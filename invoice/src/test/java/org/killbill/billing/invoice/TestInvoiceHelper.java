@@ -358,6 +358,16 @@ public class TestInvoiceHelper {
         Mockito.when(mockAccount.getTimeZone()).thenReturn(DateTimeZone.UTC);
         return new BillingEvent() {
             @Override
+            public UUID getSubscriptionId() {
+                return subscription.getId();
+            }
+
+            @Override
+            public UUID getBundleId() {
+                return subscription.getBundleId();
+            }
+
+            @Override
             public int getBillCycleDayLocal() {
                 return billCycleDayLocal;
             }
@@ -367,10 +377,6 @@ public class TestInvoiceHelper {
                 return null;
             }
 
-            @Override
-            public SubscriptionBase getSubscription() {
-                return subscription;
-            }
 
             @Override
             public DateTime getEffectiveDate() {
@@ -403,7 +409,7 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public BigDecimal getRecurringPrice(DateTime effectiveDate) {
+            public BigDecimal getRecurringPrice() {
                 return recurringPrice;
             }
 
@@ -434,8 +440,8 @@ public class TestInvoiceHelper {
 
             @Override
             public int compareTo(final BillingEvent e1) {
-                if (!getSubscription().getId().equals(e1.getSubscription().getId())) { // First order by subscription
-                    return getSubscription().getId().compareTo(e1.getSubscription().getId());
+                if (!getSubscriptionId().equals(e1.getSubscriptionId())) { // First order by subscription
+                    return getSubscriptionId().compareTo(e1.getSubscriptionId());
                 } else { // subscriptions are the same
                     if (!getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
                         return getEffectiveDate().compareTo(e1.getEffectiveDate());

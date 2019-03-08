@@ -31,7 +31,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.DefaultPrice;
 import org.killbill.billing.catalog.MockInternationalPrice;
 import org.killbill.billing.catalog.MockPlan;
@@ -44,7 +43,6 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
-import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.junction.BillingEvent;
 
 public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
@@ -187,9 +185,9 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
         final PlanPhase shotgunMonthly = createMockMonthlyPlanPhase(null, BigDecimal.ZERO, PhaseType.TRIAL);
 
         return new DefaultBillingEvent(sub, effectiveDate, true,
-                                       shotgun, shotgunMonthly, BigDecimal.ZERO,
+                                       shotgun, shotgunMonthly, BigDecimal.ZERO, BigDecimal.ZERO,
                                        Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-                                       "Test Event 1", totalOrdering, type, null, false);
+                                       "Test Event 1", totalOrdering, type, false);
     }
 
     private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,

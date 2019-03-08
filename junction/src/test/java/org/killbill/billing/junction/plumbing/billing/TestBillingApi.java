@@ -54,6 +54,8 @@ import org.killbill.billing.mock.MockEffectiveSubscriptionEvent;
 import org.killbill.billing.mock.MockSubscription;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBillingEvent;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.api.TagApiException;
@@ -82,6 +84,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     private static final UUID bunId = new UUID(2L, 0L);
     private static final String bunKey = bunId.toString();
 
+    private List<SubscriptionBillingEvent> billingTransitions;
     private List<EffectiveSubscriptionInternalEvent> effectiveSubscriptionTransitions;
     private SubscriptionBase subscription;
     private MockCatalog catalog;
@@ -97,6 +100,8 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Mockito.when(bundle.getId()).thenReturn(bunId);
         final List<SubscriptionBaseBundle> bundles = ImmutableList.<SubscriptionBaseBundle>of(bundle);
 
+
+        billingTransitions = new LinkedList<SubscriptionBillingEvent>();
         effectiveSubscriptionTransitions = new LinkedList<EffectiveSubscriptionInternalEvent>();
 
         final DateTime subscriptionStartDate = clock.getUTCNow().minusDays(3);
@@ -111,7 +116,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-        Mockito.when(subscriptionInternalApi.getBillingTransitions(Mockito.<SubscriptionBase>any(),  Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
+        Mockito.when(subscriptionInternalApi.getSubscriptionBillingEvents(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(billingTransitions);
         Mockito.when(subscriptionInternalApi.getAllTransitions(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
 
         final DefaultVersionedCatalog versionedCatalog = catalogService.getFullCatalog(true, true, internalCallContext);
@@ -260,13 +265,13 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         }
 
         if (recurringPrice != null) {
-            Assert.assertEquals(recurringPrice.getPrice(Currency.USD), event.getRecurringPrice(null));
+            Assert.assertEquals(recurringPrice.getPrice(Currency.USD), event.getRecurringPrice());
         } else {
-            assertNull(event.getRecurringPrice(null));
+            assertNull(event.getRecurringPrice());
         }
 
         Assert.assertEquals(BCD, event.getBillCycleDayLocal());
-        Assert.assertEquals(id, event.getSubscription().getId());
+        Assert.assertEquals(id, event.getSubscriptionId());
         Assert.assertEquals(time.getDayOfMonth(), event.getEffectiveDate().getDayOfMonth());
         Assert.assertEquals(nextPhase, event.getPlanPhase());
         Assert.assertEquals(nextPlan, event.getPlan());
@@ -300,6 +305,8 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
                 SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);
+        billingTransitions.add(new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CREATE, nextPlan.getName(), nextPhase.getName(), now, 1L, now, null));
+
         return now;
     }
 }

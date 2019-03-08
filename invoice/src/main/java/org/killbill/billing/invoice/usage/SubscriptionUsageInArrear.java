@@ -103,7 +103,7 @@ public class SubscriptionUsageInArrear {
         this.rawSubscriptionUsage = Ordering.<RawUsage>from(RAW_USAGE_DATE_COMPARATOR).sortedCopy(Iterables.filter(rawUsage, new Predicate<RawUsage>() {
             @Override
             public boolean apply(final RawUsage input) {
-                return input.getSubscriptionId().equals(subscriptionBillingEvents.get(0).getSubscription().getId());
+                return input.getSubscriptionId().equals(subscriptionBillingEvents.get(0).getSubscriptionId());
             }
         }));
         this.existingTrackingIds = existingTrackingIds;

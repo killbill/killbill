@@ -20,6 +20,7 @@ package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -32,96 +33,104 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.events.SubscriptionInternalEvent;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class DefaultBillingEvent implements BillingEvent {
 
+    private final UUID subscriptionId;
+    private final UUID bundleId;
+
     private final int billCycleDayLocal;
     private final BillingAlignment billingAlignment;
-    private final SubscriptionBase subscription;
+
     private final DateTime effectiveDate;
+
     private final PlanPhase planPhase;
     private final Plan plan;
+    private final BillingPeriod billingPeriod;
+
     private final BigDecimal fixedPrice;
+    private final BigDecimal recurringPrice;
     private final Currency currency;
     private final String description;
-    private final BillingPeriod billingPeriod;
     private final SubscriptionBaseTransitionType type;
     private final Long totalOrdering;
 
     private final List<Usage> usages;
 
-    private final Catalog catalog;
     private final boolean isDisableEvent;
-    private final PlanPhase nextPlanPhase;
 
     private final DateTime catalogEffectiveDate;
 
-    public DefaultBillingEvent(final SubscriptionInternalEvent transition,
+
+    // TODO Ugly, can that go completely ?
+    private final SubscriptionBase subscription;
+
+    public DefaultBillingEvent(final SubscriptionBillingEvent transition,
                                final SubscriptionBase subscription,
                                final int billCycleDayLocal,
                                final BillingAlignment billingAlignment,
                                final Currency currency,
                                final Catalog catalog) throws CatalogApiException {
-        final boolean isActive = transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL;
+        final boolean isActive = transition.getType() != SubscriptionBaseTransitionType.CANCEL;
 
-        if (isActive) {
-            final String planName = transition.getNextPlan();
-            this.plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
+        this.subscription = subscription;
 
-            final String planPhaseName = transition.getNextPhase();
-            this.planPhase = (planPhaseName != null && this.plan != null) ? this.plan.findPhase(planPhaseName) : null;
-            this.nextPlanPhase = this.planPhase;
+        this.subscriptionId = subscription.getId();
+        this.bundleId = subscription.getBundleId();
 
-            this.billingPeriod = getRecurringBillingPeriod(nextPlanPhase);
-        } else {
-            final String planName = transition.getPreviousPlan();
-            this.plan = (planName != null) ? catalog.findPlan(planName, transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-            final Plan prevPlan = this.plan;
+        this.type = transition.getType();
+        this.plan = transition.getPlanName() != null ? catalog.findPlan(transition.getPlanName(), transition.getEffectiveDate(), subscription.getStartDate()) : null;
+        this.planPhase = transition.getPlanPhaseName() != null && this.plan != null ?  this.plan.findPhase(transition.getPlanPhaseName()) : null;
+        this.billingPeriod = getRecurringBillingPeriod(planPhase);
 
-            final String planPhaseName = transition.getPreviousPhase();
-            this.planPhase = (planPhaseName != null && this.plan != null) ? this.plan.findPhase(planPhaseName) : null;
-            this.nextPlanPhase = null;
-
-            final String prevPhaseName = transition.getPreviousPhase();
-            final PlanPhase prevPlanPhase = (prevPhaseName != null && prevPlan != null) ? prevPlan.findPhase(prevPhaseName) : null;
-            this.billingPeriod = getRecurringBillingPeriod(prevPlanPhase);
-        }
         this.catalogEffectiveDate = plan == null ? null : new DateTime(plan.getCatalog().getEffectiveDate());
 
         this.billCycleDayLocal = billCycleDayLocal;
         this.billingAlignment = billingAlignment;
-        this.catalog = catalog;
         this.currency = currency;
-        this.description = transition.getTransitionType().toString();
-        this.effectiveDate = transition.getEffectiveTransitionTime();
-        this.fixedPrice = transition.getTransitionType() != SubscriptionBaseTransitionType.BCD_CHANGE ? getFixedPrice(nextPlanPhase, currency) : null;
+        this.description = transition.getType().toString();
+        this.effectiveDate = transition.getEffectiveDate();
         this.isDisableEvent = false;
-        this.subscription = subscription;
         this.totalOrdering = transition.getTotalOrdering();
-        this.type = transition.getTransitionType();
         this.usages = initializeUsage(isActive);
+
+        this.fixedPrice =  computeFixedPrice();
+        this.recurringPrice = computeRecurringPrice();
+
+
     }
 
-    public DefaultBillingEvent(final SubscriptionBase subscription, final DateTime effectiveDate, final boolean isActive,
-                               final Plan plan, final PlanPhase planPhase, final BigDecimal fixedPrice,
+    public DefaultBillingEvent(final SubscriptionBase subscription,
+                               final DateTime effectiveDate,
+                               final boolean isActive,
+                               final Plan plan,
+                               final PlanPhase planPhase,
+                               final BigDecimal fixedPrice,
+                               final BigDecimal recurringPrice,
                                final Currency currency,
-                               final BillingPeriod billingPeriod, final int billCycleDayLocal,
-                               final String description, final long totalOrdering, final SubscriptionBaseTransitionType type,
-                               final Catalog catalog,
+                               final BillingPeriod billingPeriod,
+                               final int billCycleDayLocal,
+                               final String description,
+                               final long totalOrdering,
+                               final SubscriptionBaseTransitionType type,
                                final boolean isDisableEvent) throws CatalogApiException {
-        this.catalog = catalog;
+
         this.subscription = subscription;
+
+        this.subscriptionId = subscription.getId();
+        this.bundleId = subscription.getBundleId();
         this.effectiveDate = effectiveDate;
         this.plan = plan;
         this.planPhase = planPhase;
         this.fixedPrice = fixedPrice;
+        this.recurringPrice = recurringPrice;
         this.currency = currency;
         this.billingPeriod = billingPeriod;
         this.billCycleDayLocal = billCycleDayLocal;
@@ -130,15 +139,18 @@ public class DefaultBillingEvent implements BillingEvent {
         this.totalOrdering = totalOrdering;
         this.usages = initializeUsage(isActive);
         this.isDisableEvent = isDisableEvent;
-        this.nextPlanPhase = isDisableEvent ? null : planPhase;
         this.catalogEffectiveDate = plan != null ? new DateTime(plan.getCatalog().getEffectiveDate()) : null;
         this.billingAlignment = null;
     }
 
+    SubscriptionBase getSubscription() {
+        return subscription;
+    }
+
     @Override
     public int compareTo(final BillingEvent e1) {
-        if (!getSubscription().getId().equals(e1.getSubscription().getId())) { // First order by subscription
-            return getSubscription().getId().compareTo(e1.getSubscription().getId());
+        if (!subscriptionId.equals(e1.getSubscriptionId())) { // First order by subscription
+            return subscriptionId.compareTo(e1.getSubscriptionId());
         } else { // subscriptions are the same
             if (!getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
                 return getEffectiveDate().compareTo(e1.getEffectiveDate());
@@ -182,6 +194,16 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
+    public UUID getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    @Override
+    public UUID getBundleId() {
+        return bundleId;
+    }
+
+    @Override
     public int getBillCycleDayLocal() {
         return billCycleDayLocal;
     }
@@ -191,10 +213,6 @@ public class DefaultBillingEvent implements BillingEvent {
         return billingAlignment;
     }
 
-    @Override
-    public SubscriptionBase getSubscription() {
-        return subscription;
-    }
 
     @Override
     public DateTime getEffectiveDate() {
@@ -227,12 +245,8 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public BigDecimal getRecurringPrice(final DateTime effectiveDate) throws CatalogApiException {
-        if (isDisableEvent || nextPlanPhase == null) {
-            return null;
-        }
-        final PlanPhase effectivePlanPhase = effectiveDate != null ? catalog.findPhase(nextPlanPhase.getName(), effectiveDate, subscription.getStartDate()) : nextPlanPhase;
-        return getRecurringPrice(effectivePlanPhase, currency);
+    public BigDecimal getRecurringPrice() {
+        return recurringPrice;
     }
 
     @Override
@@ -264,7 +278,7 @@ public class DefaultBillingEvent implements BillingEvent {
         sb.append("{type=").append(type);
         sb.append(", effectiveDate=").append(effectiveDate);
         sb.append(", planPhaseName=").append(planPhase.getName());
-        sb.append(", subscriptionId=").append(subscription.getId());
+        sb.append(", subscriptionId=").append(subscriptionId);
         sb.append(", totalOrdering=").append(totalOrdering);
         sb.append('}');
         return sb.toString();
@@ -281,6 +295,12 @@ public class DefaultBillingEvent implements BillingEvent {
 
         final DefaultBillingEvent that = (DefaultBillingEvent) o;
 
+        if (subscriptionId != null ? !subscriptionId.equals(that.subscriptionId) : that.subscriptionId != null) {
+            return false;
+        }
+        if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
+            return false;
+        }
         if (billCycleDayLocal != that.billCycleDayLocal) {
             return false;
         }
@@ -305,9 +325,6 @@ public class DefaultBillingEvent implements BillingEvent {
         if (planPhase != null ? !planPhase.equals(that.planPhase) : that.planPhase != null) {
             return false;
         }
-        if (subscription != null ? !subscription.equals(that.subscription) : that.subscription != null) {
-            return false;
-        }
         if (totalOrdering != null ? !totalOrdering.equals(that.totalOrdering) : that.totalOrdering != null) {
             return false;
         }
@@ -321,7 +338,8 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public int hashCode() {
         int result = 31 * billCycleDayLocal;
-        result = 31 * result + (subscription != null ? subscription.hashCode() : 0);
+        result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
+        result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (planPhase != null ? planPhase.hashCode() : 0);
@@ -334,12 +352,19 @@ public class DefaultBillingEvent implements BillingEvent {
         return result;
     }
 
-    private BigDecimal getFixedPrice(@Nullable final PlanPhase nextPhase, final Currency currency) throws CatalogApiException {
-        return (nextPhase != null && nextPhase.getFixed() != null && nextPhase.getFixed().getPrice() != null) ? nextPhase.getFixed().getPrice().getPrice(currency) : null;
+    private BigDecimal computeFixedPrice() throws CatalogApiException {
+        if (type == SubscriptionBaseTransitionType.BCD_CHANGE || type == SubscriptionBaseTransitionType.CANCEL) {
+            return null;
+        }
+        return (planPhase != null && planPhase.getFixed() != null && planPhase.getFixed().getPrice() != null) ? planPhase.getFixed().getPrice().getPrice(currency) : null;
     }
 
-    private BigDecimal getRecurringPrice(@Nullable final PlanPhase nextPhase, final Currency currency) throws CatalogApiException {
-        return (nextPhase != null && nextPhase.getRecurring() != null && nextPhase.getRecurring().getRecurringPrice() != null) ? nextPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
+    private BigDecimal computeRecurringPrice() throws CatalogApiException {
+        // TODO why is logic different than fixedPrice ?
+        if (isDisableEvent || type == SubscriptionBaseTransitionType.CANCEL) {
+            return null;
+        }
+        return (planPhase != null && planPhase.getRecurring() != null && planPhase.getRecurring().getRecurringPrice() != null) ? planPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
     }
 
     private BillingPeriod getRecurringBillingPeriod(@Nullable final PlanPhase nextPhase) {
@@ -365,6 +390,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
     @Override
     public DateTime getCatalogEffectiveDate() {
+        // TODO Can that go ?
         return catalogEffectiveDate;
     }
 }

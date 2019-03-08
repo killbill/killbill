@@ -187,6 +187,8 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         Mockito.when(result.getBillCycleDayLocal()).thenReturn(bcd);
         Mockito.when(result.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(result.getBillingPeriod()).thenReturn(billingPeriod);
+        Mockito.when(result.getSubscriptionId()).thenReturn(subscriptionId);
+        Mockito.when(result.getBundleId()).thenReturn(bundleId);
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
@@ -194,7 +196,6 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(subscriptionId);
         Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
-        Mockito.when(result.getSubscription()).thenReturn(subscription);
 
         final Product product = Mockito.mock(Product.class);
         Mockito.when(product.getName()).thenReturn(productName);

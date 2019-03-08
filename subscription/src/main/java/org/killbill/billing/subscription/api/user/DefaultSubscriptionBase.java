@@ -524,26 +524,40 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    public List<SubscriptionBaseTransition> getBillingTransitions() {
+    public List<SubscriptionBillingEvent> getBillingTransitions() {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
-        final List<SubscriptionBaseTransition> result = new ArrayList<SubscriptionBaseTransition>();
+        final List<SubscriptionBillingEvent> result = new ArrayList<SubscriptionBillingEvent>();
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST,
                 Visibility.ALL, TimeLimit.ALL);
         // Remove anything prior to first CREATE
         boolean foundInitialEvent = false;
+
+        DateTime lastPlanChangeTime = null;
         while (it.hasNext()) {
-            final SubscriptionBaseTransitionData curTransition = (SubscriptionBaseTransitionData) it.next();
+            final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
             if (!foundInitialEvent) {
-                foundInitialEvent = curTransition.getEventType() == EventType.API_USER &&
-                                    (curTransition.getApiEventType() == ApiEventType.CREATE ||
-                                     curTransition.getApiEventType() == ApiEventType.TRANSFER);
+                foundInitialEvent = cur.getEventType() == EventType.API_USER &&
+                                    (cur.getApiEventType() == ApiEventType.CREATE ||
+                                     cur.getApiEventType() == ApiEventType.TRANSFER);
+                lastPlanChangeTime = cur.getEffectiveTransitionTime();
             }
+
             if (foundInitialEvent) {
-                result.add(curTransition);
+
+                if (cur.getEventType() == EventType.API_USER &&
+                                    cur.getApiEventType() == ApiEventType.CHANGE) {
+                    lastPlanChangeTime = cur.getEffectiveTransitionTime();
+                }
+
+                final boolean isActive = cur.getTransitionType() != SubscriptionBaseTransitionType.CANCEL;
+                final String planName = isActive ? cur.getNextPlan().getName() : cur.getPreviousPlan().getName();
+                final String planPhaseName = isActive ?  cur.getNextPhase().getName() : cur.getPreviousPhase().getName();
+                final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), planName, planPhaseName, cur.getEffectiveTransitionTime(), cur.getTotalOrdering(), lastPlanChangeTime, cur.getNextBillingCycleDayLocal());
+                result.add(billingTransition);
             }
         }
         return result;

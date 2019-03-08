@@ -43,8 +43,6 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
-import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
-import org.killbill.billing.events.SubscriptionInternalEvent;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
@@ -52,6 +50,7 @@ import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.tag.TagInternalApi;
@@ -120,6 +119,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             log.info("No billing event for accountId='{}'", accountId);
             return result;
         }
+
 
         // Pretty-print the events, before and after the blocking calculator does its magic
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
@@ -235,7 +235,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 continue;
             }
 
-            final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
+            final BigDecimal recurringPrice = event.getRecurringPrice();
             final boolean hasRecurringPrice = recurringPrice != null; // Note: could be zero (BCD would still be set, by convention)
             final boolean hasUsage = event.getUsages() != null && !event.getUsages().isEmpty();
             if (!hasRecurringPrice &&
@@ -274,25 +274,25 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         for (final SubscriptionBase subscription : subscriptions) {
 
-            final List<EffectiveSubscriptionInternalEvent> billingTransitions = subscriptionApi.getBillingTransitions(subscription, context);
+            final List<SubscriptionBillingEvent> billingTransitions = subscriptionApi.getSubscriptionBillingEvents(subscription, context);
             if (billingTransitions.isEmpty() ||
-                (billingTransitions.get(0).getTransitionType() != SubscriptionBaseTransitionType.CREATE &&
-                 billingTransitions.get(0).getTransitionType() != SubscriptionBaseTransitionType.TRANSFER)) {
+                (billingTransitions.get(0).getType() != SubscriptionBaseTransitionType.CREATE &&
+                 billingTransitions.get(0).getType() != SubscriptionBaseTransitionType.TRANSFER)) {
                 log.warn("Skipping billing events for subscription " + subscription.getId() + ": Does not start with a valid CREATE transition");
                 skipSubscriptionsSet.add(subscription.getId());
                 return;
             }
 
             Integer overridenBCD = null;
-            for (final EffectiveSubscriptionInternalEvent transition : billingTransitions) {
-                final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveTransitionTime(), subscription.getStartDate());
+            for (final SubscriptionBillingEvent transition : billingTransitions) {
+                final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveDate(), subscription.getStartDate());
 
                 //
                 // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
                 // occurs below (which is based on billing alignment policy). Also multiple of those BCD_CHANGE transitions could occur,
                 // to define different intervals with different billing cycle days.
                 //
-                overridenBCD = transition.getNextBillCycleDayLocal() != null ? transition.getNextBillCycleDayLocal() : overridenBCD;
+                overridenBCD = transition.getBcdLocal() != null ? transition.getBcdLocal() : overridenBCD;
                 final int bcdLocal = overridenBCD != null ?
                                      overridenBCD :
                                      calculateBcdForTransition(alignment, bcdCache, baseSubscription, subscription, currentAccountBCD, context);
@@ -311,17 +311,9 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
     }
 
-    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final Catalog catalog, final SubscriptionInternalEvent transition) throws CatalogApiException {
-        final Plan prevPlan = (transition.getPreviousPlan() != null) ? catalog.findPlan(transition.getPreviousPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-        final Plan nextPlan = (transition.getNextPlan() != null) ? catalog.findPlan(transition.getNextPlan(), transition.getEffectiveTransitionTime(), transition.getSubscriptionStartDate()) : null;
-
-        final Plan plan = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPlan : prevPlan;
-
-        final PlanPhase prevPhase = prevPlan != null && transition.getPreviousPhase() != null ? prevPlan.findPhase(transition.getPreviousPhase()) : null;
-        final PlanPhase nextPhase = nextPlan != null && transition.getNextPhase() != null ? nextPlan.findPhase(transition.getNextPhase()) : null;
-
-        final PlanPhase phase = (transition.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) ? nextPhase : prevPhase;
-
+    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final Catalog catalog, final SubscriptionBillingEvent transition) throws CatalogApiException {
+        final Plan plan = catalog.findPlan(transition.getPlanName(), transition.getEffectiveDate(), transition.getLastChangePlanDate());
+        final PlanPhase phase =  plan.findPhase(transition.getPlanPhaseName());
         return new PlanPhaseSpecifier(plan.getName(), phase.getPhaseType());
     }
 
