@@ -34,6 +34,6 @@ public interface SubscriptionBillingEvent {
 
     DateTime getLastChangePlanDate();
 
-    public Integer getBcdLocal();
+    Integer getBcdLocal();
 
 }

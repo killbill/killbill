@@ -118,14 +118,14 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public Plan findPlan(final String name, final DateTime effectiveDate, final DateTime subscriptionStartDate)
+    public Plan findPlan(final String name, final DateTime effectiveDate, final DateTime subscriptionChangePlanDate)
             throws CatalogApiException {
         return findCurrentPlan(name);
     }
 
     @Override
     public Plan createOrFindPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate,
-                                 final DateTime subscriptionStartDate) throws CatalogApiException {
+                                 final DateTime subscriptionChangePlanDate) throws CatalogApiException {
         return createOrFindCurrentPlan(spec, overrides);
     }
 
@@ -135,34 +135,34 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public PlanPhase findPhase(final String name, final DateTime requestedDate, final DateTime subscriptionStartDate)
+    public PlanPhase findPhase(final String name, final DateTime requestedDate, final DateTime subscriptionChangePlanDate)
             throws CatalogApiException {
         return findCurrentPhase(name);
     }
 
     @Override
-    public PriceList findPriceListForPlan(final String name, final DateTime requestedDate, final DateTime subscriptionStartDate) throws CatalogApiException {
+    public PriceList findPriceListForPlan(final String name, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) throws CatalogApiException {
         return findCurrentPricelist(findCurrentPlan(name).getPriceListName());
     }
 
     @Override
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate, final DateTime subscriptionStartDate) {
+    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) {
         return planChange(from, to);
     }
 
     @Override
-    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate, final DateTime subscriptionStartDate)
+    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate, final DateTime subscriptionChangePlanDate)
             throws CatalogApiException {
         return planCancelPolicy(planPhase);
     }
 
     @Override
-    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final DateTime requestedDate, final DateTime subscriptionStartDate) {
+    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) {
         return planCreateAlignment(specifier);
     }
 
     @Override
-    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final DateTime requestedDate, final DateTime subscriptionStartDate) {
+    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) {
         return billingAlignment(planPhase);
     }
 
