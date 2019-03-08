@@ -20,10 +20,12 @@ package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -74,6 +76,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     private SubscriptionBase subscription2;
     private SubscriptionBase subscription3;
     private SubscriptionBase subscription4;
+    private Map<UUID, List<SubscriptionBase>> subscriptionsForAccount;
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
@@ -83,6 +86,9 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
         super.beforeMethod();
         account = Mockito.mock(Account.class);
+
+        subscriptionsForAccount = new HashMap<>();
+
         subscription1 = Mockito.mock(SubscriptionBase.class);
         subscription2 = Mockito.mock(SubscriptionBase.class);
         subscription3 = Mockito.mock(SubscriptionBase.class);
@@ -91,11 +97,24 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         Mockito.when(subscription1.getBundleId()).thenReturn(bundleId1);
         Mockito.when(subscription2.getBundleId()).thenReturn(bundleId1);
         Mockito.when(subscription3.getBundleId()).thenReturn(bundleId1);
+        final List<SubscriptionBase> bundleSubscriptions1 = new ArrayList<>();
+        bundleSubscriptions1.add(subscription1);
+        bundleSubscriptions1.add(subscription2);
+        bundleSubscriptions1.add(subscription3);
+        subscriptionsForAccount.put(bundleId1, bundleSubscriptions1);
+
         Mockito.when(subscription4.getBundleId()).thenReturn(bundleId2);
+        final List<SubscriptionBase> bundleSubscriptions2 = new ArrayList<>();
+        bundleSubscriptions1.add(subscription4);
+        subscriptionsForAccount.put(bundleId2, bundleSubscriptions2);
+
+
         Mockito.when(subscription1.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription2.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription3.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription4.getId()).thenReturn(UUID.randomUUID());
+
+
 
         ((MockBlockingStateDao) blockingStateDao).clear();
     }
@@ -131,7 +150,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
                                                                                                                         blockingState2, Optional.<UUID>absent()),
                                                                          internalCallContext);
 
-        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), catalogInternalApi.getFullCatalog(true, true, internalCallContext), internalCallContext);
+        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalogInternalApi.getFullCatalog(true, true, internalCallContext), internalCallContext);
 
         assertEquals(billingEvents.size(), 7);
 
@@ -580,10 +599,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final SortedSet<BillingEvent> result3 = blockingCalculator.filter(events, subscription3);
 
         assertEquals(result1.size(), 3);
-        assertEquals(((DefaultBillingEvent)(result1.first())).getSubscription(), subscription1);
-        assertEquals(((DefaultBillingEvent)(result1.last())).getSubscription(), subscription1);
         assertEquals(result2.size(), 1);
-        assertEquals(((DefaultBillingEvent)(result2.first())).getSubscription(), subscription2);
         assertEquals(result3.size(), 0);
     }
 
@@ -627,25 +643,6 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         // TODO - ugly, fragile
         assertEquals(result.getTotalOrdering(), (Long) (BlockingCalculator.getGlobalTotalOrder().get() - 1));
     }
-
-    @Test(groups = "fast")
-    public void testCreateBundleSubscriptionMap() {
-        final SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
-        events.add(createBillingEvent(subscription1, 1L));
-        events.add(createBillingEvent(subscription2, 2L));
-        events.add(createBillingEvent(subscription3, 3L));
-        events.add(createBillingEvent(subscription4, 4L));
-
-        final Hashtable<UUID, List<SubscriptionBase>> map = blockingCalculator.createBundleSubscriptionMap(events);
-
-        assertNotNull(map);
-        assertEquals(map.keySet().size(), 2);
-        assertEquals(map.get(bundleId1).size(), 3);
-        assertEquals(map.get(bundleId2).size(), 1);
-
-    }
-
-
 
     @Test(groups = "fast")
     public void testCreateDisablePairs() {
@@ -801,7 +798,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
                                                                                                                         blockingState4, Optional.<UUID>absent()),
                                                                          internalCallContext);
 
-        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), catalogInternalApi.getFullCatalog(true, true, internalCallContext), internalCallContext);
+
+        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalogInternalApi.getFullCatalog(true, true, internalCallContext), internalCallContext);
 
         assertEquals(billingEvents.size(), 5);
         final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);
@@ -850,7 +848,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
             final BigDecimal fixedPrice = BigDecimal.TEN;
 
-            return new DefaultBillingEvent(subscription,
+            return new DefaultBillingEvent(subscription.getId(),
+                                           subscription.getBundleId(),
                                            effectiveDate,
                                            plan,
                                            planPhase,

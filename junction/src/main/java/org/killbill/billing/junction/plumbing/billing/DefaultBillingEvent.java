@@ -36,7 +36,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -67,19 +66,12 @@ public class DefaultBillingEvent implements BillingEvent {
 
     private final DateTime catalogEffectiveDate;
 
-
-    // TODO Ugly, can that go completely ?
-    private final SubscriptionBase subscription;
-
     public DefaultBillingEvent(final SubscriptionBillingEvent inputEvent,
                                final SubscriptionBase subscription,
                                final int billCycleDayLocal,
                                final BillingAlignment billingAlignment,
                                final Currency currency,
                                final Catalog catalog) throws CatalogApiException {
-
-        this.subscription = subscription;
-
         this.subscriptionId = subscription.getId();
         this.bundleId = subscription.getBundleId();
 
@@ -99,12 +91,13 @@ public class DefaultBillingEvent implements BillingEvent {
         this.totalOrdering = inputEvent.getTotalOrdering();
 
         this.billingPeriod = computeRecurringBillingPeriod();
-        this.fixedPrice =  computeFixedPrice();
+        this.fixedPrice = computeFixedPrice();
         this.recurringPrice = computeRecurringPrice();
         this.usages = computeUsages();
     }
 
-    public DefaultBillingEvent(final SubscriptionBase subscription,
+    public DefaultBillingEvent(final UUID subscriptionId,
+                               final UUID bundleId,
                                final DateTime effectiveDate,
                                final Plan plan,
                                final PlanPhase planPhase,
@@ -117,12 +110,8 @@ public class DefaultBillingEvent implements BillingEvent {
                                final long totalOrdering,
                                final SubscriptionBaseTransitionType type,
                                final boolean isDisableEvent) throws CatalogApiException {
-
-        this.subscription = subscription;
-
-
-        this.subscriptionId = subscription.getId();
-        this.bundleId = subscription.getBundleId();
+        this.subscriptionId = subscriptionId;
+        this.bundleId = bundleId;
         this.effectiveDate = effectiveDate;
 
         this.isCancelledOrBlocked = isDisableEvent;
@@ -142,9 +131,41 @@ public class DefaultBillingEvent implements BillingEvent {
         this.billingAlignment = null;
     }
 
-    SubscriptionBase getSubscription() {
-        return subscription;
+
+
+    private BigDecimal computeFixedPrice() throws CatalogApiException {
+        if (isCancelledOrBlocked ||
+            type == SubscriptionBaseTransitionType.BCD_CHANGE /* We don't want to bill twice for the same fixed price */) {
+            return null;
+        }
+        return (planPhase.getFixed() != null && planPhase.getFixed().getPrice() != null) ? planPhase.getFixed().getPrice().getPrice(currency) : null;
     }
+
+    private BigDecimal computeRecurringPrice() throws CatalogApiException {
+        if (isCancelledOrBlocked) {
+            return null;
+        }
+        return (planPhase.getRecurring() != null && planPhase.getRecurring().getRecurringPrice() != null) ? planPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
+    }
+
+    private BillingPeriod computeRecurringBillingPeriod() {
+        return planPhase.getRecurring() != null ? planPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+    }
+
+    private List<Usage> computeUsages() {
+        List<Usage> result = ImmutableList.<Usage>of();
+        if (isCancelledOrBlocked) {
+            return result;
+        }
+        if (planPhase.getUsages().length > 0) {
+            result = Lists.newArrayList();
+            for (Usage usage : planPhase.getUsages()) {
+                result.add(usage);
+            }
+        }
+        return result;
+    }
+
 
     @Override
     public int compareTo(final BillingEvent e1) {
@@ -211,7 +232,6 @@ public class DefaultBillingEvent implements BillingEvent {
     public BillingAlignment getBillingAlignment() {
         return billingAlignment;
     }
-
 
     @Override
     public DateTime getEffectiveDate() {
@@ -348,39 +368,6 @@ public class DefaultBillingEvent implements BillingEvent {
         result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
         result = 31 * result + (type != null ? type.hashCode() : 0);
         result = 31 * result + (totalOrdering != null ? totalOrdering.hashCode() : 0);
-        return result;
-    }
-
-    private BigDecimal computeFixedPrice() throws CatalogApiException {
-        if (isCancelledOrBlocked ||
-            type == SubscriptionBaseTransitionType.BCD_CHANGE /* We don't want to bill twice for the same fixed price */) {
-            return null;
-        }
-        return (planPhase.getFixed() != null && planPhase.getFixed().getPrice() != null) ? planPhase.getFixed().getPrice().getPrice(currency) : null;
-    }
-
-    private BigDecimal computeRecurringPrice() throws CatalogApiException {
-        if (isCancelledOrBlocked) {
-            return null;
-        }
-        return (planPhase.getRecurring() != null && planPhase.getRecurring().getRecurringPrice() != null) ? planPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
-    }
-
-    private BillingPeriod computeRecurringBillingPeriod() {
-        return planPhase.getRecurring() != null ? planPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-    }
-
-    private List<Usage> computeUsages() {
-        List<Usage> result = ImmutableList.<Usage>of();
-        if (isCancelledOrBlocked) {
-            return result;
-        }
-        if (planPhase.getUsages().length > 0) {
-            result = Lists.newArrayList();
-            for (Usage usage : planPhase.getUsages()) {
-                result.add(usage);
-            }
-        }
         return result;
     }
 

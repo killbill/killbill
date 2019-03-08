@@ -74,13 +74,10 @@ public class BlockingCalculator {
      *
      * @param billingEvents the original list of billing events to update (without overdue events)
      */
-    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
         if (billingEvents.size() <= 0) {
             return false;
         }
-
-
-        final Hashtable<UUID, List<SubscriptionBase>> bundleMap = createBundleSubscriptionMap(billingEvents);
 
         final SortedSet<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
         final SortedSet<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
@@ -97,11 +94,11 @@ public class BlockingCalculator {
         final Map<UUID, List<BlockingState>> perBundleBlockingEvents = getPerTypeBlockingEvents(BlockingStateType.SUBSCRIPTION_BUNDLE, blockingEvents);
         final Map<UUID, List<BlockingState>> perSubscriptionBlockingEvents = getPerTypeBlockingEvents(BlockingStateType.SUBSCRIPTION, blockingEvents);
 
-        for (final UUID bundleId : bundleMap.keySet()) {
+        for (final UUID bundleId : subscriptionsForAccount.keySet()) {
 
             final List<BlockingState> bundleBlockingEvents = perBundleBlockingEvents.get(bundleId) != null ? perBundleBlockingEvents.get(bundleId) : ImmutableList.<BlockingState>of();
 
-            for (final SubscriptionBase subscription : bundleMap.get(bundleId)) {
+            for (final SubscriptionBase subscription : subscriptionsForAccount.get(bundleId)) {
                 // Avoid inserting additional events for subscriptions that don't even have a START event
                 if (skippedSubscriptions.contains(subscription.getId())) {
                     continue;
@@ -254,10 +251,20 @@ public class BlockingCalculator {
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.START_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
 
-        return new DefaultBillingEvent(((DefaultBillingEvent) previousEvent).getSubscription(), effectiveDate, plan, planPhase, fixedPrice, recurringPrice,
+        return new DefaultBillingEvent(previousEvent.getSubscriptionId(),
+                                       previousEvent.getBundleId(),
+                                       effectiveDate,
+                                       plan,
+                                       planPhase,
+                                       fixedPrice,
+                                       recurringPrice,
                                        currency,
-                                       billingPeriod, billCycleDay,
-                                       description, totalOrdering, type, true);
+                                       billingPeriod,
+                                       billCycleDay,
+                                       description,
+                                       totalOrdering,
+                                       type,
+                                       true);
     }
 
     protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
@@ -274,26 +281,20 @@ public class BlockingCalculator {
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.END_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
 
-        return new DefaultBillingEvent(((DefaultBillingEvent) previousEvent).getSubscription(), effectiveDate, plan, planPhase, fixedPrice, recurringPrice,
+        return new DefaultBillingEvent(previousEvent.getSubscriptionId(),
+                                       previousEvent.getBundleId(),
+                                       effectiveDate,
+                                       plan,
+                                       planPhase,
+                                       fixedPrice,
+                                       recurringPrice,
                                        currency,
-                                       billingPeriod, billCycleDay,
-                                       description, totalOrdering, type, false);
-    }
-
-    protected Hashtable<UUID, List<SubscriptionBase>> createBundleSubscriptionMap(final SortedSet<BillingEvent> billingEvents) {
-        final Hashtable<UUID, List<SubscriptionBase>> result = new Hashtable<UUID, List<SubscriptionBase>>();
-        for (final BillingEvent event : billingEvents) {
-            final UUID bundleId = event.getBundleId();
-            List<SubscriptionBase> subs = result.get(bundleId);
-            if (subs == null) {
-                subs = new ArrayList<SubscriptionBase>();
-                result.put(bundleId, subs);
-            }
-            if (!result.get(bundleId).contains(((DefaultBillingEvent)event).getSubscription())) {
-                subs.add(((DefaultBillingEvent)event).getSubscription());
-            }
-        }
-        return result;
+                                       billingPeriod,
+                                       billCycleDay,
+                                       description,
+                                       totalOrdering,
+                                       type,
+                                       false);
     }
 
     // In ascending order
