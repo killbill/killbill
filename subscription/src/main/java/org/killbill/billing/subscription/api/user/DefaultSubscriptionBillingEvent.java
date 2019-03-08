@@ -74,4 +74,17 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     public Integer getBcdLocal() {
         return bcdLocal;
     }
+
+    @Override
+    public String toString() {
+        return "DefaultSubscriptionBillingEvent{" +
+               "type=" + type +
+               ", planName='" + planName + '\'' +
+               ", planPhaseName='" + planPhaseName + '\'' +
+               ", effectiveDate=" + effectiveDate +
+               ", totalOrdering=" + totalOrdering +
+               ", lastChangePlanDate=" + lastChangePlanDate +
+               ", bcdLocal=" + bcdLocal +
+               '}';
+    }
 }

@@ -254,7 +254,7 @@ public class BlockingCalculator {
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.START_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
 
-        return new DefaultBillingEvent(((DefaultBillingEvent) previousEvent).getSubscription(), effectiveDate, true, plan, planPhase, fixedPrice, recurringPrice,
+        return new DefaultBillingEvent(((DefaultBillingEvent) previousEvent).getSubscription(), effectiveDate, plan, planPhase, fixedPrice, recurringPrice,
                                        currency,
                                        billingPeriod, billCycleDay,
                                        description, totalOrdering, type, true);
@@ -274,7 +274,7 @@ public class BlockingCalculator {
         final SubscriptionBaseTransitionType type = SubscriptionBaseTransitionType.END_BILLING_DISABLED;
         final Long totalOrdering = globaltotalOrder.getAndIncrement();
 
-        return new DefaultBillingEvent(((DefaultBillingEvent) previousEvent).getSubscription(), effectiveDate, true, plan, planPhase, fixedPrice, recurringPrice,
+        return new DefaultBillingEvent(((DefaultBillingEvent) previousEvent).getSubscription(), effectiveDate, plan, planPhase, fixedPrice, recurringPrice,
                                        currency,
                                        billingPeriod, billCycleDay,
                                        description, totalOrdering, type, false);
