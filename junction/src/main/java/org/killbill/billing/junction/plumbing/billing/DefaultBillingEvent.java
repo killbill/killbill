@@ -78,7 +78,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.isCancelledOrBlocked = inputEvent.getType() == SubscriptionBaseTransitionType.CANCEL;
 
         this.type = inputEvent.getType();
-        this.plan = catalog.findPlan(inputEvent.getPlanName(), inputEvent.getEffectiveDate(), subscription.getStartDate());
+        this.plan = catalog.findPlan(inputEvent.getPlanName(), inputEvent.getEffectiveDate(), inputEvent.getLastChangePlanDate());
         this.planPhase = this.plan.findPhase(inputEvent.getPlanPhaseName());
 
         this.catalogEffectiveDate = new DateTime(plan.getCatalog().getEffectiveDate());

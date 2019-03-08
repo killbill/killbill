@@ -94,16 +94,19 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertListenerStatus();
 
 
-        // Change back to original plan -- because we use the latest catalog version the change plan succeeds
+        // Change back to original plan: The code (subscription) chooses the latest version of the catalog when making the change and therefore the call succeeds
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
         bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec1), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
+        //
+        // The code normally goes through the grandfathering logic to find the version but specifies the transitionTime of the latest CHANGE (and not the subscriptionStartDate)
+        // and therefore correctly find the latest catalog version, invoicing at the new price 295.95
+        //
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-                                    // Although we are now on V2 (price = 295.95) we still invoice at 249.95
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.RECURRING, new BigDecimal("249.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.RECURRING, new BigDecimal("295.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-500.00")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("250.05")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("204.05")));
 
 
 
