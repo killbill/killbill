@@ -138,52 +138,6 @@ public class DefaultBillingEvent implements BillingEvent {
 
 
     @Override
-    public int compareTo(final BillingEvent e1) {
-        if (!subscriptionId.equals(e1.getSubscriptionId())) { // First order by subscription
-            return subscriptionId.compareTo(e1.getSubscriptionId());
-        } else { // subscriptions are the same
-            if (!getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
-                return getEffectiveDate().compareTo(e1.getEffectiveDate());
-            } else { // dates and subscriptions are the same
-                // If an subscription event and an overdue event happen at the exact same time,
-                // we assume we want the subscription event before the overdue event when entering
-                // the overdue period, and vice-versa when exiting the overdue period
-                if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
-                    if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
-                        // Make sure to always have START before END
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                } else if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
-                    if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
-                        // Make sure to always have START before END
-                        return 1;
-                    } else {
-                        return -1;
-                    }
-                } else if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
-                    if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
-                        // Make sure to always have START before END
-                        return 1;
-                    } else {
-                        return -1;
-                    }
-                } else if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
-                    if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
-                        // Make sure to always have START before END
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                } else {
-                    return getTotalOrdering().compareTo(e1.getTotalOrdering());
-                }
-            }
-        }
-    }
-
-    @Override
     public UUID getSubscriptionId() {
         return subscriptionId;
     }
@@ -228,16 +182,6 @@ public class DefaultBillingEvent implements BillingEvent {
         return description;
     }
 
-    @Override
-    public BigDecimal getFixedPrice() {
-        return fixedPrice;
-    }
-
-    @Override
-    public BigDecimal getRecurringPrice(final DateTime requestedDate) throws CatalogApiException {
-        final PlanPhase effectivePlanPhase = catalog.findPhase(planPhase.getName(), requestedDate, lastChangePlanDate);
-        return computeRecurringPrice(isCancelledOrBlocked, effectivePlanPhase, currency);
-    }
 
     @Override
     public DateTime getLastChangePlanDate() {
@@ -259,25 +203,110 @@ public class DefaultBillingEvent implements BillingEvent {
         return totalOrdering;
     }
 
-    // TODO add final DateTime requestedDate -- see #1060
     @Override
-    public List<Usage> getUsages() {
-        return computeUsages(isCancelledOrBlocked, planPhase);
+    public BigDecimal getFixedPrice() {
+        return fixedPrice;
+    }
+
+
+    @Override
+    public BigDecimal getRecurringPrice(final DateTime requestedDate) throws CatalogApiException {
+        final PlanPhase effectivePlanPhase = catalog.findPhase(planPhase.getName(), requestedDate, lastChangePlanDate);
+        return computeRecurringPrice(isCancelledOrBlocked, effectivePlanPhase, currency);
     }
 
     @Override
-    public String toString() {
-        // Note: we don't use all fields here, as the output would be overwhelming
-        // (these events are printed in the logs in junction and invoice).
-        final StringBuilder sb = new StringBuilder();
-        sb.append("DefaultBillingEvent");
-        sb.append("{type=").append(type);
-        sb.append(", effectiveDate=").append(effectiveDate);
-        sb.append(", planPhaseName=").append(planPhase.getName());
-        sb.append(", subscriptionId=").append(subscriptionId);
-        sb.append(", totalOrdering=").append(totalOrdering);
-        sb.append('}');
-        return sb.toString();
+    public List<Usage> getUsages(DateTime requestedDate) throws CatalogApiException {
+        final PlanPhase effectivePlanPhase = catalog.findPhase(planPhase.getName(), requestedDate, lastChangePlanDate);
+        return computeUsages(isCancelledOrBlocked, effectivePlanPhase);
+    }
+
+
+
+    private static BigDecimal computeFixedPrice(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase, final Currency currency, final SubscriptionBaseTransitionType type) throws CatalogApiException {
+        if (isCancelledOrBlocked ||
+            type == SubscriptionBaseTransitionType.BCD_CHANGE /* We don't want to bill twice for the same fixed price */) {
+            return null;
+        }
+        return (effectivePlanPhase.getFixed() != null && effectivePlanPhase.getFixed().getPrice() != null) ? effectivePlanPhase.getFixed().getPrice().getPrice(currency) : null;
+    }
+
+    private static BigDecimal computeRecurringPrice(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase, final Currency currency) throws CatalogApiException {
+        if (isCancelledOrBlocked) {
+            return null;
+        }
+        return (effectivePlanPhase.getRecurring() != null && effectivePlanPhase.getRecurring().getRecurringPrice() != null) ? effectivePlanPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
+    }
+
+    private static BillingPeriod computeRecurringBillingPeriod(final PlanPhase effectivePlanPhase) {
+        return effectivePlanPhase.getRecurring() != null ? effectivePlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+    }
+
+    private static List<Usage> computeUsages(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase) {
+        if (isCancelledOrBlocked) {
+            return ImmutableList.<Usage>of();
+        }
+
+        final List<Usage> result = (effectivePlanPhase.getUsages().length > 0) ?
+                             Lists.newArrayList() : ImmutableList.<Usage>of();
+        for (Usage usage : effectivePlanPhase.getUsages()) {
+            result.add(usage);
+        }
+        return result;
+    }
+
+
+
+    @Override
+    public DateTime getCatalogEffectiveDate() {
+        // TODO Can that go ?
+        return catalogEffectiveDate;
+    }
+
+    @Override
+    public int compareTo(final BillingEvent e1) {
+        if (!subscriptionId.equals(e1.getSubscriptionId())) { // First order by subscription
+            return subscriptionId.compareTo(e1.getSubscriptionId());
+        } else { // subscriptions are the same
+            if (!getEffectiveDate().equals(e1.getEffectiveDate())) { // Secondly order by date
+                return getEffectiveDate().compareTo(e1.getEffectiveDate());
+            } else { // dates and subscriptions are the same
+                // If an subscription event and an overdue event happen at the exact same time,
+                // we assume we want the subscription event before the overdue event when entering
+                // the overdue period, and vice-versa when exiting the overdue period
+                if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
+                    if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                        // Make sure to always have START before END
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                } else if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                    if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
+                        // Make sure to always have START before END
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                } else if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(getTransitionType())) {
+                    if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                        // Make sure to always have START before END
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                } else if (SubscriptionBaseTransitionType.END_BILLING_DISABLED.equals(e1.getTransitionType())) {
+                    if (SubscriptionBaseTransitionType.START_BILLING_DISABLED.equals(getTransitionType())) {
+                        // Make sure to always have START before END
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                } else {
+                    return getTotalOrdering().compareTo(e1.getTotalOrdering());
+                }
+            }
+        }
     }
 
     @Override
@@ -348,44 +377,20 @@ public class DefaultBillingEvent implements BillingEvent {
         return result;
     }
 
-
-    private static BigDecimal computeFixedPrice(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase, final Currency currency, final SubscriptionBaseTransitionType type) throws CatalogApiException {
-        if (isCancelledOrBlocked ||
-            type == SubscriptionBaseTransitionType.BCD_CHANGE /* We don't want to bill twice for the same fixed price */) {
-            return null;
-        }
-        return (effectivePlanPhase.getFixed() != null && effectivePlanPhase.getFixed().getPrice() != null) ? effectivePlanPhase.getFixed().getPrice().getPrice(currency) : null;
-    }
-
-    private static BigDecimal computeRecurringPrice(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase, final Currency currency) throws CatalogApiException {
-        if (isCancelledOrBlocked) {
-            return null;
-        }
-        return (effectivePlanPhase.getRecurring() != null && effectivePlanPhase.getRecurring().getRecurringPrice() != null) ? effectivePlanPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
-    }
-
-    private static BillingPeriod computeRecurringBillingPeriod(final PlanPhase effectivePlanPhase) {
-        return effectivePlanPhase.getRecurring() != null ? effectivePlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-    }
-
-    private static List<Usage> computeUsages(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase) {
-        if (isCancelledOrBlocked) {
-            return ImmutableList.<Usage>of();
-        }
-
-        final List<Usage> result = (effectivePlanPhase.getUsages().length > 0) ?
-                             Lists.newArrayList() : ImmutableList.<Usage>of();
-        for (Usage usage : effectivePlanPhase.getUsages()) {
-            result.add(usage);
-        }
-        return result;
-    }
-
-
-
     @Override
-    public DateTime getCatalogEffectiveDate() {
-        // TODO Can that go ?
-        return catalogEffectiveDate;
+    public String toString() {
+        // Note: we don't use all fields here, as the output would be overwhelming
+        // (these events are printed in the logs in junction and invoice).
+        final StringBuilder sb = new StringBuilder();
+        sb.append("DefaultBillingEvent");
+        sb.append("{type=").append(type);
+        sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", planPhaseName=").append(planPhase.getName());
+        sb.append(", subscriptionId=").append(subscriptionId);
+        sb.append(", totalOrdering=").append(totalOrdering);
+        sb.append('}');
+        return sb.toString();
     }
+
+
 }
