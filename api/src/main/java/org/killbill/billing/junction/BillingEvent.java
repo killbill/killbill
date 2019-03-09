@@ -86,16 +86,19 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the recurring price for the phase
      */
-    BigDecimal getRecurringPrice();
+    BigDecimal getRecurringPrice(DateTime requestedDate) throws CatalogApiException;
 
     /**
      * @return the currency for the account being invoiced
      */
     Currency getCurrency();
 
-    /**
-     * @return the transition type of the underlying subscription event that triggered this
-     */
+
+    public DateTime getLastChangePlanDate();
+
+        /**
+         * @return the transition type of the underlying subscription event that triggered this
+         */
     SubscriptionBaseTransitionType getTransitionType();
 
     /**

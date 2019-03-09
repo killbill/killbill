@@ -156,7 +156,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             } else { // It's an existing subscription
                 if (plan.getEffectiveDateForExistingSubscriptions() != null) { // If it is null, any change to this catalog does not apply to existing subscriptions
                     final DateTime existingSubscriptionDate = CatalogDateHelper.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptions());
-                    if (requestedDate.isAfter(existingSubscriptionDate)) { // This plan is now applicable to existing subs
+                    if (requestedDate.compareTo(existingSubscriptionDate) >= 0) { // This plan is now applicable to existing subs
                         return new CatalogPlanEntry(c, plan);
                     }
                 } else if (candidateInSubsequentCatalog == null) {

@@ -265,9 +265,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         }
 
         if (recurringPrice != null) {
-            Assert.assertEquals(recurringPrice.getPrice(Currency.USD), event.getRecurringPrice());
+            Assert.assertEquals(recurringPrice.getPrice(Currency.USD), event.getRecurringPrice(time));
         } else {
-            assertNull(event.getRecurringPrice());
+            assertNull(event.getRecurringPrice(time));
         }
 
         Assert.assertEquals(BCD, event.getBillCycleDayLocal());

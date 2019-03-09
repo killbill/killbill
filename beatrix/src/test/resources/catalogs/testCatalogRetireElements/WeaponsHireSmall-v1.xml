@@ -109,7 +109,6 @@
 
     <plans>
         <plan name="pistol-monthly">
-            <effectiveDateForExistingSubscriptions>2011-03-14T00:00:00+00:00</effectiveDateForExistingSubscriptions>
             <product>Pistol</product>
             <initialPhases>
                 <phase type="TRIAL">

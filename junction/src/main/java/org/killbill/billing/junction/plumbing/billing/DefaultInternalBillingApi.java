@@ -241,7 +241,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 continue;
             }
 
-            final BigDecimal recurringPrice = event.getRecurringPrice();
+            final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
             final boolean hasRecurringPrice = recurringPrice != null; // Note: could be zero (BCD would still be set, by convention)
             final boolean hasUsage = event.getUsages() != null && !event.getUsages().isEmpty();
             if (!hasRecurringPrice &&

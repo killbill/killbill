@@ -231,7 +231,8 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                         if (maxEndDate != null && maxEndDate.compareTo(itemDatum.getEndDate()) < 0) {
                             break;
                         }
-                        final BigDecimal rate = thisEvent.getRecurringPrice();
+
+                        final BigDecimal rate = thisEvent.getRecurringPrice(internalCallContext.toUTCDateTime(itemDatum.getStartDate()));
                         if (rate != null) {
                             final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
                             final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,

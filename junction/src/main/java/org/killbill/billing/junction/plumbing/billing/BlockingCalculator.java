@@ -257,14 +257,15 @@ public class BlockingCalculator {
                                        plan,
                                        planPhase,
                                        fixedPrice,
-                                       recurringPrice,
                                        currency,
                                        billingPeriod,
+                                       previousEvent.getLastChangePlanDate(),
                                        billCycleDay,
                                        description,
                                        totalOrdering,
                                        type,
-                                       true);
+                                       true,
+                                       catalog);
     }
 
     protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
@@ -273,7 +274,6 @@ public class BlockingCalculator {
         final DateTime effectiveDate = odEventTime;
         final PlanPhase planPhase = previousEvent.getPlanPhase();
         final BigDecimal fixedPrice = previousEvent.getFixedPrice();
-        final BigDecimal recurringPrice = previousEvent.getRecurringPrice();
         final Plan plan = previousEvent.getPlan();
         final Currency currency = previousEvent.getCurrency();
         final String description = "";
@@ -287,14 +287,15 @@ public class BlockingCalculator {
                                        plan,
                                        planPhase,
                                        fixedPrice,
-                                       recurringPrice,
                                        currency,
                                        billingPeriod,
+                                       previousEvent.getLastChangePlanDate(),
                                        billCycleDay,
                                        description,
                                        totalOrdering,
                                        type,
-                                       false);
+                                       false,
+                                       catalog);
     }
 
     // In ascending order

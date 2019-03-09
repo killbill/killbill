@@ -54,17 +54,16 @@ public class DefaultBillingEvent implements BillingEvent {
     private final BillingPeriod billingPeriod;
 
     private final BigDecimal fixedPrice;
-    private final BigDecimal recurringPrice;
     private final Currency currency;
     private final String description;
     private final SubscriptionBaseTransitionType type;
     private final Long totalOrdering;
 
-    private final List<Usage> usages;
-
     private final boolean isCancelledOrBlocked;
 
     private final DateTime catalogEffectiveDate;
+    private final Catalog catalog;
+    private final DateTime lastChangePlanDate;
 
     public DefaultBillingEvent(final SubscriptionBillingEvent inputEvent,
                                final SubscriptionBase subscription,
@@ -77,10 +76,12 @@ public class DefaultBillingEvent implements BillingEvent {
 
         this.isCancelledOrBlocked = inputEvent.getType() == SubscriptionBaseTransitionType.CANCEL;
 
+        this.lastChangePlanDate = inputEvent.getLastChangePlanDate();
         this.type = inputEvent.getType();
-        this.plan = catalog.findPlan(inputEvent.getPlanName(), inputEvent.getEffectiveDate(), inputEvent.getLastChangePlanDate());
+        this.plan = catalog.findPlan(inputEvent.getPlanName(), inputEvent.getEffectiveDate(), lastChangePlanDate);
         this.planPhase = this.plan.findPhase(inputEvent.getPlanPhaseName());
 
+        this.catalog = catalog;
         this.catalogEffectiveDate = new DateTime(plan.getCatalog().getEffectiveDate());
 
         this.currency = currency;
@@ -90,10 +91,10 @@ public class DefaultBillingEvent implements BillingEvent {
         this.effectiveDate = inputEvent.getEffectiveDate();
         this.totalOrdering = inputEvent.getTotalOrdering();
 
-        this.billingPeriod = computeRecurringBillingPeriod();
-        this.fixedPrice = computeFixedPrice();
-        this.recurringPrice = computeRecurringPrice();
-        this.usages = computeUsages();
+        // Those 2, billingPeriod and fixedPrice can be computed once and for all as they don't move for all invoicing period
+        // related to this billing event.
+        this.billingPeriod = computeRecurringBillingPeriod(planPhase);
+        this.fixedPrice = computeFixedPrice(isCancelledOrBlocked, planPhase, currency, type);
     }
 
     public DefaultBillingEvent(final UUID subscriptionId,
@@ -102,17 +103,23 @@ public class DefaultBillingEvent implements BillingEvent {
                                final Plan plan,
                                final PlanPhase planPhase,
                                final BigDecimal fixedPrice,
-                               final BigDecimal recurringPrice,
                                final Currency currency,
                                final BillingPeriod billingPeriod,
+                               final DateTime lastChangePlanDate,
                                final int billCycleDayLocal,
                                final String description,
                                final long totalOrdering,
                                final SubscriptionBaseTransitionType type,
-                               final boolean isDisableEvent) throws CatalogApiException {
+                               final boolean isDisableEvent,
+                               final Catalog catalog) throws CatalogApiException {
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
+
+        this.catalog = catalog;
+        this.catalogEffectiveDate = new DateTime(plan.getCatalog().getEffectiveDate());
+
         this.effectiveDate = effectiveDate;
+        this.lastChangePlanDate = lastChangePlanDate;
 
         this.isCancelledOrBlocked = isDisableEvent;
 
@@ -120,50 +127,13 @@ public class DefaultBillingEvent implements BillingEvent {
         this.planPhase = planPhase;
         this.billingPeriod = billingPeriod;
         this.fixedPrice = fixedPrice;
-        this.recurringPrice = recurringPrice;
         this.currency = currency;
         this.billCycleDayLocal = billCycleDayLocal;
         this.description = description;
         this.type = type;
         this.totalOrdering = totalOrdering;
-        this.usages = computeUsages();
-        this.catalogEffectiveDate = new DateTime(plan.getCatalog().getEffectiveDate());
         this.billingAlignment = null;
-    }
 
-
-
-    private BigDecimal computeFixedPrice() throws CatalogApiException {
-        if (isCancelledOrBlocked ||
-            type == SubscriptionBaseTransitionType.BCD_CHANGE /* We don't want to bill twice for the same fixed price */) {
-            return null;
-        }
-        return (planPhase.getFixed() != null && planPhase.getFixed().getPrice() != null) ? planPhase.getFixed().getPrice().getPrice(currency) : null;
-    }
-
-    private BigDecimal computeRecurringPrice() throws CatalogApiException {
-        if (isCancelledOrBlocked) {
-            return null;
-        }
-        return (planPhase.getRecurring() != null && planPhase.getRecurring().getRecurringPrice() != null) ? planPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
-    }
-
-    private BillingPeriod computeRecurringBillingPeriod() {
-        return planPhase.getRecurring() != null ? planPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-    }
-
-    private List<Usage> computeUsages() {
-        List<Usage> result = ImmutableList.<Usage>of();
-        if (isCancelledOrBlocked) {
-            return result;
-        }
-        if (planPhase.getUsages().length > 0) {
-            result = Lists.newArrayList();
-            for (Usage usage : planPhase.getUsages()) {
-                result.add(usage);
-            }
-        }
-        return result;
     }
 
 
@@ -264,8 +234,14 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public BigDecimal getRecurringPrice() {
-        return recurringPrice;
+    public BigDecimal getRecurringPrice(final DateTime requestedDate) throws CatalogApiException {
+        final PlanPhase effectivePlanPhase = catalog.findPhase(planPhase.getName(), requestedDate, lastChangePlanDate);
+        return computeRecurringPrice(isCancelledOrBlocked, effectivePlanPhase, currency);
+    }
+
+    @Override
+    public DateTime getLastChangePlanDate() {
+        return lastChangePlanDate;
     }
 
     @Override
@@ -283,9 +259,10 @@ public class DefaultBillingEvent implements BillingEvent {
         return totalOrdering;
     }
 
+    // TODO add final DateTime requestedDate -- see #1060
     @Override
     public List<Usage> getUsages() {
-        return usages;
+        return computeUsages(isCancelledOrBlocked, planPhase);
     }
 
     @Override
@@ -370,6 +347,41 @@ public class DefaultBillingEvent implements BillingEvent {
         result = 31 * result + (totalOrdering != null ? totalOrdering.hashCode() : 0);
         return result;
     }
+
+
+    private static BigDecimal computeFixedPrice(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase, final Currency currency, final SubscriptionBaseTransitionType type) throws CatalogApiException {
+        if (isCancelledOrBlocked ||
+            type == SubscriptionBaseTransitionType.BCD_CHANGE /* We don't want to bill twice for the same fixed price */) {
+            return null;
+        }
+        return (effectivePlanPhase.getFixed() != null && effectivePlanPhase.getFixed().getPrice() != null) ? effectivePlanPhase.getFixed().getPrice().getPrice(currency) : null;
+    }
+
+    private static BigDecimal computeRecurringPrice(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase, final Currency currency) throws CatalogApiException {
+        if (isCancelledOrBlocked) {
+            return null;
+        }
+        return (effectivePlanPhase.getRecurring() != null && effectivePlanPhase.getRecurring().getRecurringPrice() != null) ? effectivePlanPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
+    }
+
+    private static BillingPeriod computeRecurringBillingPeriod(final PlanPhase effectivePlanPhase) {
+        return effectivePlanPhase.getRecurring() != null ? effectivePlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+    }
+
+    private static List<Usage> computeUsages(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase) {
+        if (isCancelledOrBlocked) {
+            return ImmutableList.<Usage>of();
+        }
+
+        final List<Usage> result = (effectivePlanPhase.getUsages().length > 0) ?
+                             Lists.newArrayList() : ImmutableList.<Usage>of();
+        for (Usage usage : effectivePlanPhase.getUsages()) {
+            result.add(usage);
+        }
+        return result;
+    }
+
+
 
     @Override
     public DateTime getCatalogEffectiveDate() {
