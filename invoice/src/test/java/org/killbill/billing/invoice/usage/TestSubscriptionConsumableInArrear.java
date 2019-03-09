@@ -43,7 +43,7 @@ import static org.testng.Assert.assertTrue;
 public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
     @Test(groups = "fast")
-    public void testComputeInArrearUsageInterval() {
+    public void testComputeInArrearUsageInterval() throws Exception {
 
         final List<BillingEvent> billingEvents = Lists.newArrayList();
 

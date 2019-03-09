@@ -132,7 +132,7 @@ public class SubscriptionUsageInArrear {
     }
 
     @VisibleForTesting
-    List<ContiguousIntervalUsageInArrear> computeInArrearUsageInterval() {
+    List<ContiguousIntervalUsageInArrear> computeInArrearUsageInterval() throws CatalogApiException {
         final List<ContiguousIntervalUsageInArrear> usageIntervals = Lists.newLinkedList();
 
         final Map<UsageKey, ContiguousIntervalUsageInArrear> inFlightInArrearUsageIntervals = new HashMap<UsageKey, ContiguousIntervalUsageInArrear>();
@@ -187,7 +187,7 @@ public class SubscriptionUsageInArrear {
         return usageIntervals;
     }
 
-    private List<Usage> findUsageInArrearUsages(final BillingEvent event) {
+    private List<Usage> findUsageInArrearUsages(final BillingEvent event) throws CatalogApiException {
         if (event.getUsages().isEmpty()) {
             return Collections.emptyList();
         }

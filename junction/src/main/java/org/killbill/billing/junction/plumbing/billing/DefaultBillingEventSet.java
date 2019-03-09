@@ -28,6 +28,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
@@ -78,7 +79,11 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
         final Iterable<Usage> allUsages = Iterables.concat(Iterables.transform(this, new Function<BillingEvent, List<Usage>>() {
             @Override
             public List<Usage> apply(final BillingEvent input) {
-                return input.getUsages();
+                try {
+                    return input.getUsages();
+                } catch (final CatalogApiException e) {
+                    throw new IllegalStateException(String.format("Failed to retrieve usage section for billing event %s", input), e);
+                }
             }
         }));
         if (!allUsages.iterator().hasNext()) {
