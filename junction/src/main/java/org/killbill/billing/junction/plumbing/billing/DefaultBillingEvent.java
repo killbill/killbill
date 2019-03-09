@@ -216,8 +216,8 @@ public class DefaultBillingEvent implements BillingEvent {
     }
 
     @Override
-    public List<Usage> getUsages(DateTime requestedDate) throws CatalogApiException {
-        final PlanPhase effectivePlanPhase = catalog.findPhase(planPhase.getName(), requestedDate, lastChangePlanDate);
+    public List<Usage> getUsages(/*DateTime requestedDate*/) throws CatalogApiException {
+        final PlanPhase effectivePlanPhase = catalog.findPhase(planPhase.getName(), effectiveDate, lastChangePlanDate);
         return computeUsages(isCancelledOrBlocked, effectivePlanPhase);
     }
 

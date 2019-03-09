@@ -109,7 +109,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the list of {@code Usage} section
      */
-    List<Usage> getUsages();
+    List<Usage> getUsages(/*DateTime requestedDate*/) throws CatalogApiException;
 
     /**
      *
