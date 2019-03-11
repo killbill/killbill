@@ -109,6 +109,26 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions extends TestIn
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 6, 1), new LocalDate(2018, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
 
 
+        // Catalog v3 with price increase is on 2018-07-01 but because we have an effectiveDateForExistingSubscriptions set to 2018-08-01
+        // we don't see any change until 8-1
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        // 2018-7-1
+        clock.addMonths(1);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 7, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2018, 7, 1), new LocalDate(2018, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+
+
+        // Check we see the new price for catalog version v3
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        // 2018-8-1
+        clock.addMonths(1);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 8, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2018, 8, 1), new LocalDate(2018, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("69.95")));
+
+
+
     }
 
     @Test(groups = "slow")
