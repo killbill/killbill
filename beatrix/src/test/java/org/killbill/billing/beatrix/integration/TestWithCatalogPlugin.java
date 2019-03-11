@@ -222,6 +222,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
             return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
         }
 
+        // This actually pulls catalog resources from `catalog` module and not the one from beatrix/src/test/resources//catalogs
         public void addCatalogVersion(final String catalogResource) throws Exception {
 
             final StandaloneCatalog inputCatalogVersion = XMLLoader.getObjectFromString(Resources.getResource(catalogResource).toExternalForm(), StandaloneCatalog.class);

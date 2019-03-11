@@ -38,7 +38,7 @@ import com.google.common.collect.ImmutableList;
 public class TestContiguousIntervalUsageInArrear extends TestUsageInArrearBase {
 
     @Test(groups = "fast")
-    public void testVerifyTransitionTimes() {
+    public void testVerifyTransitionTimes() throws Exception {
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(block);
         final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);

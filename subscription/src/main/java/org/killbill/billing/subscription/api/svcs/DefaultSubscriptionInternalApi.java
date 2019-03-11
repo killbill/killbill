@@ -54,6 +54,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
+import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
@@ -352,9 +353,8 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public List<EffectiveSubscriptionInternalEvent> getBillingTransitions(final SubscriptionBase subscription, final InternalTenantContext context) {
-        final List<SubscriptionBaseTransition> transitions = ((DefaultSubscriptionBase) subscription).getBillingTransitions();
-        return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final SubscriptionBase subscription, final InternalTenantContext context) {
+        return((DefaultSubscriptionBase) subscription).getBillingTransitions();
     }
 
     @Override

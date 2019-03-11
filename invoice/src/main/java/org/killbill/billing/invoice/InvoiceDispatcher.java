@@ -427,7 +427,7 @@ public class InvoiceDispatcher {
         final DateTime now = clock.getUTCNow();
         final Map<UUID, DateTime> result = new HashMap<UUID, DateTime>();
         for (final BillingEvent evt : billingEvents) {
-            final UUID subscriptionId = evt.getSubscription().getId();
+            final UUID subscriptionId = evt.getSubscriptionId();
             final DateTime evtEffectiveDate = evt.getEffectiveDate();
             if (evtEffectiveDate.compareTo(now) <= 0) {
                 continue;
@@ -515,12 +515,12 @@ public class InvoiceDispatcher {
         return Iterables.transform(Iterables.filter(billingEvents, new Predicate<BillingEvent>() {
             @Override
             public boolean apply(final BillingEvent input) {
-                return input.getSubscription().getBundleId().equals(dryRunArguments.getBundleId());
+                return input.getBundleId().equals(dryRunArguments.getBundleId());
             }
         }), new Function<BillingEvent, UUID>() {
             @Override
             public UUID apply(final BillingEvent input) {
-                return input.getSubscription().getId();
+                return input.getSubscriptionId();
             }
         });
     }
@@ -678,7 +678,7 @@ public class InvoiceDispatcher {
                                                                                                             new Function<BillingEvent, UUID>() {
                                                                                                                 @Override
                                                                                                                 public UUID apply(final BillingEvent billingEvent) {
-                                                                                                                    return billingEvent.getSubscription().getId();
+                                                                                                                    return billingEvent.getSubscriptionId();
                                                                                                                 }
                                                                                                             }));
         populateNextFutureNotificationDate(rescheduleDate, subscriptionIds, notificationsBuilder, context);

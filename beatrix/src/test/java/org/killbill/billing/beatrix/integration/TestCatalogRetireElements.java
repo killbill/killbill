@@ -17,6 +17,7 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
@@ -37,6 +39,7 @@ import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
@@ -78,7 +81,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertListenerStatus();
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
 
-        // Move out a month. Date > caralog V2
+        // Move out a month. Date > catalog V2
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
@@ -91,10 +94,19 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertListenerStatus();
 
 
-        // Change back to original plan -- because we use the latest catalog version the change plan succeeds
+        // Change back to original plan: The code (subscription) chooses the latest version of the catalog when making the change and therefore the call succeeds
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
         bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec1), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+
+        //
+        // The code normally goes through the grandfathering logic to find the version but specifies the transitionTime of the latest CHANGE (and not the subscriptionStartDate)
+        // and therefore correctly find the latest catalog version, invoicing at the new price 295.95
+        //
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.RECURRING, new BigDecimal("295.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-500.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("204.05")));
 
     }
 

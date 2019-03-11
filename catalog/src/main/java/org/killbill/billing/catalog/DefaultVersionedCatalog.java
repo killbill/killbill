@@ -124,7 +124,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
     private CatalogPlanEntry findCatalogPlanEntry(final PlanRequestWrapper wrapper,
                                                   final DateTime requestedDate,
-                                                  final DateTime subscriptionStartDate) throws CatalogApiException {
+                                                  final DateTime subscriptionChangePlanDate) throws CatalogApiException {
         final List<StandaloneCatalog> catalogs = versionsBeforeDate(requestedDate.toDate());
         if (catalogs.isEmpty()) {
             throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
@@ -149,14 +149,14 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
             final boolean oldestCatalog = (i == 0);
             final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(c.getEffectiveDate());
-            final boolean catalogOlderThanSubscriptionStartDate = !subscriptionStartDate.isBefore(catalogEffectiveDate);
+            final boolean catalogOlderThanSubscriptionChangePlanDate = !subscriptionChangePlanDate.isBefore(catalogEffectiveDate);
             if (oldestCatalog || // Prevent issue with time granularity -- see #760
-                catalogOlderThanSubscriptionStartDate) { // It's a new subscription, this plan always applies
+                catalogOlderThanSubscriptionChangePlanDate) { // It's a new subscription, this plan always applies
                 return new CatalogPlanEntry(c, plan);
             } else { // It's an existing subscription
                 if (plan.getEffectiveDateForExistingSubscriptions() != null) { // If it is null, any change to this catalog does not apply to existing subscriptions
                     final DateTime existingSubscriptionDate = CatalogDateHelper.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptions());
-                    if (requestedDate.isAfter(existingSubscriptionDate)) { // This plan is now applicable to existing subs
+                    if (requestedDate.compareTo(existingSubscriptionDate) >= 0) { // This plan is now applicable to existing subs
                         return new CatalogPlanEntry(c, plan);
                     }
                 } else if (candidateInSubsequentCatalog == null) {
@@ -248,9 +248,9 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     @Override
     public Plan findPlan(final String name,
                          final DateTime requestedDate,
-                         final DateTime subscriptionStartDate)
+                         final DateTime subscriptionChangePlanDate)
             throws CatalogApiException {
-        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(name), requestedDate, subscriptionStartDate);
+        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(name), requestedDate, subscriptionChangePlanDate);
         return entry.getPlan();
     }
 
@@ -258,9 +258,9 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     public Plan createOrFindPlan(final PlanSpecifier spec,
                                  final PlanPhasePriceOverridesWithCallContext overrides,
                                  final DateTime requestedDate,
-                                 final DateTime subscriptionStartDate)
+                                 final DateTime subscriptionChangePlanDate)
             throws CatalogApiException {
-        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(spec, overrides), requestedDate, subscriptionStartDate);
+        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(spec, overrides), requestedDate, subscriptionChangePlanDate);
         return entry.getPlan();
     }
 
@@ -272,43 +272,43 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     @Override
     public PlanPhase findPhase(final String phaseName,
                                final DateTime requestedDate,
-                               final DateTime subscriptionStartDate)
+                               final DateTime subscriptionChangePlanDate)
             throws CatalogApiException {
         final String planName = DefaultPlanPhase.planName(phaseName);
-        final Plan plan = findPlan(planName, requestedDate, subscriptionStartDate);
+        final Plan plan = findPlan(planName, requestedDate, subscriptionChangePlanDate);
         return plan.findPhase(phaseName);
     }
 
     @Override
     public PriceList findPriceListForPlan(final String planName,
                                           final DateTime requestedDate,
-                                          final DateTime subscriptionStartDate)
+                                          final DateTime subscriptionChangePlanDate)
             throws CatalogApiException {
-        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(planName), requestedDate, subscriptionStartDate);
+        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(planName), requestedDate, subscriptionChangePlanDate);
         return entry.getStaticCatalog().findCurrentPricelist(entry.getPlan().getPriceListName());
     }
 
     @Override
     public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase,
                                                 final DateTime requestedDate,
-                                                final DateTime subscriptionStartDate) throws CatalogApiException {
-        final StaticCatalog staticCatalog = getStaticCatalog(planPhase, requestedDate, subscriptionStartDate);
+                                                final DateTime subscriptionChangePlanDate) throws CatalogApiException {
+        final StaticCatalog staticCatalog = getStaticCatalog(planPhase, requestedDate, subscriptionChangePlanDate);
         return staticCatalog.planCancelPolicy(planPhase);
     }
 
     @Override
     public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier,
                                                    final DateTime requestedDate,
-                                                   final DateTime subscriptionStartDate) throws CatalogApiException {
-        final StaticCatalog staticCatalog = getStaticCatalog(specifier, requestedDate, subscriptionStartDate);
+                                                   final DateTime subscriptionChangePlanDate) throws CatalogApiException {
+        final StaticCatalog staticCatalog = getStaticCatalog(specifier, requestedDate, subscriptionChangePlanDate);
         return staticCatalog.planCreateAlignment(specifier);
     }
 
     @Override
     public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase,
                                              final DateTime requestedDate,
-                                             final DateTime subscriptionStartDate) throws CatalogApiException {
-        final StaticCatalog staticCatalog = getStaticCatalog(planPhase, requestedDate, subscriptionStartDate);
+                                             final DateTime subscriptionChangePlanDate) throws CatalogApiException {
+        final StaticCatalog staticCatalog = getStaticCatalog(planPhase, requestedDate, subscriptionChangePlanDate);
         return staticCatalog.billingAlignment(planPhase);
     }
 
@@ -323,8 +323,8 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     }
 
     // Note that the PlanSpecifier billing period must refer here to the recurring phase one when a plan name isn't specified
-    private StaticCatalog getStaticCatalog(final PlanSpecifier spec, final DateTime requestedDate, final DateTime subscriptionStartDate) throws CatalogApiException {
-        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(spec), requestedDate, subscriptionStartDate);
+    private StaticCatalog getStaticCatalog(final PlanSpecifier spec, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) throws CatalogApiException {
+        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(spec), requestedDate, subscriptionChangePlanDate);
         return entry.getStaticCatalog();
     }
 

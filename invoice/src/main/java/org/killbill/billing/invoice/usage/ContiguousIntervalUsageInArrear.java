@@ -470,11 +470,11 @@ public abstract class ContiguousIntervalUsageInArrear {
     }
 
     public UUID getBundleId() {
-        return billingEvents.get(0).getSubscription().getBundleId();
+        return billingEvents.get(0).getBundleId();
     }
 
     public UUID getSubscriptionId() {
-        return billingEvents.get(0).getSubscription().getId();
+        return billingEvents.get(0).getSubscriptionId();
     }
 
     // STEPH_USAGE planName/phaseName,BCD,... might not be correct if we changed plan but Usage section was exactly similar
