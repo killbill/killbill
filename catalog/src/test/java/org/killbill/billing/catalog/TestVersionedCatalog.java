@@ -77,14 +77,14 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     public void testFindPlanAcrossVersions() throws Exception {
 
         // Existing subscription
-        final DateTime subscriptionStartDate = new DateTime("2011-02-02T00:01:00+00:00"); // dt2 (v2) < subscriptionStartDate < dt2a (v2a)
+        final DateTime subscriptionChangePlanDate = new DateTime("2011-02-02T00:01:00+00:00"); // dt2 (v2) < subscriptionChangePlanDate < dt2a (v2a)
 
 
-        Plan plan = vc.findPlan("shotgun-quarterly", dt2, subscriptionStartDate);
+        Plan plan = vc.findPlan("shotgun-quarterly", dt2, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
 
         // We still see old price because the requested date is >= dt2a and there is no effectiveDateForExistingSubscriptions
-        plan = vc.findPlan("shotgun-quarterly", dt2a, subscriptionStartDate);
+        plan = vc.findPlan("shotgun-quarterly", dt2a, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
     }
 
@@ -97,7 +97,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testFindPlanAcrossVersionsUsingEffectiveDateForExistingSubscriptions() throws Exception {
 
-        // Easy cases where subscriptionStartDate = requestedDate -> fetch date from the only valid version
+        // Easy cases where subscriptionChangePlanDate = requestedDate -> fetch date from the only valid version
         Plan plan = vc.findPlan("pistol-monthly", dt1, dt1);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 
@@ -111,17 +111,17 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("49.95"));
 
         // Case with an existing subscription (prior first price change)
-        final DateTime subscriptionStartDate = new DateTime("2011-01-01T00:01:00+00:00"); // dt1 (v1) < subscriptionStartDate < dt2 (v2)
+        final DateTime subscriptionChangePlanDate = new DateTime("2011-01-01T00:01:00+00:00"); // dt1 (v1) < subscriptionChangePlanDate < dt2 (v2)
 
         // Returns old price because of effectiveDateForExistingSubscriptions > requestedDate = dt2
-        plan = vc.findPlan("pistol-monthly", dt2, subscriptionStartDate);
+        plan = vc.findPlan("pistol-monthly", dt2, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 
         // Returns nw  price because of effectiveDateForExistingSubscriptions = requestedDate = dt2
-        plan = vc.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, subscriptionStartDate);
+        plan = vc.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
-        plan = vc.findPlan("pistol-monthly", dt3, subscriptionStartDate);
+        plan = vc.findPlan("pistol-monthly", dt3, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
     }
 
@@ -133,7 +133,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
         final PlanSpecifier pistolMonthly = new PlanSpecifier("Pistol", BillingPeriod.MONTHLY, "DEFAULT");
 
-        // Easy cases where subscriptionStartDate = requestedDate -> fetch date from the only valid version
+        // Easy cases where subscriptionChangePlanDate = requestedDate -> fetch date from the only valid version
         Plan plan = vc.createOrFindPlan(pistolMonthly, null, dt1, dt1);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 

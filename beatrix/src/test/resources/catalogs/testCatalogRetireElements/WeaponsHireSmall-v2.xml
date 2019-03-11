@@ -195,15 +195,15 @@
                     <recurringPrice>
                         <price>
                             <currency>USD</currency>
-                            <value>249.95</value>
+                            <value>295.95</value>
                         </price>
                         <price>
                             <currency>EUR</currency>
-                            <value>149.95</value>
+                            <value>249.95</value>
                         </price>
                         <price>
                             <currency>GBP</currency>
-                            <value>169.95</value>
+                            <value>269.95</value>
                         </price>
                     </recurringPrice>
                 </recurring>

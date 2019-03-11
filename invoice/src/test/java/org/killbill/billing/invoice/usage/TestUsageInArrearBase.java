@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -177,16 +178,18 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return block;
     }
 
-    protected BillingEvent createMockBillingEvent(final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) {
+    protected BillingEvent createMockBillingEvent(final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) throws Exception {
         return createMockBillingEvent(BCD, effectiveDate, billingPeriod, usages);
     }
 
-    protected BillingEvent createMockBillingEvent(final int bcd, final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) {
+    protected BillingEvent createMockBillingEvent(final int bcd, final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) throws Exception {
         final BillingEvent result = Mockito.mock(BillingEvent.class);
         Mockito.when(result.getCurrency()).thenReturn(Currency.BTC);
         Mockito.when(result.getBillCycleDayLocal()).thenReturn(bcd);
         Mockito.when(result.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(result.getBillingPeriod()).thenReturn(billingPeriod);
+        Mockito.when(result.getSubscriptionId()).thenReturn(subscriptionId);
+        Mockito.when(result.getBundleId()).thenReturn(bundleId);
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);
@@ -194,7 +197,6 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(subscriptionId);
         Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
-        Mockito.when(result.getSubscription()).thenReturn(subscription);
 
         final Product product = Mockito.mock(Product.class);
         Mockito.when(product.getName()).thenReturn(productName);

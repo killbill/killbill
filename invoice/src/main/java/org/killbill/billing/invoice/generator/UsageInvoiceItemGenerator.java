@@ -122,7 +122,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                     continue;
                 }
 
-                final UUID subscriptionId = event.getSubscription().getId();
+                final UUID subscriptionId = event.getSubscriptionId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
                     final SubscriptionUsageInArrear subscriptionUsageInArrear = new SubscriptionUsageInArrear(account.getId(), invoiceId, curEvents, rawUsgRes.getRawUsage(), rawUsgRes.getExistingTrackingIds(), targetDate, rawUsgRes.getRawUsageStartDate(), usageDetailMode, internalCallContext);
                     final List<InvoiceItem> usageInArrearItems = perSubscriptionInArrearUsageItems.get(curSubscriptionId);

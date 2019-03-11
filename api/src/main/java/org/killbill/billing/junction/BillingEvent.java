@@ -20,6 +20,7 @@ package org.killbill.billing.junction;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingAlignment;
@@ -34,6 +35,11 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
+    UUID getSubscriptionId();
+
+
+    UUID getBundleId();
+
     /**
      * @return the billCycleDay in the account timezone as seen for that subscription at that time
      * <p/>
@@ -46,10 +52,6 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      */
     BillingAlignment getBillingAlignment();
 
-    /**
-     * @return the subscription
-     */
-    SubscriptionBase getSubscription();
 
     /**
      * @return the date for when that event became effective
@@ -84,16 +86,19 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the recurring price for the phase
      */
-    BigDecimal getRecurringPrice(DateTime effectiveDate) throws CatalogApiException;
+    BigDecimal getRecurringPrice(DateTime requestedDate) throws CatalogApiException;
 
     /**
      * @return the currency for the account being invoiced
      */
     Currency getCurrency();
 
-    /**
-     * @return the transition type of the underlying subscription event that triggered this
-     */
+
+    public DateTime getLastChangePlanDate();
+
+        /**
+         * @return the transition type of the underlying subscription event that triggered this
+         */
     SubscriptionBaseTransitionType getTransitionType();
 
     /**
@@ -104,7 +109,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the list of {@code Usage} section
      */
-    List<Usage> getUsages();
+    List<Usage> getUsages(/*DateTime requestedDate*/) throws CatalogApiException;
 
     /**
      *
