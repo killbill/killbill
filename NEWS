@@ -1,3 +1,6 @@
+0.20.9
+    https://github.com/killbill/killbill/releases/tag/killbill-0.20.9
+
 0.20.8
     Fix issue when spceifying a BCD upon subscription creation
 
