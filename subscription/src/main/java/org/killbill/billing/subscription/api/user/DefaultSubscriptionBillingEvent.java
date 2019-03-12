@@ -84,6 +84,10 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
 
     @Override
     public int compareTo(final SubscriptionBillingEvent o) {
-        return 0;
+        if (!getEffectiveDate().equals(o.getEffectiveDate())) {
+            return getEffectiveDate().compareTo(o.getEffectiveDate());
+        } else {
+            return getTotalOrdering().compareTo(o.getTotalOrdering());
+        }
     }
 }
