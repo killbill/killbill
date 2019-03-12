@@ -405,18 +405,13 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public BigDecimal getRecurringPrice(DateTime requestedDate) {
+            public BigDecimal getRecurringPrice() {
                 return recurringPrice;
             }
 
             @Override
             public Currency getCurrency() {
                 return currency;
-            }
-
-            @Override
-            public DateTime getLastChangePlanDate() {
-                return effectiveDate;
             }
 
             @Override

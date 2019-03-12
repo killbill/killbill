@@ -353,8 +353,9 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final SubscriptionBase subscription, final InternalTenantContext context) {
-        return((DefaultSubscriptionBase) subscription).getBillingTransitions();
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final SubscriptionBase subscription, final InternalTenantContext context) throws CatalogApiException {
+        final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
+        return((DefaultSubscriptionBase) subscription).getBillingTransitions(catalog);
     }
 
     @Override

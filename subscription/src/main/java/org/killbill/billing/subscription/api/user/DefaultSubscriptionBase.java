@@ -24,13 +24,16 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -524,7 +527,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    public List<SubscriptionBillingEvent> getBillingTransitions() {
+    public List<SubscriptionBillingEvent> getBillingTransitions(final Catalog catalog) throws CatalogApiException {
 
         if (transitions == null) {
             return Collections.emptyList();
@@ -533,32 +536,66 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST,
                 Visibility.ALL, TimeLimit.ALL);
+
+
+        final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<SubscriptionBillingEvent>();
+
         // Remove anything prior to first CREATE
         boolean foundInitialEvent = false;
-
-        DateTime lastPlanChangeTime = null;
         while (it.hasNext()) {
             final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
             if (!foundInitialEvent) {
                 foundInitialEvent = cur.getEventType() == EventType.API_USER &&
                                     (cur.getApiEventType() == ApiEventType.CREATE ||
                                      cur.getApiEventType() == ApiEventType.TRANSFER);
-                lastPlanChangeTime = cur.getEffectiveTransitionTime();
             }
 
             if (foundInitialEvent) {
 
-                if (cur.getEventType() == EventType.API_USER &&
-                                    cur.getApiEventType() == ApiEventType.CHANGE) {
-                    lastPlanChangeTime = cur.getEffectiveTransitionTime();
+                boolean isChangeEvent = cur.getEventType() == EventType.API_USER &&
+                                        cur.getApiEventType() == ApiEventType.CHANGE;
+
+                SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+                while (prevCandidateForCatalogChangeEvents != null &&
+                       prevCandidateForCatalogChangeEvents.getEffectiveDate().compareTo(cur.getEffectiveTransitionTime()) < 0) {
+                    result.add(prevCandidateForCatalogChangeEvents);
+                    prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
                 }
 
+                if (isChangeEvent) {
+                    candidatesCatalogChangeEvents.clear();
+                }
+
+
                 final boolean isActive = cur.getTransitionType() != SubscriptionBaseTransitionType.CANCEL;
-                final String planName = isActive ? cur.getNextPlan().getName() : cur.getPreviousPlan().getName();
-                final String planPhaseName = isActive ?  cur.getNextPhase().getName() : cur.getPreviousPhase().getName();
-                final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), planName, planPhaseName, cur.getEffectiveTransitionTime(), cur.getTotalOrdering(), lastPlanChangeTime, cur.getNextBillingCycleDayLocal());
+                final Plan plan = isActive ? cur.getNextPlan() : cur.getPreviousPlan();
+                final PlanPhase planPhase = isActive ?  cur.getNextPhase() : cur.getPreviousPhase();
+                final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), plan, planPhase, cur.getEffectiveTransitionTime(), cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal());
                 result.add(billingTransition);
+
+                if (billingTransition.getType() == SubscriptionBaseTransitionType.CREATE ||
+                    billingTransition.getType() == SubscriptionBaseTransitionType.TRANSFER ||
+                    billingTransition.getType() == SubscriptionBaseTransitionType.CHANGE) {
+
+                    final Plan currentPlan = catalog.findPlan(billingTransition.getPlan().getName(), billingTransition.getEffectiveDate());
+
+                    Plan nextPlan = ((DefaultVersionedCatalog) catalog).getNextPlanVersion(currentPlan);
+
+                    while (nextPlan != null && nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
+                        final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
+                        final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
+                        final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate, cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal());
+                        candidatesCatalogChangeEvents.add(newBillingTransition);
+                        nextPlan = ((DefaultVersionedCatalog) catalog).getNextPlanVersion(nextPlan);
+                    }
+                }
             }
+        }
+
+        SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+        while (prevCandidateForCatalogChangeEvents != null) {
+            result.add(prevCandidateForCatalogChangeEvents);
+            prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
         }
         return result;
     }

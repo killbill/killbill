@@ -18,25 +18,25 @@
 package org.killbill.billing.subscription.api.user;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent {
 
     private final SubscriptionBaseTransitionType type;
-    private final String planName;
-    private final String planPhaseName;
+    private final Plan plan;
+    private final PlanPhase planPhase;
     private final DateTime effectiveDate;
     private final Long totalOrdering;
-    private final DateTime lastChangePlanDate;
     private final Integer bcdLocal;
 
-    public DefaultSubscriptionBillingEvent(final SubscriptionBaseTransitionType type, final String planName, final String planPhaseName, final DateTime effectiveDate, final Long totalOrdering, final DateTime lastChangePlanDate, final Integer bcdLocal) {
+    public DefaultSubscriptionBillingEvent(final SubscriptionBaseTransitionType type, final Plan plan, final PlanPhase planPhase, final DateTime effectiveDate, final Long totalOrdering, final Integer bcdLocal) {
         this.type = type;
-        this.planName = planName;
-        this.planPhaseName = planPhaseName;
+        this.plan = plan;
+        this.planPhase = planPhase;
         this.effectiveDate = effectiveDate;
         this.totalOrdering = totalOrdering;
-        this.lastChangePlanDate = lastChangePlanDate;
         this.bcdLocal = bcdLocal;
     }
 
@@ -46,13 +46,13 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     }
 
     @Override
-    public String getPlanName() {
-        return planName;
+    public Plan getPlan() {
+        return plan;
     }
 
     @Override
-    public String getPlanPhaseName() {
-        return planPhaseName;
+    public PlanPhase getPlanPhase() {
+        return planPhase;
     }
 
     @Override
@@ -66,11 +66,6 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     }
 
     @Override
-    public DateTime getLastChangePlanDate() {
-        return lastChangePlanDate;
-    }
-
-    @Override
     public Integer getBcdLocal() {
         return bcdLocal;
     }
@@ -79,12 +74,16 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     public String toString() {
         return "DefaultSubscriptionBillingEvent{" +
                "type=" + type +
-               ", planName='" + planName + '\'' +
-               ", planPhaseName='" + planPhaseName + '\'' +
+               ", plan='" + plan + '\'' +
+               ", planPhase='" + planPhase + '\'' +
                ", effectiveDate=" + effectiveDate +
                ", totalOrdering=" + totalOrdering +
-               ", lastChangePlanDate=" + lastChangePlanDate +
                ", bcdLocal=" + bcdLocal +
                '}';
+    }
+
+    @Override
+    public int compareTo(final SubscriptionBillingEvent o) {
+        return 0;
     }
 }

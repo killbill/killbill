@@ -63,6 +63,8 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
+import static org.killbill.billing.ErrorCode.CAT_NO_SUCH_PLAN;
+
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements VersionedCatalog<StandaloneCatalog>, Externalizable {
@@ -138,7 +140,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             try {
                 plan = wrapper.findPlan(c);
             } catch (final CatalogApiException e) {
-                if (e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode() &&
+                if (e.getCode() != CAT_NO_SUCH_PLAN.getCode() &&
                     e.getCode() != ErrorCode.CAT_PLAN_NOT_FOUND.getCode()) {
                     throw e;
                 } else {
@@ -357,6 +359,35 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             errors.addAll(c.validate(c, errors));
         }
         return errors;
+    }
+
+
+    public Plan getNextPlanVersion(final Plan curPlan) throws CatalogApiException {
+
+        boolean foundCurVersion = false;
+        StandaloneCatalog nextCatalogVersion = null;
+        for (int i = 0 ; i < versions.size(); i++) {
+            final StandaloneCatalog curCatalogversion = versions.get(i);
+            if (foundCurVersion) {
+                nextCatalogVersion = curCatalogversion;
+                break;
+            }
+            if (curCatalogversion.getEffectiveDate().compareTo(curPlan.getCatalog().getEffectiveDate()) == 0) {
+                foundCurVersion = true;
+            }
+        }
+        if (nextCatalogVersion == null) {
+            return null;
+        }
+
+        try {
+            return nextCatalogVersion.findCurrentPlan(curPlan.getName());
+        } catch (final CatalogApiException e) {
+            if (CAT_NO_SUCH_PLAN.getCode() == e.getCode()) {
+                return null;
+            }
+            throw e;
+        }
     }
 
     //
