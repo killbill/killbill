@@ -361,12 +361,12 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         return errors;
     }
 
-
-    public Plan getNextPlanVersion(final Plan curPlan) throws CatalogApiException {
+    @Override
+    public Plan getNextPlanVersion(final Plan curPlan) {
 
         boolean foundCurVersion = false;
         StandaloneCatalog nextCatalogVersion = null;
-        for (int i = 0 ; i < versions.size(); i++) {
+        for (int i = 0; i < versions.size(); i++) {
             final StandaloneCatalog curCatalogversion = versions.get(i);
             if (foundCurVersion) {
                 nextCatalogVersion = curCatalogversion;
@@ -379,23 +379,20 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         if (nextCatalogVersion == null) {
             return null;
         }
-
-        try {
-            return nextCatalogVersion.findCurrentPlan(curPlan.getName());
-        } catch (final CatalogApiException e) {
-            if (CAT_NO_SUCH_PLAN.getCode() == e.getCode()) {
-                return null;
-            }
-            throw e;
-        }
+        return nextCatalogVersion.getPlans().findByName(curPlan.getName());
     }
 
     //
     // Static catalog API
     //
     @Override
-    public Date getEffectiveDate() throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getEffectiveDate();
+    public Date getEffectiveDate() {
+        final DateTime utcNow = clock.getUTCNow();
+        try {
+            return versionForDate(utcNow).getEffectiveDate();
+        } catch (final CatalogApiException e) {
+            throw new IllegalStateException(String.format("Catalog misconfiguration: there is no active catalog version for now=%s", utcNow), e);
+        }
     }
 
     @Override

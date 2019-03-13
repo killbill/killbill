@@ -20,7 +20,6 @@ package org.killbill.billing.subscription.api.user;
 import java.util.Date;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -92,13 +91,9 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
         } else if (getTotalOrdering().compareTo(o.getTotalOrdering()) != 0) {
             return getTotalOrdering().compareTo(o.getTotalOrdering());
         } else {
-            try {
-                final Date effectiveDate = getPlan().getCatalog().getEffectiveDate();
-                final Date oEeffectiveDate = o.getPlan().getCatalog().getEffectiveDate();
-                return effectiveDate.compareTo(oEeffectiveDate);
-            } catch (CatalogApiException e) {
-                throw new IllegalStateException(e);
-            }
+            final Date effectiveDate = getPlan().getCatalog().getEffectiveDate();
+            final Date oEeffectiveDate = o.getPlan().getCatalog().getEffectiveDate();
+            return effectiveDate.compareTo(oEeffectiveDate);
         }
     }
 }

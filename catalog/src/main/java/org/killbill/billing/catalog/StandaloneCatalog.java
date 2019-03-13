@@ -123,6 +123,10 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
+    public CatalogEntityCollection<Plan> getPlans() {
+        return plans;
+    }
+
     @Override
     public Collection<Product> getCurrentProducts() {
         return products.getEntries();

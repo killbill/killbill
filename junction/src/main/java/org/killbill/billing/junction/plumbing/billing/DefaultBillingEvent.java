@@ -111,7 +111,7 @@ public class DefaultBillingEvent implements BillingEvent {
                                final String description,
                                final long totalOrdering,
                                final SubscriptionBaseTransitionType type,
-                               final boolean isDisableEvent) throws CatalogApiException {
+                               final boolean isDisableEvent) {
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
 
@@ -250,7 +250,6 @@ public class DefaultBillingEvent implements BillingEvent {
 
     @Override
     public DateTime getCatalogEffectiveDate() {
-        // TODO Can that go ?
         return catalogEffectiveDate;
     }
 
