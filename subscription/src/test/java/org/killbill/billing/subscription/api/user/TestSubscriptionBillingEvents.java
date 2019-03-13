@@ -26,9 +26,20 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
+import org.killbill.billing.catalog.MockCatalog;
+import org.killbill.billing.catalog.MockCatalogService;
+import org.killbill.billing.catalog.MockPlan;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
+import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.DefaultCatalogInternalApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
+import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
+import org.killbill.billing.subscription.api.transfer.DefaultSubscriptionBaseTransferApi;
+import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventBuilder;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
@@ -37,7 +48,9 @@ import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
+import org.mockito.Mockito;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.killbill.billing.subscription.events.user.ApiEventType.CREATE;
@@ -46,7 +59,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
 
     //  Catalog config for all scenarii:
     //
-    //  4 catalogs versions, we use pistol-monthly, with following effectiveDateForExistingSubscriptions (effSubDt):
+    //  4 catalogs versions, we use gold-monthly, with following effectiveDateForExistingSubscriptions (effSubDt):
     //
     //  * V1 : 2011-01-01
     //
@@ -62,7 +75,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
     private static final DateTime EFF_SUB_DT_V2 = new DateTime("2011-02-14T00:00:00+00:00");
 
     private static final DateTime EFF_V3 = new DateTime("2011-02-03T00:00:00+00:00");
-    private static final DateTime EFF_SUB_DT_V3 = new DateTime("2011-02-14T00:00:00+00:00");
+    private static final DateTime EFF_SUB_DT_V3 = EFF_SUB_DT_V2;
 
     private static final DateTime EFF_V4 = new DateTime("2011-03-03T00:00:00+00:00");
     private static final DateTime EFF_SUB_DT_V4 = new DateTime("2011-03-14T00:00:00+00:00");
@@ -70,9 +83,10 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
-        allExtraProperties.put("org.killbill.catalog.uri", "versionedCatalog");
+        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/subscriptionBillingEvents");
         return getConfigSource(null, allExtraProperties);
     }
+
 
     @Test(groups = "fast")
     public void testWithCancelation_Before_EffSubDtV2() throws Exception {
@@ -83,8 +97,8 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         final UUID subscriptionId = UUID.randomUUID();
         final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
         inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
-                                                                .setEventPlan("pistol-monthly")
-                                                                .setEventPlanPhase("pistol-monthly-trial")
+                                                                .setEventPlan("gold-monthly")
+                                                                .setEventPlanPhase("gold-monthly-trial")
                                                                 .setEventPriceList("DEFAULT")
                                                                 .setFromDisk(true)
                                                                 .setUuid(UUID.randomUUID())
@@ -96,7 +110,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
 
         final DateTime evergreenPhaseDate = createDate.plusDays(30);
-        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("pistol-monthly-evergreen")
+        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("gold-monthly-evergreen")
                                                                   .setUuid(UUID.randomUUID())
                                                                   .setSubscriptionId(subscriptionId)
                                                                   .setCreatedDate(evergreenPhaseDate)
@@ -126,18 +140,18 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(result.size(), 3);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(result.get(0).getEffectiveDate().compareTo(createDate), 0);
-        Assert.assertEquals(result.get(0).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(0).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(0).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
         Assert.assertEquals(result.get(1).getType(), SubscriptionBaseTransitionType.PHASE);
         Assert.assertEquals(result.get(1).getEffectiveDate().compareTo(evergreenPhaseDate), 0);
-        Assert.assertEquals(result.get(1).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(1).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(1).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
         // Cancel event
         Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CANCEL);
         Assert.assertEquals(result.get(2).getEffectiveDate().compareTo(cancelDate), 0);
-        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
         // Nothing after cancel -> we correctly discarded subsequent catalog update events after the cancel
@@ -153,8 +167,8 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         final UUID subscriptionId = UUID.randomUUID();
         final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
         inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
-                                                                .setEventPlan("pistol-monthly")
-                                                                .setEventPlanPhase("pistol-monthly-trial")
+                                                                .setEventPlan("gold-monthly")
+                                                                .setEventPlanPhase("gold-monthly-trial")
                                                                 .setEventPriceList("DEFAULT")
                                                                 .setFromDisk(true)
                                                                 .setUuid(UUID.randomUUID())
@@ -166,7 +180,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
 
         final DateTime evergreenPhaseDate = createDate.plusDays(30);
-        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("pistol-monthly-evergreen")
+        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("gold-monthly-evergreen")
                                                                   .setUuid(UUID.randomUUID())
                                                                   .setSubscriptionId(subscriptionId)
                                                                   .setCreatedDate(evergreenPhaseDate)
@@ -196,30 +210,30 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(result.size(), 5);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(result.get(0).getEffectiveDate().compareTo(createDate), 0);
-        Assert.assertEquals(result.get(0).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(0).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(0).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
         Assert.assertEquals(result.get(1).getType(), SubscriptionBaseTransitionType.PHASE);
         Assert.assertEquals(result.get(1).getEffectiveDate().compareTo(evergreenPhaseDate), 0);
-        Assert.assertEquals(result.get(1).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(1).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(1).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
         // Catalog change event for EFF_SUB_DT_V2
         Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CHANGE);
         Assert.assertEquals(result.get(2).getEffectiveDate().compareTo(EFF_SUB_DT_V2), 0);
-        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V2), 0);
 
         // Catalog change event for EFF_SUB_DT_V3
         Assert.assertEquals(result.get(3).getType(), SubscriptionBaseTransitionType.CHANGE);
         Assert.assertEquals(result.get(3).getEffectiveDate().compareTo(EFF_SUB_DT_V3), 0);
-        Assert.assertEquals(result.get(3).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(3).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(3).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 
         // Cancel event
         Assert.assertEquals(result.get(4).getType(), SubscriptionBaseTransitionType.CANCEL);
         Assert.assertEquals(result.get(4).getEffectiveDate().compareTo(cancelDate), 0);
-        Assert.assertEquals(result.get(4).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(4).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(4).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 
         // Nothing after cancel -> we correctly discarded subsequent catalog update events after the cancel
@@ -234,8 +248,8 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         final UUID subscriptionId = UUID.randomUUID();
         final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
         inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
-                                                                .setEventPlan("pistol-monthly")
-                                                                .setEventPlanPhase("pistol-monthly-trial")
+                                                                .setEventPlan("gold-monthly")
+                                                                .setEventPlanPhase("gold-monthly-trial")
                                                                 .setEventPriceList("DEFAULT")
                                                                 .setFromDisk(true)
                                                                 .setUuid(UUID.randomUUID())
@@ -247,7 +261,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
 
         final DateTime evergreenPhaseDate = createDate.plusDays(30);
-        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("pistol-monthly-evergreen")
+        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("gold-monthly-evergreen")
                                                                   .setUuid(UUID.randomUUID())
                                                                   .setSubscriptionId(subscriptionId)
                                                                   .setCreatedDate(evergreenPhaseDate)
@@ -259,8 +273,8 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         final DateTime changeDate = new DateTime(2011, 2, 13, 0, 0, DateTimeZone.UTC);
 
         inputEvents.add(new ApiEventChange(new ApiEventBuilder().setApiEventType(ApiEventType.CHANGE)
-                                                                .setEventPlan("shotgun-monthly")
-                                                                .setEventPlanPhase("shotgun-monthly-evergreen")
+                                                                .setEventPlan("silver-monthly")
+                                                                .setEventPlanPhase("silver-monthly-evergreen")
                                                                 .setEventPriceList("DEFAULT")
                                                                 .setFromDisk(true)
                                                                 .setUuid(UUID.randomUUID())
@@ -277,18 +291,18 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(result.size(), 3);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(result.get(0).getEffectiveDate().compareTo(createDate), 0);
-        Assert.assertEquals(result.get(0).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(0).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(0).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
         Assert.assertEquals(result.get(1).getType(), SubscriptionBaseTransitionType.PHASE);
         Assert.assertEquals(result.get(1).getEffectiveDate().compareTo(evergreenPhaseDate), 0);
-        Assert.assertEquals(result.get(1).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(1).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(1).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
         // User CHANGE event
         Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CHANGE);
         Assert.assertEquals(result.get(2).getEffectiveDate().compareTo(changeDate), 0);
-        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("shotgun-monthly"), 0);
+        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("silver-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 
         // We should not see any catalog CHANGE events
@@ -304,8 +318,8 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         final UUID subscriptionId = UUID.randomUUID();
         final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
         inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
-                                                                .setEventPlan("pistol-monthly")
-                                                                .setEventPlanPhase("pistol-monthly-trial")
+                                                                .setEventPlan("gold-monthly")
+                                                                .setEventPlanPhase("gold-monthly-trial")
                                                                 .setEventPriceList("DEFAULT")
                                                                 .setFromDisk(true)
                                                                 .setUuid(UUID.randomUUID())
@@ -317,7 +331,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
 
         final DateTime evergreenPhaseDate = createDate.plusDays(30);
-        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("pistol-monthly-evergreen")
+        inputEvents.add(new PhaseEventData(new PhaseEventBuilder().setPhaseName("gold-monthly-evergreen")
                                                                   .setUuid(UUID.randomUUID())
                                                                   .setSubscriptionId(subscriptionId)
                                                                   .setCreatedDate(evergreenPhaseDate)
@@ -329,8 +343,8 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         final DateTime changeDate = new DateTime(2011, 2, 15, 0, 0, DateTimeZone.UTC);
 
         inputEvents.add(new ApiEventChange(new ApiEventBuilder().setApiEventType(ApiEventType.CHANGE)
-                                                                .setEventPlan("shotgun-monthly")
-                                                                .setEventPlanPhase("shotgun-monthly-evergreen")
+                                                                .setEventPlan("silver-monthly")
+                                                                .setEventPlanPhase("silver-monthly-evergreen")
                                                                 .setEventPriceList("DEFAULT")
                                                                 .setFromDisk(true)
                                                                 .setUuid(UUID.randomUUID())
@@ -347,30 +361,30 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(result.size(), 5);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(result.get(0).getEffectiveDate().compareTo(createDate), 0);
-        Assert.assertEquals(result.get(0).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(0).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(0).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
         Assert.assertEquals(result.get(1).getType(), SubscriptionBaseTransitionType.PHASE);
         Assert.assertEquals(result.get(1).getEffectiveDate().compareTo(evergreenPhaseDate), 0);
-        Assert.assertEquals(result.get(1).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(1).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(1).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
 
         // Catalog change event for EFF_SUB_DT_V2
         Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CHANGE);
         Assert.assertEquals(result.get(2).getEffectiveDate().compareTo(EFF_SUB_DT_V2), 0);
-        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V2), 0);
 
         // Catalog change event for EFF_SUB_DT_V3
         Assert.assertEquals(result.get(3).getType(), SubscriptionBaseTransitionType.CHANGE);
         Assert.assertEquals(result.get(3).getEffectiveDate().compareTo(EFF_SUB_DT_V3), 0);
-        Assert.assertEquals(result.get(3).getPlan().getName().compareTo("pistol-monthly"), 0);
+        Assert.assertEquals(result.get(3).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(3).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 
         // User CHANGE event
         Assert.assertEquals(result.get(4).getType(), SubscriptionBaseTransitionType.CHANGE);
         Assert.assertEquals(result.get(4).getEffectiveDate().compareTo(changeDate), 0);
-        Assert.assertEquals(result.get(4).getPlan().getName().compareTo("shotgun-monthly"), 0);
+        Assert.assertEquals(result.get(4).getPlan().getName().compareTo("silver-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(4).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 
         // We should not see any more catalog CHANGE events

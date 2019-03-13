@@ -77,8 +77,8 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     public String toString() {
         return "DefaultSubscriptionBillingEvent{" +
                "type=" + type +
-               ", plan='" + plan + '\'' +
-               ", planPhase='" + planPhase + '\'' +
+               ", plan='" + plan.getName() + '\'' +
+               ", planPhase='" + planPhase.getName() + '\'' +
                ", effectiveDate=" + effectiveDate +
                ", totalOrdering=" + totalOrdering +
                ", bcdLocal=" + bcdLocal +
