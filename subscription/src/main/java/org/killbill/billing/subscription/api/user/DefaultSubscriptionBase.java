@@ -527,7 +527,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    public List<SubscriptionBillingEvent> getBillingTransitions(final Catalog catalog) throws CatalogApiException {
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog catalog) throws CatalogApiException {
 
         if (transitions == null) {
             return Collections.emptyList();
@@ -569,11 +569,23 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 // If we see a change or a cancellation and we still have catalog change transitions, we discard them
                 if (isChangeEvent || isCancelEvent) {
                     candidatesCatalogChangeEvents.clear();
+                } else if (prevCandidateForCatalogChangeEvents != null) {
+                    candidatesCatalogChangeEvents.add(prevCandidateForCatalogChangeEvents);
                 }
 
-                final Plan plan = isCancelEvent ? cur.getPreviousPlan() : cur.getNextPlan();
-                final PlanPhase planPhase = isCancelEvent ? cur.getPreviousPhase() :  cur.getNextPhase();
+                // Additional complexity to deal with null plan/phase for CANCEL, which needs to be recomputed based on the name and the correct catalog version.
+                final Plan plan;
+                final PlanPhase planPhase;
+                if (isCancelEvent) {
+                    plan = catalog.findPlan(cur.getPreviousPlan().getName(), cur.getEffectiveTransitionTime(), result.get(result.size()-1).getEffectiveDate());
+                    planPhase = plan.findPhase(cur.getPreviousPhase().getName());
+                } else {
+                    plan = cur.getNextPlan();
+                    planPhase = cur.getNextPhase();
+                }
+
                 final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), plan, planPhase, cur.getEffectiveTransitionTime(), cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal());
+
                 result.add(billingTransition);
 
                 if (isCreateOrTransfer || isChangeEvent) {
@@ -581,7 +593,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     // Using findPlan(req) or findPlan(req, changePlanDate) should be equivalent here...
                     final Plan currentPlan = catalog.findPlan(billingTransition.getPlan().getName(), billingTransition.getEffectiveDate());
 
-                    // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transaition for this Plan
+                    // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
                     Plan nextPlan = ((DefaultVersionedCatalog) catalog).getNextPlanVersion(currentPlan);
                     while (nextPlan != null && nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
                         final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
