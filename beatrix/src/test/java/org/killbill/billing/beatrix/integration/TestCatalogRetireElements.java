@@ -38,6 +38,8 @@ import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.entitlement.api.Subscription;
+import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -107,6 +109,16 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.RECURRING, new BigDecimal("295.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-500.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("204.05")));
+
+
+        final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, callContext);
+        final List<SubscriptionEvent> events = bpSubscription.getSubscriptionEvents();
+        // We are seeing START_ENTITLEMENT, START_BILLING, and the **last CHANGE**
+        // Note that the PHASE and intermediate CHANGE are not being returned (is_active = 0) because all coincided on the same date. This is debatable
+        // whether this is a good semantics. See #1030
+        assertEquals(events.size(), 3);
+        // Verify what we return is the price from the correct catalog version. See #1120
+        assertEquals(events.get(2).getNextPhase().getRecurring().getRecurringPrice().getPrice(account.getCurrency()).compareTo(new BigDecimal("295.95")), 0);
 
     }
 
