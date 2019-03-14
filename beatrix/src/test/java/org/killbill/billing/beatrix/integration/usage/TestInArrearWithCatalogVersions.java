@@ -19,7 +19,6 @@ package org.killbill.billing.beatrix.integration.usage;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,8 +35,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.usage.api.SubscriptionUsageRecord;
-import org.killbill.billing.usage.api.UnitUsageRecord;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -76,36 +73,23 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         assertListenerStatus();
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                               new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("300.00")));
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("300.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
 
 
         recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), 100L, callContext); // -> Uses v1 : $150
 
         // Catalog change with new price on 2016-05-08
-        // Schedule CHANGE_PLAN on 2016-05-09
-        final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, callContext);
-
-        bp.changePlanWithDate(new DefaultEntitlementSpecifier(spec), new LocalDate("2016-05-09"), null, callContext);
-        assertListenerStatus();
-
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        clock.addDays(8);
-        assertListenerStatus();
-
-        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 9), InvoiceItemType.USAGE, new BigDecimal("150.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3"), internalCallContext);
-
         recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 10), 100L, callContext); // -> Uses v2 : $250
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        clock.addDays(23);
+        clock.addMonths(1);
         assertListenerStatus();
 
-        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 9), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("250.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t4"), internalCallContext);
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 8), InvoiceItemType.USAGE, new BigDecimal("150.00")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 8), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("250.00")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3", "t4"), internalCallContext);
 
 
     }
@@ -192,21 +176,24 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
 
 
-        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 5), 100L, callContext);
-        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 8), 900L, callContext);
-        recordUsageData(entitlementId, "t5", "kilowatt-hour", new LocalDate(2016, 5, 9), 200L, callContext); // Move to tier 2.
+        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 1), 100L, callContext);
+        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 2), 900L, callContext);
+        recordUsageData(entitlementId, "t5", "kilowatt-hour", new LocalDate(2016, 5, 3), 200L, callContext); // Move to tier 2.
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("1900.00")));
+                                                 // First catalog version
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 8), InvoiceItemType.USAGE, new BigDecimal("1900.00")),
+                                                 // Second catalog version
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 8), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("0.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3", "t4", "t5"), internalCallContext);
 
         // Remove Usage data from period 2016-5-1 -> 2016-6-1 and verify there is no issue (readMaxRawUsagePreviousPeriod = 0 => We ignore any past invoiced period)
         // Full deletion on the second tier
-        removeUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 9));
+        removeUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 3));
 
         //
         recordUsageData(entitlementId, "t6", "kilowatt-hour", new LocalDate(2016, 6, 5), 100L, callContext);
@@ -218,8 +205,9 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
+        // We invoice using catalog V2 now
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext, ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 7, 1), InvoiceItemType.USAGE, new BigDecimal("1700.00"))));
+                new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 7, 1), InvoiceItemType.USAGE, new BigDecimal("2800.00"))));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t6", "t7", "t8", "t9"), internalCallContext);
 
         // Remove Usage data from period 2016-6-1 -> 2016-7-1 and verify there is no issue (readMaxRawUsagePreviousPeriod = 0 => We ignore any past invoiced period)
@@ -267,17 +255,20 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), 100L, callContext);
 
+
         // Update subscription BCD
         bp.updateBCD(9, new LocalDate(2016, 5, 9), callContext);
 
         recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 10), 10L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        clock.addDays(8);
+        clock.addDays(9);
         assertListenerStatus();
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 9), InvoiceItemType.USAGE, new BigDecimal("150.00")));
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 8), InvoiceItemType.USAGE, new BigDecimal("150.00")),
+                                                 // Reach the catalog version change date for this subscription
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 8), new LocalDate(2016, 5, 9), InvoiceItemType.USAGE, new BigDecimal("0.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3"), internalCallContext);
 
         // Original notification before we change BCD

@@ -21,7 +21,6 @@ package org.killbill.billing.junction.plumbing.billing;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,8 +39,6 @@ import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
-import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -241,7 +238,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 continue;
             }
 
-            final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
+            final BigDecimal recurringPrice = event.getRecurringPrice();
             final boolean hasRecurringPrice = recurringPrice != null; // Note: could be zero (BCD would still be set, by convention)
             final boolean hasUsage = event.getUsages() != null && !event.getUsages().isEmpty();
             if (!hasRecurringPrice &&
@@ -291,7 +288,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             Integer overridenBCD = null;
             for (final SubscriptionBillingEvent transition : billingTransitions) {
-                final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveDate(), subscription.getStartDate());
+                final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(transition), transition.getEffectiveDate(), subscription.getStartDate());
 
                 //
                 // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
@@ -303,7 +300,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                      overridenBCD :
                                      calculateBcdForTransition(alignment, bcdCache, baseSubscription, subscription, currentAccountBCD, context);
 
-                final BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdLocal, alignment, account.getCurrency(), catalog);
+                final BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdLocal, alignment, account.getCurrency());
                 result.add(event);
             }
         }
@@ -317,10 +314,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
     }
 
-    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final Catalog catalog, final SubscriptionBillingEvent transition) throws CatalogApiException {
-        final Plan plan = catalog.findPlan(transition.getPlanName(), transition.getEffectiveDate(), transition.getLastChangePlanDate());
-        final PlanPhase phase =  plan.findPhase(transition.getPlanPhaseName());
-        return new PlanPhaseSpecifier(plan.getName(), phase.getPhaseType());
+    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final SubscriptionBillingEvent transition) {
+        return new PlanPhaseSpecifier(transition.getPlan().getName(), transition.getPlanPhase().getPhaseType());
     }
 
     private boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {

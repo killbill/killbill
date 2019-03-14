@@ -265,9 +265,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         }
 
         if (recurringPrice != null) {
-            Assert.assertEquals(recurringPrice.getPrice(Currency.USD), event.getRecurringPrice(time));
+            Assert.assertEquals(recurringPrice.getPrice(Currency.USD), event.getRecurringPrice());
         } else {
-            assertNull(event.getRecurringPrice(time));
+            assertNull(event.getRecurringPrice());
         }
 
         Assert.assertEquals(BCD, event.getBillCycleDayLocal());
@@ -305,7 +305,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
                 SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);
-        billingTransitions.add(new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CREATE, nextPlan.getName(), nextPhase.getName(), now, 1L, now, null));
+        billingTransitions.add(new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CREATE, nextPlan, nextPhase, now, 1L, null));
 
         return now;
     }

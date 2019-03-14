@@ -45,6 +45,9 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.killbill.billing.junction.BillingEvent;
 
+import com.google.common.collect.ImmutableList;
+
+@SuppressWarnings("RedundantThrows")
 public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
     private static final UUID ID_ZERO = new UUID(0L, 0L);
@@ -185,9 +188,9 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
         final PlanPhase shotgunMonthly = createMockMonthlyPlanPhase(null, BigDecimal.ZERO, PhaseType.TRIAL);
 
         return new DefaultBillingEvent(sub.getId(), sub.getBundleId(), effectiveDate,
-                                       shotgun, shotgunMonthly, BigDecimal.ZERO,
-                                       Currency.USD, BillingPeriod.NO_BILLING_PERIOD, effectiveDate, billCycleDay,
-                                       "Test Event 1", totalOrdering, type, false, null);
+                                       shotgun, shotgunMonthly, BigDecimal.ZERO, BigDecimal.ZERO, ImmutableList.of(),
+                                       Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
+                                       "Test Event 1", totalOrdering, type, false);
     }
 
     private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,

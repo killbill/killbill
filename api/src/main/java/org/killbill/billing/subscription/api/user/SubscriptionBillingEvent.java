@@ -18,21 +18,21 @@
 package org.killbill.billing.subscription.api.user;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
-public interface SubscriptionBillingEvent {
+public interface SubscriptionBillingEvent extends Comparable<SubscriptionBillingEvent> {
 
-    String getPlanName();
+    Plan getPlan();
 
-    String getPlanPhaseName();
+    PlanPhase getPlanPhase();
 
     DateTime getEffectiveDate();
 
     Long getTotalOrdering();
 
     SubscriptionBaseTransitionType getType();
-
-    DateTime getLastChangePlanDate();
 
     Integer getBcdLocal();
 

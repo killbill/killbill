@@ -232,7 +232,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                             break;
                         }
 
-                        final BigDecimal rate = thisEvent.getRecurringPrice(internalCallContext.toUTCDateTime(itemDatum.getStartDate()));
+                        final BigDecimal rate = thisEvent.getRecurringPrice();
                         if (rate != null) {
                             final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
                             final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,

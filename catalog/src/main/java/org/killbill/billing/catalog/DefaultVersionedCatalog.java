@@ -63,6 +63,8 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
+import static org.killbill.billing.ErrorCode.CAT_NO_SUCH_PLAN;
+
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements VersionedCatalog<StandaloneCatalog>, Externalizable {
@@ -138,7 +140,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             try {
                 plan = wrapper.findPlan(c);
             } catch (final CatalogApiException e) {
-                if (e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode() &&
+                if (e.getCode() != CAT_NO_SUCH_PLAN.getCode() &&
                     e.getCode() != ErrorCode.CAT_PLAN_NOT_FOUND.getCode()) {
                     throw e;
                 } else {
@@ -356,15 +358,80 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             }
             errors.addAll(c.validate(c, errors));
         }
+
+        validateUniformPlanShapeAcrossVersions(errors);
+
         return errors;
+    }
+
+    private void validateUniformPlanShapeAcrossVersions(final ValidationErrors errors) {
+        for (int i = 0; i < versions.size(); i++) {
+            final StandaloneCatalog c = versions.get(i);
+            for (final Plan plan : c.getPlans()) {
+
+                for (int j = i+1; j < versions.size(); j++) {
+                    final StandaloneCatalog next = versions.get(j);
+                    final Plan targetPlan = next.getPlans().findByName(plan.getName());
+                    if (targetPlan != null) {
+                        validatePlanShape(plan, targetPlan, errors);
+                    }
+                    // We don't break if null , targetPlan could be re-defined on a subsequent version
+                    // TODO enforce that we can't skip versions?
+                }
+            }
+        }
+    }
+
+    private void validatePlanShape(final Plan plan, final Plan targetPlan, final ValidationErrors errors) {
+        if (plan.getAllPhases().length != targetPlan.getAllPhases().length) {
+            errors.add(new ValidationError(String.format("Number of phases for plan '%s' differs between version '%s' and '%s'",
+                                                         plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
+                                           VersionedCatalog.class, ""));
+        }
+
+        for (int i = 0; i < plan.getAllPhases().length; i++) {
+            final PlanPhase cur = plan.getAllPhases()[i];
+            final PlanPhase target = targetPlan.getAllPhases()[i];
+            if (!cur.getName().equals(target.getName())) {
+                errors.add(new ValidationError(String.format("Phase '%s'for plan '%s' in version '%s' does not exist in version '%s'",
+                                                             cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
+                                               VersionedCatalog.class, ""));
+            }
+        }
+    }
+
+    @Override
+    public Plan getNextPlanVersion(final Plan curPlan) {
+
+        boolean foundCurVersion = false;
+        StandaloneCatalog nextCatalogVersion = null;
+        for (int i = 0; i < versions.size(); i++) {
+            final StandaloneCatalog curCatalogversion = versions.get(i);
+            if (foundCurVersion) {
+                nextCatalogVersion = curCatalogversion;
+                break;
+            }
+            if (curCatalogversion.getEffectiveDate().compareTo(curPlan.getCatalog().getEffectiveDate()) == 0) {
+                foundCurVersion = true;
+            }
+        }
+        if (nextCatalogVersion == null) {
+            return null;
+        }
+        return nextCatalogVersion.getPlans().findByName(curPlan.getName());
     }
 
     //
     // Static catalog API
     //
     @Override
-    public Date getEffectiveDate() throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getEffectiveDate();
+    public Date getEffectiveDate() {
+        final DateTime utcNow = clock.getUTCNow();
+        try {
+            return versionForDate(utcNow).getEffectiveDate();
+        } catch (final CatalogApiException e) {
+            throw new IllegalStateException(String.format("Catalog misconfiguration: there is no active catalog version for now=%s", utcNow), e);
+        }
     }
 
     @Override
