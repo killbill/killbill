@@ -387,6 +387,8 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             errors.add(new ValidationError(String.format("Number of phases for plan '%s' differs between version '%s' and '%s'",
                                                          plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
                                            VersionedCatalog.class, ""));
+            // In this case we don't bother checking each phase -- the code below assumes the # are equal
+            return;
         }
 
         for (int i = 0; i < plan.getAllPhases().length; i++) {

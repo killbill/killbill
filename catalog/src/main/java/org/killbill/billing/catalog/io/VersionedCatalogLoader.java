@@ -41,6 +41,7 @@ import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.UriAccessor;
+import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
 import org.slf4j.Logger;
@@ -131,6 +132,9 @@ public class VersionedCatalogLoader implements CatalogLoader {
             return result;
         } catch (final ValidationException e) {
             logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
+            for (ValidationError ve : e.getErrors()) {
+                logger.warn(ve.toString());
+            }
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         } catch (final JAXBException e) {
             logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
