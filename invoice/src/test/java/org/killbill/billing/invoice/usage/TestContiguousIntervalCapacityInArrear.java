@@ -223,7 +223,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         checkTrackingIds(rawUsages, usageResult.getTrackingIds());
 
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("9.0")), 0, String.format("%s != 9.0", result.get(0).getAmount()));
-        assertEquals(result.get(0).getCurrency(), Currency.BTC);
+        assertEquals(result.get(0).getCurrency(), Currency.USD);
         assertEquals(result.get(0).getAccountId(), accountId);
         assertEquals(result.get(0).getBundleId(), bundleId);
         assertEquals(result.get(0).getSubscriptionId(), subscriptionId);
@@ -234,7 +234,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertTrue(result.get(0).getEndDate().compareTo(firstBCDDate) == 0);
 
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("9.0")), 0, String.format("%s != 9.0", result.get(0).getAmount()));
-        assertEquals(result.get(1).getCurrency(), Currency.BTC);
+        assertEquals(result.get(1).getCurrency(), Currency.USD);
         assertEquals(result.get(1).getAccountId(), accountId);
         assertEquals(result.get(1).getBundleId(), bundleId);
         assertEquals(result.get(1).getSubscriptionId(), subscriptionId);
@@ -418,7 +418,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         }));
 
         for (InvoiceItem item : result) {
-            assertEquals(item.getCurrency(), Currency.BTC);
+            assertEquals(item.getCurrency(), Currency.USD);
             assertEquals(item.getAccountId(), accountId);
             assertEquals(item.getBundleId(), bundleId);
             assertEquals(item.getSubscriptionId(), subscriptionId);
