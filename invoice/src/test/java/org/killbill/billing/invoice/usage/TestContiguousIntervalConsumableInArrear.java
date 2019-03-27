@@ -385,9 +385,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 2);
 
 
-        // Invoiced for 1 BTC and used 130 + 271 = 401 => 5 blocks => 5 BTC so remaining piece should be 4 BTC
+        // Invoiced for 1 USD and used 130 + 271 = 401 => 5 blocks => 5 USD so remaining piece should be 4 USD
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("4.0")), 0, String.format("%s != 4.0", result.get(0).getAmount()));
-        assertEquals(result.get(0).getCurrency(), Currency.BTC);
+        assertEquals(result.get(0).getCurrency(), Currency.USD);
         assertEquals(result.get(0).getAccountId(), accountId);
         assertEquals(result.get(0).getBundleId(), bundleId);
         assertEquals(result.get(0).getSubscriptionId(), subscriptionId);
@@ -404,9 +404,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // Because we did not have the details before, the new details don't take into account the
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("5.0")), 0);
 
-        // Invoiced for 1 BTC and used 199  => 2 blocks => 2 BTC so remaining piece should be 1 BTC
+        // Invoiced for 1 USD and used 199  => 2 blocks => 2 USD so remaining piece should be 1 USD
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("1.0")), 0, String.format("%s != 1.0", result.get(0).getAmount()));
-        assertEquals(result.get(1).getCurrency(), Currency.BTC);
+        assertEquals(result.get(1).getCurrency(), Currency.USD);
         assertEquals(result.get(1).getAccountId(), accountId);
         assertEquals(result.get(1).getBundleId(), bundleId);
         assertEquals(result.get(1).getSubscriptionId(), subscriptionId);
@@ -1041,6 +1041,32 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
     }
 
+    @Test(groups = "fast", description ="https://github.com/killbill/killbill/issues/1124" )
+    public void testComputeWithFractionOfCents() throws Exception {
+        final LocalDate startDate = new LocalDate(2014, 03, 20);
+        final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
+
+        final List<RawUsage> rawUsages = new ArrayList<RawUsage>();
+        rawUsages.add(new DefaultRawUsage(subscriptionId, startDate, "unit", 55L, "tracking-1"));
+
+        final DefaultTieredBlock block = createDefaultTieredBlock("unit", 1, 100, new BigDecimal("0.067"));
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
+
+        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsages, startDate.plusMonths(1), false, event1);
+
+        final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
+        final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), startDate, firstBCDDate, new BigDecimal("3.69"), currency);
+        invoiceItems.add(ii1);
+
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
+        // Nothing to bill
+        Assert.assertTrue(usageResult.getInvoiceItems().isEmpty());
+        checkTrackingIds(rawUsages, usageResult.getTrackingIds());
+    }
+
     private List<InvoiceItem> produceInvoiceItems(List<RawUsage> rawUsages, TierBlockPolicy tierBlockPolicy, UsageDetailMode usageDetailMode, final List<InvoiceItem> existingItems) throws Exception {
 
         final LocalDate startDate = new LocalDate(2014, 03, 20);
@@ -1080,7 +1106,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         }));
 
         for (InvoiceItem item : result) {
-            assertEquals(item.getCurrency(), Currency.BTC);
+            assertEquals(item.getCurrency(), Currency.USD);
             assertEquals(item.getAccountId(), accountId);
             assertEquals(item.getBundleId(), bundleId);
             assertEquals(item.getSubscriptionId(), subscriptionId);
