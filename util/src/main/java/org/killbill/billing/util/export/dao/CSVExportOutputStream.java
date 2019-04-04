@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -18,6 +20,7 @@ package org.killbill.billing.util.export.dao;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -87,10 +90,25 @@ public class CSVExportOutputStream extends OutputStream implements DatabaseExpor
             bytes = mapper.writer(currentCSVSchema.withHeader()).writeValueAsBytes(row);
             shouldWriteHeader = false;
         } else {
-            bytes = writer.writeValueAsBytes(row);
+            final Map<String, Object> rowSanitized = new HashMap<String, Object>(row);
+            for (final String key : row.keySet()) {
+                rowSanitized.put(key, sanitize(row.get(key)));
+            }
+            bytes = writer.writeValueAsBytes(rowSanitized);
         }
 
         write(bytes);
+    }
+
+    // Sanitize special characters which could impact the import process
+    private Object sanitize(final Object o) {
+        if (!(o instanceof String)) {
+            return o;
+        } else {
+            // Use Python3 way of escaping characters: https://docs.python.org/3.3/howto/unicode.html#the-string-type
+            return ((String) o).replace("\n", "\\N{LINE FEED}")
+                               .replace("|", "\\N{VERTICAL LINE}");
+        }
     }
 
     private ColumnType getColumnTypeFromSqlType(final String dataType) {

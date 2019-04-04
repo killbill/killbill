@@ -82,9 +82,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
         if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
-                                          String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', previously billed amount='%.2f', new proposed amount='%.2f'",
-                                                        startDate, endDate, billedUsage, toBeBilledUsage));
-
+                                          String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', amountToBill='%s', (previously billed amount='%s', new proposed amount='%s')",
+                                                        startDate, endDate, amountToBill, billedUsage, toBeBilledUsage));
         } else /* amountToBill.compareTo(BigDecimal.ZERO) >= 0 */ {
             if (!isPeriodPreviouslyBilled || amountToBill.compareTo(BigDecimal.ZERO) > 0) {
                 if (UsageDetailMode.DETAIL == usageDetailMode) {

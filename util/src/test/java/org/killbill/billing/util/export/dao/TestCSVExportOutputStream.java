@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,12 +21,11 @@ package org.killbill.billing.util.export.dao;
 import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.api.ColumnInfo;
 import org.killbill.billing.util.validation.DefaultColumnInfo;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -33,7 +34,8 @@ public class TestCSVExportOutputStream extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testSimpleGenerator() throws Exception {
-        final CSVExportOutputStream out = new CSVExportOutputStream(new ByteArrayOutputStream());
+        final ByteArrayOutputStream delegate = new ByteArrayOutputStream();
+        final CSVExportOutputStream out = new CSVExportOutputStream(delegate);
 
         // Create the schema
         final String tableName = UUID.randomUUID().toString();
@@ -60,10 +62,24 @@ public class TestCSVExportOutputStream extends UtilTestSuiteNoDB {
                                                   "last_name", "dupont",
                                                   "age", "30"));
 
-        Assert.assertEquals(out.toString(), "-- " + tableName + " first_name|last_name|age\n" +
-                                            "jean|dupond|35\n" +
-                                            "jack|dujardin|40\n" +
-                                            "pierre|schmitt|12\n" +
-                                            "stephane|dupont|30\n");
+        // Verify special characters
+        out.write(ImmutableMap.<String, Object>of("first_name", "Jørgen",
+                                                  "last_name", "Jensen",
+                                                  "age", 31));
+        out.write(ImmutableMap.<String, Object>of("first_name", "a|B",
+                                                  "last_name", "c||5",
+                                                  "age", 44));
+        out.write(ImmutableMap.<String, Object>of("first_name", "q\nw",
+                                                  "last_name", "e\n\n.",
+                                                  "age", 1));
+
+        Assert.assertEquals(delegate.toString("UTF-8"), "-- " + tableName + " first_name|last_name|age\n" +
+                                                        "jean|dupond|35\n" +
+                                                        "jack|dujardin|40\n" +
+                                                        "pierre|schmitt|12\n" +
+                                                        "stephane|dupont|30\n" +
+                                                        "Jørgen|Jensen|31\n" +
+                                                        "a\\N{VERTICAL LINE}B|c\\N{VERTICAL LINE}\\N{VERTICAL LINE}5|44\n" +
+                                                        "q\\N{LINE FEED}w|e\\N{LINE FEED}\\N{LINE FEED}.|1\n");
     }
 }
