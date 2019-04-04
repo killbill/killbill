@@ -95,7 +95,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         productName = "productName";
         planName = "planName";
         phaseName = "phaseName";
-        currency = Currency.BTC;
+        currency = Currency.USD;
         usageDetailMode = invoiceConfig.getItemResultBehaviorMode(internalCallContext);
         objectMapper = new ObjectMapper();
     }
@@ -164,14 +164,14 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return tier;
     }
 
-    protected DefaultTieredBlock createDefaultTieredBlock(final String unit, final int size, final int max, final BigDecimal btcPrice) {
+    protected DefaultTieredBlock createDefaultTieredBlock(final String unit, final int size, final int max, final BigDecimal price) {
         final DefaultTieredBlock block = new DefaultTieredBlock();
         block.setUnit(new DefaultUnit().setName(unit));
         block.setSize(new Double(size));
 
         final DefaultPrice[] prices = new DefaultPrice[1];
         prices[0] = new DefaultPrice();
-        prices[0].setCurrency(Currency.BTC).setValue(btcPrice);
+        prices[0].setCurrency(currency).setValue(price);
 
         block.setPrice(new DefaultInternationalPrice().setPrices(prices));
         block.setMax(new Double(max));
@@ -184,7 +184,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
     protected BillingEvent createMockBillingEvent(final int bcd, final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) throws Exception {
         final BillingEvent result = Mockito.mock(BillingEvent.class);
-        Mockito.when(result.getCurrency()).thenReturn(Currency.BTC);
+        Mockito.when(result.getCurrency()).thenReturn(currency);
         Mockito.when(result.getBillCycleDayLocal()).thenReturn(bcd);
         Mockito.when(result.getEffectiveDate()).thenReturn(effectiveDate);
         Mockito.when(result.getBillingPeriod()).thenReturn(billingPeriod);

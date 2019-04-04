@@ -49,6 +49,7 @@ import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
+import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,10 +125,10 @@ public abstract class ContiguousIntervalUsageInArrear {
      *                       then targetDate will define the endDate.
      */
     public ContiguousIntervalUsageInArrear build(final boolean closedInterval) {
-
-        Preconditions.checkState(!isBuilt.get());
+        Preconditions.checkState(!isBuilt.get(), "!isBuilt");
         Preconditions.checkState((!closedInterval && billingEvents.size() >= 1) ||
-                                 (closedInterval && billingEvents.size() >= 2));
+                                 (closedInterval && billingEvents.size() >= 2),
+                                 "closedInterval=%s, billingEvents.size()=%s", closedInterval, String.valueOf(billingEvents.size()));
 
         final LocalDate startDate = internalTenantContext.toLocalDate(billingEvents.get(0).getEffectiveDate());
         if (targetDate.isBefore(startDate)) {
@@ -233,7 +234,9 @@ public abstract class ContiguousIntervalUsageInArrear {
             final List<RolledUpUnit> rolledUpUnits = ru.getRolledUpUnits();
 
             final UsageInArrearAggregate toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
-            final BigDecimal toBeBilledUsage = toBeBilledUsageDetails.getAmount();
+            final BigDecimal toBeBilledUsageUnrounded = toBeBilledUsageDetails.getAmount();
+            // See https://github.com/killbill/killbill/issues/1124
+            final BigDecimal toBeBilledUsage = KillBillMoney.of(toBeBilledUsageUnrounded, getCurrency());
             populateResults(ru.getStart(), ru.getEnd(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, isPeriodPreviouslyBilled, result);
 
         }
