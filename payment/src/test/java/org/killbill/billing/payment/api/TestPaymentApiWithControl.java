@@ -961,6 +961,11 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         @Override
         public PriorPaymentControlResult priorCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+
+            if (context.getPaymentMethodId() != null) {
+                Assert.assertNotNull(context.getPaymentPluginName());
+            }
+
             actualPriorCallPaymentId = context.getPaymentId();
             actualPriorCallPaymentExternalKey = context.getPaymentExternalKey();
             actualPriorCallTransactionId = context.getTransactionId();

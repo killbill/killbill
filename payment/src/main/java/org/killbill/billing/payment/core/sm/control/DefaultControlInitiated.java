@@ -31,6 +31,7 @@ import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
@@ -99,6 +100,13 @@ public class DefaultControlInitiated implements LeavingStateCallback {
             final UUID paymentTransactionIdForNewPaymentTransaction = UUIDs.randomUUID();
             stateContext.setPaymentTransactionIdForNewPaymentTransaction(paymentTransactionIdForNewPaymentTransaction);
             stateContext.setPaymentTransactionExternalKey(paymentTransactionIdForNewPaymentTransaction.toString());
+        }
+
+        // The user specified the payment Method to use for a new payment or we computed which one to use for a subsequent payment
+        // In this case, we also want to provide the associated plugin name
+        if (stateContext.getPaymentMethodId() != null) {
+            final PaymentMethodModelDao pm = paymentDao.getPaymentMethod(stateContext.getPaymentMethodId(), stateContext.getInternalCallContext());
+            stateContext.setOriginalPluginName(pm.getPluginName());
         }
 
 

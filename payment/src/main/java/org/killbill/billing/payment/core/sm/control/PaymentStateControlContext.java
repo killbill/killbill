@@ -48,6 +48,9 @@ public class PaymentStateControlContext extends PaymentStateContext {
     private BigDecimal processedAmount;
     private Currency processedCurrency;
 
+    private String originalPluginName;
+
+
     public PaymentStateControlContext(@Nullable final List<String> paymentControlPluginNames,
                                       final boolean isApiPayment,
                                       final Boolean isSuccess,
@@ -113,6 +116,14 @@ public class PaymentStateControlContext extends PaymentStateContext {
 
     public void setProcessedCurrency(final Currency processedCurrency) {
         this.processedCurrency = processedCurrency;
+    }
+
+    public String getOriginalPluginName() {
+        return originalPluginName;
+    }
+
+    public void setOriginalPluginName(final String originalPluginName) {
+        this.originalPluginName = originalPluginName;
     }
 
     public PaymentTransaction getCurrentTransaction() {
