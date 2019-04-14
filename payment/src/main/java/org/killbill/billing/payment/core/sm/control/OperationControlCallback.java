@@ -88,7 +88,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
                 final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                      paymentStateContext.getPaymentMethodId(),
-                                                                                                     paymentStateControlContext.getOriginalPluginName(),
+                                                                                                     paymentStateControlContext.getOriginalPaymentPluginName(),
                                                                                                      paymentStateControlContext.getAttemptId(),
                                                                                                      paymentStateContext.getPaymentId(),
                                                                                                      paymentStateContext.getPaymentExternalKey(),

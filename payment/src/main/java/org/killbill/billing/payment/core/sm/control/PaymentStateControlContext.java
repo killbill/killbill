@@ -48,7 +48,7 @@ public class PaymentStateControlContext extends PaymentStateContext {
     private BigDecimal processedAmount;
     private Currency processedCurrency;
 
-    private String originalPluginName;
+    private String originalPaymentPluginName;
 
 
     public PaymentStateControlContext(@Nullable final List<String> paymentControlPluginNames,
@@ -118,12 +118,12 @@ public class PaymentStateControlContext extends PaymentStateContext {
         this.processedCurrency = processedCurrency;
     }
 
-    public String getOriginalPluginName() {
-        return originalPluginName;
+    public String getOriginalPaymentPluginName() {
+        return originalPaymentPluginName;
     }
 
-    public void setOriginalPluginName(final String originalPluginName) {
-        this.originalPluginName = originalPluginName;
+    public void setOriginalPaymentPluginName(final String originalPaymentPluginName) {
+        this.originalPaymentPluginName = originalPaymentPluginName;
     }
 
     public PaymentTransaction getCurrentTransaction() {
