@@ -101,10 +101,6 @@ public class DefaultControlInitiated implements LeavingStateCallback {
             stateContext.setPaymentTransactionExternalKey(paymentTransactionIdForNewPaymentTransaction.toString());
         }
 
-        if (stateContext.getPaymentMethodId() == null) {
-            // Similar logic in PaymentAutomatonRunner
-            stateContext.setPaymentMethodId(stateContext.getAccount().getPaymentMethodId());
-        }
 
         if (state.getName().equals(initialState.getName()) || state.getName().equals(retriedState.getName())) {
             try {
