@@ -50,12 +50,18 @@ and is_active
 ;
 >>
 
-
 getByRoleName() ::= <<
 select <allTableFields("")>
 from <tableName()>
 where role_name = :roleName
 and is_active
+;
+>>
+
+getAllPermissions() ::= <<
+select distinct permission
+from <tableName()>
+where is_active
 ;
 >>
 

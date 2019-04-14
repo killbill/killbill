@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 package org.killbill.billing.util.security.shiro.dao;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -167,6 +168,17 @@ public class DefaultUserDao implements UserDao {
             public List<RolesPermissionsModelDao> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
                 return rolesPermissionsSqlDao.getByRoleName(role);
+            }
+        });
+    }
+
+    @Override
+    public Set<String> getAllPermissions() {
+        return dbi.inTransaction(new TransactionCallback<Set<String>>() {
+            @Override
+            public Set<String> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
+                final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
+                return rolesPermissionsSqlDao.getAllPermissions();
             }
         });
     }

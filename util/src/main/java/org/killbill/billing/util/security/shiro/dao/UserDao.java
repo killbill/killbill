@@ -18,6 +18,7 @@
 package org.killbill.billing.util.security.shiro.dao;
 
 import java.util.List;
+import java.util.Set;
 
 import org.killbill.billing.security.SecurityApiException;
 
@@ -32,6 +33,8 @@ public interface UserDao {
     public void updateRoleDefinition(String role, List<String> permissions, String createdBy) throws SecurityApiException;
 
     public List<RolesPermissionsModelDao> getRoleDefinition(String role);
+
+    public Set<String> getAllPermissions();
 
     public void updateUserPassword(String username, String password, String createdBy) throws SecurityApiException;
 
