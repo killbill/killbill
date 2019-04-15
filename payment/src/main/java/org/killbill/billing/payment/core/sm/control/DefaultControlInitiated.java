@@ -106,7 +106,10 @@ public class DefaultControlInitiated implements LeavingStateCallback {
         // In this case, we also want to provide the associated plugin name
         if (stateContext.getPaymentMethodId() != null) {
             final PaymentMethodModelDao pm = paymentDao.getPaymentMethod(stateContext.getPaymentMethodId(), stateContext.getInternalCallContext());
-            stateContext.setOriginalPaymentPluginName(pm.getPluginName());
+            // Payment method was deleted
+            if (pm != null) {
+                stateContext.setOriginalPaymentPluginName(pm.getPluginName());
+            }
         }
 
 
