@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -58,6 +58,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class DefaultSecurityApi implements SecurityApi {
 
@@ -119,18 +120,25 @@ public class DefaultSecurityApi implements SecurityApi {
     }
 
     @Override
-    public Set<Permission> getCurrentUserPermissions(final TenantContext context) {
-        final Permission[] killbillPermissions = Permission.values();
+    public Set<String> getCurrentUserPermissions(final TenantContext context) {
+        // Built-in permissions
         final String[] killbillPermissionsString = getAllPermissionsAsStrings();
+        // Add user-defined permissions, if any
+        final Set<String> allPermissions = Sets.newHashSet(killbillPermissionsString);
+        allPermissions.addAll(userDao.getAllPermissions());
+        final String[] allPermissionsArray = allPermissions.toArray(new String[]{});
 
         final Subject subject = SecurityUtils.getSubject();
         // Bulk (optimized) call
-        final boolean[] permissions = subject.isPermitted(killbillPermissionsString);
+        final boolean[] permissions = subject.isPermitted(allPermissionsArray);
 
-        final Set<Permission> userPermissions = new HashSet<Permission>();
+        final Set<String> userPermissions = new HashSet<String>();
         for (int i = 0; i < permissions.length; i++) {
-            if (permissions[i]) {
-                userPermissions.add(killbillPermissions[i]);
+            final String permissionName = allPermissionsArray[i];
+            if (permissions[i] &&
+                // Don't return the "*" version
+                !("*".equals(permissionName) || permissionName.endsWith(":*"))) {
+                userPermissions.add(permissionName);
             }
         }
 
@@ -201,13 +209,13 @@ public class DefaultSecurityApi implements SecurityApi {
 
     @Override
     public void addRoleDefinition(final String role, final List<String> permissions, final CallContext callContext) throws SecurityApiException {
-        final List<String> sanitizedPermissions = sanitizeAndValidatePermissions(permissions);
+        final List<String> sanitizedPermissions = sanitizePermissions(permissions);
         userDao.addRoleDefinition(role, sanitizedPermissions, callContext.getUserName());
     }
 
     @Override
     public void updateRoleDefinition(final String role, final List<String> permissions, final CallContext callContext) throws SecurityApiException {
-        final List<String> sanitizedPermissions = sanitizeAndValidatePermissions(permissions);
+        final List<String> sanitizedPermissions = sanitizePermissions(permissions);
         userDao.updateRoleDefinition(role, sanitizedPermissions, callContext.getUserName());
     }
 
@@ -223,7 +231,7 @@ public class DefaultSecurityApi implements SecurityApi {
         }));
     }
 
-    private List<String> sanitizeAndValidatePermissions(final List<String> permissionsRaw) throws SecurityApiException {
+    private List<String> sanitizePermissions(final List<String> permissionsRaw) throws SecurityApiException {
         if (permissionsRaw == null) {
             return ImmutableList.<String>of();
         }
@@ -248,43 +256,27 @@ public class DefaultSecurityApi implements SecurityApi {
                 throw new SecurityApiException(ErrorCode.SECURITY_INVALID_PERMISSIONS, curPerm);
             }
 
-            boolean resolved = false;
-            for (final Permission cur : Permission.values()) {
-                if (!cur.getGroup().equals(permissionParts[0])) {
-                    continue;
-                }
-
-                Set<String> groupPermissions = groupToValues.get(permissionParts[0]);
-                if (groupPermissions == null) {
-                    groupPermissions = new HashSet<String>();
-                    groupToValues.put(permissionParts[0], groupPermissions);
-                }
-                if (permissionParts.length == 1 || "*".equals(permissionParts[1])) {
-                    groupPermissions.clear();
-                    groupPermissions.add("*");
-                    resolved = true;
-                    break;
-                }
-
-                if (cur.getValue().equals(permissionParts[1])) {
-                    groupPermissions.add(permissionParts[1]);
-                    resolved = true;
-                    break;
-                }
+            Set<String> groupPermissions = groupToValues.get(permissionParts[0]);
+            if (groupPermissions == null) {
+                groupPermissions = new HashSet<String>();
+                groupToValues.put(permissionParts[0], groupPermissions);
             }
-            if (!resolved) {
-                throw new SecurityApiException(ErrorCode.SECURITY_INVALID_PERMISSIONS, curPerm);
+            if (permissionParts.length == 1 || "*".equals(permissionParts[1]) || Strings.emptyToNull(permissionParts[1]) == null) {
+                groupPermissions.clear();
+                groupPermissions.add("*");
+            } else {
+                groupPermissions.add(permissionParts[1]);
             }
         }
 
-        final List<String> sanitizedPermissions = new ArrayList<String>();
+        final List<String> expandedPermissions = new ArrayList<String>();
         for (final String group : groupToValues.keySet()) {
             final Set<String> groupPermissions = groupToValues.get(group);
             for (final String value : groupPermissions) {
-                sanitizedPermissions.add(String.format("%s:%s", group, value));
+                expandedPermissions.add(String.format("%s:%s", group, value));
             }
         }
-        return sanitizedPermissions;
+        return expandedPermissions;
     }
 
     private String[] getAllPermissionsAsStrings() {
