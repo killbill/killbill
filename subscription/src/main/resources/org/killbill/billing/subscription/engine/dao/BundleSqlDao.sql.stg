@@ -69,8 +69,8 @@ getBundlesForLikeKey() ::= <<
 select <allTableFields("")>
 from bundles
 where
-external_key = :externalKey
-or external_key like concat('kb%-%:', :externalKey)
+(external_key = :externalKey
+or external_key like concat('kb%-%:', :externalKey))
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;
