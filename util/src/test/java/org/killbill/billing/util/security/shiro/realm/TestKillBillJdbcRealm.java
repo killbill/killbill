@@ -17,6 +17,7 @@
 
 package org.killbill.billing.util.security.shiro.realm;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -55,8 +56,8 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         }
 
         super.beforeMethod();
-        final KillBillJdbcRealm realm = new KillBillJdbcRealm(helper.getDataSource(), securityConfig);
-        securityManager = new DefaultSecurityManager(realm);
+
+        securityManager = new DefaultSecurityManager(realms);
         SecurityUtils.setSecurityManager(securityManager);
     }
 
@@ -147,7 +148,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCustomPermissions() throws Exception {
+    public void testCustomPermissionsAcrossRealms() throws Exception {
         final String role = "writer_off";
         final ImmutableList<String> rolePermissions = ImmutableList.<String>of(Permission.INVOICE_CAN_DELETE_CBA.toString(), /* Built-in permission */
                                                                                "invoice:write_off" /* Built-in group but custom value */,
@@ -159,8 +160,8 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         final List<String> roleDefinitions = securityApi.getRoleDefinition(role, callContext);
         Assert.assertEqualsNoOrder(roleDefinitions.toArray(), rolePermissions.toArray());
 
-        final String username = "pierre";
-        final String password = "password";
+        final String username = "tester";
+        final String password = "tester";
         securityApi.addUserRoles(username, password, ImmutableList.<String>of(role), callContext);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
@@ -168,9 +169,13 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         try {
             ThreadContext.bind(subject);
 
+            // JDBC Realm
             subject.checkPermission(Permission.INVOICE_CAN_DELETE_CBA.toString());
             subject.checkPermission("invoice:write_off");
             subject.checkPermission("acme:kb_dev");
+            // Shiro Realm
+            subject.checkPermission("invoice:credit");
+            subject.checkPermission("customx:customy");
             try {
                 subject.checkPermission("acme:kb_deployer");
                 Assert.fail("Subject should not have rights to deploy Kill Bill");
@@ -178,7 +183,10 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
             }
 
             final Set<String> permissions = securityApi.getCurrentUserPermissions(callContext);
-            Assert.assertEquals(permissions, rolePermissions);
+            final Set<String> expectedPermissions = new HashSet<String>(rolePermissions);
+            expectedPermissions.add("invoice:credit");
+            expectedPermissions.add("customx:customy");
+            Assert.assertEquals(permissions, expectedPermissions);
         } finally {
             ThreadContext.unbindSubject();
             subject.logout();
@@ -242,23 +250,23 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
             subject.checkPermission(Permission.TAG_CAN_CREATE_TAG_DEFINITION.toString());
             subject.checkPermission("acme:kb_dev");
 
-            // "*" is not expanded here
+            // "*" is not expanded
             final List<String> roleDefinitions = securityApi.getRoleDefinition(role, callContext);
             Assert.assertEqualsNoOrder(roleDefinitions.toArray(), rolePermissions.toArray());
 
-            // "*" is expanded here
+            // "*" is not expanded
             final Set<String> permissions = securityApi.getCurrentUserPermissions(callContext);
-            Assert.assertEquals(permissions.size(), Permission.values().length + 1 /* acme */);
+            Assert.assertEquals(permissions, ImmutableList.<String>of("*"));
 
             securityApi.addRoleDefinition("for yet another user", ImmutableList.of("acme:kb_deployer"), callContext);
 
-            // "*" is not expanded here
+            // "*" is not expanded
             final List<String> roleDefinitions2 = securityApi.getRoleDefinition(role, callContext);
             Assert.assertEqualsNoOrder(roleDefinitions2.toArray(), rolePermissions.toArray());
 
-            // "*" is expanded here
+            // "*" is not expanded
             final Set<String> permissions2 = securityApi.getCurrentUserPermissions(callContext);
-            Assert.assertEquals(permissions2.size(), Permission.values().length + 2 /* acme */);
+            Assert.assertEquals(permissions2, ImmutableList.<String>of("*"));
         } finally {
             ThreadContext.unbindSubject();
             subject.logout();
@@ -287,23 +295,23 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
             final Object[] rolePermissions = ImmutableList.of("account:*", "invoice:*", "tag:create_tag_definition", "acme:*").toArray();
 
-            // "*" is not expanded here
+            // "*" is not expanded
             final List<String> roleDefinitions = securityApi.getRoleDefinition(role, callContext);
             Assert.assertEqualsNoOrder(roleDefinitions.toArray(), rolePermissions);
 
-            // "*" is expanded here
+            // "*" is not expanded
             final Set<String> permissions = securityApi.getCurrentUserPermissions(callContext);
-            Assert.assertEquals(permissions.size(), 6 /* All account */ + 5 /* All invoice */ + 1 /* Tag */ + 1 /* acme */);
+            Assert.assertEqualsNoOrder(permissions.toArray(), rolePermissions);
 
             securityApi.addRoleDefinition("for yet another user", ImmutableList.of("acme:kb_deployer"), callContext);
 
-            // "*" is not expanded here
+            // "*" is not expanded
             final List<String> roleDefinitions2 = securityApi.getRoleDefinition(role, callContext);
             Assert.assertEqualsNoOrder(roleDefinitions2.toArray(), rolePermissions);
 
-            // "*" is expanded here
+            // "*" is not expanded
             final Set<String> permissions2 = securityApi.getCurrentUserPermissions(callContext);
-            Assert.assertEquals(permissions2.size(), 6 /* All account */ + 5 /* All invoice */ + 1 /* Tag */ + 2 /* acme */);
+            Assert.assertEqualsNoOrder(permissions2.toArray(), rolePermissions);
         } finally {
             ThreadContext.unbindSubject();
             subject.logout();

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,8 +18,11 @@
 
 package org.killbill.billing.util;
 
+import java.util.Set;
+
 import javax.inject.Inject;
 
+import org.apache.shiro.realm.Realm;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.api.TestApiListener;
@@ -91,6 +94,8 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected NodeInfoDao nodeInfoDao;
     @Inject
     protected BroadcastDao broadcastDao;
+    @Inject
+    protected Set<Realm> realms;
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
