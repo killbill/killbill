@@ -51,6 +51,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -787,8 +788,120 @@ public class AccountResource extends JaxRsResourceBase {
         // If the amount requested is greater than what had to be paid and if this an for an external payment (check, ..)
         // then we apply some credit on the account.
         //
+        final BigDecimal creditAmount = remainingRequestPayment;
         if (externalPayment && remainingRequestPayment.compareTo(BigDecimal.ZERO) > 0) {
-            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), true, "pay all invoices", null, pluginProperties, callContext);
+
+            final InvoiceItem  creditItem =  new InvoiceItem() {
+                @Override
+                public InvoiceItemType getInvoiceItemType() {
+                    return InvoiceItemType.CREDIT_ADJ;
+                }
+                @Override
+                public UUID getInvoiceId() {
+                    return null;
+                }
+                @Override
+                public UUID getAccountId() {
+                    return accountId;
+                }
+                @Override
+                public UUID getChildAccountId() {
+                    return null;
+                }
+                @Override
+                public LocalDate getStartDate() {
+                    return null;
+                }
+                @Override
+                public LocalDate getEndDate() {
+                    return null;
+                }
+                @Override
+                public BigDecimal getAmount() {
+                    return creditAmount;
+                }
+                @Override
+                public Currency getCurrency() {
+                    return account.getCurrency();
+                }
+                @Override
+                public String getDescription() {
+                    return "pay all invoices";
+                }
+                @Override
+                public UUID getBundleId() {
+                    return null;
+                }
+                @Override
+                public UUID getSubscriptionId() {
+                    return null;
+                }
+                @Override
+                public String getProductName() {
+                    return null;
+                }
+                @Override
+                public String getPrettyProductName() {
+                    return null;
+                }
+                @Override
+                public String getPlanName() {
+                    return null;
+                }
+                @Override
+                public String getPrettyPlanName() {
+                    return null;
+                }
+                @Override
+                public String getPhaseName() {
+                    return null;
+                }
+                @Override
+                public String getPrettyPhaseName() {
+                    return null;
+                }
+                @Override
+                public String getUsageName() {
+                    return null;
+                }
+                @Override
+                public String getPrettyUsageName() {
+                    return null;
+                }
+                @Override
+                public BigDecimal getRate() {
+                    return null;
+                }
+                @Override
+                public UUID getLinkedItemId() {
+                    return null;
+                }
+                @Override
+                public Integer getQuantity() {
+                    return null;
+                }
+                @Override
+                public String getItemDetails() {
+                    return null;
+                }
+                @Override
+                public boolean matches(final Object o) {
+                    return false;
+                }
+                @Override
+                public UUID getId() {
+                    return null;
+                }
+                @Override
+                public DateTime getCreatedDate() {
+                    return null;
+                }
+                @Override
+                public DateTime getUpdatedDate() {
+                    return null;
+                }
+            };
+            invoiceApi.insertCredit(account.getId(), clock.getUTCToday(), creditItem, true, pluginProperties, callContext);
         }
         return Response.status(Status.NO_CONTENT).build();
     }

@@ -32,10 +32,8 @@ import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.InvoiceItems;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
-import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AuditLog;
-import org.killbill.billing.client.model.gen.Credit;
 import org.killbill.billing.client.model.gen.Invoice;
 import org.killbill.billing.client.model.gen.InvoiceDryRun;
 import org.killbill.billing.client.model.gen.InvoiceItem;
@@ -57,7 +55,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -98,8 +95,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertTrue(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.FALSE, Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().isEmpty());
         assertEquals(invoiceApi.getInvoice(invoiceJson.getInvoiceId(), Boolean.TRUE, Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
         assertEquals(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.TRUE, Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
-        assertEquals(invoiceApi.getInvoiceByItemId(invoiceItem.getInvoiceItemId(), true, false, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size() );
-
+        assertEquals(invoiceApi.getInvoiceByItemId(invoiceItem.getInvoiceItemId(), true, false, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
 
         // Check we can retrieve an individual invoice
         final Invoice firstInvoice = invoiceApi.getInvoice(invoiceJson.getInvoiceId(), true, false, AuditLevel.FULL, requestOptions);
@@ -280,7 +276,6 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoices.size(), 2);
         final Invoice invoiceToPay = invoices.get(1);
         assertEquals(invoiceToPay.getBalance().compareTo(BigDecimal.ZERO), 1);
-
 
         // Pay all invoices
         accountApi.payAllInvoices(accountJson.getAccountId(), null, true, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
@@ -487,7 +482,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItems itemsForCharge = new InvoiceItems();
         itemsForCharge.add(externalCharge);
 
-        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), itemsForCharge, clock.getUTCToday(),  true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), itemsForCharge, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 1);
         final Invoice invoiceWithItems = invoiceApi.getInvoice(createdExternalCharges.get(0).getInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoiceWithItems.getBalance().compareTo(chargeAmount), 0);
@@ -566,13 +561,11 @@ public class TestInvoice extends TestJaxrsBase {
         externalCharge2.setDescription(UUID.randomUUID().toString());
         externalCharges.add(externalCharge2);
 
-
         final List<InvoiceItem> createdExternalCharges = invoiceApi.createExternalCharges(accountJson.getAccountId(), externalCharges, clock.getUTCToday(), true, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(createdExternalCharges.size(), 2);
         assertEquals(createdExternalCharges.get(0).getCurrency(), accountJson.getCurrency());
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
     }
-
 
     @Test(groups = "slow", description = "Can create an external charge for a bundle")
     public void testExternalChargeForBundleOnNewInvoice() throws Exception {
@@ -631,8 +624,6 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 3);
     }
 
-
-
     @Test(groups = "slow", description = "Can paginate and search through all invoices")
     public void testInvoicesPagination() throws Exception {
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
@@ -669,11 +660,11 @@ public class TestInvoice extends TestJaxrsBase {
         final Account account = createAccountWithDefaultPaymentMethod();
 
         final BigDecimal creditAmount = BigDecimal.TEN;
-        final Credit credit = new Credit();
+        final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(account.getAccountId());
         credit.setInvoiceId(null);
-        credit.setCreditAmount(creditAmount);
-        final Credit creditJson = creditApi.createCredit(credit, false, NULL_PLUGIN_PROPERTIES, requestOptions);
+        credit.setAmount(creditAmount);
+        final InvoiceItem creditJson = creditApi.createCredit(credit, false, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         Invoice invoice = invoiceApi.getInvoice(creditJson.getInvoiceId(), requestOptions);
         Assert.assertEquals(invoice.getStatus(), InvoiceStatus.DRAFT);
@@ -726,13 +717,13 @@ public class TestInvoice extends TestJaxrsBase {
         final Account childAccount = createAccount(parentAccount.getAccountId());
 
         final BigDecimal creditAmount = BigDecimal.TEN;
-        final Credit credit = new Credit();
+        final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(childAccount.getAccountId());
         credit.setInvoiceId(null);
-        credit.setCreditAmount(creditAmount);
+        credit.setAmount(creditAmount);
 
         // insert credit to child account
-        final Credit creditJson = creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoiceItem creditJson = creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         Invoices childInvoices = accountApi.getInvoicesForAccount(childAccount.getAccountId(), null, true, false, false, false, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(childInvoices.size(), 1);

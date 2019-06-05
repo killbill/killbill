@@ -606,57 +606,6 @@ public class InvoiceResource extends JaxRsResourceBase {
 
 
 
-    private Iterable<InvoiceItem> validateSanitizeAndTranformInputItems(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
-        try {
-            final Iterable<InvoiceItemJson> sanitized = Iterables.transform(inputItems, new Function<InvoiceItemJson, InvoiceItemJson>() {
-                @Override
-                public InvoiceItemJson apply(final InvoiceItemJson input) {
-                    if (input.getCurrency() != null) {
-                        if (!input.getCurrency().equals(accountCurrency)) {
-                            throw new IllegalArgumentException(input.getCurrency().toString());
-                        }
-                        return input;
-                    } else {
-                        return new InvoiceItemJson(null,
-                                                   input.getInvoiceId(),
-                                                   input.getLinkedInvoiceItemId(),
-                                                   input.getAccountId(),
-                                                   input.getChildAccountId(),
-                                                   input.getBundleId(),
-                                                   input.getSubscriptionId(),
-                                                   input.getProductName(),
-                                                   input.getPlanName(),
-                                                   input.getPhaseName(),
-                                                   input.getUsageName(),
-                                                   input.getPrettyProductName(),
-                                                   input.getPrettyPlanName(),
-                                                   input.getPrettyPhaseName(),
-                                                   input.getPrettyUsageName(),
-                                                   input.getItemType(),
-                                                   input.getDescription(),
-                                                   input.getStartDate(),
-                                                   input.getEndDate(),
-                                                   input.getAmount(),
-                                                   input.getRate(),
-                                                   accountCurrency,
-                                                   input.getQuantity(),
-                                                   input.getItemDetails(),
-                                                   null,
-                                                   null);
-                    }
-                }
-            });
-
-            return Iterables.transform(sanitized, new Function<InvoiceItemJson, InvoiceItem>() {
-                @Override
-                public InvoiceItem apply(final InvoiceItemJson input) {
-                    return input.toInvoiceItem();
-                }
-            });
-        } catch (IllegalArgumentException e) {
-            throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, accountCurrency, e.getMessage());
-        }
-    }
 
     @TimedResource
     @GET

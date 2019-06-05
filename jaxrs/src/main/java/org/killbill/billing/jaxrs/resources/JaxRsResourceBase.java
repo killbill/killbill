@@ -57,6 +57,8 @@ import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
+import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.jaxrs.json.AuditLogJson;
@@ -64,6 +66,7 @@ import org.killbill.billing.jaxrs.json.BillingExceptionJson;
 import org.killbill.billing.jaxrs.json.BillingExceptionJson.StackTraceElementJson;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
+import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
 import org.killbill.billing.jaxrs.json.PaymentTransactionJson;
 import org.killbill.billing.jaxrs.json.PluginPropertyJson;
@@ -590,6 +593,59 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             }
         };
     }
+
+    protected Iterable<InvoiceItem> validateSanitizeAndTranformInputItems(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
+        try {
+            final Iterable<InvoiceItemJson> sanitized = Iterables.transform(inputItems, new Function<InvoiceItemJson, InvoiceItemJson>() {
+                @Override
+                public InvoiceItemJson apply(final InvoiceItemJson input) {
+                    if (input.getCurrency() != null) {
+                        if (!input.getCurrency().equals(accountCurrency)) {
+                            throw new IllegalArgumentException(input.getCurrency().toString());
+                        }
+                        return input;
+                    } else {
+                        return new InvoiceItemJson(null,
+                                                   input.getInvoiceId(),
+                                                   input.getLinkedInvoiceItemId(),
+                                                   input.getAccountId(),
+                                                   input.getChildAccountId(),
+                                                   input.getBundleId(),
+                                                   input.getSubscriptionId(),
+                                                   input.getProductName(),
+                                                   input.getPlanName(),
+                                                   input.getPhaseName(),
+                                                   input.getUsageName(),
+                                                   input.getPrettyProductName(),
+                                                   input.getPrettyPlanName(),
+                                                   input.getPrettyPhaseName(),
+                                                   input.getPrettyUsageName(),
+                                                   input.getItemType(),
+                                                   input.getDescription(),
+                                                   input.getStartDate(),
+                                                   input.getEndDate(),
+                                                   input.getAmount(),
+                                                   input.getRate(),
+                                                   accountCurrency,
+                                                   input.getQuantity(),
+                                                   input.getItemDetails(),
+                                                   null,
+                                                   null);
+                    }
+                }
+            });
+
+            return Iterables.transform(sanitized, new Function<InvoiceItemJson, InvoiceItem>() {
+                @Override
+                public InvoiceItem apply(final InvoiceItemJson input) {
+                    return input.toInvoiceItem();
+                }
+            });
+        } catch (IllegalArgumentException e) {
+            throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, accountCurrency, e.getMessage());
+        }
+    }
+
 
     public static Iterable<PaymentTransaction> getPaymentTransactions(final List<Payment> payments, final TransactionType transactionType) {
         return Iterables.concat(Iterables.transform(payments, new Function<Payment, Iterable<PaymentTransaction>>() {

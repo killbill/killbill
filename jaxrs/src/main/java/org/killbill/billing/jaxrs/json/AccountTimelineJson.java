@@ -39,6 +39,7 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(value="AccountTimeline")
@@ -75,12 +76,12 @@ public class AccountTimelineJson {
 
         this.invoices = new LinkedList<InvoiceJson>();
         // Extract the credits from the invoices first
-        final List<CreditJson> credits = new ArrayList<CreditJson>();
+        final List<InvoiceItemJson> credits = new ArrayList<InvoiceItemJson>();
         for (final Invoice invoice : invoices) {
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
                 if (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType())) {
                     final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForInvoiceItem(invoiceItem.getId());
-                    credits.add(new CreditJson(invoice, invoiceItem, auditLogs));
+                    credits.add(new InvoiceItemJson(invoiceItem, ImmutableList.of(), auditLogs));
                 }
             }
         }

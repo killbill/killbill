@@ -325,38 +325,47 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_CREDIT, creditId);
         }
 
-        return new CreditAdjInvoiceItem(creditItem.getId(), creditItem.getCreatedDate(), creditItem.getInvoiceId(), creditItem.getAccountId(),
-                                        creditItem.getStartDate(), creditItem.getDescription(), creditItem.getAmount().negate(), creditItem.getCurrency(), creditItem.getItemDetails());
+        return new CreditAdjInvoiceItem(creditItem.getId(),
+                                        creditItem.getCreatedDate(),
+                                        creditItem.getInvoiceId(),
+                                        creditItem.getAccountId(),
+                                        creditItem.getStartDate(),
+                                        creditItem.getDescription(),
+                                        creditItem.getAmount().negate(),
+                                        creditItem.getRate(),
+                                        creditItem.getCurrency(),
+                                        creditItem.getQuantity(),
+                                        creditItem.getItemDetails());
     }
 
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final LocalDate effectiveDate,
-                                    final Currency currency, final boolean autoCommit, final String description, final String itemDetails, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-        return insertCreditForInvoice(accountId, null, amount, effectiveDate, currency, autoCommit, description, itemDetails, properties, context);
+    public InvoiceItem insertCredit(final UUID accountId, final LocalDate effectiveDate, final InvoiceItem creditItem,
+                                    final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+        return insertCreditForInvoice(accountId, null, effectiveDate, creditItem, autoCommit, properties, context);
     }
 
     @Override
-    public InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
-                                              final LocalDate effectiveDate, final Currency currency, final String description, final String itemDetails, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-        return insertCreditForInvoice(accountId, invoiceId, amount, effectiveDate, currency, false, description, itemDetails, properties, context);
+    public InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final LocalDate effectiveDate, final InvoiceItem creditItem,
+                                              final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+        return insertCreditForInvoice(accountId, invoiceId, effectiveDate, creditItem, false, properties, context);
     }
 
-    private InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final LocalDate effectiveDate,
-                                               final Currency currency, final boolean autoCommit, final String description, final String itemDetails, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+    private InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final LocalDate effectiveDate, final InvoiceItem creditItem,
+                                               final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
 
-        // Create the new credit
+        // Re-Create the new credit to add the invoiceId if needed
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(UUIDs.randomUUID(),
                                                                  context.getCreatedDate(),
                                                                  invoiceId,
                                                                  accountId,
                                                                  effectiveDate,
-                                                                 description,
-                                                                 amount,
-                                                                 currency,
-                                                                 itemDetails);
-
-
-        final Iterable<InvoiceItem> result =  insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, ImmutableList.<InvoiceItem>of(inputCredit), autoCommit, properties, context);
+                                                                 creditItem.getDescription(),
+                                                                 creditItem.getAmount(),
+                                                                 creditItem.getRate(),
+                                                                 creditItem.getCurrency(),
+                                                                 creditItem.getQuantity(),
+                                                                 creditItem.getItemDetails());
+        final Iterable<InvoiceItem> result = insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, ImmutableList.<InvoiceItem>of(inputCredit), autoCommit, properties, context);
         return Iterables.getFirst(result, null);
     }
 
@@ -563,6 +572,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
                             break;
                         case CREDIT_ADJ:
+
                             newInvoiceItem = new CreditAdjInvoiceItem(UUIDs.randomUUID(),
                                                                       context.getCreatedDate(),
                                                                       curInvoiceForItem.getId(),
@@ -571,9 +581,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                       inputItem.getDescription(),
                                                                       // Note! The amount is negated here!
                                                                       inputItem.getAmount().negate(),
-                                                                      accountCurrency,
+                                                                      inputItem.getRate(),
+                                                                      inputItem.getCurrency(),
+                                                                      inputItem.getQuantity(),
                                                                       inputItem.getItemDetails());
-
                             break;
                         case TAX:
                             newInvoiceItem = new TaxInvoiceItem(UUIDs.randomUUID(),
