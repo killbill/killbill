@@ -20,25 +20,23 @@ package org.killbill.billing.util.security.api;
 
 import java.util.Set;
 
+import org.apache.shiro.realm.Realm;
+import org.killbill.billing.security.Permission;
+import org.killbill.billing.security.api.SecurityApi;
+import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.security.shiro.dao.UserDao;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.security.Permission;
-import org.killbill.billing.security.api.SecurityApi;
-import org.killbill.billing.util.UtilTestSuiteNoDB;
-
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class TestDefaultSecurityApi extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testRetrievePermissions() throws Exception {
         configureShiro();
-
-        // We don't want the Guice injected one (it has Shiro disabled)
-        final SecurityApi securityApi = new DefaultSecurityApi(Mockito.mock(UserDao.class));
 
         logout();
         final Set<String> anonsPermissions = securityApi.getCurrentUserPermissions(callContext);

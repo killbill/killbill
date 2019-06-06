@@ -152,15 +152,15 @@ public class TestSecurity extends TestJaxrsBase {
         logout();
         login(username, password);
         List<String> permissions = securityApi.getCurrentUserPermissions(requestOptions);
-        Assert.assertEquals(permissions.size(), Permission.values().length);
+        Assert.assertEquals(permissions, ImmutableList.<String>of("*"));
 
-        String newPassword = "IamTheBestWarrior";
+        final String newPassword = "IamTheBestWarrior";
         securityApi.updateUserPassword(username, new UserRoles(username, newPassword, null), requestOptions);
 
         logout();
         login(username, newPassword);
         permissions = securityApi.getCurrentUserPermissions(requestOptions);
-        Assert.assertEquals(permissions.size(), Permission.values().length);
+        Assert.assertEquals(permissions, ImmutableList.<String>of("*"));
 
         final String newRoleDefinition = "somethingLessNice";
         // Only enough permissions to invalidate itself in the last step...

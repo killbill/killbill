@@ -18,12 +18,15 @@
 
 package org.killbill.billing.util.security.api;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -33,7 +36,9 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.AuthorizationException;
+import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
@@ -48,6 +53,8 @@ import org.killbill.billing.util.security.shiro.dao.RolesPermissionsModelDao;
 import org.killbill.billing.util.security.shiro.dao.UserDao;
 import org.killbill.billing.util.security.shiro.dao.UserRolesModelDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -58,17 +65,21 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 public class DefaultSecurityApi implements SecurityApi {
 
-    private static final String[] allPermissions = new String[Permission.values().length];
+    // Custom Realm implementors are encouraged to enable DEBUG level logging for development
+    private static final Logger logger = LoggerFactory.getLogger(DefaultSecurityApi.class);
 
     private final UserDao userDao;
+    private final Set<Realm> realms;
+    private final Map<Realm, Method> doGetAuthorizationInfoMethods = new HashMap<Realm, Method>();
 
     @Inject
-    public DefaultSecurityApi(final UserDao userDao) {
+    public DefaultSecurityApi(final UserDao userDao, final Set<Realm> realms) {
         this.userDao = userDao;
+        this.realms = realms;
+        buildDoGetAuthorizationInfoMethods();
     }
 
     @Override
@@ -121,28 +132,51 @@ public class DefaultSecurityApi implements SecurityApi {
 
     @Override
     public Set<String> getCurrentUserPermissions(final TenantContext context) {
-        // Built-in permissions
-        final String[] killbillPermissionsString = getAllPermissionsAsStrings();
-        // Add user-defined permissions, if any
-        final Set<String> allPermissions = Sets.newHashSet(killbillPermissionsString);
-        allPermissions.addAll(userDao.getAllPermissions());
-        final String[] allPermissionsArray = allPermissions.toArray(new String[]{});
-
         final Subject subject = SecurityUtils.getSubject();
-        // Bulk (optimized) call
-        final boolean[] permissions = subject.isPermitted(allPermissionsArray);
 
-        final Set<String> userPermissions = new HashSet<String>();
-        for (int i = 0; i < permissions.length; i++) {
-            final String permissionName = allPermissionsArray[i];
-            if (permissions[i] &&
-                // Don't return the "*" version
-                !("*".equals(permissionName) || permissionName.endsWith(":*"))) {
-                userPermissions.add(permissionName);
+        final Set<String> allPermissions = new HashSet<String>();
+        for (final Entry<Realm, Method> realmAndMethod : doGetAuthorizationInfoMethods.entrySet()) {
+            try {
+                final AuthorizationInfo authorizationInfo = (AuthorizationInfo) realmAndMethod.getValue().invoke(realmAndMethod.getKey(), subject.getPrincipals());
+                if (authorizationInfo == null) {
+                    logger.debug("No AuthorizationInfo returned from Realm {}", realmAndMethod.getKey());
+                } else {
+                    final Collection<org.apache.shiro.authz.Permission> realmObjectPermissions = authorizationInfo.getObjectPermissions();
+                    if (realmObjectPermissions == null) {
+                        logger.debug("No ObjectPermissions returned from Realm {}", realmAndMethod.getKey());
+                    } else {
+                        for (final org.apache.shiro.authz.Permission realmPermission : realmObjectPermissions) {
+                            // Note: this assumes custom realms return something sensible here
+                            final String realmPermissionAsString = realmPermission.toString();
+                            if (realmPermissionAsString == null) {
+                                logger.debug("Null ObjectPermission#toString returned from Realm {}", realmAndMethod.getKey());
+                            } else {
+                                allPermissions.add(realmPermissionAsString);
+                            }
+                        }
+                    }
+                    // The Javadoc says that getObjectPermissions should contain the results from getStringPermissions,
+                    // but this is incorrect in practice (JdbcRealm for instance)
+                    final Collection<String> realmStringPermissions = authorizationInfo.getStringPermissions();
+                    if (realmStringPermissions == null) {
+                        logger.debug("No StringPermissions returned from Realm {}", realmAndMethod.getKey());
+                    } else {
+                        allPermissions.addAll(authorizationInfo.getStringPermissions());
+                    }
+                }
+            } catch (final IllegalAccessException e) {
+                // Ignore
+                logger.debug("Unable to retrieve permissions for Realm {}", realmAndMethod.getKey(), e);
+            } catch (final InvocationTargetException e) {
+                // Ignore
+                logger.debug("Unable to retrieve permissions for Realm {}", realmAndMethod.getKey(), e);
+            } catch (final RuntimeException e) {
+                // Ignore
+                logger.debug("Unable to retrieve permissions for Realm {}", realmAndMethod.getKey(), e);
             }
         }
 
-        return userPermissions;
+        return allPermissions;
     }
 
     @Override
@@ -279,20 +313,6 @@ public class DefaultSecurityApi implements SecurityApi {
         return expandedPermissions;
     }
 
-    private String[] getAllPermissionsAsStrings() {
-        if (allPermissions[0] == null) {
-            synchronized (allPermissions) {
-                if (allPermissions[0] == null) {
-                    final Permission[] killbillPermissions = Permission.values();
-                    for (int i = 0; i < killbillPermissions.length; i++) {
-                        allPermissions[i] = killbillPermissions[i].toString();
-                    }
-                }
-            }
-        }
-        return allPermissions;
-    }
-
     private void invalidateJDBCAuthorizationCache(final String username) {
         final Collection<Realm> realms = ((DefaultSecurityManager) SecurityUtils.getSecurityManager()).getRealms();
         final KillBillJdbcRealm killBillJdbcRealm = (KillBillJdbcRealm) Iterables.tryFind(realms, new Predicate<Realm>() {
@@ -306,6 +326,35 @@ public class DefaultSecurityApi implements SecurityApi {
             final SimplePrincipalCollection principals = new SimplePrincipalCollection();
             principals.add(username, killBillJdbcRealm.getName());
             killBillJdbcRealm.clearCachedAuthorizationInfo(principals);
+        }
+    }
+
+    private void buildDoGetAuthorizationInfoMethods() {
+        for (final Realm realm : realms) {
+            if (!(realm instanceof AuthorizingRealm)) {
+                logger.debug("Unable to retrieve doGetAuthorizationInfo method from Realm {}: not an AuthorizingRealm", realm);
+                continue;
+            }
+
+            Method doGetAuthorizationInfoMethod = null;
+            Class<?> clazz = realm.getClass();
+            while (clazz != null) {
+                final Method[] methods = clazz.getDeclaredMethods();
+                for (final Method method : methods) {
+                    if ("doGetAuthorizationInfo".equals(method.getName())) {
+                        doGetAuthorizationInfoMethod = method;
+                        doGetAuthorizationInfoMethod.setAccessible(true);
+                        break;
+                    }
+                }
+                clazz = clazz.getSuperclass();
+            }
+            if (doGetAuthorizationInfoMethod == null) {
+                logger.debug("Unable to retrieve doGetAuthorizationInfo method from Realm {}", realm);
+                continue;
+            }
+
+            doGetAuthorizationInfoMethods.put(realm, doGetAuthorizationInfoMethod);
         }
     }
 }
