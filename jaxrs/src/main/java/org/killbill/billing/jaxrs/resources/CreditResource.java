@@ -131,15 +131,7 @@ public class CreditResource extends JaxRsResourceBase {
         // TODO Having a common method is great, but the validation is quite minimal...
         final Iterable<InvoiceItem> inputItems = validateSanitizeAndTranformInputItems(account.getCurrency(), ImmutableList.of(json));
 
-        final InvoiceItem credit;
-        if (json.getInvoiceId() != null) {
-            // Apply an invoice level credit
-            credit = invoiceUserApi.insertCreditForInvoice(account.getId(), json.getInvoiceId(), effectiveDate, inputItems.iterator().next(), pluginProperties, callContext);
-        } else {
-            // Apply a account level credit
-            credit = invoiceUserApi.insertCredit(account.getId(), effectiveDate, inputItems.iterator().next(), autoCommit, pluginProperties, callContext);
-        }
-
+        final InvoiceItem credit = invoiceUserApi.insertCredits(account.getId(), effectiveDate, inputItems, autoCommit, pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId(), request);
     }
 

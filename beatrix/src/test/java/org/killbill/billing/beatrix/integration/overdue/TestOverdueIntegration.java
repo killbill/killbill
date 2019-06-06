@@ -1145,7 +1145,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.BLOCK);
 
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(2012, 06, 30), "credit invoice", accountBalance, account.getCurrency(), null);
-        invoiceUserApi.insertCredit(account.getId(), new LocalDate(2012, 06, 30), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(2012, 06, 30), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
     }

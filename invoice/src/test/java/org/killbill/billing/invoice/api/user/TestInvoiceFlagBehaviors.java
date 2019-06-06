@@ -87,7 +87,7 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Add credit on the account
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, accountId, clock.getUTCToday(), "some description", BigDecimal.TEN, accountCurrency, null);
-        invoiceUserApi.insertCredit(accountId, clock.getUTCToday(), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
 
         final Invoice invoice2 = invoiceUserApi.getInvoice(invoiceId, callContext);
         assertEquals(invoice2.getBalance().compareTo(BigDecimal.ZERO), 0);
@@ -107,7 +107,7 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Add credit on the account
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, accountId, clock.getUTCToday(), "some description", BigDecimal.TEN, accountCurrency, null);
-        invoiceUserApi.insertCredit(accountId, clock.getUTCToday(), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
 
         final BigDecimal accountBalance0 = invoiceUserApi.getAccountBalance(accountId, callContext);
         assertEquals(accountBalance0.compareTo(new BigDecimal("-10.0")), 0);
@@ -141,7 +141,7 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Add credit on the account
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, accountId, clock.getUTCToday(), "some description", BigDecimal.TEN, accountCurrency, null);
-        invoiceUserApi.insertCredit(accountId, clock.getUTCToday(), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
 
         final UUID invoiceId = invoiceUserApi.createMigrationInvoice(accountId, null, ImmutableList.<InvoiceItem>of(new FixedPriceInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, "foo", "bar", null, null, BigDecimal.ONE, accountCurrency)), callContext);
 
@@ -162,7 +162,7 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Add credit on the account
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, accountId, clock.getUTCToday(), "some description", BigDecimal.TEN, accountCurrency, null);
-        invoiceUserApi.insertCredit(accountId, clock.getUTCToday(), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
 
         // Create new invoice with one charge and expect account credit to be used
         final List<InvoiceItem> items = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, null, new BigDecimal("4.0"), accountCurrency, null)), false, null, callContext);

@@ -222,7 +222,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
 
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), clock.getUTCToday(), "VIP", new BigDecimal("100"), account.getCurrency(), null);
-        invoiceUserApi.insertCredit(account.getId(), clock.getUTCToday(), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -278,7 +278,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), clock.getUTCToday(), "VIP", new BigDecimal("100"), account.getCurrency(), null);
-        invoiceUserApi.insertCredit(account.getId(), clock.getUTCToday(), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,

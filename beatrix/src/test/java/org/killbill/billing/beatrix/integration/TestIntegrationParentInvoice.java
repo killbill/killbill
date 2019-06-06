@@ -266,7 +266,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
 
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), clock.getUTCToday(), "some description", BigDecimal.TEN, Currency.USD, null);
-        invoiceUserApi.insertCredit(childAccount.getId(), clock.getUTCToday(), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
@@ -348,7 +348,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // add credit to child account after invoice has been paid
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), clock.getUTCToday(), "some description", BigDecimal.TEN, Currency.USD, null);
-        invoiceUserApi.insertCredit(childAccount.getId(), clock.getUTCToday(), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
 
         assertListenerStatus();
 
@@ -990,7 +990,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), "some description", new BigDecimal("250"), Currency.USD, null);
-        invoiceUserApi.insertCredit(childAccount.getId(), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(childAccount.getId(), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         BigDecimal childAccountCBA = invoiceUserApi.getAccountCBA(childAccount.getId(), callContext);

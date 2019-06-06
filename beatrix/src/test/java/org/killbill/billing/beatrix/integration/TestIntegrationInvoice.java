@@ -90,7 +90,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
 
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), "some description", new BigDecimal("300"), account.getCurrency(), null);
-        invoiceUserApi.insertCredit(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), inputCredit, true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);

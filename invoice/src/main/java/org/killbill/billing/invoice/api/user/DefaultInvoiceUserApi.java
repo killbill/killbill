@@ -339,33 +339,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final LocalDate effectiveDate, final InvoiceItem creditItem,
+    public InvoiceItem insertCredits(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> creditItems,
                                     final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-        return insertCreditForInvoice(accountId, null, effectiveDate, creditItem, autoCommit, properties, context);
-    }
-
-    @Override
-    public InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final LocalDate effectiveDate, final InvoiceItem creditItem,
-                                              final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-        return insertCreditForInvoice(accountId, invoiceId, effectiveDate, creditItem, false, properties, context);
-    }
-
-    private InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final LocalDate effectiveDate, final InvoiceItem creditItem,
-                                               final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-
-        // Re-Create the new credit to add the invoiceId if needed
-        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(UUIDs.randomUUID(),
-                                                                 context.getCreatedDate(),
-                                                                 invoiceId,
-                                                                 accountId,
-                                                                 effectiveDate,
-                                                                 creditItem.getDescription(),
-                                                                 creditItem.getAmount(),
-                                                                 creditItem.getRate(),
-                                                                 creditItem.getCurrency(),
-                                                                 creditItem.getQuantity(),
-                                                                 creditItem.getItemDetails());
-        final Iterable<InvoiceItem> result = insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, ImmutableList.<InvoiceItem>of(inputCredit), autoCommit, properties, context);
+        final Iterable<InvoiceItem> result = insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
         return Iterables.getFirst(result, null);
     }
 
