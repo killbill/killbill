@@ -158,8 +158,10 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Adjust the invoice for the full amount
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(invoiceId, accountId, clock.getUTCToday(), "some description", invoiceBalance, accountCurrency, null);
-        final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), false, null, callContext);
+        final List<InvoiceItem> creditInvoiceItems = invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), false, null, callContext);
+        Assert.assertEquals(creditInvoiceItems.size(), 1);
 
+        final InvoiceItem creditInvoiceItem = creditInvoiceItems.get(0);
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(creditInvoiceItem.getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
         Assert.assertEquals(creditInvoiceItem.getAccountId(), accountId);
@@ -349,7 +351,10 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal creditAmount = BigDecimal.TEN;
 
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, accountId, clock.getUTCToday(), "some description", creditAmount, accountCurrency, null);
-        final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), false, null, callContext);
+        final List<InvoiceItem> creditInvoiceItems = invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), false, null, callContext);
+
+        Assert.assertEquals(creditInvoiceItems.size(), 1);
+        final InvoiceItem creditInvoiceItem = creditInvoiceItems.get(0);
 
         final UUID invoiceId = creditInvoiceItem.getInvoiceId();
         Invoice creditInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);

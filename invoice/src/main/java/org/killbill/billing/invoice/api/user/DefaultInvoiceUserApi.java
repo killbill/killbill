@@ -339,10 +339,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public InvoiceItem insertCredits(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> creditItems,
+    public List<InvoiceItem> insertCredits(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> creditItems,
                                     final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-        final Iterable<InvoiceItem> result = insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
-        return Iterables.getFirst(result, null);
+        return insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
     }
 
     @Override

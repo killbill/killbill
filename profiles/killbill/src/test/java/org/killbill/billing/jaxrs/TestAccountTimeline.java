@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.model.InvoiceItems;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AccountTimeline;
 import org.killbill.billing.client.model.gen.AuditLog;
@@ -84,7 +85,10 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(accountJson.getAccountId());
         credit.setAmount(creditAmount);
-        creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+
+        final InvoiceItems credits = new InvoiceItems();
+        credits.add(credit);
+        creditApi.createCredits(credits, true, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Add refund
         final Payment postedPayment = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0);
