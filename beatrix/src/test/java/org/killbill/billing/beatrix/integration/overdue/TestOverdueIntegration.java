@@ -47,6 +47,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
@@ -1142,7 +1143,9 @@ public class TestOverdueIntegration extends TestOverdueBase {
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.BLOCK);
-        invoiceUserApi.insertCredit(account.getId(), accountBalance, new LocalDate(2012, 06, 30), account.getCurrency(), true, "credit invoice", null, null, callContext);
+
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(2012, 06, 30), "credit invoice", accountBalance, account.getCurrency(), null);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(2012, 06, 30), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
     }

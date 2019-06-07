@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -50,8 +51,8 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         final BigDecimal balance = BigDecimal.ZERO;
         final UUID accountId = UUID.randomUUID();
         final String bundleKeys = UUID.randomUUID().toString();
-        final CreditJson creditJson = createCreditJson();
-        final List<CreditJson> credits = ImmutableList.<CreditJson>of(creditJson);
+        final InvoiceItemJson creditJson = createCreditJson();
+        final List<InvoiceItemJson> credits = ImmutableList.<InvoiceItemJson>of(creditJson);
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
         final InvoiceJson invoiceJsonSimple = new InvoiceJson(amount, Currency.USD, InvoiceStatus.COMMITTED,
                                                               creditAdj, refundAdj, invoiceId, invoiceDate,
@@ -95,7 +96,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
 
 
         final String bundleKeys = UUID.randomUUID().toString();
-        final List<CreditJson> credits = ImmutableList.<CreditJson>of(createCreditJson());
+        final List<InvoiceItemJson> credits = ImmutableList.<InvoiceItemJson>of(createCreditJson());
 
         final InvoiceJson invoiceJson = new InvoiceJson(invoice, bundleKeys, credits, null);
         Assert.assertEquals(invoiceJson.getAmount(), invoice.getChargedAmount());
@@ -113,14 +114,39 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(invoiceJson.getStatus(), InvoiceStatus.COMMITTED);
     }
 
-    private CreditJson createCreditJson() {
+    private InvoiceItemJson createCreditJson() {
         final BigDecimal creditAmount = BigDecimal.TEN;
         final UUID creditId = UUID.randomUUID();
         final Currency currency = Currency.USD;
         final UUID invoiceId = UUID.randomUUID();
-        final String invoiceNumber = UUID.randomUUID().toString();
         final LocalDate effectiveDate = clock.getUTCToday();
         final UUID accountId = UUID.randomUUID();
-        return new CreditJson(creditId, creditAmount, currency, invoiceId, invoiceNumber, effectiveDate,  accountId, null, null, null);
+
+        return new InvoiceItemJson(creditId,
+                                   invoiceId,
+                                   null,
+                                   accountId,
+                                   null,
+                                   null,
+                                   null,
+                                   null,
+                                   null,
+                                   null,
+                                   null,
+                                   null,
+                                   null,
+                                   null,
+                                   null,
+                                   InvoiceItemType.CBA_ADJ,
+                                   null,
+                                   effectiveDate,
+                                   effectiveDate,
+                                   creditAmount,
+                                   null,
+                                   currency,
+                                   null,
+                                   null,
+                                   null,
+                                   null);
     }
 }

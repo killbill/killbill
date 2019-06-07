@@ -227,7 +227,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         input.setProductCategory(productCategory);
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, null, waitCompletion, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1L, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, waitCompletion, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1L, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
 
         return subscription;

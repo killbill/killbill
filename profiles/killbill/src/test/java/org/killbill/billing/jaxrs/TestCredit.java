@@ -24,8 +24,8 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.gen.Account;
-import org.killbill.billing.client.model.gen.Credit;
 import org.killbill.billing.client.model.gen.Invoice;
+import org.killbill.billing.client.model.gen.InvoiceItem;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -51,12 +51,14 @@ public class TestCredit extends TestJaxrsBase {
     public void testAddCreditToInvoice() throws Exception {
         final DateTime effectiveDate = clock.getUTCNow();
         final BigDecimal creditAmount = BigDecimal.ONE;
-        final Credit credit = new Credit();
+        final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(accountJson.getAccountId());
-        credit.setCreditAmount(creditAmount);
+        credit.setAmount(creditAmount);
         credit.setDescription("description");
+        credit.setQuantity(5);
+        credit.setRate(BigDecimal.TEN);
         credit.setItemDetails("itemDetails");
-        Credit objFromJson = creditApi.createCredit(credit, false, NULL_PLUGIN_PROPERTIES, requestOptions);
+        InvoiceItem objFromJson = creditApi.createCredit(credit, false, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final UUID invoiceId = objFromJson.getInvoiceId();
         credit.setInvoiceId(invoiceId);
@@ -65,9 +67,12 @@ public class TestCredit extends TestJaxrsBase {
         // We can't just compare the object via .equals() due e.g. to the invoice id
         assertEquals(objFromJson.getAccountId(), accountJson.getAccountId());
         assertEquals(objFromJson.getInvoiceId(), invoiceId);
-        assertEquals(objFromJson.getCreditAmount().compareTo(creditAmount), 0);
-        assertEquals(objFromJson.getEffectiveDate().compareTo(effectiveDate.toLocalDate()), 0);
+        assertEquals(objFromJson.getAmount().compareTo(creditAmount), 0);
+        assertEquals(objFromJson.getStartDate().compareTo(effectiveDate.toLocalDate()), 0);
         assertEquals(objFromJson.getDescription().compareTo("description"), 0);
+        assertEquals(objFromJson.getQuantity().compareTo(5), 0);
+        assertEquals(objFromJson.getRate().compareTo(BigDecimal.TEN), 0);
+        assertEquals(objFromJson.getItemDetails().compareTo("itemDetails"), 0);
     }
 
     @Test(groups = "slow", description = "Can add a credit to an existing account",
@@ -76,19 +81,19 @@ public class TestCredit extends TestJaxrsBase {
         final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).get(1);
 
         final BigDecimal creditAmount = BigDecimal.ONE;
-        final Credit credit = new Credit();
+        final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(accountJson.getAccountId());
         credit.setInvoiceId(invoice.getInvoiceId());
-        credit.setCreditAmount(creditAmount);
-        final Credit objFromJson = creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
-        Assert.assertTrue(objFromJson.getCreditAmount().compareTo(creditAmount) == 0);
+        credit.setAmount(creditAmount);
+        final InvoiceItem objFromJson = creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertTrue(objFromJson.getAmount().compareTo(creditAmount) == 0);
     }
 
     @Test(groups = "slow", description = "Cannot add a credit if the account doesn't exist")
     public void testAccountDoesNotExist() throws Exception {
-        final Credit credit = new Credit();
+        final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(UUID.randomUUID());
-        credit.setCreditAmount(BigDecimal.TEN);
+        credit.setAmount(BigDecimal.TEN);
 
         // Try to create the credit
         assertNull(creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions));
@@ -96,9 +101,9 @@ public class TestCredit extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Cannot credit a badly formatted credit")
     public void testBadRequest() throws Exception {
-        final Credit credit = new Credit();
+        final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(accountJson.getAccountId());
-        credit.setCreditAmount(BigDecimal.TEN.negate());
+        credit.setAmount(BigDecimal.TEN.negate());
 
         // Try to create the credit
         try {

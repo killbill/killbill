@@ -56,7 +56,7 @@ public class InvoiceJson extends JsonBase {
     private final UUID accountId;
     private final List<InvoiceItemJson> items;
     private final String bundleKeys;
-    private final List<CreditJson> credits;
+    private final List<InvoiceItemJson> credits;
     private final InvoiceStatus status;
     private final Boolean isParentInvoice;
     private final UUID parentInvoiceId;
@@ -75,7 +75,7 @@ public class InvoiceJson extends JsonBase {
                        @JsonProperty("balance") final BigDecimal balance,
                        @JsonProperty("accountId") final UUID accountId,
                        @JsonProperty("bundleKeys") final String bundleKeys,
-                       @JsonProperty("credits") final List<CreditJson> credits,
+                       @JsonProperty("credits") final List<InvoiceItemJson> credits,
                        @JsonProperty("items") final List<InvoiceItemJson> items,
                        @JsonProperty("isParentInvoice") final Boolean isParentInvoice,
                        @JsonProperty("parentInvoiceId") final UUID parentInvoiceId,
@@ -105,7 +105,7 @@ public class InvoiceJson extends JsonBase {
         this(input, false, null, null);
     }
 
-    public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
+    public InvoiceJson(final Invoice input, final String bundleKeys, final List<InvoiceItemJson> credits, final List<AuditLog> auditLogs) {
         this(input.getChargedAmount(), input.getCurrency(), input.getStatus(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
              input.getBalance(), input.getAccountId(), bundleKeys, credits, null, input.isParentInvoice(),
@@ -198,7 +198,7 @@ public class InvoiceJson extends JsonBase {
         return bundleKeys;
     }
 
-    public List<CreditJson> getCredits() {
+    public List<InvoiceItemJson> getCredits() {
         return credits;
     }
 

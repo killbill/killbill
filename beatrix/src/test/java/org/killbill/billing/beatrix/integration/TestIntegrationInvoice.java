@@ -31,6 +31,7 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -41,6 +42,7 @@ import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -85,7 +87,10 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("300"), new LocalDate(clock.getUTCNow(), account.getTimeZone()), account.getCurrency(), true, null, null, null, callContext);
+
+
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), "some description", new BigDecimal("300"), account.getCurrency(), null);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);

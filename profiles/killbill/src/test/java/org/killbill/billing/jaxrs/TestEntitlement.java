@@ -287,7 +287,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                            ExtBusEventType.INVOICE_CREATION,
                                            ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
                                            ExtBusEventType.PAYMENT_SUCCESS);
-        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
         Assert.assertEquals(subscription.getPrices().size(), 2);
 
@@ -603,7 +603,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setProductCategory(ProductCategory.BASE);
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
@@ -653,7 +653,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setProductCategory(ProductCategory.BASE);
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        final Subscription entitlementJson = subscriptionApi.createSubscription(input, initialDate.toLocalDate().plusMonths(1), null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input, initialDate.toLocalDate().plusMonths(1), null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
@@ -693,7 +693,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList("notrial");
 
-        final Subscription subscriptionJson = subscriptionApi.createSubscription(input, null, null, null, null, null, true, 10L, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscriptionJson = subscriptionApi.createSubscription(input, null, null, null, null, true, 10L, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(subscriptionJson);
 
         // verify that number of invoices is now 1
@@ -715,7 +715,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setAccountId(accountJson.getAccountId());
         input.setPlanName("shotgun-monthly");
         input.setBillCycleDayLocal(28);
-        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(subscription.getBillCycleDayLocal().intValue(), 28);
         callbackServlet.assertListenerStatus();
 
@@ -779,7 +779,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setExternalKey("somethingSpecial");
         input.setPlanName("shotgun-monthly");
 
-        final Subscription entitlementJson = subscriptionApi.createSubscription(input, null, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(entitlementJson.getProductName(), "Shotgun");
         Assert.assertEquals(entitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
         Assert.assertEquals(entitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);

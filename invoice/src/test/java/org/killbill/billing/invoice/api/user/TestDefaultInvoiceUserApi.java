@@ -39,6 +39,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
@@ -156,8 +157,9 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(accountBalance, invoiceBalance);
 
         // Adjust the invoice for the full amount
-        final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, invoiceBalance,
-                                                                                    clock.getUTCToday(), accountCurrency, "some description", null, null, callContext);
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(invoiceId, accountId, clock.getUTCToday(), "some description", invoiceBalance, accountCurrency, null);
+        final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), false, null, callContext);
+
         Assert.assertEquals(creditInvoiceItem.getInvoiceId(), invoiceId);
         Assert.assertEquals(creditInvoiceItem.getInvoiceItemType(), InvoiceItemType.CREDIT_ADJ);
         Assert.assertEquals(creditInvoiceItem.getAccountId(), accountId);
@@ -178,8 +180,9 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCantAdjustInvoiceWithNegativeAmount() throws Exception {
         try {
-            invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, BigDecimal.TEN.negate(), clock.getUTCToday(), accountCurrency,
-                                                  null, null, null, callContext);
+
+            final InvoiceItem inputCredit = new CreditAdjInvoiceItem(invoiceId, accountId, clock.getUTCToday(), "some description", BigDecimal.TEN.negate(), accountCurrency, null);
+            invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), false, null, callContext);
             Assert.fail("Should not have been able to adjust an invoice with a negative amount");
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.CREDIT_AMOUNT_INVALID.getCode());
@@ -344,8 +347,9 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Adjust the invoice for the full amount
         final BigDecimal creditAmount = BigDecimal.TEN;
-        final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCreditForInvoice(accountId, null, creditAmount,
-                                                                                    clock.getUTCToday(), accountCurrency, null, null, null, callContext);
+
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, accountId, clock.getUTCToday(), "some description", creditAmount, accountCurrency, null);
+        final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), false, null, callContext);
 
         final UUID invoiceId = creditInvoiceItem.getInvoiceId();
         Invoice creditInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
@@ -370,8 +374,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         }
 
         try {
-            invoiceUserApi.insertCreditForInvoice(accountId, invoiceId, creditAmount,
-                                                  clock.getUTCToday(), accountCurrency, null, null, null, callContext);
+            final InvoiceItem inputCreditForInvoice = new CreditAdjInvoiceItem(invoiceId, accountId, clock.getUTCToday(), "some description", creditAmount, accountCurrency, null);
+            invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCreditForInvoice), false, null, callContext);
             Assert.fail("Should fail to add credit on already committed invoice");
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_ALREADY_COMMITTED.getCode());
