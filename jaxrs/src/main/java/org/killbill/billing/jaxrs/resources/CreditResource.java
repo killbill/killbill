@@ -32,6 +32,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
@@ -55,7 +56,9 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
@@ -96,7 +99,7 @@ public class CreditResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid credit id supplied"),
                            @ApiResponse(code = 404, message = "Credit not found")})
     public Response getCredit(@PathParam("creditId") final UUID creditId,
-                              @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException, AccountApiException {
+                              @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final InvoiceItem credit = invoiceUserApi.getCreditById(creditId, tenantContext);
         final InvoiceItemJson creditJson = new InvoiceItemJson(credit, ImmutableList.of(), null);
@@ -106,11 +109,11 @@ public class CreditResource extends JaxRsResourceBase {
     @POST
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Create a credit", response = InvoiceItemJson.class)
+    @ApiOperation(value = "Create a credit", response = InvoiceItemJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Created credit successfully"),
                            @ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response createCredit(final InvoiceItemJson json,
+    public Response createCredits(final List<InvoiceItemJson> json,
                                  @QueryParam(QUERY_AUTO_COMMIT) @DefaultValue("false") final Boolean autoCommit,
                                  @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
@@ -119,20 +122,27 @@ public class CreditResource extends JaxRsResourceBase {
                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         verifyNonNullOrEmpty(json, "CreditJson body should be specified");
-        verifyNonNullOrEmpty(json.getAccountId(), "CreditJson accountId needs to be set",
-                             json.getAmount(), "CreditJson creditAmount needs to be set");
+        verifyNonNullOrEmpty(json.get(0).getAccountId(), "CreditJson accountId needs to be set",
+                             json.get(0).getAmount(), "CreditJson creditAmount needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createCallContextWithAccountId(json.getAccountId(), createdBy, reason, comment, request);
+        final CallContext callContext = context.createCallContextWithAccountId(json.get(0).getAccountId(), createdBy, reason, comment, request);
 
-        final Account account = accountUserApi.getAccountById(json.getAccountId(), callContext);
+        final Account account = accountUserApi.getAccountById(json.get(0).getAccountId(), callContext);
         final LocalDate effectiveDate = new LocalDate(callContext.getCreatedDate(), account.getTimeZone());
 
-        // TODO Having a common method is great, but the validation is quite minimal...
-        final Iterable<InvoiceItem> inputItems = validateSanitizeAndTranformInputItems(account.getCurrency(), ImmutableList.of(json));
+        final Iterable<InvoiceItem> inputItems = validateSanitizeAndTranformInputItems(account.getCurrency(), json);
 
-        final InvoiceItem credit = invoiceUserApi.insertCredits(account.getId(), effectiveDate, inputItems, autoCommit, pluginProperties, callContext);
-        return uriBuilder.buildResponse(uriInfo, CreditResource.class, "getCredit", credit.getId(), request);
+        final List<InvoiceItem> createdCredits = invoiceUserApi.insertCredits(account.getId(), effectiveDate, inputItems, autoCommit, pluginProperties, callContext);
+        final List<InvoiceItemJson> createdCreditsJson = Lists.<InvoiceItem, InvoiceItemJson>transform(createdCredits, new Function<InvoiceItem, InvoiceItemJson>() {
+                                                                                                           @Override
+                                                                                                           public InvoiceItemJson apply(final InvoiceItem input) {
+                                                                                                               return new InvoiceItemJson(input);
+                                                                                                           }
+                                                                                                       }
+                                                                                                      );
+
+        return Response.status(Status.OK).entity(createdCreditsJson).build();
     }
 
     @Override
