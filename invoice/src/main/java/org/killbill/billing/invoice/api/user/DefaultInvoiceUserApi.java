@@ -324,24 +324,34 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         if (creditItem == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_CREDIT, creditId);
         }
-
-        return new CreditAdjInvoiceItem(creditItem.getId(),
-                                        creditItem.getCreatedDate(),
-                                        creditItem.getInvoiceId(),
-                                        creditItem.getAccountId(),
-                                        creditItem.getStartDate(),
-                                        creditItem.getDescription(),
-                                        creditItem.getAmount().negate(),
-                                        creditItem.getRate(),
-                                        creditItem.getCurrency(),
-                                        creditItem.getQuantity(),
-                                        creditItem.getItemDetails());
+        return negateCreditItems(ImmutableList.of(creditItem)).get(0);
     }
 
     @Override
     public List<InvoiceItem> insertCredits(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> creditItems,
                                     final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-        return insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
+        final List<InvoiceItem> items =  insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
+        return negateCreditItems(items);
+    }
+
+    private static List<InvoiceItem> negateCreditItems(final List<InvoiceItem> input) {
+        final Iterable<InvoiceItem> tmp = Iterables.transform(input, new Function<InvoiceItem, InvoiceItem>() {
+            @Override
+            public InvoiceItem apply(final InvoiceItem creditItem) {
+                return new CreditAdjInvoiceItem(creditItem.getId(),
+                                                creditItem.getCreatedDate(),
+                                                creditItem.getInvoiceId(),
+                                                creditItem.getAccountId(),
+                                                creditItem.getStartDate(),
+                                                creditItem.getDescription(),
+                                                creditItem.getAmount().negate(),
+                                                creditItem.getRate(),
+                                                creditItem.getCurrency(),
+                                                creditItem.getQuantity(),
+                                                creditItem.getItemDetails());
+            }
+        });
+        return ImmutableList.copyOf(tmp);
     }
 
     @Override
