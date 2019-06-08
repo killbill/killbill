@@ -106,7 +106,8 @@ public class TestCredit extends TestJaxrsBase {
         credits.add(credit);
 
         // Try to create the credit
-        assertNull(creditApi.createCredits(credits, true, NULL_PLUGIN_PROPERTIES, requestOptions));
+        final InvoiceItems result = creditApi.createCredits(credits, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(result.size(), 0);
     }
 
     @Test(groups = "slow", description = "Cannot credit a badly formatted credit")
