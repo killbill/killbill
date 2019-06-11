@@ -51,6 +51,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
@@ -664,14 +665,18 @@ public class TestInvoice extends TestJaxrsBase {
         credit.setAccountId(account.getAccountId());
         credit.setInvoiceId(null);
         credit.setAmount(creditAmount);
-        final InvoiceItem creditJson = creditApi.createCredit(credit, false, NULL_PLUGIN_PROPERTIES, requestOptions);
 
-        Invoice invoice = invoiceApi.getInvoice(creditJson.getInvoiceId(), requestOptions);
+        InvoiceItems credits = new InvoiceItems();
+        credits.add(credit);
+        final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, false, NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(creditJsons.size(), 1);
+
+        Invoice invoice = invoiceApi.getInvoice(creditJsons.get(0).getInvoiceId(), requestOptions);
         Assert.assertEquals(invoice.getStatus(), InvoiceStatus.DRAFT);
 
         invoiceApi.commitInvoice(invoice.getInvoiceId(), requestOptions);
 
-        invoice = invoiceApi.getInvoice(creditJson.getInvoiceId(), requestOptions);
+        invoice = invoiceApi.getInvoice(creditJsons.get(0).getInvoiceId(), requestOptions);
         Assert.assertEquals(invoice.getStatus(), InvoiceStatus.COMMITTED);
     }
 
@@ -723,7 +728,10 @@ public class TestInvoice extends TestJaxrsBase {
         credit.setAmount(creditAmount);
 
         // insert credit to child account
-        final InvoiceItem creditJson = creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        InvoiceItems credits = new InvoiceItems();
+        credits.add(credit);
+        final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(creditJsons.size(), 1);
 
         Invoices childInvoices = accountApi.getInvoicesForAccount(childAccount.getAccountId(), null, true, false, false, false, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(childInvoices.size(), 1);
