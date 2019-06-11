@@ -46,9 +46,9 @@ public class FixedPriceInvoiceItem extends InvoiceItemCatalogBase {
     public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
                                  final UUID subscriptionId, final String productName, final String planName, final String phaseName,
                                  final String prettyProductName, final String prettyPlanName, final String prettyPhaseName,
-                                 @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
+                                 @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency, @Nullable final Integer quantity, @Nullable final String itemDetails) {
         super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, prettyProductName, prettyPlanName, prettyPhaseName,
-              null, date, null, amount, null, currency, null, InvoiceItemType.FIXED);
+              null, date, null, amount, null, currency, null, quantity, itemDetails, InvoiceItemType.FIXED);
     }
 
     @Override
