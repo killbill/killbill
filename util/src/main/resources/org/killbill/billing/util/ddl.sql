@@ -41,7 +41,7 @@ CREATE TABLE custom_field_history (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX custom_field_history_target_record_id ON custom_field_history(target_record_id);
-CREATE INDEX custom_field_history_object_id_object_type ON custom_fields(object_id, object_type);
+CREATE INDEX custom_field_history_object_id_object_type ON custom_field_history(object_id, object_type);
 CREATE INDEX custom_field_history_tenant_account_record_id ON custom_field_history(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS tag_definitions;
