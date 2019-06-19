@@ -30,6 +30,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Fix for https://issues.apache.org/jira/browse/SHIRO-540
  * Support for additional realms non injected
+ *
+ * This also reduces verbose logging like:
+ *   Realm [org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm@31b6fb14] threw an exception during a multi-realm authentication attempt:
+ *   org.apache.shiro.authc.UnknownAccountException: No account found for user [bob]
  */
 public class ModularRealmAuthenticatorWith540 extends ModularRealmAuthenticator {
 
