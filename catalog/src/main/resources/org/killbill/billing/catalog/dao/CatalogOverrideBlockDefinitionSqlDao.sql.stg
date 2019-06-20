@@ -75,7 +75,4 @@ and tb.tenant_record_id = :tenantRecordId
 ;
 >>
 
-getLastInsertId() ::= <<
-select LAST_INSERT_ID();
->>
 

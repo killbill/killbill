@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -87,8 +87,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
                 }
 
                 final CatalogOverridePlanDefinitionModelDao inputPlanDef = new CatalogOverridePlanDefinitionModelDao(parentPlan.getName(), true, catalogEffectiveDate);
-                sqlDao.create(inputPlanDef, context);
-                final Long recordId = sqlDao.getLastInsertId();
+                final Long recordId = sqlDao.create(inputPlanDef, context);
                 final CatalogOverridePlanDefinitionModelDao resultPlanDef = sqlDao.getByRecordId(recordId, context);
 
                 for (short i = 0; i < overridePhaseDefinitionModelDaos.length; i++) {
@@ -150,8 +149,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
         final CatalogOverridePhaseDefinitionModelDao inputPhaseDef = new CatalogOverridePhaseDefinitionModelDao(parentPhaseName, override.getCurrency().name(), override.getFixedPrice(), override.getRecurringPrice(),
                 catalogEffectiveDate);
-        sqlDao.create(inputPhaseDef, context);
-        final Long recordId = sqlDao.getLastInsertId();
+        final Long recordId = sqlDao.create(inputPhaseDef, context);
         final CatalogOverridePhaseDefinitionModelDao resultPhaseDef = sqlDao.getByRecordId(recordId, context);
 
         for (short i = 0; i < overrideUsageDefinitionModelDaos.length; i++) {
@@ -174,8 +172,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
         final CatalogOverridePhaseDefinitionModelDao phaseDef = new CatalogOverridePhaseDefinitionModelDao(parentPhaseName, override.getCurrency().name(), override.getFixedPrice(), override.getRecurringPrice(),
                 catalogEffectiveDate);
-        sqlDao.create(phaseDef, context);
-        final Long recordId = sqlDao.getLastInsertId();
+        final Long recordId = sqlDao.create(phaseDef, context);
         return sqlDao.getByRecordId(recordId, context);
     }
 
@@ -225,8 +222,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         }
 
         final CatalogOverrideUsageDefinitionModelDao inputUsageDef = new CatalogOverrideUsageDefinitionModelDao(parentUsage.getName(), parentUsage.getUsageType().name(), currency.name(), null, null, catalogEffectiveDate);
-        sqlDao.create(inputUsageDef, context);
-        final Long recordId = sqlDao.getLastInsertId();
+        final Long recordId = sqlDao.create(inputUsageDef, context);
         final CatalogOverrideUsageDefinitionModelDao resultUsageDef = sqlDao.getByRecordId(recordId, context);
 
         for (short i = 0; i < overrideTierDefinitionModelDaos.length; i++) {
@@ -277,8 +273,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         }
 
         final CatalogOverrideTierDefinitionModelDao inputTierDef = new CatalogOverrideTierDefinitionModelDao(currency.name(), null, null, catalogEffectiveDate);
-        sqlDao.create(inputTierDef, context);
-        final Long recordId = sqlDao.getLastInsertId();
+        final Long recordId = sqlDao.create(inputTierDef, context);
         final CatalogOverrideTierDefinitionModelDao resultTierDef = sqlDao.getByRecordId(recordId, context);
 
         for (short i = 0; i < overrideBlockDefinitionModelDaos.length; i++) {
@@ -319,8 +314,7 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
         if (result == null) {
             final CatalogOverrideBlockDefinitionModelDao blockDef = new CatalogOverrideBlockDefinitionModelDao(tieredBlockPriceOverride.getUnitName(),currency, tieredBlockPriceOverride.getPrice(),
                     tieredBlockPriceOverride.getSize(),tieredBlockPriceOverride.getMax(), catalogEffectiveDate);
-            sqlDao.create(blockDef, context);
-            final Long recordId = sqlDao.getLastInsertId();
+            final Long recordId = sqlDao.create(blockDef, context);
             result = sqlDao.getByRecordId(recordId, context);
         }
         return result;
