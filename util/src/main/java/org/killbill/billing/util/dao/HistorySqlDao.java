@@ -44,7 +44,7 @@ public interface HistorySqlDao<M extends EntityModelDao<E>, E extends Entity> {
 
     @SqlBatch
     @BatchChunkSize(1000) // Arbitrary value, just a safety mechanism in case of very large datasets
-    @GetGeneratedKeys(value = LongMapper.class)
+    @GetGeneratedKeys(value = LongMapper.class, columnName = "record_id")
     public List<Long> addHistoriesFromTransaction(@EntityHistoryBinder Iterable<EntityHistoryModelDao<M, E>> histories,
                                                   @SmartBindBean InternalCallContext context);
 }
