@@ -3,7 +3,7 @@ import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 tableName() ::= "subscription_events"
 historyTableName() ::= "subscription_event_history"
 
-andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active = 1"
 
 extraTableFieldsWithComma(prefix) ::= <<
 , <prefix>record_id as total_ordering
@@ -63,7 +63,7 @@ select <allTableFields("")>
 from <tableName()>
 where
 subscription_id = :subscriptionId
-and is_active = true
+and is_active = 1
 and effective_date > :now
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
@@ -77,7 +77,7 @@ select <allTableFields("")>
 from <tableName()>
 where
 subscription_id = :subscriptionId
-and is_active = true
+and is_active = 1
 and effective_date >= :now
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
@@ -90,7 +90,7 @@ select <allTableFields("")>
 from <tableName()>
 where
 subscription_id = :subscriptionId
-and is_active = true
+and is_active = 1
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;
