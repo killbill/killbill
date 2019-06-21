@@ -124,7 +124,8 @@ function create_ddl_file() {
     local test_ddls=
     if [ ! -z $TEST_ALSO ]; then
         test_ddls=`find_test_ddl`
-        ddls="$ddls $test_ddls"
+        # Test DDL first as the main DDL takes precedence in case of dups
+        ddls="$test_ddls $ddls"
     fi
 
     local tmp="/tmp/ddl-$DATABASE.$$"
