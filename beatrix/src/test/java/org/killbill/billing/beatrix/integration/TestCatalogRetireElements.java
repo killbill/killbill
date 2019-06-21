@@ -114,7 +114,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, callContext);
         final List<SubscriptionEvent> events = bpSubscription.getSubscriptionEvents();
         // We are seeing START_ENTITLEMENT, START_BILLING, and the **last CHANGE**
-        // Note that the PHASE and intermediate CHANGE are not being returned (is_active = 0) because all coincided on the same date. This is debatable
+        // Note that the PHASE and intermediate CHANGE are not being returned (is_active = '0') because all coincided on the same date. This is debatable
         // whether this is a good semantics. See #1030
         assertEquals(events.size(), 3);
         // Verify what we return is the price from the correct catalog version. See #1120
