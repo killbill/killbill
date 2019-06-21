@@ -85,6 +85,24 @@ CREATE TABLE subscriptions (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 
+DROP TABLE IF EXISTS invoices;
+CREATE TABLE invoices (
+    record_id serial unique,
+    id varchar(36) NOT NULL,
+    account_id varchar(36) NOT NULL,
+    invoice_date date NOT NULL,
+    target_date date,
+    currency varchar(3) NOT NULL,
+    status varchar(15) NOT NULL DEFAULT 'COMMITTED',
+    migrated bool NOT NULL,
+    parent_invoice bool NOT NULL DEFAULT FALSE,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
+    PRIMARY KEY(record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+
 DROP TABLE IF EXISTS payments;
 CREATE TABLE payments (
     record_id serial unique,
