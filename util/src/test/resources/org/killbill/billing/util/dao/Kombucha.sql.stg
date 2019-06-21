@@ -17,5 +17,5 @@ tableValues() ::= <<
 >>
 
 isItTimeForKombucha() ::= <<
-select hour(current_timestamp(0)) \< 24 as is_time;
+select 1 as is_time from dual;
 >>
