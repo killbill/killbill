@@ -34,7 +34,7 @@ import org.testng.annotations.Test;
 public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
     private final UUID tenantId = UUID.fromString("121c59d4-0458-4038-a683-698c9a121c12");
-    private Long tenantRecordId;
+    private Long tenantRecordId = 123123123L;
 
     private final UUID accountId = UUID.fromString("a01c59d4-0458-4038-a683-698c9a121c69");
     private Long accountRecordId;
