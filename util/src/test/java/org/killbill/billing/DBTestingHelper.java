@@ -45,6 +45,8 @@ import com.google.common.base.MoreObjects;
 
 public class DBTestingHelper extends PlatformDBTestingHelper {
 
+    private static final Logger log = LoggerFactory.getLogger(DBTestingHelper.class);
+
     private static DBTestingHelper dbTestingHelper = null;
 
     private DBI dbi;
@@ -101,9 +103,10 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
             final String ddl;
             try {
                 ddl = IOUtils.toString(inputStream.openStream());
+                log.info("Installing DDL: {}", inputStream.getPath());
                 getInstance().executeScript(ddl);
             } catch (final Exception ignored) {
-                // The test doesn't have this module ddl in the classpath - that's fine
+                log.warn("Ignoring exception", ignored);
             }
         }
     }
