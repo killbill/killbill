@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,27 +22,28 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
+import org.killbill.billing.ObjectType;
+import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.Update;
 import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.skife.jdbi.v2.util.LongMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.ObjectType;
-import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-
 public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
-    final Long tenantRecordId = 123123123L;
-    final UUID tenantId = UUID.fromString("121c59d4-0458-4038-a683-698c9a121c12");
+    private final UUID tenantId = UUID.fromString("121c59d4-0458-4038-a683-698c9a121c12");
+    private Long tenantRecordId;
 
-    final UUID accountId = UUID.fromString("a01c59d4-0458-4038-a683-698c9a121c69");
-    final Long accountRecordId = 333333L;
+    private final UUID accountId = UUID.fromString("a01c59d4-0458-4038-a683-698c9a121c69");
+    private Long accountRecordId;
 
-    final UUID tagDefinitionId = UUID.fromString("e01c59d4-0458-4038-a683-698c9a121c34");
-    final Long tagDefinitionRecordId = 44444444L;
+    private final UUID tagDefinitionId = UUID.fromString("e01c59d4-0458-4038-a683-698c9a121c34");
+    private Long tagDefinitionRecordId;
 
-    final UUID tagId = UUID.fromString("123c59d4-0458-4038-a683-698c9a121456");
-    final Long tagRecordId = 55555555L;
+    private final UUID tagId = UUID.fromString("123c59d4-0458-4038-a683-698c9a121456");
+    private Long tagRecordId;
 
     @Test(groups = "slow")
     public void testRetrieveRecordIdFromObject() throws IOException {
@@ -92,13 +95,13 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
     private void insertAccount() throws IOException {
-        dbi.withHandle(new HandleCallback<Void>() {
+        this.accountRecordId = dbi.withHandle(new HandleCallback<Long>() {
             @Override
-            public Void withHandle(final Handle handle) throws Exception {
+            public Long withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into accounts (record_id, id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               accountRecordId, accountId.toString(), accountId.toString(), "zozo@tt.com", "zozo", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", tenantRecordId);
-                return null;
+                return executeAndReturnGeneratedKeys(handle,
+                                                     "insert into accounts (id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                                     accountId.toString(), accountId.toString(), "yo@t.com", "toto", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", tenantRecordId);
             }
         });
     }
@@ -108,46 +111,55 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into account_history (record_id, id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               accountRecordId, accountId.toString(), accountId.toString(), "zozo@tt.com", "zozo", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", tenantRecordId);
+                handle.execute("insert into account_history (id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               accountId.toString(), accountId.toString(), "zozo@tt.com", "zozo", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", tenantRecordId);
                 return null;
             }
         });
     }
 
     private void insertTagDefinition() throws IOException {
-        dbi.withHandle(new HandleCallback<Void>() {
+        tagDefinitionRecordId = dbi.withHandle(new HandleCallback<Long>() {
             @Override
-            public Void withHandle(final Handle handle) throws Exception {
+            public Long withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into tag_definitions (record_id, id, name, description, is_active, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               tagDefinitionRecordId, tagDefinitionId.toString(), "tagdef", "nothing", true, new Date(), "i", new Date(), "j", 0);
-                return null;
+                return executeAndReturnGeneratedKeys(handle,
+                                                     "insert into tag_definitions (id, name, description, is_active, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                                     tagDefinitionId.toString(), "tagdef", "nothing", true, new Date(), "i", new Date(), "j", 0);
             }
         });
     }
 
     private void insertTag() throws IOException {
-        dbi.withHandle(new HandleCallback<Void>() {
+        tagRecordId = dbi.withHandle(new HandleCallback<Long>() {
             @Override
-            public Void withHandle(final Handle handle) throws Exception {
+            public Long withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into tags (record_id, id, tag_definition_id, object_id, object_type, is_active, created_date, created_by, updated_date, updated_by, account_record_id, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               tagRecordId, tagId.toString(), tagDefinitionId.toString(), accountId.toString(), "ACCOUNT", true, new Date(), "i", new Date(), "j", accountRecordId, 0);
-                return null;
+                return executeAndReturnGeneratedKeys(handle,
+                                                     "insert into tags (id, tag_definition_id, object_id, object_type, is_active, created_date, created_by, updated_date, updated_by, account_record_id, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                                     tagId.toString(), tagDefinitionId.toString(), accountId.toString(), "ACCOUNT", true, new Date(), "i", new Date(), "j", accountRecordId, 0);
             }
         });
     }
 
     private void insertTenant() throws IOException {
-        dbi.withHandle(new HandleCallback<Void>() {
+        tenantRecordId = dbi.withHandle(new HandleCallback<Long>() {
             @Override
-            public Void withHandle(final Handle handle) throws Exception {
+            public Long withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into tenants (record_id, id, external_key, api_key, api_secret, api_salt, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               tenantRecordId, tenantId.toString(), "foo", "key", "secret", "salt", new Date(), "i", new Date(), "j");
-                return null;
+                return executeAndReturnGeneratedKeys(handle,
+                                                     "insert into tenants (id, external_key, api_key, api_secret, api_salt, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                                     tenantId.toString(), "foo", "key", "secret", "salt", new Date(), "i", new Date(), "j");
             }
         });
+    }
+
+    private Long executeAndReturnGeneratedKeys(final Handle handle, final String sql, final Object... args) {
+        final Update stmt = handle.createStatement(sql);
+        int position = 0;
+        for (final Object arg : args) {
+            stmt.bind(position++, arg);
+        }
+        return stmt.executeAndReturnGeneratedKeys(new LongMapper(), "record_id").first();
     }
 }
