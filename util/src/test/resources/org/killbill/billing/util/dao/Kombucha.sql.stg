@@ -17,5 +17,5 @@ tableValues() ::= <<
 >>
 
 isItTimeForKombucha() ::= <<
-select 1 as is_time from dual;
+select count(*) = 0 as is_time from kombucha;
 >>
