@@ -28,7 +28,9 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.Update;
 import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.skife.jdbi.v2.util.LongMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -60,20 +62,28 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
     @Test(groups = "slow")
     public void testCreateInternalCallContextWithAccountRecordIdFromAccountObjectType() throws Exception {
         final UUID accountId = UUID.randomUUID();
-        final Long accountRecordId = 19384012L;
+
+        final Long accountRecordId = dbi.withHandle(new HandleCallback<Long>() {
+            @Override
+            public Long withHandle(final Handle handle) throws Exception {
+                // Note: we always create an accounts table, see MysqlTestingHelper
+                return update(handle,
+                              "insert into accounts (id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                              accountId.toString(), accountId.toString(), "yo@t.com", "toto", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", internalCallContext.getTenantRecordId());
+            }
+
+            Long update(final Handle handle, final String sql, final Object... args) {
+                final Update stmt = handle.createStatement(sql);
+                int position = 0;
+                for (final Object arg : args) {
+                    stmt.bind(position++, arg);
+                }
+                return stmt.executeAndReturnGeneratedKeys(new LongMapper(), "record_id").first();
+            }
+        });
 
         final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(accountRecordId), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
-
-        dbi.withHandle(new HandleCallback<Void>() {
-            @Override
-            public Void withHandle(final Handle handle) throws Exception {
-                // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into accounts (record_id, id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               accountRecordId, accountId.toString(), accountId.toString(), "yo@t.com", "toto", 4, new Date(), "UTC", new Date(), "i", new Date(), "j");
-                return null;
-            }
-        });
 
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, ObjectType.ACCOUNT, callContext);
         // The account record id should have been looked up in the accounts table
