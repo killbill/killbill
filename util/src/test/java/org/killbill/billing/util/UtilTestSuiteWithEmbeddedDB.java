@@ -18,7 +18,9 @@
 
 package org.killbill.billing.util;
 
+import java.util.Date;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -43,6 +45,10 @@ import org.killbill.billing.util.tag.dao.TagDefinitionDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationQueueService;
+import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.Update;
+import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.skife.jdbi.v2.util.LongMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -137,5 +143,26 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     @Override
     protected void assertListenerStatus() {
         eventsListener.assertListenerStatus();
+    }
+
+    protected Long generateAccountRecordId(final UUID accountId) {
+        return dbi.withHandle(new HandleCallback<Long>() {
+            @Override
+            public Long withHandle(final Handle handle) throws Exception {
+                // Note: we always create an accounts table, see MysqlTestingHelper
+                return update(handle,
+                              "insert into accounts (id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                              accountId.toString(), accountId.toString(), "yo@t.com", "toto", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", internalCallContext.getTenantRecordId());
+            }
+
+            Long update(final Handle handle, final String sql, final Object... args) {
+                final Update stmt = handle.createStatement(sql);
+                int position = 0;
+                for (final Object arg : args) {
+                    stmt.bind(position++, arg);
+                }
+                return stmt.executeAndReturnGeneratedKeys(new LongMapper(), "record_id").first();
+            }
+        });
     }
 }

@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,7 +18,6 @@
 
 package org.killbill.billing.util.customfield.api;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -44,8 +43,8 @@ import com.google.common.collect.ImmutableList;
 
 public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
 
-    final UUID accountId = UUID.randomUUID();
-    final Long accountRecordId = 19384012L;
+    private final UUID accountId = UUID.randomUUID();
+    private Long accountRecordId = 19384012L;
 
     @Override
     @BeforeMethod(groups = "slow")
@@ -56,19 +55,10 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
 
         super.beforeMethod();
 
+        accountRecordId = generateAccountRecordId(accountId);
+
         final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(accountRecordId), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
-
-        dbi.withHandle(new HandleCallback<Void>() {
-            @Override
-            public Void withHandle(final Handle handle) throws Exception {
-                // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into accounts (record_id, id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               accountRecordId, accountId.toString(), accountId.toString(), "yo@t.com", "toto", 4, new Date(), "UTC", new Date(), "i", new Date(), "j");
-
-                return null;
-            }
-        });
     }
 
     @Test(groups = "slow")
@@ -125,7 +115,6 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(all.get(0).getFieldValue(), customField2.getFieldValue());
     }
 
-
     @Test(groups = "slow")
     public void testCustomFieldUpdate() throws Exception {
 
@@ -161,8 +150,7 @@ public class TestDefaultCustomFieldUserApi extends UtilTestSuiteWithEmbeddedDB {
 
     }
 
-
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testSaveCustomFieldWithAccountRecordId() throws Exception {
 
         checkPagination(0);

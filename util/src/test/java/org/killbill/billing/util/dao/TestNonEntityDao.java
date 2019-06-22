@@ -29,25 +29,29 @@ import org.skife.jdbi.v2.Update;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.skife.jdbi.v2.util.LongMapper;
 import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
     private final UUID tenantId = UUID.fromString("121c59d4-0458-4038-a683-698c9a121c12");
-    private Long tenantRecordId = 123123123L;
+    private Long tenantRecordId;
 
     private final UUID accountId = UUID.fromString("a01c59d4-0458-4038-a683-698c9a121c69");
     private Long accountRecordId;
 
     private final UUID tagDefinitionId = UUID.fromString("e01c59d4-0458-4038-a683-698c9a121c34");
-    private Long tagDefinitionRecordId;
 
     private final UUID tagId = UUID.fromString("123c59d4-0458-4038-a683-698c9a121456");
-    private Long tagRecordId;
+
+    @BeforeMethod(groups = "slow")
+    public void setUp() {
+        tenantRecordId = internalCallContext.getTenantRecordId();
+    }
 
     @Test(groups = "slow")
     public void testRetrieveRecordIdFromObject() throws IOException {
-        insertAccount();
+        accountRecordId = generateAccountRecordId(accountId);
 
         final Long resultRecordId = nonEntityDao.retrieveRecordIdFromObject(accountId, ObjectType.ACCOUNT, null);
         Assert.assertEquals(resultRecordId, accountRecordId);
@@ -55,7 +59,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testRetrieveAccountRecordIdFromAccountObject() throws IOException {
-        insertAccount();
+        accountRecordId = generateAccountRecordId(accountId);
 
         final Long resultAccountRecordId = nonEntityDao.retrieveAccountRecordIdFromObject(accountId, ObjectType.ACCOUNT, null);
         Assert.assertEquals(resultAccountRecordId, accountRecordId);
@@ -80,7 +84,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testRetrieveTenantRecordIdFromObject() throws IOException {
-        insertAccount();
+        accountRecordId = generateAccountRecordId(accountId);
 
         final Long resultTenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(accountId, ObjectType.ACCOUNT, null);
         Assert.assertEquals(resultTenantRecordId, tenantRecordId);
@@ -94,32 +98,8 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(resultTenantRecordId, tenantRecordId);
     }
 
-    private void insertAccount() throws IOException {
-        this.accountRecordId = dbi.withHandle(new HandleCallback<Long>() {
-            @Override
-            public Long withHandle(final Handle handle) throws Exception {
-                // Note: we always create an accounts table, see MysqlTestingHelper
-                return executeAndReturnGeneratedKeys(handle,
-                                                     "insert into accounts (id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                                                     accountId.toString(), accountId.toString(), "yo@t.com", "toto", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", tenantRecordId);
-            }
-        });
-    }
-
-    private void insertHistoryAccount() throws IOException {
-        dbi.withHandle(new HandleCallback<Void>() {
-            @Override
-            public Void withHandle(final Handle handle) throws Exception {
-                // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into account_history (id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               accountId.toString(), accountId.toString(), "zozo@tt.com", "zozo", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", tenantRecordId);
-                return null;
-            }
-        });
-    }
-
     private void insertTagDefinition() throws IOException {
-        tagDefinitionRecordId = dbi.withHandle(new HandleCallback<Long>() {
+        dbi.withHandle(new HandleCallback<Long>() {
             @Override
             public Long withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
@@ -131,7 +111,7 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
     }
 
     private void insertTag() throws IOException {
-        tagRecordId = dbi.withHandle(new HandleCallback<Long>() {
+        dbi.withHandle(new HandleCallback<Long>() {
             @Override
             public Long withHandle(final Handle handle) throws Exception {
                 // Note: we always create an accounts table, see MysqlTestingHelper
