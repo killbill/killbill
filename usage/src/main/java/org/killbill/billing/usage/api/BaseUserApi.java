@@ -53,7 +53,7 @@ public class BaseUserApi {
         for (final String service : allServices) {
             final UsagePluginApi plugin = pluginRegistry.getServiceForName(service);
 
-            final List<RawUsageRecord> result = plugin.geUsageForAccount(startDate, endDate, tenantContext);
+            final List<RawUsageRecord> result = plugin.getUsageForAccount(startDate, endDate, tenantContext);
             // First plugin registered, returns result -- could be empty List if no usage was recorded.
             if (result != null) {
 
