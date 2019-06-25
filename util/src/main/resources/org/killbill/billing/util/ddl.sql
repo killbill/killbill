@@ -125,7 +125,7 @@ CREATE TABLE tag_history (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX tag_history_target_record_id ON tag_history(target_record_id);
-CREATE INDEX tag_history_by_object ON tags(object_id);
+CREATE INDEX tag_history_by_object ON tag_history(object_id);
 CREATE INDEX tag_history_tenant_account_record_id ON tag_history(tenant_record_id, account_record_id);
 
 DROP TABLE IF EXISTS audit_log;

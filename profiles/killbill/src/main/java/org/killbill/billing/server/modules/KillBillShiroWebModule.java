@@ -66,9 +66,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matchers;
-import com.google.inject.spi.InjectionListener;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
 
 // For Kill Bill server only.
 // See org.killbill.billing.util.glue.KillBillShiroModule for Kill Bill library.
@@ -125,14 +122,6 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
             bindRealm().to(KillBillOktaRealm.class).asEagerSingleton();
         }
 
-        bindListener(new AbstractMatcher<TypeLiteral<?>>() {
-                         @Override
-                         public boolean matches(final TypeLiteral<?> o) {
-                             return Matchers.subclassesOf(WebSecurityManager.class).matches(o.getRawType());
-                         }
-                     },
-                     new DefaultWebSecurityManagerTypeListener());
-
         if (KillBillShiroModule.isRBACEnabled()) {
             addFilterChain(JaxrsResource.PREFIX + "/**", Key.get(CorsBasicHttpAuthenticationFilter.class));
             addFilterChain(JaxrsResource.PLUGINS_PATH + "/**", Key.get(CorsBasicHttpAuthenticationOptionalFilter.class));
@@ -167,6 +156,11 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
         public DefaultWebSecurityManager get() {
             final DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager(realms);
             defaultWebSecurityManager.setSessionManager(sessionManager);
+
+            final ModularRealmAuthenticator authenticator = (ModularRealmAuthenticator) defaultWebSecurityManager.getAuthenticator();
+            authenticator.setAuthenticationStrategy(new FirstSuccessfulStrategyWith540());
+            defaultWebSecurityManager.setAuthenticator(new ModularRealmAuthenticatorWith540(defaultWebSecurityManager.getRealms(), authenticator));
+
             return defaultWebSecurityManager;
         }
     }
@@ -205,25 +199,6 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
             // Unlike the original method, we don't send a challenge on failure but simply allow the request to continue
             return true;
-        }
-    }
-
-    private final class DefaultWebSecurityManagerTypeListener implements TypeListener {
-
-        @Override
-        public <I> void hear(final TypeLiteral<I> typeLiteral, final TypeEncounter<I> typeEncounter) {
-            typeEncounter.register(new InjectionListener<I>() {
-                @Override
-                public void afterInjection(final Object o) {
-                    final DefaultWebSecurityManager webSecurityManager = (DefaultWebSecurityManager) o;
-
-                    if (webSecurityManager.getAuthenticator() instanceof ModularRealmAuthenticator) {
-                        final ModularRealmAuthenticator authenticator = (ModularRealmAuthenticator) webSecurityManager.getAuthenticator();
-                        authenticator.setAuthenticationStrategy(new FirstSuccessfulStrategyWith540());
-                        webSecurityManager.setAuthenticator(new ModularRealmAuthenticatorWith540(webSecurityManager.getRealms(), authenticator));
-                    }
-                }
-            });
         }
     }
 }

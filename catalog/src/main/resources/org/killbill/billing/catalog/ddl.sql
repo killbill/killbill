@@ -73,7 +73,7 @@ created_by varchar(50) NOT NULL,
 tenant_record_id bigint /*! unsigned */ not null default 0,
 PRIMARY KEY(record_id)
 );
-CREATE INDEX catalog_override_tier_definition_idx ON catalog_override_usage_definition(tenant_record_id, currency);
+CREATE INDEX catalog_override_tier_definition_idx ON catalog_override_tier_definition(tenant_record_id, currency);
 
 DROP TABLE IF EXISTS catalog_override_block_definition;
 create table catalog_override_block_definition
