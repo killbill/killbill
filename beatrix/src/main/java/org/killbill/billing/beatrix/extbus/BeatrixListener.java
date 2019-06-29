@@ -287,6 +287,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
+                metaData = realUserTagEventCr.getTagDefinition().getName();
                 break;
 
             case CONTROL_TAG_CREATION:
@@ -294,6 +295,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
+                metaData = realTagEventCr.getTagDefinition().getName();
                 break;
 
             case USER_TAG_DELETION:
@@ -301,6 +303,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
+                metaData = realUserTagEventDel.getTagDefinition().getName();
                 break;
 
             case CONTROL_TAG_DELETION:
@@ -308,6 +311,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
+                metaData = realTagEventDel.getTagDefinition().getName();
                 break;
 
             case CUSTOM_FIELD_CREATION:
