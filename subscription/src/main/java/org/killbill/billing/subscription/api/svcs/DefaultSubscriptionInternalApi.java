@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -444,7 +444,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         try {
             catalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
             final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, internalCallContext);
-            final DateTime effectiveDate = getEffectiveDateForNewBCD(bcd, effectiveFromDate, internalCallContext);
+            final DateTime effectiveDate = getEffectiveDateForNewBCD(bcd, effectiveFromDate, subscription.getStartDate(), internalCallContext);
             final BCDEvent bcdEvent = BCDEventData.createBCDEvent(subscription, effectiveDate, bcd);
             dao.createBCDChangeEvent(subscription, bcdEvent, catalog, internalCallContext);
         } catch (final CatalogApiException e) {
@@ -507,7 +507,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @VisibleForTesting
-    DateTime getEffectiveDateForNewBCD(final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) {
+    DateTime getEffectiveDateForNewBCD(final int bcd, @Nullable final LocalDate effectiveFromDate, final DateTime subscriptionStartDate, final InternalCallContext internalCallContext) {
         if (internalCallContext.getAccountRecordId() == null) {
             throw new IllegalStateException("Need to have a valid context with accountRecordId");
         }
@@ -535,7 +535,12 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         } else /* bcd > lastDayOfMonth && bcd > currentDay */ {
             requestedDate = new LocalDate(startDate.getYear(), startDate.getMonthOfYear(), lastDayOfMonth);
         }
-        return requestedDate == null ? internalCallContext.getCreatedDate() : internalCallContext.toUTCDateTime(requestedDate);
+        DateTime requestedDateTime = requestedDate == null ? internalCallContext.getCreatedDate() : internalCallContext.toUTCDateTime(requestedDate);
+        // The event needs to be after the subscription start date
+        while (requestedDateTime.compareTo(subscriptionStartDate) < 0) {
+            requestedDateTime = requestedDateTime.plusMonths(1);
+        }
+        return requestedDateTime;
     }
 
     private List<EffectiveSubscriptionInternalEvent> convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(final SubscriptionBase subscription,

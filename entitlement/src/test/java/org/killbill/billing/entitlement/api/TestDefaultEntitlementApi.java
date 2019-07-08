@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -736,6 +736,49 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         testListener.pushExpectedEvents(NextEvent.CREATE);
         clock.addDays(5);
         assertListenerStatus();
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1158")
+    public void testCreateBaseWithEntitlementInTheFutureAndChangeBCD() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final LocalDate entitlementDate = initialDate.plusMonths(1);
+        final LocalDate billingDate = entitlementDate;
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun",  BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), entitlementDate, billingDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+
+        assertEquals(entitlement.getState(), EntitlementState.PENDING);
+        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+        // shotgun-annual is SUBSCRIPTION aligned and has a 30 days trial (2013-09-07 + 30 days = 2013-10-07 for the phase)
+        assertEquals(entitlement.getBillCycleDayLocal(), (Integer) 7);
+
+        entitlement.updateBCD(11, null, callContext);
+
+        // Still the 7
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, callContext).getBillCycleDayLocal(), (Integer) 7);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        final Entitlement entitlementActive = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlementActive.getState(), EntitlementState.ACTIVE);
+        // Still the 7
+        assertEquals(entitlementActive.getBillCycleDayLocal(), (Integer) 7);
+
+        // Move clock to the 11th
+        testListener.pushExpectedEvents(NextEvent.BCD_CHANGE);
+        clock.addDays(5);
+        assertListenerStatus();
+
+        assertEquals(entitlementApi.getEntitlementForId(entitlementId, callContext).getBillCycleDayLocal(), (Integer) 11);
     }
 
     @Test(groups = "slow")
