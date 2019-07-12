@@ -31,6 +31,15 @@ tableValues() ::= <<
 , :updatedDate
 >>
 
+getSubscriptionByExternalKey() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where external_key = :externalKey
+<AND_CHECK_TENANT("")>
+;
+>>
+
 
 getSubscriptionsFromBundleId() ::= <<
 select

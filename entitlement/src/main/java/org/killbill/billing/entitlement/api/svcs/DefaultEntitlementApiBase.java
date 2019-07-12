@@ -141,6 +141,14 @@ public class DefaultEntitlementApiBase {
                                       entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);
     }
 
+    public Entitlement getEntitlementForExternalKey(final String externalKey, final InternalTenantContext tenantContext) throws EntitlementApiException {
+        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(externalKey, tenantContext);
+        return new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
+                                      blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
+                                      entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);
+    }
+
+
     public void pause(final UUID bundleId, @Nullable final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(

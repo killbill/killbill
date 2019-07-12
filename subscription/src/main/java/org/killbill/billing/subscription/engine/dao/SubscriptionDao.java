@@ -61,6 +61,8 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     SubscriptionBase getSubscriptionFromId(UUID subscriptionId, final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
 
+    SubscriptionBase getSubscriptionFromExternalKey(String externalKey, final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
+
     UUID getBundleIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context);
 
     // SubscriptionBase retrieval

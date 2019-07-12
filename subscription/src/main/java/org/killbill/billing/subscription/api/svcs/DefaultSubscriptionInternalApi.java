@@ -322,6 +322,21 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
+    public SubscriptionBase getSubscriptionFromExternalKey(final String externalKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        try {
+
+            final Catalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
+            final SubscriptionBase result = dao.getSubscriptionFromExternalKey(externalKey, catalog, context);
+            if (result == null) {
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_EXTERNAL_KEY, externalKey);
+            }
+            return createSubscriptionForApiUse(result);
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+    }
+
+    @Override
     public SubscriptionBaseBundle getBundleFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBaseBundle result = dao.getSubscriptionBundleFromId(id, context);
         if (result == null) {

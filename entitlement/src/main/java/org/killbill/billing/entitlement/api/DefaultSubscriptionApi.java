@@ -160,6 +160,17 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
+    public Subscription getSubscriptionForExternalKey(final String externalKey, final TenantContext tenantContext) throws SubscriptionApiException {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext.getAccountId(), tenantContext);
+        try {
+            final Entitlement res = entitlementInternalApi.getEntitlementForExternalKey(externalKey, internalTenantContext);
+            return new DefaultSubscription((DefaultEntitlement) res);
+        } catch (final EntitlementApiException e) {
+            throw new SubscriptionApiException(e);
+        }
+    }
+
+    @Override
     public SubscriptionBundle getSubscriptionBundle(final UUID bundleId, final TenantContext tenantContext) throws SubscriptionApiException {
         final UUID accountId = internalCallContextFactory.getAccountId(bundleId, ObjectType.BUNDLE, tenantContext);
 

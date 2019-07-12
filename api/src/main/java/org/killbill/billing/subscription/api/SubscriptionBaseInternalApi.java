@@ -79,6 +79,8 @@ public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBase getSubscriptionFromId(UUID id, InternalTenantContext context) throws SubscriptionBaseApiException;
 
+    public SubscriptionBase getSubscriptionFromExternalKey(String externalKey, InternalTenantContext context) throws SubscriptionBaseApiException;
+
     public SubscriptionBaseBundle getBundleFromId(UUID id, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public void setChargedThroughDate(UUID subscriptionId, DateTime chargedThruDate, InternalCallContext context) throws SubscriptionBaseApiException;

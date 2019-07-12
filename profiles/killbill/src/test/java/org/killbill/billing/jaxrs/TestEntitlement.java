@@ -87,6 +87,11 @@ public class TestEntitlement extends TestJaxrsBase {
 
         Assert.assertTrue(subscription.equals(entitlementJson));
 
+
+        final Subscription subscription2 = subscriptionApi.getSubscriptionByKey(subscription.getExternalKey(), accountJson.getAccountId(), requestOptions);
+        assertEquals(subscription2.getBundleExternalKey(), "99999");
+        assertEquals(subscription2.getExternalKey(), subscription.getExternalKey());
+
         // Change the clock otherwise the CREATE event might be replaced (instead of having a CHANGE event)
         clock.addDays(1);
         callbackServlet.assertListenerStatus();
@@ -128,12 +133,12 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(accountBundles.get(0).getSubscriptions().size(), 1);
         assertEquals(accountBundles.get(0).getSubscriptions().get(0).getState(), EntitlementState.CANCELLED);
 
-        final Bundles bundlesByKey1 = bundleApi.getBundleByKey(entitlementJson.getExternalKey(), true, AuditLevel.NONE, requestOptions);
+        final Bundles bundlesByKey1 = bundleApi.getBundleByKey(entitlementJson.getBundleExternalKey(), true, AuditLevel.NONE, requestOptions);
         assertEquals(bundlesByKey1.size(), 1);
         assertEquals(bundlesByKey1.get(0).getSubscriptions().size(), 1);
         assertEquals(bundlesByKey1.get(0).getSubscriptions().get(0).getState(), EntitlementState.CANCELLED);
 
-        final Bundles bundlesByKey2 = bundleApi.getBundleByKey(entitlementJson.getExternalKey(), requestOptions);
+        final Bundles bundlesByKey2 = bundleApi.getBundleByKey(entitlementJson.getBundleExternalKey(), requestOptions);
         assertNotNull(bundlesByKey2);
         assertEquals(bundlesByKey2.size(), 0);
 
