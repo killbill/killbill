@@ -577,16 +577,16 @@ public class TestEntitlement extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Create a bulk of base entitlements and addOns under the same transaction",
             expectedExceptions = KillBillClientException.class, expectedExceptionsMessageRegExp = "SubscriptionJson productName needs to be set when no planName is specified")
-    public void testcreateSubscriptionsWithoutBase() throws Exception {
+    public void testCreateSubscriptionsWithoutBase() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
-        final Subscription bp = new Subscription();
-        bp.setAccountId(accountJson.getAccountId());
-        bp.setProductCategory(ProductCategory.BASE);
-        bp.setBundleExternalKey("12345");
+        final Subscription bp1 = new Subscription();
+        bp1.setAccountId(accountJson.getAccountId());
+        bp1.setProductCategory(ProductCategory.BASE);
+        bp1.setBundleExternalKey("12345");
 
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
@@ -595,20 +595,38 @@ public class TestEntitlement extends TestJaxrsBase {
         addOn1.setBillingPeriod(BillingPeriod.MONTHLY);
         addOn1.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
-        final List<Subscription> subscriptions = new ArrayList<Subscription>();
-        subscriptions.add(bp);
-        subscriptions.add(addOn1);
+        final List<Subscription> subscriptions1 = new ArrayList<Subscription>();
+        subscriptions1.add(bp1);
+        subscriptions1.add(addOn1);
+
+        final Subscription bp2 = new Subscription();
+        bp2.setAccountId(accountJson.getAccountId());
+        bp2.setProductCategory(ProductCategory.BASE);
+        bp2.setBundleExternalKey("54321");
+
+        final Subscription addOn2 = new Subscription();
+        addOn2.setAccountId(accountJson.getAccountId());
+        addOn2.setProductName("Telescopic-Scope");
+        addOn2.setProductCategory(ProductCategory.ADD_ON);
+        addOn2.setBillingPeriod(BillingPeriod.MONTHLY);
+        addOn2.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final List<Subscription> subscriptions2 = new ArrayList<Subscription>();
+        subscriptions2.add(bp1);
+        subscriptions2.add(addOn1);
+
 
         final BulkSubscriptionsBundle bulkList1 = new BulkSubscriptionsBundle();
-        bulkList1.setBaseEntitlementAndAddOns(subscriptions);
+        bulkList1.setBaseEntitlementAndAddOns(subscriptions1);
         final BulkSubscriptionsBundle bulkList2 = new BulkSubscriptionsBundle();
-        bulkList2.setBaseEntitlementAndAddOns(subscriptions);
+        bulkList2.setBaseEntitlementAndAddOns(subscriptions2);
 
         final BulkSubscriptionsBundles input = new BulkSubscriptionsBundles();
         input.add(bulkList1);
         input.add(bulkList2);
 
-        subscriptionApi.createSubscriptionsWithAddOns(input, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Bundles res = subscriptionApi.createSubscriptionsWithAddOns(input, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(res.size(), 2);
     }
 
     @Test(groups = "slow", description = "Create addOns in a bundle where BP subscription already exist")
