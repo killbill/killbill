@@ -271,7 +271,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription input = new Subscription();
         input.setAccountId(accountJson.getAccountId());
-        input.setExternalKey("identical");
+        input.setBundleExternalKey("identical");
         input.setProductName(productName);
         input.setProductCategory(ProductCategory.BASE);
         input.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -369,11 +369,15 @@ public class TestEntitlement extends TestJaxrsBase {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
+        final String bundleExternalKey = "bundleKey12346542";
+
         final Account accountJson = createAccount();
 
         final Subscription base = new Subscription();
         base.setAccountId(accountJson.getAccountId());
-        base.setExternalKey("base");
+
+        base.setBundleExternalKey(bundleExternalKey);
+        base.setExternalKey("Base");
         base.setProductName("Shotgun");
         base.setProductCategory(ProductCategory.BASE);
         base.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -381,6 +385,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
+        addOn1.setExternalKey("addOn1");
         addOn1.setProductName("Telescopic-Scope");
         addOn1.setProductCategory(ProductCategory.ADD_ON);
         addOn1.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -388,6 +393,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription addOn2 = new Subscription();
         addOn2.setAccountId(accountJson.getAccountId());
+        addOn2.setExternalKey("addOn2");
         addOn2.setProductName("Laser-Scope");
         addOn2.setProductCategory(ProductCategory.ADD_ON);
         addOn2.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -400,8 +406,24 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(subscriptions, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(bundle);
-        assertEquals(bundle.getExternalKey(), "base");
+        assertEquals(bundle.getExternalKey(), bundleExternalKey);
         assertEquals(bundle.getSubscriptions().size(), 3);
+        int found = 0;
+        for (int i = 0; i < 3; i++) {
+            final Subscription cur = bundle.getSubscriptions().get(i);
+            assertEquals(cur.getBundleExternalKey(), bundleExternalKey);
+            if ("Shotgun".equals(cur.getProductName())) {
+                assertEquals(cur.getExternalKey(), "Base");
+                found++;
+            } else if ("Telescopic-Scope".equals(cur.getProductName())) {
+                assertEquals(cur.getExternalKey(), "addOn1");
+                found++;
+            } else if ("Laser-Scope".equals(cur.getProductName())) {
+                assertEquals(cur.getExternalKey(), "addOn2");
+                found++;
+            }
+        }
+        assertEquals(found, 3);
 
         final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, true, false, false, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoices.size(), 1);
@@ -564,7 +586,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription bp = new Subscription();
         bp.setAccountId(accountJson.getAccountId());
         bp.setProductCategory(ProductCategory.BASE);
-        bp.setExternalKey("12345");
+        bp.setBundleExternalKey("12345");
 
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
@@ -598,7 +620,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription input = new Subscription();
         input.setAccountId(accountJson.getAccountId());
-        input.setExternalKey("foobarxyz");
+        input.setBundleExternalKey("foobarxyz");
         input.setProductName("Shotgun");
         input.setProductCategory(ProductCategory.BASE);
         input.setBillingPeriod(BillingPeriod.MONTHLY);
@@ -776,7 +798,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Subscription input = new Subscription();
         input.setAccountId(accountJson.getAccountId());
-        input.setExternalKey("somethingSpecial");
+        input.setBundleExternalKey("somethingSpecial");
         input.setPlanName("shotgun-monthly");
 
         final Subscription entitlementJson = subscriptionApi.createSubscription(input, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
