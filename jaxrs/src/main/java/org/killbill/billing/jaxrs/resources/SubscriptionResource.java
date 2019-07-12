@@ -320,12 +320,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     bundleId = entitlement.getBundleId();
                 }
                 // Can be set on a single element (e.g. BASE + ADD_ON for a new bundle)
-                Preconditions.checkArgument(bundleExternalKey == null || entitlement.getExternalKey() == null || bundleExternalKey.equals(entitlement.getExternalKey()), "SubscriptionJson externalKey should be the same for each element");
+                Preconditions.checkArgument(bundleExternalKey == null || entitlement.getBundleExternalKey() == null || bundleExternalKey.equals(entitlement.getBundleExternalKey()), "SubscriptionJson externalKey should be the same for each element");
                 if (bundleExternalKey == null) {
-                    bundleExternalKey = entitlement.getExternalKey();
+                    bundleExternalKey = entitlement.getBundleExternalKey();
                 }
                 // create the entitlementSpecifier
-                buildEntitlementSpecifier(entitlement, account.getCurrency(), entitlementSpecifierList);
+                buildEntitlementSpecifier(entitlement, account.getCurrency(), entitlement.getExternalKey(), entitlementSpecifierList);
             }
 
             final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
@@ -486,11 +486,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final List<PlanPhasePriceOverride> overrides = buildPlanPhasePriceOverrides(entitlement.getPriceOverrides(), account.getCurrency(), planSpec);
 
                 if (requestedDate == null && billingPolicy == null) {
-                    newEntitlement = current.changePlan(new DefaultEntitlementSpecifier(planSpec, null, overrides), pluginProperties, ctx);
+                    newEntitlement = current.changePlan(new DefaultEntitlementSpecifier(planSpec, null, null, overrides), pluginProperties, ctx);
                 } else if (billingPolicy == null) {
-                    newEntitlement = current.changePlanWithDate(new DefaultEntitlementSpecifier(planSpec, null, overrides), inputLocalDate, pluginProperties, ctx);
+                    newEntitlement = current.changePlanWithDate(new DefaultEntitlementSpecifier(planSpec, null, null, overrides), inputLocalDate, pluginProperties, ctx);
                 } else {
-                    newEntitlement = current.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(planSpec, null, overrides), null, billingPolicy, pluginProperties, ctx);
+                    newEntitlement = current.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(planSpec, null, null, overrides), null, billingPolicy, pluginProperties, ctx);
                 }
                 isImmediateOp = newEntitlement.getLastActiveProduct().getName().equals(entitlement.getProductName()) &&
                                 newEntitlement.getLastActivePlan().getRecurringBillingPeriod() == entitlement.getBillingPeriod() &&

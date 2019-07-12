@@ -49,6 +49,7 @@ public class SubscriptionResourceHelpers {
 
     public static void buildEntitlementSpecifier(final SubscriptionJson subscriptionJson,
                                                  final Currency currency,
+                                                 final String externalKey,
                                                  final Collection<EntitlementSpecifier> entitlementSpecifierList) {
         if (subscriptionJson.getPlanName() == null &&
             (subscriptionJson.getProductName() == null ||
@@ -76,6 +77,11 @@ public class SubscriptionResourceHelpers {
             @Override
             public Integer getBillCycleDay() {
                 return subscriptionJson.getBillCycleDayLocal();
+            }
+
+            @Override
+            public String getExternalKey() {
+                return externalKey;
             }
 
             @Override
@@ -261,7 +267,7 @@ public class SubscriptionResourceHelpers {
             }
 
             @Override
-            public String getExternalKey() {
+            public String getBundleExternalKey() {
                 return bundleExternalKey;
             }
 

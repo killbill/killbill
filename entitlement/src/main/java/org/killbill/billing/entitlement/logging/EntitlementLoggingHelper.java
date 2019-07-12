@@ -40,7 +40,7 @@ public abstract class EntitlementLoggingHelper {
             if (baseEntitlementSpecifiersWithAddOns != null && baseEntitlementSpecifiersWithAddOns.iterator().hasNext()) {
                 for (final BaseEntitlementWithAddOnsSpecifier cur : baseEntitlementSpecifiersWithAddOns) {
                     logCreateEntitlementWithAOs(logLine,
-                                                cur.getExternalKey(),
+                                                cur.getBundleExternalKey(),
                                                 cur.getEntitlementSpecifier(),
                                                 cur.getEntitlementEffectiveDate(),
                                                 cur.getBillingEffectiveDate());
@@ -56,7 +56,7 @@ public abstract class EntitlementLoggingHelper {
                                                     final LocalDate entitlementDate,
                                                     final LocalDate billingDate) {
         if (externalKey != null) {
-            logLine.append("key='")
+            logLine.append("bundle key='")
                    .append(externalKey)
                    .append("'");
         }

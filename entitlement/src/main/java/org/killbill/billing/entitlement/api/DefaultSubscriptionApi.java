@@ -495,18 +495,18 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         final List<SubscriptionBundle> bundles = new LinkedList<SubscriptionBundle>();
         for (final UUID bundleId : subscriptionsPerBundle.keySet()) {
             final List<Subscription> subscriptionsForBundle = subscriptionsPerBundle.get(bundleId);
-            final String externalKey = subscriptionsForBundle.get(0).getExternalKey();
+            final String bundleExternalKey = subscriptionsForBundle.get(0).getBundleExternalKey();
 
             final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId,
                                                                                               bundleId,
-                                                                                              externalKey,
+                                                                                              bundleExternalKey,
                                                                                               accountEntitlements.getEntitlements().get(bundleId),
                                                                                               internalTenantContextWithValidAccountRecordId);
 
             final SubscriptionBaseBundle baseBundle = accountEntitlements.getBundles().get(bundleId);
             final SubscriptionBundle subscriptionBundle = new DefaultSubscriptionBundle(bundleId,
                                                                                         accountId,
-                                                                                        externalKey,
+                                                                                        bundleExternalKey,
                                                                                         subscriptionsForBundle,
                                                                                         timeline,
                                                                                         baseBundle.getOriginalCreatedDate(),

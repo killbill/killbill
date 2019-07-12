@@ -27,6 +27,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.DefaultPriceListSet;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -233,10 +234,10 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testWithAuditAndHistory() throws SubscriptionBaseApiException {
-        final String externalKey = "54341455sttfs1";
+        final String bundleExternalKey = "54341455sttfs1";
         final DateTime startDate = clock.getUTCNow();
 
-        final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, startDate, startDate);
+        final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(bundleExternalKey, accountId, startDate, startDate, startDate, startDate);
         final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
 
         final List<AuditLogWithHistory> bundleHistory1 =  dao.getSubscriptionBundleAuditLogsWithHistoryForId(bundle.getId(), AuditLevel.FULL, internalCallContext);
@@ -280,9 +281,9 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                                                             ImmutableList.<SubscriptionBase>of(subscription));
 
         final List<SubscriptionBaseEvent> resultSubscriptions = dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
-                                                                                                 ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
-                                                                                                 catalog,
-                                                                                                 internalCallContext);
+                                                                                                  ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+                                                                                                  catalog,
+                                                                                                  internalCallContext);
         assertListenerStatus();
         assertEquals(resultSubscriptions.size(), 1);
         final SubscriptionBaseEvent subscriptionBaseEvent = resultSubscriptions.get(0);
@@ -312,6 +313,48 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
 
     @Test(groups = "slow")
+    public void testSubscriptionExternalKey() throws SubscriptionBaseApiException, CatalogApiException {
+        final String eternalKey = "6577564455sgwers2";
+        final DateTime startDate = clock.getUTCNow();
+
+        final SubscriptionBuilder builder = new SubscriptionBuilder()
+                .setId(UUIDs.randomUUID())
+                .setBundleId(bundle.getId())
+                .setExternalKey(eternalKey)
+                .setBundleExternalKey(bundle.getExternalKey())
+                .setCategory(ProductCategory.BASE)
+                .setBundleStartDate(startDate)
+                .setAlignStartDate(startDate)
+                .setMigrated(false);
+
+        final ApiEventBuilder createBuilder = new ApiEventBuilder()
+                .setSubscriptionId(builder.getId())
+                .setEventPlan("shotgun-monthly")
+                .setEventPlanPhase("shotgun-monthly-trial")
+                .setEventPriceList(DefaultPriceListSet.DEFAULT_PRICELIST_NAME)
+                .setEffectiveDate(startDate)
+                .setFromDisk(true);
+        final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
+
+
+        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
+                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        final List<SubscriptionBaseEvent> resultSubscriptions = dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
+                                                                                                  ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+                                                                                                  catalog,
+                                                                                                  internalCallContext);
+        assertListenerStatus();
+        assertEquals(resultSubscriptions.size(), 1);
+
+        final SubscriptionBase s = dao.getSubscriptionFromId(resultSubscriptions.get(0).getSubscriptionId(), catalog, internalCallContext);
+        assertEquals(s.getExternalKey(), eternalKey);
+
+    }
+
+
+        @Test(groups = "slow")
     public void testDirtyFlag() throws Throwable {
         final IDBI dbiSpy = Mockito.spy(dbi);
         final IDBI roDbiSpy = Mockito.spy(roDbi);

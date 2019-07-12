@@ -224,6 +224,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
+    public String getExternalKey() {
+        return eventsStream.getExternalKey();
+     }
+
+    @Override
     public UUID getBundleId() {
         return eventsStream.getBundleId();
     }
@@ -234,7 +239,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public String getExternalKey() {
+    public String getBundleExternalKey() {
         return eventsStream.getBundleExternalKey();
     }
 
@@ -318,7 +323,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final LocalDate billingEffectiveDate = overrideBillingEffectiveDate ? entitlementEffectiveDate : null;
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 entitlementEffectiveDate,
                 billingEffectiveDate,
@@ -384,7 +389,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 null,
                 null,
@@ -467,7 +472,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 entitlementEffectiveDate,
                 entitlementEffectiveDate,
@@ -549,7 +554,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 null,
                 null,
@@ -620,7 +625,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 null,
                 null,
@@ -665,7 +670,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 effectiveDate,
                 effectiveDate,
@@ -740,7 +745,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 null,
                 null,

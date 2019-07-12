@@ -105,7 +105,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         effectiveSubscriptionTransitions = new LinkedList<EffectiveSubscriptionInternalEvent>();
 
         final DateTime subscriptionStartDate = clock.getUTCNow().minusDays(3);
-        subscription = new MockSubscription(subId, bunId, null, subscriptionStartDate, subscriptionStartDate);
+        subscription = new MockSubscription(subId, bunId, null, null, subscriptionStartDate, subscriptionStartDate);
         final List<SubscriptionBase> subscriptions = ImmutableList.<SubscriptionBase>of(subscription);
 
         Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);

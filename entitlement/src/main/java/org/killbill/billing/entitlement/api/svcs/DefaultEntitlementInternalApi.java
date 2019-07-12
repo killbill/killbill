@@ -115,7 +115,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
             final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                     entitlement.getBundleId(),
-                    entitlement.getExternalKey(),
+                    entitlement.getBundleExternalKey(),
                     null,
                     effectiveDate,
                     null,

@@ -60,6 +60,7 @@ CREATE TABLE subscriptions (
     record_id serial unique,
     id varchar(36) NOT NULL,
     bundle_id varchar(36) NOT NULL,
+    external_key varchar(255) NOT NULL,
     category varchar(32) NOT NULL,
     start_date datetime NOT NULL,
     bundle_start_date datetime NOT NULL,
@@ -74,6 +75,7 @@ CREATE TABLE subscriptions (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX subscriptions_id ON subscriptions(id);
+CREATE UNIQUE INDEX subscriptions_external_key ON subscriptions(external_key, tenant_record_id);
 CREATE INDEX subscriptions_bundle_id ON subscriptions(bundle_id);
 CREATE INDEX subscriptions_tenant_account_record_id ON subscriptions(tenant_record_id, account_record_id);
 
@@ -83,6 +85,7 @@ CREATE TABLE subscription_history (
     id varchar(36) NOT NULL,
     target_record_id bigint /*! unsigned */ not null,
     bundle_id varchar(36) NOT NULL,
+    external_key varchar(255) NOT NULL,
     category varchar(32) NOT NULL,
     start_date datetime NOT NULL,
     bundle_start_date datetime NOT NULL,
