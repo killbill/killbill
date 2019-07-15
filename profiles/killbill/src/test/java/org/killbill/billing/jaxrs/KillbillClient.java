@@ -233,7 +233,9 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         callbackServlet.assertListenerStatus();
 
         assertEquals(subscription.getExternalKey(), externalKey);
-        assertEquals(subscription.getBundleExternalKey(), bundleExternalKey);
+        if (bundleExternalKey != null) {
+            assertEquals(subscription.getBundleExternalKey(), bundleExternalKey);
+        }
 
         return subscription;
     }
