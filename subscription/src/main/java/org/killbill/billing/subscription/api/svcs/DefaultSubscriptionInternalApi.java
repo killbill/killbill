@@ -497,6 +497,11 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
+    public UUID getSubscriptionIdFromSubscriptionExternalKey(final String externalKey, final InternalTenantContext context) {
+        return dao.getSubscriptionIdFromSubscriptionExternalKey(externalKey, context);
+    }
+
+    @Override
     public List<AuditLogWithHistory> getSubscriptionBundleAuditLogsWithHistoryForId(final UUID bundleId, final AuditLevel auditLevel, final TenantContext tenantContext) {
         return dao.getSubscriptionBundleAuditLogsWithHistoryForId(bundleId, auditLevel, internalCallContextFactory.createInternalTenantContext(bundleId, ObjectType.BUNDLE, tenantContext));
     }

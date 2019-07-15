@@ -88,7 +88,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertTrue(subscription.equals(entitlementJson));
 
 
-        final Subscription subscription2 = subscriptionApi.getSubscriptionByKey(subscription.getExternalKey(), accountJson.getAccountId(), requestOptions);
+        final Subscription subscription2 = subscriptionApi.getSubscriptionByKey(subscription.getExternalKey(), requestOptions);
         assertEquals(subscription2.getBundleExternalKey(), "99999");
         assertEquals(subscription2.getExternalKey(), subscription.getExternalKey());
 

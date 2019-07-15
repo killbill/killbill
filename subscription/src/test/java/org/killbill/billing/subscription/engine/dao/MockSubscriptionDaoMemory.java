@@ -216,6 +216,16 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
+    public UUID getSubscriptionIdFromSubscriptionExternalKey(final String externalKey, final InternalTenantContext context) {
+        for (final SubscriptionBase cur : subscriptions) {
+            if (cur.getExternalKey().equals(externalKey)) {
+                return cur.getId();
+            }
+        }
+        return null;
+    }
+
+    @Override
     public List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(final List<SubscriptionBaseWithAddOns> subscriptions,
                                                                      final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap,
                                                                      final Catalog catalog,

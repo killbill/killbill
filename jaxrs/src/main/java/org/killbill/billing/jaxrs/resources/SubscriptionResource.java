@@ -174,13 +174,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve a subscription by external key", response = SubscriptionJson.class)
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Subscription not found")})
     public Response getSubscriptionByKey(@ApiParam(required = true) @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
-                                         // The required part is a bit forceful for the user though... but removing would require not using our CatalogInternalApi down the line
-                                         // which was made specifically to ensure that catalog plugin get what they need.
-                                         @ApiParam(required = true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
-
-        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Subscription subscription = subscriptionApi.getSubscriptionForExternalKey(externalKey, tenantContext);
         final Account account = accountUserApi.getAccountById(subscription.getAccountId(), tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(subscription.getAccountId(), auditMode.getLevel(), tenantContext);

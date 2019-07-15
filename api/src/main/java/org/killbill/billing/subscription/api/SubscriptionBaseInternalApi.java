@@ -104,6 +104,8 @@ public interface SubscriptionBaseInternalApi {
 
     public UUID getAccountIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
+    public UUID getSubscriptionIdFromSubscriptionExternalKey(String externalKey, InternalTenantContext context) throws SubscriptionBaseApiException;
+
     public List<AuditLogWithHistory> getSubscriptionBundleAuditLogsWithHistoryForId(final UUID uuid, final AuditLevel auditLevel, final TenantContext tenantContext);
 
     public List<AuditLogWithHistory> getSubscriptionAuditLogsWithHistoryForId(final UUID uuid, final AuditLevel auditLevel, final TenantContext tenantContext);
