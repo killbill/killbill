@@ -56,7 +56,7 @@ public abstract class EntitlementLoggingHelper {
                                                     final LocalDate entitlementDate,
                                                     final LocalDate billingDate) {
         if (externalKey != null) {
-            logLine.append("bundle key='")
+            logLine.append("bundleKey='")
                    .append(externalKey)
                    .append("'");
         }

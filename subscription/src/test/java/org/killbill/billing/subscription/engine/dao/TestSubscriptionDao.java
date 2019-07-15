@@ -314,13 +314,13 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testSubscriptionExternalKey() throws SubscriptionBaseApiException, CatalogApiException {
-        final String eternalKey = "6577564455sgwers2";
+        final String externalKey = "6577564455sgwers2";
         final DateTime startDate = clock.getUTCNow();
 
         final SubscriptionBuilder builder = new SubscriptionBuilder()
                 .setId(UUIDs.randomUUID())
                 .setBundleId(bundle.getId())
-                .setExternalKey(eternalKey)
+                .setExternalKey(externalKey)
                 .setBundleExternalKey(bundle.getExternalKey())
                 .setCategory(ProductCategory.BASE)
                 .setBundleStartDate(startDate)
@@ -349,7 +349,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(resultSubscriptions.size(), 1);
 
         final SubscriptionBase s = dao.getSubscriptionFromId(resultSubscriptions.get(0).getSubscriptionId(), catalog, internalCallContext);
-        assertEquals(s.getExternalKey(), eternalKey);
+        assertEquals(s.getExternalKey(), externalKey);
 
     }
 
