@@ -52,8 +52,15 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
     @Test(groups = "slow")
     public void testAddOnCreationTiming() throws AccountApiException, EntitlementApiException {
+
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
+
+        final String bundleExternalKey = UUID.randomUUID().toString();
+        final String bpExternalKey = UUID.randomUUID().toString();
+        final String aoExternalKey = UUID.randomUUID().toString();
+
+
         final Account account = createAccount(getAccountData(7));
         // Reference time of 2013-08-07T00:00:00.000
         Assert.assertEquals(account.getReferenceTime().compareTo(new DateTime(2013, 8, 7, 0, 0, 0, DateTimeZone.UTC)), 0);
@@ -65,18 +72,23 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(baseSpec), account.getExternalKey(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(baseSpec, null, bpExternalKey, null), bundleExternalKey, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final DefaultEntitlement baseEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
         Assert.assertEquals(baseEntitlement.getSubscriptionBase().getStartDate().compareTo(account.getReferenceTime().plusSeconds(5)), 0);
+        Assert.assertEquals(baseEntitlement.getBundleExternalKey(), bundleExternalKey);
+        Assert.assertEquals(baseEntitlement.getExternalKey(), bpExternalKey);
 
         // Add ADD_ON (verify date passed, i.e. initialDate, won't map to 2013-08-07T00:00:00.000Z)
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final UUID addOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec, null, aoExternalKey, null), initialDate, initialDate, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final DefaultEntitlement addOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
         Assert.assertEquals(addOnEntitlement.getSubscriptionBase().getStartDate().compareTo(baseEntitlement.getSubscriptionBase().getStartDate()), 0);
+        Assert.assertEquals(addOnEntitlement.getBundleExternalKey(), bundleExternalKey);
+        Assert.assertEquals(addOnEntitlement.getExternalKey(), aoExternalKey);
+
     }
 
     @Test(groups = "slow")
@@ -193,7 +205,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         assertEquals(entitlement.getAccountId(), account.getId());
-        assertEquals(entitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(entitlement.getBundleExternalKey(), account.getExternalKey());
 
         assertEquals(entitlement.getEffectiveStartDate(), initialDate);
         assertNull(entitlement.getEffectiveEndDate());
@@ -219,7 +231,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
 
         assertEquals(entitlement2.getAccountId(), account.getId());
-        assertEquals(entitlement2.getExternalKey(), account.getExternalKey());
+        assertEquals(entitlement2.getBundleExternalKey(), account.getExternalKey());
 
         assertEquals(entitlement2.getEffectiveStartDate(), initialDate);
         assertNull(entitlement2.getEffectiveEndDate());
@@ -248,7 +260,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement entitlement3 = accountEntitlements.get(0);
 
         assertEquals(entitlement3.getAccountId(), account.getId());
-        assertEquals(entitlement3.getExternalKey(), account.getExternalKey());
+        assertEquals(entitlement3.getBundleExternalKey(), account.getExternalKey());
 
         assertEquals(entitlement3.getEffectiveStartDate(), initialDate);
         assertNull(entitlement3.getEffectiveEndDate());
@@ -294,7 +306,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement telescopicEntitlement = entitlementApi.getEntitlementForId(telescopicEntitlementId, callContext);
 
         assertEquals(telescopicEntitlement.getAccountId(), account.getId());
-        assertEquals(telescopicEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(telescopicEntitlement.getBundleExternalKey(), account.getExternalKey());
 
         assertEquals(telescopicEntitlement.getEffectiveStartDate(), initialDate);
         assertNull(telescopicEntitlement.getEffectiveEndDate());
@@ -308,7 +320,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement.getBundleId(), callContext);
         assertEquals(bundleEntitlements.size(), 2);
 
-        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
+        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndBundleExternalKey(account.getId(), account.getExternalKey(), callContext);
         assertEquals(bundleEntitlements.size(), 2);
     }
 
@@ -347,7 +359,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
 
         assertEquals(telescopicEntitlement.getAccountId(), account.getId());
-        assertEquals(telescopicEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(telescopicEntitlement.getBundleExternalKey(), account.getExternalKey());
 
         assertEquals(telescopicEntitlement.getEffectiveStartDate(), startDate);
         assertNull(telescopicEntitlement.getEffectiveEndDate());
@@ -361,7 +373,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(telescopicEntitlement.getBundleId(), callContext);
         assertEquals(bundleEntitlements.size(), 2);
 
-        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
+        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndBundleExternalKey(account.getId(), account.getExternalKey(), callContext);
         assertEquals(bundleEntitlements.size(), 2);
     }
 
@@ -563,10 +575,10 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         // Transfer bundle to dest account
         final LocalDate effectiveDate = new LocalDate(clock.getUTCNow(), accountSrc.getTimeZone());
         testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.BLOCK, NextEvent.BLOCK);
-        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(accountSrc.getId(), accountDesc.getId(), baseEntitlement.getExternalKey(), effectiveDate, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(accountSrc.getId(), accountDesc.getId(), baseEntitlement.getBundleExternalKey(), effectiveDate, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        final Entitlement oldBaseEntitlement = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(accountSrc.getId(), accountSrc.getExternalKey(), callContext).get(0);
+        final Entitlement oldBaseEntitlement = entitlementApi.getAllEntitlementsForAccountIdAndBundleExternalKey(accountSrc.getId(), accountSrc.getExternalKey(), callContext).get(0);
         assertEquals(oldBaseEntitlement.getEffectiveEndDate(), effectiveDate);
         assertEquals(oldBaseEntitlement.getState(), EntitlementState.CANCELLED);
 
@@ -598,7 +610,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         assertEquals(entitlement.getAccountId(), account.getId());
-        assertEquals(entitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(entitlement.getBundleExternalKey(), account.getExternalKey());
 
         assertEquals(entitlement.getEffectiveStartDate(), initialDate);
         assertNull(entitlement.getEffectiveEndDate());
@@ -623,7 +635,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(entitlement.getBundleId(), callContext);
         assertEquals(bundleEntitlements.size(), 1);
 
-        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
+        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndBundleExternalKey(account.getId(), account.getExternalKey(), callContext);
         assertEquals(bundleEntitlements.size(), 1);
 
     }
@@ -839,11 +851,11 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         // Retun only the created subscriptions
         Assert.assertEquals(entitlementIds.size(), 3);
 
-        final List<Entitlement> entitlementsForBundle1 = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), bundleKey1, callContext);
+        final List<Entitlement> entitlementsForBundle1 = entitlementApi.getAllEntitlementsForAccountIdAndBundleExternalKey(account.getId(), bundleKey1, callContext);
         Assert.assertEquals(entitlementsForBundle1.size(), 2);
 
         // And yet we do have both the BASE and ADD_ON for bundleKey2
-        final List<Entitlement> entitlementsForBundle2 = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), bundleKey2, callContext);
+        final List<Entitlement> entitlementsForBundle2 = entitlementApi.getAllEntitlementsForAccountIdAndBundleExternalKey(account.getId(), bundleKey2, callContext);
         Assert.assertEquals(entitlementsForBundle2.size(), 2);
 
     }
@@ -904,7 +916,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
         assertEquals(baseEntitlement.getAccountId(), account.getId());
-        assertEquals(baseEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(baseEntitlement.getBundleExternalKey(), account.getExternalKey());
         assertEquals(baseEntitlement.getLastActiveProduct().getName(), "Knife");
         assertEquals(baseEntitlement.getLastActivePlan().getName(), "knife-monthly-notrial");
         assertEquals(baseEntitlement.getLastActiveProductCategory(), ProductCategory.STANDALONE);
@@ -917,7 +929,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement anotherStandaloneEntitlement = entitlementApi.getEntitlementForId(anotherStandaloneEntitlementId, callContext);
 
         assertEquals(anotherStandaloneEntitlement.getAccountId(), account.getId());
-        assertEquals(anotherStandaloneEntitlement.getExternalKey(), account.getExternalKey());
+        assertEquals(anotherStandaloneEntitlement.getBundleExternalKey(), account.getExternalKey());
         assertEquals(anotherStandaloneEntitlement.getBundleId(), baseEntitlement.getBundleId());
 
         assertEquals(anotherStandaloneEntitlement.getLastActivePriceList().getName(), "notrial");
@@ -928,7 +940,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         List<Entitlement> bundleEntitlements = entitlementApi.getAllEntitlementsForBundle(anotherStandaloneEntitlement.getBundleId(), callContext);
         assertEquals(bundleEntitlements.size(), 2);
 
-        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndExternalKey(account.getId(), account.getExternalKey(), callContext);
+        bundleEntitlements = entitlementApi.getAllEntitlementsForAccountIdAndBundleExternalKey(account.getId(), account.getExternalKey(), callContext);
         assertEquals(bundleEntitlements.size(), 2);
     }
 }

@@ -42,6 +42,7 @@ public class MockSubscription implements SubscriptionBase {
 
     private final UUID id;
     private final UUID bundleId;
+    private final String externalKey;
     private final EntitlementState state;
     private Plan plan;
     private final PlanPhase phase;
@@ -49,9 +50,10 @@ public class MockSubscription implements SubscriptionBase {
     private final DateTime firstRecurringNonZeroChargeDate;
     private SubscriptionBase sub;
 
-    public MockSubscription(final UUID id, final UUID bundleId, final Plan plan, final DateTime startDate, final DateTime firstRecurringNonZeroChargeDate) {
+    public MockSubscription(final UUID id, final UUID bundleId, final String externalKey, final Plan plan, final DateTime startDate, final DateTime firstRecurringNonZeroChargeDate) {
         this.id = id;
         this.bundleId = bundleId;
+        this.externalKey = externalKey;
         this.state = EntitlementState.ACTIVE;
         this.plan = plan;
         this.phase = null;
@@ -120,6 +122,11 @@ public class MockSubscription implements SubscriptionBase {
     @Override
     public UUID getBundleId() {
         return bundleId;
+    }
+
+    @Override
+    public String getExternalKey() {
+        return externalKey;
     }
 
     @Override

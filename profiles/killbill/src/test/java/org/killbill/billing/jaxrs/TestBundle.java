@@ -54,7 +54,7 @@ public class TestBundle extends TestJaxrsBase {
         accountJson = createAccount();
 
         final Subscription subscription = createSubscription(accountJson.getAccountId(), null, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
-        Assert.assertNotNull(subscription.getExternalKey());
+        Assert.assertNotNull(subscription.getBundleExternalKey());
     }
 
     @Test(groups = "slow", description = "Can retrieve bundles by external key")

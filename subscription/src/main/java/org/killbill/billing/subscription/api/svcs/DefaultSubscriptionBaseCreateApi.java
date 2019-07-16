@@ -258,6 +258,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             subscription.setBuilder(new SubscriptionBuilder()
                                             .setId(UUIDs.randomUUID())
                                             .setBundleId(bundle.getId())
+                                            .setExternalKey(entitlement.getExternalKey())
                                             .setBundleExternalKey(bundle.getExternalKey())
                                             .setCategory(plan.getProduct().getCategory())
                                             .setBundleStartDate(bundleStartDate)
