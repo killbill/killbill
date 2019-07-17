@@ -164,7 +164,6 @@ public class AccountResource extends JaxRsResourceBase {
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final OverdueApi overdueApi;
-    private final PaymentConfig paymentConfig;
     private final JaxrsExecutors jaxrsExecutors;
     private final JaxrsConfig jaxrsConfig;
     private final RecordIdApi recordIdApi;
@@ -182,7 +181,6 @@ public class AccountResource extends JaxRsResourceBase {
                            final SubscriptionApi subscriptionApi,
                            final OverdueApi overdueApi,
                            final Clock clock,
-                           final PaymentConfig paymentConfig,
                            final JaxrsExecutors jaxrsExecutors,
                            final JaxrsConfig jaxrsConfig,
                            final Context context,
@@ -193,7 +191,6 @@ public class AccountResource extends JaxRsResourceBase {
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.overdueApi = overdueApi;
-        this.paymentConfig = paymentConfig;
         this.jaxrsExecutors = jaxrsExecutors;
         this.jaxrsConfig = jaxrsConfig;
         this.recordIdApi = recordIdApi;
@@ -1100,7 +1097,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
         final OverdueState overdueState = overdueApi.getOverdueStateFor(account.getId(), tenantContext);
 
-        return Response.status(Status.OK).entity(new OverdueStateJson(overdueState, paymentConfig)).build();
+        return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
     }
 
 
