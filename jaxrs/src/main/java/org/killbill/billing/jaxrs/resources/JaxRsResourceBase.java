@@ -691,11 +691,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected void logDeprecationParameterWarningIfNeeded(@Nullable final String deprecatedParam, final String... replacementParams) {
-        if (deprecatedParam != null) {
-            log.warn(String.format("Parameter %s is being deprecated: Instead use parameters %s", deprecatedParam, Joiner.on(",").join(replacementParams)));
-        }
-    }
 
     protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey, final HttpServletRequest request) {
         final PaymentTransaction createdTransaction = findCreatedTransaction(payment, transactionType, transactionExternalKey);
