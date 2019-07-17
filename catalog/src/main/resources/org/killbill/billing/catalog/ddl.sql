@@ -80,7 +80,7 @@ create table catalog_override_block_definition
 (
 record_id serial unique,
 parent_unit_name varchar(255) NOT NULL,
-size decimal(15,9) NOT NULL,
+bsize decimal(15,9) NOT NULL,
 max decimal(15,9) NULL,
 currency varchar(3) NOT NULL,
 price decimal(15,9) NOT NULL,

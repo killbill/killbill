@@ -28,7 +28,7 @@ public class CatalogOverrideBlockDefinitionModelDao {
     private String currency;
     private BigDecimal price;
     private String blockType;
-    private double size;
+    private double bsize;
     private double max;
     private DateTime effectiveDate;
     private DateTime createdDate;
@@ -76,12 +76,18 @@ public class CatalogOverrideBlockDefinitionModelDao {
     }
 
     public double getSize() {
-        return size;
+        return bsize;
+    }
+
+    // Jdbi binder
+    public double getBsize() {
+        return bsize;
     }
 
     public void setSize(double size) {
-        this.size = size;
+        this.bsize = size;
     }
+
 
     public double getMax() {
         return max;
@@ -130,7 +136,7 @@ public class CatalogOverrideBlockDefinitionModelDao {
         this.parentUnitName = parentUnitName;
         this.currency = currency;
         this.price = price;
-        this.size = size;
+        this.bsize = size;
         this.max = max;
         this.effectiveDate = effectiveDate;
     }
