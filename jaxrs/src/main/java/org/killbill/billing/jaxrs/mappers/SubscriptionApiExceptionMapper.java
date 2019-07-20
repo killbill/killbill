@@ -72,6 +72,8 @@ public class SubscriptionApiExceptionMapper extends ExceptionMapperBase implemen
             return buildNotFoundResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.SUB_GET_NO_SUCH_BASE_SUBSCRIPTION.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.SUB_INVALID_SUBSCRIPTION_EXTERNAL_KEY.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode()) {
             return buildBadRequestResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.SUB_INVALID_REQUESTED_FUTURE_DATE.getCode()) {
