@@ -137,7 +137,7 @@ public class PaymentRefresher extends ProcessorBase {
                     onJanitorChange(curPaymentTransactionModelDao, internalTenantContext);
                 }
             } else {
-                log.warn("Unable to find transaction={} from pluginTransactions={}", curPaymentTransactionModelDao, pluginTransactions);
+                log.debug("Unable to find transaction={} from pluginTransactions={}", curPaymentTransactionModelDao, pluginTransactions);
             }
 
             transactionsModelDao.add(newPaymentTransactionModelDao);
