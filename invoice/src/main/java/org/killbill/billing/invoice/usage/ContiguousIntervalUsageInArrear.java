@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -220,6 +220,13 @@ public abstract class ContiguousIntervalUsageInArrear {
         // Each RolledUpUsage 'ru' is for a specific time period and across all units
         for (final RolledUpUsage ru : allUsage) {
 
+            final InvoiceItem existingOverlappingItem = isContainedIntoExistingUsage(ru.getStart(), ru.getEnd(), existingUsage);
+            if (existingOverlappingItem != null) {
+                log.warn("ContiguousIntervalUsageInArrear detected usage {} start={}, end={} already contained in item {}, start = {}, end = {}, skipping... ",
+                         usage.getName(), ru.getStart(), ru.getEnd(),
+                         existingOverlappingItem.getInvoiceItemType(), existingOverlappingItem.getStartDate(), existingOverlappingItem.getEndDate());
+                continue;
+            }
             //
             // Previously billed items:
             //
@@ -243,6 +250,28 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
         final LocalDate nextNotificationDate = computeNextNotificationDate();
         return new UsageInArrearItemsAndNextNotificationDate(result, newTrackingIds, nextNotificationDate);
+    }
+
+    private InvoiceItem isContainedIntoExistingUsage(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> existingUsage) {
+        Preconditions.checkState(isBuilt.get());
+        if (existingUsage.isEmpty()) {
+            return null;
+        }
+
+        final Optional<InvoiceItem> res =Iterables.tryFind(existingUsage, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                if (input.getInvoiceItemType() != InvoiceItemType.USAGE) {
+                    return false;
+                }
+                final UsageInvoiceItem usageInput = (UsageInvoiceItem) input;
+                final boolean isContained = usageInput.getUsageName().equals(usage.getName()) &&
+                                            ((startDate.compareTo(usageInput.getStartDate()) >= 0 && endDate.compareTo(usageInput.getEndDate()) < 0) ||
+                                             (startDate.compareTo(usageInput.getStartDate()) > 0 && endDate.compareTo(usageInput.getEndDate()) <= 0));
+                return isContained;
+            }
+        });
+        return res.isPresent() ? res.get() : null;
     }
 
     protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException;
