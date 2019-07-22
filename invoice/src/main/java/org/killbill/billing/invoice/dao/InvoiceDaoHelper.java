@@ -47,6 +47,7 @@ import org.killbill.billing.util.tag.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -232,8 +233,9 @@ public class InvoiceDaoHelper {
             return;
         }
 
-        getInvoiceItemsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
-        getInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
+        setInvoiceItemsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
+        setInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
+        setTrackingIdsFromTransaction(invoices, entitySqlDaoWrapperFactory, context);
         setInvoicesWrittenOff(invoices, invoicesTags);
 
         final Iterable<InvoiceModelDao> nonParentInvoices = Iterables.<InvoiceModelDao>filter(invoices,
@@ -268,7 +270,7 @@ public class InvoiceDaoHelper {
         return amount == null ? BigDecimal.ZERO : amount;
     }
 
-    private void getInvoiceItemsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+    private void setInvoiceItemsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
         final List<InvoiceItemModelDao> invoiceItemsForAccount = invoiceItemSqlDao.getByAccountRecordId(context);
 
@@ -288,7 +290,7 @@ public class InvoiceDaoHelper {
         }
     }
 
-    private void getInvoicePaymentsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+    private void setInvoicePaymentsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
         final List<InvoicePaymentModelDao> invoicePaymentsForAccount = invoicePaymentSqlDao.getByAccountRecordId(context);
 
@@ -327,6 +329,32 @@ public class InvoiceDaoHelper {
             }).orNull();
             if (foundInvoice != null) {
                 foundInvoice.setIsWrittenOff(true);
+            }
+        }
+    }
+
+    private void setTrackingIdsFromTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        final InvoiceTrackingSqlDao invoiceTrackingidSqlDao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
+        final List<InvoiceTrackingModelDao> trackingIds = invoiceTrackingidSqlDao.getByAccountRecordId(context);
+
+        final Map<UUID, List<InvoiceTrackingModelDao>> invoiceTrackingIdsPerInvoiceId = new HashMap<UUID, List<InvoiceTrackingModelDao>>();
+        for (InvoiceTrackingModelDao cur : trackingIds) {
+            if (invoiceTrackingIdsPerInvoiceId.get(cur.getInvoiceId()) == null) {
+                invoiceTrackingIdsPerInvoiceId.put(cur.getInvoiceId(), new LinkedList<>());
+            }
+            invoiceTrackingIdsPerInvoiceId.get(cur.getInvoiceId()).add(cur);
+        }
+
+        for (final InvoiceModelDao invoice : invoices) {
+            if (invoiceTrackingIdsPerInvoiceId.get(invoice.getId()) != null) {
+                final List<InvoiceTrackingModelDao> perInvoiceTrackingIds = invoiceTrackingIdsPerInvoiceId.get(invoice.getId());
+                final Iterable<String> transform = Iterables.transform(perInvoiceTrackingIds, new Function<InvoiceTrackingModelDao, String>() {
+                    @Override
+                    public String apply(final InvoiceTrackingModelDao input) {
+                        return input.getTrackingId();
+                    }
+                });
+                invoice.addTrackingIds(ImmutableList.<String>copyOf(transform));
             }
         }
     }

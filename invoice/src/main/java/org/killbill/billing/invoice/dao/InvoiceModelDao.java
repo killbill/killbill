@@ -48,6 +48,8 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     // Not in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
     private List<InvoicePaymentModelDao> invoicePayments = new LinkedList<InvoicePaymentModelDao>();
+    private List<String> trackingIds = new LinkedList<>();
+
     private Currency processedCurrency;
     private InvoiceModelDao parentInvoice;
 
@@ -85,6 +87,14 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     public InvoiceModelDao(final Invoice invoice) {
         this(invoice.getId(), invoice.getCreatedDate(), invoice.getAccountId(), invoice.getInvoiceNumber(), invoice.getInvoiceDate(),
              invoice.getTargetDate(), invoice.getCurrency(), invoice.isMigrationInvoice(), invoice.getStatus(), invoice.isParentInvoice());
+    }
+
+    public List<String> getTrackingIds() {
+        return trackingIds;
+    }
+
+    public void addTrackingIds(final List<String> trackingIds) {
+        this.trackingIds = trackingIds;
     }
 
     public void addInvoiceItems(final List<InvoiceItemModelDao> invoiceItems) {
