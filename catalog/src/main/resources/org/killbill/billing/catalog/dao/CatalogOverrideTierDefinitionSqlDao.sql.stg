@@ -43,7 +43,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where record_id = :recordId
 and tenant_record_id = :tenantRecordId
