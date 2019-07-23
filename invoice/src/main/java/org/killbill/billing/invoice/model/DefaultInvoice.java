@@ -99,6 +99,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
                 return new DefaultInvoicePayment(input);
             }
         }));
+        addTrackingIds(invoiceModelDao.getTrackingIds());
     }
 
     public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
@@ -163,6 +164,12 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     @Override
     public List<String> getTrackingIds() {
         return trackingIds;
+    }
+
+    @Override
+    public boolean addTrackingIds(final Collection<String> trackingIds) {
+        this.trackingIds.addAll(trackingIds);
+        return true;
     }
 
     @Override
