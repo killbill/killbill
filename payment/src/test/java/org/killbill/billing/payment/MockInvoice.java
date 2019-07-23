@@ -88,6 +88,11 @@ public class MockInvoice extends EntityBase implements Invoice {
     }
 
     @Override
+    public boolean addTrackingIds(final Collection<String> collection) {
+        return false;
+    }
+
+    @Override
     public <T extends InvoiceItem> List<InvoiceItem> getInvoiceItems(final Class<T> clazz) {
         final List<InvoiceItem> results = new ArrayList<InvoiceItem>();
         for (final InvoiceItem item : invoiceItems) {
