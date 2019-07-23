@@ -18,8 +18,10 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -33,6 +35,8 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
+
+import com.google.common.collect.ImmutableList;
 
 public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDao<Invoice> {
 
@@ -48,7 +52,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     // Not in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
     private List<InvoicePaymentModelDao> invoicePayments = new LinkedList<InvoicePaymentModelDao>();
-    private List<String> trackingIds = new LinkedList<>();
+    private Set<String> trackingIds = new HashSet<>();
 
     private Currency processedCurrency;
     private InvoiceModelDao parentInvoice;
@@ -90,10 +94,10 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     }
 
     public List<String> getTrackingIds() {
-        return trackingIds;
+        return ImmutableList.copyOf(trackingIds);
     }
 
-    public void addTrackingIds(final List<String> trackingIds) {
+    public void addTrackingIds(final Set<String> trackingIds) {
         this.trackingIds = trackingIds;
     }
 

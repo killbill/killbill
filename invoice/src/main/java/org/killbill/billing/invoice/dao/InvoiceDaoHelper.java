@@ -52,6 +52,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class InvoiceDaoHelper {
@@ -354,7 +355,7 @@ public class InvoiceDaoHelper {
                         return input.getTrackingId();
                     }
                 });
-                invoice.addTrackingIds(ImmutableList.<String>copyOf(transform));
+                invoice.addTrackingIds(ImmutableSet.<String>copyOf(transform));
             }
         }
     }
