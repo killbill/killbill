@@ -82,7 +82,7 @@ and field_name = :fieldName
 
 searchByObjectTypeAndFieldName(ordering) ::= <<
 select
-<allTableFields()>
+<allTableFields("")>
 from <tableName()>
 where
 object_type = :objectType
@@ -109,7 +109,7 @@ and field_value = :fieldValue
 
 searchByObjectTypeAndFieldNameValue(ordering) ::= <<
 select
-<allTableFields()>
+<allTableFields("")>
 from <tableName()>
 where
 object_type = :objectType

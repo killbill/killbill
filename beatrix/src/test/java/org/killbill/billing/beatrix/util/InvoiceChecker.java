@@ -183,7 +183,7 @@ public class InvoiceChecker {
 
     public void checkTrackingIds(final Invoice invoice, final Set<String> expectedTrackingIds, final InternalCallContext internalCallContext) {
         final InvoiceTrackingSqlDao dao = dbi.onDemand(InvoiceTrackingSqlDao.class);
-        final List<InvoiceTrackingModelDao> result = dao.getTrackingsForInvoice(invoice.getId().toString(), internalCallContext);
+        final List<InvoiceTrackingModelDao> result = dao.getTrackingsForInvoices(ImmutableList.of(invoice.getId().toString()), internalCallContext);
 
         final Set<String> existingTrackingIds = ImmutableSet.copyOf(Iterables.transform(result, new Function<InvoiceTrackingModelDao, String>() {
             @Override

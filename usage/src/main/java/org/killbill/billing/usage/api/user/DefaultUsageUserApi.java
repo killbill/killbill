@@ -43,6 +43,7 @@ import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
 import org.killbill.billing.usage.dao.RolledUpUsageModelDao;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -67,15 +68,21 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     public void recordRolledUpUsage(final SubscriptionUsageRecord record, final CallContext callContext) throws UsageApiException {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(record.getSubscriptionId(), ObjectType.SUBSCRIPTION, callContext);
 
+        final String trackingIds;
+        if (Strings.isNullOrEmpty(record.getTrackingId())) {
+            trackingIds = UUIDs.randomUUID().toString();
         // check if we have (at least) one row with the supplied tracking id
-        if (!Strings.isNullOrEmpty(record.getTrackingId()) && recordsWithTrackingIdExist(record, internalCallContext)) {
+        } else if (recordsWithTrackingIdExist(record, internalCallContext)) {
             throw new UsageApiException(ErrorCode.USAGE_RECORD_TRACKING_ID_ALREADY_EXISTS, record.getTrackingId());
+        } else {
+            trackingIds = record.getTrackingId();
         }
+
 
         final List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
         for (final UnitUsageRecord unitUsageRecord : record.getUnitUsageRecord()) {
             for (final UsageRecord usageRecord : unitUsageRecord.getDailyAmount()) {
-                usages.add(new RolledUpUsageModelDao(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), usageRecord.getAmount(), record.getTrackingId()));
+                usages.add(new RolledUpUsageModelDao(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), usageRecord.getAmount(), trackingIds));
             }
         }
         rolledUpUsageDao.record(usages, internalCallContext);

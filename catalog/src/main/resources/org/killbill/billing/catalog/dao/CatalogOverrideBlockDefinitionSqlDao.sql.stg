@@ -47,7 +47,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where record_id = :recordId
 and tenant_record_id = :tenantRecordId
@@ -55,7 +55,7 @@ and tenant_record_id = :tenantRecordId
 >>
 
 getByAttributes() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where parent_unit_name = :parentUnitName
 and currency = :currency

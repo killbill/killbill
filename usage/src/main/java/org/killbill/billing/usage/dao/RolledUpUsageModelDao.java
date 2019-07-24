@@ -44,13 +44,7 @@ public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityM
         this.unitType = unitType;
         this.recordDate = recordDate;
         this.amount = amount;
-
-        if(Strings.isNullOrEmpty(trackingId)){
-            this.trackingId = UUIDs.randomUUID().toString();
-        }
-        else {
-            this.trackingId = trackingId;
-        }
+        this.trackingId = trackingId;
     }
 
     public RolledUpUsageModelDao(final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount, final String trackingId) {

@@ -61,6 +61,7 @@ public class InvoiceJson extends JsonBase {
     private final Boolean isParentInvoice;
     private final UUID parentInvoiceId;
     private final UUID parentAccountId;
+    private final List<String> trackingIds;
 
     @JsonCreator
     public InvoiceJson(@JsonProperty("amount") final BigDecimal amount,
@@ -77,6 +78,7 @@ public class InvoiceJson extends JsonBase {
                        @JsonProperty("bundleKeys") final String bundleKeys,
                        @JsonProperty("credits") final List<InvoiceItemJson> credits,
                        @JsonProperty("items") final List<InvoiceItemJson> items,
+                       @JsonProperty("trackingIds") final List<String> trackingIds,
                        @JsonProperty("isParentInvoice") final Boolean isParentInvoice,
                        @JsonProperty("parentInvoiceId") final UUID parentInvoiceId,
                        @JsonProperty("parentAccountId") final UUID parentAccountId,
@@ -96,6 +98,7 @@ public class InvoiceJson extends JsonBase {
         this.bundleKeys = bundleKeys;
         this.credits = credits;
         this.items = items;
+        this.trackingIds = trackingIds;
         this.isParentInvoice = isParentInvoice;
         this.parentInvoiceId = parentInvoiceId;
         this.parentAccountId = parentAccountId;
@@ -108,7 +111,7 @@ public class InvoiceJson extends JsonBase {
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<InvoiceItemJson> credits, final List<AuditLog> auditLogs) {
         this(input.getChargedAmount(), input.getCurrency(), input.getStatus(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
-             input.getBalance(), input.getAccountId(), bundleKeys, credits, null, input.isParentInvoice(),
+             input.getBalance(), input.getAccountId(), bundleKeys, credits, null, null, input.isParentInvoice(),
              input.getParentInvoiceId(),
              input.getParentAccountId(),
              toAuditLogJson(auditLogs));
@@ -131,6 +134,7 @@ public class InvoiceJson extends JsonBase {
                 this.items.add(new InvoiceItemJson(item, childItemsFiltered, accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
             }
         }
+        this.trackingIds = input.getTrackingIds();
         this.amount = input.getChargedAmount();
         this.currency = input.getCurrency();
         this.status = input.getStatus();
@@ -216,6 +220,10 @@ public class InvoiceJson extends JsonBase {
 
     public UUID getParentAccountId() {
         return parentAccountId;
+    }
+
+    public List<String> getTrackingIds() {
+        return trackingIds;
     }
 
     @Override

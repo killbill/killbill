@@ -41,7 +41,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from
 <tableName()>
 where record_id = :recordId

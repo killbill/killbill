@@ -1236,7 +1236,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Deactivate any usage trackingIds if necessary
                 } else if (InvoiceStatus.VOID.equals(newStatus)) {
                     final InvoiceTrackingSqlDao trackingSqlDao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
-                    final List<InvoiceTrackingModelDao> invoiceTrackingModelDaos = trackingSqlDao.getTrackingsForInvoice(invoiceId.toString(), context);
+                    final List<InvoiceTrackingModelDao> invoiceTrackingModelDaos = trackingSqlDao.getTrackingsForInvoices(ImmutableList.of(invoiceId.toString()), context);
                     if (!invoiceTrackingModelDaos.isEmpty()) {
                         final Collection<String> invoiceTrackingIdsToDeactivate = Collections2.<InvoiceTrackingModelDao, String>transform(invoiceTrackingModelDaos,
                                                                                                                                           new Function<InvoiceTrackingModelDao, String>() {
