@@ -78,8 +78,6 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
             trackingIds = record.getTrackingId();
         }
 
-        if (!Strings.isNullOrEmpty(record.getTrackingId()) && recordsWithTrackingIdExist(record, internalCallContext)) {
-        }
 
         final List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
         for (final UnitUsageRecord unitUsageRecord : record.getUnitUsageRecord()) {

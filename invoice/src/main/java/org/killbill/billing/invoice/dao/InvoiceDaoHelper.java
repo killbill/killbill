@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -335,8 +336,16 @@ public class InvoiceDaoHelper {
     }
 
     private void setTrackingIdsFromTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+
+        final Set<String> invoiceIds = ImmutableSet.<String>copyOf(Iterables.transform(invoices, new Function<InvoiceModelDao, String>() {
+            @Override
+            public String apply(final InvoiceModelDao input) {
+                return input.getId().toString();
+            }
+        }));
+
         final InvoiceTrackingSqlDao invoiceTrackingidSqlDao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
-        final List<InvoiceTrackingModelDao> trackingIds = invoiceTrackingidSqlDao.getByAccountRecordId(context);
+        final List<InvoiceTrackingModelDao> trackingIds = invoiceTrackingidSqlDao.getTrackingsForInvoices(invoiceIds, context);
 
         final Map<UUID, List<InvoiceTrackingModelDao>> invoiceTrackingIdsPerInvoiceId = new HashMap<UUID, List<InvoiceTrackingModelDao>>();
         for (InvoiceTrackingModelDao cur : trackingIds) {

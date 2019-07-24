@@ -104,6 +104,21 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                             return null;
                                         }
                                     });
+
+
+
+        transactionalSqlDao.execute(false,
+                                    new EntitySqlDaoTransactionWrapper<Void>() {
+                                        @Override
+                                        public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                                            final InvoiceTrackingSqlDao dao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
+
+                                            final List<InvoiceTrackingModelDao> result = dao.getTrackingsForInvoices(ImmutableList.of(invoiceId1.toString(), invoiceId2.toString()), internalCallContext);
+                                            Assert.assertEquals(result.size(), 5);
+                                            return null;
+                                        }
+                                    });
+
     }
 
     @Test(groups = "slow")
