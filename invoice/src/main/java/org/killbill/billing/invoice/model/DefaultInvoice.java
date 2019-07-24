@@ -168,8 +168,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     @Override
     public boolean addTrackingIds(final Collection<String> trackingIds) {
-        this.trackingIds.addAll(trackingIds);
-        return true;
+        return this.trackingIds.addAll(trackingIds);
     }
 
     @Override
