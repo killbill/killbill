@@ -236,10 +236,6 @@
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
-                <fixed>
-                    <fixedPrice>
-                    </fixedPrice>
-                </fixed>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
                     <recurringPrice>
@@ -254,6 +250,35 @@
                         <price>
                             <currency>GBP</currency>
                             <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="blowdart-quarterly-notrial">
+            <product>Blowdart</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <fixed>
+                    <fixedPrice>
+                    </fixedPrice>
+                </fixed>
+                <recurring>
+                    <billingPeriod>QUARTERLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>129.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>129.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>129.95</value>
                         </price>
                     </recurringPrice>
                 </recurring>
@@ -1480,6 +1505,7 @@
                 <plan>pistol-weekly</plan>
                 <plan>pistol-thirty-days</plan>
                 <plan>blowdart-monthly</plan>
+                <plan>blowdart-quarterly-notrial</plan>
                 <plan>pistol-monthly</plan>
                 <plan>shotgun-monthly</plan>
                 <plan>assault-rifle-monthly</plan>

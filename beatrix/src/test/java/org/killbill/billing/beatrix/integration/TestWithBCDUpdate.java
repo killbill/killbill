@@ -878,9 +878,9 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // Price override of $10 for fixed and $0 for recurring
         // Override BCD as well
         final Integer billCycleDay = 1;
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.QUARTERLY, "notrial", null);
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), BigDecimal.TEN, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
+        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-quarterly-notrial-evergreen", account.getCurrency(), BigDecimal.TEN, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         final DefaultEntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(spec, billCycleDay, overrides);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -889,7 +889,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.TEN),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 7, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
 
     }
 }
