@@ -710,7 +710,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
-        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE, ExtBusEventType.ENTITLEMENT_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_BCD_CHANGE);
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE, ExtBusEventType.ENTITLEMENT_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_BCD_CHANGE, ExtBusEventType.INVOICE_CREATION);
         final Subscription input = new Subscription();
         input.setAccountId(accountJson.getAccountId());
         input.setPlanName("shotgun-monthly");
