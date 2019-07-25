@@ -236,6 +236,10 @@
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
+                <fixed>
+                    <fixedPrice>
+                    </fixedPrice>
+                </fixed>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
                     <recurringPrice>
