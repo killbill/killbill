@@ -41,12 +41,15 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -95,7 +98,6 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-
         // Change back to original plan: The code (subscription) chooses the latest version of the catalog when making the change and therefore the call succeeds
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
         bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec1), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
@@ -110,7 +112,6 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-500.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("204.05")));
 
-
         final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, callContext);
         final List<SubscriptionEvent> events = bpSubscription.getSubscriptionEvents();
         // We are seeing START_ENTITLEMENT, START_BILLING, and the **last CHANGE**
@@ -122,8 +123,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
     }
 
-
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testRetirePlan() throws Exception {
         // Catalog v1 starts in 2011-01-01
         // Catalog v2 starts in 2015-12-01
@@ -172,9 +172,29 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 4);
 
+        // One more invoice to generate an item whose effectiveDate is past our original V1 version
+        // and verify we still know how to compute the pretty name by finding the right initial
+        // catalog version -- as pistol-monthly was retired on V1
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 5);
+
+        final Invoice fifthInvoice = invoices.get(4);
+        assertEquals(fifthInvoice.getInvoiceItems().size(), 2);
+
+        final InvoiceItem pistolInvoiceItem = Iterables.find(fifthInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return "pistol-monthly".equals(input.getPlanName());
+            }
+        });
+        assertEquals(pistolInvoiceItem.getPrettyPlanName(), "Beretta");
     }
 
     @Test(groups = "slow")

@@ -124,7 +124,7 @@ public class InvoiceItemFactory {
     //
     // Returns an array of string for 'pretty' names [prettyPlanName, prettyPlanPhaseName, prettyUsageName]
     //
-    private static String[] computePrettyName(final InvoiceItemType type, final DateTime createdDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final Catalog catalog) {
+    private static String[] computePrettyName(final InvoiceItemType type, final DateTime transitionDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final Catalog catalog) {
 
         final String[] result = new String[4];
 
@@ -141,7 +141,14 @@ public class InvoiceItemFactory {
             if (computePrettyName) {
 
                 if (planName != null) {
-                    final Plan plan = catalog.findPlan(planName, createdDate);
+
+                    // We don't know the creation date of the said subscription, all we know is the time
+                    // of the current event. By specifying KILLBILL_GENESIS, we should at least find a Plan
+                    // and most likely the correct one since we start from the transitionDate and move backward
+                    // Worst case: This is the wrong plan and the prettyName was updated across version, oh well..
+                    //
+                    final DateTime KILLBILL_GENESIS = new DateTime(2019, 10, 28, 0, 0);
+                    final Plan plan = catalog.findPlan(planName, transitionDate, KILLBILL_GENESIS);
                     if (plan != null) {
                         prettyPlanName = plan.getPrettyName();
 
