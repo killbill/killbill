@@ -460,7 +460,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         // First BLOCK subscription starting from the 2016-5-1
         // This will generate the credit for the full period, bringing by account balance to 0
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         final BlockingState blockingState = new DefaultBlockingState(baseEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "COURTESY_BLOCK", "company.a.b.c", true, true, true, null);
         subscriptionApi.addBlockingState(blockingState,  new LocalDate(2016, 5, 1),  ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
