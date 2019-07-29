@@ -24,6 +24,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -147,7 +148,8 @@ public class InvoiceItemFactory {
                     // and most likely the correct one since we start from the transitionDate and move backward
                     // Worst case: This is the wrong plan and the prettyName was updated across version, oh well..
                     //
-                    final DateTime KILLBILL_GENESIS = new DateTime(2019, 10, 28, 0, 0);
+
+                    final DateTime KILLBILL_GENESIS = new DateTime(2011, 10, 28, 0, 0, DateTimeZone.UTC);
                     final Plan plan = catalog.findPlan(planName, transitionDate, KILLBILL_GENESIS);
                     if (plan != null) {
                         prettyPlanName = plan.getPrettyName();
