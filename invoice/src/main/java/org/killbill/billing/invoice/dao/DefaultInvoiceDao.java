@@ -1442,6 +1442,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Add child CBA complexity and notify bus on child invoice creation
                 final Set<UUID> childModifiedInvoiceIds = new HashSet<>();
                 childModifiedInvoiceIds.addAll(cbaDao.doCBAComplexityFromTransaction(ImmutableList.of(childInvoice), childInvoicesTags, entitySqlDaoWrapperFactory, childAccountContext));
+                // Remove the childInvoice -> CREATION event
+                childModifiedInvoiceIds.remove(childInvoice.getId());
                 for (final UUID id : childModifiedInvoiceIds) {
                     notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, id, childAccount.getId(), childAccountContext.getUserToken(), childAccountContext);
                 }
@@ -1451,6 +1453,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Add parent CBA complexity and notify bus on child invoice creation
                 final Set<UUID> parentModifiedInvoiceIds = new HashSet<>();
                 parentModifiedInvoiceIds.addAll(cbaDao.doCBAComplexityFromTransaction(ImmutableList.of(parentInvoice), parentInvoicesTags, entitySqlDaoWrapperFactory, parentAccountContext));
+                // Remove the parentInvoiceId -> CREATION event
+                parentModifiedInvoiceIds.remove(parentInvoice.getId());
                 for (final UUID id : parentModifiedInvoiceIds) {
                     notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, id, childAccount.getParentAccountId(), parentAccountContext.getUserToken(), parentAccountContext);
                 }
