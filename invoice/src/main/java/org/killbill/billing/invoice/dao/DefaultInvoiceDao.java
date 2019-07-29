@@ -1432,6 +1432,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Keep invoice up-to-date for CBA below
                 parentInvoice.addInvoiceItem(parentCreditItem);
 
+
+                // Create Mapping relation
+                final InvoiceParentChildrenSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceParentChildrenSqlDao.class);
+                final InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(parentInvoice.getId(), childInvoice.getId(), childInvoice.getAccountId());
+                createAndRefresh(transactional, invoiceRelation, parentAccountContext);
+
+
                 // Add child CBA complexity and notify bus on child invoice creation
                 final Set<UUID> childModifiedInvoiceIds = new HashSet<>();
                 childModifiedInvoiceIds.addAll(cbaDao.doCBAComplexityFromTransaction(ImmutableList.of(childInvoice), childInvoicesTags, entitySqlDaoWrapperFactory, childAccountContext));
