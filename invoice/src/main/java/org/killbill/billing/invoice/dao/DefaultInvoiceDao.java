@@ -406,19 +406,19 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                             }
                         }
                     }
-                    if (isNotShellInvoice) {
-                        final boolean wasInvoiceCreatedOrCommitted = createdInvoiceIds.contains(invoiceModelDao.getId()) ||
-                                                                     committedReusedInvoiceId.contains(invoiceModelDao.getId());
-                        if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
-                            if (wasInvoiceCreatedOrCommitted) {
-                                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
-                            } else {
-                                adjustedCommittedInvoiceIds.add(invoiceModelDao.getId());
-                            }
-                        } else if (wasInvoiceCreatedOrCommitted && invoiceModelDao.isParentInvoice()) {
-                            // Commit queue
-                            notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
+                    final boolean wasInvoiceCreatedOrCommitted = createdInvoiceIds.contains(invoiceModelDao.getId()) ||
+                                                                 committedReusedInvoiceId.contains(invoiceModelDao.getId());
+
+                    final boolean hasInvoiceBeenAdjusted = allInvoiceIds.contains(invoiceModelDao.getId());
+
+                    if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
+                        if (wasInvoiceCreatedOrCommitted) {
+                            notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
+                        } else if (hasInvoiceBeenAdjusted) {
+                            adjustedCommittedInvoiceIds.add(invoiceModelDao.getId());
                         }
+                    } else if (wasInvoiceCreatedOrCommitted && invoiceModelDao.isParentInvoice()) {
+                        notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
                     }
 
                     // We always add the future notifications when the callbackDateTimePerSubscriptions is not empty (incl. DRAFT invoices containing RECURRING items created using AUTO_INVOICING_DRAFT feature)
