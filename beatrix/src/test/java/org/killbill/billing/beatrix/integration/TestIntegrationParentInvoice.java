@@ -263,8 +263,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // add credit to child account when invoice is still unpaid
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
-
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), clock.getUTCToday(), "some description", BigDecimal.TEN, Currency.USD, null);
         invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
@@ -717,7 +716,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
 
         // cancel subscription
-        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         baseEntitlementChild.cancelEntitlementWithDateOverrideBillingPolicy(clock.getToday(childAccount.getTimeZone()), BillingActionPolicy.IMMEDIATE, null, callContext);
         assertListenerStatus();
 
