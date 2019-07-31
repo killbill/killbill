@@ -294,7 +294,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                                                                             itemDetails);
 
         // Move one month
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 

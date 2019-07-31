@@ -1142,7 +1142,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT, NextEvent.BLOCK);
 
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(2012, 06, 30), "credit invoice", accountBalance, account.getCurrency(), null);
         invoiceUserApi.insertCredits(account.getId(), new LocalDate(2012, 06, 30), ImmutableList.of(inputCredit), true, null, callContext);
