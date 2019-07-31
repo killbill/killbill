@@ -16,19 +16,16 @@
 
 package org.killbill.billing.subscription.api.user;
 
-import java.lang.reflect.Field;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 
 public class SubscriptionBuilder {
 
-
     private UUID id;
     private UUID bundleId;
+    private String externalKey;
     private String bundleExternalKey;
     private DateTime createdDate;
     private DateTime updatedDate;
@@ -45,6 +42,7 @@ public class SubscriptionBuilder {
     public SubscriptionBuilder(final DefaultSubscriptionBase original) {
         this.id = original.getId();
         this.bundleId = original.getBundleId();
+        this.externalKey = original.getExternalKey();
         this.bundleExternalKey = original.getBundleExternalKey();
         this.alignStartDate = original.getAlignStartDate();
         this.bundleStartDate = original.getBundleStartDate();
@@ -53,9 +51,17 @@ public class SubscriptionBuilder {
         this.migrated = original.isMigrated();
     }
 
+    public UUID getId() {
+        return id;
+    }
+
     public SubscriptionBuilder setId(final UUID id) {
         this.id = id;
         return this;
+    }
+
+    public DateTime getCreatedDate() {
+        return createdDate;
     }
 
     public SubscriptionBuilder setCreatedDate(final DateTime createdDate) {
@@ -63,8 +69,25 @@ public class SubscriptionBuilder {
         return this;
     }
 
+    public DateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
     public SubscriptionBuilder setUpdatedDate(final DateTime updatedDate) {
         this.updatedDate = updatedDate;
+        return this;
+    }
+
+    public UUID getBundleId() {
+        return bundleId;
+    }
+
+    public String getExternalKey() {
+        return externalKey;
+    }
+
+    public SubscriptionBuilder setExternalKey(final String externalKey) {
+        this.externalKey = externalKey;
         return this;
     }
 
@@ -73,9 +96,18 @@ public class SubscriptionBuilder {
         return this;
     }
 
+    public String getBundleExternalKey() {
+        return bundleExternalKey;
+    }
+
     public SubscriptionBuilder setBundleExternalKey(final String bundleExternalKey) {
         this.bundleExternalKey = bundleExternalKey;
         return this;
+    }
+
+
+    public DateTime getAlignStartDate() {
+        return alignStartDate;
     }
 
     public SubscriptionBuilder setAlignStartDate(final DateTime alignStartDate) {
@@ -83,18 +115,17 @@ public class SubscriptionBuilder {
         return this;
     }
 
+    public DateTime getBundleStartDate() {
+        return bundleStartDate;
+    }
+
     public SubscriptionBuilder setBundleStartDate(final DateTime bundleStartDate) {
         this.bundleStartDate = bundleStartDate;
         return this;
     }
-    public SubscriptionBuilder setChargedThroughDate(final DateTime chargedThroughDate) {
-        this.chargedThroughDate = chargedThroughDate;
-        return this;
-    }
 
-    public SubscriptionBuilder setMigrated(final boolean migrated) {
-        this.migrated = migrated;
-        return this;
+    public ProductCategory getCategory() {
+        return category;
     }
 
     public SubscriptionBuilder setCategory(final ProductCategory category) {
@@ -102,52 +133,31 @@ public class SubscriptionBuilder {
         return this;
     }
 
-    public SubscriptionBuilder setSubscriptionBCD(final Integer subscriptionBCD) {
-        this.subscriptionBCD = subscriptionBCD;
-        return this;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public DateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public DateTime getUpdatedDate() {
-        return updatedDate;
-    }
-
-    public UUID getBundleId() {
-        return bundleId;
-    }
-
-    public String getBundleExternalKey() {
-        return bundleExternalKey;
-    }
-
-    public DateTime getAlignStartDate() {
-        return alignStartDate;
-    }
-
-    public DateTime getBundleStartDate() {
-        return bundleStartDate;
-    }
-    public ProductCategory getCategory() {
-        return category;
-    }
-
     public DateTime getChargedThroughDate() {
         return chargedThroughDate;
+    }
+
+    public SubscriptionBuilder setChargedThroughDate(final DateTime chargedThroughDate) {
+        this.chargedThroughDate = chargedThroughDate;
+        return this;
     }
 
     public boolean isMigrated() {
         return migrated;
     }
 
+    public SubscriptionBuilder setMigrated(final boolean migrated) {
+        this.migrated = migrated;
+        return this;
+    }
+
     public Integer getSubscriptionBCD() {
         return subscriptionBCD;
+    }
+
+    public SubscriptionBuilder setSubscriptionBCD(final Integer subscriptionBCD) {
+        this.subscriptionBCD = subscriptionBCD;
+        return this;
     }
 
 }

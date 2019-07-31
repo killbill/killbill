@@ -54,12 +54,13 @@ and is_active = '1'
 ;
 >>
 
-getTrackingsForInvoice() ::= <<
+
+getTrackingsForInvoices(invoiceIds) ::= <<
 select
   <allTableFields("")>
 from <tableName()>
 where
-invoice_id = :invoiceId
+invoice_id in (<invoiceIds>)
 and <accountRecordIdField("")> = :accountRecordId
 and is_active = '1'
 <AND_CHECK_TENANT("")>

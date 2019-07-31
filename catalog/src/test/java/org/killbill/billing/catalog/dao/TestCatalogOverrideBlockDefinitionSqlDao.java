@@ -45,7 +45,7 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
     @Test(groups = "slow")
     public void testBasic() throws Exception {
 
-        final CatalogOverrideBlockDefinitionModelDao obj1 = new CatalogOverrideBlockDefinitionModelDao("p1", "USD", BigDecimal.ONE, 1 , 1, clock.getUTCNow());
+        final CatalogOverrideBlockDefinitionModelDao obj1 = new CatalogOverrideBlockDefinitionModelDao("p1", "USD", BigDecimal.ONE, 17.3 , 1, clock.getUTCNow());
         performTestInTransaction(new WithCatalogOverrideBlockDefinitionSqlDaoTransaction<Void>() {
             @Override
             public Void doTransaction(final CatalogOverrideBlockDefinitionSqlDao sqlDao) {
@@ -56,6 +56,7 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
                 assertEquals(rehydrated.getCurrency(), obj1.getCurrency());
                 assertEquals(rehydrated.getPrice().compareTo(obj1.getPrice()), 0);
                 assertEquals(rehydrated.getSize(), obj1.getSize());
+                assertEquals(rehydrated.getSize(), 17.3);
                 assertEquals(rehydrated.getMax(), obj1.getMax());
                 return null;
             }

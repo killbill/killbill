@@ -49,6 +49,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     private final List<InvoiceItem> invoiceItems;
     private final List<InvoicePayment> payments;
+    private final List<String> trackingIds;
+
     private final UUID accountId;
     private final Integer invoiceNumber;
     private final LocalDate invoiceDate;
@@ -61,7 +63,6 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     private final InvoiceStatus status;
     private final boolean isParentInvoice;
     private final Invoice parentInvoice;
-
 
 
     // Used to create a new invoice
@@ -98,6 +99,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
                 return new DefaultInvoicePayment(input);
             }
         }));
+        addTrackingIds(invoiceModelDao.getTrackingIds());
     }
 
     public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
@@ -124,6 +126,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this.isWrittenOff = isWrittenOff;
         this.invoiceItems = new ArrayList<InvoiceItem>();
         this.payments = new ArrayList<InvoicePayment>();
+        this.trackingIds = new ArrayList<String>();
         this.status = status;
         this.isParentInvoice = isParentInvoice;
         this.parentInvoice = (parentInvoice != null) ? new DefaultInvoice(parentInvoice) : null;
@@ -156,6 +159,16 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     @Override
     public List<InvoiceItem> getInvoiceItems() {
         return invoiceItems;
+    }
+
+    @Override
+    public List<String> getTrackingIds() {
+        return trackingIds;
+    }
+
+    @Override
+    public boolean addTrackingIds(final Collection<String> trackingIds) {
+        return this.trackingIds.addAll(trackingIds);
     }
 
     @Override

@@ -260,19 +260,23 @@ public class EventsStreamBuilder {
     }
 
     public EventsStream buildForEntitlement(final UUID entitlementId, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
-        final SubscriptionBaseBundle bundle;
-        final SubscriptionBase subscription;
-        final List<SubscriptionBase> subscriptionsForBundle;
         try {
-            subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, internalTenantContext);
-            bundle = subscriptionInternalApi.getBundleFromId(subscription.getBundleId(), internalTenantContext);
-            subscriptionsForBundle = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), null, internalTenantContext);
+            final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, internalTenantContext);
+            return buildForEntitlement(subscription, internalTenantContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
-
-        return buildForEntitlement(bundle, subscription, subscriptionsForBundle, internalTenantContext);
     }
+
+    public EventsStream buildForEntitlement(final String externalKey, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+        try {
+            final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromExternalKey(externalKey, internalTenantContext);
+            return buildForEntitlement(subscription, internalTenantContext);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
+    }
+
 
     public EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle,
                                             final SubscriptionBase subscription,
@@ -424,6 +428,21 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
     }
+
+
+    private EventsStream buildForEntitlement(final SubscriptionBase subscription, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+        final SubscriptionBaseBundle bundle;
+        final List<SubscriptionBase> subscriptionsForBundle;
+        try {
+            bundle = subscriptionInternalApi.getBundleFromId(subscription.getBundleId(), internalTenantContext);
+            subscriptionsForBundle = subscriptionInternalApi.getSubscriptionsForBundle(subscription.getBundleId(), null, internalTenantContext);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
+
+        return buildForEntitlement(bundle, subscription, subscriptionsForBundle, internalTenantContext);
+    }
+
 
     private PlanPhaseSpecifier createPlanPhaseSpecifier(final SubscriptionBase subscription) {
         final String planName;

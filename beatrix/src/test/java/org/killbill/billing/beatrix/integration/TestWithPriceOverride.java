@@ -120,7 +120,7 @@ public class TestWithPriceOverride extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
-        bpSubscription.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(spec, null, overrides), null, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        bpSubscription.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(spec, null, null, overrides), null, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -168,7 +168,7 @@ public class TestWithPriceOverride extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
-        aoEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(spec, null, overrides), null, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        aoEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(spec, null, null, overrides), null, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
     }
 }

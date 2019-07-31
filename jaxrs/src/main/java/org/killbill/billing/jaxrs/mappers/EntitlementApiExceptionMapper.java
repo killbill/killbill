@@ -44,6 +44,8 @@ public class EntitlementApiExceptionMapper extends ExceptionMapperBase implement
             return buildInternalErrorResponse(exception, uriInfo);
         } else if (exception.getCode() == ErrorCode.SUB_INVALID_SUBSCRIPTION_ID.getCode()) {
             return buildNotFoundResponse(exception, uriInfo);
+        } else if (exception.getCode() == ErrorCode.SUB_INVALID_SUBSCRIPTION_EXTERNAL_KEY.getCode()) {
+            return buildNotFoundResponse(exception, uriInfo);
         } else {
             return fallback(exception, uriInfo);
         }

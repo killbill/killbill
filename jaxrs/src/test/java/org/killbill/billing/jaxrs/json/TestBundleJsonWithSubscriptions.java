@@ -44,6 +44,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
     public void testJson() throws Exception {
         final UUID someUUID = UUID.randomUUID();
         final UUID bundleId = UUID.randomUUID();
+        final String bundleExternalKey = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
 
@@ -65,7 +66,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
 
         final SubscriptionJson subscription = new SubscriptionJson(UUID.randomUUID(),
                                                                    UUID.randomUUID(),
-                                                                   UUID.randomUUID(),
+                                                                   bundleExternalKey, UUID.randomUUID(),
                                                                    externalKey,
                                                                    new LocalDate(),
                                                                    UUID.randomUUID().toString(),
@@ -86,9 +87,9 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    null,
                                                                    auditLogs);
 
-        final BundleJson bundleJson = new BundleJson(someUUID, bundleId, externalKey, ImmutableList.<SubscriptionJson>of(subscription), null, auditLogs);
+        final BundleJson bundleJson = new BundleJson(someUUID, bundleId, bundleExternalKey, ImmutableList.<SubscriptionJson>of(subscription), null, auditLogs);
         Assert.assertEquals(bundleJson.getBundleId(), bundleId);
-        Assert.assertEquals(bundleJson.getExternalKey(), externalKey);
+        Assert.assertEquals(bundleJson.getExternalKey(), bundleExternalKey);
         Assert.assertEquals(bundleJson.getSubscriptions().size(), 1);
         Assert.assertEquals(bundleJson.getAuditLogs(), auditLogs);
 

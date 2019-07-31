@@ -187,6 +187,11 @@ public class TestSubscriptionHelper {
             }
 
             @Override
+            public String getExternalKey() {
+                return UUID.randomUUID().toString();
+            }
+
+            @Override
             public List<PlanPhasePriceOverride> getOverrides() {
                 return null;
             }

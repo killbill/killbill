@@ -386,12 +386,39 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
+    public SubscriptionBase getSubscriptionFromExternalKey(final String externalKey, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+        final DefaultSubscriptionBase shellSubscription = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<DefaultSubscriptionBase>() {
+            @Override
+            public DefaultSubscriptionBase inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final SubscriptionModelDao subscriptionModel = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getSubscriptionByExternalKey(externalKey, context);
+                final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getById(subscriptionModel.getBundleId().toString(), context);
+                return SubscriptionModelDao.toSubscription(subscriptionModel, bundleModel.getExternalKey());
+            }
+        });
+        return buildSubscription(shellSubscription, catalog, context);
+    }
+
+    @Override
     public UUID getBundleIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) {
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<UUID>() {
             @Override
             public UUID inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionModelDao subscriptionModel = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getById(subscriptionId.toString(), context);
                 return subscriptionModel.getBundleId();
+            }
+        });
+    }
+
+    @Override
+    public UUID getSubscriptionIdFromSubscriptionExternalKey(final String externalKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        return transactionalSqlDao.execute(true, SubscriptionBaseApiException.class, new EntitySqlDaoTransactionWrapper<UUID>() {
+            @Override
+            public UUID inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final SubscriptionModelDao subscriptionModel = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getSubscriptionByExternalKey(externalKey, context);
+                if (subscriptionModel == null) {
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_EXTERNAL_KEY, externalKey);
+                }
+                return subscriptionModel.getId();
             }
         });
     }

@@ -226,7 +226,7 @@ getByAccountRecordId(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where (<accountRecordIdField("t.")> = :accountRecordId or (<accountRecordIdField("t.")> is null and :accountRecordId is null))
+where <accountRecordIdField("t.")> = :accountRecordId
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
@@ -237,7 +237,7 @@ getByAccountRecordIdIncludedDeleted(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where (<accountRecordIdField("t.")> = :accountRecordId or (<accountRecordIdField("t.")> is null and :accountRecordId is null))
+where <accountRecordIdField("t.")> = :accountRecordId
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
 ;

@@ -16,15 +16,11 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestOverdueStateJson extends JaxrsTestSuiteNoDB {
 
@@ -32,17 +28,15 @@ public class TestOverdueStateJson extends JaxrsTestSuiteNoDB {
     public void testJson() throws Exception {
         final String name = UUID.randomUUID().toString();
         final String externalMessage = UUID.randomUUID().toString();
-        final List<Integer> daysBetweenPaymentRetries = ImmutableList.of(new Integer(12));
         final boolean disableEntitlementAndChangesBlocked = true;
         final boolean blockChanges = false;
         final boolean clearState = true;
         final int reevaluationIntervalDays = 100;
-        final OverdueStateJson overdueStateJson = new OverdueStateJson(name, externalMessage, daysBetweenPaymentRetries,
+        final OverdueStateJson overdueStateJson = new OverdueStateJson(name, externalMessage,
                                                                        disableEntitlementAndChangesBlocked, blockChanges, clearState,
                                                                        reevaluationIntervalDays);
         Assert.assertEquals(overdueStateJson.getName(), name);
         Assert.assertEquals(overdueStateJson.getExternalMessage(), externalMessage);
-        Assert.assertEquals(overdueStateJson.getDaysBetweenPaymentRetries().size(), daysBetweenPaymentRetries.size());
         Assert.assertEquals(overdueStateJson.isDisableEntitlementAndChangesBlocked(), (Boolean) disableEntitlementAndChangesBlocked);
         Assert.assertEquals(overdueStateJson.isBlockChanges(), (Boolean) blockChanges);
         Assert.assertEquals(overdueStateJson.isClearState(), (Boolean) clearState);

@@ -1,0 +1,2 @@
+drop index catalog_override_tier_definition_idx on catalog_override_usage_definition;
+create index catalog_override_tier_definition_idx on catalog_override_tier_definition(tenant_record_id, currency);

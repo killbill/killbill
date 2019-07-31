@@ -69,6 +69,8 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public UUID getBundleId();
 
+    public String getExternalKey();
+
     public EntitlementState getState();
 
     public EntitlementSourceType getSourceType();

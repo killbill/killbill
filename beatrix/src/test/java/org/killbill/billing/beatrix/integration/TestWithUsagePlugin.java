@@ -188,7 +188,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public List<RawUsageRecord> geUsageForAccount(final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+        public List<RawUsageRecord> getUsageForAccount(final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
 
             final List<RawUsageRecord> result = new LinkedList<>();
             for (final LocalDate curDate : usageData.keySet()) {

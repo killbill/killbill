@@ -201,8 +201,28 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
+    public SubscriptionBase getSubscriptionFromExternalKey(final String externalKey, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+        for (final SubscriptionBase cur : subscriptions) {
+            if (cur.getExternalKey().equals(externalKey)) {
+                return buildSubscription((DefaultSubscriptionBase) cur, context);
+            }
+        }
+        return null;
+    }
+
+    @Override
     public UUID getBundleIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) {
         return getSubscriptionFromId(subscriptionId, null, context).getBundleId();
+    }
+
+    @Override
+    public UUID getSubscriptionIdFromSubscriptionExternalKey(final String externalKey, final InternalTenantContext context) {
+        for (final SubscriptionBase cur : subscriptions) {
+            if (cur.getExternalKey().equals(externalKey)) {
+                return cur.getId();
+            }
+        }
+        return null;
     }
 
     @Override

@@ -499,7 +499,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
                     return null;
                 }
                 @Override
-                public String getExternalKey() {
+                public String getBundleExternalKey() {
                     return externalKey;
                 }
                 @Override

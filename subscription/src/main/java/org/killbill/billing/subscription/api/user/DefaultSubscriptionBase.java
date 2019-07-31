@@ -83,6 +83,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     // Final subscription fields
     //
     private final UUID bundleId;
+    private final String externalKey;
     private final String bundleExternalKey;
     private final DateTime alignStartDate;
     private final DateTime bundleStartDate;
@@ -119,6 +120,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.apiService = apiService;
         this.clock = clock;
         this.bundleId = builder.getBundleId();
+        this.externalKey = builder.getExternalKey();
         this.bundleExternalKey = builder.getBundleExternalKey();
         this.alignStartDate = builder.getAlignStartDate();
         this.bundleStartDate = builder.getBundleStartDate();
@@ -133,6 +135,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.apiService = apiService;
         this.clock = clock;
         this.bundleId = internalSubscription.getBundleId();
+        this.externalKey = internalSubscription.getExternalKey();
         this.bundleExternalKey = internalSubscription.getBundleExternalKey();
         this.alignStartDate = internalSubscription.getAlignStartDate();
         this.bundleStartDate = internalSubscription.getBundleStartDate();
@@ -146,6 +149,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     @Override
     public UUID getBundleId() {
         return bundleId;
+    }
+
+    @Override
+    public String getExternalKey() {
+        return externalKey;
     }
 
     public String getBundleExternalKey() {

@@ -30,11 +30,11 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
 
     // Maybe populated after create or transfer
     private UUID bundleId;
-    private String externalKey;
+    private String bundleExternalKey;
 
     public DefaultBaseEntitlementWithAddOnsSpecifier(final BaseEntitlementWithAddOnsSpecifier input) {
         this(input.getBundleId(),
-             input.getExternalKey(),
+             input.getBundleExternalKey(),
              input.getEntitlementSpecifier(),
              input.getEntitlementEffectiveDate(),
              input.getBillingEffectiveDate(),
@@ -42,13 +42,13 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
     }
 
     public DefaultBaseEntitlementWithAddOnsSpecifier(final UUID bundleId,
-                                                     final String externalKey,
+                                                     final String bundleExternalKey,
                                                      final Iterable<EntitlementSpecifier> entitlementSpecifier,
                                                      final LocalDate entitlementEffectiveDate,
                                                      final LocalDate billingEffectiveDate,
                                                      final boolean isMigrated) {
         this.bundleId = bundleId;
-        this.externalKey = externalKey;
+        this.bundleExternalKey = bundleExternalKey;
         this.entitlementSpecifier = entitlementSpecifier;
         this.entitlementEffectiveDate = entitlementEffectiveDate;
         this.billingEffectiveDate = billingEffectiveDate;
@@ -65,12 +65,12 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
     }
 
     @Override
-    public String getExternalKey() {
-        return externalKey;
+    public String getBundleExternalKey() {
+        return bundleExternalKey;
     }
 
-    public void setExternalKey(final String externalKey) {
-        this.externalKey = externalKey;
+    public void setBundleExternalKey(final String bundleExternalKey) {
+        this.bundleExternalKey = bundleExternalKey;
     }
 
     @Override
@@ -101,7 +101,7 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
         sb.append(", billingEffectiveDate=").append(billingEffectiveDate);
         sb.append(", isMigrated=").append(isMigrated);
         sb.append(", bundleId=").append(bundleId);
-        sb.append(", externalKey='").append(externalKey).append('\'');
+        sb.append(", bundleExternalKey='").append(bundleExternalKey).append('\'');
         sb.append('}');
         return sb.toString();
     }
@@ -132,7 +132,7 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
-        return externalKey != null ? externalKey.equals(that.externalKey) : that.externalKey == null;
+        return bundleExternalKey != null ? bundleExternalKey.equals(that.bundleExternalKey) : that.bundleExternalKey == null;
     }
 
     @Override
@@ -142,7 +142,7 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
         result = 31 * result + (billingEffectiveDate != null ? billingEffectiveDate.hashCode() : 0);
         result = 31 * result + (isMigrated ? 1 : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
-        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
+        result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);
         return result;
     }
 }

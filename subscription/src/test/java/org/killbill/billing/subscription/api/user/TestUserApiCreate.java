@@ -304,7 +304,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                                                              this.internalCallContext.getUserToken(),
                                                                                                              this.internalCallContext.getTenantRecordId());
 
-        final Iterable<EntitlementSpecifier> specifiers = ImmutableList.<EntitlementSpecifier>of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), 18, null));
+        final Iterable<EntitlementSpecifier> specifiers = ImmutableList.<EntitlementSpecifier>of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), 18, null, null));
         final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle.getId(),
                                                                                                                                 bundle.getExternalKey(),
                                                                                                                                 specifiers,

@@ -5,6 +5,7 @@ historyTableName() ::= "subscription_history"
 
 tableFields(prefix) ::= <<
   <prefix>bundle_id
+, <prefix>external_key
 , <prefix>category
 , <prefix>start_date
 , <prefix>bundle_start_date
@@ -18,6 +19,7 @@ tableFields(prefix) ::= <<
 
 tableValues() ::= <<
   :bundleId
+, :externalKey
 , :category
 , :startDate
 , :bundleStartDate
@@ -27,6 +29,15 @@ tableValues() ::= <<
 , :createdDate
 , :updatedBy
 , :updatedDate
+>>
+
+getSubscriptionByExternalKey() ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where external_key = :externalKey
+<AND_CHECK_TENANT("")>
+;
 >>
 
 

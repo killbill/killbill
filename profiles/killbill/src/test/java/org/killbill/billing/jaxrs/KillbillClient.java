@@ -220,15 +220,22 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         }
         callbackServlet.pushExpectedEvents(ExtBusEventType.ENTITLEMENT_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.INVOICE_CREATION);
 
+        final String externalKey = UUID.randomUUID().toString();
         final Subscription input = new Subscription();
         input.setAccountId(accountId);
-        input.setExternalKey(bundleExternalKey);
+        input.setBundleExternalKey(bundleExternalKey);
+        input.setExternalKey(externalKey);
         input.setProductName(productName);
         input.setProductCategory(productCategory);
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
         final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, waitCompletion, waitCompletion ? DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC : -1L, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
+
+        assertEquals(subscription.getExternalKey(), externalKey);
+        if (bundleExternalKey != null) {
+            assertEquals(subscription.getBundleExternalKey(), bundleExternalKey);
+        }
 
         return subscription;
     }

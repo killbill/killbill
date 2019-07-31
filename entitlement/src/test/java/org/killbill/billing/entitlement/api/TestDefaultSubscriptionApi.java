@@ -119,7 +119,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         assertEquals(entitlement.getAccountId(), account.getId());
-        assertEquals(entitlement.getExternalKey(), externalKey);
+        assertEquals(entitlement.getBundleExternalKey(), externalKey);
 
         assertEquals(entitlement.getEffectiveStartDate(), initialDate);
         assertNull(entitlement.getEffectiveEndDate());
@@ -154,7 +154,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertListenerStatus();
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement2Id, callContext);
         assertEquals(entitlement2.getAccountId(), account.getId());
-        assertEquals(entitlement2.getExternalKey(), externalKey);
+        assertEquals(entitlement2.getBundleExternalKey(), externalKey);
 
         final List<SubscriptionBundle> bundles2 = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, callContext);
         assertEquals(bundles2.size(), 2);
