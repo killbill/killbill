@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,25 +19,25 @@ package org.killbill.billing.catalog.dao;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.util.LongMapper;
 
 @KillBillSqlDaoStringTemplate
 public interface CatalogOverridePlanDefinitionSqlDao extends Transactional<CatalogOverridePlanDefinitionSqlDao>, CloseMe {
 
     @SqlUpdate
-    public void create(@SmartBindBean final CatalogOverridePlanDefinitionModelDao entity,
+    @GetGeneratedKeys(value = LongMapper.class, columnName = "record_id")
+    public Long create(@SmartBindBean final CatalogOverridePlanDefinitionModelDao entity,
                        @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public CatalogOverridePlanDefinitionModelDao getByRecordId(@Bind("recordId") final Long recordId,
                                                                @SmartBindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public Long getLastInsertId();
 }

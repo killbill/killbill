@@ -66,8 +66,3 @@ where
 and tmp.count = :targetCount
 ;
 >>
-
-getLastInsertId() ::= <<
-select LAST_INSERT_ID();
->>
-

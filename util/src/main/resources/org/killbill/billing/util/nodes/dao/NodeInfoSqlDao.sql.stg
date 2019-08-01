@@ -41,14 +41,14 @@ getByNodeName() ::= <<
 select <allTableFields("")>
 from <tableName()>
 where node_name = :nodeName
-and is_active
+and is_active = '1'
 ;
 >>
 
 getAll() ::= <<
 select <allTableFields("")>
 from <tableName()>
-where is_active
+where is_active = '1'
 order by node_name asc
 ;
 >>

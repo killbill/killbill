@@ -56,7 +56,7 @@ getByUsername() ::= <<
 select <allTableFields("")>
 from <tableName()>
 where username = :username
-and is_active
+and is_active = '1'
 ;
 >>
 
@@ -67,13 +67,13 @@ set password = :password
 , updated_date = :updatedDate
 , updated_by = :updatedBy
 where username = :username
-and is_active
+and is_active = '1'
 ;
 >>
 
 invalidate() ::= <<
 update <tableName()>
-set is_active = false
+set is_active = '0'
 where
 username = :username
 ;

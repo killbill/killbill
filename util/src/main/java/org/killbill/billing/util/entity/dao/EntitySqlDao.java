@@ -47,14 +47,14 @@ import org.skife.jdbi.v2.util.LongMapper;
 public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> extends AuditSqlDao, HistorySqlDao<M, E>, Transactional<EntitySqlDao<M, E>>, CloseMe {
 
     @SqlUpdate
-    @GetGeneratedKeys(value = LongMapper.class)
+    @GetGeneratedKeys(value = LongMapper.class, columnName = "record_id")
     @Audited(ChangeType.INSERT)
     public Object create(@SmartBindBean final M entity,
                          @SmartBindBean final InternalCallContext context);
 
     @SqlBatch
     @BatchChunkSize(1000) // Arbitrary value, just a safety mechanism in case of very large datasets
-    @GetGeneratedKeys(value = LongMapper.class)
+    @GetGeneratedKeys(value = LongMapper.class, columnName = "record_id")
     @Audited(ChangeType.INSERT)
     // Note that you cannot rely on the ordering here
     public List<Long> create(@SmartBindBean final Iterable<M> entity,

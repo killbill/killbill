@@ -547,7 +547,7 @@ from (
        pm.account_record_id != a.record_id
     or pm.account_record_id is null
   )
-  and pm.is_active = 0
+  and pm.is_active = '0'
   union all
   select
     count(1) count
@@ -558,7 +558,7 @@ from (
        pm.account_record_id != a.record_id
     or pm.account_record_id is null
   )
-  and pm.is_active = 1
+  and pm.is_active = '1'
 ) pms
 union
 select
