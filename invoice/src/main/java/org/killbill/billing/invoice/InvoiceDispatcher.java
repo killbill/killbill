@@ -1211,6 +1211,12 @@ public class InvoiceDispatcher {
             }
         });
 
+        //  childAdjustments can be empty if event was a result of a CBA_ADJ
+        if (Iterables.isEmpty(childAdjustments)) {
+            return;
+        }
+
+
         // find last ITEM_ADJ invoice added in child invoice
         final InvoiceItemModelDao lastChildInvoiceItemAdjustment = Collections.max(Lists.newArrayList(childAdjustments), new Comparator<InvoiceItemModelDao>() {
             @Override

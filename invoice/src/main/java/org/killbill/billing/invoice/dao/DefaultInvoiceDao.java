@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,6 +96,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
@@ -334,13 +336,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                      final boolean returnCreatedInvoiceItems,
                                                      final InternalCallContext context) {
         // Track invoices that are being created
-        final Collection<UUID> createdInvoiceIds = new HashSet<UUID>();
+        final Set<UUID> createdInvoiceIds = new HashSet<UUID>();
         // Track invoices that already exist but are being committed -- AUTO_INVOICING_REUSE_DRAFT mode
-        final Collection<UUID> committedReusedInvoiceId = new HashSet<UUID>();
+        final Set<UUID> committedReusedInvoiceId = new HashSet<UUID>();
         // Track all invoices that are referenced through all invoiceItems
-        final Collection<UUID> allInvoiceIds = new HashSet<UUID>();
+        final Set<UUID> allInvoiceIds = new HashSet<UUID>();
         // Track invoices that are committed but were not created or reused -- to sent the InvoiceAdjustment bus event
-        final Collection<UUID> adjustedCommittedInvoiceIds = new HashSet<UUID>();
+        final Set<UUID> adjustedCommittedInvoiceIds = new HashSet<UUID>();
 
         final Collection<UUID> invoiceIdsReferencedFromItems = new HashSet<UUID>();
         for (final InvoiceModelDao invoiceModelDao : invoices) {
@@ -404,17 +406,18 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                             }
                         }
                     }
-
                     final boolean wasInvoiceCreatedOrCommitted = createdInvoiceIds.contains(invoiceModelDao.getId()) ||
                                                                  committedReusedInvoiceId.contains(invoiceModelDao.getId());
+
+                    final boolean hasInvoiceBeenAdjusted = allInvoiceIds.contains(invoiceModelDao.getId());
+
                     if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
                         if (wasInvoiceCreatedOrCommitted) {
                             notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
-                        } else {
+                        } else if (hasInvoiceBeenAdjusted) {
                             adjustedCommittedInvoiceIds.add(invoiceModelDao.getId());
                         }
                     } else if (wasInvoiceCreatedOrCommitted && invoiceModelDao.isParentInvoice()) {
-                        // Commit queue
                         notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
                     }
 
@@ -425,21 +428,21 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Bulk insert the invoice items
                 createInvoiceItemsFromTransaction(transInvoiceItemSqlDao, invoiceItemsToCreate, context);
 
-                for (final UUID adjustedInvoiceId : allInvoiceIds) {
-                    final boolean newInvoice = createdInvoiceIds.contains(adjustedInvoiceId);
-                    if (newInvoice) {
-                        // New invoice, so no associated payment yet: no need to refresh the invoice state
-                        cbaDao.doCBAComplexityFromTransaction(invoiceByInvoiceId.get(adjustedInvoiceId), invoicesTags, entitySqlDaoWrapperFactory, context);
-                    } else {
-                        // Existing invoice (e.g. we're processing an adjustment): refresh the invoice state to get the correct balance
-                        // Should we maybe enforce callers (e.g. InvoiceApiHelper) to properly populate these invoices?
-                        cbaDao.doCBAComplexityFromTransaction(adjustedInvoiceId, invoicesTags, entitySqlDaoWrapperFactory, context);
-                    }
 
-                    if (adjustedCommittedInvoiceIds.contains(adjustedInvoiceId)) {
-                        // Notify the bus since the balance of the invoice changed (only if the invoice is COMMITTED)
-                        notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, adjustedInvoiceId, accountId, context.getUserToken(), context);
+
+
+                // CBA COMPLEXITY...
+                //
+                // Optimized path where we don't need to refresh invoices
+                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoicesTags, context, entitySqlDaoWrapperFactory);
+                if (createdInvoiceIds.equals(allInvoiceIds)) {
+                    final List<InvoiceModelDao> cbaInvoicesInput = new ArrayList<>();
+                    for (final UUID id : createdInvoiceIds) {
+                        cbaInvoicesInput.add(invoiceByInvoiceId.get(id));
                     }
+                    cbaWrapper.runCBALogicWithNotificationEvents(adjustedCommittedInvoiceIds, createdInvoiceIds, cbaInvoicesInput);
+                } else {
+                    cbaWrapper.runCBALogicWithNotificationEvents(adjustedCommittedInvoiceIds, createdInvoiceIds, allInvoiceIds);
                 }
 
                 if (trackingIds != null && !trackingIds.isEmpty()) {
@@ -451,8 +454,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     if (invoiceItemsToCreate.isEmpty()) {
                         return ImmutableList.<InvoiceItemModelDao>of();
                     } else {
-                        return transInvoiceItemSqlDao.getByIds(Collections2.<InvoiceItemModelDao, String>transform(invoiceItemsToCreate,
-                                                                                                                   new Function<InvoiceItemModelDao, String>() {
+                        return transInvoiceItemSqlDao.getByIds(Collections2.<InvoiceItemModelDao, String>transform(invoiceItemsToCreate, new Function<InvoiceItemModelDao, String>() {
                                                                                                                        @Override
                                                                                                                        public String apply(final InvoiceItemModelDao input) {
                                                                                                                            return input.getId().toString();
@@ -466,6 +468,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
+
 
     @Override
     public List<InvoiceModelDao> getInvoicesBySubscription(final UUID subscriptionId, final InternalTenantContext context) {
@@ -695,6 +698,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // At this point, we created the refund which made the invoice balance positive and applied any existing
                 // available CBA to that invoice.
                 // We now need to adjust the invoice and/or invoice items if needed and specified.
+                final Set<UUID> initSet = new HashSet<>();
                 if (isInvoiceAdjusted) {
                     // Invoice item adjustment
                     for (final UUID invoiceItemId : invoiceItemIdsWithAmounts.keySet()) {
@@ -706,14 +710,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         createInvoiceItemFromTransaction(transInvoiceItemDao, item, context);
                         invoice.addInvoiceItem(item);
                     }
+                    initSet.add(invoice.getId());
                 }
 
-                // The invoice object has been kept up-to-date
-                cbaDao.doCBAComplexityFromTransaction(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
+                // The invoice object has been kept up-to-date, we can pass it to CBA complexity
+                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(invoice.getAccountId(), invoicesTags, context, entitySqlDaoWrapperFactory);
+                cbaWrapper.runCBALogicWithNotificationEvents(initSet, ImmutableSet.of(), ImmutableList.of(invoice));
 
-                if (isInvoiceAdjusted) {
-                    notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoice.getId(), invoice.getAccountId(), context.getUserToken(), context);
-                }
                 notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, refund, invoice.getAccountId(), context.getUserToken(), context);
 
                 return refund;
@@ -767,7 +770,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Notify the bus since the balance of the invoice changed
                 final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString(), context);
 
-                cbaDao.doCBAComplexityFromTransaction(payment.getInvoiceId(), invoicesTags, entitySqlDaoWrapperFactory, context);
+                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoicesTags, context, entitySqlDaoWrapperFactory);
+                cbaWrapper.runCBALogicWithNotificationEvents(ImmutableSet.<UUID>of(payment.getInvoiceId()));
 
                 notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargeBack, accountId, context.getUserToken(), context);
 
@@ -805,7 +809,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Notify the bus since the balance of the invoice changed
                 final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargebackReversed.getId().toString(), context);
 
-                cbaDao.doCBAComplexityFromTransaction(chargebackReversed.getInvoiceId(), invoicesTags, entitySqlDaoWrapperFactory, context);
+                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoicesTags, context, entitySqlDaoWrapperFactory);
+                cbaWrapper.runCBALogicWithNotificationEvents(ImmutableSet.of(chargebackReversed.getInvoiceId()));
 
                 notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, chargebackReversed, accountId, context.getUserToken(), context);
 
@@ -1228,6 +1233,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 transactional.updateStatus(invoiceId.toString(), newStatus.toString(), context);
 
+                // Run through all invoices
+                // Current invoice could be a credit item that needs to be rebalanced
                 cbaDao.doCBAComplexityFromTransaction(invoicesTags, entitySqlDaoWrapperFactory, context);
 
                 // Invoice creation event sent on COMMITTED
@@ -1417,17 +1424,31 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Keep invoice up-to-date for CBA below
                 parentInvoice.addInvoiceItem(parentCreditItem);
 
-                // add CBA complexity and notify bus on child invoice creation
-                cbaDao.doCBAComplexityFromTransaction(childInvoice, childInvoicesTags, entitySqlDaoWrapperFactory, childAccountContext);
+
+                // Create Mapping relation
+                final InvoiceParentChildrenSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceParentChildrenSqlDao.class);
+                final InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(parentInvoice.getId(), childInvoice.getId(), childInvoice.getAccountId());
+                createAndRefresh(transactional, invoiceRelation, parentAccountContext);
+
+
+                // Add child CBA complexity and notify bus on child invoice creation
+                final CBALogicWrapper childCbaWrapper = new CBALogicWrapper(childAccount.getId(), childInvoicesTags, childAccountContext, entitySqlDaoWrapperFactory);
+                childCbaWrapper.runCBALogicWithNotificationEvents(ImmutableSet.of(), ImmutableSet.of(childInvoice.getId()), ImmutableList.of(childInvoice));
                 notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, childInvoice, childAccountContext);
 
-                cbaDao.doCBAComplexityFromTransaction(parentInvoice, parentInvoicesTags, entitySqlDaoWrapperFactory, parentAccountContext);
+
+
+                // Add parent CBA complexity and notify bus on child invoice creation
+                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(childAccount.getParentAccountId(), parentInvoicesTags, parentAccountContext, entitySqlDaoWrapperFactory);
+                cbaWrapper.runCBALogicWithNotificationEvents(ImmutableSet.of(), ImmutableSet.of(parentInvoice.getId()), ImmutableList.of(parentInvoice));
                 notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, parentInvoice, parentAccountContext);
 
                 return null;
             }
         });
     }
+
+
 
     @Override
     public List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(final UUID parentInvoiceId, final InternalTenantContext context) throws InvoiceApiException {
@@ -1484,6 +1505,58 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
+
+    private class CBALogicWrapper {
+
+        private final UUID accountId;
+        private final List<Tag> invoicesTags;
+        private final InternalCallContext context;
+        private final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory;
+
+        public CBALogicWrapper(final UUID accountId, final List<Tag> invoicesTags, final InternalCallContext context, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
+            this.accountId = accountId;
+            this.invoicesTags = invoicesTags;
+            this.context = context;
+            this.entitySqlDaoWrapperFactory = entitySqlDaoWrapperFactory;
+        }
+
+        public void runCBALogicWithNotificationEvents(final Set<UUID> allInvoiceIds) throws EntityPersistenceException, InvoiceApiException {
+            runCBALogicWithNotificationEventsInternal(ImmutableSet.of(), ImmutableSet.of(), runCBALogicWithInvoiceIds(allInvoiceIds));
+        }
+
+        public void runCBALogicWithNotificationEvents(final Set<UUID> initSet, final Set<UUID> excludedSet, final Set<UUID> allInvoiceIds) throws EntityPersistenceException, InvoiceApiException {
+            runCBALogicWithNotificationEventsInternal(initSet, excludedSet, runCBALogicWithInvoiceIds(allInvoiceIds));
+        }
+
+        public void runCBALogicWithNotificationEvents(final List<InvoiceModelDao> invoices) throws EntityPersistenceException, InvoiceApiException {
+            runCBALogicWithNotificationEvents(ImmutableSet.of(), ImmutableSet.of(), invoices);
+        }
+
+        public void runCBALogicWithNotificationEvents(final Set<UUID> initSet, final Set<UUID> excludedSet, final List<InvoiceModelDao> invoices) throws EntityPersistenceException, InvoiceApiException {
+            runCBALogicWithNotificationEventsInternal(initSet, excludedSet, runCBALogicWithInvoices(invoices));
+        }
+
+        private void runCBALogicWithNotificationEventsInternal(final Set<UUID> initSet, final Set<UUID> excludedSet, final Set<UUID> resCbaInvoiceIds) {
+
+            final Set<UUID> candidateModifiedInvoiceIds = new HashSet<>(initSet);
+            candidateModifiedInvoiceIds.addAll(resCbaInvoiceIds);
+            final Set<UUID> modifiedInvoiceIds = Sets.difference(candidateModifiedInvoiceIds, excludedSet);
+            for (UUID id : modifiedInvoiceIds) {
+                notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, id, accountId, context.getUserToken(), context);
+            }
+
+        }
+
+        private Set<UUID> runCBALogicWithInvoices(final List<InvoiceModelDao> invoices) throws EntityPersistenceException, InvoiceApiException {
+            return cbaDao.doCBAComplexityFromTransaction(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
+        }
+
+        private Set<UUID> runCBALogicWithInvoiceIds(final Set<UUID> allInvoiceIds) throws EntityPersistenceException, InvoiceApiException {
+            return cbaDao.doCBAComplexityFromTransaction(allInvoiceIds, invoicesTags, entitySqlDaoWrapperFactory, context);
+        }
+    }
+
+
 
     // PERF: fetch tags once. See also https://github.com/killbill/killbill/issues/720.
     private List<Tag> getInvoicesTags(final InternalTenantContext context) {
