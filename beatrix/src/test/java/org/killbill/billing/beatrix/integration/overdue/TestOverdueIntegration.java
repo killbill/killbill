@@ -1142,6 +1142,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
 
+        // We rebalance CBA on the last 2 unpaid invoices and therefore we expect 2 INVOICE_ADJUSTMENT events
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT, NextEvent.BLOCK);
 
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(2012, 06, 30), "credit invoice", accountBalance, account.getCurrency(), null);
