@@ -28,7 +28,9 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
+import org.skife.jdbi.v2.Update;
 import org.skife.jdbi.v2.tweak.HandleCallback;
+import org.skife.jdbi.v2.util.LongMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -45,25 +47,8 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("DROP TABLE IF EXISTS invoices;\n" +
-                               "CREATE TABLE invoices (\n" +
-                               "    record_id serial unique,\n" +
-                               "    id varchar(36) NOT NULL,\n" +
-                               "    account_id varchar(36) NOT NULL,\n" +
-                               "    invoice_date date NOT NULL,\n" +
-                               "    target_date date,\n" +
-                               "    currency varchar(3) NOT NULL,\n" +
-                               "    status varchar(15) NOT NULL DEFAULT 'COMMITTED',\n" +
-                               "    migrated bool NOT NULL,\n" +
-                               "    parent_invoice bool NOT NULL DEFAULT FALSE,\n" +
-                               "    created_by varchar(50) NOT NULL,\n" +
-                               "    created_date datetime NOT NULL,\n" +
-                               "    account_record_id bigint /*! unsigned */ not null,\n" +
-                               "    tenant_record_id bigint /*! unsigned */ not null default 0,\n" +
-                               "    PRIMARY KEY(record_id)\n" +
-                               ");");
-                handle.execute("insert into invoices (id, account_id, invoice_date, target_date, currency, migrated, created_by, created_date, account_record_id) values " +
-                               "(?, ?, now(), now(), 'USD', false, 'test', now(), ?)", invoiceId.toString(), UUID.randomUUID().toString(), accountRecordId);
+                handle.execute("insert into invoices (id, account_id, invoice_date, target_date, currency, status, migrated, created_by, created_date, account_record_id, tenant_record_id) values " +
+                               "(?, ?, ?, ?, 'USD', 'COMMITTED', '0', 'test', ?, ?, ?)", invoiceId.toString(), UUID.randomUUID().toString(), new Date(), new Date(), new Date(), accountRecordId, internalCallContext.getTenantRecordId());
                 return null;
             }
         });
@@ -77,20 +62,28 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
     @Test(groups = "slow")
     public void testCreateInternalCallContextWithAccountRecordIdFromAccountObjectType() throws Exception {
         final UUID accountId = UUID.randomUUID();
-        final Long accountRecordId = 19384012L;
+
+        final Long accountRecordId = dbi.withHandle(new HandleCallback<Long>() {
+            @Override
+            public Long withHandle(final Handle handle) throws Exception {
+                // Note: we always create an accounts table, see MysqlTestingHelper
+                return update(handle,
+                              "insert into accounts (id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by, tenant_record_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                              accountId.toString(), accountId.toString(), "yo@t.com", "toto", 4, new Date(), "UTC", new Date(), "i", new Date(), "j", internalCallContext.getTenantRecordId());
+            }
+
+            Long update(final Handle handle, final String sql, final Object... args) {
+                final Update stmt = handle.createStatement(sql);
+                int position = 0;
+                for (final Object arg : args) {
+                    stmt.bind(position++, arg);
+                }
+                return stmt.executeAndReturnGeneratedKeys(new LongMapper(), "record_id").first();
+            }
+        });
 
         final ImmutableAccountData immutableAccountData = Mockito.mock(ImmutableAccountData.class);
         Mockito.when(immutableAccountInternalApi.getImmutableAccountDataByRecordId(Mockito.<Long>eq(accountRecordId), Mockito.<InternalTenantContext>any())).thenReturn(immutableAccountData);
-
-        dbi.withHandle(new HandleCallback<Void>() {
-            @Override
-            public Void withHandle(final Handle handle) throws Exception {
-                // Note: we always create an accounts table, see MysqlTestingHelper
-                handle.execute("insert into accounts (record_id, id, external_key, email, name, first_name_length, reference_time, time_zone, created_date, created_by, updated_date, updated_by) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               accountRecordId, accountId.toString(), accountId.toString(), "yo@t.com", "toto", 4, new Date(), "UTC", new Date(), "i", new Date(), "j");
-                return null;
-            }
-        });
 
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(accountId, ObjectType.ACCOUNT, callContext);
         // The account record id should have been looked up in the accounts table

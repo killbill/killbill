@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,19 +22,22 @@ import java.util.List;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.util.LongMapper;
 
 @KillBillSqlDaoStringTemplate
 public interface CatalogOverridePhaseDefinitionSqlDao extends Transactional<CatalogOverridePhaseDefinitionSqlDao>, CloseMe {
 
     @SqlUpdate
-    public void create(@SmartBindBean final CatalogOverridePhaseDefinitionModelDao entity,
+    @GetGeneratedKeys(value = LongMapper.class, columnName = "record_id")
+    public Long create(@SmartBindBean final CatalogOverridePhaseDefinitionModelDao entity,
                        @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
@@ -43,15 +46,12 @@ public interface CatalogOverridePhaseDefinitionSqlDao extends Transactional<Cata
 
     @SqlQuery
     public List<CatalogOverridePhaseDefinitionModelDao> getByAttributes(@Bind("parentPhaseName") String parentPhaseName,
-                                                                  @Bind("currency") String currency,
-                                                                  @Bind("fixedPrice") BigDecimal fixedPrice,
-                                                                  @Bind("recurringPrice") BigDecimal recurringPrice,
-                                                                  @SmartBindBean final InternalTenantContext context);
+                                                                        @Bind("currency") String currency,
+                                                                        @Bind("fixedPrice") BigDecimal fixedPrice,
+                                                                        @Bind("recurringPrice") BigDecimal recurringPrice,
+                                                                        @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<CatalogOverridePhaseDefinitionModelDao> getOverriddenPlanPhases(@Bind("targetPlanDefRecordId") Long targetPlanDefRecordId,
                                                                                 @SmartBindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public Long getLastInsertId();
 }

@@ -33,7 +33,7 @@ public class TestStringTemplateInheritance extends UtilTestSuiteNoDB {
         final STGroup kombucha = new STGroupFile(this.getClass().getResource("/org/killbill/billing/util/dao/Kombucha.sql.stg"), "UTF-8", '<', '>');
 
         // Verify non inherited template
-        Assert.assertEquals(kombucha.getInstanceOf("isItTimeForKombucha").render(), "select hour(current_timestamp(0)) < 24 as is_time;");
+        Assert.assertEquals(kombucha.getInstanceOf("isItTimeForKombucha").render(), "select count(*) = 0 as is_time from kombucha;");
 
         // Verify inherited templates
         assertPattern(kombucha.getInstanceOf("getById").render(), "select\r?\n" +

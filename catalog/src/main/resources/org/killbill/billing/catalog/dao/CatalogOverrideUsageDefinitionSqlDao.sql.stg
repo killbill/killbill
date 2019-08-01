@@ -75,9 +75,3 @@ and pu.tenant_record_id = :tenantRecordId
 order by pu.usage_number asc
 ;
 >>
-
-
-getLastInsertId() ::= <<
-    select LAST_INSERT_ID();
->>
-
