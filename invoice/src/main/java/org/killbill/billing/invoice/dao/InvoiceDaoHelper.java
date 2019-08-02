@@ -426,7 +426,7 @@ public class InvoiceDaoHelper {
             return;
         }
 
-        Preconditions.checkState(mappings.size() == 1, String.format("Expected only one parent mapping for invoice", invoice.getId()));
+        Preconditions.checkState(mappings.size() == 1, String.format("Expected only one parent mapping for invoice %s", invoice.getId()));
 
         final UUID parentInvoiceId = mappings.get(0).getParentInvoiceId();
         final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
