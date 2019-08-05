@@ -228,6 +228,7 @@ public class InvoiceDaoHelper {
     }
 
     public void populateChildren(final InvoiceModelDao invoice, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        // !!! Anything updated here needs to also be reflected in   void populateChildren(final Iterable<InvoiceModelDao> invoices,...)
         setInvoiceItemsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         setInvoicePaymentsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         setTrackingIdsFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
@@ -238,6 +239,7 @@ public class InvoiceDaoHelper {
     }
 
     public void populateChildren(final Iterable<InvoiceModelDao> invoices, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        // !!! Anything updated here needs to also be reflected in   void populateChildren(final InvoiceModelDao invoice,...)
         if (Iterables.isEmpty(invoices)) {
             return;
         }
