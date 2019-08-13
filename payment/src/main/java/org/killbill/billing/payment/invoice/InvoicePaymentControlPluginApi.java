@@ -597,10 +597,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     }
 
     private Invoice getAndSanitizeInvoice(final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
-        final Invoice invoicePriorRebalancing = invoiceApi.getInvoiceById(invoiceId, context);
-        invoiceApi.consumeExistingCBAOnAccountWithUnpaidInvoices(invoicePriorRebalancing.getAccountId(), context);
         final Invoice invoice = invoiceApi.getInvoiceById(invoiceId, context);
-
         if (checkForIncompleteInvoicePaymentAndRepair(invoice, context)) {
             // Fetch new repaired 'invoice'
             return invoiceApi.getInvoiceById(invoiceId, context);

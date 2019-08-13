@@ -56,6 +56,7 @@ getInvoiceItemsByInvoice() ::= <<
   FROM <tableName()>
   WHERE invoice_id = :invoiceId
   <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
   ;
 >>
 
@@ -64,6 +65,7 @@ getInvoiceItemsBySubscription() ::= <<
   FROM <tableName()>
   WHERE subscription_id = :subscriptionId
   <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
   ;
 >>
 
@@ -73,6 +75,7 @@ getAdjustedOrRepairedInvoiceItemsByLinkedId() ::= <<
   WHERE linked_item_id = :linkedItemId
   AND type IN ('ITEM_ADJ', 'REPAIR_ADJ')
   <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
   ;
 >>
 
