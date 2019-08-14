@@ -27,7 +27,9 @@ import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.audit.dao.AuditLogModelDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.dao.TableName;
+import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
@@ -35,7 +37,9 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
 
@@ -105,8 +109,6 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                         }
                                     });
 
-
-
         transactionalSqlDao.execute(false,
                                     new EntitySqlDaoTransactionWrapper<Void>() {
                                         @Override
@@ -144,6 +146,7 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
         inputs.add(input3);
         inputs.add(input4);
 
+        // Create state
         transactionalSqlDao.execute(false,
                                     new EntitySqlDaoTransactionWrapper<Void>() {
                                         @Override
@@ -152,21 +155,58 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
 
                                             dao.create(inputs, internalCallContext);
 
-                                            final List<InvoiceTrackingModelDao> result = dao.getTrackingsByDateRange(startRange.toDate(), endRange.toDate(), internalCallContext);
-                                            Assert.assertEquals(result.size(), 4);
+                                            return null;
+                                        }
+                                    });
 
-                                            final List<AuditLogModelDao> auditLogsPostCreate = new ArrayList<>();
-                                            for (int i = 0; i < 4; i++) {
-                                                List<AuditLogModelDao> tmp = dao.getAuditLogsViaHistoryForTargetRecordId(TableName.INVOICE_TRACKING_ID_HISTORY.name(), TableName.INVOICE_TRACKING_ID_HISTORY.getTableName().toLowerCase(), result.get(i).getRecordId(), internalCallContext);
-                                                auditLogsPostCreate.addAll(tmp);
-                                            }
-                                            Assert.assertEquals(auditLogsPostCreate.size(), 4);
-                                            for (int i = 0; i < 4; i++) {
-                                                Assert.assertEquals(auditLogsPostCreate.get(i).getChangeType(), ChangeType.INSERT);
-                                                Assert.assertEquals(auditLogsPostCreate.get(i).getTargetRecordId(), result.get(i).getRecordId());
-                                            }
+        // Verify audit logs from existing state
+        final List<InvoiceTrackingModelDao> initialTrackingIdsByRange = transactionalSqlDao.execute(false,
+                                                                                                    new EntitySqlDaoTransactionWrapper<List<InvoiceTrackingModelDao>>() {
+                                                                                                        @Override
+                                                                                                        public List<InvoiceTrackingModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
 
-                                            clock.addDays(1);
+                                                                                                            final InvoiceTrackingSqlDao dao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
+                                                                                                            final List<InvoiceTrackingModelDao> result = dao.getTrackingsByDateRange(startRange.toDate(), endRange.toDate(), internalCallContext);
+                                                                                                            Assert.assertEquals(result.size(), 4);
+
+                                                                                                            final List<EntityHistoryModelDao> entityHistoryModelDaos = new ArrayList<>();
+                                                                                                            final List<AuditLogModelDao> auditLogsPostCreate = new ArrayList<>();
+                                                                                                            for (int i = 0; i < 4; i++) {
+                                                                                                                List<AuditLogModelDao> tmp1 = dao.getAuditLogsViaHistoryForTargetRecordId(TableName.INVOICE_TRACKING_ID_HISTORY.name(), TableName.INVOICE_TRACKING_ID_HISTORY.getTableName().toLowerCase(), result.get(i).getRecordId(), internalCallContext);
+                                                                                                                auditLogsPostCreate.addAll(tmp1);
+
+                                                                                                                final List<EntityHistoryModelDao<InvoiceTrackingModelDao, Entity>> tmp2 = dao.getHistoryForTargetRecordId(true, result.get(i).getRecordId(), internalCallContext);
+                                                                                                                entityHistoryModelDaos.addAll(tmp2);
+                                                                                                            }
+
+                                                                                                            Assert.assertEquals(auditLogsPostCreate.size(), 4);
+                                                                                                            Assert.assertEquals(entityHistoryModelDaos.size(), 4);
+
+                                                                                                            for (int i = 0; i < 4; i++) {
+                                                                                                                Assert.assertEquals(auditLogsPostCreate.get(i).getChangeType(), ChangeType.INSERT);
+
+                                                                                                                // From the audit log entry, lookup the matching history entry
+                                                                                                                final int curIdx = i;
+                                                                                                                final EntityHistoryModelDao history = Iterables.find(entityHistoryModelDaos, new Predicate<EntityHistoryModelDao>() {
+                                                                                                                    @Override
+                                                                                                                    public boolean apply(final EntityHistoryModelDao input) {
+                                                                                                                        return input.getHistoryRecordId() == auditLogsPostCreate.get(curIdx).getTargetRecordId();
+                                                                                                                    }
+                                                                                                                });
+                                                                                                                Assert.assertEquals(auditLogsPostCreate.get(i).getTargetRecordId(), history.getHistoryRecordId());
+                                                                                                            }
+                                                                                                            return result;
+                                                                                                        }
+                                                                                                    });
+
+        clock.addDays(1);
+
+        // Create state
+        transactionalSqlDao.execute(false,
+                                    new EntitySqlDaoTransactionWrapper<Void>() {
+                                        @Override
+                                        public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                                            final InvoiceTrackingSqlDao dao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
                                             final InternalCallContext updatedContext = new InternalCallContext(internalCallContext.getTenantRecordId(),
                                                                                                                internalCallContext.getAccountRecordId(),
                                                                                                                internalCallContext.getFixedOffsetTimeZone(),
@@ -182,20 +222,31 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
 
                                             dao.deactivateByIds(ImmutableList.<String>of(input1.getId().toString(), input2.getId().toString(), input3.getId().toString()), updatedContext);
 
+                                            return null;
+                                        }
+                                    });
+
+        // Verify audit logs from existing state
+        transactionalSqlDao.execute(false,
+                                    new EntitySqlDaoTransactionWrapper<Void>() {
+                                        @Override
+                                        public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                                            final InvoiceTrackingSqlDao dao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
+
                                             final List<InvoiceTrackingModelDao> result2 = dao.getTrackingsByDateRange(startRange.toDate(), endRange.toDate(), internalCallContext);
                                             Assert.assertEquals(result2.size(), 1);
 
                                             final List<AuditLogModelDao> auditLogsPostDelete = new ArrayList<>();
                                             for (int i = 0; i < 4; i++) {
-                                                List<AuditLogModelDao> tmp = dao.getAuditLogsViaHistoryForTargetRecordId(TableName.INVOICE_TRACKING_ID_HISTORY.name(), TableName.INVOICE_TRACKING_ID_HISTORY.getTableName().toLowerCase(), result.get(i).getRecordId(), internalCallContext);
+                                                List<AuditLogModelDao> tmp = dao.getAuditLogsViaHistoryForTargetRecordId(TableName.INVOICE_TRACKING_ID_HISTORY.name(), TableName.INVOICE_TRACKING_ID_HISTORY.getTableName().toLowerCase(), initialTrackingIdsByRange.get(i).getRecordId(), internalCallContext);
                                                 auditLogsPostDelete.addAll(tmp);
                                             }
 
                                             Assert.assertEquals(auditLogsPostDelete.size(), 7);
                                             // First 3 records will show an INSERT & DELETE
                                             for (int i = 0; i < 3; i++) {
-                                                Assert.assertEquals(auditLogsPostDelete.get(2*i).getChangeType(), ChangeType.INSERT);
-                                                Assert.assertEquals(auditLogsPostDelete.get(2*i + 1).getChangeType(), ChangeType.DELETE);
+                                                Assert.assertEquals(auditLogsPostDelete.get(2 * i).getChangeType(), ChangeType.INSERT);
+                                                Assert.assertEquals(auditLogsPostDelete.get(2 * i + 1).getChangeType(), ChangeType.DELETE);
                                             }
                                             // Last record will only show an INSERT
                                             Assert.assertEquals(auditLogsPostDelete.get(6).getChangeType(), ChangeType.INSERT);
