@@ -20,6 +20,7 @@ CREATE TABLE invoice_tracking_ids (
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE INDEX invoice_tracking_tenant_account_date_idx ON invoice_tracking_ids(tenant_record_id, account_record_id, record_date);
 CREATE INDEX invoice_tracking_invoice_id_idx ON invoice_tracking_ids(invoice_id);
+CREATE INDEX invoice_tracking_id_idx ON invoice_tracking_ids(id);
 
 
 DROP TABLE IF EXISTS invoice_tracking_id_history;
