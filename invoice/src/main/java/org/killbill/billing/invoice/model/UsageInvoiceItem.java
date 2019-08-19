@@ -56,6 +56,6 @@ public class UsageInvoiceItem extends InvoiceItemCatalogBase {
 
     @Override
     public String getDescription() {
-        return MoreObjects.firstNonNull(description, usageName);
+        return MoreObjects.firstNonNull(description, MoreObjects.firstNonNull(prettyUsageName, usageName));
     }
 }
