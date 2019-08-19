@@ -47,20 +47,12 @@ import com.google.common.base.Preconditions;
 
 public class SubscriptionResourceHelpers {
 
-    public static void buildEntitlementSpecifier(final SubscriptionJson subscriptionJson,
-                                                 final Currency currency,
-                                                 final String externalKey,
-                                                 final Collection<EntitlementSpecifier> entitlementSpecifierList) {
-        if (subscriptionJson.getPlanName() == null &&
-            (subscriptionJson.getProductName() == null ||
-             subscriptionJson.getProductCategory() == null ||
-             subscriptionJson.getBillingPeriod() == null ||
-             subscriptionJson.getPriceList() == null)) {
-            return;
-        }
+    public static EntitlementSpecifier buildEntitlementSpecifier(final SubscriptionJson subscriptionJson,
+                                                                 final Currency currency,
+                                                                 final String externalKey) {
 
         final PlanPhaseSpecifier planPhaseSpecifier = subscriptionJson.getPlanName() != null ?
-                                                      new PlanPhaseSpecifier(subscriptionJson.getPlanName(), null) :
+                                                      new PlanPhaseSpecifier(subscriptionJson.getPlanName(), subscriptionJson.getPhaseType()) :
                                                       new PlanPhaseSpecifier(subscriptionJson.getProductName(),
                                                                              subscriptionJson.getBillingPeriod(),
                                                                              subscriptionJson.getPriceList(),
@@ -68,7 +60,7 @@ public class SubscriptionResourceHelpers {
 
         final List<PlanPhasePriceOverride> overrides = buildPlanPhasePriceOverrides(subscriptionJson.getPriceOverrides(), currency, planPhaseSpecifier);
 
-        final EntitlementSpecifier specifier = new EntitlementSpecifier() {
+        return new EntitlementSpecifier() {
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                 return planPhaseSpecifier;
@@ -89,7 +81,6 @@ public class SubscriptionResourceHelpers {
                 return overrides;
             }
         };
-        entitlementSpecifierList.add(specifier);
     }
 
     public static List<PlanPhasePriceOverride> buildPlanPhasePriceOverrides(final Iterable<PhasePriceJson> priceOverrides,
