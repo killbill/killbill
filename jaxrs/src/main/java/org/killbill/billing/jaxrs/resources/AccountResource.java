@@ -125,7 +125,6 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
-import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -663,7 +662,6 @@ public class AccountResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getInvoicesForAccount(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_START_DATE) final String startDateStr,
-                                          @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
                                           @QueryParam(QUERY_WITH_MIGRATION_INVOICES) @DefaultValue("false") final boolean withMigrationInvoices,
                                           @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                           @QueryParam(QUERY_INCLUDE_VOIDED_INVOICES) @DefaultValue("false") final boolean includeVoidedInvoices,
@@ -693,7 +691,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
         for (final Invoice invoice : invoices) {
-            result.add(new InvoiceJson(invoice, withItems, null, accountAuditLogs));
+            result.add(new InvoiceJson(invoice, null, accountAuditLogs));
         }
 
         return Response.status(Status.OK).entity(result).build();

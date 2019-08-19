@@ -39,7 +39,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(value="Invoice", parent = JsonBase.class)
 public class InvoiceJson extends JsonBase {
@@ -105,7 +104,7 @@ public class InvoiceJson extends JsonBase {
     }
 
     public InvoiceJson(final Invoice input) {
-        this(input, false, null, null);
+        this(input, null, null);
     }
 
     public InvoiceJson(final Invoice input, final String bundleKeys, final List<InvoiceItemJson> credits, final List<AuditLog> auditLogs) {
@@ -117,22 +116,20 @@ public class InvoiceJson extends JsonBase {
              toAuditLogJson(auditLogs));
     }
 
-    public InvoiceJson(final Invoice input, final boolean withItems, final List<InvoiceItem> childItems, @Nullable final AccountAuditLogs accountAuditLogs) {
+    public InvoiceJson(final Invoice input, final List<InvoiceItem> childItems, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoice(input.getId())));
         this.items = new ArrayList<InvoiceItemJson>(input.getInvoiceItems().size());
-        if (withItems || !CollectionUtils.isEmpty(childItems)) {
-            for (final InvoiceItem item : input.getInvoiceItems()) {
-                ImmutableList<InvoiceItem> childItemsFiltered = null;
-                if (item.getInvoiceItemType().equals(InvoiceItemType.PARENT_SUMMARY) && !CollectionUtils.isEmpty(childItems)) {
-                    childItemsFiltered = ImmutableList.copyOf(Iterables.filter(childItems, new Predicate<InvoiceItem>() {
-                        @Override
-                        public boolean apply(@Nullable final InvoiceItem invoice) {
-                            return invoice.getAccountId().equals(item.getChildAccountId());
-                        }
-                    }));
-                }
-                this.items.add(new InvoiceItemJson(item, childItemsFiltered, accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
+        for (final InvoiceItem item : input.getInvoiceItems()) {
+            ImmutableList<InvoiceItem> childItemsFiltered = null;
+            if (item.getInvoiceItemType().equals(InvoiceItemType.PARENT_SUMMARY) && !CollectionUtils.isEmpty(childItems)) {
+                childItemsFiltered = ImmutableList.copyOf(Iterables.filter(childItems, new Predicate<InvoiceItem>() {
+                    @Override
+                    public boolean apply(@Nullable final InvoiceItem invoice) {
+                        return invoice.getAccountId().equals(item.getChildAccountId());
+                    }
+                }));
             }
+            this.items.add(new InvoiceItemJson(item, childItemsFiltered, accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
         }
         this.trackingIds = input.getTrackingIds();
         this.amount = input.getChargedAmount();
@@ -151,7 +148,6 @@ public class InvoiceJson extends JsonBase {
         this.isParentInvoice = input.isParentInvoice();
         this.parentInvoiceId = input.getParentInvoiceId();
         this.parentAccountId = input.getParentAccountId();
-
     }
 
     public BigDecimal getAmount() {

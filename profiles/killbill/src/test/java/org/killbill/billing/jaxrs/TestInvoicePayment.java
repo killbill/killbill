@@ -155,7 +155,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
-        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
+        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), false, AuditLevel.NONE, requestOptions);
         final InvoiceItem itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for the full amount
@@ -185,7 +185,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
-        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
+        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), false, AuditLevel.NONE, requestOptions);
         final InvoiceItem itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for a fraction of the amount
@@ -214,7 +214,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
-        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
+        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), false, AuditLevel.NONE, requestOptions);
         final InvoiceItem itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for a fraction of the amount
