@@ -53,7 +53,8 @@ public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
 
     @Override
     public String getDescription() {
-        return MoreObjects.firstNonNull(description, phaseName);
+        final String resolvedPhaseName = getPrettyPhaseName() != null ? getPrettyPhaseName() : getPhaseName();
+        return MoreObjects.firstNonNull(description, resolvedPhaseName);
     }
 
     @Override
