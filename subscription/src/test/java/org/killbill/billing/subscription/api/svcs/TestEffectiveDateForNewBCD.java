@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -34,6 +34,8 @@ import org.testng.annotations.Test;
 //
 public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
 
+    private final DateTime subscriptionStartDate = new DateTime("2010-05-07T00:03:42.000Z");
+
     @Test(groups = "fast")
     public void testNullEffectiveDateWithBCDPriorComputedEffectiveDay() throws Exception {
 
@@ -45,7 +47,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = null;
 
         // newBCD < ComputedEffectiveDay
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-06-03")));
     }
@@ -61,7 +63,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = null;
 
         // newBCD == ComputedEffectiveDay
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         final DateTime nowAfterCall = clock.getUTCNow();
 
@@ -82,7 +84,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = null;
 
         // newBCD > 30 (max day in June)
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-06-30")));
     }
@@ -98,7 +100,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = null;
 
         // newBCD < ComputedEffectiveDay
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-05-10")));
     }
@@ -114,7 +116,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = new LocalDate(2012, 7, 7);
 
         // newBCD < ComputedEffectiveDay
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-08-03")));
     }
@@ -130,7 +132,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = new LocalDate(2012, 7, 3);
 
         // newBCD == ComputedEffectiveDay
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-07-03")));
     }
@@ -146,7 +148,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = new LocalDate(2012, 7, 3);
 
         // newBCD > ComputedEffectiveDay
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-07-10")));
     }
@@ -162,7 +164,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = new LocalDate(2012, 6, 3);
 
         // newBCD > 30 (max day in June)
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-06-30")));
     }
@@ -178,7 +180,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = new LocalDate(2012, 2, 7);
 
         // newBCD < ComputedEffectiveDay
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-03-03")));
     }
@@ -194,7 +196,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = new LocalDate(2012, 2, 3);
 
         // newBCD == ComputedEffectiveDay
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-02-03")));
     }
@@ -210,7 +212,7 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = new LocalDate(2012, 2, 3);
 
         // newBCD > ComputedEffectiveDay
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-02-10")));
     }
@@ -226,9 +228,21 @@ public class TestEffectiveDateForNewBCD extends SubscriptionTestSuiteNoDB {
         LocalDate effectiveDate = new LocalDate(2012, 2, 3);
 
         // newBCD > 30 (max day in June)
-        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, internalCallContext);
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, subscriptionStartDate, internalCallContext);
 
         Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2012-2-29")));
     }
 
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1158")
+    public void testNullEffectiveDateWithBCDBeforeSubscriptionStartDate() throws Exception {
+        // Set by test as : 2012-05-07T00:03:42.000Z
+        final DateTime now = clock.getUTCNow();
+        final DateTime startDate = now.plusYears(1);
+        final int newBCD = 3;
+        final LocalDate effectiveDate = null;
+
+        final DateTime result = ((DefaultSubscriptionInternalApi) subscriptionInternalApi).getEffectiveDateForNewBCD(newBCD, effectiveDate, startDate, internalCallContext);
+        Assert.assertTrue(result.compareTo(startDate) >= 0);
+        Assert.assertEquals(result, internalCallContext.toUTCDateTime(new LocalDate("2013-06-03")));
+    }
 }

@@ -64,10 +64,11 @@ public class ExternalChargeInvoiceItem extends InvoiceItemCatalogBase {
             return description;
         }
 
-        if (getPlanName() == null) {
+        final String resolvedPlanName = getPrettyPlanName() != null ? getPrettyPlanName() : getPlanName();
+        if (resolvedPlanName == null) {
             return "External charge";
         } else {
-            return String.format("%s (external charge)", getPlanName());
+            return String.format("%s (external charge)", resolvedPlanName);
         }
     }
 }

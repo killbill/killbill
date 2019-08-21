@@ -473,12 +473,14 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                  entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
         }
 
+        Preconditions.checkArgument(requestedDate == null || billingPolicy == null, "Only one of requestedDate or billingPolicy should be specified");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
-            private boolean isImmediateOp = true;
+             private boolean isImmediateOp = true;
 
             @Override
             public Response doOperation(final CallContext ctx) throws EntitlementApiException,

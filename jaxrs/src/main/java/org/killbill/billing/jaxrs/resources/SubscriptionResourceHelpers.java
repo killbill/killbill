@@ -50,7 +50,6 @@ public class SubscriptionResourceHelpers {
     public static EntitlementSpecifier buildEntitlementSpecifier(final SubscriptionJson subscriptionJson,
                                                                  final Currency currency,
                                                                  final String externalKey) {
-
         final PlanPhaseSpecifier planPhaseSpecifier = subscriptionJson.getPlanName() != null ?
                                                       new PlanPhaseSpecifier(subscriptionJson.getPlanName(), subscriptionJson.getPhaseType()) :
                                                       new PlanPhaseSpecifier(subscriptionJson.getProductName(),

@@ -59,6 +59,8 @@ import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.tag.DefaultTagDefinition;
+import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -69,6 +71,7 @@ import org.testng.annotations.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import static org.killbill.billing.util.tag.dao.SystemTags.PARK_TAG_DEFINITION_ID;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doThrow;
@@ -461,6 +464,7 @@ public class TestBeatrixListener {
         provideCommonBusEventInfo(event);
         when(event.getBusEventType()).thenReturn(BusInternalEventType.USER_TAG_CREATION);
         when(event.getTagId()).thenReturn(OBJECT_ID);
+        when(event.getTagDefinition()).thenReturn(new DefaultTagDefinition("MY_TAG", "", false));
 
         when(internalCallContextFactory.getAccountId(
                 OBJECT_ID,
@@ -478,7 +482,7 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getObjectId(), OBJECT_ID);
         assertEquals(postedEvent.getObjectType(), ObjectType.TAG);
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TAG_CREATION);
-        assertNull(postedEvent.getMetaData());
+        assertEquals(postedEvent.getMetaData(), "MY_TAG");
         assertCommonFieldsWithAccountId(postedEvent);
     }
 
@@ -488,6 +492,7 @@ public class TestBeatrixListener {
         provideCommonBusEventInfo(event);
         when(event.getBusEventType()).thenReturn(BusInternalEventType.CONTROL_TAG_CREATION);
         when(event.getTagId()).thenReturn(OBJECT_ID);
+        when(event.getTagDefinition()).thenReturn(new DefaultTagDefinition("MY_TAG", "", false));
 
         when(internalCallContextFactory.getAccountId(
                 OBJECT_ID,
@@ -505,7 +510,7 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getObjectId(), OBJECT_ID);
         assertEquals(postedEvent.getObjectType(), ObjectType.TAG);
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TAG_CREATION);
-        assertNull(postedEvent.getMetaData());
+        assertEquals(postedEvent.getMetaData(), "MY_TAG");
         assertCommonFieldsWithAccountId(postedEvent);
     }
 
@@ -515,6 +520,7 @@ public class TestBeatrixListener {
         provideCommonBusEventInfo(event);
         when(event.getBusEventType()).thenReturn(BusInternalEventType.USER_TAG_DELETION);
         when(event.getTagId()).thenReturn(OBJECT_ID);
+        when(event.getTagDefinition()).thenReturn(new DefaultTagDefinition("MY_TAG", "", false));
 
         when(internalCallContextFactory.getAccountId(
                 OBJECT_ID,
@@ -532,7 +538,7 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getObjectId(), OBJECT_ID);
         assertEquals(postedEvent.getObjectType(), ObjectType.TAG);
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TAG_DELETION);
-        assertNull(postedEvent.getMetaData());
+        assertEquals(postedEvent.getMetaData(), "MY_TAG");
         assertCommonFieldsWithAccountId(postedEvent);
     }
 
@@ -542,6 +548,7 @@ public class TestBeatrixListener {
         provideCommonBusEventInfo(event);
         when(event.getBusEventType()).thenReturn(BusInternalEventType.CONTROL_TAG_DELETION);
         when(event.getTagId()).thenReturn(OBJECT_ID);
+        when(event.getTagDefinition()).thenReturn(new DefaultTagDefinition("MY_TAG", "", false));
 
         when(internalCallContextFactory.getAccountId(
                 OBJECT_ID,
@@ -559,7 +566,7 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getObjectId(), OBJECT_ID);
         assertEquals(postedEvent.getObjectType(), ObjectType.TAG);
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TAG_DELETION);
-        assertNull(postedEvent.getMetaData());
+        assertEquals(postedEvent.getMetaData(), "MY_TAG");
         assertCommonFieldsWithAccountId(postedEvent);
     }
 
