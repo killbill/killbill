@@ -296,7 +296,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     bundleExternalKey = entitlement.getExternalKey();
                 }
                 // create the entitlementSpecifier
-                buildEntitlementSpecifier(entitlement, account.getCurrency(), entitlementSpecifierList);
+                final EntitlementSpecifier spec = buildEntitlementSpecifier(entitlement, account.getCurrency());
+                entitlementSpecifierList.add(spec);
             }
 
             final LocalDate resolvedEntitlementDate = requestedDate != null ? toLocalDate(requestedDate) : toLocalDate(entitlementDate);
@@ -433,12 +434,14 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                  entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
         }
 
+        Preconditions.checkArgument(requestedDate == null || billingPolicy == null, "Only one of requestedDate or billingPolicy should be specified");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
-            private boolean isImmediateOp = true;
+             private boolean isImmediateOp = true;
 
             @Override
             public Response doOperation(final CallContext ctx) throws EntitlementApiException,
@@ -449,19 +452,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final Entitlement newEntitlement;
 
                 final Account account = accountUserApi.getAccountById(current.getAccountId(), callContext);
-                final PhaseType phaseType = entitlement.getPhaseType();
-                final PlanPhaseSpecifier planSpec = entitlement.getPlanName() != null ?
-                                                    new PlanPhaseSpecifier(entitlement.getPlanName(), phaseType) :
-                                                    new PlanPhaseSpecifier(entitlement.getProductName(),
-                                                                           entitlement.getBillingPeriod(), entitlement.getPriceList(), phaseType);
-                final List<PlanPhasePriceOverride> overrides = buildPlanPhasePriceOverrides(entitlement.getPriceOverrides(), account.getCurrency(), planSpec);
-
+                final EntitlementSpecifier spec = buildEntitlementSpecifier(entitlement, account.getCurrency());
                 if (requestedDate == null && billingPolicy == null) {
-                    newEntitlement = current.changePlan(new DefaultEntitlementSpecifier(planSpec, null, overrides), pluginProperties, ctx);
+                    newEntitlement = current.changePlan(spec, pluginProperties, ctx);
                 } else if (billingPolicy == null) {
-                    newEntitlement = current.changePlanWithDate(new DefaultEntitlementSpecifier(planSpec, null, overrides), inputLocalDate, pluginProperties, ctx);
+                    newEntitlement = current.changePlanWithDate(spec, inputLocalDate, pluginProperties, ctx);
                 } else {
-                    newEntitlement = current.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(planSpec, null, overrides), null, billingPolicy, pluginProperties, ctx);
+                    newEntitlement = current.changePlanOverrideBillingPolicy(spec, null, billingPolicy, pluginProperties, ctx);
                 }
                 isImmediateOp = newEntitlement.getLastActiveProduct().getName().equals(entitlement.getProductName()) &&
                                 newEntitlement.getLastActivePlan().getRecurringBillingPeriod() == entitlement.getBillingPeriod() &&
