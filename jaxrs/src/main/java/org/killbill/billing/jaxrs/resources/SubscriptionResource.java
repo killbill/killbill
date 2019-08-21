@@ -434,6 +434,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                  entitlement.getPriceList(), "SubscriptionJson priceList needs to be set");
         }
 
+        Preconditions.checkArgument(requestedDate == null || billingPolicy == null, "Only one of requestedDate or billingPolicy should be specified");
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
