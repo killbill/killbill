@@ -136,7 +136,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("assault-rifle-annual-rescue"); // this plan does not have a TRIAL
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
 
@@ -163,7 +163,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
         // we should except to receive this event twice
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("assault-rifle-annual-rescue"); // this plan does not have a TRIAL
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null,UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
     }
@@ -185,7 +185,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
         // We see 4 times the EffectiveSubscriptionEvent (3 retries) along with the BlockingTransitionInternalEvent and nothing else
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CREATE, NextEvent.CREATE, NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("assault-rifle-annual-rescue"); // this plan does not have a TRIAL
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
     }
