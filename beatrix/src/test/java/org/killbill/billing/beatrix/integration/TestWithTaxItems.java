@@ -186,7 +186,8 @@ public class TestWithTaxItems extends TestIntegrationBase {
         assertListenerStatus();
 
         // Make sure TestInvoicePluginApi will return an additional TAX item
-        testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(UUID.randomUUID(), null, account.getId(), null, "Tax Item", new LocalDate(2012, 5, 1), BigDecimal.ONE, account.getCurrency()));
+        // Verify we support passing extra items for a null invoiceItemId #1182 (as advertised in our doc)
+        testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(null, null, account.getId(), null, "Tax Item", new LocalDate(2012, 5, 1), BigDecimal.ONE, account.getCurrency()));
 
         // Remove AUTO_INVOICING_OFF => Invoice + Payment
         remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -455,18 +456,23 @@ public class TestWithTaxItems extends TestIntegrationBase {
             Assert.assertFalse(invoiceContext.isRescheduled());
 
             final Invoice invoice = invoiceContext.getInvoice();
-            Assert.assertNotNull(invoice);
-            for (final TaxInvoiceItem taxInvoiceItem : taxItems) {
-                final InvoiceItem createdTaxInvoiceItem = Iterables.<InvoiceItem>find(invoice.getInvoiceItems(),
-                                                                                      new Predicate<InvoiceItem>() {
-                                                                                          @Override
-                                                                                          public boolean apply(final InvoiceItem invoiceItem) {
-                                                                                              return invoiceItem.getId().compareTo(taxInvoiceItem.getId()) == 0;
-                                                                                          }
-                                                                                      });
-                Assert.assertEquals(createdTaxInvoiceItem.getAccountId(), taxInvoiceItem.getAccountId());
-            }
+            if (invoice != null) {
+                for (final TaxInvoiceItem taxInvoiceItem : taxItems) {
+                    // If we specified the invoiceItemId, we should be able to find such tax item
+                    if (taxInvoiceItem.getId() != null) {
+                        final InvoiceItem createdTaxInvoiceItem = Iterables.<InvoiceItem>find(invoice.getInvoiceItems(),
+                                                                                              new Predicate<InvoiceItem>() {
+                                                                                                  @Override
+                                                                                                  public boolean apply(final InvoiceItem invoiceItem) {
+                                                                                                      return invoiceItem.getId().compareTo(taxInvoiceItem.getId()) == 0;
+                                                                                                  }
+                                                                                              });
+                        Assert.assertNotNull(createdTaxInvoiceItem);
+                    }
+                    Assert.assertEquals(taxInvoiceItem.getAccountId(), taxInvoiceItem.getAccountId());
+                }
 
+            }
             reset();
 
             return null;

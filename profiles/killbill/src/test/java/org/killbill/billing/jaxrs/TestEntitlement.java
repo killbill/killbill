@@ -755,7 +755,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithDefaultPaymentMethod();
 
-        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE, ExtBusEventType.ENTITLEMENT_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_BCD_CHANGE);
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE, ExtBusEventType.ENTITLEMENT_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_CREATION, ExtBusEventType.SUBSCRIPTION_BCD_CHANGE, ExtBusEventType.INVOICE_CREATION);
         final Subscription input = new Subscription();
         input.setAccountId(accountJson.getAccountId());
         input.setPlanName("shotgun-monthly");
@@ -775,6 +775,52 @@ public class TestEntitlement extends TestJaxrsBase {
         // TODO : we should add the BCD_CHANGE event in the timeline (does not exist in SubscriptionEventType)
         Assert.assertEquals(subscriptionT.getEvents().size(), 3);
     }
+
+
+    @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription when changing plan")
+    public void testOverwriteEntitlementBCDOnChange() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+
+        final Subscription subscription = createSubscription(accountJson.getAccountId(), "99999", "Shotgun",
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+
+        // 2012-05-25
+        // Move outside of trial
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
+
+        clock.addDays(30);
+        callbackServlet.assertListenerStatus();
+
+        // 2012-05-28
+        clock.addDays(3);
+
+        final Subscription newInput = new Subscription();
+        newInput.setAccountId(subscription.getAccountId());
+        newInput.setSubscriptionId(subscription.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        // Update BCD
+        newInput.setBillCycleDayLocal(28);
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE,  ExtBusEventType.SUBSCRIPTION_CHANGE, ExtBusEventType.SUBSCRIPTION_BCD_CHANGE, ExtBusEventType.INVOICE_CREATION);
+        subscriptionApi.changeSubscriptionPlan(subscription.getSubscriptionId(), newInput, new LocalDate(2012, 5, 28), null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        Subscription refreshedSubscription = subscriptionApi.getSubscription(subscription.getSubscriptionId(), requestOptions);
+        Assert.assertNotNull(refreshedSubscription);
+
+        // We charged a full period 2012-05-28 - 2012-06-28 based on the new BCD
+        Assert.assertEquals(refreshedSubscription.getChargedThroughDate(), new LocalDate(2012, 6, 28));
+
+    }
+
+
 
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
     public void testMoveEntitlementBCD() throws Exception {

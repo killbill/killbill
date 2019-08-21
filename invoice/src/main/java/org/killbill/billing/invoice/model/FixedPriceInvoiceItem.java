@@ -57,13 +57,14 @@ public class FixedPriceInvoiceItem extends InvoiceItemCatalogBase {
             return description;
         }
 
-        if (getPhaseName() == null) {
+        final String resolvedPhaseName = getPrettyPhaseName() != null ? getPrettyPhaseName() : getPhaseName();
+        if (resolvedPhaseName == null) {
             return "Fixed price charge";
         } else {
             if (getAmount().compareTo(BigDecimal.ZERO) == 0) {
                 return getPhaseName();
             } else {
-                return String.format("%s (fixed price)", getPhaseName());
+                return String.format("%s (fixed price)", resolvedPhaseName);
             }
         }
     }

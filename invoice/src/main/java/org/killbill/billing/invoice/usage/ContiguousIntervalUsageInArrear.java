@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -73,11 +74,10 @@ import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrea
  */
 public abstract class ContiguousIntervalUsageInArrear {
 
+    protected static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(ContiguousIntervalUsageInArrear.class);
-
     protected final List<LocalDate> transitionTimes;
     protected final List<BillingEvent> billingEvents;
-
     protected final Usage usage;
     protected final Set<String> unitTypes;
     protected final List<RawUsageRecord> rawSubscriptionUsage;
@@ -89,7 +89,6 @@ public abstract class ContiguousIntervalUsageInArrear {
     protected final LocalDate rawUsageStartDate;
     protected final InternalTenantContext internalTenantContext;
     protected final UsageDetailMode usageDetailMode;
-    protected static final ObjectMapper objectMapper = new ObjectMapper();
 
     public ContiguousIntervalUsageInArrear(final Usage usage,
                                            final UUID accountId,
@@ -201,12 +200,11 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         final Set<TrackingRecordId> existingTrackingIds = extractTrackingIds(allExistingTrackingIds);
 
-
         final Set<TrackingRecordId> newTrackingIds = Sets.filter(allTrackingIds, new Predicate<TrackingRecordId>() {
             @Override
             public boolean apply(final TrackingRecordId allRecord) {
 
-                return ! Iterables.any(existingTrackingIds, new Predicate<TrackingRecordId>() {
+                return !Iterables.any(existingTrackingIds, new Predicate<TrackingRecordId>() {
                     @Override
                     public boolean apply(final TrackingRecordId existingRecord) {
                         return existingRecord.isSimilarRecord(allRecord);
@@ -215,10 +213,16 @@ public abstract class ContiguousIntervalUsageInArrear {
             }
         });
 
-
         // Each RolledUpUsage 'ru' is for a specific time period and across all units
         for (final RolledUpUsage ru : allUsage) {
 
+            final InvoiceItem existingOverlappingItem = isContainedIntoExistingUsage(ru.getStart(), ru.getEnd(), existingUsage);
+            if (existingOverlappingItem != null) {
+                log.warn("ContiguousIntervalUsageInArrear detected usage {} start={}, end={} already contained in item {}, start = {}, end = {}, skipping... ",
+                         usage.getName(), ru.getStart(), ru.getEnd(),
+                         existingOverlappingItem.getInvoiceItemType(), existingOverlappingItem.getStartDate(), existingOverlappingItem.getEndDate());
+                continue;
+            }
             //
             // Previously billed items:
             //
@@ -242,6 +246,28 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
         final LocalDate nextNotificationDate = computeNextNotificationDate();
         return new UsageInArrearItemsAndNextNotificationDate(result, newTrackingIds, nextNotificationDate);
+    }
+
+    private InvoiceItem isContainedIntoExistingUsage(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> existingUsage) {
+        Preconditions.checkState(isBuilt.get());
+        if (existingUsage.isEmpty()) {
+            return null;
+        }
+
+        final Optional<InvoiceItem> res = Iterables.tryFind(existingUsage, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                if (input.getInvoiceItemType() != InvoiceItemType.USAGE) {
+                    return false;
+                }
+                final UsageInvoiceItem usageInput = (UsageInvoiceItem) input;
+                final boolean isContained = usageInput.getUsageName().equals(usage.getName()) &&
+                                            ((startDate.compareTo(usageInput.getStartDate()) >= 0 && endDate.compareTo(usageInput.getEndDate()) < 0) ||
+                                             (startDate.compareTo(usageInput.getStartDate()) > 0 && endDate.compareTo(usageInput.getEndDate()) <= 0));
+                return isContained;
+            }
+        });
+        return res.isPresent() ? res.get() : null;
     }
 
     protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException;
@@ -497,28 +523,12 @@ public abstract class ContiguousIntervalUsageInArrear {
         return billingEvents.get(0).getCurrency();
     }
 
-    public class UsageInArrearItemsAndNextNotificationDate {
-
-        private final List<InvoiceItem> invoiceItems;
-        private final LocalDate nextNotificationDate;
-        private final Set<TrackingRecordId> trackingIds;
-
-        public UsageInArrearItemsAndNextNotificationDate(final List<InvoiceItem> invoiceItems, final Set<TrackingRecordId> trackingIds, final LocalDate nextNotificationDate) {
-            this.invoiceItems = invoiceItems;
-            this.nextNotificationDate = nextNotificationDate;
-            this.trackingIds = trackingIds;
-        }
-
-        public List<InvoiceItem> getInvoiceItems() {
-            return invoiceItems;
-        }
-
-        public LocalDate getNextNotificationDate() {
-            return nextNotificationDate;
-        }
-
-        public Set<TrackingRecordId> getTrackingIds() {
-            return trackingIds;
+    protected String toJson(final Object usageInArrearAggregate) {
+        try {
+            return objectMapper.writeValueAsString(usageInArrearAggregate);
+        } catch (JsonProcessingException e) {
+            Preconditions.checkState(false, e.getMessage());
+            return null;
         }
     }
 
@@ -541,12 +551,28 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
     }
 
-    protected String toJson(final Object usageInArrearAggregate) {
-        try {
-            return objectMapper.writeValueAsString(usageInArrearAggregate);
-        } catch (JsonProcessingException e) {
-            Preconditions.checkState(false, e.getMessage());
-            return null;
+    public class UsageInArrearItemsAndNextNotificationDate {
+
+        private final List<InvoiceItem> invoiceItems;
+        private final LocalDate nextNotificationDate;
+        private final Set<TrackingRecordId> trackingIds;
+
+        public UsageInArrearItemsAndNextNotificationDate(final List<InvoiceItem> invoiceItems, final Set<TrackingRecordId> trackingIds, final LocalDate nextNotificationDate) {
+            this.invoiceItems = invoiceItems;
+            this.nextNotificationDate = nextNotificationDate;
+            this.trackingIds = trackingIds;
+        }
+
+        public List<InvoiceItem> getInvoiceItems() {
+            return invoiceItems;
+        }
+
+        public LocalDate getNextNotificationDate() {
+            return nextNotificationDate;
+        }
+
+        public Set<TrackingRecordId> getTrackingIds() {
+            return trackingIds;
         }
     }
 

@@ -10,6 +10,9 @@
 0.21.0
     https://github.com/killbill/killbill/releases/tag/killbill-0.21.0
 
+0.20.11
+    Add usage logic to not re-bill existing enclosing past periods
+
 0.20.10
     https://github.com/killbill/killbill/releases/tag/killbill-0.20.10
 

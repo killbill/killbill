@@ -62,6 +62,8 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
     @Inject
     protected SubscriptionBaseInternalApi subscriptionBaseInternalApi;
 
+
+
     @Test(groups = "slow")
     public void testBCDChangeInTrial() throws Exception {
 
@@ -861,5 +863,33 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         aoExpectedCTD = new DateTime("2012-06-05T00:00:00.000Z");
         assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(aoExpectedCTD), 0);
+    }
+
+
+    @Test(groups = "slow")
+    public void testWithOverrideFixedPriceAndNewBCD() throws Exception {
+
+        final DateTime initialDate = new DateTime(2016, 4, 1, 0, 13, 42, 0, testTimeZone);
+        clock.setTime(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        assertNotNull(account);
+
+        // Price override of $10 for fixed and $0 for recurring
+        // Override BCD as well
+        final Integer billCycleDay = 1;
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.QUARTERLY, "notrial", null);
+        final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
+        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-quarterly-notrial-evergreen", account.getCurrency(), BigDecimal.TEN, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
+        final DefaultEntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(spec, billCycleDay, UUID.randomUUID().toString(), overrides);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        entitlementApi.createBaseEntitlement(account.getId(), entitlementSpecifier, "134582864", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.TEN),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 7, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
+
     }
 }

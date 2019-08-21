@@ -68,6 +68,7 @@ import com.google.inject.Inject;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateNumberOfWholeBillingPeriods;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod;
+import static org.killbill.billing.subscription.api.SubscriptionBaseTransitionType.BCD_CHANGE;
 
 public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator {
 
@@ -167,6 +168,9 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         final Iterator<BillingEvent> eventIt = events.iterator();
         while (eventIt.hasNext()) {
             final BillingEvent thisEvent = eventIt.next();
+            if (thisEvent.getTransitionType() == BCD_CHANGE) {
+                continue;
+            }
 
             final InvoiceItem currentFixedPriceItem = generateFixedPriceItem(invoiceId, accountId, thisEvent, targetDate, currency, invoiceItemGeneratorLogger, internalCallContext);
             if (!isSameDayAndSameSubscription(prevItem, thisEvent, internalCallContext) && prevItem != null) {
@@ -184,6 +188,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
     @VisibleForTesting
     boolean isSameDayAndSameSubscription(final InvoiceItem prevComputedFixedItem, final BillingEvent currentBillingEvent, final InternalCallContext internalCallContext) {
+
         final LocalDate curLocalEffectiveDate = internalCallContext.toLocalDate(currentBillingEvent.getEffectiveDate());
         if (prevComputedFixedItem != null && /* If we have computed a previous item */
             prevComputedFixedItem.getStartDate().compareTo(curLocalEffectiveDate) == 0 && /* The current billing event happens at the same date */
