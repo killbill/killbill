@@ -55,6 +55,7 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
@@ -161,7 +162,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
                (supportedCurrencies == null || supportedCurrencies.length == 0);
     }
 
-    public DefaultPlanRules getPlanRules() {
+    public PlanRules getPlanRules() {
         return planRules;
     }
 
@@ -258,32 +259,12 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return priceLists.findPriceListFrom(name);
     }
 
-    @Override
-    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
-        return planRules.getPlanCancelPolicy(planPhase, this);
-    }
-
-    @Override
-    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier) throws CatalogApiException {
-        return planRules.getPlanCreateAlignment(specifier, this);
-    }
-
-    @Override
-    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
-        return planRules.getBillingAlignment(planPhase, this);
-    }
-
     //////////////////////////////////////////////////////////////////////////////
     //
     // UNIT LIMIT
     //
     //////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to)
-            throws CatalogApiException {
-        return planRules.planChange(from, to, this);
-    }
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {

@@ -29,8 +29,8 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -126,10 +126,10 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoadCatalogFromClasspathResourceFolder() throws CatalogApiException {
-        final VersionedCatalog c = loader.loadDefaultCatalog("SpyCarBasic.xml");
+        final Catalog c = loader.loadDefaultCatalog("SpyCarBasic.xml");
         Assert.assertEquals(c.getVersions().size(), 1);
         final DateTime dt = new DateTime("2013-02-08T00:00:00+00:00");
-        Assert.assertEquals(c.getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
         Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
     }
 
@@ -158,7 +158,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
         final File destinationFile = new File(Files.createTempDir().toString() + "/SpyCarBasicRelocated.xml");
         destinationFile.deleteOnExit();
         Files.copy(originFile, destinationFile);
-        final VersionedCatalog c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
+        final Catalog c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
         Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
     }
 }

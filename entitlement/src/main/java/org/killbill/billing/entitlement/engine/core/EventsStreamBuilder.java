@@ -407,7 +407,8 @@ public class EventsStreamBuilder {
         try {
             Integer defaultAlignmentDay = null;
             try {
-                final BillingAlignment alignment = catalog.billingAlignment(createPlanPhaseSpecifier(subscription), clock.getUTCNow(), subscription.getStartDate());
+                final BillingAlignment alignment = subscription.getBillingAlignment(createPlanPhaseSpecifier(subscription), clock.getUTCNow(), catalog);
+
                 if (alignment != BillingAlignment.ACCOUNT || accountBCD != 0) {
                     defaultAlignmentDay = BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBCD);
                 }

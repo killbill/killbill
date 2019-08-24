@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.VersionedCatalogMapper;
@@ -122,7 +123,7 @@ public class DefaultCatalogCache implements CatalogCache {
             // for test purpose.
             if (useDefaultCatalog && tenantCatalog == null) {
                 tenantCatalog = new DefaultVersionedCatalog(defaultCatalog.getClock());
-                for (final StandaloneCatalog cur : defaultCatalog.getVersions()) {
+                for (final StaticCatalog cur : defaultCatalog.getVersions()) {
                     final StandaloneCatalogWithPriceOverride curWithOverride = new StandaloneCatalogWithPriceOverride(cur, priceOverride, tenantContext.getTenantRecordId(), internalCallContextFactory);
                     tenantCatalog.add(curWithOverride);
                 }
@@ -197,11 +198,11 @@ public class DefaultCatalogCache implements CatalogCache {
 
     private void initializeCatalog(final DefaultVersionedCatalog tenantCatalog) {
         tenantCatalog.initialize(defaultCatalog.getClock(), tenantCatalog);
-        for (final StandaloneCatalog cur : tenantCatalog.getVersions()) {
+        for (final StaticCatalog cur : tenantCatalog.getVersions()) {
             if (cur instanceof StandaloneCatalogWithPriceOverride) {
-                ((StandaloneCatalogWithPriceOverride) cur).initialize(cur, priceOverride, internalCallContextFactory);
+                ((StandaloneCatalogWithPriceOverride) cur).initialize((StandaloneCatalog) cur, priceOverride, internalCallContextFactory);
             } else {
-                cur.initialize(cur);
+                ((StandaloneCatalog) cur).initialize((StandaloneCatalog) cur);
             }
         }
     }

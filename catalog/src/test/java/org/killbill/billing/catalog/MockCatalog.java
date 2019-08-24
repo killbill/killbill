@@ -21,9 +21,9 @@ package org.killbill.billing.catalog;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -31,15 +31,15 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
-import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
+
+import com.google.common.collect.ImmutableList;
 
 public class MockCatalog extends StandaloneCatalog implements Catalog {
 
@@ -118,77 +118,13 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     }
 
     @Override
-    public Plan findPlan(final String name, final DateTime effectiveDate, final DateTime subscriptionChangePlanDate)
-            throws CatalogApiException {
-        return findCurrentPlan(name);
-    }
-
-    @Override
-    public Plan createOrFindPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate,
-                                 final DateTime subscriptionChangePlanDate) throws CatalogApiException {
-        return createOrFindCurrentPlan(spec, overrides);
-    }
-
-    @Override
     public Product findProduct(final String name, final DateTime requestedDate) throws CatalogApiException {
         return findCurrentProduct(name);
     }
 
     @Override
-    public PlanPhase findPhase(final String name, final DateTime requestedDate, final DateTime subscriptionChangePlanDate)
-            throws CatalogApiException {
-        return findCurrentPhase(name);
-    }
-
-    @Override
-    public Plan getNextPlanVersion(final Plan plan) {
-        return null;
-    }
-
-    @Override
-    public PriceList findPriceListForPlan(final String name, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) throws CatalogApiException {
-        return findCurrentPricelist(findCurrentPlan(name).getPriceListName());
-    }
-
-    @Override
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final DateTime requestedDate) {
-        return planChange(from, to);
-    }
-
-    @Override
-    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final DateTime requestedDate, final DateTime subscriptionChangePlanDate)
-            throws CatalogApiException {
-        return planCancelPolicy(planPhase);
-    }
-
-    @Override
-    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) {
-        return planCreateAlignment(specifier);
-    }
-
-    @Override
-    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) {
-        return billingAlignment(planPhase);
-    }
-
-    @Override
-    public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
-        return super.planCancelPolicy(planPhase);
-    }
-
-    @Override
-    public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier) {
-        return planCreateAlignment;
-    }
-
-    @Override
-    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase) {
-        return billingAlignment;
-    }
-
-    @Override
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to) {
-        return planChange;
+    public List<StaticCatalog> getVersions() {
+        return ImmutableList.of(this);
     }
 
     public DefaultProduct getCurrentProduct(final int idx) {

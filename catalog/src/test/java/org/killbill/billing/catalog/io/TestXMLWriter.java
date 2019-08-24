@@ -19,7 +19,6 @@ package org.killbill.billing.catalog.io;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.nio.charset.Charset;
 
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
@@ -43,7 +42,6 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
-import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 import org.testng.annotations.Test;

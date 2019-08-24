@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -53,16 +54,16 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     public StandaloneCatalogWithPriceOverride() {
     }
 
-    public StandaloneCatalogWithPriceOverride(final StandaloneCatalog catalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
+    public StandaloneCatalogWithPriceOverride(final StaticCatalog catalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
         // Initialize from input catalog
         setCatalogName(catalog.getCatalogName());
         setEffectiveDate(catalog.getEffectiveDate());
-        setProducts(catalog.getCurrentProducts());
-        setPlans(catalog.getCurrentPlans());
-        setPriceLists(catalog.getPriceLists());
-        setPlanRules(catalog.getPlanRules());
-        setSupportedCurrencies(catalog.getCurrentSupportedCurrencies());
-        setUnits(catalog.getCurrentUnits());
+        setProducts(((StandaloneCatalog) catalog).getCurrentProducts());
+        setPlans(((StandaloneCatalog) catalog).getCurrentPlans());
+        setPriceLists(((StandaloneCatalog) catalog).getPriceLists());
+        setPlanRules((DefaultPlanRules) ((StandaloneCatalog) catalog).getPlanRules());
+        setSupportedCurrencies(((StandaloneCatalog) catalog).getCurrentSupportedCurrencies());
+        setUnits(((StandaloneCatalog) catalog).getCurrentUnits());
         this.tenantRecordId = tenantRecordId;
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;

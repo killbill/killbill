@@ -31,13 +31,13 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogUpdater;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
@@ -77,7 +77,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     }
 
     @Override
-    public VersionedCatalog<? extends StaticCatalog> getCatalog(final String catalogName, @Nullable final DateTime catalogDateVersion, final TenantContext tenantContext) throws CatalogApiException {
+    public Catalog getCatalog(final String catalogName, @Nullable final DateTime catalogDateVersion, final TenantContext tenantContext) throws CatalogApiException {
         final InternalTenantContext internalTenantContext;
         if (tenantContext.getAccountId() != null) {
             internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantContext.getAccountId(), tenantContext);
@@ -89,9 +89,9 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             return fullCatalog;
         } else {
             final DefaultVersionedCatalog filteredCatalog = new DefaultVersionedCatalog(clock);
-            for (final StandaloneCatalog v : fullCatalog.getVersions()) {
+            for (final StaticCatalog v : fullCatalog.getVersions()) {
                 if (v.getEffectiveDate().compareTo(catalogDateVersion.toDate()) >= 0) {
-                    filteredCatalog.add(v);
+                    filteredCatalog.add((StandaloneCatalog) v);
                     break;
                 }
             }
@@ -136,7 +136,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
                     throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
                 }
 
-                for (StandaloneCatalog c : versionedCatalog.getVersions()) {
+                for (StaticCatalog c : versionedCatalog.getVersions()) {
                     if (c.getEffectiveDate().compareTo(newCatalogVersion.getEffectiveDate()) == 0) {
                         final ValidationErrors errors = new ValidationErrors();
                         errors.add(String.format("Catalog version for effectiveDate '%s' already exists", newCatalogVersion.getEffectiveDate()),
@@ -227,7 +227,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     private StandaloneCatalog getCurrentStandaloneCatalogForTenant(final InternalTenantContext internalTenantContext) throws CatalogApiException {
         final DefaultVersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, false, internalTenantContext);
         if (versionedCatalog != null && !versionedCatalog.getVersions().isEmpty()) {
-            final StandaloneCatalog standaloneCatalogWithPriceOverride = versionedCatalog.getVersions().get(versionedCatalog.getVersions().size() - 1);
+            final StandaloneCatalog standaloneCatalogWithPriceOverride = (StandaloneCatalog) versionedCatalog.getVersions().get(versionedCatalog.getVersions().size() - 1);
             return standaloneCatalogWithPriceOverride;
         } else {
             return null;

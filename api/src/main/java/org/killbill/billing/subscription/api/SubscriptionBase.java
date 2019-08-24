@@ -23,9 +23,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -35,6 +39,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
+import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.entity.Entity;
 
@@ -116,4 +121,8 @@ public interface SubscriptionBase extends Entity, Blockable {
     public List<SubscriptionBaseTransition> getAllTransitions();
 
     public DateTime getDateOfFirstRecurringNonZeroCharge();
+
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(Catalog kbCatalog) throws CatalogApiException;
+
+    public BillingAlignment getBillingAlignment(PlanPhaseSpecifier spec, DateTime transitionTime, Catalog kbCatalog) throws CatalogApiException;
 }

@@ -49,7 +49,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
         final DefaultCaseChangePlanAlignment caseAlignment = new DefaultCaseChangePlanAlignment().setAlignment(PlanAlignmentChange.START_OF_SUBSCRIPTION);
         final DefaultCasePriceList casePriceList = new DefaultCasePriceList().setToPriceList(priceList2);
 
-        cat.getPlanRules().
+        ((DefaultPlanRules) cat.getPlanRules()).
                 setChangeCase(new DefaultCaseChangePlanPolicy[]{casePolicy}).
                    setChangeAlignmentCase(new DefaultCaseChangePlanAlignment[]{caseAlignment}).
                    setPriceListCase(new DefaultCasePriceList[]{casePriceList});
@@ -65,7 +65,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
         PlanChangeResult result = null;
         try {
-            result = cat.getPlanRules().planChange(from, to, cat);
+            result = ((DefaultPlanRules) cat.getPlanRules()).planChange(from, to, cat);
         } catch (IllegalPlanChange e) {
             Assert.fail("We should not have triggered this error");
         } catch (CatalogApiException e) {
@@ -89,7 +89,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
         PlanChangeResult result = null;
         try {
-            result = cat.getPlanRules().planChange(from, to, cat);
+            result = ((DefaultPlanRules) cat.getPlanRules()).planChange(from, to, cat);
         } catch (IllegalPlanChange e) {
             Assert.fail("We should not have triggered this error");
         } catch (CatalogApiException e) {

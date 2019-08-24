@@ -30,11 +30,11 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
-import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Product;
-import org.killbill.billing.catalog.api.VersionedCatalog;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -94,7 +94,7 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
 
         // Verify the lookup with other contexts
         final DefaultVersionedCatalog resultForMultiTenantContext = new DefaultVersionedCatalog(result.getClock());
-        for (final StandaloneCatalog cur : result.getVersions()) {
+        for (final StaticCatalog cur : result.getVersions()) {
             resultForMultiTenantContext.add(new StandaloneCatalogWithPriceOverride(cur, priceOverride, multiTenantContext.getTenantRecordId(), internalCallContextFactory));
         }
 
@@ -142,7 +142,7 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         });
 
         // Verify the lookup for a non-cached tenant. No system config is set yet but DefaultCatalogCache returns a default empty one
-        VersionedCatalog differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
+        Catalog differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
         Assert.assertEquals(differentResult.getCatalogName(), "EmptyCatalog");
 
@@ -173,7 +173,7 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         shouldThrow.set(true);
 
         // Verify the lookup for this tenant
-        final VersionedCatalog result2 = catalogCache.getCatalog(true, true, false, multiTenantContext);
+        final Catalog result2 = catalogCache.getCatalog(true, true, false, multiTenantContext);
         Assert.assertEquals(result2, result);
 
         // Verify the lookup with another context for the same tenant

@@ -39,6 +39,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -107,6 +108,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final DateTime subscriptionStartDate = clock.getUTCNow().minusDays(3);
         subscription = new MockSubscription(subId, bunId, null, null, subscriptionStartDate, subscriptionStartDate);
         final List<SubscriptionBase> subscriptions = ImmutableList.<SubscriptionBase>of(subscription);
+        //Mockito.when(subscription.getBillingAlignment(Mockito.<PlanPhaseSpecifier>any(), Mockito.<DateTime>any(), Mockito.<Catalog>any())).thenReturn(BillingAlignment.ACCOUNT);
 
         Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
         Mockito.when(subscriptionInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
@@ -125,7 +127,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         Mockito.when(catalogInternalApi.getFullCatalog(true, true, internalCallContext)).thenReturn(catalog);
         // Set a default alignment
-        catalog.setBillingAlignment(BillingAlignment.ACCOUNT);
+        ((MockSubscription) subscription).setBillingAlignment(BillingAlignment.ACCOUNT);
 
         // Cleanup mock daos
         ((MockBlockingStateDao) blockingStateDao).clear();
@@ -159,7 +161,8 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final Account account = createAccount(1);
 
-        catalog.setBillingAlignment(BillingAlignment.SUBSCRIPTION);
+        ((MockSubscription) subscription).setBillingAlignment(BillingAlignment.SUBSCRIPTION);
+
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
         // The expected BCD is when the subscription started since we skip the trial phase
@@ -187,8 +190,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final Account account = createAccount(1);
 
-        catalog.setBillingAlignment(BillingAlignment.BUNDLE);
         ((MockSubscription) subscription).setPlan(catalog.findPlan("3-PickupTrialEvergreen10USD", now));
+        ((MockSubscription) subscription).setBillingAlignment(BillingAlignment.BUNDLE);
+
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
         // The expected BCD is when the subscription started
@@ -296,12 +300,10 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     private DateTime createSubscriptionCreationEvent(final Plan nextPlan, final PlanPhase nextPhase) throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
-        final PriceList nextPriceList = catalog.findPriceListForPlan(nextPlan.getName(), now, now);
-
         final EffectiveSubscriptionInternalEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, bunKey, then, now, null, null, null, null, null, EntitlementState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
-                nextPriceList.getName(), null, 1L,
+                nextPlan.getPriceListName(), null, 1L,
                 SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);

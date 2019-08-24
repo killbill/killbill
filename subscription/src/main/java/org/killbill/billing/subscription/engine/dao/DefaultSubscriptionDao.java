@@ -64,6 +64,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.api.user.SubscriptionCatalog;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.SubscriptionNotificationKey;
@@ -373,7 +374,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final Catalog kbCatalog, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase shellSubscription = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<DefaultSubscriptionBase>() {
             @Override
             public DefaultSubscriptionBase inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -382,7 +383,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 return SubscriptionModelDao.toSubscription(subscriptionModel, bundleModel.getExternalKey());
             }
         });
-        return buildSubscription(shellSubscription, catalog, context);
+        return buildSubscription(shellSubscription, kbCatalog, context);
     }
 
     @Override
@@ -885,14 +886,14 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
     }
 
-    private DefaultSubscriptionBase buildSubscription(final DefaultSubscriptionBase input, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    private DefaultSubscriptionBase buildSubscription(final DefaultSubscriptionBase input, final Catalog kbCatalog, final InternalTenantContext context) throws CatalogApiException {
 
         if (input == null) {
             return null;
         }
         final List<DefaultSubscriptionBase> bundleInput = new ArrayList<DefaultSubscriptionBase>();
         if (input.getCategory() == ProductCategory.ADD_ON) {
-            final DefaultSubscriptionBase baseSubscription = getBaseSubscription(input.getBundleId(), false, catalog, context);
+            final DefaultSubscriptionBase baseSubscription = getBaseSubscription(input.getBundleId(), false, kbCatalog, context);
             if (baseSubscription == null) {
                 return null;
             }
@@ -903,7 +904,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             bundleInput.add(input);
         }
 
-        final List<DefaultSubscriptionBase> reloadedSubscriptions = buildBundleSubscriptions(bundleInput, null, null, catalog, context);
+        final List<DefaultSubscriptionBase> reloadedSubscriptions = buildBundleSubscriptions(bundleInput, null, null, kbCatalog, context);
         for (final DefaultSubscriptionBase cur : reloadedSubscriptions) {
             if (cur.getId().equals(input.getId())) {
                 return cur;
@@ -914,7 +915,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     private List<DefaultSubscriptionBase> buildBundleSubscriptions(final List<DefaultSubscriptionBase> input, @Nullable final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscription,
-                                                            @Nullable final Collection<SubscriptionBaseEvent> dryRunEvents, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+                                                            @Nullable final Collection<SubscriptionBaseEvent> dryRunEvents, final Catalog kbCatalog, final InternalTenantContext context) throws CatalogApiException {
         if (input == null || input.isEmpty()) {
             return Collections.emptyList();
         }
@@ -931,8 +932,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                        getEventsForSubscription(cur.getId(), context);
             mergeDryRunEvents(cur.getId(), events, dryRunEvents);
 
-            DefaultSubscriptionBase reloaded = createSubscriptionForInternalUse(cur, events, catalog, context);
+            DefaultSubscriptionBase reloaded = createSubscriptionForInternalUse(cur, events, kbCatalog, context);
 
+            final SubscriptionCatalog catalog = new SubscriptionCatalog(kbCatalog, clock);
             switch (cur.getCategory()) {
                 case BASE:
                     for (final SubscriptionBaseEvent event : events) {
@@ -983,7 +985,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                         events.add(addOnCancelEvent);
                         // Finally reload subscription with full set of events
-                        reloaded = createSubscriptionForInternalUse(cur, events, catalog, context);
+                        reloaded = createSubscriptionForInternalUse(cur, events, kbCatalog, context);
                     }
                     break;
                 default:
@@ -1134,11 +1136,11 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         });
     }
 
-    private DefaultSubscriptionBase createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionBaseEvent> events, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    private DefaultSubscriptionBase createSubscriptionForInternalUse(final SubscriptionBase shellSubscription, final List<SubscriptionBaseEvent> events, final Catalog kbCatalog, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase result = new DefaultSubscriptionBase(new SubscriptionBuilder(((DefaultSubscriptionBase) shellSubscription)), null, clock);
 
         if (!events.isEmpty()) {
-            result.rebuildTransitions(events, catalog);
+            result.rebuildTransitions(events, kbCatalog);
         }
         return result;
     }

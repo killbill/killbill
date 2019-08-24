@@ -87,16 +87,14 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
         final DateTime effectiveDate = existingEvent.getEffectiveDate().isBefore(transferDate) ? transferDate : existingEvent.getEffectiveDate();
 
         final PlanPhaseSpecifier spec = existingEvent.getPlanPhaseSpecifier();
-        final PlanPhase currentPhase = existingEvent.getPlanPhaseName() != null ? catalog.findPhase(existingEvent.getPlanPhaseName(), effectiveDate, subscription.getAlignStartDate()) : null;
-
-        if (spec == null || currentPhase == null) {
+        if (spec == null || existingEvent.getPlanPhaseName() == null) {
             // Ignore cancellations - we assume that transferred subscriptions should always be active
             return null;
         }
         final ApiEventBuilder apiBuilder = new ApiEventBuilder()
                 .setSubscriptionId(subscription.getId())
                 .setEventPlan(existingEvent.getPlanName())
-                .setEventPlanPhase(currentPhase.getName())
+                .setEventPlanPhase(existingEvent.getPlanPhaseName())
                 .setEventPriceList(spec.getPriceListName())
                 .setEffectiveDate(effectiveDate)
                 .setFromDisk(true);
@@ -114,7 +112,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
             case PHASE:
                 newEvent = firstEvent ? new ApiEventTransfer(apiBuilder) :
-                           PhaseEventData.createNextPhaseEvent(subscription.getId(), currentPhase.getName(), effectiveDate);
+                           PhaseEventData.createNextPhaseEvent(subscription.getId(), existingEvent.getPlanPhaseName(), effectiveDate);
                 break;
 
             case CANCEL:

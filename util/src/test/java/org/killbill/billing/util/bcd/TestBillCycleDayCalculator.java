@@ -53,8 +53,6 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
 
         // Create a the base plan associated with that subscription
         final Plan plan = Mockito.mock(Plan.class);
-        final Catalog catalog = Mockito.mock(Catalog.class);
-        Mockito.when(catalog.findPlan(Mockito.anyString(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(plan);
         Mockito.when(subscription.getLastActivePlan()).thenReturn(plan);
         Mockito.when(subscription.getDateOfFirstRecurringNonZeroCharge()).thenReturn(bpStartDateUTC);
 

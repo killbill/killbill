@@ -852,8 +852,6 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
             Mockito.when(planPhase.getRecurring()).thenReturn(recurring);
             Mockito.when(planPhase.getUsages()).thenReturn(new DefaultUsage[0]);
 
-            Mockito.when(catalog.findPhase(Mockito.<String>any(), Mockito.<DateTime>any(), Mockito.<DateTime>any())).thenReturn(planPhase);
-
             final BigDecimal fixedPrice = BigDecimal.TEN;
             final BigDecimal recurringPrice = BigDecimal.TEN;
 

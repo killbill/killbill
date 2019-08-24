@@ -33,7 +33,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -42,6 +41,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -284,7 +284,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public DateTime changePlan(final EntitlementSpecifier spec,
-                                final CallContext context) throws SubscriptionBaseApiException {
+                               final CallContext context) throws SubscriptionBaseApiException {
         return apiService.changePlan(this, spec, context);
     }
 
@@ -499,6 +499,14 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return initialPlan.dateOfFirstRecurringNonZeroCharge(getStartDate(), initialPhaseType);
     }
 
+    @Override
+    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final Catalog kbCatalog) throws CatalogApiException {
+        final SubscriptionCatalog catalog = new SubscriptionCatalog(kbCatalog, clock);
+        // TODO_CATALOG is this really the startDate we should be using ?
+        final BillingAlignment alignment = catalog.billingAlignment(spec, transitionTime, getStartDate());
+        return alignment;
+    }
+
     public SubscriptionBaseTransitionData getTransitionFromEvent(final SubscriptionBaseEvent event, final int seqId) {
         if (transitions == null || event == null) {
             return null;
@@ -535,29 +543,30 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog catalog) throws CatalogApiException {
+    // TODO_CATALOG fix exception
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog kbCatalog) throws CatalogApiException {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
+
+        final SubscriptionCatalog catalog = new SubscriptionCatalog(kbCatalog, clock);
+
         final List<SubscriptionBillingEvent> result = new ArrayList<SubscriptionBillingEvent>();
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
                 clock, transitions, Order.ASC_FROM_PAST,
                 Visibility.ALL, TimeLimit.ALL);
 
-
         final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<SubscriptionBillingEvent>();
         boolean foundInitialEvent = false;
         while (it.hasNext()) {
 
-
             final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
 
-            final boolean isCreateOrTransfer = cur.getTransitionType() ==SubscriptionBaseTransitionType.CREATE ||
+            final boolean isCreateOrTransfer = cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
                                                cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER;
             final boolean isChangeEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE;
             final boolean isCancelEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CANCEL;
-
 
             if (!foundInitialEvent) {
                 foundInitialEvent = isCreateOrTransfer;
@@ -585,7 +594,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 final Plan plan;
                 final PlanPhase planPhase;
                 if (isCancelEvent) {
-                    plan = catalog.findPlan(cur.getPreviousPlan().getName(), cur.getEffectiveTransitionTime(), result.get(result.size()-1).getEffectiveDate());
+                    plan = catalog.findPlan(cur.getPreviousPlan().getName(), cur.getEffectiveTransitionTime(), result.get(result.size() - 1).getEffectiveDate());
                     planPhase = plan.findPhase(cur.getPreviousPhase().getName());
                 } else {
                     plan = cur.getNextPlan();
@@ -742,13 +751,18 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 "Failed to find CurrentPhaseStart id = %s", getId().toString()));
     }
 
-    public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final Catalog catalog) throws CatalogApiException {
+    public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final Catalog kbCatalog) throws CatalogApiException {
 
         if (inputEvents == null) {
             return;
         }
 
         this.events = inputEvents;
+
+        // TODO_CATALOG Safety until code is stable
+        Preconditions.checkState(!(kbCatalog instanceof SubscriptionCatalog), "Unexpected catalog type");
+
+        final SubscriptionCatalog catalog = new SubscriptionCatalog(kbCatalog, clock);
 
         Collections.sort(inputEvents, new Comparator<SubscriptionBaseEvent>() {
             @Override

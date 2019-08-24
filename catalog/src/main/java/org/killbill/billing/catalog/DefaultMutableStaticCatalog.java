@@ -30,6 +30,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.rules.DefaultPlanRules;
 
 public class DefaultMutableStaticCatalog extends StandaloneCatalog implements MutableStaticCatalog {
 
@@ -48,7 +49,7 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
             .setUnits(input.getCurrentUnits())
             .setProducts(input.getCurrentProducts())
             .setPlans(input.getCurrentPlans())
-            .setPlanRules(input.getPlanRules())
+            .setPlanRules((DefaultPlanRules) input.getPlanRules())
             .setPriceLists(input.getPriceLists());
         initialize(this);
     }

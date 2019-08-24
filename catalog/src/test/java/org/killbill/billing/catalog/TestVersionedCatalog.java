@@ -39,6 +39,8 @@ import org.testng.annotations.Test;
 
 import io.netty.buffer.ByteBuf;
 
+
+// TODO_CATALOG MOVE COMMENTED TESTS TO SUBSCRIPTION MODULE
 public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
     // WeaponsHireSmall-1.xml
@@ -73,6 +75,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     //
     // We use shotgun-quarterly only available from dt2 (v2) and with a price change in V2a
     //
+    /*
     @Test(groups = "fast", description = "See https://github.com/killbill/killbill/issues/1110")
     public void testFindPlanAcrossVersions() throws Exception {
 
@@ -94,6 +97,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     // We use pistol-monthly available from dt1 (v1) and with a first price change in V2a, and then in v3
     // Also  dt2a < effectiveDateForExistingSubscriptions < dt3
     //
+
     @Test(groups = "fast")
     public void testFindPlanAcrossVersionsUsingEffectiveDateForExistingSubscriptions() throws Exception {
 
@@ -128,6 +132,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
 
 
     // Similar to testFindPlanWithDates, but use the API with PlanSpecifier
+
     @Test(groups = "fast")
     public void testFindPlanWithDatesAndPlanSpecifier() throws Exception {
 
@@ -157,22 +162,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
     }
-
-    @Test(groups = "fast")
-    public void testErrorOnDateTooEarly() throws CatalogApiException {
-        // We find it although the date provided is too early because we default to first catalog version
-        vc.findPlan("shotgun-monthly", dt1);
-
-        try {
-            // We **don't find it** because date is too early and not part of first catalog version
-            vc.findPlan("shotgun-quarterly", dt1);
-            Assert.fail("Date is too early an exception should have been thrown");
-        } catch (final CatalogApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PLAN.getCode());
-        }
-    }
-
-    @Test(groups = "fast")
+        @Test(groups = "fast")
     public void testWithDeletedPlan() throws CatalogApiException {
         // We find it because this is version 2 whose effectiveDate is "2011-02-02T00:00:00+00:00"
         vc.findPlan("shotgun-quarterly", dt2);
@@ -189,9 +179,25 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
         // This would be called for instance when computing billing events (dt3 could be a future PHASE event for instance)
         vc.findPlan("shotgun-quarterly", dt3, dt1);
     }
+*/
 
     @Test(groups = "fast")
-    public void testDefaultPlanRulesExternalizable() throws IOException {
+    public void testErrorOnDateTooEarly() throws CatalogApiException {
+        // We find it although the date provided is too early because we default to first catalog version
+        vc.findPlan("shotgun-monthly", dt1);
+
+        try {
+            // We **don't find it** because date is too early and not part of first catalog version
+            vc.findPlan("shotgun-quarterly", dt1);
+            Assert.fail("Date is too early an exception should have been thrown");
+        } catch (final CatalogApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PLAN.getCode());
+        }
+    }
+
+
+    @Test(groups = "fast")
+    public void testDefaultPlanRulesExternalizable() throws IOException, CatalogApiException {
         final Codec codec = new SerializationCodec();
         final ByteBuf byteBuf = codec.getValueEncoder().encode(vc.getVersions().get(0).getPlanRules());
         final DefaultPlanRules planRules = (DefaultPlanRules) codec.getValueDecoder().decode(byteBuf, null);
@@ -201,7 +207,7 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testProductExternalizable() throws IOException {
         final Codec codec = new SerializationCodec();
-        for (final Product product : vc.getVersions().get(0).getCatalogEntityCollectionProduct().getEntries()) {
+        for (final Product product : ((StandaloneCatalog) vc.getVersions().get(0)).getCatalogEntityCollectionProduct().getEntries()) {
             final ByteBuf byteBuf = codec.getValueEncoder().encode(product);
             final Product product2 = (Product) codec.getValueDecoder().decode(byteBuf, null);
             Assert.assertEquals(product2, product);
@@ -211,9 +217,9 @@ public class TestVersionedCatalog extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCatalogEntityCollectionProductExternalizable() throws IOException {
         final Codec codec = new SerializationCodec();
-        final ByteBuf byteBuf = codec.getValueEncoder().encode(vc.getVersions().get(0).getCatalogEntityCollectionProduct());
+        final ByteBuf byteBuf = codec.getValueEncoder().encode(((StandaloneCatalog) vc.getVersions().get(0)).getCatalogEntityCollectionProduct());
         final Collection products = (CatalogEntityCollection) codec.getValueDecoder().decode(byteBuf, null);
-        Assert.assertEquals(products, vc.getVersions().get(0).getCatalogEntityCollectionProduct());
+        Assert.assertEquals(products, ((StandaloneCatalog) vc.getVersions().get(0)).getCatalogEntityCollectionProduct());
     }
 
     @Test(groups = "fast")

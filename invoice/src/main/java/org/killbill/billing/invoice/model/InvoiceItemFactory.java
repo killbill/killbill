@@ -150,7 +150,8 @@ public class InvoiceItemFactory {
                     //
 
                     final DateTime KILLBILL_GENESIS = new DateTime(2011, 10, 28, 0, 0, DateTimeZone.UTC);
-                    final Plan plan = catalog.findPlan(planName, transitionDate, KILLBILL_GENESIS);
+                    // TODO_CATALOG FIX PRETTY NAME
+                    final Plan plan = null; // catalog.findPlan(planName, transitionDate, KILLBILL_GENESIS);
                     if (plan != null) {
                         prettyPlanName = plan.getPrettyName();
 

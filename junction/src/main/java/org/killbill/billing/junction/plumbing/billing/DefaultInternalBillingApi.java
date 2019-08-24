@@ -288,7 +288,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             Integer overridenBCD = null;
             for (final SubscriptionBillingEvent transition : billingTransitions) {
-                final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(transition), transition.getEffectiveDate(), subscription.getStartDate());
+                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(transition.getPlan().getName(), transition.getPlanPhase().getPhaseType());
+                final BillingAlignment alignment = subscription.getBillingAlignment(spec, transition.getEffectiveDate(), catalog);
 
                 //
                 // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
@@ -312,10 +313,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             alignment = BillingAlignment.SUBSCRIPTION;
         }
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
-    }
-
-    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final SubscriptionBillingEvent transition) {
-        return new PlanPhaseSpecifier(transition.getPlan().getName(), transition.getPlanPhase().getPhaseType());
     }
 
     private boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {

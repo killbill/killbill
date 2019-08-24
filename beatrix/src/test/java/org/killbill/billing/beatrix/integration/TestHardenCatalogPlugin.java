@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.TestModelStandalonePluginCatalog;
 import org.killbill.billing.catalog.plugin.TestModelVersionedPluginCatalog;
@@ -263,18 +264,19 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
             this.throwOnZeroCounter = 0;
         }
 
-        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final List<StandaloneCatalog> input) {
-            return Iterables.transform(input, new Function<StandaloneCatalog, StandalonePluginCatalog>() {
+        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final List<StaticCatalog> input) {
+            return Iterables.transform(input, new Function<StaticCatalog, StandalonePluginCatalog>() {
                 @Override
-                public StandalonePluginCatalog apply(final StandaloneCatalog input) {
+                public StandalonePluginCatalog apply(final StaticCatalog input) {
 
+                    final StandaloneCatalog standaloneCatalog = (StandaloneCatalog) input;
                     return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
-                                                                ImmutableList.copyOf(input.getCurrentSupportedCurrencies()),
-                                                                ImmutableList.<Product>copyOf(input.getCurrentProducts()),
-                                                                ImmutableList.<Plan>copyOf(input.getCurrentPlans()),
-                                                                input.getPriceLists().getDefaultPricelist(),
-                                                                ImmutableList.<PriceList>copyOf(input.getPriceLists().getChildPriceLists()),
-                                                                input.getPlanRules(),
+                                                                ImmutableList.copyOf(standaloneCatalog.getCurrentSupportedCurrencies()),
+                                                                ImmutableList.<Product>copyOf(standaloneCatalog.getCurrentProducts()),
+                                                                ImmutableList.<Plan>copyOf(standaloneCatalog.getCurrentPlans()),
+                                                                standaloneCatalog.getPriceLists().getDefaultPricelist(),
+                                                                ImmutableList.<PriceList>copyOf(standaloneCatalog.getPriceLists().getChildPriceLists()),
+                                                                standaloneCatalog.getPlanRules(),
                                                                 null /* ImmutableList.<Unit>copyOf(input.getCurrentUnits()) */);
                 }
 
