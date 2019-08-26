@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -51,12 +51,8 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingStateType;
-import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApi;
@@ -96,13 +92,17 @@ import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -115,7 +115,6 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildBaseEntitlementWithAddOnsSpecifier;
 import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildEntitlementSpecifier;
-import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildPlanPhasePriceOverrides;
 
 @Path(JaxrsResource.SUBSCRIPTIONS_PATH)
 @Api(value = JaxrsResource.SUBSCRIPTIONS_PATH, description = "Operations on subscriptions", tags = "Subscription")
@@ -624,8 +623,17 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     private static final class CompletionUserRequestEntitlement extends CompletionUserRequestBase {
 
-        public CompletionUserRequestEntitlement(final UUID userToken) {
-            super(userToken);
+        private final SubscriptionApi subscriptionApi;
+        private final TagUserApi tagUserApi;
+        private final TenantContext context;
+
+        public CompletionUserRequestEntitlement(final SubscriptionApi subscriptionApi,
+                                                final TagUserApi tagUserApi,
+                                                final CallContext contextNoAccountId) {
+            super(contextNoAccountId.getUserToken());
+            this.subscriptionApi = subscriptionApi;
+            this.tagUserApi = tagUserApi;
+            this.context = contextNoAccountId;
         }
 
         @Override
@@ -637,6 +645,30 @@ public class SubscriptionResource extends JaxRsResourceBase {
         @Override
         public void onBlockingState(final BlockingTransitionInternalEvent event) {
             log.info(String.format("Got event BlockingTransitionInternalEvent token = %s", event.getUserToken()));
+
+            try {
+                UUID accountId = null;
+                switch (event.getBlockingType()) {
+                    case SUBSCRIPTION:
+                        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(event.getBlockableId(), context);
+                        accountId = subscription.getAccountId();
+                        break;
+                    case SUBSCRIPTION_BUNDLE:
+                        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(event.getBlockableId(), context);
+                        accountId = bundle.getAccountId();
+                        break;
+                    case ACCOUNT:
+                        accountId = event.getBlockableId();
+                        break;
+                }
+                Preconditions.checkNotNull(accountId, "accountId should not be null - missing switch branch?");
+                final List<Tag> accountTags = tagUserApi.getTagsForAccountType(accountId, ObjectType.ACCOUNT, false, context);
+                if (is_AUTO_INVOICING_OFF(accountTags)) {
+                    notifyForCompletion();
+                }
+            } catch (final SubscriptionApiException e) {
+                log.warn("Unable to retrieve subscription -- callCompletion might time out if the account is AUTO_INVOICING_OFF", e);
+            }
         }
 
         @Override
@@ -683,6 +715,15 @@ public class SubscriptionResource extends JaxRsResourceBase {
             log.info("Got event InvoicePaymentError token='{}'", event.getUserToken());
             notifyForCompletion();
         }
+
+        private boolean is_AUTO_INVOICING_OFF(final Collection<Tag> tags) {
+            return ControlTagType.isAutoInvoicingOff(Collections2.transform(tags, new Function<Tag, UUID>() {
+                @Override
+                public UUID apply(final Tag tag) {
+                    return tag.getTagDefinitionId();
+                }
+            }));
+        }
     }
 
     private interface EntitlementCallCompletionCallback<T> {
@@ -700,7 +741,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                             final long timeoutSec,
                                             final boolean callCompletion,
                                             final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException {
-            final CompletionUserRequestEntitlement waiter = callCompletion ? new CompletionUserRequestEntitlement(callContext.getUserToken()) : null;
+            final CompletionUserRequestEntitlement waiter = callCompletion ? new CompletionUserRequestEntitlement(subscriptionApi,
+                                                                                                                  tagUserApi,
+                                                                                                                  callContext) : null;
             try {
                 if (waiter != null) {
                     killbillHandler.registerCompletionUserRequestWaiter(waiter);
