@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.CatalogDateHelper;
 import org.killbill.billing.catalog.StandaloneCatalog;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
@@ -234,8 +234,6 @@ public class SubscriptionCatalog implements Catalog {
         return planRules.getBillingAlignment(planPhase, standaloneCatalog);
     }
 
-    // TODO_CATALOG: Private methods currently duplicated with VersionnedCatalog
-    //
     private StaticCatalog getStaticCatalog(final PlanSpecifier spec, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) throws CatalogApiException {
         final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(spec), requestedDate, subscriptionChangePlanDate);
         return entry.getStaticCatalog();

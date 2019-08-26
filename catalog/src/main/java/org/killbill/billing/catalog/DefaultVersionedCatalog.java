@@ -63,20 +63,15 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import static org.killbill.billing.ErrorCode.CAT_NO_SUCH_PLAN;
-
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements Catalog, StaticCatalog, Externalizable {
 
     private static final long serialVersionUID = 3181874902672322725L;
-
-    private Clock clock;
-
     @XmlElementWrapper(name = "versions", required = true)
     @XmlElement(name = "version", required = true)
     private final List<StandaloneCatalog> versions;
-
+    private Clock clock;
     @XmlElement(required = true)
     private String catalogName;
 
@@ -98,15 +93,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         return versions.get(indexOfVersionForDate(date.toDate()));
     }
 
-    private List<StandaloneCatalog> versionsBeforeDate(final Date date) throws CatalogApiException {
-        final List<StandaloneCatalog> result = new ArrayList<StandaloneCatalog>();
-        final int index = indexOfVersionForDate(date);
-        for (int i = 0; i <= index; i++) {
-            result.add(versions.get(i));
-        }
-        return result;
-    }
-
     private int indexOfVersionForDate(final Date date) throws CatalogApiException {
         for (int i = versions.size() - 1; i >= 0; i--) {
             final StandaloneCatalog c = versions.get(i);
@@ -122,62 +108,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             return 0;
         }
         throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, date.toString());
-    }
-
-    private CatalogPlanEntry findCatalogPlanEntry(final PlanRequestWrapper wrapper,
-                                                  final DateTime requestedDate,
-                                                  final DateTime subscriptionChangePlanDate) throws CatalogApiException {
-        final List<StandaloneCatalog> catalogs = versionsBeforeDate(requestedDate.toDate());
-        if (catalogs.isEmpty()) {
-            throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
-        }
-
-        CatalogPlanEntry candidateInSubsequentCatalog = null;
-        for (int i = catalogs.size() - 1; i >= 0; i--) { // Working backwards to find the latest applicable plan
-            final StandaloneCatalog c = catalogs.get(i);
-
-            final Plan plan;
-            try {
-                plan = wrapper.findPlan(c);
-            } catch (final CatalogApiException e) {
-                if (e.getCode() != CAT_NO_SUCH_PLAN.getCode() &&
-                    e.getCode() != ErrorCode.CAT_PLAN_NOT_FOUND.getCode()) {
-                    throw e;
-                } else {
-                    // If we can't find an entry it probably means the plan has been retired so we keep looking...
-                    continue;
-                }
-            }
-
-            final boolean oldestCatalog = (i == 0);
-            final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(c.getEffectiveDate());
-            final boolean catalogOlderThanSubscriptionChangePlanDate = !subscriptionChangePlanDate.isBefore(catalogEffectiveDate);
-            if (oldestCatalog || // Prevent issue with time granularity -- see #760
-                catalogOlderThanSubscriptionChangePlanDate) { // It's a new subscription, this plan always applies
-                return new CatalogPlanEntry(c, plan);
-            } else { // It's an existing subscription
-                if (plan.getEffectiveDateForExistingSubscriptions() != null) { // If it is null, any change to this catalog does not apply to existing subscriptions
-                    final DateTime existingSubscriptionDate = CatalogDateHelper.toUTCDateTime(plan.getEffectiveDateForExistingSubscriptions());
-                    if (requestedDate.compareTo(existingSubscriptionDate) >= 0) { // This plan is now applicable to existing subs
-                        return new CatalogPlanEntry(c, plan);
-                    }
-                } else if (candidateInSubsequentCatalog == null) {
-                    // Keep the most recent one
-                    candidateInSubsequentCatalog = new CatalogPlanEntry(c, plan);
-                }
-            }
-        }
-
-        if (candidateInSubsequentCatalog != null) {
-            return candidateInSubsequentCatalog;
-        }
-
-        final PlanSpecifier spec = wrapper.getSpec();
-        throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND,
-                                      spec.getPlanName() != null ? spec.getPlanName() : "undefined",
-                                      spec.getProductName() != null ? spec.getProductName() : "undefined",
-                                      spec.getBillingPeriod() != null ? spec.getBillingPeriod() : "undefined",
-                                      spec.getPriceListName() != null ? spec.getPriceListName() : "undefined");
     }
 
     public Clock getClock() {
@@ -256,14 +186,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     @Override
     public Product findProduct(final String name, final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).findCurrentProduct(name);
-    }
-
-
-
-    // Note that the PlanSpecifier billing period must refer here to the recurring phase one when a plan name isn't specified
-    private StaticCatalog getStaticCatalog(final PlanSpecifier spec, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) throws CatalogApiException {
-        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(spec), requestedDate, subscriptionChangePlanDate);
-        return entry.getStaticCatalog();
     }
 
     @Override
@@ -351,6 +273,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         }
     }
 
+    //TODO_CATALOG do we really need that ?
     @Override
     public Date getStandaloneCatalogEffectiveDate(final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).getEffectiveDate();
@@ -413,7 +336,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     }
 
     @Override
-    public PlanRules getPlanRules() throws CatalogApiException  {
+    public PlanRules getPlanRules() throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).getPlanRules();
     }
 
@@ -467,50 +390,4 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         initialize(tenantCatalog);
     }
 
-    private static class CatalogPlanEntry {
-
-        private final StaticCatalog staticCatalog;
-        private final Plan plan;
-
-        public CatalogPlanEntry(final StaticCatalog staticCatalog, final Plan plan) {
-            this.staticCatalog = staticCatalog;
-            this.plan = plan;
-        }
-
-        public StaticCatalog getStaticCatalog() {
-            return staticCatalog;
-        }
-
-        public Plan getPlan() {
-            return plan;
-        }
-    }
-
-    private class PlanRequestWrapper {
-
-        private final PlanSpecifier spec;
-        private final PlanPhasePriceOverridesWithCallContext overrides;
-
-        public PlanRequestWrapper(final String planName) {
-            this(new PlanSpecifier(planName));
-        }
-
-        public PlanRequestWrapper(final PlanSpecifier spec) {
-            this(spec, null);
-        }
-
-        public PlanRequestWrapper(final PlanSpecifier spec,
-                                  final PlanPhasePriceOverridesWithCallContext overrides) {
-            this.spec = spec;
-            this.overrides = overrides;
-        }
-
-        public Plan findPlan(final StandaloneCatalog catalog) throws CatalogApiException {
-            return catalog.createOrFindCurrentPlan(spec, overrides);
-        }
-
-        public PlanSpecifier getSpec() {
-            return spec;
-        }
-    }
 }

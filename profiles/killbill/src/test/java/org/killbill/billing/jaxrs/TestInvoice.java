@@ -85,7 +85,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceJson.getItems().size(), 1);
         final InvoiceItem invoiceItem = invoiceJson.getItems().get(0);
         assertEquals(invoiceItem.getProductName(), "Shotgun");
-        
+
         // TODO_CATALOG fix pretty name
         //assertEquals(invoiceItem.getPrettyProductName(), "Shotgun");
         assertEquals(invoiceItem.getPlanName(), "shotgun-monthly");
