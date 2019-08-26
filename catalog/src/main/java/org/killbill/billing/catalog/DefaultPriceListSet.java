@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
@@ -95,6 +96,12 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
         }
         throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, priceListName);
     }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return root;
+    }
+
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {

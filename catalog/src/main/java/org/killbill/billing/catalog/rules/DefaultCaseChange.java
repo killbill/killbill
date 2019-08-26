@@ -149,6 +149,11 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
         return null;
 
     }
+    @Override
+    public StaticCatalog getCatalog() {
+        return root;
+    }
+
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {

@@ -62,6 +62,11 @@ public abstract class DefaultCasePhase<T> extends DefaultCaseStandardNaming<T> i
     }
 
     @Override
+    public StaticCatalog getCatalog() {
+        return root;
+    }
+
+    @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
         return errors;
     }

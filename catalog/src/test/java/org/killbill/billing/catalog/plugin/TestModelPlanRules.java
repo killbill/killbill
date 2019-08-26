@@ -32,6 +32,7 @@ import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.rules.CaseBillingAlignment;
 import org.killbill.billing.catalog.api.rules.CaseCancelPolicy;
 import org.killbill.billing.catalog.api.rules.CaseChangePlanAlignment;
@@ -151,6 +152,11 @@ public class TestModelPlanRules implements PlanRules {
                                  final PriceList priceList,
                                  final PriceList destPriceList) {
         casePriceList.add(new TestModelCasePriceList(product, productCategory, billingPeriod, priceList, destPriceList));
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return null;
     }
 
     @Override

@@ -56,8 +56,6 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
-import com.google.common.annotations.VisibleForTesting;
-
 @XmlRootElement(name = "plans")
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements Plan, Externalizable {
@@ -98,21 +96,16 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     private String priceListName;
 
-    // Not exposed in XML
-    @VisibleForTesting
-    StandaloneCatalog staticCatalog;
-
     // For deserialization
     public DefaultPlan() {
     }
 
+    // TODO_CATALOG : Can we remove this?
     public DefaultPlan(final StandaloneCatalog staticCatalog) {
-        this.staticCatalog = staticCatalog;
         initialPhases = new DefaultPlanPhase[0];
     }
 
-    public DefaultPlan(final StandaloneCatalog staticCatalog, final String planName, final DefaultPlan in, final PlanPhasePriceOverride[] overrides) {
-        this.staticCatalog = staticCatalog;
+    public DefaultPlan(final String planName, final DefaultPlan in, final PlanPhasePriceOverride[] overrides) {
         this.name = planName;
         this.effectiveDateForExistingSubscriptions = in.getEffectiveDateForExistingSubscriptions();
         this.product = (DefaultProduct) in.getProduct();
@@ -131,9 +124,14 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return effectiveDateForExistingSubscriptions;
     }
 
+    public void setEffectiveDateForExistingSubscriptions(
+            final Date effectiveDateForExistingSubscriptions) {
+        this.effectiveDateForExistingSubscriptions = effectiveDateForExistingSubscriptions;
+    }
+
     @Override
     public StaticCatalog getCatalog() {
-        return staticCatalog;
+        return root;
     }
 
     @Override
@@ -141,9 +139,19 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return recurringBillingMode;
     }
 
+    public DefaultPlan setRecurringBillingMode(final BillingMode billingMode) {
+        this.recurringBillingMode = billingMode;
+        return this;
+    }
+
     @Override
     public DefaultPlanPhase[] getInitialPhases() {
         return initialPhases;
+    }
+
+    public DefaultPlan setInitialPhases(final DefaultPlanPhase[] phases) {
+        this.initialPhases = phases;
+        return this;
     }
 
     @Override
@@ -151,9 +159,19 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return product;
     }
 
+    public DefaultPlan setProduct(final Product product) {
+        this.product = (DefaultProduct) product;
+        return this;
+    }
+
     @Override
     public String getPriceListName() {
         return priceListName;
+    }
+
+    public DefaultPlan setPriceListName(final String priceListName) {
+        this.priceListName = priceListName;
+        return this;
     }
 
     @Override
@@ -161,14 +179,29 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return name;
     }
 
+    public DefaultPlan setName(final String name) {
+        this.name = name;
+        return this;
+    }
+
     @Override
     public String getPrettyName() {
         return prettyName;
     }
 
+    public DefaultPlan setPrettyName(final String prettyName) {
+        this.prettyName = prettyName;
+        return this;
+    }
+
     @Override
     public DefaultPlanPhase getFinalPhase() {
         return finalPhase;
+    }
+
+    public DefaultPlan setFinalPhase(final DefaultPlanPhase finalPhase) {
+        this.finalPhase = finalPhase;
+        return this;
     }
 
     @Override
@@ -206,6 +239,11 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         return plansAllowedInBundle;
     }
 
+    public DefaultPlan setPlansAllowedInBundle(final Integer plansAllowedInBundle) {
+        this.plansAllowedInBundle = plansAllowedInBundle;
+        return this;
+    }
+
     @Override
     public Iterator<PlanPhase> getInitialPhaseIterator() {
         final Collection<PlanPhase> list = new ArrayList<PlanPhase>();
@@ -234,7 +272,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
         }
 
         this.priceListName = this.priceListName != null ? this.priceListName : findPriceListForPlan(catalog);
-        this.staticCatalog = catalog;
+        this.root = catalog;
     }
 
     @Override
@@ -277,51 +315,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             throw new IllegalStateException("plansAllowedInBundle should have been automatically been initialized with DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE (-1)");
         }
         return errors;
-    }
-
-    public void setEffectiveDateForExistingSubscriptions(
-            final Date effectiveDateForExistingSubscriptions) {
-        this.effectiveDateForExistingSubscriptions = effectiveDateForExistingSubscriptions;
-    }
-
-    public DefaultPlan setName(final String name) {
-        this.name = name;
-        return this;
-    }
-
-    public DefaultPlan setPrettyName(final String prettyName) {
-        this.prettyName = prettyName;
-        return this;
-    }
-
-    public DefaultPlan setFinalPhase(final DefaultPlanPhase finalPhase) {
-        this.finalPhase = finalPhase;
-        return this;
-    }
-
-    public DefaultPlan setProduct(final Product product) {
-        this.product = (DefaultProduct) product;
-        return this;
-    }
-
-    public DefaultPlan setPriceListName(final String priceListName) {
-        this.priceListName = priceListName;
-        return this;
-    }
-
-    public DefaultPlan setInitialPhases(final DefaultPlanPhase[] phases) {
-        this.initialPhases = phases;
-        return this;
-    }
-
-    public DefaultPlan setPlansAllowedInBundle(final Integer plansAllowedInBundle) {
-        this.plansAllowedInBundle = plansAllowedInBundle;
-        return this;
-    }
-
-    public DefaultPlan setRecurringBillingMode(final BillingMode billingMode) {
-        this.recurringBillingMode = billingMode;
-        return this;
     }
 
     @Override

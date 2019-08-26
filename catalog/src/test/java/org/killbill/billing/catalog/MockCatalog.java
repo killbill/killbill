@@ -48,11 +48,13 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
     private PlanAlignmentCreate planCreateAlignment;
 
     public MockCatalog() {
+        setUnits(new DefaultUnit[0]);
         setEffectiveDate(new Date());
         setProducts(MockProduct.createAll());
         setPlans(MockPlan.createAll());
         populateRules();
         populatePriceLists();
+        initialize(this);
     }
 
     public void populateRules() {

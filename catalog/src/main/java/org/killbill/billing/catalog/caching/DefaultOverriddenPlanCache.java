@@ -106,7 +106,7 @@ public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
         final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs = overrideDao.getOverriddenPlanPhases(planDefRecordId, context);
         final DefaultPlan defaultPlan = catalog.findCurrentPlan(parentPlanName);
         final PlanPhasePriceOverride[] overrides = createOverrides(defaultPlan, phaseDefs, context);
-        final DefaultPlan result = new DefaultPlan(catalog, planName, defaultPlan, overrides);
+        final DefaultPlan result = new DefaultPlan(planName, defaultPlan, overrides);
         result.initialize(catalog);
         return result;
     }

@@ -65,7 +65,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
         PlanChangeResult result = null;
         try {
-            result = ((DefaultPlanRules) cat.getPlanRules()).planChange(from, to, cat);
+            result = ((DefaultPlanRules) cat.getPlanRules()).getPlanChangeResult(from, to);
         } catch (IllegalPlanChange e) {
             Assert.fail("We should not have triggered this error");
         } catch (CatalogApiException e) {
@@ -89,7 +89,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
         PlanChangeResult result = null;
         try {
-            result = ((DefaultPlanRules) cat.getPlanRules()).planChange(from, to, cat);
+            result = cat.getPlanRules().getPlanChangeResult(from, to);
         } catch (IllegalPlanChange e) {
             Assert.fail("We should not have triggered this error");
         } catch (CatalogApiException e) {

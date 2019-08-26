@@ -17,8 +17,6 @@
 package org.killbill.billing.catalog.rules;
 
 
-import java.net.URI;
-
 import org.killbill.billing.catalog.CatalogSafetyInitializer;
 import org.killbill.billing.catalog.DefaultPriceList;
 import org.killbill.billing.catalog.DefaultProduct;

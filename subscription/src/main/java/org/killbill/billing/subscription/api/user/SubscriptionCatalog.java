@@ -24,8 +24,6 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.Catalog;
@@ -42,7 +40,8 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Unit;
-import org.killbill.billing.catalog.rules.DefaultPlanRules;
+import org.killbill.billing.catalog.api.rules.PlanRules;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.clock.Clock;
 
 import static org.killbill.billing.ErrorCode.CAT_NO_SUCH_PLAN;
@@ -151,8 +150,13 @@ public class SubscriptionCatalog implements Catalog {
         if (nextCatalogVersion == null) {
             return null;
         }
-        // TODO_CATALOG Need to remove dependency to catalog module !
-        return ((StandaloneCatalog) nextCatalogVersion).getPlans().findByName(curPlan.getName());
+
+        // TODO_CATALOG should we worry about cost of exception handling ?
+        try {
+            return nextCatalogVersion.findCurrentPlan(curPlan.getName());
+        } catch (CatalogApiException e) {
+            return null;
+        }
     }
 
     // TODO_CATALOG see #1190
@@ -173,8 +177,8 @@ public class SubscriptionCatalog implements Catalog {
 
     private PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog standaloneCatalog)
             throws CatalogApiException {
-        final DefaultPlanRules planRules = (DefaultPlanRules) standaloneCatalog.getPlanRules();
-        return planRules.planChange(from, to, standaloneCatalog);
+        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        return planRules.getPlanChangeResult(from, to);
     }
 
     public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase,
@@ -192,8 +196,8 @@ public class SubscriptionCatalog implements Catalog {
 
     private BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final StaticCatalog standaloneCatalog)
             throws CatalogApiException {
-        final DefaultPlanRules planRules = (DefaultPlanRules) standaloneCatalog.getPlanRules();
-        return planRules.getPlanCancelPolicy(planPhase, standaloneCatalog);
+        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        return planRules.getPlanCancelPolicy(planPhase);
     }
 
     public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier,
@@ -211,8 +215,8 @@ public class SubscriptionCatalog implements Catalog {
 
     private PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final StaticCatalog standaloneCatalog)
             throws CatalogApiException {
-        final DefaultPlanRules planRules = (DefaultPlanRules) standaloneCatalog.getPlanRules();
-        return planRules.getPlanCreateAlignment(specifier, standaloneCatalog);
+        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        return planRules.getPlanCreateAlignment(specifier);
     }
 
     public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase,
@@ -230,8 +234,8 @@ public class SubscriptionCatalog implements Catalog {
 
     private BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final StaticCatalog standaloneCatalog)
             throws CatalogApiException {
-        final DefaultPlanRules planRules = (DefaultPlanRules) standaloneCatalog.getPlanRules();
-        return planRules.getBillingAlignment(planPhase, standaloneCatalog);
+        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        return planRules.getBillingAlignment(planPhase);
     }
 
     private StaticCatalog getStaticCatalog(final PlanSpecifier spec, final DateTime requestedDate, final DateTime subscriptionChangePlanDate) throws CatalogApiException {

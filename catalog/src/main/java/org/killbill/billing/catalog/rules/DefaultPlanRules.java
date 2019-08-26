@@ -87,6 +87,12 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
     public DefaultPlanRules() {
     }
 
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return root;
+    }
+
     @Override
     public Iterable<CaseChangePlanPolicy> getCaseChangePlanPolicy() {
         return ImmutableList.<CaseChangePlanPolicy>copyOf(changeCase);
@@ -117,26 +123,30 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
         return ImmutableList.<CasePriceList>copyOf(priceListCase);
     }
 
-    public PlanAlignmentCreate getPlanCreateAlignment(final PlanSpecifier specifier, final StaticCatalog catalog) throws CatalogApiException {
-        final PlanAlignmentCreate result = DefaultCase.getResult(createAlignmentCase, specifier, catalog);
+    @Override
+    public PlanAlignmentCreate getPlanCreateAlignment(final PlanSpecifier specifier) throws CatalogApiException {
+        final PlanAlignmentCreate result = DefaultCase.getResult(createAlignmentCase, specifier, root);
         return (result != null) ? result : PlanAlignmentCreate.START_OF_BUNDLE;
     }
 
-    public BillingActionPolicy getPlanCancelPolicy(final PlanPhaseSpecifier planPhase, final StaticCatalog catalog) throws CatalogApiException {
-        final BillingActionPolicy result = DefaultCasePhase.getResult(cancelCase, planPhase, catalog);
+    @Override
+    public BillingActionPolicy getPlanCancelPolicy(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
+        final BillingActionPolicy result = DefaultCasePhase.getResult(cancelCase, planPhase, root);
         return (result != null) ? result : BillingActionPolicy.END_OF_TERM;
     }
 
-    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier planPhase, final StaticCatalog catalog) throws CatalogApiException {
-        final BillingAlignment result = DefaultCasePhase.getResult(billingAlignmentCase, planPhase, catalog);
+    @Override
+    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier planPhase) throws CatalogApiException {
+        final BillingAlignment result = DefaultCasePhase.getResult(billingAlignmentCase, planPhase, root);
         return (result != null) ? result : BillingAlignment.ACCOUNT;
     }
 
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
+    @Override
+    public PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
 
         final DefaultPriceList toPriceList = to.getPriceListName() != null ?
-                                             (DefaultPriceList) catalog.findCurrentPricelist(to.getPriceListName()) :
-                                             findPriceList(from, catalog);
+                                             (DefaultPriceList) root.findCurrentPricelist(to.getPriceListName()) :
+                                             findPriceList(from);
 
         // If we use old scheme {product, billingPeriod, pricelist}, ensure pricelist is correct
         // (Pricelist may be null because if it is unspecified this is the principal use-case)
@@ -144,33 +154,33 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
                                               new PlanSpecifier(to.getProductName(), to.getBillingPeriod(), toPriceList.getName()) :
                                               to;
 
-        final BillingActionPolicy policy = getPlanChangePolicy(from, toWithPriceList, catalog);
+        final BillingActionPolicy policy = getPlanChangePolicy(from, toWithPriceList);
         if (policy == BillingActionPolicy.ILLEGAL) {
             throw new IllegalPlanChange(from, toWithPriceList);
         }
 
-        final PlanAlignmentChange alignment = getPlanChangeAlignment(from, toWithPriceList, catalog);
+        final PlanAlignmentChange alignment = getPlanChangeAlignment(from, toWithPriceList);
 
         return new PlanChangeResult(toPriceList, policy, alignment);
     }
 
     private PlanAlignmentChange getPlanChangeAlignment(final PlanPhaseSpecifier from,
-                                                       final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
-        final PlanAlignmentChange result = DefaultCaseChange.getResult(changeAlignmentCase, from, to, catalog);
+                                                       final PlanSpecifier to) throws CatalogApiException {
+        final PlanAlignmentChange result = DefaultCaseChange.getResult(changeAlignmentCase, from, to, root);
         return (result != null) ? result : PlanAlignmentChange.START_OF_BUNDLE;
     }
 
     private BillingActionPolicy getPlanChangePolicy(final PlanPhaseSpecifier from,
-                                                    final PlanSpecifier to, final StaticCatalog catalog) throws CatalogApiException {
-        final BillingActionPolicy result = DefaultCaseChange.getResult(changeCase, from, to, catalog);
+                                                    final PlanSpecifier to) throws CatalogApiException {
+        final BillingActionPolicy result = DefaultCaseChange.getResult(changeCase, from, to, root);
         return (result != null) ? result : BillingActionPolicy.END_OF_TERM;
     }
 
-    private DefaultPriceList findPriceList(final PlanSpecifier specifier, final StaticCatalog catalog) throws CatalogApiException {
-        DefaultPriceList result = DefaultCasePriceList.getResult(priceListCase, specifier, catalog);
+    private DefaultPriceList findPriceList(final PlanSpecifier specifier) throws CatalogApiException {
+        DefaultPriceList result = DefaultCasePriceList.getResult(priceListCase, specifier, root);
         if (result == null) {
-            final String priceListName = specifier.getPlanName() != null ? catalog.findCurrentPlan(specifier.getPlanName()).getPriceListName() : specifier.getPriceListName();
-            result = (DefaultPriceList) catalog.findCurrentPricelist(priceListName);
+            final String priceListName = specifier.getPlanName() != null ? root.findCurrentPlan(specifier.getPlanName()).getPriceListName() : specifier.getPriceListName();
+            result = (DefaultPriceList) root.findCurrentPricelist(priceListName);
         }
         return result;
     }

@@ -100,8 +100,7 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-catalog</artifactId>
-            <!-- TODO create proper Catalog#getNextPlanVersion api -->
-            <!-- <scope>test</scope>-->
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
