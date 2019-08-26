@@ -57,6 +57,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.svcs.DefaultPlanPhasePriceOverridesWithCallContext;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;

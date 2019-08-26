@@ -31,7 +31,7 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
-import org.killbill.billing.subscription.api.user.SubscriptionCatalog;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBase;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;

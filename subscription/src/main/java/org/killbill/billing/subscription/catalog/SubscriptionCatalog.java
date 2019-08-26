@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.billing.subscription.api.user;
+package org.killbill.billing.subscription.catalog;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -39,7 +39,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
-import org.killbill.billing.subscription.api.user.SubscriptionCatalog;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 
 import com.google.common.base.Predicate;

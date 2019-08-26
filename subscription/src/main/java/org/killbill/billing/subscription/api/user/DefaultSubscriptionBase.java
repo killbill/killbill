@@ -55,6 +55,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Order;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.TimeLimit;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Visibility;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;

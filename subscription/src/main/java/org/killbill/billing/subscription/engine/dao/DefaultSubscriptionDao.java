@@ -64,7 +64,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
-import org.killbill.billing.subscription.api.user.SubscriptionCatalog;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.SubscriptionNotificationKey;

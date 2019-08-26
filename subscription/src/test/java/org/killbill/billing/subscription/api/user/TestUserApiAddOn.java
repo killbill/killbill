@@ -40,6 +40,7 @@ import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;

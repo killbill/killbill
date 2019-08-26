@@ -32,7 +32,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
-import org.killbill.billing.subscription.api.user.SubscriptionCatalog;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;

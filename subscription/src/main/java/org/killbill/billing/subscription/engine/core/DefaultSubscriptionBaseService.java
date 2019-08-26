@@ -35,7 +35,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
-import org.killbill.billing.subscription.api.user.SubscriptionCatalog;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
