@@ -564,7 +564,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "        </plan>\n" +
                                    "    </plans>\n" +
                                    "    <priceLists>\n" +
-                                   "        <defaultPriceList name=\"DEFAULT\">\n" +
+                                   "        <defaultPriceList name=\"DEFAULT\" prettyName=\"DEFAULT\">\n" +
                                    "            <plans>\n" +
                                    "                <plan>dynamic-annual</plan>\n" +
                                    "                <plan>sports-monthly</plan>\n" +

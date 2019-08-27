@@ -100,7 +100,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     public DefaultPlan() {
     }
 
-    // TODO_CATALOG : Can we remove this?
     public DefaultPlan(final StandaloneCatalog staticCatalog) {
         initialPhases = new DefaultPlanPhase[0];
     }

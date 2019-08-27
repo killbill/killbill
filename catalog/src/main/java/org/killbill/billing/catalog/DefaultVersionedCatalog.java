@@ -273,7 +273,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         }
     }
 
-    //TODO_CATALOG do we really need that ?
     @Override
     public Date getStandaloneCatalogEffectiveDate(final DateTime requestedDate) throws CatalogApiException {
         return versionForDate(requestedDate).getEffectiveDate();

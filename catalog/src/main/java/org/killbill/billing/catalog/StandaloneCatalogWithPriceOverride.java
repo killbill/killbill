@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
@@ -68,6 +69,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         this.tenantRecordId = tenantRecordId;
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
+        initialize(this);
     }
 
     public Long getTenantRecordId() {

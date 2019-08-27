@@ -120,6 +120,12 @@ public class DefaultPriceListSet extends ValidatingConfig<StandaloneCatalog> imp
     @Override
     public void initialize(final StandaloneCatalog catalog) {
         super.initialize(catalog);
+        defaultPricelist.initialize(catalog);
+        if (childPriceLists != null) {
+            for (DefaultPriceList cur : childPriceLists) {
+                cur.initialize(catalog);
+            }
+        }
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
     }
 
