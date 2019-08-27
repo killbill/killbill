@@ -69,8 +69,8 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
     private static final long serialVersionUID = 3181874902672322725L;
     @XmlElementWrapper(name = "versions", required = true)
-    @XmlElement(name = "version", required = true)
-    private final List<StandaloneCatalog> versions;
+    @XmlElement(name = "version", type = StandaloneCatalog.class, required = true)
+    private final List<StaticCatalog> versions;
     private Clock clock;
     @XmlElement(required = true)
     private String catalogName;
@@ -78,24 +78,24 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     // Required for JAXB deserialization
     public DefaultVersionedCatalog() {
         this.clock = null;
-        this.versions = new ArrayList<StandaloneCatalog>();
+        this.versions = new ArrayList<StaticCatalog>();
     }
 
     public DefaultVersionedCatalog(final Clock clock) {
         this.clock = clock;
-        this.versions = new ArrayList<StandaloneCatalog>();
+        this.versions = new ArrayList<StaticCatalog>();
     }
 
     //
     // Private methods
     //
-    private StandaloneCatalog versionForDate(final DateTime date) throws CatalogApiException {
+    private StaticCatalog versionForDate(final DateTime date) throws CatalogApiException {
         return versions.get(indexOfVersionForDate(date.toDate()));
     }
 
     private int indexOfVersionForDate(final Date date) throws CatalogApiException {
         for (int i = versions.size() - 1; i >= 0; i--) {
-            final StandaloneCatalog c = versions.get(i);
+            final StaticCatalog c = versions.get(i);
             if (c.getEffectiveDate().getTime() <= date.getTime()) {
                 return i;
             }
@@ -116,13 +116,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
     @Override
     public List<StaticCatalog> getVersions() {
-        // TODO_CATALOG so ugly!!!!
-        return ImmutableList.copyOf(Iterables.transform(versions, new Function<StandaloneCatalog, StaticCatalog>() {
-            @Override
-            public StaticCatalog apply(final StandaloneCatalog input) {
-                return input;
-            }
-        }));
+        return versions;
     }
 
     public void add(final StandaloneCatalog e) {
@@ -130,9 +124,9 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             catalogName = e.getCatalogName();
         }
         versions.add(e);
-        Collections.sort(versions, new Comparator<StandaloneCatalog>() {
+        Collections.sort(versions, new Comparator<StaticCatalog>() {
             @Override
-            public int compare(final StandaloneCatalog c1, final StandaloneCatalog c2) {
+            public int compare(final StaticCatalog c1, final StaticCatalog c2) {
                 return c1.getEffectiveDate().compareTo(c2.getEffectiveDate());
             }
         });
@@ -203,7 +197,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     public ValidationErrors validate(final DefaultVersionedCatalog catalog, final ValidationErrors errors) {
         final Set<Date> effectiveDates = new TreeSet<Date>();
 
-        for (final StandaloneCatalog c : versions) {
+        for (final StaticCatalog c : versions) {
             if (effectiveDates.contains(c.getEffectiveDate())) {
                 errors.add(new ValidationError(String.format("Catalog effective date '%s' already exists for a previous version", c.getEffectiveDate()),
                                                Catalog.class, ""));
@@ -214,7 +208,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                 errors.add(new ValidationError(String.format("Catalog name '%s' is not consistent across versions ", c.getCatalogName()),
                                                Catalog.class, ""));
             }
-            errors.addAll(c.validate(c, errors));
+            errors.addAll(((StandaloneCatalog)c).validate((StandaloneCatalog) c, errors));
         }
 
         validateUniformPlanShapeAcrossVersions(errors);
@@ -224,12 +218,12 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
     private void validateUniformPlanShapeAcrossVersions(final ValidationErrors errors) {
         for (int i = 0; i < versions.size(); i++) {
-            final StandaloneCatalog c = versions.get(i);
-            for (final Plan plan : c.getPlans()) {
+            final StaticCatalog c = versions.get(i);
+            for (final Plan plan : ((StandaloneCatalog) c).getPlans()) {
 
                 for (int j = i + 1; j < versions.size(); j++) {
-                    final StandaloneCatalog next = versions.get(j);
-                    final Plan targetPlan = next.getPlans().findByName(plan.getName());
+                    final StaticCatalog next = versions.get(j);
+                    final Plan targetPlan = ((StandaloneCatalog) next).getPlans().findByName(plan.getName());
                     if (targetPlan != null) {
                         validatePlanShape(plan, targetPlan, errors);
                     }
@@ -324,7 +318,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     }
 
     @Override
-    public PriceList findCurrentPricelist(final String name)
+    public PriceList findCurrentPriceList(final String name)
             throws CatalogApiException {
         return versionForDate(clock.getUTCNow()).findCurrentPriceList(name);
     }

@@ -171,9 +171,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-    public DefaultPriceList findCurrentPriceList(final String priceListName) throws CatalogApiException {
-        return priceLists.findPriceListFrom(priceListName);
-    }
 
     public DefaultPriceListSet getPriceLists() {
         return this.priceLists;
@@ -251,7 +248,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     @Override
-    public PriceList findCurrentPricelist(final String name)
+    public PriceList findCurrentPriceList(final String name)
             throws CatalogApiException {
         if (name == null || priceLists == null) {
             throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, name);
