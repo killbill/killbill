@@ -272,7 +272,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
                                                  final Set<UUID> skipSubscriptionsSet,
-                                                 final Catalog catalog) throws CatalogApiException {
+                                                 final Catalog catalog) throws SubscriptionBaseApiException, CatalogApiException {
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
 
         for (final SubscriptionBase subscription : subscriptions) {

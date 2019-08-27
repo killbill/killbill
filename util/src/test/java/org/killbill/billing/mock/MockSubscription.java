@@ -176,12 +176,12 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog kbCatalog) throws CatalogApiException {
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog kbCatalog) throws SubscriptionBaseApiException {
         return null;
     }
 
     @Override
-    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final Catalog kbCatalog) throws CatalogApiException {
+    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final Catalog kbCatalog) throws SubscriptionBaseApiException {
         return billingAlignment;
     }
 

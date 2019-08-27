@@ -86,7 +86,7 @@ public interface SubscriptionBaseInternalApi {
 
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(SubscriptionBase subscription, InternalTenantContext context);
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(SubscriptionBase subscription, InternalTenantContext context) throws CatalogApiException;
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(SubscriptionBase subscription, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, EntitlementSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException;
 

@@ -52,7 +52,6 @@ import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
-import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
@@ -61,6 +60,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
+import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
@@ -368,9 +368,13 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final SubscriptionBase subscription, final InternalTenantContext context) throws CatalogApiException {
-        final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-        return((DefaultSubscriptionBase) subscription).getSubscriptionBillingEvents(catalog);
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final SubscriptionBase subscription, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        try {
+            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
+            return subscription.getSubscriptionBillingEvents(catalog);
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
     }
 
     @Override

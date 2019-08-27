@@ -48,6 +48,9 @@ import static org.killbill.billing.ErrorCode.CAT_NO_SUCH_PLAN;
 
 //
 // Wrapper catalog api with low level apis only required from this module and often requiring subscription details
+// Notes:
+// * subscription code should only use SubscriptionCatalog (and never Catalog) although nothing wrong would happen if it was the case, but just for consistency
+// * this class is really an extension of Catalog api and as such it still throws CatalogApiException
 //
 public class SubscriptionCatalog implements Catalog {
 
@@ -132,7 +135,7 @@ public class SubscriptionCatalog implements Catalog {
                                           final DateTime subscriptionChangePlanDate)
             throws CatalogApiException {
         final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(planName), requestedDate, subscriptionChangePlanDate);
-        return entry.getStaticCatalog().findCurrentPricelist(entry.getPlan().getPriceListName());
+        return entry.getStaticCatalog().findCurrentPriceList(entry.getPlan().getPriceListName());
     }
 
     public Plan getNextPlanVersion(final Plan curPlan) {
@@ -154,10 +157,9 @@ public class SubscriptionCatalog implements Catalog {
             return null;
         }
 
-        // TODO_CATALOG should we worry about cost of exception handling ?
         try {
             return nextCatalogVersion.findCurrentPlan(curPlan.getName());
-        } catch (CatalogApiException e) {
+        } catch (final CatalogApiException ignored) {
             return null;
         }
     }

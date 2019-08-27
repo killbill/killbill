@@ -502,11 +502,15 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final Catalog publicCatalog) throws CatalogApiException {
-        final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
-        // TODO_CATALOG is this really the startDate we should be using ?
-        final BillingAlignment alignment = catalog.billingAlignment(spec, transitionTime, getStartDate());
-        return alignment;
+    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final Catalog publicCatalog) throws SubscriptionBaseApiException {
+        try {
+            final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
+            // TODO_CATALOG is this really the startDate we should be using ?
+            final BillingAlignment alignment = catalog.billingAlignment(spec, transitionTime, getStartDate());
+            return alignment;
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
     }
 
     public SubscriptionBaseTransitionData getTransitionFromEvent(final SubscriptionBaseEvent event, final int seqId) {
@@ -545,92 +549,94 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    // TODO_CATALOG fix exception
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog publicCatalog) throws CatalogApiException {
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog publicCatalog) throws SubscriptionBaseApiException {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
 
         final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
+        try {
+            final List<SubscriptionBillingEvent> result = new ArrayList<SubscriptionBillingEvent>();
+            final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
+                    clock, transitions, Order.ASC_FROM_PAST,
+                    Visibility.ALL, TimeLimit.ALL);
 
-        final List<SubscriptionBillingEvent> result = new ArrayList<SubscriptionBillingEvent>();
-        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
-                clock, transitions, Order.ASC_FROM_PAST,
-                Visibility.ALL, TimeLimit.ALL);
+            final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<SubscriptionBillingEvent>();
+            boolean foundInitialEvent = false;
+            while (it.hasNext()) {
 
-        final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<SubscriptionBillingEvent>();
-        boolean foundInitialEvent = false;
-        while (it.hasNext()) {
+                final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
 
-            final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
+                final boolean isCreateOrTransfer = cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
+                                                   cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER;
+                final boolean isChangeEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE;
+                final boolean isCancelEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CANCEL;
 
-            final boolean isCreateOrTransfer = cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
-                                               cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER;
-            final boolean isChangeEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE;
-            final boolean isCancelEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CANCEL;
-
-            if (!foundInitialEvent) {
-                foundInitialEvent = isCreateOrTransfer;
-            }
-
-            // Remove anything prior to first CREATE
-            if (foundInitialEvent) {
-
-                // Look for any catalog change transition whose date is less the cur event
-                SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-                while (prevCandidateForCatalogChangeEvents != null &&
-                       prevCandidateForCatalogChangeEvents.getEffectiveDate().compareTo(cur.getEffectiveTransitionTime()) < 0) {
-                    result.add(prevCandidateForCatalogChangeEvents);
-                    prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+                if (!foundInitialEvent) {
+                    foundInitialEvent = isCreateOrTransfer;
                 }
 
-                // If we see a change or a cancellation and we still have catalog change transitions, we discard them
-                if (isChangeEvent || isCancelEvent) {
-                    candidatesCatalogChangeEvents.clear();
-                } else if (prevCandidateForCatalogChangeEvents != null) {
-                    candidatesCatalogChangeEvents.add(prevCandidateForCatalogChangeEvents);
-                }
+                // Remove anything prior to first CREATE
+                if (foundInitialEvent) {
 
-                // Additional complexity to deal with null plan/phase for CANCEL, which needs to be recomputed based on the name and the correct catalog version.
-                final Plan plan;
-                final PlanPhase planPhase;
-                if (isCancelEvent) {
-                    plan = catalog.findPlan(cur.getPreviousPlan().getName(), cur.getEffectiveTransitionTime(), result.get(result.size() - 1).getEffectiveDate());
-                    planPhase = plan.findPhase(cur.getPreviousPhase().getName());
-                } else {
-                    plan = cur.getNextPlan();
-                    planPhase = cur.getNextPhase();
-                }
+                    // Look for any catalog change transition whose date is less the cur event
+                    SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+                    while (prevCandidateForCatalogChangeEvents != null &&
+                           prevCandidateForCatalogChangeEvents.getEffectiveDate().compareTo(cur.getEffectiveTransitionTime()) < 0) {
+                        result.add(prevCandidateForCatalogChangeEvents);
+                        prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+                    }
 
-                final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), plan, planPhase, cur.getEffectiveTransitionTime(), cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal());
+                    // If we see a change or a cancellation and we still have catalog change transitions, we discard them
+                    if (isChangeEvent || isCancelEvent) {
+                        candidatesCatalogChangeEvents.clear();
+                    } else if (prevCandidateForCatalogChangeEvents != null) {
+                        candidatesCatalogChangeEvents.add(prevCandidateForCatalogChangeEvents);
+                    }
 
-                result.add(billingTransition);
+                    // Additional complexity to deal with null plan/phase for CANCEL, which needs to be recomputed based on the name and the correct catalog version.
+                    final Plan plan;
+                    final PlanPhase planPhase;
+                    if (isCancelEvent) {
+                        plan = catalog.findPlan(cur.getPreviousPlan().getName(), cur.getEffectiveTransitionTime(), result.get(result.size() - 1).getEffectiveDate());
+                        planPhase = plan.findPhase(cur.getPreviousPhase().getName());
+                    } else {
+                        plan = cur.getNextPlan();
+                        planPhase = cur.getNextPhase();
+                    }
 
-                if (isCreateOrTransfer || isChangeEvent) {
+                    final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), plan, planPhase, cur.getEffectiveTransitionTime(), cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal());
 
-                    // Using findPlan(req) or findPlan(req, changePlanDate) should be equivalent here...
-                    final Plan currentPlan = catalog.findPlan(billingTransition.getPlan().getName(), billingTransition.getEffectiveDate());
+                    result.add(billingTransition);
 
-                    // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
-                    Plan nextPlan = catalog.getNextPlanVersion(currentPlan);
-                    while (nextPlan != null && nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
-                        final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
-                        final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
-                        final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate, cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal());
-                        candidatesCatalogChangeEvents.add(newBillingTransition);
-                        nextPlan = catalog.getNextPlanVersion(nextPlan);
+                    if (isCreateOrTransfer || isChangeEvent) {
+
+                        // Using findPlan(req) or findPlan(req, changePlanDate) should be equivalent here...
+                        final Plan currentPlan = catalog.findPlan(billingTransition.getPlan().getName(), billingTransition.getEffectiveDate());
+
+                        // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
+                        Plan nextPlan = catalog.getNextPlanVersion(currentPlan);
+                        while (nextPlan != null && nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
+                            final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
+                            final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
+                            final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate, cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal());
+                            candidatesCatalogChangeEvents.add(newBillingTransition);
+                            nextPlan = catalog.getNextPlanVersion(nextPlan);
+                        }
                     }
                 }
             }
-        }
 
-        SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-        while (prevCandidateForCatalogChangeEvents != null) {
-            result.add(prevCandidateForCatalogChangeEvents);
-            prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+            SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+            while (prevCandidateForCatalogChangeEvents != null) {
+                result.add(prevCandidateForCatalogChangeEvents);
+                prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+            }
+            return result;
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
         }
-        return result;
     }
 
     public SubscriptionBaseTransitionData getLastTransitionForCurrentPlan() {

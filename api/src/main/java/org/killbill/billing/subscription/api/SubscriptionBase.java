@@ -122,7 +122,7 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public DateTime getDateOfFirstRecurringNonZeroCharge();
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(Catalog kbCatalog) throws CatalogApiException;
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(Catalog catalog) throws SubscriptionBaseApiException;
 
-    public BillingAlignment getBillingAlignment(PlanPhaseSpecifier spec, DateTime transitionTime, Catalog kbCatalog) throws CatalogApiException;
+    public BillingAlignment getBillingAlignment(PlanPhaseSpecifier spec, DateTime transitionTime, Catalog catalog) throws SubscriptionBaseApiException;
 }

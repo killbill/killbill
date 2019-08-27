@@ -95,12 +95,12 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
             inFromProduct = plan.getProduct();
             inFromBillingPeriod = plan.getRecurringBillingPeriod();
             inFromProductCategory = plan.getProduct().getCategory();
-            inFromPriceList = catalog.findCurrentPricelist(plan.getPriceListName());
+            inFromPriceList = catalog.findCurrentPriceList(plan.getPriceListName());
         } else {
             inFromProduct = catalog.findCurrentProduct(from.getProductName());
             inFromBillingPeriod = from.getBillingPeriod();
             inFromProductCategory = inFromProduct.getCategory();
-            inFromPriceList = from.getPriceListName() != null ? catalog.findCurrentPricelist(from.getPriceListName()) : null;
+            inFromPriceList = from.getPriceListName() != null ? catalog.findCurrentPriceList(from.getPriceListName()) : null;
         }
 
         final Product inToProduct;
@@ -112,12 +112,12 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
             inToProduct = plan.getProduct();
             inToBillingPeriod = plan.getRecurringBillingPeriod();
             inToProductCategory = plan.getProduct().getCategory();
-            inToPriceList = catalog.findCurrentPricelist(plan.getPriceListName());
+            inToPriceList = catalog.findCurrentPriceList(plan.getPriceListName());
         } else {
             inToProduct = catalog.findCurrentProduct(to.getProductName());
             inToBillingPeriod = to.getBillingPeriod();
             inToProductCategory = inToProduct.getCategory();
-            inToPriceList = to.getPriceListName() != null ? catalog.findCurrentPricelist(to.getPriceListName()) : null;
+            inToPriceList = to.getPriceListName() != null ? catalog.findCurrentPriceList(to.getPriceListName()) : null;
         }
 
         if (

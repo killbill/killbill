@@ -43,6 +43,11 @@ public class DefaultSubscriptionCatalogApi implements SubscriptionCatalogApi {
     }
 
     public static SubscriptionCatalog wrapCatalog(final Catalog catalog, final Clock clock) {
-        return new SubscriptionCatalog(catalog, clock);
+        if (catalog instanceof SubscriptionCatalog) {
+            // wrapping idempotency... for safety
+            return (SubscriptionCatalog) catalog;
+        } else {
+            return new SubscriptionCatalog(catalog, clock);
+        }
     }
 }

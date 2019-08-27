@@ -406,14 +406,10 @@ public class EventsStreamBuilder {
 
         try {
             Integer defaultAlignmentDay = null;
-            try {
-                final BillingAlignment alignment = subscription.getBillingAlignment(createPlanPhaseSpecifier(subscription), clock.getUTCNow(), catalog);
+            final BillingAlignment alignment = subscription.getBillingAlignment(createPlanPhaseSpecifier(subscription), clock.getUTCNow(), catalog);
 
-                if (alignment != BillingAlignment.ACCOUNT || accountBCD != 0) {
-                    defaultAlignmentDay = BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBCD);
-                }
-            } catch (final CatalogApiException e) {
-                throw new SubscriptionBaseApiException(e);
+            if (alignment != BillingAlignment.ACCOUNT || accountBCD != 0) {
+                defaultAlignmentDay = BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBCD);
             }
             return new DefaultEventsStream(account,
                                            bundle,
