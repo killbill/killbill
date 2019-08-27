@@ -411,7 +411,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             final Catalog kbCatalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
             final SubscriptionCatalog catalog = new SubscriptionCatalog(kbCatalog, clock);
-            planChangeResult = catalog.planChange(fromPlanPhase, toPlanPhase, effectiveDate);
+            planChangeResult = catalog.getPlanChangeResult(fromPlanPhase, toPlanPhase, effectiveDate);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }

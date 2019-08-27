@@ -159,23 +159,22 @@ public class SubscriptionCatalog implements Catalog {
         }
     }
 
-    // TODO_CATALOG see #1190
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from,
-                                       final PlanSpecifier to,
-                                       final DateTime requestedDate)
+    public PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from,
+                                                final PlanSpecifier to,
+                                                final DateTime requestedDate)
             throws CatalogApiException {
         // Use the "to" specifier, to make sure the new plan always exists
         final StaticCatalog staticCatalog = versionForDate(requestedDate);
-        return planChange(from, to, staticCatalog);
+        return getPlanChangeResult(from, to, staticCatalog);
     }
 
-    public PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to)
+    public PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to)
             throws CatalogApiException {
         final StaticCatalog standaloneCatalog = versionForDate(clock.getUTCNow());
-        return planChange(from, to, standaloneCatalog);
+        return getPlanChangeResult(from, to, standaloneCatalog);
     }
 
-    private PlanChangeResult planChange(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog standaloneCatalog)
+    private PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog standaloneCatalog)
             throws CatalogApiException {
         final PlanRules planRules = standaloneCatalog.getPlanRules();
         return planRules.getPlanChangeResult(from, to);

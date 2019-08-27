@@ -194,8 +194,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
                 return "pistol-monthly".equals(input.getPlanName());
             }
         });
-        // TODO_CATALOG Broken prettyName
-        //assertEquals(pistolInvoiceItem.getPrettyPlanName(), "Beretta");
+        assertEquals(pistolInvoiceItem.getPrettyPlanName(), "Beretta");
     }
 
     @Test(groups = "slow")

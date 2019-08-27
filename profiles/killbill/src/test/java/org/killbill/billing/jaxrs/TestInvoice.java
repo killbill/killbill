@@ -62,7 +62,7 @@ import static org.testng.Assert.assertTrue;
 public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can search and retrieve invoices with and without items")
-    public void testInvoiceOk() throws Exception {
+        public void testInvoiceOk() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
@@ -86,12 +86,11 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem invoiceItem = invoiceJson.getItems().get(0);
         assertEquals(invoiceItem.getProductName(), "Shotgun");
 
-        // TODO_CATALOG fix pretty name
-        //assertEquals(invoiceItem.getPrettyProductName(), "Shotgun");
+        assertEquals(invoiceItem.getPrettyProductName(), "Shotgun");
         assertEquals(invoiceItem.getPlanName(), "shotgun-monthly");
-        //assertEquals(invoiceItem.getPrettyPlanName(), "Shotgun Monthly");
+        assertEquals(invoiceItem.getPrettyPlanName(), "Shotgun Monthly");
         assertEquals(invoiceItem.getPhaseName(), "shotgun-monthly-trial");
-        //assertEquals(invoiceItem.getPrettyPhaseName(), "shotgun-monthly-trial");
+        assertEquals(invoiceItem.getPrettyPhaseName(), "shotgun-monthly-trial");
 
         assertEquals(invoiceApi.getInvoice(invoiceJson.getInvoiceId(), Boolean.TRUE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
         assertEquals(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());

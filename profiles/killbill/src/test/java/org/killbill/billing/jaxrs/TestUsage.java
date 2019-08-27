@@ -156,12 +156,9 @@ public class TestUsage extends TestJaxrsBase {
         }).orNull();
         Assert.assertNotNull(usageItem);
 
-        // TODO_CATALOG Fix pretty name
-        /*
         Assert.assertEquals(usageItem.getPrettyPlanName(), "Bullet Monthly Plan");
         Assert.assertEquals(usageItem.getPrettyPhaseName(), "Bullet Monthly Plan Evergreen");
         Assert.assertEquals(usageItem.getPrettyUsageName(), "Bullet Usage In Arrear");
-         */
     }
 
     @Test(groups = "slow", description = "Test tracking ID already exists")

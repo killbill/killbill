@@ -25,10 +25,14 @@ import javax.annotation.Nullable;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentChange;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
+import org.killbill.billing.catalog.api.PlanChangeResult;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -187,6 +191,26 @@ public class TestModelPlanRules implements PlanRules {
     @Override
     public Iterable<CasePriceList> getCasePriceList() {
         return casePriceList;
+    }
+
+    @Override
+    public PlanAlignmentCreate getPlanCreateAlignment(final PlanSpecifier planSpecifier) throws CatalogApiException {
+        return null;
+    }
+
+    @Override
+    public BillingActionPolicy getPlanCancelPolicy(final PlanPhaseSpecifier planPhaseSpecifier) throws CatalogApiException {
+        return null;
+    }
+
+    @Override
+    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier planPhaseSpecifier) throws CatalogApiException {
+        return null;
+    }
+
+    @Override
+    public PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier planPhaseSpecifier, final PlanSpecifier planSpecifier) throws CatalogApiException {
+        return null;
     }
 
     private Product findProduct(@Nullable final String productName) {
