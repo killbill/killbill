@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
@@ -32,6 +31,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
+import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
@@ -46,10 +46,10 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
     private final List<ExistingEvent> existingEvents;
     private final Clock clock;
 
-    public DefaultSubscriptionBaseTimeline(final DefaultSubscriptionBase input, final Catalog catalog, final Clock clock) throws CatalogApiException {
+    public DefaultSubscriptionBaseTimeline(final DefaultSubscriptionBase input, final SubscriptionCatalog catalog, final Clock clock) throws CatalogApiException {
         this.id = input.getId();
         this.clock = clock;
-        this.existingEvents = toExistingEvents(new SubscriptionCatalog( catalog, clock), input.getCategory(), input.getEvents());
+        this.existingEvents = toExistingEvents(DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock), input.getCategory(), input.getEvents());
     }
 
     private List<ExistingEvent> toExistingEvents(final SubscriptionCatalog catalog, final ProductCategory category, final List<SubscriptionBaseEvent> events)

@@ -95,7 +95,59 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
     @Override // to ignore events
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        if (hasFailed()) {
+        if (hasFailed()) {        final String externalKey = "12345";
+            final DateTime startDate = clock.getUTCNow();
+            final DateTime createdDate = startDate.plusSeconds(10);
+
+            final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
+            final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+
+            final List<SubscriptionBaseBundle> result = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
+            assertEquals(result.size(), 1);
+            assertEquals(result.get(0).getExternalKey(), bundle.getExternalKey());
+
+            // Operation succeeds but nothing new got created because bundle is empty
+            dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+            final List<SubscriptionBaseBundle> result2 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
+            assertEquals(result2.size(), 1);
+
+            // Create a subscription and this time operation should fail
+            final SubscriptionBuilder builder = new SubscriptionBuilder()
+                    .setId(UUIDs.randomUUID())
+                    .setBundleId(bundle.getId())
+                    .setBundleExternalKey(bundle.getExternalKey())
+                    .setCategory(ProductCategory.BASE)
+                    .setBundleStartDate(startDate)
+                    .setAlignStartDate(startDate)
+                    .setMigrated(false);
+
+            final ApiEventBuilder createBuilder = new ApiEventBuilder()
+                    .setSubscriptionId(builder.getId())
+                    .setEventPlan("shotgun-monthly")
+                    .setEventPlanPhase("shotgun-monthly-trial")
+                    .setEventPriceList(DefaultPriceListSet.DEFAULT_PRICELIST_NAME)
+                    .setEffectiveDate(startDate)
+                    .setFromDisk(true);
+            final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
+
+            final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
+            testListener.pushExpectedEvents(NextEvent.CREATE);
+            final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
+                                                                                                                ImmutableList.<SubscriptionBase>of(subscription));
+            dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
+                                              ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+                                              catalog,
+                                              internalCallContext);
+            assertListenerStatus();
+
+            // Operation Should now fail
+            try {
+                dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+                Assert.fail("Should fail to create new subscription bundle with existing key");
+            } catch (SubscriptionBaseApiException e) {
+                assertEquals(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode(), e.getCode());
+            }
+
             return;
         }
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
@@ -104,58 +156,6 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testBundleExternalKeyReused() throws Exception {
 
-        final String externalKey = "12345";
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime createdDate = startDate.plusSeconds(10);
-
-        final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
-        final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
-
-        final List<SubscriptionBaseBundle> result = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
-        assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getExternalKey(), bundle.getExternalKey());
-
-        // Operation succeeds but nothing new got created because bundle is empty
-        dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
-        final List<SubscriptionBaseBundle> result2 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
-        assertEquals(result2.size(), 1);
-
-        // Create a subscription and this time operation should fail
-        final SubscriptionBuilder builder = new SubscriptionBuilder()
-                .setId(UUIDs.randomUUID())
-                .setBundleId(bundle.getId())
-                .setBundleExternalKey(bundle.getExternalKey())
-                .setCategory(ProductCategory.BASE)
-                .setBundleStartDate(startDate)
-                .setAlignStartDate(startDate)
-                .setMigrated(false);
-
-        final ApiEventBuilder createBuilder = new ApiEventBuilder()
-                .setSubscriptionId(builder.getId())
-                .setEventPlan("shotgun-monthly")
-                .setEventPlanPhase("shotgun-monthly-trial")
-                .setEventPriceList(DefaultPriceListSet.DEFAULT_PRICELIST_NAME)
-                .setEffectiveDate(startDate)
-                .setFromDisk(true);
-        final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
-
-        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
-        testListener.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
-                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
-        dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
-                                          ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
-                                          catalog,
-                                          internalCallContext);
-        assertListenerStatus();
-
-        // Operation Should now fail
-        try {
-            dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
-            Assert.fail("Should fail to create new subscription bundle with existing key");
-        } catch (SubscriptionBaseApiException e) {
-            assertEquals(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode(), e.getCode());
-        }
     }
 
     @Test(groups = "slow")

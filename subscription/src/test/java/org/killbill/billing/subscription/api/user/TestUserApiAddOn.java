@@ -40,6 +40,7 @@ import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.testng.annotations.Test;
 
@@ -405,7 +406,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
                                                               aoTerm,
                                                               aoPriceList);
         final DateTime utcNow = clock.getUTCNow();
-        final SubscriptionCatalog subscriptionCatalog = new SubscriptionCatalog(catalog, clock);
+        final SubscriptionCatalog subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock);
         final PlanAlignmentCreate alignment = subscriptionCatalog.planCreateAlignment(planSpecifier, utcNow, utcNow);
         assertEquals(alignment, PlanAlignmentCreate.START_OF_BUNDLE);
 
@@ -423,7 +424,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
                                                               aoTerm,
                                                               aoPriceList);
         final DateTime utcNow = clock.getUTCNow();
-        final SubscriptionCatalog subscriptionCatalog = new SubscriptionCatalog(catalog, clock);
+        final SubscriptionCatalog subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock);
         final PlanAlignmentCreate alignment = subscriptionCatalog.planCreateAlignment(planSpecifier, utcNow, utcNow);
         assertEquals(alignment, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 

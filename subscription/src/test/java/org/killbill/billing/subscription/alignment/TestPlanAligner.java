@@ -31,6 +31,7 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBase;
@@ -62,7 +63,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
         super.beforeMethod();
-        subscriptionCatalog =  new SubscriptionCatalog(catalog, clock);
+        subscriptionCatalog =  DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock);
     }
 
     @Test(groups = "fast")
@@ -389,7 +390,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
                                                                    );
         final List<SubscriptionBaseEvent> events = new ArrayList<SubscriptionBaseEvent>();
         events.add(event);
-        defaultSubscriptionBase.rebuildTransitions(events, catalogService.getFullCatalog(true, true, internalCallContext));
+        defaultSubscriptionBase.rebuildTransitions(events, subscriptionCatalogApi.getFullCatalog(internalCallContext));
 
         Assert.assertEquals(defaultSubscriptionBase.getAllTransitions().size(), 1);
         Assert.assertNull(defaultSubscriptionBase.getAllTransitions().get(0).getPreviousPhase());
@@ -418,7 +419,7 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         events.add(previousEvent);
         events.add(event);
 
-        defaultSubscriptionBase.rebuildTransitions(events, catalogService.getFullCatalog(true, true, internalCallContext));
+        defaultSubscriptionBase.rebuildTransitions(events, subscriptionCatalogApi.getFullCatalog(internalCallContext));
 
         final List<SubscriptionBaseTransition> newTransitions = defaultSubscriptionBase.getAllTransitions();
         Assert.assertEquals(newTransitions.size(), 2);

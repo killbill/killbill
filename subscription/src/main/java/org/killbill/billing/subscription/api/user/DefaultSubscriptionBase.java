@@ -55,6 +55,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Order;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.TimeLimit;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionDataIterator.Visibility;
+import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
@@ -501,8 +502,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final Catalog kbCatalog) throws CatalogApiException {
-        final SubscriptionCatalog catalog = new SubscriptionCatalog(kbCatalog, clock);
+    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final Catalog publicCatalog) throws CatalogApiException {
+        final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
         // TODO_CATALOG is this really the startDate we should be using ?
         final BillingAlignment alignment = catalog.billingAlignment(spec, transitionTime, getStartDate());
         return alignment;
@@ -545,13 +546,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     // TODO_CATALOG fix exception
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog kbCatalog) throws CatalogApiException {
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog publicCatalog) throws CatalogApiException {
 
         if (transitions == null) {
             return Collections.emptyList();
         }
 
-        final SubscriptionCatalog catalog = new SubscriptionCatalog(kbCatalog, clock);
+        final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
 
         final List<SubscriptionBillingEvent> result = new ArrayList<SubscriptionBillingEvent>();
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
@@ -752,7 +753,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 "Failed to find CurrentPhaseStart id = %s", getId().toString()));
     }
 
-    public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final Catalog kbCatalog) throws CatalogApiException {
+    public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final SubscriptionCatalog catalog) throws CatalogApiException {
 
         if (inputEvents == null) {
             return;
@@ -760,10 +761,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         this.events = inputEvents;
 
-        // TODO_CATALOG Safety until code is stable
-        Preconditions.checkState(!(kbCatalog instanceof SubscriptionCatalog), "Unexpected catalog type");
-
-        final SubscriptionCatalog catalog = new SubscriptionCatalog(kbCatalog, clock);
 
         Collections.sort(inputEvents, new Comparator<SubscriptionBaseEvent>() {
             @Override

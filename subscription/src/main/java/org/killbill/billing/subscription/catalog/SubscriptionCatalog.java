@@ -46,13 +46,16 @@ import org.killbill.clock.Clock;
 
 import static org.killbill.billing.ErrorCode.CAT_NO_SUCH_PLAN;
 
-// TODO_CATALOG Unclear if this is really the right approach, for now this at least provides the separation (catalog v.s subscription apis) we want
+//
+// Wrapper catalog api with low level apis only required from this module and often requiring subscription details
+//
 public class SubscriptionCatalog implements Catalog {
 
     private final Catalog delegate;
     private final Clock clock;
 
-    public SubscriptionCatalog(final Catalog delegate, final Clock clock) {
+    // package scope
+    SubscriptionCatalog(final Catalog delegate, final Clock clock) {
         this.delegate = delegate;
         this.clock = clock;
     }

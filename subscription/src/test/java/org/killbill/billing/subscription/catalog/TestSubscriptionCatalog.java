@@ -60,7 +60,7 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
         }
         super.beforeMethod();
 
-        subscriptionCatalog = new SubscriptionCatalog(catalog, clock);
+        subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock);
 
     }
 
