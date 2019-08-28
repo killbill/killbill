@@ -36,6 +36,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
@@ -258,10 +259,9 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final InternalTenantContext context) {
+    public SubscriptionBaseBundle getActiveBundleForKey(final Catalog publicCatalog, final String bundleKey, final InternalTenantContext context) {
         try {
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-
+            final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
             return super.getActiveBundleForKey(bundleKey, DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock), context);
         } catch (final CatalogApiException e) {
             log.warn("Failed to get subscriptions", e);
@@ -284,9 +284,9 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final Catalog publicCatalog,  final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
+            final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
             final Map<UUID, List<DefaultSubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock), context);
             final Map<UUID, List<SubscriptionBase>> result = new HashMap<UUID, List<SubscriptionBase>>();
             for (final UUID bundleId : internalSubscriptions.keySet()) {

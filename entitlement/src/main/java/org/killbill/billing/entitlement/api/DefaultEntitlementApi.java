@@ -500,7 +500,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
     private void populateBundleKeyToIdMappingCache(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier, final Map<String, Optional<UUID>> bundleKeyToIdMapping, final Catalog catalog, final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
         if (bundleKeyToIdMapping.get(baseEntitlementWithAddOnsSpecifier.getBundleExternalKey()) == null) {
-            final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getActiveBundleForKey(baseEntitlementWithAddOnsSpecifier.getBundleExternalKey(), contextWithValidAccountRecordId);
+            final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getActiveBundleForKey(catalog, baseEntitlementWithAddOnsSpecifier.getBundleExternalKey(), contextWithValidAccountRecordId);
             if (bundle != null) {
                 bundleKeyToIdMapping.put(baseEntitlementWithAddOnsSpecifier.getBundleExternalKey(), Optional.<UUID>of(bundle.getId()));
             } else {

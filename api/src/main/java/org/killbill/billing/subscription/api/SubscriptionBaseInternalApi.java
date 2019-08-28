@@ -29,6 +29,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
@@ -67,12 +68,13 @@ public interface SubscriptionBaseInternalApi {
 
     public Iterable<UUID> getNonAOSubscriptionIdsForKey(String bundleKey, InternalTenantContext context);
 
-    public SubscriptionBaseBundle getActiveBundleForKey(String bundleKey, InternalTenantContext context);
+    public SubscriptionBaseBundle getActiveBundleForKey(Catalog catalog, String bundleKey, InternalTenantContext context);
 
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId, DryRunArguments dryRunArguments, InternalTenantContext context)
             throws SubscriptionBaseApiException;
 
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final InternalTenantContext context) throws SubscriptionBaseApiException;
+    // TODO_CATALOG revisit which apis should take a Catalog
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
