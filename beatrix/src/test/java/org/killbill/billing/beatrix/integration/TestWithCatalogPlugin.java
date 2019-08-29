@@ -229,7 +229,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
             this.latestCatalogUpdate = new DateTime(inputCatalogVersion.getEffectiveDate());
             if (versionedCatalog == null) {
-                versionedCatalog = new DefaultVersionedCatalog(clock, new ArrayList<>());
+                versionedCatalog = new DefaultVersionedCatalog(new ArrayList<>());
             }
             versionedCatalog.add(inputCatalogVersionWithOverride);
         }

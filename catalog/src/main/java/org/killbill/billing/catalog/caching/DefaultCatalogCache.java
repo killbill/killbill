@@ -47,7 +47,6 @@ import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.cache.TenantCatalogCacheLoader.LoaderCallback;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +66,6 @@ public class DefaultCatalogCache implements CatalogCache {
     private final VersionedCatalogMapper versionedCatalogMapper;
     private final PriceOverride priceOverride;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final Clock clock;
     private List<StaticCatalog> defaultCatalog;
 
     @Inject
@@ -76,14 +74,12 @@ public class DefaultCatalogCache implements CatalogCache {
                                final CacheControllerDispatcher cacheControllerDispatcher,
                                final VersionedCatalogLoader loader,
                                final PriceOverride priceOverride,
-                               final Clock clock,
                                final InternalCallContextFactory internalCallContextFactory) {
         this.pluginRegistry = pluginRegistry;
         this.versionedCatalogMapper = versionedCatalogMapper;
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         this.loader = loader;
         this.priceOverride = priceOverride;
-        this.clock = clock;
         this.internalCallContextFactory = internalCallContextFactory;
         this.cacheLoaderArgumentWithTemplateFiltering = initializeCacheLoaderArgument(true);
         this.cacheLoaderArgument = initializeCacheLoaderArgument(false);
@@ -122,7 +118,7 @@ public class DefaultCatalogCache implements CatalogCache {
         // but to be on the safe side;;
         try {
             final DefaultVersionedCatalog versionnedCatalog = cacheController.get(tenantContext.getTenantRecordId(),
-                                                                              filterTemplateCatalog ? cacheLoaderArgumentWithTemplateFiltering : cacheLoaderArgument);
+                                                                                  filterTemplateCatalog ? cacheLoaderArgumentWithTemplateFiltering : cacheLoaderArgument);
             List<StaticCatalog> tenantCatalog = versionnedCatalog != null ? versionnedCatalog.getVersions() : null;
 
             // It means we are using a default catalog in a multi-tenant deployment, that does not really match a real use case, but we want to support it
@@ -134,7 +130,7 @@ public class DefaultCatalogCache implements CatalogCache {
                     tenantCatalog.add(curWithOverride);
                 }
 
-                final DefaultVersionedCatalog cachedCatalog = new DefaultVersionedCatalog(clock, tenantCatalog);
+                final DefaultVersionedCatalog cachedCatalog = new DefaultVersionedCatalog(tenantCatalog);
                 cacheController.putIfAbsent(tenantContext.getTenantRecordId(), cachedCatalog);
             }
 
@@ -196,7 +192,7 @@ public class DefaultCatalogCache implements CatalogCache {
                 // Always clear the cache for safety
                 cacheController.remove(internalTenantContext.getTenantRecordId());
                 if (cacheable) {
-                    final DefaultVersionedCatalog cachedCatalog = new DefaultVersionedCatalog(clock, resolvedPluginCatalog);
+                    final DefaultVersionedCatalog cachedCatalog = new DefaultVersionedCatalog(resolvedPluginCatalog);
                     cacheController.putIfAbsent(internalTenantContext.getTenantRecordId(), cachedCatalog);
                 }
 

@@ -57,7 +57,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testVersionedCatalog() throws Exception {
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
-        final DefaultVersionedCatalog versionedCatalog = new DefaultVersionedCatalog(clock, new ArrayList<>());
+        final DefaultVersionedCatalog versionedCatalog = new DefaultVersionedCatalog(new ArrayList<>());
         versionedCatalog.add(catalog);
         final String newCatalogStr = XMLWriter.writeXML(versionedCatalog, DefaultVersionedCatalog.class);
         //System.err.println(newCatalogStr);

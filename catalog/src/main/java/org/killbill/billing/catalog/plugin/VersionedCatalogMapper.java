@@ -47,7 +47,7 @@ public class VersionedCatalogMapper {
     }
 
     public DefaultVersionedCatalog toVersionedCatalog(final VersionedPluginCatalog pluginCatalog, final InternalTenantContext internalTenantContext) throws CatalogApiException {
-        final DefaultVersionedCatalog result = new DefaultVersionedCatalog(clock, new ArrayList<>());
+        final DefaultVersionedCatalog result = new DefaultVersionedCatalog(new ArrayList<>());
         for (final StandalonePluginCatalog cur : pluginCatalog.getStandalonePluginCatalogs()) {
             result.add(toStandaloneCatalogWithPriceOverride(pluginCatalog, cur, internalTenantContext));
         }

@@ -249,7 +249,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
             final StandaloneCatalogWithPriceOverride inputCatalogVersionWithOverride = new StandaloneCatalogWithPriceOverride(inputCatalogVersion, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
 
             if (versionedCatalog == null) {
-                versionedCatalog = new DefaultVersionedCatalog(clock, new ArrayList<>());
+                versionedCatalog = new DefaultVersionedCatalog(new ArrayList<>());
             }
             versionedCatalog.add(inputCatalogVersionWithOverride);
         }

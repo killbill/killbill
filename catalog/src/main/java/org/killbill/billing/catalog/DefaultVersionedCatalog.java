@@ -37,15 +37,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.joda.time.DateTime;
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.Catalog;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.clock.Clock;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
@@ -58,47 +53,16 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     @XmlElementWrapper(name = "versions", required = true)
     @XmlElement(name = "version", type = StandaloneCatalog.class, required = true)
     private final List<StaticCatalog> versions;
-    private Clock clock;
     @XmlElement(required = true)
     private String catalogName;
 
     // Required for JAXB deserialization
     public DefaultVersionedCatalog() {
-        this.clock = null;
         this.versions = new ArrayList<StaticCatalog>();
     }
 
-    public DefaultVersionedCatalog(final Clock clock, final List<StaticCatalog> versions) {
-        this.clock = clock;
+    public DefaultVersionedCatalog(final List<StaticCatalog> versions) {
         this.versions = versions;
-    }
-
-    //
-    // Private methods
-    //
-    private StaticCatalog versionForDate(final DateTime date) throws CatalogApiException {
-        return versions.get(indexOfVersionForDate(date.toDate()));
-    }
-
-    private int indexOfVersionForDate(final Date date) throws CatalogApiException {
-        for (int i = versions.size() - 1; i >= 0; i--) {
-            final StaticCatalog c = versions.get(i);
-            if (c.getEffectiveDate().getTime() <= date.getTime()) {
-                return i;
-            }
-        }
-        // If the only version we have are after the input date, we return the first version
-        // This is not strictly correct from an api point of view, but there is no real good use case
-        // where the system would ask for the catalog for a date prior any catalog was uploaded and
-        // yet time manipulation could end of inn that state -- see https://github.com/killbill/killbill/issues/760
-        if (!versions.isEmpty()) {
-            return 0;
-        }
-        throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, date.toString());
-    }
-
-    public Clock getClock() {
-        return clock;
     }
 
     @Override
@@ -117,10 +81,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                 return c1.getEffectiveDate().compareTo(c2.getEffectiveDate());
             }
         });
-    }
-
-    public PriceListSet getPriceLists(final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).getPriceLists();
     }
 
     @Override
@@ -233,11 +193,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         int result = versions != null ? versions.hashCode() : 0;
         result = 31 * result + (catalogName != null ? catalogName.hashCode() : 0);
         return result;
-    }
-
-    public void initialize(final Clock clock, final DefaultVersionedCatalog tenantCatalog) {
-        this.clock = clock;
-        initialize(tenantCatalog);
     }
 
 }
