@@ -49,7 +49,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
     public DefaultSubscriptionBaseTimeline(final DefaultSubscriptionBase input, final SubscriptionCatalog catalog, final Clock clock) throws CatalogApiException {
         this.id = input.getId();
         this.clock = clock;
-        this.existingEvents = toExistingEvents(DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock), input.getCategory(), input.getEvents());
+        this.existingEvents = toExistingEvents(catalog, input.getCategory(), input.getEvents());
     }
 
     private List<ExistingEvent> toExistingEvents(final SubscriptionCatalog catalog, final ProductCategory category, final List<SubscriptionBaseEvent> events)

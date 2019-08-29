@@ -28,8 +28,8 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -81,7 +81,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     }
 
     // This CTOR is used to return an existing invoice and must include everything (items, payments, tags,..)
-    public DefaultInvoice(final InvoiceModelDao invoiceModelDao, @Nullable final Catalog catalog) {
+    public DefaultInvoice(final InvoiceModelDao invoiceModelDao, @Nullable final List<StaticCatalog> catalog) {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
              invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated(),

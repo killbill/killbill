@@ -17,6 +17,8 @@
 
 package org.killbill.billing.catalog.api;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -32,7 +34,7 @@ public class DefaultCatalogInternalApi implements CatalogInternalApi {
     }
 
     @Override
-    public Catalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
+    public List<StaticCatalog> getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
         return catalogService.getFullCatalogForInternalUse(useDefaultCatalog, filterTemplateCatalog, context);
     }
 }

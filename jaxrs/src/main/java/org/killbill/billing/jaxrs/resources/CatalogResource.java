@@ -42,7 +42,6 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Currency;
@@ -137,11 +136,12 @@ public class CatalogResource extends JaxRsResourceBase {
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
 
-        final Catalog catalog = catalogUserApi.getCatalog(catalogName, catalogDateVersion, tenantContext);
+        final List<StaticCatalog> versions = catalogUserApi.getAllCatalogs(catalogName, tenantContext);
+        final List<StaticCatalog> filteredCatalogs = catalogDateVersion != null ? JaxRsResourceBase.filterCatalogVersions(versions, catalogDateVersion) : versions;
 
         // This assumes serializableClass has the right JAXB annotations
-        final Class serializableClass = catalog.getClass();
-        final String result = XMLWriter.writeXML(catalog, serializableClass);
+        final Class serializableClass = filteredCatalogs.getClass();
+        final String result = XMLWriter.writeXML(filteredCatalogs, serializableClass);
 
         return Response.status(Status.OK).entity(result).build();
     }
@@ -208,14 +208,15 @@ public class CatalogResource extends JaxRsResourceBase {
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
 
-        final Catalog catalog = catalogUserApi.getCatalog(catalogName, null, tenantContext);
+        final List<StaticCatalog> versions = catalogUserApi.getAllCatalogs(catalogName, tenantContext);
+        final List<StaticCatalog> filteredCatalogs = catalogDateVersion != null ? JaxRsResourceBase.filterCatalogVersions(versions, catalogDateVersion) : versions;
 
         final List<CatalogJson> result = new ArrayList<CatalogJson>();
         if (catalogDateVersion != null) {
-            result.add(new CatalogJson(catalog, catalogDateVersion));
+            result.add(new CatalogJson(filteredCatalogs, catalogDateVersion));
         } else {
-            for (final StaticCatalog v : catalog.getVersions()) {
-                result.add(new CatalogJson(catalog, new DateTime(v.getEffectiveDate())));
+            for (final StaticCatalog v : filteredCatalogs) {
+                result.add(new CatalogJson(filteredCatalogs, new DateTime(v.getEffectiveDate())));
             }
         }
         return Response.status(Status.OK).entity(result).build();
@@ -232,10 +233,10 @@ public class CatalogResource extends JaxRsResourceBase {
         final TenantContext tenantContext = accountId != null ?
                                             context.createTenantContextWithAccountId(accountId, request) :
                                             context.createTenantContextNoAccountId(request);
-        final Catalog catalog = catalogUserApi.getCatalog(catalogName, null, tenantContext);
+        final List<StaticCatalog> versions = catalogUserApi.getAllCatalogs(catalogName, tenantContext);
 
         final List<DateTime> result = new ArrayList<DateTime>();
-        for (final StaticCatalog v : catalog.getVersions()) {
+        for (final StaticCatalog v : versions) {
             result.add(new DateTime(v.getEffectiveDate()));
         }
 

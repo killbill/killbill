@@ -17,6 +17,7 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -238,7 +239,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
                 }
             }
 
-            return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
+            return new TestModelVersionedPluginCatalog(versionedCatalog.getVersions().get(0).getCatalogName(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
         }
 
         // This actually pulls catalog resources from `catalog` module and not the one from beatrix/src/test/resources//catalogs
@@ -248,7 +249,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
             final StandaloneCatalogWithPriceOverride inputCatalogVersionWithOverride = new StandaloneCatalogWithPriceOverride(inputCatalogVersion, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
 
             if (versionedCatalog == null) {
-                versionedCatalog = new DefaultVersionedCatalog(clock);
+                versionedCatalog = new DefaultVersionedCatalog(clock, new ArrayList<>());
             }
             versionedCatalog.add(inputCatalogVersionWithOverride);
         }

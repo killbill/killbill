@@ -25,10 +25,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
@@ -53,7 +51,7 @@ public class InvoiceItemFactory {
         return fromModelDaoWithCatalog(invoiceItemModelDao, null);
     }
 
-    public static InvoiceItem fromModelDaoWithCatalog(final InvoiceItemModelDao invoiceItemModelDao, @Nullable final Catalog catalog) {
+    public static InvoiceItem fromModelDaoWithCatalog(final InvoiceItemModelDao invoiceItemModelDao, @Nullable final List<StaticCatalog> catalog) {
         if (invoiceItemModelDao == null) {
             return null;
         }
@@ -128,7 +126,7 @@ public class InvoiceItemFactory {
     //
     // Returns an array of string for 'pretty' names [prettyPlanName, prettyPlanPhaseName, prettyUsageName]
     //
-    private static String[] computePrettyName(final InvoiceItemType type, final DateTime transitionDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final Catalog catalog) {
+    private static String[] computePrettyName(final InvoiceItemType type, final DateTime transitionDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final List<StaticCatalog> catalog) {
 
         final String[] result = new String[4];
 
@@ -149,9 +147,8 @@ public class InvoiceItemFactory {
                     // We are simply looking for the most recent version of a catalog version having such plan
                     // Finding the right entry would require some expensive operations which are probably not worth it for this use case.
                     Plan plan = null;
-                    final List<StaticCatalog> versions = catalog.getVersions();
-                    for (int i = versions.size() - 1; i >= 0; i--) {
-                        final StaticCatalog curVersion = versions.get(i);
+                    for (int i = catalog.size() - 1; i >= 0; i--) {
+                        final StaticCatalog curVersion = catalog.get(i);
                         try {
                             plan = curVersion.findCurrentPlan(planName);
                         } catch (final CatalogApiException e) {

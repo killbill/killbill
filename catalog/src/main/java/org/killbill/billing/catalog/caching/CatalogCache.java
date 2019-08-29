@@ -17,15 +17,18 @@
 
 package org.killbill.billing.catalog.caching;
 
+import java.util.List;
+
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.StaticCatalog;
 
 public interface CatalogCache {
 
     public void loadDefaultCatalog(final String url) throws CatalogApiException;
 
-    public DefaultVersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, InternalTenantContext tenantContext) throws CatalogApiException;
+    public List<StaticCatalog> getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, InternalTenantContext tenantContext) throws CatalogApiException;
 
     public void clearCatalog(InternalTenantContext tenantContext);
 }

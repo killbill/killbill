@@ -36,7 +36,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
@@ -45,6 +44,7 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
@@ -502,7 +502,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     @Override
-    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final Catalog publicCatalog) throws SubscriptionBaseApiException {
+    public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final List<StaticCatalog> publicCatalog) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
             // TODO_CATALOG is this really the startDate we should be using ?
@@ -549,7 +549,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final Catalog publicCatalog) throws SubscriptionBaseApiException {
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final List<StaticCatalog> publicCatalog) throws SubscriptionBaseApiException {
 
         if (transitions == null) {
             return Collections.emptyList();
@@ -612,8 +612,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
                     if (isCreateOrTransfer || isChangeEvent) {
 
-                        // Using findPlan(req) or findPlan(req, changePlanDate) should be equivalent here...
-                        final Plan currentPlan = catalog.findPlan(billingTransition.getPlan().getName(), billingTransition.getEffectiveDate());
+                        final StaticCatalog catalogVersion = catalog.versionForDate(billingTransition.getEffectiveDate());
+                        final Plan currentPlan = catalogVersion.findCurrentPlan(billingTransition.getPlan().getName());
 
                         // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
                         Plan nextPlan = catalog.getNextPlanVersion(currentPlan);

@@ -406,7 +406,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
                                                               aoTerm,
                                                               aoPriceList);
         final DateTime utcNow = clock.getUTCNow();
-        final SubscriptionCatalog subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock);
+        final SubscriptionCatalog subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog.getVersions(), clock);
         final PlanAlignmentCreate alignment = subscriptionCatalog.planCreateAlignment(planSpecifier, utcNow, utcNow);
         assertEquals(alignment, PlanAlignmentCreate.START_OF_BUNDLE);
 
@@ -424,7 +424,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
                                                               aoTerm,
                                                               aoPriceList);
         final DateTime utcNow = clock.getUTCNow();
-        final SubscriptionCatalog subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock);
+        final SubscriptionCatalog subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog.getVersions(), clock);
         final PlanAlignmentCreate alignment = subscriptionCatalog.planCreateAlignment(planSpecifier, utcNow, utcNow);
         assertEquals(alignment, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 

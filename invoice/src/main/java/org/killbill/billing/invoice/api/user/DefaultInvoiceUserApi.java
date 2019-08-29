@@ -37,10 +37,10 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
@@ -604,7 +604,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
     }
 
-    private List<Invoice> fromInvoiceModelDao(final Collection<InvoiceModelDao> invoiceModelDaos, final Catalog catalog) {
+    private List<Invoice> fromInvoiceModelDao(final Collection<InvoiceModelDao> invoiceModelDaos, final List<StaticCatalog> catalog) {
         return ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceModelDaos,
                                                                     new Function<InvoiceModelDao, Invoice>() {
                                                                         @Override
@@ -658,7 +658,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public List<InvoiceItem> getInvoiceItemsByParentInvoice(final UUID parentInvoiceId, final TenantContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(parentInvoiceId, ObjectType.INVOICE, context);
 
-        final Catalog catalog  = getCatalogSafelyForPrettyNames(internalTenantContext);
+        final List<StaticCatalog> catalog  = getCatalogSafelyForPrettyNames(internalTenantContext);
         return ImmutableList.copyOf(Collections2.transform(dao.getInvoiceItemsByParentInvoice(parentInvoiceId, internalTenantContext),
                                                            new Function<InvoiceItemModelDao, InvoiceItem>() {
                                                                @Override
@@ -668,7 +668,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                            }));
     }
 
-    private Catalog getCatalogSafelyForPrettyNames(final InternalTenantContext internalTenantContext) {
+    private List<StaticCatalog> getCatalogSafelyForPrettyNames(final InternalTenantContext internalTenantContext) {
 
         try {
             return catalogInternalApi.getFullCatalog(true, true, internalTenantContext);

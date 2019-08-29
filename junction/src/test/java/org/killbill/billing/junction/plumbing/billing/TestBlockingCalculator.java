@@ -36,13 +36,13 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Recurring;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.dao.MockBlockingStateDao;
@@ -79,7 +79,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     private SubscriptionBase subscription4;
     private Map<UUID, List<SubscriptionBase>> subscriptionsForAccount;
 
-    private Catalog catalog;
+    private List<StaticCatalog> catalog;
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
@@ -116,9 +116,6 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         Mockito.when(subscription2.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription3.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription4.getId()).thenReturn(UUID.randomUUID());
-
-
-        catalog = Mockito.mock(Catalog.class);
 
 
         ((MockBlockingStateDao) blockingStateDao).clear();

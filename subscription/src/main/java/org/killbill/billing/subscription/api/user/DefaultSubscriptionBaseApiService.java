@@ -47,6 +47,7 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.alignment.PlanAligner;
@@ -421,7 +422,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
         final PlanPhaseSpecifier planPhaseSpecifier = spec.getPlanPhaseSpecifier();
-        final Plan newPlan = catalog.createOrFindPlan(planPhaseSpecifier, overridesWithContext, effectiveDate);
+        final StaticCatalog versionCatalog = catalog.versionForDate(effectiveDate);
+        final Plan newPlan = versionCatalog.createOrFindCurrentPlan(planPhaseSpecifier, overridesWithContext);
 
         final PhaseType initialPhaseType = planPhaseSpecifier.getPhaseType();
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(newPlan.getProduct().getCategory().toString())) {

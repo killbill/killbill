@@ -22,11 +22,13 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.util.config.tenant.PerTenantConfig;
 
@@ -51,6 +53,7 @@ public @interface Cachable {
     String BUNDLE_ID_FROM_SUBSCRIPTION_ID_CACHE_NAME = "bundle-id-from-subscription-id";
 
     CacheType value();
+
 
     // Make sure both the key and value are Serializable
     enum CacheType {

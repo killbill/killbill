@@ -36,10 +36,10 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.junction.BillingEvent;
@@ -91,7 +91,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Catalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
+        final List<StaticCatalog> fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
 
         // Check to see if billing is off for the account
         final List<Tag> tagsForAccount = tagApi.getTagsForAccount(false, context);
@@ -148,7 +148,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                             final DefaultBillingEventSet result,
                                             final Set<UUID> skipSubscriptionsSet,
                                             final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount,
-                                            final Catalog catalog,
+                                            final List<StaticCatalog> catalog,
                                             final List<Tag> tagsForAccount) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         final int currentAccountBCD = accountApi.getBCD(context);
         addBillingEventsForBundles(bundles,
@@ -170,7 +170,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                             final DefaultBillingEventSet result,
                                             final Set<UUID> skipSubscriptionsSet,
                                             final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount,
-                                            final Catalog catalog,
+                                            final List<StaticCatalog> catalog,
                                             final List<Tag> tagsForAccount,
                                             final int currentAccountBCD) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         // In dryRun mode, when we care about invoice generated for new BASE subscription, no such bundle exists yet; we still
@@ -272,7 +272,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
                                                  final Set<UUID> skipSubscriptionsSet,
-                                                 final Catalog catalog) throws SubscriptionBaseApiException, CatalogApiException {
+                                                 final List<StaticCatalog> catalog) throws SubscriptionBaseApiException, CatalogApiException {
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
 
         for (final SubscriptionBase subscription : subscriptions) {

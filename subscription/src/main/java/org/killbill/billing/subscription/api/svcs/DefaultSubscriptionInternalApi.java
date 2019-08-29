@@ -36,12 +36,12 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
@@ -259,10 +259,10 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public SubscriptionBaseBundle getActiveBundleForKey(final Catalog publicCatalog, final String bundleKey, final InternalTenantContext context) {
+    public SubscriptionBaseBundle getActiveBundleForKey(final List<StaticCatalog> publicCatalog, final String bundleKey, final InternalTenantContext context) {
         try {
             final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
-            return super.getActiveBundleForKey(bundleKey, DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock), context);
+            return super.getActiveBundleForKey(bundleKey, catalog, context);
         } catch (final CatalogApiException e) {
             log.warn("Failed to get subscriptions", e);
             return null;
@@ -284,10 +284,10 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final Catalog publicCatalog,  final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final List<StaticCatalog> publicCatalog,  final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
-            final Map<UUID, List<DefaultSubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock), context);
+            final Map<UUID, List<DefaultSubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(catalog, context);
             final Map<UUID, List<SubscriptionBase>> result = new HashMap<UUID, List<SubscriptionBase>>();
             for (final UUID bundleId : internalSubscriptions.keySet()) {
                 final List<DefaultSubscriptionBase> subscriptionsForApiUse = createSubscriptionsForApiUse(internalSubscriptions.get(bundleId));
@@ -371,7 +371,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final SubscriptionBase subscription, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            return subscription.getSubscriptionBillingEvents(catalog);
+            return subscription.getSubscriptionBillingEvents(catalog.getVersions());
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
@@ -388,10 +388,13 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
 
         // verify the number of subscriptions (of the same kind) allowed per bundle
         final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
+
         final DateTime effectiveDate = (requestedDateWithMs != null) ? DefaultClock.truncateMs(requestedDateWithMs) : null;
         final DateTime effectiveCatalogDate = effectiveDate != null ? effectiveDate : context.getCreatedDate();
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(spec.getOverrides(), callContext);
-        final Plan plan = catalog.createOrFindPlan(spec.getPlanPhaseSpecifier(), overridesWithContext, effectiveCatalogDate);
+
+        final StaticCatalog catalogVersion = catalog.versionForDate(effectiveCatalogDate);
+        final Plan plan = catalogVersion.createOrFindCurrentPlan(spec.getPlanPhaseSpecifier(), overridesWithContext);
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
             if (plan.getPlansAllowedInBundle() != -1
                 && plan.getPlansAllowedInBundle() > 0
@@ -430,7 +433,8 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
                     continue;
                 }
 
-                final Product baseProduct = baseProductName != null ? catalog.findProduct(baseProductName, requestedDate) : null;
+                final StaticCatalog catalogVersion = catalog.versionForDate(requestedDate);
+                final Product baseProduct = baseProductName != null ? catalogVersion.findCurrentProduct(baseProductName) : null;
 
                 final DryRunChangeReason reason;
                 // If baseProductName is null, it's a cancellation dry-run. In this case, return all addons, so they are cancelled

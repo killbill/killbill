@@ -18,6 +18,7 @@
 
 package org.killbill.billing.subscription;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -27,9 +28,9 @@ import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultCatalogService;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -54,9 +55,9 @@ public class DefaultSubscriptionTestInitializer implements SubscriptionTestIniti
     public DefaultSubscriptionTestInitializer() {
     }
 
-    public Catalog initCatalog(final CatalogService catalogService, final InternalTenantContext context) throws Exception {
+    public List<StaticCatalog> initCatalog(final CatalogService catalogService, final InternalTenantContext context) throws Exception {
         ((DefaultCatalogService) catalogService).loadCatalog();
-        final Catalog catalog = catalogService.getFullCatalog(true, true, context);
+        final List<StaticCatalog> catalog = catalogService.getFullCatalog(true, true, context);
         assertNotNull(catalog);
         return catalog;
     }

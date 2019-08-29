@@ -26,6 +26,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
 import org.testng.Assert;
@@ -60,7 +61,7 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
         }
         super.beforeMethod();
 
-        subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock);
+        subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog.getVersions(), clock);
 
     }
 
@@ -121,11 +122,13 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testWithDeletedPlan() throws CatalogApiException {
         // We find it because this is version 2 whose effectiveDate is "2011-02-02T00:00:00+00:00"
-        subscriptionCatalog.findPlan("shotgun-quarterly", dt2);
+        final StaticCatalog catalogVersion2 = subscriptionCatalog.versionForDate(dt2);
+        catalogVersion2.findCurrentPlan("shotgun-quarterly");
 
         try {
             // We **don't find it** because date provided matches version 3 where plan was removed
-            subscriptionCatalog.findPlan("shotgun-quarterly", dt3);
+            final StaticCatalog catalogVersion3 = subscriptionCatalog.versionForDate(dt3);
+            catalogVersion3.findCurrentPlan("shotgun-quarterly");
             Assert.fail("Plan has been removed");
         } catch (final CatalogApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PLAN.getCode());

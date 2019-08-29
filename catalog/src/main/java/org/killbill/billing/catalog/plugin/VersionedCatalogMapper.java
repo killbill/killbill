@@ -17,6 +17,8 @@
 
 package org.killbill.billing.catalog.plugin;
 
+import java.util.ArrayList;
+
 import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -45,7 +47,7 @@ public class VersionedCatalogMapper {
     }
 
     public DefaultVersionedCatalog toVersionedCatalog(final VersionedPluginCatalog pluginCatalog, final InternalTenantContext internalTenantContext) throws CatalogApiException {
-        final DefaultVersionedCatalog result = new DefaultVersionedCatalog(clock);
+        final DefaultVersionedCatalog result = new DefaultVersionedCatalog(clock, new ArrayList<>());
         for (final StandalonePluginCatalog cur : pluginCatalog.getStandalonePluginCatalogs()) {
             result.add(toStandaloneCatalogWithPriceOverride(pluginCatalog, cur, internalTenantContext));
         }

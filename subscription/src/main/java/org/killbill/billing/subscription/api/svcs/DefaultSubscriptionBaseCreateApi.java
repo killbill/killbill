@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -287,7 +288,8 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
         for (final EntitlementSpecifier cur : subscriptionBaseWithAddOnsSpecifier.getEntitlementSpecifiers()) {
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(cur.getOverrides(), callContext);
             // Called by createBaseSubscriptionsWithAddOns only -- no need for subscription start date
-            final Plan plan = catalog.createOrFindPlan(cur.getPlanPhaseSpecifier(), overridesWithContext, effectiveDate);
+            final StaticCatalog catalogVersion = catalog.versionForDate(effectiveDate);
+            final Plan plan = catalogVersion.createOrFindCurrentPlan(cur.getPlanPhaseSpecifier(), overridesWithContext);
 
             final boolean isBase = isBaseSpecifier(plan);
             final boolean isStandalone = isStandaloneSpecifier(plan);

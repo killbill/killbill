@@ -20,13 +20,14 @@ package org.killbill.billing.entitlement.dao;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -84,7 +85,7 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
                                                         final SubscriptionBase subscription,
                                                         final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                                         final int accountBCD,
-                                                        final Catalog catalog,
+                                                        final List<StaticCatalog> catalog,
                                                         final InternalTenantContext context) throws EntitlementApiException {
         // blockable id points to a subscription, but make sure it's an add-on
         if (!ProductCategory.ADD_ON.equals(subscription.getCategory())) {

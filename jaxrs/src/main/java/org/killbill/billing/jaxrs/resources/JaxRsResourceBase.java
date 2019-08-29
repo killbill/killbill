@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +43,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -52,6 +54,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -776,4 +779,31 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             }
         }));
     }
+
+    // TODO_HACK_REF
+    public static StaticCatalog getCatalogVersion(final List<StaticCatalog> versions, final DateTime requestedDate) {
+
+        for (int i = versions.size() - 1; i >= 0; i--) {
+            final StaticCatalog c = versions.get(i);
+            if (c.getEffectiveDate().getTime() <= requestedDate.toDate().getTime()) {
+                return c;
+            }
+        }
+        throw new IllegalStateException(String.format("Cannot find catalog version for requestedDate %s", requestedDate));
+    }
+
+    // TODO_HACK_REF
+    public static List<StaticCatalog> filterCatalogVersions(final List<StaticCatalog> fullCatalog, final DateTime requestedDate) {
+
+        final List<StaticCatalog> result = new ArrayList<>();
+        for (final StaticCatalog v : fullCatalog) {
+            if (v.getEffectiveDate().compareTo(requestedDate.toDate()) >= 0) {
+                result.add(v);
+                // TODO_HACK_REF  don't understand previous implementation : why do we break here ??
+                break;
+            }
+        }
+        return result;
+    }
+
 }

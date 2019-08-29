@@ -21,27 +21,14 @@ package org.killbill.billing.catalog;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.Catalog;
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
-import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.Product;
-import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
 
-import com.google.common.collect.ImmutableList;
-
-public class MockCatalog extends StandaloneCatalog implements Catalog {
+public class MockCatalog extends StandaloneCatalog {
 
     private PlanChangeResult planChange;
     private BillingAlignment billingAlignment;
@@ -76,57 +63,6 @@ public class MockCatalog extends StandaloneCatalog implements Catalog {
 
         final DefaultPriceListSet set = new DefaultPriceListSet(new PriceListDefault(new DefaultPlan[]{(DefaultPlan) initialPlan}), priceList);
         setPriceLists(set);
-    }
-
-    @Override
-    public Date getStandaloneCatalogEffectiveDate(final DateTime dateTime) {
-        return getEffectiveDate();
-    }
-
-    @Override
-    public Currency[] getSupportedCurrencies(final DateTime requestedDate) {
-        return getCurrentSupportedCurrencies();
-    }
-
-    @Override
-    public Unit[] getUnits(final DateTime requestedDate) {
-        return getCurrentUnits();
-    }
-
-    @Override
-    public Collection<Product> getProducts(final DateTime requestedDate) {
-        return getCurrentProducts();
-    }
-
-    @Override
-    public Collection<Plan> getPlans(final DateTime requestedDate) {
-        return getCurrentPlans();
-    }
-
-    @Override
-    public PriceListSet getPriceLists(final DateTime dateTime) {
-        return getPriceLists();
-    }
-
-    @Override
-    public Plan findPlan(final String name, final DateTime requestedDate) throws CatalogApiException {
-        return findCurrentPlan(name);
-    }
-
-    @Override
-    public Plan createOrFindPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides, final DateTime requestedDate)
-            throws CatalogApiException {
-        return createOrFindCurrentPlan(spec, overrides);
-    }
-
-    @Override
-    public Product findProduct(final String name, final DateTime requestedDate) throws CatalogApiException {
-        return findCurrentProduct(name);
-    }
-
-    @Override
-    public List<StaticCatalog> getVersions() {
-        return ImmutableList.of(this);
     }
 
     public DefaultProduct getCurrentProduct(final int idx) {

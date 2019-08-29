@@ -29,8 +29,8 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -112,25 +112,25 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoad() throws CatalogApiException {
-        final DefaultVersionedCatalog c = loader.loadDefaultCatalog(Resources.getResource("versionedCatalog").toString());
-        Assert.assertEquals(c.getVersions().size(), 4);
+        final List<StaticCatalog> c = loader.loadDefaultCatalog(Resources.getResource("versionedCatalog").toString());
+        Assert.assertEquals(c.size(), 4);
         DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
-        Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.get(0).getEffectiveDate(), dt.toDate());
         dt = new DateTime("2011-02-02T00:00:00+00:00");
-        Assert.assertEquals(c.getVersions().get(1).getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.get(1).getEffectiveDate(), dt.toDate());
         dt = new DateTime("2011-02-03T00:00:00+00:00");
-        Assert.assertEquals(c.getVersions().get(2).getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.get(2).getEffectiveDate(), dt.toDate());
         dt = new DateTime("2011-03-03T00:00:00+00:00");
-        Assert.assertEquals(c.getVersions().get(3).getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.get(3).getEffectiveDate(), dt.toDate());
     }
 
     @Test(groups = "fast")
     public void testLoadCatalogFromClasspathResourceFolder() throws CatalogApiException {
-        final Catalog c = loader.loadDefaultCatalog("SpyCarBasic.xml");
-        Assert.assertEquals(c.getVersions().size(), 1);
+        final List<StaticCatalog> c = loader.loadDefaultCatalog("SpyCarBasic.xml");
+        Assert.assertEquals(c.size(), 1);
         final DateTime dt = new DateTime("2013-02-08T00:00:00+00:00");
-        Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
-        Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
+        Assert.assertEquals(c.get(0).getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.get(0).getCatalogName(), "SpyCarBasic");
     }
 
     @Test(groups = "fast", expectedExceptions = CatalogApiException.class)
@@ -140,11 +140,11 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoadCatalogFromInsideResourceFolder() throws CatalogApiException {
-        final DefaultVersionedCatalog c = loader.loadDefaultCatalog("com/acme/SpyCarCustom.xml");
-        Assert.assertEquals(c.getVersions().size(), 1);
+        final List<StaticCatalog> c = loader.loadDefaultCatalog("com/acme/SpyCarCustom.xml");
+        Assert.assertEquals(c.size(), 1);
         final DateTime dt = new DateTime("2015-10-04T00:00:00+00:00");
-        Assert.assertEquals(c.getEffectiveDate(), dt.toDate());
-        Assert.assertEquals(c.getCatalogName(), "SpyCarCustom");
+        Assert.assertEquals(c.get(0).getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.get(0).getCatalogName(), "SpyCarCustom");
     }
 
     @Test(groups = "fast", expectedExceptions = CatalogApiException.class)
@@ -158,7 +158,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
         final File destinationFile = new File(Files.createTempDir().toString() + "/SpyCarBasicRelocated.xml");
         destinationFile.deleteOnExit();
         Files.copy(originFile, destinationFile);
-        final Catalog c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
-        Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
+        final List<StaticCatalog> c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
+        Assert.assertEquals(c.get(0).getCatalogName(), "SpyCarBasic");
     }
 }

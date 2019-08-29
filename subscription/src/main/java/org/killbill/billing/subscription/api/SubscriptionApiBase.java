@@ -36,6 +36,7 @@ import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -140,9 +141,10 @@ public class SubscriptionApiBase {
 
         // Create an overridesWithContext with a null context to indicate this is dryRun and no price overridden plan should be created.
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(entitlementSpecifier.getOverrides(), null);
+        final StaticCatalog versionCatalog = catalog.versionForDate(utcNow);
         final Plan plan = isInputSpecNullOrEmpty ?
                           null :
-                          catalog.createOrFindPlan(inputSpec, overridesWithContext, utcNow);
+                          versionCatalog.createOrFindCurrentPlan(inputSpec, overridesWithContext);
 
         switch (dryRunArguments.getAction()) {
             case START_BILLING:
