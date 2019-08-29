@@ -789,7 +789,11 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                 return c;
             }
         }
-        throw new IllegalStateException(String.format("Cannot find catalog version for requestedDate %s", requestedDate));
+        // If the only version we have are after the input date, we return the first version
+        // This is not strictly correct from an api point of view, but there is no real good use case
+        // where the system would ask for the catalog for a date prior any catalog was uploaded and
+        // yet time manipulation could end of inn that state -- see https://github.com/killbill/killbill/issues/760
+        return versions.get(0);
     }
 
     // TODO_HACK_REF
