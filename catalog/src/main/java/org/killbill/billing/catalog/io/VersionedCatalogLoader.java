@@ -127,15 +127,8 @@ public class VersionedCatalogLoader implements CatalogLoader {
                     result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory));
                 }
             }
-            // Don't return a DefaultVersionedCatalog with no StaticCatalog
-            if (result.getVersions().isEmpty()) {
-                return null;
-            } else {
-                // Perform initialization and validation for VersionedCatalog
-                XMLLoader.initializeAndValidate(result);
-                return result;
-            }
-
+            XMLLoader.initializeAndValidate(result);
+            return result;
         } catch (final ValidationException e) {
             logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             for (ValidationError ve : e.getErrors()) {
