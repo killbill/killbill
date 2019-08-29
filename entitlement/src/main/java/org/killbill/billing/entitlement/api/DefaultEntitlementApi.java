@@ -42,6 +42,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.EntitlementPluginExecution.WithEntitlementPlugin;
@@ -391,7 +392,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             public List<UUID> doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(accountId, callContext);
 
-                final List<StaticCatalog> catalog;
+                final VersionedCatalog catalog;
                 try {
                     catalog = catalogInternalApi.getFullCatalog(true, true, contextWithValidAccountRecordId);
                 } catch (final CatalogApiException e) {
@@ -474,7 +475,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     private UUID populateCaches(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier,
                                 final Map<UUID, Optional<EventsStream>> eventsStreamForBaseSubscriptionPerBundle,
                                 final Map<String, Optional<UUID>> bundleKeyToIdMapping,
-                                final List<StaticCatalog> catalog,
+                                final VersionedCatalog catalog,
                                 final TenantContext callContext,
                                 final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
         // In the addEntitlement codepath, bundleId is always set. But, technically, an existing bundle could be specified by bundleExternalKey in
@@ -498,7 +499,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         return bundleId;
     }
 
-    private void populateBundleKeyToIdMappingCache(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier, final Map<String, Optional<UUID>> bundleKeyToIdMapping, final List<StaticCatalog> catalog, final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
+    private void populateBundleKeyToIdMappingCache(final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier, final Map<String, Optional<UUID>> bundleKeyToIdMapping, final VersionedCatalog catalog, final InternalCallContext contextWithValidAccountRecordId) throws EntitlementApiException {
         if (bundleKeyToIdMapping.get(baseEntitlementWithAddOnsSpecifier.getBundleExternalKey()) == null) {
             final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getActiveBundleForKey(catalog, baseEntitlementWithAddOnsSpecifier.getBundleExternalKey(), contextWithValidAccountRecordId);
             if (bundle != null) {

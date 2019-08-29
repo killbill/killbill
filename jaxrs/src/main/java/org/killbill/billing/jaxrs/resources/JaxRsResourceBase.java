@@ -55,6 +55,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -780,7 +781,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }));
     }
 
-    // TODO_HACK_REF
     public static StaticCatalog getCatalogVersion(final List<StaticCatalog> versions, final DateTime requestedDate) {
 
         for (int i = versions.size() - 1; i >= 0; i--) {
@@ -796,18 +796,23 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return versions.get(0);
     }
 
-    // TODO_HACK_REF
-    public static List<StaticCatalog> filterCatalogVersions(final List<StaticCatalog> fullCatalog, final DateTime requestedDate) {
+    // Since we cannot reconstruct a DefaultVersionedCatalog with all its JAXB annotation
+    // we filter the existing versions list from the original object
+    public static void filterCatalogVersions(final VersionedCatalog fullCatalog, @Nullable final DateTime requestedDate) {
 
-        final List<StaticCatalog> result = new ArrayList<>();
-        for (final StaticCatalog v : fullCatalog) {
+        if (requestedDate == null) {
+            return;
+        }
+
+        final List<StaticCatalog> allVersions = new ArrayList<>(fullCatalog.getVersions());
+        fullCatalog.getVersions().clear();
+        for (final StaticCatalog v : allVersions) {
             if (v.getEffectiveDate().compareTo(requestedDate.toDate()) >= 0) {
-                result.add(v);
-                // TODO_HACK_REF  don't understand previous implementation : why do we break here ??
+                fullCatalog.getVersions().add(v);
+                // TODO_CATALOG  don't understand previous implementation : why do we break here ??
                 break;
             }
         }
-        return result;
     }
 
 }

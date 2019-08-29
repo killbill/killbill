@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -77,7 +78,7 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testMissingDefaultCatalog() throws CatalogApiException {
         catalogCache.loadDefaultCatalog(null);
-        Assert.assertEquals(catalogCache.getCatalog(true, true, false, internalCallContext).get(0).getCatalogName(), "EmptyCatalog");
+        Assert.assertEquals(catalogCache.getCatalog(true, true, false, internalCallContext).getVersions().get(0).getCatalogName(), "EmptyCatalog");
     }
 
     //
@@ -87,22 +88,22 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
     public void testDefaultCatalog() throws CatalogApiException {
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
 
-        final List<StaticCatalog> result = catalogCache.getCatalog(true, true, false, internalCallContext);
+        final VersionedCatalog result = catalogCache.getCatalog(true, true, false, internalCallContext);
         Assert.assertNotNull(result);
-        final StaticCatalog catalogVersion = result.get(result.size() - 1);
+        final StaticCatalog catalogVersion = result.getVersions().get(result.getVersions().size() - 1);
         final Collection<Product> products = catalogVersion.getCurrentProducts();
         Assert.assertEquals(products.size(), 3);
 
         // Verify the lookup with other contexts
         final DefaultVersionedCatalog resultForMultiTenantContext = new DefaultVersionedCatalog(new ArrayList<>());
-        for (final StaticCatalog cur : result) {
+        for (final StaticCatalog cur : result.getVersions()) {
             resultForMultiTenantContext.add(new StandaloneCatalogWithPriceOverride(cur, priceOverride, multiTenantContext.getTenantRecordId(), internalCallContextFactory));
         }
 
-        Assert.assertEquals(catalogCache.getCatalog(true, true, false, multiTenantContext).get(0).getCatalogName(), resultForMultiTenantContext.getVersions().get(0).getCatalogName());
-        Assert.assertEquals(catalogCache.getCatalog(true, true, false, multiTenantContext).size(), resultForMultiTenantContext.getVersions().size());
-        for (int i = 0; i < catalogCache.getCatalog(true, true, false, multiTenantContext).size(); i++) {
-           Assert.assertEquals(((StandaloneCatalogWithPriceOverride) catalogCache.getCatalog(true, true, false, multiTenantContext).get(i)).getTenantRecordId(), ((StandaloneCatalogWithPriceOverride) resultForMultiTenantContext.getVersions().get(i)).getTenantRecordId());
+        Assert.assertEquals(catalogCache.getCatalog(true, true, false, multiTenantContext).getVersions().get(0).getCatalogName(), resultForMultiTenantContext.getVersions().get(0).getCatalogName());
+        Assert.assertEquals(catalogCache.getCatalog(true, true, false, multiTenantContext).getVersions().size(), resultForMultiTenantContext.getVersions().size());
+        for (int i = 0; i < catalogCache.getCatalog(true, true, false, multiTenantContext).getVersions().size(); i++) {
+           Assert.assertEquals(((StandaloneCatalogWithPriceOverride) catalogCache.getCatalog(true, true, false, multiTenantContext).getVersions().get(i)).getTenantRecordId(), ((StandaloneCatalogWithPriceOverride) resultForMultiTenantContext.getVersions().get(i)).getTenantRecordId());
         }
     }
 
@@ -143,16 +144,16 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         });
 
         // Verify the lookup for a non-cached tenant. No system config is set yet but DefaultCatalogCache returns a default empty one
-        List<StaticCatalog> differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
+        VersionedCatalog differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
-        Assert.assertEquals(differentResult.get(0).getCatalogName(), "EmptyCatalog");
+        Assert.assertEquals(differentResult.getVersions().get(0).getCatalogName(), "EmptyCatalog");
 
         // Make sure the cache loader isn't invoked, see https://github.com/killbill/killbill/issues/300
         shouldThrow.set(true);
 
         differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
-        Assert.assertEquals(differentResult.get(0).getCatalogName(), "EmptyCatalog");
+        Assert.assertEquals(differentResult.getVersions().get(0).getCatalogName(), "EmptyCatalog");
 
         shouldThrow.set(false);
 
@@ -160,23 +161,23 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
 
         // Verify the lookup for this tenant
-        final List<StaticCatalog> result = catalogCache.getCatalog(true, true, false, multiTenantContext);
+        final VersionedCatalog result = catalogCache.getCatalog(true, true, false, multiTenantContext);
         Assert.assertNotNull(result);
-        final StaticCatalog catalogVersion = result.get(result.size() - 1);
+        final StaticCatalog catalogVersion = result.getVersions().get(result.getVersions().size() - 1);
         final Collection<Product> products = catalogVersion.getCurrentProducts();
         Assert.assertEquals(products.size(), 6);
 
         // Verify the lookup for another tenant
-        final List<StaticCatalog> otherResult = catalogCache.getCatalog(true, true, false, otherMultiTenantContext);
+        final VersionedCatalog otherResult = catalogCache.getCatalog(true, true, false, otherMultiTenantContext);
         Assert.assertNotNull(otherResult);
-        final StaticCatalog othercatalogVersion = otherResult.get(result.size() - 1);
+        final StaticCatalog othercatalogVersion = otherResult.getVersions().get(result.getVersions().size() - 1);
         final Collection<Product> otherProducts = othercatalogVersion.getCurrentProducts();
         Assert.assertEquals(otherProducts.size(), 3);
 
         shouldThrow.set(true);
 
         // Verify the lookup for this tenant
-        final List<StaticCatalog> result2 = catalogCache.getCatalog(true, true, false, multiTenantContext);
+        final VersionedCatalog result2 = catalogCache.getCatalog(true, true, false, multiTenantContext);
         Assert.assertEquals(result2, result);
 
         // Verify the lookup with another context for the same tenant

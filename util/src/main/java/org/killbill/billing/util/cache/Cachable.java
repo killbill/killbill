@@ -22,13 +22,11 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.ImmutableAccountData;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.util.config.tenant.PerTenantConfig;
 
@@ -54,7 +52,6 @@ public @interface Cachable {
 
     CacheType value();
 
-
     // Make sure both the key and value are Serializable
     enum CacheType {
 
@@ -71,7 +68,7 @@ public @interface Cachable {
         OBJECT_ID(OBJECT_ID_CACHE_NAME, String.class, UUID.class, true),
 
         /* Tenant catalog cache */
-        TENANT_CATALOG(TENANT_CATALOG_CACHE_NAME, Long.class, Catalog.class, false),
+        TENANT_CATALOG(TENANT_CATALOG_CACHE_NAME, Long.class, VersionedCatalog.class, false),
 
         /* Tenant payment state machine config cache (String -> SerializableStateMachineConfig) */
         TENANT_PAYMENT_STATE_MACHINE_CONFIG(TENANT_PAYMENT_STATE_MACHINE_CONFIG_CACHE_NAME, String.class, Object.class, false),
@@ -115,6 +112,15 @@ public @interface Cachable {
             this.isKeyPrefixedWithTableName = isKeyPrefixedWithTableName;
         }
 
+        public static CacheType findByName(final String input) {
+            for (final CacheType cacheType : CacheType.values()) {
+                if (cacheType.cacheName.equals(input)) {
+                    return cacheType;
+                }
+            }
+            return null;
+        }
+
         public String getCacheName() {
             return cacheName;
         }
@@ -128,14 +134,5 @@ public @interface Cachable {
         }
 
         public boolean isKeyPrefixedWithTableName() { return isKeyPrefixedWithTableName; }
-
-        public static CacheType findByName(final String input) {
-            for (final CacheType cacheType : CacheType.values()) {
-                if (cacheType.cacheName.equals(input)) {
-                    return cacheType;
-                }
-            }
-            return null;
-        }
     }
 }

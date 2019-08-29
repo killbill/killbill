@@ -42,7 +42,7 @@ import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Recurring;
-import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.dao.MockBlockingStateDao;
@@ -79,7 +79,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     private SubscriptionBase subscription4;
     private Map<UUID, List<SubscriptionBase>> subscriptionsForAccount;
 
-    private List<StaticCatalog> catalog;
+    private VersionedCatalog catalog;
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
@@ -111,12 +111,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         bundleSubscriptions1.add(subscription4);
         subscriptionsForAccount.put(bundleId2, bundleSubscriptions2);
 
-
         Mockito.when(subscription1.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription2.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription3.getId()).thenReturn(UUID.randomUUID());
         Mockito.when(subscription4.getId()).thenReturn(UUID.randomUUID());
-
 
         ((MockBlockingStateDao) blockingStateDao).clear();
     }
@@ -373,7 +371,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(subscription1, now.minusDays(1)));
 
-        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, catalog,  internalCallContext);
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, catalog, internalCallContext);
 
         assertEquals(results.size(), 1);
         assertEquals(results.first().getEffectiveDate(), now);
@@ -449,7 +447,6 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         billingEvents.add(createRealEvent(subscription1, now.minusDays(1)));
 
         final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, catalog, internalCallContext);
-
 
         assertEquals(results.size(), 2);
         assertEquals(results.first().getEffectiveDate(), now);
@@ -608,7 +605,6 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewDisableEvent() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-
 
         final BillingEvent event = createRealEvent(subscription1, now);
 
@@ -801,7 +797,6 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
                                                                                                                         blockingState4, Optional.<UUID>absent()),
                                                                          internalCallContext);
 
-
         blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalog, internalCallContext);
 
         assertEquals(billingEvents.size(), 5);
@@ -815,11 +810,11 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(events.get(3).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
         assertEquals(events.get(3).getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
         assertEquals(events.get(4).getEffectiveDate(), new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
-        assertEquals(events.get(4).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);    }
-
+        assertEquals(events.get(4).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
+    }
 
     private BillingEvent createBillingEvent(final SubscriptionBase subscription, final Long totalOrdering) {
-        return createRealEvent( subscription, new DateTime(), SubscriptionBaseTransitionType.CREATE, totalOrdering);
+        return createRealEvent(subscription, new DateTime(), SubscriptionBaseTransitionType.CREATE, totalOrdering);
     }
 
     protected BillingEvent createRealEvent(final SubscriptionBase subscription, final DateTime effectiveDate) {
@@ -830,7 +825,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         return createRealEvent(subscription, effectiveDate, type, 0L);
     }
 
-    private BillingEvent createRealEvent(final SubscriptionBase subscription, final DateTime effectiveDate, final SubscriptionBaseTransitionType type, final Long totalOrdering)  {
+    private BillingEvent createRealEvent(final SubscriptionBase subscription, final DateTime effectiveDate, final SubscriptionBaseTransitionType type, final Long totalOrdering) {
         try {
 
             final Integer billCycleDay = 1;

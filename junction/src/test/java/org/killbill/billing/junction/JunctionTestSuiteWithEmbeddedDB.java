@@ -34,6 +34,7 @@ import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.api.EntitlementApi;
@@ -92,7 +93,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     @Inject
     protected InternalCallContextFactory internalCallContextFactory;
 
-    protected List<StaticCatalog> catalog;
+    protected VersionedCatalog catalog;
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
@@ -129,9 +130,9 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
         stopTestFramework();
     }
 
-    private List<StaticCatalog> initCatalog(final CatalogService catalogService) throws Exception {
+    private VersionedCatalog initCatalog(final CatalogService catalogService) throws Exception {
         ((DefaultCatalogService) catalogService).loadCatalog();
-        final List<StaticCatalog> catalog = catalogService.getFullCatalog(true, true, internalCallContext);
+        final VersionedCatalog catalog = catalogService.getFullCatalog(true, true, internalCallContext);
         assertNotNull(catalog);
         return catalog;
     }

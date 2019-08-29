@@ -17,10 +17,7 @@
 
 package org.killbill.billing.catalog.api;
 
-import java.util.List;
-
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.platform.api.KillbillService;
 
 /**
@@ -28,7 +25,7 @@ import org.killbill.billing.platform.api.KillbillService;
  */
 public interface CatalogService extends KillbillService {
 
-    public List<StaticCatalog> getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
+    public VersionedCatalog getFullCatalog(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 
-    public List<StaticCatalog> getFullCatalogForInternalUse(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
+    public VersionedCatalog getFullCatalogForInternalUse(boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) throws CatalogApiException;
 }

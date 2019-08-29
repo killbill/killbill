@@ -40,6 +40,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.junction.BillingEvent;
@@ -91,7 +92,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final List<StaticCatalog> fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
+        final VersionedCatalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
 
         // Check to see if billing is off for the account
         final List<Tag> tagsForAccount = tagApi.getTagsForAccount(false, context);
@@ -111,7 +112,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(fullCatalog, context);
 
-
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
         result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
@@ -120,8 +120,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             log.info("No billing event for accountId='{}'", accountId);
             return result;
         }
-
-
 
         // Pretty-print the events, before and after the blocking calculator does its magic
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
@@ -148,7 +146,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                             final DefaultBillingEventSet result,
                                             final Set<UUID> skipSubscriptionsSet,
                                             final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount,
-                                            final List<StaticCatalog> catalog,
+                                            final VersionedCatalog catalog,
                                             final List<Tag> tagsForAccount) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         final int currentAccountBCD = accountApi.getBCD(context);
         addBillingEventsForBundles(bundles,
@@ -170,7 +168,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                             final DefaultBillingEventSet result,
                                             final Set<UUID> skipSubscriptionsSet,
                                             final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount,
-                                            final List<StaticCatalog> catalog,
+                                            final VersionedCatalog catalog,
                                             final List<Tag> tagsForAccount,
                                             final int currentAccountBCD) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         // In dryRun mode, when we care about invoice generated for new BASE subscription, no such bundle exists yet; we still
@@ -272,7 +270,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
                                                  final Set<UUID> skipSubscriptionsSet,
-                                                 final List<StaticCatalog> catalog) throws SubscriptionBaseApiException, CatalogApiException {
+                                                 final VersionedCatalog catalog) throws SubscriptionBaseApiException, CatalogApiException {
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
 
         for (final SubscriptionBase subscription : subscriptions) {
@@ -344,17 +342,17 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags, @Nullable final UUID objectId) {
         return ImmutableList.<Tag>copyOf(Iterables.<Tag>filter(tags,
-                                                                  new Predicate<Tag>() {
-                                                                      @Override
-                                                                      public boolean apply(final Tag input) {
-                                                                          if (objectId == null) {
-                                                                              return objectType == input.getObjectType();
-                                                                          } else {
-                                                                              return objectType == input.getObjectType() && objectId.equals(input.getObjectId());
-                                                                          }
+                                                               new Predicate<Tag>() {
+                                                                   @Override
+                                                                   public boolean apply(final Tag input) {
+                                                                       if (objectId == null) {
+                                                                           return objectType == input.getObjectType();
+                                                                       } else {
+                                                                           return objectType == input.getObjectType() && objectId.equals(input.getObjectId());
+                                                                       }
 
-                                                                      }
-                                                                  }));
+                                                                   }
+                                                               }));
     }
 
     private List<SubscriptionBase> getSubscriptionsForAccountByBundleId(final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount, final UUID bundleId) {

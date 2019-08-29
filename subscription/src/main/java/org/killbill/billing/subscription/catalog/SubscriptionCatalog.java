@@ -34,6 +34,7 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.clock.Clock;
@@ -48,17 +49,23 @@ import static org.killbill.billing.ErrorCode.CAT_NO_SUCH_PLAN;
 //
 public class SubscriptionCatalog  {
 
+    private final VersionedCatalog catalog;
     private final List<StaticCatalog> versions;
     private final Clock clock;
 
     // package scope
-    SubscriptionCatalog(final List<StaticCatalog> versions, final Clock clock) {
-        this.versions = versions;
+    SubscriptionCatalog(final VersionedCatalog catalog, final Clock clock) {
+        this.catalog = catalog;
+        this.versions = catalog.getVersions();
         this.clock = clock;
     }
 
     public List<StaticCatalog> getVersions() {
         return versions;
+    }
+
+    public VersionedCatalog getCatalog() {
+        return catalog;
     }
 
     //

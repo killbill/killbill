@@ -42,6 +42,7 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun.DryRunChangeReason;
@@ -259,7 +260,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public SubscriptionBaseBundle getActiveBundleForKey(final List<StaticCatalog> publicCatalog, final String bundleKey, final InternalTenantContext context) {
+    public SubscriptionBaseBundle getActiveBundleForKey(final VersionedCatalog publicCatalog, final String bundleKey, final InternalTenantContext context) {
         try {
             final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
             return super.getActiveBundleForKey(bundleKey, catalog, context);
@@ -284,7 +285,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final List<StaticCatalog> publicCatalog,  final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final VersionedCatalog publicCatalog,  final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
             final Map<UUID, List<DefaultSubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(catalog, context);
@@ -371,7 +372,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final SubscriptionBase subscription, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            return subscription.getSubscriptionBillingEvents(catalog.getVersions());
+            return subscription.getSubscriptionBillingEvents(catalog.getCatalog());
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }

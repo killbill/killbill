@@ -18,14 +18,10 @@
 
 package org.killbill.billing.catalog;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.mockito.Mockito;
@@ -41,7 +37,7 @@ public class MockCatalogModule extends KillBillModule {
         final CatalogService catalogService = Mockito.mock(CatalogService.class);
         final CatalogInternalApi catalogInternalApi = Mockito.mock(CatalogInternalApi.class);
         try {
-            final List<StaticCatalog> mockVersionedCatalog = new ArrayList<StaticCatalog>();
+            final DefaultVersionedCatalog mockVersionedCatalog = new DefaultVersionedCatalog();
             final MockCatalog mockCatalog = new MockCatalog();
             mockVersionedCatalog.add(mockCatalog);
             Mockito.when(catalogService.getFullCatalogForInternalUse(Mockito.any(Boolean.class), Mockito.any(Boolean.class), Mockito.any(InternalCallContext.class))).thenReturn(mockVersionedCatalog);

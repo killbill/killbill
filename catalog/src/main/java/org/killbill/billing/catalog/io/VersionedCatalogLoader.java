@@ -35,10 +35,9 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.InvalidConfigException;
-import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
@@ -72,7 +71,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
     }
 
     @Override
-    public List<StaticCatalog> loadDefaultCatalog(final String uriString) throws CatalogApiException {
+    public VersionedCatalog loadDefaultCatalog(final String uriString) throws CatalogApiException {
         try {
             final List<URI> xmlURIs;
             if (uriString.endsWith(XML_EXTENSION)) { // Assume its an xml file
@@ -91,7 +90,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
             }
             // Perform initialization and validation for VersionedCatalog
             XMLLoader.initializeAndValidate(result);
-            return result.getVersions();
+            return result;
         } catch (final ValidationException e) {
             logger.warn("Failed to load default catalog", e);
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_DEFAULT, uriString);
@@ -117,7 +116,7 @@ public class VersionedCatalogLoader implements CatalogLoader {
         return Resources.getResource(urlString);
     }
 
-    public Catalog load(final Iterable<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
+    public VersionedCatalog load(final Iterable<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
         try {
             final DefaultVersionedCatalog result = new DefaultVersionedCatalog(new ArrayList<>());
             for (final String cur : catalogXMLs) {

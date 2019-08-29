@@ -67,14 +67,14 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultVersionedCatalog versionedCatalog = new DefaultVersionedCatalog();
         final MockCatalog mockCatalog = new MockCatalog();
         versionedCatalog.add(mockCatalog);
-        final CatalogService catalogService = new MockCatalogService(versionedCatalog.getVersions(), cacheControllerDispatcher);
+        final CatalogService catalogService = new MockCatalogService(versionedCatalog, cacheControllerDispatcher);
         final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService);
         final SubscriptionCatalogApi subscriptionCatalogInternalApiWithMockCatalogService = new DefaultSubscriptionCatalogApi(catalogInternalApiWithMockCatalogService, clock);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
         transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, subscriptionCatalogInternalApiWithMockCatalogService, subscriptionInternalApi, apiService, internalCallContextFactory);
         // Overrride catalog with our MockCatalog
-        this.catalog = DefaultSubscriptionCatalogApi.wrapCatalog(versionedCatalog.getVersions(), clock);
+        this.catalog = DefaultSubscriptionCatalogApi.wrapCatalog(versionedCatalog, clock);
     }
 
     @Test(groups = "fast")

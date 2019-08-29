@@ -18,17 +18,15 @@
 
 package org.killbill.billing.catalog;
 
-import java.util.List;
-
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 
 public class MockCatalogService extends DefaultCatalogService {
 
-    private final List<StaticCatalog> catalog;
+    private final VersionedCatalog catalog;
 
-    public MockCatalogService(final List<StaticCatalog> catalog, final CacheControllerDispatcher cacheControllerDispatcher) {
+    public MockCatalogService(final VersionedCatalog catalog, final CacheControllerDispatcher cacheControllerDispatcher) {
         super(null, null, null, null);
         this.catalog = catalog;
     }
@@ -43,12 +41,12 @@ public class MockCatalogService extends DefaultCatalogService {
     }
 
     @Override
-    public List<StaticCatalog> getFullCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
+    public VersionedCatalog getFullCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
         return catalog;
     }
 
     @Override
-    public List<StaticCatalog> getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
+    public VersionedCatalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, InternalTenantContext context) {
         return catalog;
     }
 }

@@ -18,13 +18,10 @@
 
 package org.killbill.billing.catalog.io;
 
-import java.util.List;
-
-import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 
 public interface CatalogLoader {
 
-    public List<StaticCatalog> loadDefaultCatalog(String urlString) throws CatalogApiException;
+    public VersionedCatalog loadDefaultCatalog(String urlString) throws CatalogApiException;
 }

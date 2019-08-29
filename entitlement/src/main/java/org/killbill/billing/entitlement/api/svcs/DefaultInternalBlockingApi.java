@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
@@ -49,7 +50,7 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
     }
 
     @Override
-    public List<BlockingState> getBlockingAllForAccount(final List<StaticCatalog> catalog, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingAllForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
         return dao.getBlockingAllForAccountRecordId(catalog, context);
     }
 

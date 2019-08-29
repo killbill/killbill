@@ -41,6 +41,7 @@ import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
@@ -123,7 +124,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     @Inject
     protected NonEntityDao nonEntityDao;
 
-    protected List<StaticCatalog> catalog;
+    protected VersionedCatalog catalog;
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
@@ -158,7 +159,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         securityApi.login(username, "password");
     }
 
-
     protected void configureShiro() {
         final Ini config = new Ini();
         config.addSection("users");
@@ -190,10 +190,10 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         stopTestFramework(testListener, busService, subscriptionBaseService, entitlementService);
     }
 
-    private List<StaticCatalog> initCatalog(final CatalogService catalogService) throws Exception {
+    private VersionedCatalog initCatalog(final CatalogService catalogService) throws Exception {
 
         ((DefaultCatalogService) catalogService).loadCatalog();
-        final List<StaticCatalog> catalog = catalogService.getFullCatalog(true, true, internalCallContext);
+        final VersionedCatalog catalog = catalogService.getFullCatalog(true, true, internalCallContext);
         assertNotNull(catalog);
         return catalog;
     }

@@ -23,6 +23,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.clock.Clock;
 
 import com.google.inject.Inject;
@@ -40,11 +41,11 @@ public class DefaultSubscriptionCatalogApi implements SubscriptionCatalogApi {
 
     @Override
     public SubscriptionCatalog getFullCatalog(final InternalTenantContext context) throws CatalogApiException {
-        final List<StaticCatalog> catalog = catalogInternalApi.getFullCatalog(true, true, context);
+        final VersionedCatalog catalog = catalogInternalApi.getFullCatalog(true, true, context);
         return wrapCatalog(catalog, clock);
     }
 
-    public static SubscriptionCatalog wrapCatalog(final List<StaticCatalog> catalog, final Clock clock) {
+    public static SubscriptionCatalog wrapCatalog(final VersionedCatalog catalog, final Clock clock) {
         if (catalog instanceof SubscriptionCatalog) {
             // wrapping idempotency... for safety
             return (SubscriptionCatalog) catalog;

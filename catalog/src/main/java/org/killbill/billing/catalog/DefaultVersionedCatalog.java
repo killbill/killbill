@@ -37,17 +37,17 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements Catalog, Externalizable {
+public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements VersionedCatalog, Externalizable {
 
     private static final long serialVersionUID = 3181874902672322725L;
     @XmlElementWrapper(name = "versions", required = true)
@@ -68,6 +68,12 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     @Override
     public List<StaticCatalog> getVersions() {
         return versions;
+    }
+
+    @Override
+    public StaticCatalog getCurrentVersion() {
+        // Looks like we sometimes cache empty catalog ?
+        return !versions.isEmpty() ? versions.get(versions.size() - 1) : null;
     }
 
     public void add(final StandaloneCatalog e) {

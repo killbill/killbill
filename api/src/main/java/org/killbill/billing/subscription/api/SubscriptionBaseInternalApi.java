@@ -31,6 +31,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -68,13 +69,13 @@ public interface SubscriptionBaseInternalApi {
 
     public Iterable<UUID> getNonAOSubscriptionIdsForKey(String bundleKey, InternalTenantContext context);
 
-    public SubscriptionBaseBundle getActiveBundleForKey(List<StaticCatalog> catalog, String bundleKey, InternalTenantContext context);
+    public SubscriptionBaseBundle getActiveBundleForKey(VersionedCatalog catalog, String bundleKey, InternalTenantContext context);
 
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId, DryRunArguments dryRunArguments, InternalTenantContext context)
             throws SubscriptionBaseApiException;
 
     // TODO_CATALOG revisit which apis should take a Catalog
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(List<StaticCatalog> catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(VersionedCatalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 

@@ -23,15 +23,15 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public class TenantCatalogCacheLoader extends BaseCacheLoader<Long, Catalog> {
+public class TenantCatalogCacheLoader extends BaseCacheLoader<Long, VersionedCatalog> {
 
     private final Logger log = LoggerFactory.getLogger(TenantCatalogCacheLoader.class);
 
@@ -49,7 +49,7 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader<Long, Catalog> {
     }
 
     @Override
-    public Catalog compute(final Long key, final CacheLoaderArgument cacheLoaderArgument) {
+    public VersionedCatalog compute(final Long key, final CacheLoaderArgument cacheLoaderArgument) {
         final Long tenantRecordId = key;
         final InternalTenantContext internalTenantContext = new InternalTenantContext(tenantRecordId);
 
@@ -72,6 +72,6 @@ public class TenantCatalogCacheLoader extends BaseCacheLoader<Long, Catalog> {
 
     public interface LoaderCallback {
 
-        public Catalog loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException;
+        public VersionedCatalog loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException;
     }
 }
