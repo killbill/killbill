@@ -116,7 +116,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-        Mockito.when(subscriptionInternalApi.getSubscriptionBillingEvents(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(billingTransitions);
+        Mockito.when(subscriptionInternalApi.getSubscriptionBillingEvents(Mockito.<VersionedCatalog>any(), Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(billingTransitions);
         Mockito.when(subscriptionInternalApi.getAllTransitions(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
 
         final VersionedCatalog versionedCatalog = catalogService.getFullCatalog(true, true, internalCallContext);

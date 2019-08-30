@@ -275,7 +275,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         for (final SubscriptionBase subscription : subscriptions) {
 
-            final List<SubscriptionBillingEvent> billingTransitions = subscriptionApi.getSubscriptionBillingEvents(subscription, context);
+            final List<SubscriptionBillingEvent> billingTransitions = subscriptionApi.getSubscriptionBillingEvents(catalog, subscription, context);
             if (billingTransitions.isEmpty() ||
                 (billingTransitions.get(0).getType() != SubscriptionBaseTransitionType.CREATE &&
                  billingTransitions.get(0).getType() != SubscriptionBaseTransitionType.TRANSFER)) {

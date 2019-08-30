@@ -142,9 +142,9 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(final Iterable<SubscriptionBaseWithAddOnsSpecifier> subscriptionWithAddOnsSpecifiers, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(final VersionedCatalog publicCatalog, final Iterable<SubscriptionBaseWithAddOnsSpecifier> subscriptionWithAddOnsSpecifiers, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
+            final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
             final CallContext callContext = internalCallContextFactory.createCallContext(context);
 
             return super.createBaseSubscriptionsWithAddOns(subscriptionWithAddOnsSpecifiers,
@@ -369,13 +369,9 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final SubscriptionBase subscription, final InternalTenantContext context) throws SubscriptionBaseApiException {
-        try {
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            return subscription.getSubscriptionBillingEvents(catalog.getCatalog());
-        } catch (final CatalogApiException e) {
-            throw new SubscriptionBaseApiException(e);
-        }
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog, final SubscriptionBase subscription, final InternalTenantContext context) throws SubscriptionBaseApiException {
+        final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
+        return subscription.getSubscriptionBillingEvents(catalog.getCatalog());
     }
 
     @Override

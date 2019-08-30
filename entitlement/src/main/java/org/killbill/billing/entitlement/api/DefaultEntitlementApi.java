@@ -439,7 +439,8 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
                 final List<SubscriptionBaseWithAddOns> subscriptionsWithAddOns;
                 try {
-                    subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(subscriptionBaseWithAddOnsSpecifiers,
+                    subscriptionsWithAddOns = subscriptionBaseInternalApi.createBaseSubscriptionsWithAddOns(catalog,
+                                                                                                            subscriptionBaseWithAddOnsSpecifiers,
                                                                                                             renameCancelledBundleIfExist,
                                                                                                             contextWithValidAccountRecordId);
                 } catch (final SubscriptionBaseApiException e) {

@@ -39,6 +39,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
@@ -74,6 +75,7 @@ public class TestSubscriptionHelper {
     private final InternalCallContext internalCallContext;
     private final TestApiListener testListener;
     private final SubscriptionDao dao;
+    private final VersionedCatalog catalog;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
@@ -83,6 +85,7 @@ public class TestSubscriptionHelper {
                                   final InternalCallContext internalCallContext,
                                   final TestApiListener testListener,
                                   final SubscriptionDao dao,
+                                  final VersionedCatalog catalog,
                                   final InternalCallContextFactory internalCallContextFactory) {
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
@@ -90,6 +93,7 @@ public class TestSubscriptionHelper {
         this.internalCallContext = internalCallContext;
         this.testListener = testListener;
         this.dao = dao;
+        this.catalog = catalog;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -201,7 +205,8 @@ public class TestSubscriptionHelper {
                                                                                                                                 entitlementSpecifiers,
                                                                                                                                 requestedDate,
                                                                                                                                 false);
-        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionApi.createBaseSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionApi.createBaseSubscriptionsWithAddOns(catalog,
+                                                                                                                        ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
                                                                                                                         false,
                                                                                                                         internalCallContext).get(0);
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionBaseWithAddOns.getSubscriptionBaseList().get(0);

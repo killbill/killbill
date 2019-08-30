@@ -46,7 +46,7 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface SubscriptionBaseInternalApi {
 
-    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(Iterable<SubscriptionBaseWithAddOnsSpecifier> subscriptionWithAddOnsSpecifiers,
+    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(VersionedCatalog catalog, Iterable<SubscriptionBaseWithAddOnsSpecifier> subscriptionWithAddOnsSpecifiers,
                                                                               boolean renameCancelledBundleIfExist,
                                                                               InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
 
@@ -89,7 +89,7 @@ public interface SubscriptionBaseInternalApi {
 
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(SubscriptionBase subscription, InternalTenantContext context);
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(SubscriptionBase subscription, InternalTenantContext context) throws SubscriptionBaseApiException;
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(VersionedCatalog catalog, SubscriptionBase subscription, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, EntitlementSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException;
 
