@@ -806,10 +806,11 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
         final List<StaticCatalog> allVersions = new ArrayList<>(fullCatalog.getVersions());
         fullCatalog.getVersions().clear();
+        // TODO_CATALOG  this seems reverse from what we use to have ???  :
+        // https://github.com/killbill/killbill/blob/work-for-release-0.21.x/catalog/src/main/java/org/killbill/billing/catalog/api/user/DefaultCatalogUserApi.java#L93
         for (final StaticCatalog v : allVersions) {
-            if (v.getEffectiveDate().compareTo(requestedDate.toDate()) >= 0) {
+            if (requestedDate.toDate().compareTo(v.getEffectiveDate()) >= 0) {
                 fullCatalog.getVersions().add(v);
-                // TODO_CATALOG  don't understand previous implementation : why do we break here ??
                 break;
             }
         }
