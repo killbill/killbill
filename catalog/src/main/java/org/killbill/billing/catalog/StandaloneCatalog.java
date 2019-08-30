@@ -124,9 +124,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-    public CatalogEntityCollection<Plan> getPlansXXX() {
-        return plans;
-    }
 
     @Override
     public Collection<Product> getProducts() {
@@ -152,9 +149,11 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return plans.getEntries();
     }
 
-    public CatalogEntityCollection<Plan> getCatalogEntityCollectionPlan() {
+
+    public CatalogEntityCollection<Plan> getPlansMap() {
         return plans;
     }
+
 
     public boolean isTemplateCatalog() {
         return (products == null || products.isEmpty()) &&

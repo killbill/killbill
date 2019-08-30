@@ -68,7 +68,7 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
     @Override
     public void addPlan(final Plan plan) throws CatalogApiException {
 
-        getCatalogEntityCollectionPlan().add(plan);
+        getPlansMap().add(plan);
 
         final DefaultPriceList priceList = getPriceLists().findPriceListFrom(plan.getPriceListName());
         priceList.getCatalogEntityCollectionPlan().add(plan);

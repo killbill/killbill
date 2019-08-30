@@ -130,7 +130,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
                 for (int j = i + 1; j < versions.size(); j++) {
                     final StaticCatalog next = versions.get(j);
-                    final Plan targetPlan = ((StandaloneCatalog) next).getPlansXXX().findByName(plan.getName());
+                    final Plan targetPlan = ((StandaloneCatalog) next).getPlansMap().findByName(plan.getName());
                     if (targetPlan != null) {
                         validatePlanShape(plan, targetPlan, errors);
                     }
