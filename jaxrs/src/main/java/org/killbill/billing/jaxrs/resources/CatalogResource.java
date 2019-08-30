@@ -211,7 +211,7 @@ public class CatalogResource extends JaxRsResourceBase {
 
         final List<CatalogJson> result = new ArrayList<CatalogJson>();
         for (final StaticCatalog v : catalog.getVersions()) {
-            result.add(new CatalogJson(catalog.getVersions(), new DateTime(v.getEffectiveDate())));
+            result.add(new CatalogJson(v));
         }
 
         return Response.status(Status.OK).entity(result).build();

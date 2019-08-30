@@ -34,6 +34,8 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -75,8 +77,8 @@ public class TestSubscriptionHelper {
     private final InternalCallContext internalCallContext;
     private final TestApiListener testListener;
     private final SubscriptionDao dao;
-    private final VersionedCatalog catalog;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final CatalogInternalApi catalogInternalApi;
 
     @Inject
     public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi,
@@ -85,7 +87,7 @@ public class TestSubscriptionHelper {
                                   final InternalCallContext internalCallContext,
                                   final TestApiListener testListener,
                                   final SubscriptionDao dao,
-                                  final VersionedCatalog catalog,
+                                  final CatalogInternalApi catalogInternalApi,
                                   final InternalCallContextFactory internalCallContextFactory) {
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
@@ -93,7 +95,7 @@ public class TestSubscriptionHelper {
         this.internalCallContext = internalCallContext;
         this.testListener = testListener;
         this.dao = dao;
-        this.catalog = catalog;
+        this.catalogInternalApi = catalogInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -158,6 +160,15 @@ public class TestSubscriptionHelper {
 
     private DefaultSubscriptionBase createSubscription(final boolean noEvents, @Nullable final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
             throws SubscriptionBaseApiException {
+
+        final VersionedCatalog catalog;
+        try {
+            catalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
+        } catch (CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+
+
         // Make sure the right account information is used
         final InternalCallContext internalCallContext = bundle == null ? this.internalCallContext : internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
                                                                                                                                                          ObjectType.ACCOUNT,
@@ -205,6 +216,7 @@ public class TestSubscriptionHelper {
                                                                                                                                 entitlementSpecifiers,
                                                                                                                                 requestedDate,
                                                                                                                                 false);
+
         final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionApi.createBaseSubscriptionsWithAddOns(catalog,
                                                                                                                         ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
                                                                                                                         false,

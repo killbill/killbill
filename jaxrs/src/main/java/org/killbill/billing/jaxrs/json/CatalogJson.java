@@ -81,12 +81,9 @@ public class CatalogJson {
         this.priceLists = priceLists;
     }
 
-    public CatalogJson(final List<StaticCatalog> versions, final DateTime requestedDate) throws CatalogApiException {
+    public CatalogJson(final StaticCatalog catalog) throws CatalogApiException {
 
-        final StaticCatalog catalog = JaxRsResourceBase.getCatalogVersion(versions, requestedDate);
         name = catalog.getCatalogName();
-
-
         effectiveDate = catalog.getEffectiveDate();
         currencies = Arrays.asList(catalog.getSupportedCurrencies());
         priceLists = new ArrayList<PriceListJson>();

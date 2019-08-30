@@ -200,7 +200,7 @@ public class SubscriptionCatalog  {
     private CatalogPlanEntry findCatalogPlanEntry(final PlanRequestWrapper wrapper,
                                                   final DateTime requestedDate,
                                                   final DateTime subscriptionChangePlanDate) throws CatalogApiException {
-        final List<StaticCatalog> catalogs = versionsBeforeDate(requestedDate.toDate());
+        final List<StaticCatalog> catalogs = versionsBeforeDate(requestedDate);
         if (catalogs.isEmpty()) {
             throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
         }
@@ -253,36 +253,23 @@ public class SubscriptionCatalog  {
                                       spec.getPriceListName() != null ? spec.getPriceListName() : "undefined");
     }
 
-    private List<StaticCatalog> versionsBeforeDate(final Date date) throws CatalogApiException {
+    private List<StaticCatalog> versionsBeforeDate(final DateTime date) {
 
         final List<StaticCatalog> result = new ArrayList<StaticCatalog>();
-        final int index = indexOfVersionForDate(date);
-        for (int i = 0; i <= index; i++) {
-            result.add(versions.get(i));
+
+        // Fetch latest version allowed -- to benefit from custom logic implemented in VersionedCatalog
+        final StaticCatalog latestVersion = versionForDate(date);
+        for (StaticCatalog v : versions) {
+            // Add all versions prior or equal to the one returned.
+            if (v.getEffectiveDate().compareTo(latestVersion.getEffectiveDate()) <= 0) {
+                result.add(v);
+            }
         }
         return result;
     }
 
-    public StaticCatalog versionForDate(final DateTime date) throws CatalogApiException {
-        return versions.get(indexOfVersionForDate(date.toDate()));
-    }
-
-    private int indexOfVersionForDate(final Date date) throws CatalogApiException {
-
-        for (int i = versions.size() - 1; i >= 0; i--) {
-            final StaticCatalog c = versions.get(i);
-            if (c.getEffectiveDate().getTime() <= date.getTime()) {
-                return i;
-            }
-        }
-        // If the only version we have are after the input date, we return the first version
-        // This is not strictly correct from an api point of view, but there is no real good use case
-        // where the system would ask for the catalog for a date prior any catalog was uploaded and
-        // yet time manipulation could end of inn that state -- see https://github.com/killbill/killbill/issues/760
-        if (!versions.isEmpty()) {
-            return 0;
-        }
-        throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, date.toString());
+    public StaticCatalog versionForDate(final DateTime date) {
+        return catalog.getVersion(date.toDate());
     }
 
     private static class CatalogPlanEntry {

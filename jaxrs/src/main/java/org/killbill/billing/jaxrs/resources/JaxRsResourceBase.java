@@ -781,39 +781,18 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }));
     }
 
-    public static StaticCatalog getCatalogVersion(final List<StaticCatalog> versions, final DateTime requestedDate) {
-
-        for (int i = versions.size() - 1; i >= 0; i--) {
-            final StaticCatalog c = versions.get(i);
-            if (c.getEffectiveDate().getTime() <= requestedDate.toDate().getTime()) {
-                return c;
-            }
-        }
-        // If the only version we have are after the input date, we return the first version
-        // This is not strictly correct from an api point of view, but there is no real good use case
-        // where the system would ask for the catalog for a date prior any catalog was uploaded and
-        // yet time manipulation could end of inn that state -- see https://github.com/killbill/killbill/issues/760
-        return versions.get(0);
-    }
-
-    // Since we cannot reconstruct a DefaultVersionedCatalog with all its JAXB annotation
-    // we filter the existing versions list from the original object
     public static void filterCatalogVersions(final VersionedCatalog fullCatalog, @Nullable final DateTime requestedDate) {
 
         if (requestedDate == null) {
             return;
         }
 
-        final List<StaticCatalog> allVersions = new ArrayList<>(fullCatalog.getVersions());
+        final StaticCatalog target = fullCatalog.getVersion(requestedDate.toDate());
+
+        // Since we cannot reconstruct a DefaultVersionedCatalog with all its JAXB annotation
+        // we filter the existing versions list from the original object
         fullCatalog.getVersions().clear();
-        // TODO_CATALOG  this seems reverse from what we use to have ???  :
-        // https://github.com/killbill/killbill/blob/work-for-release-0.21.x/catalog/src/main/java/org/killbill/billing/catalog/api/user/DefaultCatalogUserApi.java#L93
-        for (final StaticCatalog v : allVersions) {
-            if (requestedDate.toDate().compareTo(v.getEffectiveDate()) >= 0) {
-                fullCatalog.getVersions().add(v);
-                break;
-            }
-        }
+        fullCatalog.getVersions().add(target);
     }
 
 }
