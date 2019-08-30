@@ -49,7 +49,7 @@ public class MockCatalog extends StandaloneCatalog {
     }
 
     public void populatePriceLists() {
-        final Collection<Plan> plans = getCurrentPlans();
+        final Collection<Plan> plans = getPlans();
 
         final DefaultPriceList[] priceList = new DefaultPriceList[plans.size() - 1];
         int i = 1;
@@ -66,7 +66,7 @@ public class MockCatalog extends StandaloneCatalog {
     }
 
     public DefaultProduct getCurrentProduct(final int idx) {
-        return (DefaultProduct) getCurrentProducts().toArray()[idx];
+        return (DefaultProduct) getProducts().toArray()[idx];
     }
 
     public void setPlanChange(final PlanChangeResult planChange) {

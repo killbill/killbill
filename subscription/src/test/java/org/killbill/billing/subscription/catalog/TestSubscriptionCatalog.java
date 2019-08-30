@@ -118,12 +118,12 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
     public void testWithDeletedPlan() throws CatalogApiException {
         // We find it because this is version 2 whose effectiveDate is "2011-02-02T00:00:00+00:00"
         final StaticCatalog catalogVersion2 = catalog.versionForDate(dt2);
-        catalogVersion2.findCurrentPlan("shotgun-quarterly");
+        catalogVersion2.findPlan("shotgun-quarterly");
 
         try {
             // We **don't find it** because date provided matches version 3 where plan was removed
             final StaticCatalog catalogVersion3 = catalog.versionForDate(dt3);
-            catalogVersion3.findCurrentPlan("shotgun-quarterly");
+            catalogVersion3.findPlan("shotgun-quarterly");
             Assert.fail("Plan has been removed");
         } catch (final CatalogApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PLAN.getCode());

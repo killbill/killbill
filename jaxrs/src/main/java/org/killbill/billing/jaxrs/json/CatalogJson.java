@@ -88,17 +88,17 @@ public class CatalogJson {
 
 
         effectiveDate = catalog.getEffectiveDate();
-        currencies = Arrays.asList(catalog.getCurrentSupportedCurrencies());
+        currencies = Arrays.asList(catalog.getSupportedCurrencies());
         priceLists = new ArrayList<PriceListJson>();
 
         List<UnitJson> units = new ArrayList<UnitJson>();
-        for (final Unit unit : catalog.getCurrentUnits()) {
+        for (final Unit unit : catalog.getUnits()) {
             final UnitJson unitJson = new UnitJson(unit.getName(), unit.getPrettyName());
             units.add(unitJson);
         }
         this.units = units;
 
-        final Collection<Plan> plans = catalog.getCurrentPlans();
+        final Collection<Plan> plans = catalog.getPlans();
         final Map<String, ProductJson> productMap = new HashMap<String, ProductJson>();
         for (final Plan plan : plans) {
             // Build the product associated with this plan

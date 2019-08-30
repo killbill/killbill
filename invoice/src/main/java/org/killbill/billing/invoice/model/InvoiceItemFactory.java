@@ -152,7 +152,7 @@ public class InvoiceItemFactory {
                     for (int i = versions.size() - 1; i >= 0; i--) {
                         final StaticCatalog curVersion = versions.get(i);
                         try {
-                            plan = curVersion.findCurrentPlan(planName);
+                            plan = curVersion.findPlan(planName);
                         } catch (final CatalogApiException e) {
                             if (e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode()) {
                                 throw e;

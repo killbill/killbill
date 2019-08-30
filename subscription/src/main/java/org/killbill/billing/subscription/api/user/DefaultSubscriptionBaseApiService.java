@@ -423,7 +423,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
         final PlanPhaseSpecifier planPhaseSpecifier = spec.getPlanPhaseSpecifier();
         final StaticCatalog versionCatalog = catalog.versionForDate(effectiveDate);
-        final Plan newPlan = versionCatalog.createOrFindCurrentPlan(planPhaseSpecifier, overridesWithContext);
+        final Plan newPlan = versionCatalog.createOrFindPlan(planPhaseSpecifier, overridesWithContext);
 
         final PhaseType initialPhaseType = planPhaseSpecifier.getPhaseType();
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(newPlan.getProduct().getCategory().toString())) {

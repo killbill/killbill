@@ -86,7 +86,7 @@ public class SubscriptionCatalog  {
                                           final DateTime subscriptionChangePlanDate)
             throws CatalogApiException {
         final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(planName), requestedDate, subscriptionChangePlanDate);
-        return entry.getStaticCatalog().findCurrentPriceList(entry.getPlan().getPriceListName());
+        return entry.getStaticCatalog().findPriceList(entry.getPlan().getPriceListName());
     }
 
     public Plan getNextPlanVersion(final Plan curPlan) {
@@ -108,7 +108,7 @@ public class SubscriptionCatalog  {
         }
 
         try {
-            return nextCatalogVersion.findCurrentPlan(curPlan.getName());
+            return nextCatalogVersion.findPlan(curPlan.getName());
         } catch (final CatalogApiException ignored) {
             return null;
         }
@@ -324,7 +324,7 @@ public class SubscriptionCatalog  {
         }
 
         public Plan findPlan(final StaticCatalog catalog) throws CatalogApiException {
-            return catalog.createOrFindCurrentPlan(spec, overrides);
+            return catalog.createOrFindPlan(spec, overrides);
         }
 
         public PlanSpecifier getSpec() {

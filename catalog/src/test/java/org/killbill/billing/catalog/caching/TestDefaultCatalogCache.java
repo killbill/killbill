@@ -91,7 +91,7 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         final VersionedCatalog result = catalogCache.getCatalog(true, true, false, internalCallContext);
         Assert.assertNotNull(result);
         final StaticCatalog catalogVersion = result.getVersions().get(result.getVersions().size() - 1);
-        final Collection<Product> products = catalogVersion.getCurrentProducts();
+        final Collection<Product> products = catalogVersion.getProducts();
         Assert.assertEquals(products.size(), 3);
 
         // Verify the lookup with other contexts
@@ -164,14 +164,14 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         final VersionedCatalog result = catalogCache.getCatalog(true, true, false, multiTenantContext);
         Assert.assertNotNull(result);
         final StaticCatalog catalogVersion = result.getVersions().get(result.getVersions().size() - 1);
-        final Collection<Product> products = catalogVersion.getCurrentProducts();
+        final Collection<Product> products = catalogVersion.getProducts();
         Assert.assertEquals(products.size(), 6);
 
         // Verify the lookup for another tenant
         final VersionedCatalog otherResult = catalogCache.getCatalog(true, true, false, otherMultiTenantContext);
         Assert.assertNotNull(otherResult);
         final StaticCatalog othercatalogVersion = otherResult.getVersions().get(result.getVersions().size() - 1);
-        final Collection<Product> otherProducts = othercatalogVersion.getCurrentProducts();
+        final Collection<Product> otherProducts = othercatalogVersion.getProducts();
         Assert.assertEquals(otherProducts.size(), 3);
 
         shouldThrow.set(true);

@@ -614,7 +614,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     if (isCreateOrTransfer || isChangeEvent) {
 
                         final StaticCatalog catalogVersion = catalog.versionForDate(billingTransition.getEffectiveDate());
-                        final Plan currentPlan = catalogVersion.findCurrentPlan(billingTransition.getPlan().getName());
+                        final Plan currentPlan = catalogVersion.findPlan(billingTransition.getPlan().getName());
 
                         // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
                         Plan nextPlan = catalog.getNextPlanVersion(currentPlan);

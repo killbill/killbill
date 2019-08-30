@@ -145,7 +145,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
     public PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to) throws CatalogApiException {
 
         final DefaultPriceList toPriceList = to.getPriceListName() != null ?
-                                             (DefaultPriceList) root.findCurrentPriceList(to.getPriceListName()) :
+                                             (DefaultPriceList) root.findPriceList(to.getPriceListName()) :
                                              findPriceList(from);
 
         // If we use old scheme {product, billingPeriod, pricelist}, ensure pricelist is correct
@@ -179,8 +179,8 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
     private DefaultPriceList findPriceList(final PlanSpecifier specifier) throws CatalogApiException {
         DefaultPriceList result = DefaultCasePriceList.getResult(priceListCase, specifier, root);
         if (result == null) {
-            final String priceListName = specifier.getPlanName() != null ? root.findCurrentPlan(specifier.getPlanName()).getPriceListName() : specifier.getPriceListName();
-            result = (DefaultPriceList) root.findCurrentPriceList(priceListName);
+            final String priceListName = specifier.getPlanName() != null ? root.findPlan(specifier.getPlanName()).getPriceListName() : specifier.getPriceListName();
+            result = (DefaultPriceList) root.findPriceList(priceListName);
         }
         return result;
     }

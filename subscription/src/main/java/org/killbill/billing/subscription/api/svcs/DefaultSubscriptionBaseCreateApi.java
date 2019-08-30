@@ -289,7 +289,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(cur.getOverrides(), callContext);
             // Called by createBaseSubscriptionsWithAddOns only -- no need for subscription start date
             final StaticCatalog catalogVersion = catalog.versionForDate(effectiveDate);
-            final Plan plan = catalogVersion.createOrFindCurrentPlan(cur.getPlanPhaseSpecifier(), overridesWithContext);
+            final Plan plan = catalogVersion.createOrFindPlan(cur.getPlanPhaseSpecifier(), overridesWithContext);
 
             final boolean isBase = isBaseSpecifier(plan);
             final boolean isStandalone = isStandaloneSpecifier(plan);

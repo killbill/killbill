@@ -53,7 +53,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
         catalog.initialize(catalog);
-        final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
+        final Plan plan = catalog.findPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.ONE, null, null);
@@ -108,7 +108,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
         catalog.initialize(catalog);
 
-        final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
+        final Plan plan = catalog.findPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, null, BigDecimal.ONE, null);
@@ -124,7 +124,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
         catalog.initialize(catalog);
 
-        final Plan plan = catalog.findCurrentPlan("discount-standard-monthly");
+        final Plan plan = catalog.findPlan("discount-standard-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         final PlanPhasePriceOverride phase1 = new DefaultPlanPhasePriceOverride(plan.getAllPhases()[0].getName(), Currency.USD, BigDecimal.ONE, null, null);
@@ -202,7 +202,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     public void testOverrideOneOutOfTwoTieredBlockPrices() throws Exception {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
-        final Plan plan = catalog.findCurrentPlan("chocolate-monthly");
+        final Plan plan = catalog.findPlan("chocolate-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
 
@@ -273,7 +273,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     public void testOverrideTwoOutOfTwoTieredBlockPrices() throws Exception {
 
         final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
-        final Plan plan = catalog.findCurrentPlan("chocolate-monthly");
+        final Plan plan = catalog.findPlan("chocolate-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
 

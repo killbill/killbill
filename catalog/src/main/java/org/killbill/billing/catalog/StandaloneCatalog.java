@@ -124,12 +124,12 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-    public CatalogEntityCollection<Plan> getPlans() {
+    public CatalogEntityCollection<Plan> getPlansXXX() {
         return plans;
     }
 
     @Override
-    public Collection<Product> getCurrentProducts() {
+    public Collection<Product> getProducts() {
         return products.getEntries();
     }
 
@@ -138,17 +138,17 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     @Override
-    public DefaultUnit[] getCurrentUnits() {
+    public DefaultUnit[] getUnits() {
         return units;
     }
 
     @Override
-    public Currency[] getCurrentSupportedCurrencies() {
+    public Currency[] getSupportedCurrencies() {
         return supportedCurrencies;
     }
 
     @Override
-    public Collection<Plan> getCurrentPlans() {
+    public Collection<Plan> getPlans() {
         return plans.getEntries();
     }
 
@@ -182,10 +182,10 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     @Override
-    public Plan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext unused) throws CatalogApiException {
+    public Plan createOrFindPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext unused) throws CatalogApiException {
         final Plan result;
         if (spec.getPlanName() != null) {
-            result = findCurrentPlan(spec.getPlanName());
+            result = findPlan(spec.getPlanName());
         } else {
             if (spec.getProductName() == null) {
                 throw new CatalogApiException(ErrorCode.CAT_NULL_PRODUCT_NAME);
@@ -194,7 +194,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
                 throw new CatalogApiException(ErrorCode.CAT_NULL_BILLING_PERIOD);
             }
             final String inputOrDefaultPricelist = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
-            final Product product = findCurrentProduct(spec.getProductName());
+            final Product product = findProduct(spec.getProductName());
             result = priceLists.getPlanFrom(product, spec.getBillingPeriod(), inputOrDefaultPricelist);
         }
         if (result == null) {
@@ -214,7 +214,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     //////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public DefaultPlan findCurrentPlan(final String name) throws CatalogApiException {
+    public DefaultPlan findPlan(final String name) throws CatalogApiException {
         if (name == null || plans == null) {
             throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PLAN, name);
         }
@@ -226,7 +226,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     @Override
-    public Product findCurrentProduct(final String name) throws CatalogApiException {
+    public Product findProduct(final String name) throws CatalogApiException {
         if (name == null || products == null) {
             throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PRODUCT, name);
         }
@@ -238,17 +238,17 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     @Override
-    public PlanPhase findCurrentPhase(final String name) throws CatalogApiException {
+    public PlanPhase findPhase(final String name) throws CatalogApiException {
         if (name == null || plans == null) {
             throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PHASE, name);
         }
         final String planName = DefaultPlanPhase.planName(name);
-        final Plan plan = findCurrentPlan(planName);
+        final Plan plan = findPlan(planName);
         return plan.findPhase(name);
     }
 
     @Override
-    public PriceList findCurrentPriceList(final String name)
+    public PriceList findPriceList(final String name)
             throws CatalogApiException {
         if (name == null || priceLists == null) {
             throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, name);
@@ -324,7 +324,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         final List<Listing> availAddons = new ArrayList<Listing>();
 
         try {
-            final Product product = findCurrentProduct(baseProductName);
+            final Product product = findProduct(baseProductName);
             if (product != null) {
                 for (final Product availAddon : product.getAvailable()) {
                     for (final BillingPeriod billingPeriod : BillingPeriod.values()) {
@@ -349,7 +349,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     public List<Listing> getAvailableBasePlanListings() {
         final List<Listing> availBasePlans = new ArrayList<Listing>();
 
-        for (final Plan plan : getCurrentPlans()) {
+        for (final Plan plan : getPlans()) {
             if (plan.getProduct().getCategory().equals(ProductCategory.BASE)) {
                 for (final PriceList priceList : getPriceLists().getAllPriceLists()) {
                     for (final Plan priceListPlan : priceList.getPlans()) {

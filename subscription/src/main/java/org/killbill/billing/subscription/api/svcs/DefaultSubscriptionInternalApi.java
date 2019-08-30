@@ -395,7 +395,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(spec.getOverrides(), callContext);
 
         final StaticCatalog catalogVersion = catalog.versionForDate(effectiveCatalogDate);
-        final Plan plan = catalogVersion.createOrFindCurrentPlan(spec.getPlanPhaseSpecifier(), overridesWithContext);
+        final Plan plan = catalogVersion.createOrFindPlan(spec.getPlanPhaseSpecifier(), overridesWithContext);
         if (ProductCategory.ADD_ON.toString().equalsIgnoreCase(plan.getProduct().getCategory().toString())) {
             if (plan.getPlansAllowedInBundle() != -1
                 && plan.getPlansAllowedInBundle() > 0
@@ -435,7 +435,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
                 }
 
                 final StaticCatalog catalogVersion = catalog.versionForDate(requestedDate);
-                final Product baseProduct = baseProductName != null ? catalogVersion.findCurrentProduct(baseProductName) : null;
+                final Product baseProduct = baseProductName != null ? catalogVersion.findProduct(baseProductName) : null;
 
                 final DryRunChangeReason reason;
                 // If baseProductName is null, it's a cancellation dry-run. In this case, return all addons, so they are cancelled

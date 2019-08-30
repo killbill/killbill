@@ -144,7 +144,7 @@ public class SubscriptionApiBase {
         final StaticCatalog versionCatalog = catalog.versionForDate(utcNow);
         final Plan plan = isInputSpecNullOrEmpty ?
                           null :
-                          versionCatalog.createOrFindCurrentPlan(inputSpec, overridesWithContext);
+                          versionCatalog.createOrFindPlan(inputSpec, overridesWithContext);
 
         switch (dryRunArguments.getAction()) {
             case START_BILLING:

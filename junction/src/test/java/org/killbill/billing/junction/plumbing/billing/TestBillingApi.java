@@ -139,7 +139,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsNoBillingPeriod() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findCurrentPlan("3-PickupTrialEvergreen10USD");
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         // The trial has no billing period
         final PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
@@ -152,7 +152,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsSubscriptionAligned() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findCurrentPlan("3-PickupTrialEvergreen10USD");
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -168,7 +168,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsAccountAligned() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findCurrentPlan("3-PickupTrialEvergreen10USD");
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -181,13 +181,13 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsBundleAligned() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findCurrentPlan("7-Horn1USD");
+        final Plan nextPlan = catalog.findPlan("7-Horn1USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
         final Account account = createAccount(1);
 
-        ((MockSubscription) subscription).setPlan(catalog.findCurrentPlan("3-PickupTrialEvergreen10USD"));
+        ((MockSubscription) subscription).setPlan(catalog.findPlan("3-PickupTrialEvergreen10USD"));
         ((MockSubscription) subscription).setBillingAlignment(BillingAlignment.BUNDLE);
 
 
@@ -198,7 +198,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsWithBlock() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findCurrentPlan("3-PickupTrialEvergreen10USD");
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -220,7 +220,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsAutoInvoicingOffAccount() throws CatalogApiException, AccountApiException, TagApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findCurrentPlan("3-PickupTrialEvergreen10USD");
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -236,7 +236,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsAutoInvoicingOffBundle() throws CatalogApiException, AccountApiException, TagApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findCurrentPlan("3-PickupTrialEvergreen10USD");
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         createSubscriptionCreationEvent(nextPlan, nextPhase);
 

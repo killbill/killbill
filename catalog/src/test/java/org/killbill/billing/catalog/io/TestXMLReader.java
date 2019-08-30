@@ -248,7 +248,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
 
 
     private Usage[] getUsages(final StandaloneCatalog catalog, final String planName) throws CatalogApiException {
-        final Plan plan  = catalog.findCurrentPlan(planName);
+        final Plan plan  = catalog.findPlan(planName);
         assertNotNull(plan);
         final PlanPhase phase = plan.getFinalPhase();
         assertNotNull(phase);

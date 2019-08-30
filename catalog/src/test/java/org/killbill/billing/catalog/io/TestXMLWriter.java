@@ -112,9 +112,9 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
         final StandaloneCatalog newCatalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
-        assertEquals(newCatalog.getCurrentPlans().size(), catalog.getCurrentPlans().size() + 1);
+        assertEquals(newCatalog.getPlans().size(), catalog.getPlans().size() + 1);
 
-        final Plan plan = newCatalog.findCurrentPlan("dynamic-monthly");
+        final Plan plan = newCatalog.findPlan("dynamic-monthly");
         assertEquals(plan.getName(), "dynamic-monthly");
         assertEquals(plan.getPriceListName(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
         assertEquals(plan.getProduct().getName(), "Dynamic");

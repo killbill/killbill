@@ -45,10 +45,10 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
         this.setCatalogName(input.getCatalogName())
             .setRecurringBillingMode(input.getRecurringBillingMode())
             .setEffectiveDate(input.getEffectiveDate())
-            .setSupportedCurrencies(input.getCurrentSupportedCurrencies())
-            .setUnits(input.getCurrentUnits())
-            .setProducts(input.getCurrentProducts())
-            .setPlans(input.getCurrentPlans())
+            .setSupportedCurrencies(input.getSupportedCurrencies())
+            .setUnits(input.getUnits())
+            .setProducts(input.getProducts())
+            .setPlans(input.getPlans())
             .setPlanRules((DefaultPlanRules) input.getPlanRules())
             .setPriceLists(input.getPriceLists());
         initialize(this);
@@ -56,7 +56,7 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
 
     @Override
     public void addCurrency(final Currency currency) throws CatalogApiException {
-        final Currency[] newEntries = allocateNewEntries(getCurrentSupportedCurrencies(), currency);
+        final Currency[] newEntries = allocateNewEntries(getSupportedCurrencies(), currency);
         setSupportedCurrencies(newEntries);
     }
 

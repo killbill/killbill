@@ -261,9 +261,9 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
                     final StandaloneCatalog standaloneCatalog = (StandaloneCatalog) input;
                     return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
-                                                                ImmutableList.copyOf(standaloneCatalog.getCurrentSupportedCurrencies()),
-                                                                ImmutableList.<Product>copyOf(standaloneCatalog.getCurrentProducts()),
-                                                                ImmutableList.<Plan>copyOf(standaloneCatalog.getCurrentPlans()),
+                                                                ImmutableList.copyOf(standaloneCatalog.getSupportedCurrencies()),
+                                                                ImmutableList.<Product>copyOf(standaloneCatalog.getProducts()),
+                                                                ImmutableList.<Plan>copyOf(standaloneCatalog.getPlans()),
                                                                 standaloneCatalog.getPriceLists().getDefaultPricelist(),
                                                                 ImmutableList.<PriceList>copyOf(standaloneCatalog.getPriceLists().getChildPriceLists()),
                                                                 standaloneCatalog.getPlanRules(),
