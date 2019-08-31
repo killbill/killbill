@@ -69,7 +69,7 @@ import static org.testng.Assert.assertNotNull;
 
 public class TestHardenCatalogPlugin extends TestIntegrationBase {
 
-    private static final int NB_CATALOG_ITERATIONS_FOR_PULLING_BILLING_EVENTS = 3;
+    private static final int NB_CATALOG_ITERATIONS_FOR_PULLING_BILLING_EVENTS = 2;
     @Inject
     private OSGIServiceRegistration<CatalogPluginApi> pluginRegistry;
 
