@@ -58,6 +58,7 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBillingEven
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.dao.MockTagDao;
 import org.mockito.Mockito;
@@ -300,11 +301,12 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final EffectiveSubscriptionInternalEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, bunKey, then, now, null, null, null, null, null, EntitlementState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
-                nextPlan.getPriceListName(), null, 1L,
+                nextPlan.getPriceList().getName(), null, 1L,
                 SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);
-        billingTransitions.add(new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CREATE, nextPlan, nextPhase, now, 1L, null));
+        billingTransitions.add(new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CREATE, nextPlan, nextPhase, now, 1L, null,
+                                                                   CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate())));
 
         return now;
     }

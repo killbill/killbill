@@ -151,8 +151,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         // Cancel event
         Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CANCEL);
         Assert.assertEquals(result.get(2).getEffectiveDate().compareTo(cancelDate), 0);
-        Assert.assertEquals(result.get(2).getPlan().getName().compareTo("gold-monthly"), 0);
-        Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V1), 0);
+        Assert.assertNull(result.get(2).getPlan());
 
         // Nothing after cancel -> we correctly discarded subsequent catalog update events after the cancel
 
@@ -233,8 +232,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
         // Cancel event
         Assert.assertEquals(result.get(4).getType(), SubscriptionBaseTransitionType.CANCEL);
         Assert.assertEquals(result.get(4).getEffectiveDate().compareTo(cancelDate), 0);
-        Assert.assertEquals(result.get(4).getPlan().getName().compareTo("gold-monthly"), 0);
-        Assert.assertEquals(toDateTime(result.get(4).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
+        Assert.assertNull(result.get(4).getPlan());
 
         // Nothing after cancel -> we correctly discarded subsequent catalog update events after the cancel
     }

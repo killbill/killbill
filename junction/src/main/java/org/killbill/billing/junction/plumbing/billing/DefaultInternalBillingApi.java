@@ -39,7 +39,6 @@ import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -285,19 +284,25 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             }
 
             Integer overridenBCD = null;
+            int bcdLocal = 0;
+            BillingAlignment alignment = null;
             for (final SubscriptionBillingEvent transition : billingTransitions) {
-                final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(transition.getPlan().getName(), transition.getPlanPhase().getPhaseType());
-                final BillingAlignment alignment = subscription.getBillingAlignment(spec, transition.getEffectiveDate(), catalog);
 
-                //
-                // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
-                // occurs below (which is based on billing alignment policy). Also multiple of those BCD_CHANGE transitions could occur,
-                // to define different intervals with different billing cycle days.
-                //
-                overridenBCD = transition.getBcdLocal() != null ? transition.getBcdLocal() : overridenBCD;
-                final int bcdLocal = overridenBCD != null ?
-                                     overridenBCD :
-                                     calculateBcdForTransition(alignment, bcdCache, baseSubscription, subscription, currentAccountBCD, context);
+                if (transition.getType() != SubscriptionBaseTransitionType.CANCEL) {
+                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(transition.getPlan().getName(), transition.getPlanPhase().getPhaseType());
+                    alignment = subscription.getBillingAlignment(spec, transition.getEffectiveDate(), catalog);
+
+                    //
+                    // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
+                    // occurs below (which is based on billing alignment policy). Also multiple of those BCD_CHANGE transitions could occur,
+                    // to define different intervals with different billing cycle days.
+                    //
+                    overridenBCD = transition.getBcdLocal() != null ? transition.getBcdLocal() : overridenBCD;
+                    bcdLocal = overridenBCD != null ?
+                               overridenBCD :
+                               calculateBcdForTransition(alignment, bcdCache, baseSubscription, subscription, currentAccountBCD, context);
+
+                }
 
                 final BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdLocal, alignment, account.getCurrency());
                 result.add(event);

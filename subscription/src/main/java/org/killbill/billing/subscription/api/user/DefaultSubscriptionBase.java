@@ -67,6 +67,7 @@ import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
 import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -563,6 +564,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     clock, transitions, Order.ASC_FROM_PAST,
                     Visibility.ALL, TimeLimit.ALL);
 
+            // Recomputed for each event from the active Plan -- if Plan is null (cancellation this is not set)
+            StaticCatalog lastActiveCatalog = null;
             final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<SubscriptionBillingEvent>();
             boolean foundInitialEvent = false;
             while (it.hasNext()) {
@@ -581,6 +584,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 // Remove anything prior to first CREATE
                 if (foundInitialEvent) {
 
+
                     // Look for any catalog change transition whose date is less the cur event
                     SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
                     while (prevCandidateForCatalogChangeEvents != null &&
@@ -596,24 +600,25 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         candidatesCatalogChangeEvents.add(prevCandidateForCatalogChangeEvents);
                     }
 
-                    // Additional complexity to deal with null plan/phase for CANCEL, which needs to be recomputed based on the name and the correct catalog version.
-                    final Plan plan;
-                    final PlanPhase planPhase;
-                    if (isCancelEvent) {
-                        plan = catalog.findPlan(cur.getPreviousPlan().getName(), cur.getEffectiveTransitionTime(), result.get(result.size() - 1).getEffectiveDate());
-                        planPhase = plan.findPhase(cur.getPreviousPhase().getName());
-                    } else {
-                        plan = cur.getNextPlan();
-                        planPhase = cur.getNextPhase();
+
+                    final Plan plan = cur.getNextPlan();
+                    final PlanPhase planPhase = cur.getNextPhase();
+
+                    if (plan != null) {
+                        lastActiveCatalog = plan.getCatalog();
                     }
 
-                    final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), plan, planPhase, cur.getEffectiveTransitionTime(), cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal());
-
+                    // Computed from lastActiveCatalog
+                    final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(lastActiveCatalog.getEffectiveDate());
+                    final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), plan, planPhase, cur.getEffectiveTransitionTime(),
+                                                                                                           cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal(), catalogEffectiveDate);
                     result.add(billingTransition);
 
                     if (isCreateOrTransfer || isChangeEvent) {
 
+                        // We are moving to a new Plan, we use the latest active catalog version at the time this operation took place.
                         final StaticCatalog catalogVersion = catalog.versionForDate(billingTransition.getEffectiveDate());
+
                         final Plan currentPlan = catalogVersion.findPlan(billingTransition.getPlan().getName());
 
                         // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
@@ -621,7 +626,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         while (nextPlan != null && nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
                             final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
                             final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
-                            final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate, cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal());
+
+                            // Computed from the nextPlan
+                            final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
+                            final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
+                                                                                                                      cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal(), catalogEffectiveDateForNextPlan);
                             candidatesCatalogChangeEvents.add(newBillingTransition);
                             nextPlan = catalog.getNextPlanVersion(nextPlan);
                         }
