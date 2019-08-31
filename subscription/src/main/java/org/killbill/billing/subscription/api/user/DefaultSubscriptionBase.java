@@ -883,7 +883,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
             final Plan nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), lastPlanChangeTime) : null;
             final PlanPhase nextPhase = (nextPlan != null && nextPhaseName != null) ? nextPlan.findPhase(nextPhaseName) : null;
-            final PriceList nextPriceList = (nextPlan != null) ? catalog.findPriceListForPlan(nextPlanName, cur.getEffectiveDate(), getAlignStartDate()) : null;
+            final PriceList nextPriceList = (nextPlan != null) ? nextPlan.getPriceList() : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, bundleExternalKey, cur.getType(), apiEventType,

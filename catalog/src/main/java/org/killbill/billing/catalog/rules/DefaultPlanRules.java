@@ -179,7 +179,7 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
     private DefaultPriceList findPriceList(final PlanSpecifier specifier) throws CatalogApiException {
         DefaultPriceList result = DefaultCasePriceList.getResult(priceListCase, specifier, root);
         if (result == null) {
-            final String priceListName = specifier.getPlanName() != null ? root.findPlan(specifier.getPlanName()).getPriceListName() : specifier.getPriceListName();
+            final String priceListName = specifier.getPlanName() != null ? root.findPlan(specifier.getPlanName()).getPriceList().getName() : specifier.getPriceListName();
             result = (DefaultPriceList) root.findPriceList(priceListName);
         }
         return result;

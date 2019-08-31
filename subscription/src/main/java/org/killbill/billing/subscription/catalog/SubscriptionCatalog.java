@@ -81,14 +81,6 @@ public class SubscriptionCatalog  {
 
     }
 
-    public PriceList findPriceListForPlan(final String planName,
-                                          final DateTime requestedDate,
-                                          final DateTime subscriptionChangePlanDate)
-            throws CatalogApiException {
-        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(planName), requestedDate, subscriptionChangePlanDate);
-        return entry.getStaticCatalog().findPriceList(entry.getPlan().getPriceListName());
-    }
-
     public Plan getNextPlanVersion(final Plan curPlan) {
 
         boolean foundCurVersion = false;

@@ -106,9 +106,8 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
         newPlan.setInitialPhases(new DefaultPlanPhase[]{trialPhase});
         newPlan.setFinalPhase(evergreenPhase);
         newPlan.setRecurringBillingMode(BillingMode.IN_ADVANCE);
-        // TODO Ordering breaks
-        mutableCatalog.addPlan(newPlan);
         newPlan.initialize((StandaloneCatalog) mutableCatalog);
+        mutableCatalog.addPlan(newPlan);
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
         final StandaloneCatalog newCatalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
@@ -116,7 +115,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
 
         final Plan plan = newCatalog.findPlan("dynamic-monthly");
         assertEquals(plan.getName(), "dynamic-monthly");
-        assertEquals(plan.getPriceListName(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
+        assertEquals(plan.getPriceList().getName(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
         assertEquals(plan.getProduct().getName(), "Dynamic");
         assertEquals(plan.getProduct().getCategory(), ProductCategory.BASE);
         assertEquals(plan.getInitialPhases().length, 1);

@@ -319,8 +319,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newPlan.setProduct(newProduct);
         newPlan.setInitialPhases(new DefaultPlanPhase[]{trialPhase, fixedTermPhase});
         newPlan.setFinalPhase(fixedTermPhase);
-        mutableCatalog.addPlan(newPlan);
         newPlan.initialize((StandaloneCatalog) mutableCatalog);
+        mutableCatalog.addPlan(newPlan);
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
         final StandaloneCatalog newCatalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
@@ -608,8 +608,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newPlan1.setProduct(newProduct1);
         newPlan1.setInitialPhases(new DefaultPlanPhase[]{discountPhase1});
         newPlan1.setFinalPhase(evergreenPhase1);
-        mutableCatalog.addPlan(newPlan1);
         newPlan1.initialize((StandaloneCatalog) mutableCatalog);
+        mutableCatalog.addPlan(newPlan1);
 
         final DefaultProduct newProduct2 = new DefaultProduct();
         newProduct2.setName("SuperDynamic");
@@ -628,8 +628,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newPlan2.setPriceListName(DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
         newPlan2.setProduct(newProduct2);
         newPlan2.setFinalPhase(fixedterm2);
-        mutableCatalog.addPlan(newPlan2);
         newPlan2.initialize((StandaloneCatalog) mutableCatalog);
+        mutableCatalog.addPlan(newPlan2);
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
         return XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);

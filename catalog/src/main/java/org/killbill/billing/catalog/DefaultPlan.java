@@ -98,11 +98,9 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
     // For deserialization
     public DefaultPlan() {
-    }
-
-    public DefaultPlan(final StandaloneCatalog staticCatalog) {
         initialPhases = new DefaultPlanPhase[0];
     }
+
 
     public DefaultPlan(final String planName, final DefaultPlan in, final PlanPhasePriceOverride[] overrides) {
         this.name = planName;
@@ -114,7 +112,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
             initialPhases[i] = newPhase;
         }
         this.finalPhase = new DefaultPlanPhase(this, in.getFinalPhase(), overrides[overrides.length - 1]);
-        this.priceListName = in.getPriceListName();
+        this.priceListName = in.getPriceList().getName();
         this.recurringBillingMode = in.getRecurringBillingMode();
     }
 
@@ -161,11 +159,6 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     public DefaultPlan setProduct(final Product product) {
         this.product = (DefaultProduct) product;
         return this;
-    }
-
-    @Override
-    public String getPriceListName() {
-        return priceListName;
     }
 
     public DefaultPlan setPriceListName(final String priceListName) {
@@ -229,6 +222,16 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     }
 
     @Override
+    public PriceList getPriceList() {
+        try {
+            return root.getPriceLists().findPriceListFrom(priceListName);
+        } catch (CatalogApiException e) {
+            // This should not be possible
+            throw new IllegalStateException(e);
+        }
+    }
+
+    @Override
     public BillingPeriod getRecurringBillingPeriod() {
         return finalPhase.getRecurring() != null ? finalPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
     }
@@ -236,6 +239,10 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
     @Override
     public int getPlansAllowedInBundle() {
         return plansAllowedInBundle;
+    }
+
+    public String getPriceListName() {
+        return priceListName;
     }
 
     public DefaultPlan setPlansAllowedInBundle(final Integer plansAllowedInBundle) {
@@ -272,6 +279,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
 
         this.priceListName = this.priceListName != null ? this.priceListName : findPriceListForPlan(catalog);
         this.root = catalog;
+
     }
 
     @Override
@@ -309,6 +317,7 @@ public class DefaultPlan extends ValidatingConfig<StandaloneCatalog> implements 
                                                          finalPhase.getName(), name, finalPhase.getPhaseType()),
                                            DefaultPlan.class, ""));
         }
+
         // Safety check
         if (plansAllowedInBundle == null) {
             throw new IllegalStateException("plansAllowedInBundle should have been automatically been initialized with DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE (-1)");

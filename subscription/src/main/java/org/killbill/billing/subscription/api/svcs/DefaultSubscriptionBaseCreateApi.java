@@ -225,7 +225,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
-                                                              spec.getProductName(), spec.getBillingPeriod().toString(), plan.getPriceListName()));
+                                                              spec.getProductName(), spec.getBillingPeriod().toString(), plan.getPriceList()));
             }
 
             // verify the number of subscriptions (of the same kind) allowed per bundle and the existing ones
@@ -251,7 +251,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             }
 
             final SubscriptionSpecifier subscription = new SubscriptionSpecifier();
-            subscription.setRealPriceList(plan.getPriceListName());
+            subscription.setRealPriceList(plan.getPriceList().getName());
             subscription.setEffectiveDate(effectiveDate);
             subscription.setProcessedDate(context.getCreatedDate());
             subscription.setPlan(plan);

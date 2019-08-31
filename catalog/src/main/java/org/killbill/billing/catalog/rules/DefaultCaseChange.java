@@ -95,7 +95,7 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
             inFromProduct = plan.getProduct();
             inFromBillingPeriod = plan.getRecurringBillingPeriod();
             inFromProductCategory = plan.getProduct().getCategory();
-            inFromPriceList = catalog.findPriceList(plan.getPriceListName());
+            inFromPriceList = plan.getPriceList();
         } else {
             inFromProduct = catalog.findProduct(from.getProductName());
             inFromBillingPeriod = from.getBillingPeriod();
@@ -112,7 +112,7 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
             inToProduct = plan.getProduct();
             inToBillingPeriod = plan.getRecurringBillingPeriod();
             inToProductCategory = plan.getProduct().getCategory();
-            inToPriceList = catalog.findPriceList(plan.getPriceListName());
+            inToPriceList =  plan.getPriceList();
         } else {
             inToProduct = catalog.findProduct(to.getProductName());
             inToBillingPeriod = to.getBillingPeriod();

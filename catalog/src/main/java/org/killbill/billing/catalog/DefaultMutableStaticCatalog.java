@@ -70,7 +70,7 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
 
         getPlansMap().add(plan);
 
-        final DefaultPriceList priceList = getPriceLists().findPriceListFrom(plan.getPriceListName());
+        final DefaultPriceList priceList = (DefaultPriceList) plan.getPriceList();
         priceList.getCatalogEntityCollectionPlan().add(plan);
     }
 

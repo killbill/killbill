@@ -117,7 +117,7 @@ public class CatalogUpdater {
 
         if (plan == null) {
 
-            plan = new DefaultPlan(catalog);
+            plan = new DefaultPlan();
             plan.setName(desc.getPlanId());
             plan.setPriceListName(PriceListSet.DEFAULT_PRICELIST_NAME);
             plan.setProduct(product);
@@ -130,6 +130,7 @@ public class CatalogUpdater {
                 trialPhase.setFixed(new DefaultFixed().setFixedPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(desc.getCurrency()).setValue(BigDecimal.ZERO)})));
                 plan.setInitialPhases(new DefaultPlanPhase[]{trialPhase});
             }
+            plan.initialize(catalog);
             catalog.addPlan(plan);
         } else {
             validateExistingPlan(plan, desc);
