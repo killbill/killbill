@@ -36,6 +36,7 @@ import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -140,9 +141,10 @@ public class SubscriptionApiBase {
 
         // Create an overridesWithContext with a null context to indicate this is dryRun and no price overridden plan should be created.
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(entitlementSpecifier.getOverrides(), null);
+        final StaticCatalog versionCatalog = catalog.versionForDate(utcNow);
         final Plan plan = isInputSpecNullOrEmpty ?
                           null :
-                          catalog.createOrFindPlan(inputSpec, overridesWithContext, utcNow);
+                          versionCatalog.createOrFindPlan(inputSpec, overridesWithContext);
 
         switch (dryRunArguments.getAction()) {
             case START_BILLING:
@@ -150,7 +152,7 @@ public class SubscriptionApiBase {
                 final DateTime startEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : utcNow;
                 final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, addonUtils, context);
                 final UUID subscriptionId = UUIDs.randomUUID();
-                dryRunEvents = apiService.getEventsOnCreation(subscriptionId, startEffectiveDate, bundleStartDate, plan, inputSpec.getPhaseType(), plan.getPriceListName(),
+                dryRunEvents = apiService.getEventsOnCreation(subscriptionId, startEffectiveDate, bundleStartDate, plan, inputSpec.getPhaseType(), plan.getPriceList().getName(),
                                                               startEffectiveDate, entitlementSpecifier.getBillCycleDay(), catalog, context);
                 final SubscriptionBuilder builder = new SubscriptionBuilder()
                         .setId(subscriptionId)
@@ -177,7 +179,7 @@ public class SubscriptionApiBase {
                     // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
                     changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy, null, -1, context);
                 }
-                dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, plan.getPriceListName(), changeEffectiveDate, true, entitlementSpecifier.getBillCycleDay(), catalog, context);
+                dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, plan.getPriceList().getName(), changeEffectiveDate, true, entitlementSpecifier.getBillCycleDay(), catalog, context);
                 break;
 
             case STOP_BILLING:

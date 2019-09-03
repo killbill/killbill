@@ -29,9 +29,9 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.VersionedCatalogMapper;
@@ -65,8 +65,7 @@ public class DefaultCatalogCache implements CatalogCache {
     private final VersionedCatalogMapper versionedCatalogMapper;
     private final PriceOverride priceOverride;
     private final InternalCallContextFactory internalCallContextFactory;
-
-    private DefaultVersionedCatalog defaultCatalog;
+    private VersionedCatalog defaultCatalog;
 
     @Inject
     public DefaultCatalogCache(final OSGIServiceRegistration<CatalogPluginApi> pluginRegistry,
@@ -94,7 +93,7 @@ public class DefaultCatalogCache implements CatalogCache {
     }
 
     @Override
-    public DefaultVersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext tenantContext) throws CatalogApiException {
+    public VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext tenantContext) throws CatalogApiException {
 
         //
         // This is used by Kill Bill services (subscription/invoice/... creation/change)
@@ -106,7 +105,7 @@ public class DefaultCatalogCache implements CatalogCache {
             Preconditions.checkState(tenantContext.getAccountRecordId() != null, "Unexpected null accountRecordId in context issued from internal Kill Bill service");
         }
 
-        final DefaultVersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
+        final VersionedCatalog pluginVersionedCatalog = getCatalogFromPlugins(tenantContext);
         if (pluginVersionedCatalog != null) {
             return pluginVersionedCatalog;
         }
@@ -118,15 +117,17 @@ public class DefaultCatalogCache implements CatalogCache {
         // but to be on the safe side;;
         try {
             DefaultVersionedCatalog tenantCatalog = cacheController.get(tenantContext.getTenantRecordId(),
-                                                                        filterTemplateCatalog ? cacheLoaderArgumentWithTemplateFiltering : cacheLoaderArgument);
+                                                                                  filterTemplateCatalog ? cacheLoaderArgumentWithTemplateFiltering : cacheLoaderArgument);
+
             // It means we are using a default catalog in a multi-tenant deployment, that does not really match a real use case, but we want to support it
             // for test purpose.
             if (useDefaultCatalog && tenantCatalog == null) {
-                tenantCatalog = new DefaultVersionedCatalog(defaultCatalog.getClock());
+                tenantCatalog = new DefaultVersionedCatalog();
                 for (final StaticCatalog cur : defaultCatalog.getVersions()) {
                     final StandaloneCatalogWithPriceOverride curWithOverride = new StandaloneCatalogWithPriceOverride(cur, priceOverride, tenantContext.getTenantRecordId(), internalCallContextFactory);
                     tenantCatalog.add(curWithOverride);
                 }
+
                 cacheController.putIfAbsent(tenantContext.getTenantRecordId(), tenantCatalog);
             }
 
@@ -147,7 +148,7 @@ public class DefaultCatalogCache implements CatalogCache {
         }
     }
 
-    private DefaultVersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) throws CatalogApiException {
+    private VersionedCatalog getCatalogFromPlugins(final InternalTenantContext internalTenantContext) throws CatalogApiException {
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
         final Set<String> allServices = pluginRegistry.getAllServices();
         for (final String service : allServices) {
@@ -164,12 +165,12 @@ public class DefaultCatalogCache implements CatalogCache {
             // A null latestCatalogUpdatedDate bypasses caching, by fetching full catalog from plugin below (compatibility mode with 0.18.x or non optimized plugin api mode)
             final boolean cacheable = latestCatalogUpdatedDate != null;
             if (cacheable) {
-                final DefaultVersionedCatalog tenantCatalog = cacheController.get(internalTenantContext.getTenantRecordId(), cacheLoaderArgument);
-                if (tenantCatalog != null) {
-                    initializeCatalog(tenantCatalog);
-                    if (tenantCatalog.getEffectiveDate().compareTo(latestCatalogUpdatedDate.toDate()) == 0) {
+                final DefaultVersionedCatalog versionedCatalog = cacheController.get(internalTenantContext.getTenantRecordId(), cacheLoaderArgument);
+                if (versionedCatalog != null) {
+                    initializeCatalog(versionedCatalog);
+                    if (versionedCatalog.getCurrentVersion().getEffectiveDate().compareTo(latestCatalogUpdatedDate.toDate()) == 0) {
                         // Current cached version matches the one from the plugin
-                        return tenantCatalog;
+                        return versionedCatalog;
                     }
                 }
             }
@@ -189,15 +190,13 @@ public class DefaultCatalogCache implements CatalogCache {
                 if (cacheable) {
                     cacheController.putIfAbsent(internalTenantContext.getTenantRecordId(), resolvedPluginCatalog);
                 }
-
                 return resolvedPluginCatalog;
             }
         }
         return null;
     }
 
-    private void initializeCatalog(final DefaultVersionedCatalog tenantCatalog) {
-        tenantCatalog.initialize(defaultCatalog.getClock(), tenantCatalog);
+    private void initializeCatalog(final VersionedCatalog tenantCatalog) {
         for (final StaticCatalog cur : tenantCatalog.getVersions()) {
             if (cur instanceof StandaloneCatalogWithPriceOverride) {
                 ((StandaloneCatalogWithPriceOverride) cur).initialize((StandaloneCatalog) cur, priceOverride, internalCallContextFactory);
@@ -215,7 +214,7 @@ public class DefaultCatalogCache implements CatalogCache {
     private CacheLoaderArgument initializeCacheLoaderArgument(final boolean filterTemplateCatalog) {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
-            public Catalog loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
+            public VersionedCatalog loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
                 return loader.load(catalogXMLs, filterTemplateCatalog, tenantRecordId);
             }
         };

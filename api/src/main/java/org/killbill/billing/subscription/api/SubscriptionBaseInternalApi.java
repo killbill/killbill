@@ -29,8 +29,9 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
@@ -45,7 +46,7 @@ import org.killbill.billing.util.entity.Pagination;
 
 public interface SubscriptionBaseInternalApi {
 
-    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(Iterable<SubscriptionBaseWithAddOnsSpecifier> subscriptionWithAddOnsSpecifiers,
+    public List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(VersionedCatalog catalog, Iterable<SubscriptionBaseWithAddOnsSpecifier> subscriptionWithAddOnsSpecifiers,
                                                                               boolean renameCancelledBundleIfExist,
                                                                               InternalCallContext contextWithValidAccountRecordId) throws SubscriptionBaseApiException;
 
@@ -68,13 +69,13 @@ public interface SubscriptionBaseInternalApi {
 
     public Iterable<UUID> getNonAOSubscriptionIdsForKey(String bundleKey, InternalTenantContext context);
 
-    public SubscriptionBaseBundle getActiveBundleForKey(Catalog catalog, String bundleKey, InternalTenantContext context);
+    public SubscriptionBaseBundle getActiveBundleForKey(VersionedCatalog catalog, String bundleKey, InternalTenantContext context);
 
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId, DryRunArguments dryRunArguments, InternalTenantContext context)
             throws SubscriptionBaseApiException;
 
     // TODO_CATALOG revisit which apis should take a Catalog
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(Catalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(VersionedCatalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
@@ -88,7 +89,7 @@ public interface SubscriptionBaseInternalApi {
 
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(SubscriptionBase subscription, InternalTenantContext context);
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(SubscriptionBase subscription, InternalTenantContext context) throws SubscriptionBaseApiException;
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(VersionedCatalog catalog, SubscriptionBase subscription, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public DateTime getDryRunChangePlanEffectiveDate(SubscriptionBase subscription, EntitlementSpecifier spec, DateTime requestedDate, BillingActionPolicy policy, InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException;
 

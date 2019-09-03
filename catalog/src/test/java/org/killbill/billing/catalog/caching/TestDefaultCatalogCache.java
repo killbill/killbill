@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,10 +32,10 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -87,13 +88,14 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
     public void testDefaultCatalog() throws CatalogApiException {
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
 
-        final DefaultVersionedCatalog result = catalogCache.getCatalog(true, true, false, internalCallContext);
+        final VersionedCatalog result = catalogCache.getCatalog(true, true, false, internalCallContext);
         Assert.assertNotNull(result);
-        final Collection<Product> products = result.getProducts(clock.getUTCNow());
+        final StaticCatalog catalogVersion = result.getVersions().get(result.getVersions().size() - 1);
+        final Collection<Product> products = catalogVersion.getProducts();
         Assert.assertEquals(products.size(), 3);
 
         // Verify the lookup with other contexts
-        final DefaultVersionedCatalog resultForMultiTenantContext = new DefaultVersionedCatalog(result.getClock());
+        final DefaultVersionedCatalog resultForMultiTenantContext = new DefaultVersionedCatalog();
         for (final StaticCatalog cur : result.getVersions()) {
             resultForMultiTenantContext.add(new StandaloneCatalogWithPriceOverride(cur, priceOverride, multiTenantContext.getTenantRecordId(), internalCallContextFactory));
         }
@@ -142,7 +144,7 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         });
 
         // Verify the lookup for a non-cached tenant. No system config is set yet but DefaultCatalogCache returns a default empty one
-        Catalog differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
+        VersionedCatalog differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
         Assert.assertEquals(differentResult.getCatalogName(), "EmptyCatalog");
 
@@ -159,21 +161,23 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
 
         // Verify the lookup for this tenant
-        final DefaultVersionedCatalog result = catalogCache.getCatalog(true, true, false, multiTenantContext);
+        final VersionedCatalog result = catalogCache.getCatalog(true, true, false, multiTenantContext);
         Assert.assertNotNull(result);
-        final Collection<Product> products = result.getProducts(clock.getUTCNow());
+        final StaticCatalog catalogVersion = result.getVersions().get(result.getVersions().size() - 1);
+        final Collection<Product> products = catalogVersion.getProducts();
         Assert.assertEquals(products.size(), 6);
 
         // Verify the lookup for another tenant
-        final DefaultVersionedCatalog otherResult = catalogCache.getCatalog(true, true, false, otherMultiTenantContext);
+        final VersionedCatalog otherResult = catalogCache.getCatalog(true, true, false, otherMultiTenantContext);
         Assert.assertNotNull(otherResult);
-        final Collection<Product> otherProducts = otherResult.getProducts(clock.getUTCNow());
+        final StaticCatalog othercatalogVersion = otherResult.getVersions().get(result.getVersions().size() - 1);
+        final Collection<Product> otherProducts = othercatalogVersion.getProducts();
         Assert.assertEquals(otherProducts.size(), 3);
 
         shouldThrow.set(true);
 
         // Verify the lookup for this tenant
-        final Catalog result2 = catalogCache.getCatalog(true, true, false, multiTenantContext);
+        final VersionedCatalog result2 = catalogCache.getCatalog(true, true, false, multiTenantContext);
         Assert.assertEquals(result2, result);
 
         // Verify the lookup with another context for the same tenant

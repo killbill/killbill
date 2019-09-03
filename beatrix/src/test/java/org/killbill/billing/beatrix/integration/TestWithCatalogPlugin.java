@@ -18,6 +18,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -34,13 +35,13 @@ import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.TestModelStandalonePluginCatalog;
 import org.killbill.billing.catalog.plugin.TestModelVersionedPluginCatalog;
@@ -150,38 +151,38 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
         testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-1.xml");
 
-        final Catalog catalog1 = catalogUserApi.getCatalog("whatever", null, callContext);
+        final VersionedCatalog catalog1 = catalogUserApi.getCatalog("whatever", callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 1);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 1);
         Assert.assertEquals(catalog1.getVersions().get(0).getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
 
         // Retrieve 3 more times
-        catalogUserApi.getCatalog("whatever", null, callContext);
-        catalogUserApi.getCatalog("whatever", null, callContext);
-        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", callContext);
+        catalogUserApi.getCatalog("whatever", callContext);
+        catalogUserApi.getCatalog("whatever", callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 4);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 1);
 
         testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-2.xml");
 
-        final Catalog catalog2 = catalogUserApi.getCatalog("whatever", null, callContext);
+        final VersionedCatalog catalog2 = catalogUserApi.getCatalog("whatever", callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 5);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 2);
         Assert.assertEquals(catalog2.getVersions().get(1).getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
 
         testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-3.xml");
 
-        final Catalog catalog3 = catalogUserApi.getCatalog("whatever", null, callContext);
+        final VersionedCatalog catalog3 = catalogUserApi.getCatalog("whatever", callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 6);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 3);
         Assert.assertEquals(catalog3.getVersions().get(2).getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
 
 
         // Retrieve 4 more times
-        catalogUserApi.getCatalog("whatever", null, callContext);
-        catalogUserApi.getCatalog("whatever", null, callContext);
-        catalogUserApi.getCatalog("whatever", null, callContext);
-        catalogUserApi.getCatalog("whatever", null, callContext);
+        catalogUserApi.getCatalog("whatever", callContext);
+        catalogUserApi.getCatalog("whatever", callContext);
+        catalogUserApi.getCatalog("whatever", callContext);
+        catalogUserApi.getCatalog("whatever", callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 10);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 3);
 
@@ -218,7 +219,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         public VersionedPluginCatalog getVersionedPluginCatalog(final Iterable<PluginProperty> properties, final TenantContext tenantContext) {
             nbVersionedPluginCatalogApiCalls++;
             Assert.assertNotNull(versionedCatalog, "test did not initialize plugin catalog");
-            return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), toStandalonePluginCatalogs(versionedCatalog.getVersions()));
+            return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), toStandalonePluginCatalogs(versionedCatalog));
         }
 
         // This actually pulls catalog resources from `catalog` module and not the one from beatrix/src/test/resources//catalogs
@@ -229,7 +230,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
             this.latestCatalogUpdate = new DateTime(inputCatalogVersion.getEffectiveDate());
             if (versionedCatalog == null) {
-                versionedCatalog = new DefaultVersionedCatalog(clock);
+                versionedCatalog = new DefaultVersionedCatalog();
             }
             versionedCatalog.add(inputCatalogVersionWithOverride);
         }
@@ -253,16 +254,16 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
             return latestCatalogUpdate;
         }
 
-        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final List<StaticCatalog> input) {
-            return Iterables.transform(input, new Function<StaticCatalog, StandalonePluginCatalog>() {
+        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final VersionedCatalog input) {
+            return Iterables.transform(input.getVersions(), new Function<StaticCatalog, StandalonePluginCatalog>() {
                 @Override
                 public StandalonePluginCatalog apply(final StaticCatalog input) {
 
                     final StandaloneCatalog standaloneCatalog = (StandaloneCatalog) input;
                     return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
-                                                                ImmutableList.copyOf(standaloneCatalog.getCurrentSupportedCurrencies()),
-                                                                ImmutableList.<Product>copyOf(standaloneCatalog.getCurrentProducts()),
-                                                                ImmutableList.<Plan>copyOf(standaloneCatalog.getCurrentPlans()),
+                                                                ImmutableList.copyOf(standaloneCatalog.getSupportedCurrencies()),
+                                                                ImmutableList.<Product>copyOf(standaloneCatalog.getProducts()),
+                                                                ImmutableList.<Plan>copyOf(standaloneCatalog.getPlans()),
                                                                 standaloneCatalog.getPriceLists().getDefaultPricelist(),
                                                                 ImmutableList.<PriceList>copyOf(standaloneCatalog.getPriceLists().getChildPriceLists()),
                                                                 standaloneCatalog.getPlanRules(),

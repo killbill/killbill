@@ -32,14 +32,18 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     private final DateTime effectiveDate;
     private final Long totalOrdering;
     private final Integer bcdLocal;
+    private final DateTime catalogEffectiveDate;
 
-    public DefaultSubscriptionBillingEvent(final SubscriptionBaseTransitionType type, final Plan plan, final PlanPhase planPhase, final DateTime effectiveDate, final Long totalOrdering, final Integer bcdLocal) {
+    public DefaultSubscriptionBillingEvent(final SubscriptionBaseTransitionType type, final Plan plan,
+                                           final PlanPhase planPhase, final DateTime effectiveDate,
+                                           final Long totalOrdering, final Integer bcdLocal, final DateTime catalogEffectiveDate) {
         this.type = type;
         this.plan = plan;
         this.planPhase = planPhase;
         this.effectiveDate = effectiveDate;
         this.totalOrdering = totalOrdering;
         this.bcdLocal = bcdLocal;
+        this.catalogEffectiveDate = catalogEffectiveDate;
     }
 
     @Override
@@ -73,6 +77,11 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     }
 
     @Override
+    public DateTime getCatalogEffectiveDate() {
+        return catalogEffectiveDate;
+    }
+
+    @Override
     public String toString() {
         return "DefaultSubscriptionBillingEvent{" +
                "type=" + type +
@@ -80,6 +89,7 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
                ", planPhase='" + planPhase.getName() + '\'' +
                ", effectiveDate=" + effectiveDate +
                ", totalOrdering=" + totalOrdering +
+               ", catalogEffectiveDate=" + catalogEffectiveDate +
                ", bcdLocal=" + bcdLocal +
                '}';
     }

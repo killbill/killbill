@@ -61,7 +61,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final CatalogUpdater catalogUpdater = new CatalogUpdater(now, null);
         final String catalogXML = catalogUpdater.getCatalogXML();
         final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(catalogXML.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
-        assertEquals(catalog.getCurrentPlans().size(), 0);
+        assertEquals(catalog.getPlans().size(), 0);
     }
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/842")
@@ -73,25 +73,25 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         catalogUpdater.addSimplePlanDescriptor(desc);
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
-        assertEquals(catalog.getCurrentPlans().size(), 1);
+        assertEquals(catalog.getPlans().size(), 1);
 
         final StaticCatalog standaloneCatalogWithPriceOverride = new StandaloneCatalogWithPriceOverride(catalog,
                                                                                                         priceOverride,
                                                                                                         internalCallContext.getTenantRecordId(),
                                                                                                         internalCallContextFactory);
 
-        final Plan plan = catalog.findCurrentPlan("foo-monthly-12345");
+        final Plan plan = catalog.findPlan("foo-monthly-12345");
         assertEquals(plan.getName(), "foo-monthly-12345");
 
         // Verify PriceOverride logic
-        final Plan plan2 = standaloneCatalogWithPriceOverride.findCurrentPlan("foo-monthly-12345");
+        final Plan plan2 = standaloneCatalogWithPriceOverride.findPlan("foo-monthly-12345");
         assertEquals(plan2.getName(), "foo-monthly-12345");
 
-        final PlanPhase planPhase = catalog.findCurrentPhase("foo-monthly-12345-evergreen");
+        final PlanPhase planPhase = catalog.findPhase("foo-monthly-12345-evergreen");
         assertEquals(planPhase.getName(), "foo-monthly-12345-evergreen");
 
         // Verify PriceOverride logic
-        final PlanPhase phase2 = standaloneCatalogWithPriceOverride.findCurrentPhase("foo-monthly-12345-evergreen");
+        final PlanPhase phase2 = standaloneCatalogWithPriceOverride.findPhase("foo-monthly-12345-evergreen");
         assertEquals(phase2.getName(), "foo-monthly-12345-evergreen");
     }
 
@@ -107,15 +107,15 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
-        assertEquals(catalog.getCurrentProducts().size(), 1);
+        assertEquals(catalog.getProducts().size(), 1);
 
-        final Product product = catalog.getCurrentProducts().iterator().next();
+        final Product product = catalog.getProducts().iterator().next();
         assertEquals(product.getName(), "Foo");
         assertEquals(product.getCategory(), ProductCategory.BASE);
 
-        assertEquals(catalog.getCurrentPlans().size(), 1);
+        assertEquals(catalog.getPlans().size(), 1);
 
-        final Plan plan = catalog.findCurrentPlan("foo-monthly");
+        final Plan plan = catalog.findPlan("foo-monthly");
         assertEquals(plan.getName(), "foo-monthly");
 
         assertEquals(plan.getInitialPhases().length, 0);
@@ -147,15 +147,15 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
-        assertEquals(catalog.getCurrentProducts().size(), 1);
+        assertEquals(catalog.getProducts().size(), 1);
 
-        final Product product = catalog.getCurrentProducts().iterator().next();
+        final Product product = catalog.getProducts().iterator().next();
         assertEquals(product.getName(), "Foo");
         assertEquals(product.getCategory(), ProductCategory.BASE);
 
-        assertEquals(catalog.getCurrentPlans().size(), 1);
+        assertEquals(catalog.getPlans().size(), 1);
 
-        final Plan plan = catalog.findCurrentPlan("foo-monthly");
+        final Plan plan = catalog.findPlan("foo-monthly");
         assertEquals(plan.getName(), "foo-monthly");
 
         assertEquals(plan.getInitialPhases().length, 1);
@@ -196,7 +196,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
-        final Plan plan = catalog.findCurrentPlan("standard-annual");
+        final Plan plan = catalog.findPlan("standard-annual");
         assertEquals(plan.getName(), "standard-annual");
 
         assertEquals(plan.getInitialPhases().length, 0);
@@ -229,7 +229,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final StandaloneCatalog catalog = catalogUpdater.getCatalog();
 
-        final Plan plan = catalog.findCurrentPlan("standard-monthly");
+        final Plan plan = catalog.findPlan("standard-monthly");
         assertEquals(plan.getName(), "standard-monthly");
 
         assertEquals(plan.getInitialPhases().length, 1);
@@ -319,13 +319,13 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newPlan.setProduct(newProduct);
         newPlan.setInitialPhases(new DefaultPlanPhase[]{trialPhase, fixedTermPhase});
         newPlan.setFinalPhase(fixedTermPhase);
-        mutableCatalog.addPlan(newPlan);
         newPlan.initialize((StandaloneCatalog) mutableCatalog);
+        mutableCatalog.addPlan(newPlan);
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
         final StandaloneCatalog newCatalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
 
-        final DefaultPlan targetPlan = newCatalog.findCurrentPlan("something-with-fixed-term");
+        final DefaultPlan targetPlan = newCatalog.findPlan("something-with-fixed-term");
         Assert.assertEquals(targetPlan.getInitialPhases().length, 2);
         Assert.assertEquals(targetPlan.getInitialPhases()[1].getPhaseType(), PhaseType.FIXEDTERM);
 
@@ -608,8 +608,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newPlan1.setProduct(newProduct1);
         newPlan1.setInitialPhases(new DefaultPlanPhase[]{discountPhase1});
         newPlan1.setFinalPhase(evergreenPhase1);
-        mutableCatalog.addPlan(newPlan1);
         newPlan1.initialize((StandaloneCatalog) mutableCatalog);
+        mutableCatalog.addPlan(newPlan1);
 
         final DefaultProduct newProduct2 = new DefaultProduct();
         newProduct2.setName("SuperDynamic");
@@ -628,8 +628,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         newPlan2.setPriceListName(DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
         newPlan2.setProduct(newProduct2);
         newPlan2.setFinalPhase(fixedterm2);
-        mutableCatalog.addPlan(newPlan2);
         newPlan2.initialize((StandaloneCatalog) mutableCatalog);
+        mutableCatalog.addPlan(newPlan2);
 
         final String newCatalogStr = XMLWriter.writeXML((StandaloneCatalog) mutableCatalog, StandaloneCatalog.class);
         return XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalogStr.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);

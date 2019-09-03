@@ -23,7 +23,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.api.StandalonePluginCatalog;
 import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
@@ -44,8 +43,8 @@ public class VersionedCatalogMapper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public DefaultVersionedCatalog toVersionedCatalog(final VersionedPluginCatalog pluginCatalog, final InternalTenantContext internalTenantContext) throws CatalogApiException {
-        final DefaultVersionedCatalog result = new DefaultVersionedCatalog(clock);
+    public DefaultVersionedCatalog toVersionedCatalog(final VersionedPluginCatalog pluginCatalog, final InternalTenantContext internalTenantContext) {
+        final DefaultVersionedCatalog result = new DefaultVersionedCatalog();
         for (final StandalonePluginCatalog cur : pluginCatalog.getStandalonePluginCatalogs()) {
             result.add(toStandaloneCatalogWithPriceOverride(pluginCatalog, cur, internalTenantContext));
         }

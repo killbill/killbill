@@ -79,7 +79,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.plan = inputEvent.getPlan();
         this.planPhase = inputEvent.getPlanPhase();
 
-        this.catalogEffectiveDate = new DateTime(plan.getCatalog().getEffectiveDate());
+        this.catalogEffectiveDate = inputEvent.getCatalogEffectiveDate();
 
         this.currency = currency;
         this.billCycleDayLocal = billCycleDayLocal;
@@ -91,7 +91,7 @@ public class DefaultBillingEvent implements BillingEvent {
         // All those attributes are computed once for the billing and will be applied through all transitions
         // issued from this billing events -- e.g monthly recurring invoicing
         //
-        this.billingPeriod = computeRecurringBillingPeriod(planPhase);
+        this.billingPeriod = computeRecurringBillingPeriod(isCancelledOrBlocked, planPhase);
         this.fixedPrice = computeFixedPrice(isCancelledOrBlocked, planPhase, currency, type);
         this.recurringPrice = computeRecurringPrice(isCancelledOrBlocked, planPhase, currency);
         this.usages = computeUsages(isCancelledOrBlocked, planPhase);
@@ -229,7 +229,10 @@ public class DefaultBillingEvent implements BillingEvent {
         return (effectivePlanPhase.getRecurring() != null && effectivePlanPhase.getRecurring().getRecurringPrice() != null) ? effectivePlanPhase.getRecurring().getRecurringPrice().getPrice(currency) : null;
     }
 
-    private static BillingPeriod computeRecurringBillingPeriod(final PlanPhase effectivePlanPhase) {
+    private static BillingPeriod computeRecurringBillingPeriod(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase) {
+        if (isCancelledOrBlocked) {
+            return BillingPeriod.NO_BILLING_PERIOD;
+        }
         return effectivePlanPhase.getRecurring() != null ? effectivePlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
     }
 
@@ -375,7 +378,9 @@ public class DefaultBillingEvent implements BillingEvent {
         sb.append("DefaultBillingEvent");
         sb.append("{type=").append(type);
         sb.append(", effectiveDate=").append(effectiveDate);
-        sb.append(", planPhaseName=").append(planPhase.getName());
+        if (planPhase != null) {
+            sb.append(", planPhaseName=").append(planPhase.getName());
+        }
         sb.append(", subscriptionId=").append(subscriptionId);
         sb.append(", totalOrdering=").append(totalOrdering);
         sb.append('}');

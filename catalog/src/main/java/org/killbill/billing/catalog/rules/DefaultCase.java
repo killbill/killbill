@@ -57,16 +57,16 @@ public abstract class DefaultCase<T> extends ValidatingConfig<StandaloneCatalog>
         final ProductCategory productCategory;
         final PriceList priceList;
         if (planPhase.getPlanName() != null) {
-            final Plan plan = c.findCurrentPlan(planPhase.getPlanName());
+            final Plan plan = c.findPlan(planPhase.getPlanName());
             product = plan.getProduct();
             billingPeriod = plan.getRecurringBillingPeriod();
             productCategory = plan.getProduct().getCategory();
-            priceList = c.findCurrentPriceList(plan.getPriceListName());
+            priceList =  plan.getPriceList();
         } else {
-            product = c.findCurrentProduct(planPhase.getProductName());
+            product = c.findProduct(planPhase.getProductName());
             billingPeriod = planPhase.getBillingPeriod();
             productCategory = product.getCategory();
-            priceList = getPriceList() != null ? c.findCurrentPriceList(planPhase.getPriceListName()) : null;
+            priceList = getPriceList() != null ? c.findPriceList(planPhase.getPriceListName()) : null;
         }
         return (getProduct() == null || getProduct().equals(product)) &&
                (getProductCategory() == null || getProductCategory().equals(productCategory)) &&

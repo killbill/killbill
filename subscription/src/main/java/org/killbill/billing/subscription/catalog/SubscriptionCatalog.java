@@ -18,28 +18,21 @@
 package org.killbill.billing.subscription.catalog;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.billing.catalog.api.PriceList;
-import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.Unit;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.clock.Clock;
@@ -52,74 +45,30 @@ import static org.killbill.billing.ErrorCode.CAT_NO_SUCH_PLAN;
 // * subscription code should only use SubscriptionCatalog (and never Catalog) although nothing wrong would happen if it was the case, but just for consistency
 // * this class is really an extension of Catalog api and as such it still throws CatalogApiException
 //
-public class SubscriptionCatalog implements Catalog {
+public class SubscriptionCatalog {
 
-    private final Catalog delegate;
+    private final VersionedCatalog catalog;
+    private final List<StaticCatalog> versions;
     private final Clock clock;
 
     // package scope
-    SubscriptionCatalog(final Catalog delegate, final Clock clock) {
-        this.delegate = delegate;
+    SubscriptionCatalog(final VersionedCatalog catalog, final Clock clock) {
+        this.catalog = catalog;
+        this.versions = catalog.getVersions();
         this.clock = clock;
+    }
+
+    public List<StaticCatalog> getVersions() {
+        return versions;
+    }
+
+    public VersionedCatalog getCatalog() {
+        return catalog;
     }
 
     //
     // Public apis accessed through delegation
     //
-    @Override
-    public String getCatalogName() {
-        return delegate.getCatalogName();
-    }
-
-    @Override
-    public Date getStandaloneCatalogEffectiveDate(final DateTime requestedDate) throws CatalogApiException {
-        return delegate.getStandaloneCatalogEffectiveDate(requestedDate);
-    }
-
-    @Override
-    public Currency[] getSupportedCurrencies(final DateTime requestedDate) throws CatalogApiException {
-        return delegate.getSupportedCurrencies(requestedDate);
-    }
-
-    @Override
-    public Unit[] getUnits(final DateTime requestedDate) throws CatalogApiException {
-        return delegate.getUnits(requestedDate);
-    }
-
-    @Override
-    public Collection<Product> getProducts(final DateTime requestedDate) throws CatalogApiException {
-        return delegate.getProducts(requestedDate);
-    }
-
-    @Override
-    public Collection<Plan> getPlans(final DateTime requestedDate) throws CatalogApiException {
-        return delegate.getPlans(requestedDate);
-    }
-
-    @Override
-    public PriceListSet getPriceLists(final DateTime requestedDate) throws CatalogApiException {
-        return delegate.getPriceLists(requestedDate);
-    }
-
-    @Override
-    public Plan findPlan(final String planName, final DateTime requestedDate) throws CatalogApiException {
-        return delegate.findPlan(planName, requestedDate);
-    }
-
-    @Override
-    public Plan createOrFindPlan(final PlanSpecifier planSpecifier, final PlanPhasePriceOverridesWithCallContext planPhasePriceOverridesWithCallContext, final DateTime requestedDate) throws CatalogApiException {
-        return delegate.createOrFindPlan(planSpecifier, planPhasePriceOverridesWithCallContext, requestedDate);
-    }
-
-    @Override
-    public Product findProduct(final String planName, final DateTime requestedDate) throws CatalogApiException {
-        return delegate.findProduct(planName, requestedDate);
-    }
-
-    @Override
-    public List<StaticCatalog> getVersions() {
-        return delegate.getVersions();
-    }
 
     //
     // Private (subscription-specific) apis that require state associated with this a given subscription
@@ -130,17 +79,8 @@ public class SubscriptionCatalog implements Catalog {
 
     }
 
-    public PriceList findPriceListForPlan(final String planName,
-                                          final DateTime requestedDate,
-                                          final DateTime subscriptionChangePlanDate)
-            throws CatalogApiException {
-        final CatalogPlanEntry entry = findCatalogPlanEntry(new PlanRequestWrapper(planName), requestedDate, subscriptionChangePlanDate);
-        return entry.getStaticCatalog().findCurrentPriceList(entry.getPlan().getPriceListName());
-    }
-
     public Plan getNextPlanVersion(final Plan curPlan) {
 
-        final List<StaticCatalog> versions = delegate.getVersions();
         boolean foundCurVersion = false;
         StaticCatalog nextCatalogVersion = null;
         for (int i = 0; i < versions.size(); i++) {
@@ -158,7 +98,7 @@ public class SubscriptionCatalog implements Catalog {
         }
 
         try {
-            return nextCatalogVersion.findCurrentPlan(curPlan.getName());
+            return nextCatalogVersion.findPlan(curPlan.getName());
         } catch (final CatalogApiException ignored) {
             return null;
         }
@@ -175,13 +115,13 @@ public class SubscriptionCatalog implements Catalog {
 
     public PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to)
             throws CatalogApiException {
-        final StaticCatalog standaloneCatalog = versionForDate(clock.getUTCNow());
-        return getPlanChangeResult(from, to, standaloneCatalog);
+        final StaticCatalog staticCatalog = versionForDate(clock.getUTCNow());
+        return getPlanChangeResult(from, to, staticCatalog);
     }
 
-    private PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog standaloneCatalog)
+    private PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog staticCatalog)
             throws CatalogApiException {
-        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        final PlanRules planRules = staticCatalog.getPlanRules();
         return planRules.getPlanChangeResult(from, to);
     }
 
@@ -194,13 +134,13 @@ public class SubscriptionCatalog implements Catalog {
 
     public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase)
             throws CatalogApiException {
-        final StaticCatalog standaloneCatalog = versionForDate(clock.getUTCNow());
-        return planCancelPolicy(planPhase, standaloneCatalog);
+        final StaticCatalog staticCatalog = versionForDate(clock.getUTCNow());
+        return planCancelPolicy(planPhase, staticCatalog);
     }
 
-    private BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final StaticCatalog standaloneCatalog)
+    private BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final StaticCatalog staticCatalog)
             throws CatalogApiException {
-        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        final PlanRules planRules = staticCatalog.getPlanRules();
         return planRules.getPlanCancelPolicy(planPhase);
     }
 
@@ -213,13 +153,13 @@ public class SubscriptionCatalog implements Catalog {
 
     public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier)
             throws CatalogApiException {
-        final StaticCatalog standaloneCatalog = versionForDate(clock.getUTCNow());
-        return planCreateAlignment(specifier, standaloneCatalog);
+        final StaticCatalog staticCatalog = versionForDate(clock.getUTCNow());
+        return planCreateAlignment(specifier, staticCatalog);
     }
 
-    private PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final StaticCatalog standaloneCatalog)
+    private PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final StaticCatalog staticCatalog)
             throws CatalogApiException {
-        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        final PlanRules planRules = staticCatalog.getPlanRules();
         return planRules.getPlanCreateAlignment(specifier);
     }
 
@@ -232,13 +172,13 @@ public class SubscriptionCatalog implements Catalog {
 
     public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase)
             throws CatalogApiException {
-        final StaticCatalog standaloneCatalog = versionForDate(clock.getUTCNow());
-        return billingAlignment(planPhase, standaloneCatalog);
+        final StaticCatalog staticCatalog = versionForDate(clock.getUTCNow());
+        return billingAlignment(planPhase, staticCatalog);
     }
 
-    private BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final StaticCatalog standaloneCatalog)
+    private BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final StaticCatalog staticCatalog)
             throws CatalogApiException {
-        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        final PlanRules planRules = staticCatalog.getPlanRules();
         return planRules.getBillingAlignment(planPhase);
     }
 
@@ -250,7 +190,7 @@ public class SubscriptionCatalog implements Catalog {
     private CatalogPlanEntry findCatalogPlanEntry(final PlanRequestWrapper wrapper,
                                                   final DateTime requestedDate,
                                                   final DateTime subscriptionChangePlanDate) throws CatalogApiException {
-        final List<StaticCatalog> catalogs = versionsBeforeDate(requestedDate.toDate());
+        final List<StaticCatalog> catalogs = versionsBeforeDate(requestedDate);
         if (catalogs.isEmpty()) {
             throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, requestedDate.toDate().toString());
         }
@@ -303,39 +243,23 @@ public class SubscriptionCatalog implements Catalog {
                                       spec.getPriceListName() != null ? spec.getPriceListName() : "undefined");
     }
 
-    private List<StaticCatalog> versionsBeforeDate(final Date date) throws CatalogApiException {
+    private List<StaticCatalog> versionsBeforeDate(final DateTime date) {
 
-        final List<StaticCatalog> versions = delegate.getVersions();
         final List<StaticCatalog> result = new ArrayList<StaticCatalog>();
-        final int index = indexOfVersionForDate(date);
-        for (int i = 0; i <= index; i++) {
-            result.add(versions.get(i));
+
+        // Fetch latest version allowed -- to benefit from custom logic implemented in VersionedCatalog
+        final StaticCatalog latestVersion = versionForDate(date);
+        for (StaticCatalog v : versions) {
+            // Add all versions prior or equal to the one returned.
+            if (v.getEffectiveDate().compareTo(latestVersion.getEffectiveDate()) <= 0) {
+                result.add(v);
+            }
         }
         return result;
     }
 
-    private StaticCatalog versionForDate(final DateTime date) throws CatalogApiException {
-        final List<StaticCatalog> versions = delegate.getVersions();
-        return versions.get(indexOfVersionForDate(date.toDate()));
-    }
-
-    private int indexOfVersionForDate(final Date date) throws CatalogApiException {
-
-        final List<StaticCatalog> versions = delegate.getVersions();
-        for (int i = versions.size() - 1; i >= 0; i--) {
-            final StaticCatalog c = versions.get(i);
-            if (c.getEffectiveDate().getTime() <= date.getTime()) {
-                return i;
-            }
-        }
-        // If the only version we have are after the input date, we return the first version
-        // This is not strictly correct from an api point of view, but there is no real good use case
-        // where the system would ask for the catalog for a date prior any catalog was uploaded and
-        // yet time manipulation could end of inn that state -- see https://github.com/killbill/killbill/issues/760
-        if (!versions.isEmpty()) {
-            return 0;
-        }
-        throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, date.toString());
+    public StaticCatalog versionForDate(final DateTime date) {
+        return catalog.getVersion(date.toDate());
     }
 
     private static class CatalogPlanEntry {
@@ -377,7 +301,7 @@ public class SubscriptionCatalog implements Catalog {
         }
 
         public Plan findPlan(final StaticCatalog catalog) throws CatalogApiException {
-            return catalog.createOrFindCurrentPlan(spec, overrides);
+            return catalog.createOrFindPlan(spec, overrides);
         }
 
         public PlanSpecifier getSpec() {

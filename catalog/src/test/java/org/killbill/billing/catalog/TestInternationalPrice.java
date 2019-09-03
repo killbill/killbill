@@ -63,10 +63,10 @@ public class TestInternationalPrice extends CatalogTestSuiteNoDB {
     public void testPriceInitialization() throws URISyntaxException, CatalogApiException {
         final StandaloneCatalog c = new MockCatalog();
         c.setSupportedCurrencies(new Currency[]{Currency.GBP, Currency.EUR, Currency.USD, Currency.BRL, Currency.MXN});
-        ((DefaultInternationalPrice) c.getCurrentPlans().iterator().next().getFinalPhase().getRecurring().getRecurringPrice()).setPrices(new DefaultPrice[0]);
+        ((DefaultInternationalPrice) c.getPlans().iterator().next().getFinalPhase().getRecurring().getRecurringPrice()).setPrices(new DefaultPrice[0]);
         c.setUnits(new DefaultUnit[0]);
         c.initialize(c);
-        Assert.assertEquals(c.getCurrentPlans().iterator().next().getFinalPhase().getRecurring().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
+        Assert.assertEquals(c.getPlans().iterator().next().getFinalPhase().getRecurring().getRecurringPrice().getPrice(Currency.GBP), new BigDecimal(0));
     }
 
     @Test(groups = "fast")

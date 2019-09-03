@@ -37,12 +37,13 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -138,7 +139,7 @@ public class EventsStreamBuilder {
         // Retrieve the subscriptions (map bundle id -> subscriptions)
         final Map<UUID, List<SubscriptionBase>> subscriptions;
         try {
-            final Catalog catalog = getCatalog(internalTenantContext);
+            final VersionedCatalog catalog = getCatalog(internalTenantContext);
             subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(catalog, internalTenantContext);
             return buildForAccount(subscriptions, catalog, internalTenantContext);
         } catch (final SubscriptionBaseApiException e) {
@@ -147,7 +148,7 @@ public class EventsStreamBuilder {
     }
 
     // Special signature for ProxyBlockingStateDao to save a DAO call
-    public AccountEventsStreams buildForAccount(final Map<UUID, List<SubscriptionBase>> subscriptions, final Catalog catalog, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+    public AccountEventsStreams buildForAccount(final Map<UUID, List<SubscriptionBase>> subscriptions, final VersionedCatalog catalog, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         // Retrieve the account
         final ImmutableAccountData account;
         final int accountBCD;
@@ -306,7 +307,7 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
 
-        final Catalog catalog = getCatalog(internalTenantContext);
+        final VersionedCatalog catalog = getCatalog(internalTenantContext);
 
         // Retrieve the blocking states
         final List<BlockingState> blockingStatesForAccount = defaultBlockingStateDao.getBlockingAllForAccountRecordId(catalog, internalTenantContext);
@@ -322,7 +323,7 @@ public class EventsStreamBuilder {
                                             final SubscriptionBase baseSubscription,
                                             final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                             final int accountBCD,
-                                            final Catalog catalog,
+                                            final VersionedCatalog catalog,
                                             final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
         return buildForEntitlement(blockingStatesForAccount, account, bundle, baseSubscription, baseSubscription, allSubscriptionsForBundle, accountBCD, bcdCache, catalog, internalTenantContext);
@@ -336,7 +337,7 @@ public class EventsStreamBuilder {
                                              final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                              final int accountBCD,
                                              final Map<UUID, Integer> bcdCache,
-                                             final Catalog catalog,
+                                             final VersionedCatalog catalog,
                                              final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         // Optimization: build lookup tables for blocking states states
         final Collection<BlockingState> accountBlockingStates = new LinkedList<BlockingState>();
@@ -401,7 +402,7 @@ public class EventsStreamBuilder {
                                              final Collection<BlockingState> blockingStates,
                                              final int accountBCD,
                                              final Map<UUID, Integer> bcdCache,
-                                             final Catalog catalog,
+                                             final VersionedCatalog catalog,
                                              final InternalTenantContext internalTenantContext) throws EntitlementApiException {
 
         try {
@@ -455,8 +456,8 @@ public class EventsStreamBuilder {
         return new PlanPhaseSpecifier(planName, phaseType);
     }
 
-    private Catalog getCatalog(final InternalTenantContext internalTenantContext) throws EntitlementApiException {
-        final Catalog catalog;
+    private VersionedCatalog getCatalog(final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+        final VersionedCatalog catalog;
         try {
             catalog = catalogInternalApi.getFullCatalog(true, true, internalTenantContext);
         } catch (final CatalogApiException e) {

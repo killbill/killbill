@@ -36,4 +36,6 @@ public interface SubscriptionBillingEvent extends Comparable<SubscriptionBilling
 
     Integer getBcdLocal();
 
+    DateTime getCatalogEffectiveDate();
+
 }

@@ -95,7 +95,8 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
     @Override // to ignore events
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        if (hasFailed()) {        final String externalKey = "12345";
+        if (hasFailed()) {
+            final String externalKey = "12345";
             final DateTime startDate = clock.getUTCNow();
             final DateTime createdDate = startDate.plusSeconds(10);
 

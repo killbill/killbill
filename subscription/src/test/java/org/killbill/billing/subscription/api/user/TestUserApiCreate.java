@@ -312,9 +312,10 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                                                                                 false);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BCD_CHANGE);
-        final List<SubscriptionBaseWithAddOns> subscriptionBaseWithAddOns = subscriptionInternalApi.createBaseSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
-                                                                                                                                false,
-                                                                                                                                internalCallContext);
+        final List<SubscriptionBaseWithAddOns> subscriptionBaseWithAddOns = subscriptionInternalApi.createBaseSubscriptionsWithAddOns(catalog.getCatalog(),
+                                                                                                                                      ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+                                                                                                                                      false,
+                                                                                                                                      internalCallContext);
         testListener.assertListenerStatus();
 
         assertEquals(subscriptionBaseWithAddOns.size(), 1);

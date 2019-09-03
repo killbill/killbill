@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -39,61 +38,60 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.Catalog;
-import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
-import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.billing.catalog.api.PriceList;
-import org.killbill.billing.catalog.api.PriceListSet;
-import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.Unit;
-import org.killbill.billing.catalog.api.rules.PlanRules;
-import org.killbill.clock.Clock;
+import org.killbill.billing.catalog.api.VersionedCatalog;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import com.google.common.base.Preconditions;
 
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
-public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements Catalog, StaticCatalog, Externalizable {
+public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements VersionedCatalog, Externalizable {
 
     private static final long serialVersionUID = 3181874902672322725L;
     @XmlElementWrapper(name = "versions", required = true)
     @XmlElement(name = "version", type = StandaloneCatalog.class, required = true)
     private final List<StaticCatalog> versions;
-    private Clock clock;
     @XmlElement(required = true)
     private String catalogName;
 
     // Required for JAXB deserialization
     public DefaultVersionedCatalog() {
-        this.clock = null;
         this.versions = new ArrayList<StaticCatalog>();
     }
 
-    public DefaultVersionedCatalog(final Clock clock) {
-        this.clock = clock;
-        this.versions = new ArrayList<StaticCatalog>();
+    @Override
+    public String getCatalogName() {
+        return !versions.isEmpty() ? versions.get(0).getCatalogName() : null;
     }
 
-    //
-    // Private methods
-    //
-    private StaticCatalog versionForDate(final DateTime date) throws CatalogApiException {
+    @Override
+    public List<StaticCatalog> getVersions() {
+        return versions;
+    }
+
+    @Override
+    public StaticCatalog getCurrentVersion() {
+        // Looks like we sometimes cache empty catalog ?
+        return !versions.isEmpty() ? versions.get(versions.size() - 1) : null;
+    }
+
+    @Override
+    public StaticCatalog getVersion(final Date date) {
+        return versionForDate(CatalogDateHelper.toUTCDateTime(date));
+    }
+
+    private StaticCatalog versionForDate(final DateTime date) {
         return versions.get(indexOfVersionForDate(date.toDate()));
     }
 
-    private int indexOfVersionForDate(final Date date) throws CatalogApiException {
+    private int indexOfVersionForDate(final Date date) {
+
         for (int i = versions.size() - 1; i >= 0; i--) {
             final StaticCatalog c = versions.get(i);
             if (c.getEffectiveDate().getTime() <= date.getTime()) {
@@ -107,16 +105,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         if (!versions.isEmpty()) {
             return 0;
         }
-        throw new CatalogApiException(ErrorCode.CAT_NO_CATALOG_FOR_GIVEN_DATE, date.toString());
-    }
-
-    public Clock getClock() {
-        return clock;
-    }
-
-    @Override
-    public List<StaticCatalog> getVersions() {
-        return versions;
+        throw new IllegalStateException(String.format("No existing versions in the VersionedCatalog catalog for input date %s", date));
     }
 
     public void add(final StandaloneCatalog e) {
@@ -130,56 +119,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                 return c1.getEffectiveDate().compareTo(c2.getEffectiveDate());
             }
         });
-    }
-
-    @Override
-    public String getCatalogName() {
-        return catalogName;
-    }
-
-    @Override
-    public Collection<Product> getProducts(final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).getCurrentProducts();
-    }
-
-    @Override
-    public Currency[] getSupportedCurrencies(final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).getCurrentSupportedCurrencies();
-    }
-
-    @Override
-    public Unit[] getUnits(final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).getCurrentUnits();
-    }
-
-    @Override
-    public Collection<Plan> getPlans(final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).getCurrentPlans();
-    }
-
-    @Override
-    public PriceListSet getPriceLists(final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).getPriceLists();
-    }
-
-    @Override
-    public Plan findPlan(final String name,
-                         final DateTime requestedDate)
-            throws CatalogApiException {
-        return versionForDate(requestedDate).findCurrentPlan(name);
-    }
-
-    @Override
-    public Plan createOrFindPlan(final PlanSpecifier spec,
-                                 final PlanPhasePriceOverridesWithCallContext overrides,
-                                 final DateTime requestedDate)
-            throws CatalogApiException {
-        return versionForDate(requestedDate).createOrFindCurrentPlan(spec, overrides);
-    }
-
-    @Override
-    public Product findProduct(final String name, final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).findCurrentProduct(name);
     }
 
     @Override
@@ -200,15 +139,15 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         for (final StaticCatalog c : versions) {
             if (effectiveDates.contains(c.getEffectiveDate())) {
                 errors.add(new ValidationError(String.format("Catalog effective date '%s' already exists for a previous version", c.getEffectiveDate()),
-                                               Catalog.class, ""));
+                                               DefaultVersionedCatalog.class, ""));
             } else {
                 effectiveDates.add(c.getEffectiveDate());
             }
             if (!c.getCatalogName().equals(catalogName)) {
                 errors.add(new ValidationError(String.format("Catalog name '%s' is not consistent across versions ", c.getCatalogName()),
-                                               Catalog.class, ""));
+                                               DefaultVersionedCatalog.class, ""));
             }
-            errors.addAll(((StandaloneCatalog)c).validate((StandaloneCatalog) c, errors));
+            errors.addAll(((StandaloneCatalog) c).validate((StandaloneCatalog) c, errors));
         }
 
         validateUniformPlanShapeAcrossVersions(errors);
@@ -223,7 +162,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
 
                 for (int j = i + 1; j < versions.size(); j++) {
                     final StaticCatalog next = versions.get(j);
-                    final Plan targetPlan = ((StandaloneCatalog) next).getPlans().findByName(plan.getName());
+                    final Plan targetPlan = ((StandaloneCatalog) next).getPlansMap().findByName(plan.getName());
                     if (targetPlan != null) {
                         validatePlanShape(plan, targetPlan, errors);
                     }
@@ -238,7 +177,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         if (plan.getAllPhases().length != targetPlan.getAllPhases().length) {
             errors.add(new ValidationError(String.format("Number of phases for plan '%s' differs between version '%s' and '%s'",
                                                          plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
-                                           Catalog.class, ""));
+                                           DefaultVersionedCatalog.class, ""));
             // In this case we don't bother checking each phase -- the code below assumes the # are equal
             return;
         }
@@ -249,93 +188,9 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             if (!cur.getName().equals(target.getName())) {
                 errors.add(new ValidationError(String.format("Phase '%s'for plan '%s' in version '%s' does not exist in version '%s'",
                                                              cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
-                                               Catalog.class, ""));
+                                               DefaultVersionedCatalog.class, ""));
             }
         }
-    }
-
-    //
-    // Static catalog API
-    //
-    @Override
-    public Date getEffectiveDate() {
-        final DateTime utcNow = clock.getUTCNow();
-        try {
-            return versionForDate(utcNow).getEffectiveDate();
-        } catch (final CatalogApiException e) {
-            throw new IllegalStateException(String.format("Catalog misconfiguration: there is no active catalog version for now=%s", utcNow), e);
-        }
-    }
-
-    @Override
-    public Date getStandaloneCatalogEffectiveDate(final DateTime requestedDate) throws CatalogApiException {
-        return versionForDate(requestedDate).getEffectiveDate();
-    }
-
-    @Override
-    public Currency[] getCurrentSupportedCurrencies() throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getCurrentSupportedCurrencies();
-    }
-
-    @Override
-    public Collection<Product> getCurrentProducts() throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getCurrentProducts();
-    }
-
-    @Override
-    public Unit[] getCurrentUnits() throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getCurrentUnits();
-    }
-
-    @Override
-    public Collection<Plan> getCurrentPlans() throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getCurrentPlans();
-    }
-
-    @Override
-    public Plan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).createOrFindCurrentPlan(spec, overrides);
-    }
-
-    @Override
-    public Plan findCurrentPlan(final String name) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).findCurrentPlan(name);
-    }
-
-    @Override
-    public Product findCurrentProduct(final String name) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).findCurrentProduct(name);
-    }
-
-    @Override
-    public PlanPhase findCurrentPhase(final String name) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).findCurrentPhase(name);
-    }
-
-    @Override
-    public PriceListSet getPriceLists() throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getPriceLists();
-    }
-
-    @Override
-    public PriceList findCurrentPriceList(final String name)
-            throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).findCurrentPriceList(name);
-    }
-
-    @Override
-    public List<Listing> getAvailableAddOnListings(final String baseProductName, @Nullable final String priceListName) throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getAvailableAddOnListings(baseProductName, priceListName);
-    }
-
-    @Override
-    public PlanRules getPlanRules() throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getPlanRules();
-    }
-
-    @Override
-    public List<Listing> getAvailableBasePlanListings() throws CatalogApiException {
-        return versionForDate(clock.getUTCNow()).getAvailableBasePlanListings();
     }
 
     @Override
@@ -376,11 +231,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         int result = versions != null ? versions.hashCode() : 0;
         result = 31 * result + (catalogName != null ? catalogName.hashCode() : 0);
         return result;
-    }
-
-    public void initialize(final Clock clock, final DefaultVersionedCatalog tenantCatalog) {
-        this.clock = clock;
-        initialize(tenantCatalog);
     }
 
 }

@@ -33,7 +33,6 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
@@ -60,12 +59,12 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         // Initialize from input catalog
         setCatalogName(catalog.getCatalogName());
         setEffectiveDate(catalog.getEffectiveDate());
-        setProducts(((StandaloneCatalog) catalog).getCurrentProducts());
-        setPlans(((StandaloneCatalog) catalog).getCurrentPlans());
+        setProducts(catalog.getProducts());
+        setPlans(catalog.getPlans());
         setPriceLists(((StandaloneCatalog) catalog).getPriceLists());
-        setPlanRules((DefaultPlanRules) ((StandaloneCatalog) catalog).getPlanRules());
-        setSupportedCurrencies(((StandaloneCatalog) catalog).getCurrentSupportedCurrencies());
-        setUnits(((StandaloneCatalog) catalog).getCurrentUnits());
+        setPlanRules((DefaultPlanRules) catalog.getPlanRules());
+        setSupportedCurrencies(catalog.getSupportedCurrencies());
+        setUnits((DefaultUnit[]) catalog.getUnits());
         this.tenantRecordId = tenantRecordId;
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -81,8 +80,8 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     }
 
     @Override
-    public Plan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
-        final Plan defaultPlan = super.createOrFindCurrentPlan(spec, null);
+    public Plan createOrFindPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
+        final Plan defaultPlan = super.createOrFindPlan(spec, null);
         if (overrides == null ||
             overrides.getOverrides() == null ||
             overrides.getOverrides().isEmpty()) {
@@ -94,7 +93,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     }
 
     @Override
-    public DefaultPlan findCurrentPlan(final String planName) throws CatalogApiException {
+    public DefaultPlan findPlan(final String planName) throws CatalogApiException {
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
         if (m.matches()) {
             final DefaultPlan plan = maybeGetOverriddenPlan(planName);
@@ -102,16 +101,16 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
                 return plan;
             }
         }
-        return super.findCurrentPlan(planName);
+        return super.findPlan(planName);
     }
 
     @Override
-    public Product findCurrentProduct(final String productName) throws CatalogApiException {
-        return super.findCurrentProduct(productName);
+    public Product findProduct(final String productName) throws CatalogApiException {
+        return super.findProduct(productName);
     }
 
     @Override
-    public PlanPhase findCurrentPhase(final String phaseName) throws CatalogApiException {
+    public PlanPhase findPhase(final String phaseName) throws CatalogApiException {
         final String planName = DefaultPlanPhase.planName(phaseName);
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
         if (m.matches()) {
@@ -120,7 +119,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
                 return plan.findPhase(phaseName);
             }
         }
-        return super.findCurrentPhase(phaseName);
+        return super.findPhase(phaseName);
     }
 
     private DefaultPlan maybeGetOverriddenPlan(final String planName) throws CatalogApiException {

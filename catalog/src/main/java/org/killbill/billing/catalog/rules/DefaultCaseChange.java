@@ -91,16 +91,16 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
         final ProductCategory inFromProductCategory;
         final PriceList inFromPriceList;
         if (from.getPlanName() != null) {
-            final Plan plan = catalog.findCurrentPlan(from.getPlanName());
+            final Plan plan = catalog.findPlan(from.getPlanName());
             inFromProduct = plan.getProduct();
             inFromBillingPeriod = plan.getRecurringBillingPeriod();
             inFromProductCategory = plan.getProduct().getCategory();
-            inFromPriceList = catalog.findCurrentPriceList(plan.getPriceListName());
+            inFromPriceList = plan.getPriceList();
         } else {
-            inFromProduct = catalog.findCurrentProduct(from.getProductName());
+            inFromProduct = catalog.findProduct(from.getProductName());
             inFromBillingPeriod = from.getBillingPeriod();
             inFromProductCategory = inFromProduct.getCategory();
-            inFromPriceList = from.getPriceListName() != null ? catalog.findCurrentPriceList(from.getPriceListName()) : null;
+            inFromPriceList = from.getPriceListName() != null ? catalog.findPriceList(from.getPriceListName()) : null;
         }
 
         final Product inToProduct;
@@ -108,16 +108,16 @@ public abstract class DefaultCaseChange<T> extends ValidatingConfig<StandaloneCa
         final ProductCategory inToProductCategory;
         final PriceList inToPriceList;
         if (to.getPlanName() != null) {
-            final Plan plan = catalog.findCurrentPlan(to.getPlanName());
+            final Plan plan = catalog.findPlan(to.getPlanName());
             inToProduct = plan.getProduct();
             inToBillingPeriod = plan.getRecurringBillingPeriod();
             inToProductCategory = plan.getProduct().getCategory();
-            inToPriceList = catalog.findCurrentPriceList(plan.getPriceListName());
+            inToPriceList =  plan.getPriceList();
         } else {
-            inToProduct = catalog.findCurrentProduct(to.getProductName());
+            inToProduct = catalog.findProduct(to.getProductName());
             inToBillingPeriod = to.getBillingPeriod();
             inToProductCategory = inToProduct.getCategory();
-            inToPriceList = to.getPriceListName() != null ? catalog.findCurrentPriceList(to.getPriceListName()) : null;
+            inToPriceList = to.getPriceListName() != null ? catalog.findPriceList(to.getPriceListName()) : null;
         }
 
         if (

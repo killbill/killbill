@@ -58,7 +58,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testExistingPriceListIsKept() throws CatalogApiException {
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final PlanPhaseSpecifier from = new PlanPhaseSpecifier(product1.getName(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN);
         final PlanSpecifier to = new PlanSpecifier(product1.getName(), BillingPeriod.ANNUAL, priceList1.getName());
@@ -81,7 +81,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
     public void testBaseCase() throws CatalogApiException {
         final DefaultProduct product1 = cat.getCurrentProduct(0);
         final DefaultProduct product2 = cat.getCurrentProduct(1);
-        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[0];
 
         final PlanPhaseSpecifier from = new PlanPhaseSpecifier(product1.getName(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN);

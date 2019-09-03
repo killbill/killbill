@@ -26,6 +26,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
 import org.testng.Assert;
@@ -44,7 +45,6 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
     final DateTime dEffectiveDateForExistingSubscriptions = new DateTime("2011-02-14T00:01:00+00:00");
     // WeaponsHireSmall-3.xml
     final DateTime dt3 = new DateTime("2011-03-03T00:01:00+00:00");
-    private SubscriptionCatalog subscriptionCatalog;
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
@@ -59,9 +59,6 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
             return;
         }
         super.beforeMethod();
-
-        subscriptionCatalog = DefaultSubscriptionCatalogApi.wrapCatalog(catalog, clock);
-
     }
 
     //
@@ -73,11 +70,11 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
         // Existing subscription
         final DateTime subscriptionChangePlanDate = new DateTime("2011-02-02T00:01:00+00:00"); // dt2 (v2) < subscriptionChangePlanDate < dt2a (v2a)
 
-        Plan plan = subscriptionCatalog.findPlan("shotgun-quarterly", dt2, subscriptionChangePlanDate);
+        Plan plan = catalog.findPlan("shotgun-quarterly", dt2, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
 
         // We still see old price because the requested date is >= dt2a and there is no effectiveDateForExistingSubscriptions
-        plan = subscriptionCatalog.findPlan("shotgun-quarterly", dt2a, subscriptionChangePlanDate);
+        plan = catalog.findPlan("shotgun-quarterly", dt2a, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("249.95"));
     }
 
@@ -90,42 +87,43 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
     public void testFindPlanAcrossVersionsUsingEffectiveDateForExistingSubscriptions() throws Exception {
 
         // Easy cases where subscriptionChangePlanDate = requestedDate -> fetch date from the only valid version
-        Plan plan = subscriptionCatalog.findPlan("pistol-monthly", dt1, dt1);
+        Plan plan = catalog.findPlan("pistol-monthly", dt1, dt1);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 
-        plan = subscriptionCatalog.findPlan("pistol-monthly", dt2, dt2);
+        plan = catalog.findPlan("pistol-monthly", dt2, dt2);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
-        plan = subscriptionCatalog.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, dEffectiveDateForExistingSubscriptions);
+        plan = catalog.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, dEffectiveDateForExistingSubscriptions);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
-        plan = subscriptionCatalog.findPlan("pistol-monthly", dt3, dt3);
+        plan = catalog.findPlan("pistol-monthly", dt3, dt3);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("49.95"));
 
         // Case with an existing subscription (prior first price change)
         final DateTime subscriptionChangePlanDate = new DateTime("2011-01-01T00:01:00+00:00"); // dt1 (v1) < subscriptionChangePlanDate < dt2 (v2)
 
         // Returns old price because of effectiveDateForExistingSubscriptions > requestedDate = dt2
-        plan = subscriptionCatalog.findPlan("pistol-monthly", dt2, subscriptionChangePlanDate);
+        plan = catalog.findPlan("pistol-monthly", dt2, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("29.95"));
 
         // Returns nw  price because of effectiveDateForExistingSubscriptions = requestedDate = dt2
-        plan = subscriptionCatalog.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, subscriptionChangePlanDate);
+        plan = catalog.findPlan("pistol-monthly", dEffectiveDateForExistingSubscriptions, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
 
-        plan = subscriptionCatalog.findPlan("pistol-monthly", dt3, subscriptionChangePlanDate);
+        plan = catalog.findPlan("pistol-monthly", dt3, subscriptionChangePlanDate);
         Assert.assertEquals(plan.getAllPhases()[1].getRecurring().getRecurringPrice().getPrice(Currency.USD), new BigDecimal("39.95"));
     }
-
 
     @Test(groups = "fast")
     public void testWithDeletedPlan() throws CatalogApiException {
         // We find it because this is version 2 whose effectiveDate is "2011-02-02T00:00:00+00:00"
-        subscriptionCatalog.findPlan("shotgun-quarterly", dt2);
+        final StaticCatalog catalogVersion2 = catalog.versionForDate(dt2);
+        catalogVersion2.findPlan("shotgun-quarterly");
 
         try {
             // We **don't find it** because date provided matches version 3 where plan was removed
-            subscriptionCatalog.findPlan("shotgun-quarterly", dt3);
+            final StaticCatalog catalogVersion3 = catalog.versionForDate(dt3);
+            catalogVersion3.findPlan("shotgun-quarterly");
             Assert.fail("Plan has been removed");
         } catch (final CatalogApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PLAN.getCode());
@@ -133,7 +131,7 @@ public class TestSubscriptionCatalog extends SubscriptionTestSuiteNoDB {
 
         // Similar test but for existing subscription: we want to find the plan in the original catalog in this case.
         // This would be called for instance when computing billing events (dt3 could be a future PHASE event for instance)
-        subscriptionCatalog.findPlan("shotgun-quarterly", dt3, dt1);
+        catalog.findPlan("shotgun-quarterly", dt3, dt1);
     }
 
 }

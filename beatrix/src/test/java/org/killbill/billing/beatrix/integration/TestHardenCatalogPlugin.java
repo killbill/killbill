@@ -17,6 +17,7 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,7 +69,7 @@ import static org.testng.Assert.assertNotNull;
 
 public class TestHardenCatalogPlugin extends TestIntegrationBase {
 
-    private static final int NB_CATALOG_ITERATIONS_FOR_PULLING_BILLING_EVENTS = 3;
+    private static final int NB_CATALOG_ITERATIONS_FOR_PULLING_BILLING_EVENTS = 2;
     @Inject
     private OSGIServiceRegistration<CatalogPluginApi> pluginRegistry;
 
@@ -248,7 +249,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
             final StandaloneCatalogWithPriceOverride inputCatalogVersionWithOverride = new StandaloneCatalogWithPriceOverride(inputCatalogVersion, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
 
             if (versionedCatalog == null) {
-                versionedCatalog = new DefaultVersionedCatalog(clock);
+                versionedCatalog = new DefaultVersionedCatalog();
             }
             versionedCatalog.add(inputCatalogVersionWithOverride);
         }
@@ -271,9 +272,9 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
 
                     final StandaloneCatalog standaloneCatalog = (StandaloneCatalog) input;
                     return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
-                                                                ImmutableList.copyOf(standaloneCatalog.getCurrentSupportedCurrencies()),
-                                                                ImmutableList.<Product>copyOf(standaloneCatalog.getCurrentProducts()),
-                                                                ImmutableList.<Plan>copyOf(standaloneCatalog.getCurrentPlans()),
+                                                                ImmutableList.copyOf(standaloneCatalog.getSupportedCurrencies()),
+                                                                ImmutableList.<Product>copyOf(standaloneCatalog.getProducts()),
+                                                                ImmutableList.<Plan>copyOf(standaloneCatalog.getPlans()),
                                                                 standaloneCatalog.getPriceLists().getDefaultPricelist(),
                                                                 ImmutableList.<PriceList>copyOf(standaloneCatalog.getPriceLists().getChildPriceLists()),
                                                                 standaloneCatalog.getPlanRules(),

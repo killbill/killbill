@@ -34,12 +34,12 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.BillingEvent;
@@ -48,8 +48,8 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -69,12 +69,17 @@ public class BlockingCalculator {
         this.blockingApi = blockingApi;
     }
 
+    @VisibleForTesting
+    static AtomicLong getGlobalTotalOrder() {
+        return globaltotalOrder;
+    }
+
     /**
      * Given a set of billing events, add corresponding blocking (overdue) billing events.
      *
      * @param billingEvents the original list of billing events to update (without overdue events)
      */
-    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount, final VersionedCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
         if (billingEvents.size() <= 0) {
             return false;
         }
@@ -179,7 +184,7 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> subscriptionBillingEvents, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> subscriptionBillingEvents, final VersionedCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
 
         Preconditions.checkState(context.getAccountRecordId() != null);
 
@@ -204,7 +209,6 @@ public class BlockingCalculator {
         return result;
     }
 
-
     protected BillingEvent precedingBillingEventForSubscription(final DateTime disabledDurationStart, final SortedSet<BillingEvent> subscriptionBillingEvents) {
         if (disabledDurationStart == null) {
             return null;
@@ -221,7 +225,6 @@ public class BlockingCalculator {
         }
         return prev;
     }
-
 
     protected SortedSet<BillingEvent> filter(final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
@@ -351,10 +354,5 @@ public class BlockingCalculator {
         }
 
         return result;
-    }
-
-    @VisibleForTesting
-    static AtomicLong getGlobalTotalOrder() {
-        return globaltotalOrder;
     }
 }

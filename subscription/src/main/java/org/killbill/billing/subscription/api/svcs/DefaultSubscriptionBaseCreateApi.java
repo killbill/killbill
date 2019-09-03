@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -224,7 +225,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
-                                                              spec.getProductName(), spec.getBillingPeriod().toString(), plan.getPriceListName()));
+                                                              spec.getProductName(), spec.getBillingPeriod().toString(), plan.getPriceList()));
             }
 
             // verify the number of subscriptions (of the same kind) allowed per bundle and the existing ones
@@ -250,7 +251,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             }
 
             final SubscriptionSpecifier subscription = new SubscriptionSpecifier();
-            subscription.setRealPriceList(plan.getPriceListName());
+            subscription.setRealPriceList(plan.getPriceList().getName());
             subscription.setEffectiveDate(effectiveDate);
             subscription.setProcessedDate(context.getCreatedDate());
             subscription.setPlan(plan);
@@ -287,7 +288,8 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
         for (final EntitlementSpecifier cur : subscriptionBaseWithAddOnsSpecifier.getEntitlementSpecifiers()) {
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(cur.getOverrides(), callContext);
             // Called by createBaseSubscriptionsWithAddOns only -- no need for subscription start date
-            final Plan plan = catalog.createOrFindPlan(cur.getPlanPhaseSpecifier(), overridesWithContext, effectiveDate);
+            final StaticCatalog catalogVersion = catalog.versionForDate(effectiveDate);
+            final Plan plan = catalogVersion.createOrFindPlan(cur.getPlanPhaseSpecifier(), overridesWithContext);
 
             final boolean isBase = isBaseSpecifier(plan);
             final boolean isStandalone = isStandaloneSpecifier(plan);
