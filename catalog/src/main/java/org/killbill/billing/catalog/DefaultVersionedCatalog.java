@@ -38,8 +38,6 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.StaticCatalog;
@@ -85,8 +83,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         return versionForDate(CatalogDateHelper.toUTCDateTime(date));
     }
 
-
-    private StaticCatalog versionForDate(final DateTime date)  {
+    private StaticCatalog versionForDate(final DateTime date) {
         return versions.get(indexOfVersionForDate(date.toDate()));
     }
 
@@ -107,7 +104,6 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         }
         throw new IllegalStateException("No existing versions in the VersionedCatalog catalog ??");
     }
-
 
     public void add(final StandaloneCatalog e) {
         if (catalogName == null && e.getCatalogName() != null) {

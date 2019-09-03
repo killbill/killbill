@@ -18,7 +18,6 @@
 package org.killbill.billing.subscription.catalog;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -32,7 +31,6 @@ import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.api.rules.PlanRules;
@@ -47,7 +45,7 @@ import static org.killbill.billing.ErrorCode.CAT_NO_SUCH_PLAN;
 // * subscription code should only use SubscriptionCatalog (and never Catalog) although nothing wrong would happen if it was the case, but just for consistency
 // * this class is really an extension of Catalog api and as such it still throws CatalogApiException
 //
-public class SubscriptionCatalog  {
+public class SubscriptionCatalog {
 
     private final VersionedCatalog catalog;
     private final List<StaticCatalog> versions;
@@ -117,13 +115,13 @@ public class SubscriptionCatalog  {
 
     public PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to)
             throws CatalogApiException {
-        final StaticCatalog standaloneCatalog = versionForDate(clock.getUTCNow());
-        return getPlanChangeResult(from, to, standaloneCatalog);
+        final StaticCatalog staticCatalog = versionForDate(clock.getUTCNow());
+        return getPlanChangeResult(from, to, staticCatalog);
     }
 
-    private PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog standaloneCatalog)
+    private PlanChangeResult getPlanChangeResult(final PlanPhaseSpecifier from, final PlanSpecifier to, final StaticCatalog staticCatalog)
             throws CatalogApiException {
-        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        final PlanRules planRules = staticCatalog.getPlanRules();
         return planRules.getPlanChangeResult(from, to);
     }
 
@@ -136,13 +134,13 @@ public class SubscriptionCatalog  {
 
     public BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase)
             throws CatalogApiException {
-        final StaticCatalog standaloneCatalog = versionForDate(clock.getUTCNow());
-        return planCancelPolicy(planPhase, standaloneCatalog);
+        final StaticCatalog staticCatalog = versionForDate(clock.getUTCNow());
+        return planCancelPolicy(planPhase, staticCatalog);
     }
 
-    private BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final StaticCatalog standaloneCatalog)
+    private BillingActionPolicy planCancelPolicy(final PlanPhaseSpecifier planPhase, final StaticCatalog staticCatalog)
             throws CatalogApiException {
-        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        final PlanRules planRules = staticCatalog.getPlanRules();
         return planRules.getPlanCancelPolicy(planPhase);
     }
 
@@ -155,13 +153,13 @@ public class SubscriptionCatalog  {
 
     public PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier)
             throws CatalogApiException {
-        final StaticCatalog standaloneCatalog = versionForDate(clock.getUTCNow());
-        return planCreateAlignment(specifier, standaloneCatalog);
+        final StaticCatalog staticCatalog = versionForDate(clock.getUTCNow());
+        return planCreateAlignment(specifier, staticCatalog);
     }
 
-    private PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final StaticCatalog standaloneCatalog)
+    private PlanAlignmentCreate planCreateAlignment(final PlanSpecifier specifier, final StaticCatalog staticCatalog)
             throws CatalogApiException {
-        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        final PlanRules planRules = staticCatalog.getPlanRules();
         return planRules.getPlanCreateAlignment(specifier);
     }
 
@@ -174,13 +172,13 @@ public class SubscriptionCatalog  {
 
     public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase)
             throws CatalogApiException {
-        final StaticCatalog standaloneCatalog = versionForDate(clock.getUTCNow());
-        return billingAlignment(planPhase, standaloneCatalog);
+        final StaticCatalog staticCatalog = versionForDate(clock.getUTCNow());
+        return billingAlignment(planPhase, staticCatalog);
     }
 
-    private BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final StaticCatalog standaloneCatalog)
+    private BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final StaticCatalog staticCatalog)
             throws CatalogApiException {
-        final PlanRules planRules = standaloneCatalog.getPlanRules();
+        final PlanRules planRules = staticCatalog.getPlanRules();
         return planRules.getBillingAlignment(planPhase);
     }
 

@@ -33,7 +33,6 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
@@ -60,12 +59,12 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         // Initialize from input catalog
         setCatalogName(catalog.getCatalogName());
         setEffectiveDate(catalog.getEffectiveDate());
-        setProducts(((StandaloneCatalog) catalog).getProducts());
-        setPlans(((StandaloneCatalog) catalog).getPlans());
+        setProducts(catalog.getProducts());
+        setPlans(catalog.getPlans());
         setPriceLists(((StandaloneCatalog) catalog).getPriceLists());
-        setPlanRules((DefaultPlanRules) ((StandaloneCatalog) catalog).getPlanRules());
-        setSupportedCurrencies(((StandaloneCatalog) catalog).getSupportedCurrencies());
-        setUnits(((StandaloneCatalog) catalog).getUnits());
+        setPlanRules((DefaultPlanRules) catalog.getPlanRules());
+        setSupportedCurrencies(catalog.getSupportedCurrencies());
+        setUnits((DefaultUnit[]) catalog.getUnits());
         this.tenantRecordId = tenantRecordId;
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;

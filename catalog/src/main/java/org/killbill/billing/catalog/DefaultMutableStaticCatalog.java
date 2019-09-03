@@ -18,11 +18,8 @@
 package org.killbill.billing.catalog;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogEntity;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.MutableStaticCatalog;
@@ -46,7 +43,7 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
             .setRecurringBillingMode(input.getRecurringBillingMode())
             .setEffectiveDate(input.getEffectiveDate())
             .setSupportedCurrencies(input.getSupportedCurrencies())
-            .setUnits(input.getUnits())
+            .setUnits((DefaultUnit[]) input.getUnits())
             .setProducts(input.getProducts())
             .setPlans(input.getPlans())
             .setPlanRules((DefaultPlanRules) input.getPlanRules())
@@ -55,18 +52,18 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
     }
 
     @Override
-    public void addCurrency(final Currency currency) throws CatalogApiException {
+    public void addCurrency(final Currency currency) {
         final Currency[] newEntries = allocateNewEntries(getSupportedCurrencies(), currency);
         setSupportedCurrencies(newEntries);
     }
 
     @Override
-    public void addProduct(final Product product) throws CatalogApiException {
+    public void addProduct(final Product product) {
         getCatalogEntityCollectionProduct().add(product);
     }
 
     @Override
-    public void addPlan(final Plan plan) throws CatalogApiException {
+    public void addPlan(final Plan plan) {
 
         getPlansMap().add(plan);
 
@@ -75,22 +72,22 @@ public class DefaultMutableStaticCatalog extends StandaloneCatalog implements Mu
     }
 
     @Override
-    public void addPriceList(final PriceList priceList) throws CatalogApiException {
+    public void addPriceList(final PriceList priceList) {
         final PriceList[] newEntries = allocateNewEntries(getPriceLists().getChildPriceLists(), priceList);
-        final DefaultPriceListSet priceListSet = new DefaultPriceListSet((PriceListDefault) getPriceLists().getDefaultPricelist(), (DefaultPriceList[]) newEntries);
+        final DefaultPriceListSet priceListSet = new DefaultPriceListSet(getPriceLists().getDefaultPricelist(), (DefaultPriceList[]) newEntries);
         setPriceLists(priceListSet);
     }
 
-    public void addRecurringPriceToPlan(final DefaultInternationalPrice currentPrices, final Price newPrice) throws CatalogApiException {
+    public void addRecurringPriceToPlan(final DefaultInternationalPrice currentPrices, final Price newPrice) {
         final Price[] newEntries = allocateNewEntries(currentPrices.getPrices(), newPrice);
         currentPrices.setPrices((DefaultPrice[]) newEntries);
     }
 
-    public void addProductAvailableAO(final Product targetBasePlan, final DefaultProduct aoProduct) throws CatalogApiException {
+    public void addProductAvailableAO(final Product targetBasePlan, final DefaultProduct aoProduct) {
         ((DefaultProduct) targetBasePlan).getCatalogEntityCollectionAvailable().add(aoProduct);
     }
 
-    private <T> T[] allocateNewEntries(final T[] existingEntries, final T newEntry) throws CatalogApiException {
+    private <T> T[] allocateNewEntries(final T[] existingEntries, final T newEntry) {
 
         if (existingEntries != null) {
             for (T input : existingEntries) {

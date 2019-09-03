@@ -61,6 +61,9 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
         super.beforeMethod();
         currentVersion = catalog.versionForDate(clock.getUTCNow());
     }

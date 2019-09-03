@@ -36,25 +36,21 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanAlignmentCreate;
-import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -85,7 +81,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     @XmlElement(type = DefaultProduct.class, name = "product", required = false)
     private CatalogEntityCollection<Product> products;
 
-    @XmlElement(name = "rules", required = true)
+    @XmlElement(name = "rules",  required = true)
     private DefaultPlanRules planRules;
 
     @XmlElementWrapper(name = "plans", required = true)
@@ -124,10 +120,14 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return this;
     }
 
-
     @Override
     public Collection<Product> getProducts() {
         return products.getEntries();
+    }
+
+    public StandaloneCatalog setProducts(final Iterable<Product> products) {
+        this.products = new CatalogEntityCollection<Product>(products);
+        return this;
     }
 
     public CatalogEntityCollection<Product> getCatalogEntityCollectionProduct() {
@@ -135,8 +135,13 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
     }
 
     @Override
-    public DefaultUnit[] getUnits() {
+    public Unit[] getUnits() {
         return units;
+    }
+
+    public StandaloneCatalog setUnits(final DefaultUnit[] units) {
+        this.units = units;
+        return this;
     }
 
     @Override
@@ -144,16 +149,24 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         return supportedCurrencies;
     }
 
+    public StandaloneCatalog setSupportedCurrencies(final Currency[] supportedCurrencies) {
+        this.supportedCurrencies = supportedCurrencies;
+        return this;
+    }
+
     @Override
     public Collection<Plan> getPlans() {
         return plans.getEntries();
     }
 
+    public StandaloneCatalog setPlans(final Iterable<Plan> plans) {
+        this.plans = new CatalogEntityCollection<Plan>(plans);
+        return this;
+    }
 
     public CatalogEntityCollection<Plan> getPlansMap() {
         return plans;
     }
-
 
     public boolean isTemplateCatalog() {
         return (products == null || products.isEmpty()) &&
@@ -161,15 +174,21 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
                (supportedCurrencies == null || supportedCurrencies.length == 0);
     }
 
+    @Override
     public PlanRules getPlanRules() {
         return planRules;
     }
+
+    //////////////////////////////////////////////////////////////////////////////
+    //
+    // RULES
+    //
+    //////////////////////////////////////////////////////////////////////////////
 
     public StandaloneCatalog setPlanRules(final DefaultPlanRules planRules) {
         this.planRules = planRules;
         return this;
     }
-
 
     public DefaultPriceListSet getPriceLists() {
         return this.priceLists;
@@ -194,7 +213,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
             }
             final String inputOrDefaultPricelist = (spec.getPriceListName() == null) ? PriceListSet.DEFAULT_PRICELIST_NAME : spec.getPriceListName();
             final Product product = findProduct(spec.getProductName());
-            result = priceLists.getPlanFrom(product, spec.getBillingPeriod(), inputOrDefaultPricelist);
+            result = ((DefaultPriceListSet) priceLists).getPlanFrom(product, spec.getBillingPeriod(), inputOrDefaultPricelist);
         }
         if (result == null) {
             throw new CatalogApiException(ErrorCode.CAT_PLAN_NOT_FOUND,
@@ -208,7 +227,7 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     //////////////////////////////////////////////////////////////////////////////
     //
-    // RULES
+    // UNIT LIMIT
     //
     //////////////////////////////////////////////////////////////////////////////
 
@@ -252,15 +271,8 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         if (name == null || priceLists == null) {
             throw new CatalogApiException(ErrorCode.CAT_PRICE_LIST_NOT_FOUND, name);
         }
-        return priceLists.findPriceListFrom(name);
+        return ((DefaultPriceListSet)priceLists).findPriceListFrom(name);
     }
-
-    //////////////////////////////////////////////////////////////////////////////
-    //
-    // UNIT LIMIT
-    //
-    //////////////////////////////////////////////////////////////////////////////
-
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
@@ -295,26 +307,6 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
 
     public StandaloneCatalog setRecurringBillingMode(final BillingMode recurringBillingMode) {
         this.recurringBillingMode = recurringBillingMode;
-        return this;
-    }
-
-    public StandaloneCatalog setProducts(final Iterable<Product> products) {
-        this.products = new CatalogEntityCollection<Product>(products);
-        return this;
-    }
-
-    public StandaloneCatalog setSupportedCurrencies(final Currency[] supportedCurrencies) {
-        this.supportedCurrencies = supportedCurrencies;
-        return this;
-    }
-
-    public StandaloneCatalog setPlans(final Iterable<Plan> plans) {
-        this.plans = new CatalogEntityCollection<Plan>(plans);
-        return this;
-    }
-
-    public StandaloneCatalog setUnits(final DefaultUnit[] units) {
-        this.units = units;
         return this;
     }
 
