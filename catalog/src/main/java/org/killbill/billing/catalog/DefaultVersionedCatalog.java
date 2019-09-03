@@ -47,6 +47,8 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
+import com.google.common.base.Preconditions;
+
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements VersionedCatalog, Externalizable {
@@ -63,8 +65,9 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         this.versions = new ArrayList<StaticCatalog>();
     }
 
-    public DefaultVersionedCatalog(final List<StaticCatalog> versions) {
-        this.versions = versions;
+    @Override
+    public String getCatalogName() {
+        return !versions.isEmpty() ? versions.get(0).getCatalogName() : null;
     }
 
     @Override
@@ -102,7 +105,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         if (!versions.isEmpty()) {
             return 0;
         }
-        throw new IllegalStateException("No existing versions in the VersionedCatalog catalog ??");
+        throw new IllegalStateException(String.format("No existing versions in the VersionedCatalog catalog for input date %s", date));
     }
 
     public void add(final StandaloneCatalog e) {

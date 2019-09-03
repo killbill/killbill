@@ -25,7 +25,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -85,7 +84,6 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
     public void unactiveBlockingState(UUID blockableId, final InternalCallContext context);
 
     /**
-     *
      * @param blockableId id of the blockable object
      * @param auditLevel  audit level
      * @param context     call context

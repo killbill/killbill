@@ -50,6 +50,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.AdminPaymentJson;
@@ -422,7 +423,7 @@ public class AdminResource extends JaxRsResourceBase {
         tenantOverdueConfigCacheController.remove(tenantRecordId);
 
         // clear tenant-catalog cache by tenantRecordId
-        final CacheController<Long, List<StaticCatalog>> tenantCatalogCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
+        final CacheController<Long, VersionedCatalog> tenantCatalogCacheController = cacheControllerDispatcher.getCacheController(CacheType.TENANT_CATALOG);
         tenantCatalogCacheController.remove(tenantRecordId);
 
         return Response.status(Status.NO_CONTENT).build();

@@ -78,7 +78,7 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testMissingDefaultCatalog() throws CatalogApiException {
         catalogCache.loadDefaultCatalog(null);
-        Assert.assertEquals(catalogCache.getCatalog(true, true, false, internalCallContext).getVersions().get(0).getCatalogName(), "EmptyCatalog");
+        Assert.assertEquals(catalogCache.getCatalog(true, true, false, internalCallContext).getCatalogName(), "EmptyCatalog");
     }
 
     //
@@ -95,12 +95,12 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         Assert.assertEquals(products.size(), 3);
 
         // Verify the lookup with other contexts
-        final DefaultVersionedCatalog resultForMultiTenantContext = new DefaultVersionedCatalog(new ArrayList<>());
+        final DefaultVersionedCatalog resultForMultiTenantContext = new DefaultVersionedCatalog();
         for (final StaticCatalog cur : result.getVersions()) {
             resultForMultiTenantContext.add(new StandaloneCatalogWithPriceOverride(cur, priceOverride, multiTenantContext.getTenantRecordId(), internalCallContextFactory));
         }
 
-        Assert.assertEquals(catalogCache.getCatalog(true, true, false, multiTenantContext).getVersions().get(0).getCatalogName(), resultForMultiTenantContext.getVersions().get(0).getCatalogName());
+        Assert.assertEquals(catalogCache.getCatalog(true, true, false, multiTenantContext).getCatalogName(), resultForMultiTenantContext.getCatalogName());
         Assert.assertEquals(catalogCache.getCatalog(true, true, false, multiTenantContext).getVersions().size(), resultForMultiTenantContext.getVersions().size());
         for (int i = 0; i < catalogCache.getCatalog(true, true, false, multiTenantContext).getVersions().size(); i++) {
            Assert.assertEquals(((StandaloneCatalogWithPriceOverride) catalogCache.getCatalog(true, true, false, multiTenantContext).getVersions().get(i)).getTenantRecordId(), ((StandaloneCatalogWithPriceOverride) resultForMultiTenantContext.getVersions().get(i)).getTenantRecordId());
@@ -146,14 +146,14 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         // Verify the lookup for a non-cached tenant. No system config is set yet but DefaultCatalogCache returns a default empty one
         VersionedCatalog differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
-        Assert.assertEquals(differentResult.getVersions().get(0).getCatalogName(), "EmptyCatalog");
+        Assert.assertEquals(differentResult.getCatalogName(), "EmptyCatalog");
 
         // Make sure the cache loader isn't invoked, see https://github.com/killbill/killbill/issues/300
         shouldThrow.set(true);
 
         differentResult = catalogCache.getCatalog(true, true, false, differentMultiTenantContext);
         Assert.assertNotNull(differentResult);
-        Assert.assertEquals(differentResult.getVersions().get(0).getCatalogName(), "EmptyCatalog");
+        Assert.assertEquals(differentResult.getCatalogName(), "EmptyCatalog");
 
         shouldThrow.set(false);
 

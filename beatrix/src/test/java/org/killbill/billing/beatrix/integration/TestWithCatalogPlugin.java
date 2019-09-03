@@ -219,7 +219,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         public VersionedPluginCatalog getVersionedPluginCatalog(final Iterable<PluginProperty> properties, final TenantContext tenantContext) {
             nbVersionedPluginCatalogApiCalls++;
             Assert.assertNotNull(versionedCatalog, "test did not initialize plugin catalog");
-            return new TestModelVersionedPluginCatalog(versionedCatalog.getVersions().get(0).getCatalogName(), toStandalonePluginCatalogs(versionedCatalog));
+            return new TestModelVersionedPluginCatalog(versionedCatalog.getCatalogName(), toStandalonePluginCatalogs(versionedCatalog));
         }
 
         // This actually pulls catalog resources from `catalog` module and not the one from beatrix/src/test/resources//catalogs
@@ -230,7 +230,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
 
             this.latestCatalogUpdate = new DateTime(inputCatalogVersion.getEffectiveDate());
             if (versionedCatalog == null) {
-                versionedCatalog = new DefaultVersionedCatalog(new ArrayList<>());
+                versionedCatalog = new DefaultVersionedCatalog();
             }
             versionedCatalog.add(inputCatalogVersionWithOverride);
         }

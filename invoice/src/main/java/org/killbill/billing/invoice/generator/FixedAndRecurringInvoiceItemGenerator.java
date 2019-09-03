@@ -217,7 +217,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             if (billingPeriod != BillingPeriod.NO_BILLING_PERIOD) {
 
                 final Plan currentPlan = thisEvent.getPlan();
-                Preconditions.checkNotNull(currentPlan, String.format("Unexpected null Plan name event = %s", thisEvent));
+                Preconditions.checkNotNull(currentPlan, "Unexpected null Plan name event = %s", thisEvent);
 
                 // For FIXEDTERM phases we need to stop when the specified duration has been reached
                 final LocalDate maxEndDate = thisEvent.getPlanPhase().getPhaseType() == PhaseType.FIXEDTERM ?

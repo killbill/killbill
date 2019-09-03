@@ -131,7 +131,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
         Assert.assertEquals(c.getVersions().size(), 1);
         final DateTime dt = new DateTime("2013-02-08T00:00:00+00:00");
         Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
-        Assert.assertEquals(c.getVersions().get(0).getCatalogName(), "SpyCarBasic");
+        Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
     }
 
     @Test(groups = "fast", expectedExceptions = CatalogApiException.class)
@@ -145,7 +145,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
         Assert.assertEquals(c.getVersions().size(), 1);
         final DateTime dt = new DateTime("2015-10-04T00:00:00+00:00");
         Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
-        Assert.assertEquals(c.getVersions().get(0).getCatalogName(), "SpyCarCustom");
+        Assert.assertEquals(c.getCatalogName(), "SpyCarCustom");
     }
 
     @Test(groups = "fast", expectedExceptions = CatalogApiException.class)
@@ -160,6 +160,6 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
         destinationFile.deleteOnExit();
         Files.copy(originFile, destinationFile);
         final VersionedCatalog c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
-        Assert.assertEquals(c.getVersions().get(0).getCatalogName(), "SpyCarBasic");
+        Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
     }
 }
