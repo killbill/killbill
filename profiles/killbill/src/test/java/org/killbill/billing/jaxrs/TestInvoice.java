@@ -62,7 +62,7 @@ import static org.testng.Assert.assertTrue;
 public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can search and retrieve invoices with and without items")
-    public void testInvoiceOk() throws Exception {
+        public void testInvoiceOk() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
@@ -85,6 +85,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceJson.getItems().size(), 1);
         final InvoiceItem invoiceItem = invoiceJson.getItems().get(0);
         assertEquals(invoiceItem.getProductName(), "Shotgun");
+
         assertEquals(invoiceItem.getPrettyProductName(), "Shotgun");
         assertEquals(invoiceItem.getPlanName(), "shotgun-monthly");
         assertEquals(invoiceItem.getPrettyPlanName(), "Shotgun Monthly");

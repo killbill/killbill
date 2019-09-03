@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -35,6 +34,7 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.util.api.AuditLevel;
@@ -57,22 +57,22 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     SubscriptionBaseBundle getSubscriptionBundleFromId(UUID bundleId, InternalTenantContext context);
 
-    SubscriptionBaseBundle createSubscriptionBundle(DefaultSubscriptionBaseBundle bundle, final Catalog catalog, final boolean renameCancelledBundleIfExist, InternalCallContext context) throws SubscriptionBaseApiException;
+    SubscriptionBaseBundle createSubscriptionBundle(DefaultSubscriptionBaseBundle bundle, final SubscriptionCatalog catalog, final boolean renameCancelledBundleIfExist, InternalCallContext context) throws SubscriptionBaseApiException;
 
-    SubscriptionBase getSubscriptionFromId(UUID subscriptionId, final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
+    SubscriptionBase getSubscriptionFromId(UUID subscriptionId, final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
-    SubscriptionBase getSubscriptionFromExternalKey(String externalKey, final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
+    SubscriptionBase getSubscriptionFromExternalKey(String externalKey, final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
     UUID getBundleIdFromSubscriptionId(UUID subscriptionId, InternalTenantContext context);
 
     UUID getSubscriptionIdFromSubscriptionExternalKey(String externalKey, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     // SubscriptionBase retrieval
-    SubscriptionBase getBaseSubscription(UUID bundleId, final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
+    SubscriptionBase getBaseSubscription(UUID bundleId, final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
-    List<DefaultSubscriptionBase> getSubscriptions(UUID bundleId, List<SubscriptionBaseEvent> dryRunEvents, final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
+    List<DefaultSubscriptionBase> getSubscriptions(UUID bundleId, List<SubscriptionBaseEvent> dryRunEvents, final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
-    Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final Catalog catalog, InternalTenantContext context) throws CatalogApiException;
+    Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
     // Update
     void updateChargedThroughDate(DefaultSubscriptionBase subscription, InternalCallContext context);
@@ -88,25 +88,25 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     // SubscriptionBase creation, cancellation, changePlanWithRequestedDate apis
 
-    List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(List<SubscriptionBaseWithAddOns> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final Catalog catalog, InternalCallContext context);
+    List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(List<SubscriptionBaseWithAddOns> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final SubscriptionCatalog catalog, InternalCallContext context);
 
-    void cancelSubscriptionsOnBasePlanEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, final Catalog catalog, InternalCallContext context);
+    void cancelSubscriptionsOnBasePlanEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, InternalCallContext context);
 
-    void notifyOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final Catalog catalog, final InternalCallContext context);
+    void notifyOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final SubscriptionCatalog catalog, final InternalCallContext context);
 
-    void cancelSubscriptions(List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, final Catalog catalog, InternalCallContext context);
+    void cancelSubscriptions(List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, InternalCallContext context);
 
     void uncancelSubscription(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> uncancelEvents, InternalCallContext context);
 
-    void changePlan(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> changeEvents, List<DefaultSubscriptionBase> subscriptionsToBeCancelled, List<SubscriptionBaseEvent> cancelEvents, final Catalog catalog, InternalCallContext context);
+    void changePlan(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> changeEvents, List<DefaultSubscriptionBase> subscriptionsToBeCancelled, List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, InternalCallContext context);
 
     void undoChangePlan(DefaultSubscriptionBase subscription, List<SubscriptionBaseEvent> undoChangePlanEvents, InternalCallContext context);
 
-    void transfer(UUID srcAccountId, UUID destAccountId, BundleTransferData data, List<TransferCancelData> transferCancelData, final Catalog catalog, InternalCallContext fromContext, InternalCallContext toContext);
+    void transfer(UUID srcAccountId, UUID destAccountId, BundleTransferData data, List<TransferCancelData> transferCancelData, final SubscriptionCatalog catalog, InternalCallContext fromContext, InternalCallContext toContext);
 
     void updateBundleExternalKey(UUID bundleId, String externalKey, InternalCallContext context);
 
-    void createBCDChangeEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent bcdEvent, final Catalog catalog, InternalCallContext context);
+    void createBCDChangeEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent bcdEvent, final SubscriptionCatalog catalog, InternalCallContext context);
 
     List<AuditLogWithHistory> getSubscriptionBundleAuditLogsWithHistoryForId(UUID bundleId, AuditLevel auditLevel, InternalTenantContext context);
 

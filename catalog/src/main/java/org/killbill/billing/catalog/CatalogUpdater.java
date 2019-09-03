@@ -117,7 +117,7 @@ public class CatalogUpdater {
 
         if (plan == null) {
 
-            plan = new DefaultPlan(catalog);
+            plan = new DefaultPlan();
             plan.setName(desc.getPlanId());
             plan.setPriceListName(PriceListSet.DEFAULT_PRICELIST_NAME);
             plan.setProduct(product);
@@ -130,6 +130,7 @@ public class CatalogUpdater {
                 trialPhase.setFixed(new DefaultFixed().setFixedPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(desc.getCurrency()).setValue(BigDecimal.ZERO)})));
                 plan.setInitialPhases(new DefaultPlanPhase[]{trialPhase});
             }
+            plan.initialize(catalog);
             catalog.addPlan(plan);
         } else {
             validateExistingPlan(plan, desc);
@@ -258,8 +259,8 @@ public class CatalogUpdater {
     }
 
     private boolean isCurrencySupported(final Currency targetCurrency) {
-        if (catalog.getCurrentSupportedCurrencies() != null) {
-            for (final Currency input : catalog.getCurrentSupportedCurrencies()) {
+        if (catalog.getSupportedCurrencies() != null) {
+            for (final Currency input : catalog.getSupportedCurrencies()) {
                 if (input.equals(targetCurrency)) {
                     return true;
                 }
@@ -290,7 +291,7 @@ public class CatalogUpdater {
 
     private Product getExistingProduct(final String productName) {
         try {
-            return catalog.findCurrentProduct(productName);
+            return catalog.findProduct(productName);
         } catch (final CatalogApiException e) {
             return null;
         }
@@ -298,7 +299,7 @@ public class CatalogUpdater {
 
     private Plan getExistingPlan(final String planName) {
         try {
-            return catalog.findCurrentPlan(planName);
+            return catalog.findPlan(planName);
         } catch (CatalogApiException e) {
             return null;
         }

@@ -30,6 +30,8 @@ import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineAp
 import org.killbill.billing.subscription.api.transfer.DefaultSubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
+import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.dao.DefaultSubscriptionDao;
@@ -54,6 +56,7 @@ public class DefaultSubscriptionModule extends KillBillModule implements Subscri
     }
 
     protected void installSubscriptionCore() {
+        bind(SubscriptionCatalogApi.class).to(DefaultSubscriptionCatalogApi.class).asEagerSingleton();
         bind(SubscriptionBaseApiService.class).to(DefaultSubscriptionBaseApiService.class).asEagerSingleton();
         bind(DefaultSubscriptionBaseService.class).asEagerSingleton();
         bind(PlanAligner.class).asEagerSingleton();

@@ -29,6 +29,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 
@@ -36,14 +37,16 @@ public class MockPlan implements Plan {
 
     private final String name;
     private final Product product;
+    private final PriceList pricelist;
 
     public MockPlan() {
-        this(UUID.randomUUID().toString(), new MockProduct());
+        this(UUID.randomUUID().toString(), new MockProduct(), new MockPriceList());
     }
 
-    public MockPlan(final String name, final Product product) {
+    public MockPlan(final String name, final Product product, final PriceList pricelist) {
         this.name = name;
         this.product = product;
+        this.pricelist = pricelist;
     }
 
     @Override
@@ -67,8 +70,8 @@ public class MockPlan implements Plan {
     }
 
     @Override
-    public String getPriceListName() {
-        throw new UnsupportedOperationException();
+    public PriceList getPriceList() {
+        return pricelist;
     }
 
     @Override

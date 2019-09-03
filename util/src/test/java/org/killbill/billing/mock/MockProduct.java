@@ -21,6 +21,7 @@ import java.util.Collection;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 
 import com.google.common.collect.ImmutableList;
 
@@ -48,6 +49,7 @@ public class MockProduct implements Product {
         this.available = ImmutableList.copyOf(available);
     }
 
+
     @Override
     public String getCatalogName() {
         return catalogName;
@@ -66,6 +68,11 @@ public class MockProduct implements Product {
     @Override
     public String getPrettyName() {
         return name;
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return null;
     }
 
     @Override

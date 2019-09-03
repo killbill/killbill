@@ -31,9 +31,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.dao.MockNonEntityDao;
@@ -49,6 +47,8 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.core.SubscriptionNotificationKey;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
@@ -88,18 +88,18 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
     private final PersistentBus eventBus;
-    private final CatalogService catalogService;
+    private final SubscriptionCatalogApi subscriptionCatalogApi;
 
     @Inject
     public MockSubscriptionDaoMemory(final MockNonEntityDao mockNonEntityDao,
                                      final Clock clock,
                                      final NotificationQueueService notificationQueueService,
                                      final PersistentBus eventBus,
-                                     final CatalogService catalogService) {
+                                     final SubscriptionCatalogApi subscriptionCatalogApi) {
         super();
         this.mockNonEntityDao = mockNonEntityDao;
         this.clock = clock;
-        this.catalogService = catalogService;
+        this.subscriptionCatalogApi = subscriptionCatalogApi;
         this.notificationQueueService = notificationQueueService;
         this.eventBus = eventBus;
         this.bundles = new ArrayList<SubscriptionBaseBundle>();
@@ -178,7 +178,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final Catalog catalog, final boolean renameCancelledBundleIfExist, final InternalCallContext context) {
+    public SubscriptionBaseBundle createSubscriptionBundle(final DefaultSubscriptionBaseBundle bundle, final SubscriptionCatalog catalog, final boolean renameCancelledBundleIfExist, final InternalCallContext context) {
         bundles.add(new DefaultSubscriptionBaseBundle(bundle.getId(),
                                                       MoreObjects.firstNonNull(bundle.getExternalKey(), UUID.randomUUID().toString()),
                                                       bundle.getAccountId(),
@@ -191,7 +191,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final Catalog catalog, final InternalTenantContext context) {
+    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final SubscriptionCatalog catalog, final InternalTenantContext context) {
         for (final SubscriptionBase cur : subscriptions) {
             if (cur.getId().equals(subscriptionId)) {
                 return buildSubscription((DefaultSubscriptionBase) cur, context);
@@ -201,7 +201,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public SubscriptionBase getSubscriptionFromExternalKey(final String externalKey, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    public SubscriptionBase getSubscriptionFromExternalKey(final String externalKey, final SubscriptionCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
         for (final SubscriptionBase cur : subscriptions) {
             if (cur.getExternalKey().equals(externalKey)) {
                 return buildSubscription((DefaultSubscriptionBase) cur, context);
@@ -228,7 +228,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     @Override
     public List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(final List<SubscriptionBaseWithAddOns> subscriptions,
                                                                      final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap,
-                                                                     final Catalog catalog,
+                                                                     final SubscriptionCatalog catalog,
                                                                      final InternalCallContext context) {
         final List<SubscriptionBaseEvent> createdEvents = new LinkedList<SubscriptionBaseEvent>();
         synchronized (events) {
@@ -252,7 +252,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public List<DefaultSubscriptionBase> getSubscriptions(final UUID bundleId, final List<SubscriptionBaseEvent> dryRunEvents, final Catalog catalog, final InternalTenantContext context) {
+    public List<DefaultSubscriptionBase> getSubscriptions(final UUID bundleId, final List<SubscriptionBaseEvent> dryRunEvents, final SubscriptionCatalog catalog, final InternalTenantContext context) {
         final List<DefaultSubscriptionBase> results = new ArrayList<DefaultSubscriptionBase>();
         for (final DefaultSubscriptionBase cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId)) {
@@ -263,7 +263,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final Catalog catalog, final InternalTenantContext context) {
+    public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, final InternalTenantContext context) {
         final Map<UUID, List<DefaultSubscriptionBase>> results = new HashMap<UUID, List<DefaultSubscriptionBase>>();
         for (final DefaultSubscriptionBase cur : subscriptions) {
             if (results.get(cur.getBundleId()) == null) {
@@ -303,7 +303,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public SubscriptionBase getBaseSubscription(final UUID bundleId, final Catalog catalog, final InternalTenantContext context) {
+    public SubscriptionBase getBaseSubscription(final UUID bundleId, final SubscriptionCatalog catalog, final InternalTenantContext context) {
         for (final SubscriptionBase cur : subscriptions) {
             if (cur.getBundleId().equals(bundleId) &&
                 cur.getCurrentPlan().getProduct().getCategory() == ProductCategory.BASE) {
@@ -324,7 +324,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(new SubscriptionBuilder(in), null, clock);
         if (!events.isEmpty()) {
             try {
-                subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), catalogService.getFullCatalog(true, true, context));
+                subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), subscriptionCatalogApi.getFullCatalog(context));
             } catch (final CatalogApiException e) {
                 log.warn("Failed to rebuild subscription", e);
             }
@@ -350,18 +350,18 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void cancelSubscriptionsOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final Catalog catalog, final InternalCallContext context) {
+    public void cancelSubscriptionsOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, final InternalCallContext context) {
         cancelSubscriptions(subscriptions, cancelEvents, catalog, context);
         notifyBusOfEffectiveImmediateChange(subscription, event, subscriptions.size(), context);
     }
 
     @Override
-    public void notifyOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event,  final Catalog catalog, final InternalCallContext context) {
+    public void notifyOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event,  final SubscriptionCatalog catalog, final InternalCallContext context) {
         notifyBusOfEffectiveImmediateChange(subscription, event, subscriptions.size(), context);
     }
 
     @Override
-    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final Catalog catalog, final InternalCallContext context) {
+    public void cancelSubscriptions(final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, final InternalCallContext context) {
         synchronized (events) {
             for (int i = 0; i < subscriptions.size(); i++) {
                 cancelNextPhaseEvent(subscriptions.get(i).getId(), catalog, context);
@@ -371,7 +371,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> changeEvents, final List<DefaultSubscriptionBase> subscriptionsToBeCancelled, final List<SubscriptionBaseEvent> cancelEvents, final Catalog catalog, final InternalCallContext context) {
+    public void changePlan(final DefaultSubscriptionBase subscription, final List<SubscriptionBaseEvent> changeEvents, final List<DefaultSubscriptionBase> subscriptionsToBeCancelled, final List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, final InternalCallContext context) {
         synchronized (events) {
             cancelNextChangeEvent(subscription.getId());
             cancelNextPhaseEvent(subscription.getId(), catalog, context);
@@ -393,7 +393,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         }
     }
 
-    private void cancelNextPhaseEvent(final UUID subscriptionId,  final Catalog catalog, final InternalTenantContext context) {
+    private void cancelNextPhaseEvent(final UUID subscriptionId,  final SubscriptionCatalog catalog, final InternalTenantContext context) {
         final SubscriptionBase curSubscription = getSubscriptionFromId(subscriptionId, catalog, context);
         if (curSubscription.getCurrentPhase() == null ||
             curSubscription.getCurrentPhase().getDuration().getUnit() == TimeUnit.UNLIMITED) {
@@ -518,7 +518,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
 
     @Override
     public void transfer(final UUID srcAccountId, final UUID destAccountId, final BundleTransferData data,
-                         final List<TransferCancelData> transferCancelData, final Catalog catalog, final InternalCallContext fromContext,
+                         final List<TransferCancelData> transferCancelData, final SubscriptionCatalog catalog, final InternalCallContext fromContext,
                          final InternalCallContext toContext) {
     }
 
@@ -527,7 +527,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void createBCDChangeEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent bcdEvent, final Catalog catalog, final InternalCallContext context) {
+    public void createBCDChangeEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent bcdEvent, final SubscriptionCatalog catalog, final InternalCallContext context) {
 
     }
 

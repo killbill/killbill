@@ -24,8 +24,8 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
@@ -35,7 +35,7 @@ import org.killbill.clock.ClockMock;
 
 public interface SubscriptionTestInitializer {
 
-    public Catalog initCatalog(final CatalogService catalogService, final InternalTenantContext context) throws Exception;
+    public VersionedCatalog initCatalog(final CatalogService catalogService, final InternalTenantContext context) throws Exception;
 
     public AccountData initAccountData(Clock clock);
 

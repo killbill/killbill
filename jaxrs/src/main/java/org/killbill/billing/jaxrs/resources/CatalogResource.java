@@ -137,7 +137,8 @@ public class CatalogResource extends JaxRsResourceBase {
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
 
-        final VersionedCatalog<? extends StaticCatalog> catalog = catalogUserApi.getCatalog(catalogName, catalogDateVersion, tenantContext);
+        final VersionedCatalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
+        JaxRsResourceBase.filterCatalogVersions(catalog, catalogDateVersion);
 
         // This assumes serializableClass has the right JAXB annotations
         final Class serializableClass = catalog.getClass();
@@ -158,19 +159,17 @@ public class CatalogResource extends JaxRsResourceBase {
         return getCatalogXmlOriginal(requestedDate, accountId, request);
     }
 
-
-
     @TimedResource
     @POST
     @Consumes(TEXT_XML)
-    @ApiOperation(value = "Upload the full catalog as XML", hidden=true)
+    @ApiOperation(value = "Upload the full catalog as XML", hidden = true)
     @ApiResponses(value = {})
     public Response uploadCatalogXmlOriginal(final String catalogXML,
-                                     @HeaderParam(HDR_CREATED_BY) final String createdBy,
-                                     @HeaderParam(HDR_REASON) final String reason,
-                                     @HeaderParam(HDR_COMMENT) final String comment,
-                                     @javax.ws.rs.core.Context final HttpServletRequest request,
-                                     @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request,
+                                             @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         catalogUserApi.uploadCatalog(catalogXML, callContext);
         return uriBuilder.buildResponse(uriInfo, CatalogResource.class, null, null, request);
@@ -191,7 +190,6 @@ public class CatalogResource extends JaxRsResourceBase {
         return uploadCatalogXmlOriginal(catalogXML, createdBy, reason, comment, request, uriInfo);
     }
 
-
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
@@ -208,16 +206,14 @@ public class CatalogResource extends JaxRsResourceBase {
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
 
-        final VersionedCatalog<? extends StaticCatalog> catalog = catalogUserApi.getCatalog(catalogName, null, tenantContext);
+        final VersionedCatalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
+        JaxRsResourceBase.filterCatalogVersions(catalog, catalogDateVersion);
 
         final List<CatalogJson> result = new ArrayList<CatalogJson>();
-        if (catalogDateVersion != null) {
-            result.add(new CatalogJson(catalog, catalogDateVersion));
-        } else {
-            for (final StaticCatalog v : catalog.getVersions()) {
-                result.add(new CatalogJson(catalog, new DateTime(v.getEffectiveDate())));
-            }
+        for (final StaticCatalog v : catalog.getVersions()) {
+            result.add(new CatalogJson(v));
         }
+
         return Response.status(Status.OK).entity(result).build();
     }
 
@@ -232,7 +228,7 @@ public class CatalogResource extends JaxRsResourceBase {
         final TenantContext tenantContext = accountId != null ?
                                             context.createTenantContextWithAccountId(accountId, request) :
                                             context.createTenantContextNoAccountId(request);
-        final VersionedCatalog<? extends StaticCatalog> catalog = catalogUserApi.getCatalog(catalogName, null, tenantContext);
+        final VersionedCatalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
 
         final List<DateTime> result = new ArrayList<DateTime>();
         for (final StaticCatalog v : catalog.getVersions()) {

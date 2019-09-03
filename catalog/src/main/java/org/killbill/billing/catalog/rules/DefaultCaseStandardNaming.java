@@ -31,6 +31,7 @@ import org.killbill.billing.catalog.DefaultProduct;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.rules.Case;
 
 public abstract class DefaultCaseStandardNaming<T> extends DefaultCase<T> implements Case, Externalizable {
@@ -47,6 +48,12 @@ public abstract class DefaultCaseStandardNaming<T> extends DefaultCase<T> implem
     @XmlElement(required = false, name = "priceList")
     @XmlIDREF
     private DefaultPriceList priceList;
+
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return root;
+    }
 
     @Override
     public DefaultProduct getProduct() {

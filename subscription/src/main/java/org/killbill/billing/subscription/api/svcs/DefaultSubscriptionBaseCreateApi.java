@@ -27,13 +27,13 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -46,6 +46,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.api.user.SubscriptionSpecifier;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
@@ -67,7 +68,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
 
     List<SubscriptionBaseWithAddOns> createBaseSubscriptionsWithAddOns(final Iterable<SubscriptionBaseWithAddOnsSpecifier> baseAndAddOnEntitlementsSpecifiers,
                                                                        final boolean renameCancelledBundleIfExist,
-                                                                       final Catalog catalog,
+                                                                       final SubscriptionCatalog catalog,
                                                                        final AddonUtils addonUtils,
                                                                        final CacheController<UUID, UUID> accountIdCacheController,
                                                                        final CacheController<UUID, UUID> bundleIdCacheController,
@@ -105,7 +106,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
     private void prepareSubscriptionAndAddOnsSpecifier(final Collection<SubscriptionAndAddOnsSpecifier> subscriptionAndAddOns,
                                                        final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier,
                                                        final boolean renameCancelledBundleIfExist,
-                                                       final Catalog catalog,
+                                                       final SubscriptionCatalog catalog,
                                                        final AddonUtils addonUtils,
                                                        final CacheController<UUID, UUID> accountIdCacheController,
                                                        final CallContext callContext,
@@ -169,7 +170,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
     private DateTime computeActualBillingRequestedDate(final SubscriptionBaseBundle bundle,
                                                        final DateTime billingRequestedDateRaw,
                                                        @Nullable final SubscriptionBase baseSubscription,
-                                                       final Catalog catalog,
+                                                       final SubscriptionCatalog catalog,
                                                        final InternalCallContext context) throws CatalogApiException, SubscriptionBaseApiException {
         DateTime billingRequestedDate = billingRequestedDateRaw;
         if (baseSubscription != null) {
@@ -180,7 +181,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
     }
 
     private SubscriptionBaseBundle getBundleWithSanity(final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier,
-                                                       final Catalog catalog,
+                                                       final SubscriptionCatalog catalog,
                                                        final TenantContext callContext,
                                                        final InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException {
         SubscriptionBaseBundle bundle = null;
@@ -207,7 +208,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
                                                                              final List<Plan> entitlementsPlans,
                                                                              final boolean isMigrated,
                                                                              final DateTime effectiveDate,
-                                                                             final Catalog catalog,
+                                                                             final SubscriptionCatalog catalog,
                                                                              final AddonUtils addonUtils,
                                                                              final TenantContext callContext,
                                                                              final InternalCallContext context) throws SubscriptionBaseApiException, CatalogApiException {
@@ -224,7 +225,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             final PlanPhase phase = plan.getAllPhases()[0];
             if (phase == null) {
                 throw new SubscriptionBaseError(String.format("No initial PlanPhase for Product %s, term %s and set %s does not exist in the catalog",
-                                                              spec.getProductName(), spec.getBillingPeriod().toString(), plan.getPriceListName()));
+                                                              spec.getProductName(), spec.getBillingPeriod().toString(), plan.getPriceList()));
             }
 
             // verify the number of subscriptions (of the same kind) allowed per bundle and the existing ones
@@ -250,7 +251,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             }
 
             final SubscriptionSpecifier subscription = new SubscriptionSpecifier();
-            subscription.setRealPriceList(plan.getPriceListName());
+            subscription.setRealPriceList(plan.getPriceList().getName());
             subscription.setEffectiveDate(effectiveDate);
             subscription.setProcessedDate(context.getCreatedDate());
             subscription.setPlan(plan);
@@ -272,7 +273,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
     }
 
     private boolean createPlansIfNeededAndReorderBPOrStandaloneSpecFirstWithSanity(final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier,
-                                                                                   final Catalog catalog,
+                                                                                   final SubscriptionCatalog catalog,
                                                                                    final DateTime effectiveDate,
                                                                                    final Collection<EntitlementSpecifier> outputEntitlementSpecifier,
                                                                                    final Collection<Plan> outputEntitlementPlans,
@@ -287,7 +288,8 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
         for (final EntitlementSpecifier cur : subscriptionBaseWithAddOnsSpecifier.getEntitlementSpecifiers()) {
             final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(cur.getOverrides(), callContext);
             // Called by createBaseSubscriptionsWithAddOns only -- no need for subscription start date
-            final Plan plan = catalog.createOrFindPlan(cur.getPlanPhaseSpecifier(), overridesWithContext, effectiveDate);
+            final StaticCatalog catalogVersion = catalog.versionForDate(effectiveDate);
+            final Plan plan = catalogVersion.createOrFindPlan(cur.getPlanPhaseSpecifier(), overridesWithContext);
 
             final boolean isBase = isBaseSpecifier(plan);
             final boolean isStandalone = isStandaloneSpecifier(plan);

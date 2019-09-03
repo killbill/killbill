@@ -23,6 +23,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.StaticCatalog;
 
 import com.google.common.collect.ImmutableList;
 
@@ -47,6 +48,11 @@ public class MockPriceList implements PriceList {
     @Override
     public String getPrettyName() {
         return name;
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return null;
     }
 
     @Override

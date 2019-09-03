@@ -37,10 +37,11 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
@@ -127,6 +128,26 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         this.catalogInternalApi = catalogInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
         this.eventBus = eventBus;
+    }
+
+    private static List<InvoiceItem> negateCreditItems(final List<InvoiceItem> input) {
+        final Iterable<InvoiceItem> tmp = Iterables.transform(input, new Function<InvoiceItem, InvoiceItem>() {
+            @Override
+            public InvoiceItem apply(final InvoiceItem creditItem) {
+                return new CreditAdjInvoiceItem(creditItem.getId(),
+                                                creditItem.getCreatedDate(),
+                                                creditItem.getInvoiceId(),
+                                                creditItem.getAccountId(),
+                                                creditItem.getStartDate(),
+                                                creditItem.getDescription(),
+                                                creditItem.getAmount().negate(),
+                                                creditItem.getRate(),
+                                                creditItem.getCurrency(),
+                                                creditItem.getQuantity(),
+                                                creditItem.getItemDetails());
+            }
+        });
+        return ImmutableList.copyOf(tmp);
     }
 
     @Override
@@ -244,7 +265,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return fromInvoiceModelDao(unpaidInvoicesByAccountId, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
-
     @Override
     public Invoice triggerDryRunInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
@@ -305,9 +325,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                              externalChargeItem.getAmount(), externalChargeItem.getCurrency(), externalChargeItem.getItemDetails());
     }
 
-
-
-
     @Override
     public List<InvoiceItem> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> charges, final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
         return insertItems(accountId, effectiveDate, InvoiceItemType.EXTERNAL_CHARGE, charges, autoCommit, properties, context);
@@ -329,29 +346,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public List<InvoiceItem> insertCredits(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> creditItems,
-                                    final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-        final List<InvoiceItem> items =  insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
+                                           final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+        final List<InvoiceItem> items = insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
         return negateCreditItems(items);
-    }
-
-    private static List<InvoiceItem> negateCreditItems(final List<InvoiceItem> input) {
-        final Iterable<InvoiceItem> tmp = Iterables.transform(input, new Function<InvoiceItem, InvoiceItem>() {
-            @Override
-            public InvoiceItem apply(final InvoiceItem creditItem) {
-                return new CreditAdjInvoiceItem(creditItem.getId(),
-                                                creditItem.getCreatedDate(),
-                                                creditItem.getInvoiceId(),
-                                                creditItem.getAccountId(),
-                                                creditItem.getStartDate(),
-                                                creditItem.getDescription(),
-                                                creditItem.getAmount().negate(),
-                                                creditItem.getRate(),
-                                                creditItem.getCurrency(),
-                                                creditItem.getQuantity(),
-                                                creditItem.getItemDetails());
-            }
-        });
-        return ImmutableList.copyOf(tmp);
     }
 
     @Override
@@ -471,7 +468,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     private List<InvoiceItem> insertItems(final UUID accountId, final LocalDate effectiveDate, final InvoiceItemType itemType, final Iterable<InvoiceItem> inputItems, final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
 
-
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         ImmutableAccountData accountData;
         try {
@@ -528,7 +524,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                         }
                         curInvoiceForItem = newAndExistingInvoices.get(invoiceIdForItem);
                     }
-
 
                     final InvoiceItem newInvoiceItem;
                     switch (itemType) {
@@ -604,7 +599,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
     }
 
-    private List<Invoice> fromInvoiceModelDao(final Collection<InvoiceModelDao> invoiceModelDaos, final Catalog catalog) {
+    private List<Invoice> fromInvoiceModelDao(final Collection<InvoiceModelDao> invoiceModelDaos, final VersionedCatalog catalog) {
         return ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceModelDaos,
                                                                     new Function<InvoiceModelDao, Invoice>() {
                                                                         @Override
@@ -653,12 +648,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     }
 
-
     @Override
     public List<InvoiceItem> getInvoiceItemsByParentInvoice(final UUID parentInvoiceId, final TenantContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(parentInvoiceId, ObjectType.INVOICE, context);
 
-        final Catalog catalog  = getCatalogSafelyForPrettyNames(internalTenantContext);
+        final VersionedCatalog catalog = getCatalogSafelyForPrettyNames(internalTenantContext);
         return ImmutableList.copyOf(Collections2.transform(dao.getInvoiceItemsByParentInvoice(parentInvoiceId, internalTenantContext),
                                                            new Function<InvoiceItemModelDao, InvoiceItem>() {
                                                                @Override
@@ -668,7 +662,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                            }));
     }
 
-    private Catalog getCatalogSafelyForPrettyNames(final InternalTenantContext internalTenantContext) {
+    private VersionedCatalog getCatalogSafelyForPrettyNames(final InternalTenantContext internalTenantContext) {
 
         try {
             return catalogInternalApi.getFullCatalog(true, true, internalTenantContext);

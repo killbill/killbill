@@ -19,19 +19,21 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
@@ -50,7 +52,7 @@ public class InvoiceItemFactory {
         return fromModelDaoWithCatalog(invoiceItemModelDao, null);
     }
 
-    public static InvoiceItem fromModelDaoWithCatalog(final InvoiceItemModelDao invoiceItemModelDao, @Nullable final Catalog catalog) {
+    public static InvoiceItem fromModelDaoWithCatalog(final InvoiceItemModelDao invoiceItemModelDao, @Nullable final VersionedCatalog catalog) {
         if (invoiceItemModelDao == null) {
             return null;
         }
@@ -125,7 +127,7 @@ public class InvoiceItemFactory {
     //
     // Returns an array of string for 'pretty' names [prettyPlanName, prettyPlanPhaseName, prettyUsageName]
     //
-    private static String[] computePrettyName(final InvoiceItemType type, final DateTime transitionDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final Catalog catalog) {
+    private static String[] computePrettyName(final InvoiceItemType type, final DateTime transitionDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final VersionedCatalog catalog) {
 
         final String[] result = new String[4];
 
@@ -143,14 +145,24 @@ public class InvoiceItemFactory {
 
                 if (planName != null) {
 
-                    // We don't know the creation date of the said subscription, all we know is the time
-                    // of the current event. By specifying KILLBILL_GENESIS, we should at least find a Plan
-                    // and most likely the correct one since we start from the transitionDate and move backward
-                    // Worst case: This is the wrong plan and the prettyName was updated across version, oh well..
-                    //
+                    // We are simply looking for the most recent version of a catalog version having such plan
+                    // Finding the right entry would require some expensive operations which are probably not worth it for this use case.
+                    Plan plan = null;
+                    final List<StaticCatalog> versions = catalog.getVersions();
+                    for (int i = versions.size() - 1; i >= 0; i--) {
+                        final StaticCatalog curVersion = versions.get(i);
+                        try {
+                            plan = curVersion.findPlan(planName);
+                        } catch (final CatalogApiException e) {
+                            if (e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode()) {
+                                throw e;
+                            }
+                        }
+                        if (plan != null) {
+                            break;
+                        }
+                    }
 
-                    final DateTime KILLBILL_GENESIS = new DateTime(2011, 10, 28, 0, 0, DateTimeZone.UTC);
-                    final Plan plan = catalog.findPlan(planName, transitionDate, KILLBILL_GENESIS);
                     if (plan != null) {
                         prettyPlanName = plan.getPrettyName();
 

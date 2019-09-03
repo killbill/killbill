@@ -291,6 +291,7 @@ public class StandaloneCatalogMapper {
             tmpDefaultPlans = map;
         }
         return tmpDefaultPlans.values();
+
     }
 
     private Iterable<Plan> toFilterDefaultPlans(final String priceListName) {
@@ -300,7 +301,7 @@ public class StandaloneCatalogMapper {
         return Iterables.filter(tmpDefaultPlans.values(), new Predicate<Plan>() {
             @Override
             public boolean apply(final Plan input) {
-                return input.getPriceListName().equals(priceListName);
+                return ((DefaultPlan)input).getPriceListName().equals(priceListName);
             }
         });
     }
@@ -405,7 +406,8 @@ public class StandaloneCatalogMapper {
         result.setInitialPhases(toDefaultPlanPhases(ImmutableList.copyOf(input.getInitialPhases())));
         result.setPlansAllowedInBundle(input.getPlansAllowedInBundle());
         result.setProduct(toDefaultProduct(input.getProduct()));
-        result.setPriceListName(input.getPriceListName());
+        result.setPriceListName(input.getPriceList().getName());
+        result.initialize((StandaloneCatalog) staticCatalog);
         return result;
     }
 

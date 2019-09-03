@@ -33,8 +33,9 @@ import javax.inject.Singleton;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -232,7 +233,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public List<BlockingState> getBlockingAllForAccountRecordId(final Catalog catalog, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingAllForAccountRecordId(final VersionedCatalog catalog, final InternalTenantContext context) {
         final List<BlockingState> statesOnDisk = delegate.getBlockingAllForAccountRecordId(catalog, context);
         return addBlockingStatesNotOnDisk(statesOnDisk, catalog, context);
     }
@@ -255,7 +256,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan
     // See DefaultEntitlement#computeAddOnBlockingStates
     private List<BlockingState> addBlockingStatesNotOnDisk(final List<BlockingState> blockingStatesOnDisk,
-                                                           final Catalog catalog,
+                                                           final VersionedCatalog catalog,
                                                            final InternalTenantContext context) {
         final Collection<BlockingState> blockingStatesOnDiskCopy = new LinkedList<BlockingState>(blockingStatesOnDisk);
 

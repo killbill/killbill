@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Groupon, Inc
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,17 +15,12 @@
  * under the License.
  */
 
-package org.killbill.billing.catalog;
+package org.killbill.billing.subscription.catalog;
 
-import java.util.Date;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.CatalogApiException;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+public interface SubscriptionCatalogApi {
+    public SubscriptionCatalog getFullCatalog(InternalTenantContext context) throws CatalogApiException;
 
-public abstract class CatalogDateHelper {
-
-    // From JDK to Joda (see http://www.joda.org/joda-time/userguide.html#JDK_Interoperability)
-    public static DateTime toUTCDateTime(final Date date) {
-        return new DateTime(date).toDateTime(DateTimeZone.UTC);
-    }
 }
