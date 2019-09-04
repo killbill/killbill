@@ -33,6 +33,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -45,6 +46,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
@@ -107,10 +109,17 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // The code normally goes through the grandfathering logic to find the version but specifies the transitionTime of the latest CHANGE (and not the subscriptionStartDate)
         // and therefore correctly find the latest catalog version, invoicing at the new price 295.95
         //
-        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.RECURRING, new BigDecimal("295.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-500.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("204.05")));
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+        // RECURRING should be set against V2
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(1).getEffectiveDate());
+        Assert.assertNull(curInvoice.getInvoiceItems().get(1).getCatalogEffectiveDate());
+        Assert.assertNull(curInvoice.getInvoiceItems().get(2).getCatalogEffectiveDate());
+
+
 
         final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, callContext);
         final List<SubscriptionEvent> events = bpSubscription.getSubscriptionEvents();

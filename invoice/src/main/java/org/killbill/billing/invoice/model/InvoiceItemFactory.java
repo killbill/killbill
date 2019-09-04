@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +88,7 @@ public class InvoiceItemFactory {
         String prettyPlanPhaseName = prettyNames[2];
         String prettyUsageName = prettyNames[3];
 
-        Date catalogEffectiveDate = null;
+        final Date catalogEffectiveDate = invoiceItemModelDao.getCatalogEffectiveDate() != null ? invoiceItemModelDao.getCatalogEffectiveDate().toDate() : null;
 
         final InvoiceItem item;
         switch (type) {

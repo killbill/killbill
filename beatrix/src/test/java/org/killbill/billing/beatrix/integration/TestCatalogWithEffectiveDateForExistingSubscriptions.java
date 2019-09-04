@@ -29,12 +29,14 @@ import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -57,6 +59,8 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions extends TestIn
         final LocalDate today = new LocalDate(2018, 1, 1);
         clock.setDay(today);
 
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
 
         final DefaultEntitlement bpEntitlement =
@@ -65,8 +69,9 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions extends TestIn
                                                            NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
         assertNotNull(bpEntitlement);
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 1, 1), new LocalDate(2018, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(0).getEffectiveDate());
 
         // Catalog v2 with price increase is on 2018-04-01 but because we have an effectiveDateForExistingSubscriptions set to 2018-05-01
         // we don't see any change until 5-1
@@ -75,22 +80,25 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions extends TestIn
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+        curInvoice= invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 2, 1), new LocalDate(2018, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(0).getEffectiveDate());
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // 2018-3-1
         clock.addMonths(1);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 3, 1), new LocalDate(2018, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(0).getEffectiveDate());
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // 2018-4-1
         clock.addMonths(1);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 4, 1), new LocalDate(2018, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(0).getEffectiveDate());
 
 
         // effectiveDateForExistingSubscriptions set to 2018-05-01 should kick-in and we should see the price increase
@@ -98,8 +106,10 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions extends TestIn
         // 2018-5-1
         clock.addMonths(1);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 5, 1), new LocalDate(2018, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+        // Check with see version catalog v2
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(1).getEffectiveDate());
 
 
         // One more month to make sure
@@ -109,6 +119,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions extends TestIn
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 6, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 6, 1), new LocalDate(2018, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(1).getEffectiveDate());
 
 
         // Catalog v3 with price increase is on 2018-07-01 but because we have an effectiveDateForExistingSubscriptions set to 2018-08-01
@@ -119,15 +130,16 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions extends TestIn
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 7, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 7, 1), new LocalDate(2018, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
-
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(1).getEffectiveDate());
 
         // Check we see the new price for catalog version v3
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         // 2018-8-1
         clock.addMonths(1);
         assertListenerStatus();
-        invoiceChecker.checkInvoice(account.getId(), 8, callContext,
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 8, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 8, 1), new LocalDate(2018, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("69.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(2).getEffectiveDate());
 
 
 

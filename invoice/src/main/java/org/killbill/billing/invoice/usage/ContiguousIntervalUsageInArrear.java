@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
@@ -370,8 +371,8 @@ public abstract class ContiguousIntervalUsageInArrear {
         // to create one RolledUpUsage per interval.
         //
         LocalDate prevDate = null;
+        DateTime prevCatalogEffectiveDate = null;
         for (final TransitionTime curTransition : transitionTimes) {
-
 
             final LocalDate curDate = curTransition.getDate();
             if (prevDate != null) {
@@ -420,10 +421,11 @@ public abstract class ContiguousIntervalUsageInArrear {
                     for (final String unitType : perRangeUnitToAmount.keySet()) {
                         rolledUpUnits.add(new DefaultRolledUpUnit(unitType, perRangeUnitToAmount.get(unitType)));
                     }
-                    result.add(new DefaultRolledUpUsageWithMetadata(getSubscriptionId(), prevDate, curDate, rolledUpUnits, curTransition.getTargetBillingEvent().getCatalogEffectiveDate()));
+                    result.add(new DefaultRolledUpUsageWithMetadata(getSubscriptionId(), prevDate, curDate, rolledUpUnits, prevCatalogEffectiveDate));
                 }
             }
             prevDate = curDate;
+            prevCatalogEffectiveDate = curTransition.getTargetBillingEvent().getCatalogEffectiveDate();
         }
         return new RolledUpUnitsWithTracking(result, trackingIds);
     }

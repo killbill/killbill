@@ -29,12 +29,14 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.integration.TestIntegrationBase;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -92,6 +94,10 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3", "t4"), internalCallContext);
 
 
+        // Check items catalogEffectiveDate are correctly marked against each version
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(0).getEffectiveDate());
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(1).getCatalogEffectiveDate(), catalog.getVersions().get(1).getEffectiveDate());
     }
 
     @Test(groups = "slow")
@@ -146,6 +152,11 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 7), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t4"), internalCallContext);
+
+        // Check item catalogEffectiveDate correctly reflects the first catalog where such plan is available
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(0).getEffectiveDate());
+
 
     }
 
@@ -231,6 +242,9 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         // 30 days month
         clock.setDay(new LocalDate(2016, 4, 1));
 
+
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+
         final AccountData accountData = getAccountData(1);
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
@@ -271,6 +285,11 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 8), new LocalDate(2016, 5, 9), InvoiceItemType.USAGE, new BigDecimal("0.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3"), internalCallContext);
 
+        // Check items catalogEffectiveDate are correctly marked against each version
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(0).getEffectiveDate());
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(1).getCatalogEffectiveDate(), catalog.getVersions().get(1).getEffectiveDate());
+
+
         // Original notification before we change BCD
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         clock.addDays(23);
@@ -284,6 +303,10 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 9), new LocalDate(2016, 6, 9), InvoiceItemType.USAGE, new BigDecimal("25.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t4"), internalCallContext);
+
+        // Check items catalogEffectiveDate is correctly set against last version
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(1).getEffectiveDate());
+
 
     }
 }
