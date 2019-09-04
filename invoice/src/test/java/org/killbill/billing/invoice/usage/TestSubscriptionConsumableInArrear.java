@@ -57,15 +57,15 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
         final Usage usage2 = createConsumableInArrearUsage(usageName2, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier2);
 
         final DateTime dt1 = new DateTime(2013, 3, 23, 4, 34, 59, DateTimeZone.UTC);
-        final BillingEvent evt1 = createMockBillingEvent(dt1, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).add(usage2).build());
+        final BillingEvent evt1 = createMockBillingEvent(dt1, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).add(usage2).build(), catalogEffectiveDate);
         billingEvents.add(evt1);
 
         final DateTime dt2 = new DateTime(2013, 4, 23, 4, 34, 59, DateTimeZone.UTC);
-        final BillingEvent evt2 = createMockBillingEvent(dt2, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).build());
+        final BillingEvent evt2 = createMockBillingEvent(dt2, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).build(), catalogEffectiveDate);
         billingEvents.add(evt2);
 
         final DateTime dt3 = new DateTime(2013, 5, 23, 4, 34, 59, DateTimeZone.UTC);
-        final BillingEvent evt3 = createMockBillingEvent(dt3, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).add(usage2).build());
+        final BillingEvent evt3 = createMockBillingEvent(dt3, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).add(usage2).build(), catalogEffectiveDate);
         billingEvents.add(evt3);
 
         LocalDate targetDate = new LocalDate(2013, 6, 23);

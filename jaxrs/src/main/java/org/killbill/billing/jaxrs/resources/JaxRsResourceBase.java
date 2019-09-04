@@ -633,6 +633,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                                                    accountCurrency,
                                                    input.getQuantity(),
                                                    input.getItemDetails(),
+                                                   input.getCatalogEffectiveDate(),
                                                    null,
                                                    null);
                     }

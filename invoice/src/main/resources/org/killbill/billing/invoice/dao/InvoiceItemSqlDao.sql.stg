@@ -15,6 +15,7 @@ tableFields(prefix) ::= <<
 , <prefix>plan_name
 , <prefix>phase_name
 , <prefix>usage_name
+, <prefix>catalog_effective_date
 , <prefix>start_date
 , <prefix>end_date
 , <prefix>amount
@@ -39,6 +40,7 @@ tableValues() ::= <<
 , :planName
 , :phaseName
 , :usageName
+, :catalogEffectiveDate
 , :startDate
 , :endDate
 , :amount

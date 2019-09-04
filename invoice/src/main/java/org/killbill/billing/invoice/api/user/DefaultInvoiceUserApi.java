@@ -73,6 +73,7 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -451,6 +452,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                input.getPlanName(),
                                                input.getPhaseName(),
                                                input.getUsageName(),
+                                               CatalogDateHelper.toUTCDateTime(input.getCatalogEffectiveDate()),
                                                input.getStartDate(),
                                                input.getEndDate(),
                                                input.getAmount(),

@@ -18,6 +18,7 @@
 package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -65,7 +66,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
+    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final Date catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
         // Compute final amount by subtracting  amount that was already billed.
         final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
@@ -77,7 +78,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
             if (!isPeriodPreviouslyBilled || amountToBill.compareTo(BigDecimal.ZERO) > 0) {
                 final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
                 final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                              getPhaseName(), usage.getName(), startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
+                                                              getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
                 result.add(item);
             }
         }

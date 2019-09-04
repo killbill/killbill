@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -47,4 +48,10 @@ public abstract class AdjInvoiceItem extends InvoiceItemBase {
                    final BigDecimal amount, @Nullable final BigDecimal rate, final Currency currency, @Nullable final UUID reversingId, @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
         super(id, createdDate, invoiceId, accountId, null, null, description, startDate, endDate, amount, rate, currency, reversingId, quantity, itemDetails, invoiceItemType);
     }
+
+    @Override
+    public Date getCatalogEffectiveDate() {
+        return null;
+    }
+
 }

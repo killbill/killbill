@@ -87,7 +87,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
     public void testPopulateChildrenSimple() throws Exception {
         final UUID accountId = account.getId();
         final Invoice inputInvoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase",
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase", null,
                                                                  today, today, BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
 
         inputInvoice.addInvoiceItem(invoiceItem);
@@ -107,7 +107,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
     public void testPopulateChildrenWithPayments() throws Exception {
         final UUID accountId = account.getId();
         final Invoice inputInvoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase",
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase", null,
                                                                  today, today, BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
 
         inputInvoice.addInvoiceItem(invoiceItem);
@@ -137,7 +137,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
     public void testPopulateChildrenWithTrackingIds() throws Exception {
         final UUID accountId = account.getId();
         final Invoice inputInvoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase",
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase", null,
                                                                  today, today, BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
 
         inputInvoice.addInvoiceItem(invoiceItem);
@@ -166,7 +166,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
     public void testPopulateChildrenWith_WRITTEN_OFF() throws Exception {
         final UUID accountId = account.getId();
         final Invoice inputInvoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase",
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(inputInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase", null,
                                                                  today, today, BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
 
         inputInvoice.addInvoiceItem(invoiceItem);
@@ -201,7 +201,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
 
         final UUID accountId = account.getId();
         final Invoice childInvoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem invoiceItem = new RecurringInvoiceItem(childInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase",
+        final InvoiceItem invoiceItem = new RecurringInvoiceItem(childInvoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test", "test-plan", "test-phase", null,
                                                                  today, today, BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
 
         childInvoice.addInvoiceItem(invoiceItem);

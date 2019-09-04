@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.tree;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -58,6 +59,7 @@ public class Item {
     private final Currency currency;
     private final DateTime createdDate;
     private final UUID linkedId;
+    private final Date catalogEffectiveDate;
 
     private BigDecimal currentRepairedAmount;
     private BigDecimal adjustedAmount;
@@ -84,6 +86,8 @@ public class Item {
         this.amount = item.amount;
         this.rate = item.rate;
         this.currency = item.currency;
+        this.catalogEffectiveDate = item.catalogEffectiveDate;
+
         // In merge mode, the reverse item needs to correctly point to itself (repair of original item)
         this.linkedId = action == ItemAction.ADD ? item.linkedId : this.id;
         this.createdDate = item.createdDate;
@@ -114,6 +118,7 @@ public class Item {
         this.currency = item.getCurrency();
         this.linkedId = item.getLinkedItemId();
         this.createdDate = item.getCreatedDate();
+        this.catalogEffectiveDate = item.getCatalogEffectiveDate();
         this.action = action;
 
         this.currentRepairedAmount = BigDecimal.ZERO;
@@ -134,7 +139,7 @@ public class Item {
                                                                      .multiply(amount) : amount;
 
         if (action == ItemAction.ADD) {
-            return new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, newStartDate, newEndDate, positiveAmount, rate, currency);
+            return new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, newStartDate, newEndDate, positiveAmount, rate, currency);
         } else {
             // We first compute the maximum amount after adjustment and that sets the amount limit of how much can be repaired.
             final BigDecimal maxAvailableAmountForRepair = getNetAmount();

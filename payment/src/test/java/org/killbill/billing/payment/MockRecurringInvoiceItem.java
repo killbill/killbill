@@ -17,6 +17,7 @@
 package org.killbill.billing.payment;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -183,6 +184,11 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
 
     @Override
     public String getItemDetails() { return itemDetails; }
+
+    @Override
+    public Date getCatalogEffectiveDate() {
+        return null;
+    }
 
     @Override
     public boolean matches(final Object other) {
