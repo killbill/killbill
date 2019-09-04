@@ -186,8 +186,11 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
         SubscriptionBaseBundle bundle = null;
         if (subscriptionBaseWithAddOnsSpecifier.getBundleId() != null) {
             bundle = dao.getSubscriptionBundleFromId(subscriptionBaseWithAddOnsSpecifier.getBundleId(), context);
-            if (bundle == null ||
-                (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null && !subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey().equals(bundle.getExternalKey()))) {
+            if (bundle == null) {
+                log.warn("getBundleWithSanity: bundle is missing");
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
+            } else if (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null && !subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey().equals(bundle.getExternalKey())) {
+                log.warn("getBundleWithSanity: specified bundleExternalKey {} doesn't match existing bundleExternalKey {}", subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(), bundle.getExternalKey());
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
             }
         } else if (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null) {
@@ -298,6 +301,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
                     basePlanSpecifier = cur;
                     basePlan = plan;
                 } else {
+                    log.warn("createPlansIfNeededAndReorderBPOrStandaloneSpecFirstWithSanity: multiple basePlanSpecifier");
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
                 }
             } else {
@@ -314,6 +318,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
         outputEntitlementPlans.addAll(addOnsPlans);
 
         if (!outputEntitlementSpecifier.isEmpty() && !standaloneSpecifiers.isEmpty()) {
+            log.warn("createPlansIfNeededAndReorderBPOrStandaloneSpecFirstWithSanity: both outputEntitlementSpecifier and standaloneSpecifiers specified");
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
         }
 
