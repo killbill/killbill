@@ -147,6 +147,7 @@ public class TestInvoiceJsonWithBundleKeys extends JaxrsTestSuiteNoDB {
                                    null,
                                    null,
                                    null,
+                                   null,
                                    null);
     }
 }

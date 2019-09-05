@@ -116,7 +116,7 @@ public class InvoiceTestUtils {
 
     public static InvoiceItem createInvoiceItem(final Clock clock, final UUID invoiceId, final UUID accountId, final BigDecimal amount, final Currency currency) {
         return new FixedPriceInvoiceItem(invoiceId, accountId, UUID.randomUUID(), UUID.randomUUID(),
-                                         null, "charge back test", "charge back phase", clock.getUTCToday(), amount, currency);
+                                         null, "charge back test", "charge back phase", null, clock.getUTCToday(), amount, currency);
     }
 
     public static InvoicePayment createAndPersistPayment(final InvoiceInternalApi invoicePaymentApi,

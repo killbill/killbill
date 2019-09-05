@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.generator;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -248,6 +250,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                         final BigDecimal rate = thisEvent.getRecurringPrice();
                         if (rate != null) {
                             final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
+                            final DateTime catalogEffectiveDate = thisEvent.getCatalogEffectiveDate() != null ? thisEvent.getCatalogEffectiveDate() : null;
                             final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
                                                                                                 accountId,
                                                                                                 thisEvent.getBundleId(),
@@ -255,6 +258,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                                                                 currentPlan.getProduct().getName(),
                                                                                                 currentPlan.getName(),
                                                                                                 thisEvent.getPlanPhase().getName(),
+                                                                                                catalogEffectiveDate,
                                                                                                 itemDatum.getStartDate(),
                                                                                                 itemDatum.getEndDate(),
                                                                                                 amount, rate, currency);
@@ -416,9 +420,11 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                 final Plan currentPlan = thisEvent.getPlan();
                 Preconditions.checkNotNull(currentPlan, String.format("Unexpected null Plan name event = %s", thisEvent));
 
+                final DateTime catalogEffectiveDate = thisEvent.getCatalogEffectiveDate() != null ? thisEvent.getCatalogEffectiveDate() : null;
                 final FixedPriceInvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId, accountId, thisEvent.getBundleId(),
                                                                                               thisEvent.getSubscriptionId(),
                                                                                               currentPlan.getProduct().getName(), currentPlan.getName(), thisEvent.getPlanPhase().getName(),
+                                                                                              catalogEffectiveDate,
                                                                                               roundedStartDate, fixedPrice, currency);
 
                 // For debugging purposes

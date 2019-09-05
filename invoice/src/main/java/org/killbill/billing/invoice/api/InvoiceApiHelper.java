@@ -200,6 +200,7 @@ public class InvoiceApiHelper {
                                           invoiceItemToBeAdjusted.getPlanName(),
                                           invoiceItemToBeAdjusted.getPhaseName(),
                                           invoiceItemToBeAdjusted.getUsageName(),
+                                          invoiceItemToBeAdjusted.getCatalogEffectiveDate(),
                                           effectiveDate,
                                           effectiveDate,
                                           amountToAdjust,

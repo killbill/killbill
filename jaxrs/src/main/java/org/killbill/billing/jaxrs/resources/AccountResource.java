@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -1636,6 +1637,12 @@ public class AccountResource extends JaxRsResourceBase {
             public String getItemDetails() {
                 return null;
             }
+
+            @Override
+            public DateTime getCatalogEffectiveDate() {
+                return null;
+            }
+
             @Override
             public boolean matches(final Object o) {
                 return false;

@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +38,7 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,16 +88,18 @@ public class InvoiceItemFactory {
         String prettyPlanPhaseName = prettyNames[2];
         String prettyUsageName = prettyNames[3];
 
+        final DateTime catalogEffectiveDate = invoiceItemModelDao.getCatalogEffectiveDate() != null ? invoiceItemModelDao.getCatalogEffectiveDate() : null;
+
         final InvoiceItem item;
         switch (type) {
             case EXTERNAL_CHARGE:
                 item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails);
                 break;
             case FIXED:
-                item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, amount, currency, quantity, itemDetails);
+                item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, amount, currency, quantity, itemDetails);
                 break;
             case RECURRING:
-                item = new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, quantity, itemDetails);
+                item = new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, quantity, itemDetails);
                 break;
             case CBA_ADJ:
                 item = new CreditBalanceAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, linkedItemId, description, amount, currency);
@@ -110,10 +114,10 @@ public class InvoiceItemFactory {
                 item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, rate, currency, linkedItemId, quantity, itemDetails);
                 break;
             case USAGE:
-                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, rate, currency, quantity, itemDetails);
+                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, rate, currency, quantity, itemDetails);
                 break;
             case TAX:
-                item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, currency, linkedItemId, itemDetails);
+                item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, currency, linkedItemId, itemDetails);
                 break;
             case PARENT_SUMMARY:
                 item = new ParentInvoiceItem(id, createdDate, invoiceId, accountId, childAccountId, amount, currency, description);

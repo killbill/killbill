@@ -119,7 +119,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
 
         final UUID invoiceId = UUID.randomUUID();
         final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), UUID.randomUUID(), UUID.randomUUID(), null, plan.getName(),
-                                                                      phase.getName(), invoiceItemDate, fixedPriceAmount, Currency.USD);
+                                                                      phase.getName(), null, invoiceItemDate, fixedPriceAmount, Currency.USD);
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-01-08"),
                                                                       plan, phase,
@@ -142,7 +142,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
 
         final UUID invoiceId = UUID.randomUUID();
         final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), subscription.getBundleId(), subscription.getId(), null, plan.getName(),
-                                                                      phase.getName(), invoiceItemDate, fixedPriceAmount, Currency.USD);
+                                                                      phase.getName(), null, invoiceItemDate, fixedPriceAmount, Currency.USD);
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-02-01"),
                                                                       plan, phase,
@@ -165,7 +165,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
 
         final UUID invoiceId = UUID.randomUUID();
         final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), subscription.getBundleId(), subscription.getId(), null, plan.getName(),
-                                                                      phase.getName(), invoiceItemDate, fixedPriceAmount, Currency.USD);
+                                                                      phase.getName(), null, invoiceItemDate, fixedPriceAmount, Currency.USD);
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-01-08"),
                                                                       plan, phase,
@@ -332,6 +332,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                             null,
                                                             event.getPlan().getName(),
                                                             event.getPlanPhase().getName(),
+                                                            null,
                                                             startDate.plusMonths(i),
                                                             startDate.plusMonths(1 + i),
                                                             amount,
@@ -361,6 +362,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                             null,
                                                             event.getPlan().getName(),
                                                             event.getPlanPhase().getName(),
+                                                            null,
                                                             startDate.plusMonths(i),
                                                             startDate.plusMonths(1 + i),
                                                             amount,
@@ -422,6 +424,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                              null,
                                                              event.getPlan().getName(),
                                                              event.getPlanPhase().getName(),
+                                                             null,
                                                              "Buggy fixed item",
                                                              startDate,
                                                              amount,
@@ -480,6 +483,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                             null,
                                                             event.getPlan().getName(),
                                                             event.getPlanPhase().getName(),
+                                                            null,
                                                             startDate,
                                                             startDate.plusMonths(1),
                                                             amount,
@@ -542,6 +546,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -605,6 +610,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -620,6 +626,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -688,6 +695,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -758,6 +766,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -838,6 +847,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -963,6 +973,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         "my-plan",
                                                         "my-plan-monthly",
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -1052,6 +1063,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         plan.getName(),
                                                         planPhase.getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -1137,6 +1149,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         plan.getName(),
                                                         planPhase.getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -1222,6 +1235,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         plan.getName(),
                                                         planPhase.getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -1276,6 +1290,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                             null,
                                                                             "planName",
                                                                             "phaseName",
+                                                                            null,
                                                                             "description",
                                                                             startDate,
                                                                             BigDecimal.ONE,
@@ -1301,6 +1316,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                          null,
                                                          "planName",
                                                          "phaseName",
+                                                         null,
                                                          "description",
                                                          startDate,
                                                          // Amount shouldn't have any effect
@@ -1332,6 +1348,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                           null,
                                                                           "planName",
                                                                           "phaseName",
+                                                                          null,
                                                                           startDate,
                                                                           startDate.plusMonths(1),
                                                                           BigDecimal.ONE,
@@ -1358,6 +1375,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         "planName",
                                                         "phaseName",
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         // Amount shouldn't have any effect

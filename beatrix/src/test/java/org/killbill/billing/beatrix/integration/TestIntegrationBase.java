@@ -50,6 +50,7 @@ import org.killbill.billing.beatrix.util.SubscriptionChecker;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -297,6 +298,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected KillbillNodesApi nodesApi;
+
+    @Inject
+    protected CatalogUserApi catalogUserApi;
 
     @Inject
     protected CacheControllerDispatcher controllerDispatcher;

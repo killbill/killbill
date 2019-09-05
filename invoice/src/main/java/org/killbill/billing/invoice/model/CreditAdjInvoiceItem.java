@@ -52,4 +52,5 @@ public class CreditAdjInvoiceItem extends AdjInvoiceItem {
     public String getDescription() {
         return MoreObjects.firstNonNull(description, "Invoice adjustment");
     }
+
 }
