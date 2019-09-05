@@ -127,7 +127,7 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
             return false;
         }
         final InvoiceItemCatalogBase that = (InvoiceItemCatalogBase) o;
-        if (catalogEffectiveDate != null ? catalogEffectiveDate.compareTo(that.catalogEffectiveDate) != 0 : that.catalogEffectiveDate != null) {
+        if (catalogEffectiveDate != null && that.catalogEffectiveDate != null ? catalogEffectiveDate.compareTo(that.catalogEffectiveDate) != 0 : that.catalogEffectiveDate != null) {
             return false;
         }
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
