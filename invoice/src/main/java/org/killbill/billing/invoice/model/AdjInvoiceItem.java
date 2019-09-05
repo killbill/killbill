@@ -19,7 +19,6 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -50,7 +49,7 @@ public abstract class AdjInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public Date getCatalogEffectiveDate() {
+    public DateTime getCatalogEffectiveDate() {
         return null;
     }
 

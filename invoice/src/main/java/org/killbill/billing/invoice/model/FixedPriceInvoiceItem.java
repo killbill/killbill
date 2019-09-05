@@ -33,19 +33,19 @@ import org.killbill.billing.util.UUIDs;
 public class FixedPriceInvoiceItem extends InvoiceItemCatalogBase {
 
     public FixedPriceInvoiceItem(final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
-                                 final String productName, final String planName, final String phaseName, final Date catalogEffectiveDate,
+                                 final String productName, final String planName, final String phaseName, final DateTime catalogEffectiveDate,
                                  final LocalDate date, final BigDecimal amount, final Currency currency) {
         this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, null, date, amount, currency);
     }
 
     public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
-                                 final UUID subscriptionId, final String productName, final String planName, final String phaseName, final Date catalogEffectiveDate,
+                                 final UUID subscriptionId, final String productName, final String planName, final String phaseName, final DateTime catalogEffectiveDate,
                                  @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency) {
         super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, catalogEffectiveDate, date, null, amount, null, currency, null, InvoiceItemType.FIXED);
     }
 
     public FixedPriceInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId,
-                                 final UUID subscriptionId, final String productName, final String planName, final String phaseName, final Date catalogEffectiveDate,
+                                 final UUID subscriptionId, final String productName, final String planName, final String phaseName, final DateTime catalogEffectiveDate,
                                  final String prettyProductName, final String prettyPlanName, final String prettyPhaseName,
                                  @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency, @Nullable final Integer quantity, @Nullable final String itemDetails) {
         super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPhaseName,

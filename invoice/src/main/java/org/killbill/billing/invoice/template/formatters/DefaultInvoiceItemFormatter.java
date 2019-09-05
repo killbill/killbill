@@ -210,7 +210,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     public String getItemDetails() { return item.getItemDetails(); }
 
     @Override
-    public Date getCatalogEffectiveDate() {
+    public DateTime getCatalogEffectiveDate() {
         return item.getCatalogEffectiveDate();
     }
 

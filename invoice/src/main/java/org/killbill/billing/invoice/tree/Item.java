@@ -59,7 +59,7 @@ public class Item {
     private final Currency currency;
     private final DateTime createdDate;
     private final UUID linkedId;
-    private final Date catalogEffectiveDate;
+    private final DateTime catalogEffectiveDate;
 
     private BigDecimal currentRepairedAmount;
     private BigDecimal adjustedAmount;

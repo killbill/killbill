@@ -17,21 +17,19 @@
 package org.killbill.billing.payment;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.entity.EntityBase;
 
 public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem {
-    private final BigDecimal rate;
-    private final UUID reversedItemId;
+
     protected final UUID invoiceId;
     protected final UUID accountId;
     protected final UUID subscriptionId;
@@ -45,6 +43,8 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     protected final String usageName;
     protected final Integer quantity;
     protected final String itemDetails;
+    private final BigDecimal rate;
+    private final UUID reversedItemId;
 
     public MockRecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
                                     final String planName, final String phaseName, final String usageName, final LocalDate startDate, final LocalDate endDate,
@@ -186,7 +186,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     public String getItemDetails() { return itemDetails; }
 
     @Override
-    public Date getCatalogEffectiveDate() {
+    public DateTime getCatalogEffectiveDate() {
         return null;
     }
 

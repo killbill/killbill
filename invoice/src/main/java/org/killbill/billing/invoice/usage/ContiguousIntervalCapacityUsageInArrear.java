@@ -18,12 +18,12 @@
 package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -66,7 +66,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final Date catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
+    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
         // Compute final amount by subtracting  amount that was already billed.
         final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 

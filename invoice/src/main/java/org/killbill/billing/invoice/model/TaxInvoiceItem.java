@@ -42,7 +42,7 @@ public class TaxInvoiceItem extends InvoiceItemCatalogBase {
     }
 
     public TaxInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
-                          @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, final Date catalogEffectiveDate,
+                          @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, final DateTime catalogEffectiveDate,
                           @Nullable final String prettyProductName, @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
                           final LocalDate startDate, @Nullable final LocalDate endDate, @Nullable final String description, final BigDecimal amount, final Currency currency, @Nullable final UUID linkedItemId, @Nullable final String itemDetails) {
         super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPhaseName, prettyUsageName, startDate, endDate, amount, null, currency, linkedItemId, null, itemDetails, InvoiceItemType.TAX);

@@ -115,7 +115,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("204.05")));
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
         // RECURRING should be set against V2
-        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate(), catalog.getVersions().get(1).getEffectiveDate());
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
         Assert.assertNull(curInvoice.getInvoiceItems().get(1).getCatalogEffectiveDate());
         Assert.assertNull(curInvoice.getInvoiceItems().get(2).getCatalogEffectiveDate());
 

@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeUtils;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -104,7 +103,7 @@ public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityMod
 
     public InvoiceItemModelDao(final InvoiceItem invoiceItem) {
         this(invoiceItem.getId(), invoiceItem.getCreatedDate(), invoiceItem.getInvoiceItemType(), invoiceItem.getInvoiceId(), invoiceItem.getAccountId(), invoiceItem.getChildAccountId(), invoiceItem.getBundleId(),
-             invoiceItem.getSubscriptionId(), invoiceItem.getDescription(), invoiceItem.getProductName(), invoiceItem.getPlanName(), invoiceItem.getPhaseName(), invoiceItem.getUsageName(), CatalogDateHelper.toUTCDateTime(invoiceItem.getCatalogEffectiveDate()),
+             invoiceItem.getSubscriptionId(), invoiceItem.getDescription(), invoiceItem.getProductName(), invoiceItem.getPlanName(), invoiceItem.getPhaseName(), invoiceItem.getUsageName(), invoiceItem.getCatalogEffectiveDate(),
              invoiceItem.getStartDate(), invoiceItem.getEndDate(),
              invoiceItem.getAmount(), invoiceItem.getRate(), invoiceItem.getCurrency(), invoiceItem.getLinkedItemId(), invoiceItem.getQuantity(), invoiceItem.getItemDetails());
     }

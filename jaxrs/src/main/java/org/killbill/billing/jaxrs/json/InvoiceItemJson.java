@@ -67,7 +67,7 @@ public class InvoiceItemJson extends JsonBase {
     private final Currency currency;
     private final Integer quantity;
     private final String itemDetails;
-    private final Date catalogEffectiveDate;
+    private final DateTime catalogEffectiveDate;
     private List<InvoiceItemJson> childItems;
 
     @JsonCreator
@@ -95,7 +95,7 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("currency") final Currency currency,
                            @JsonProperty("quantity") final Integer quantity,
                            @JsonProperty("itemDetails") final String itemDetails,
-                           @JsonProperty("catalogEffectiveDate") final Date catalogEffectiveDate,
+                           @JsonProperty("catalogEffectiveDate") final DateTime catalogEffectiveDate,
                            @JsonProperty("childItems") final List<InvoiceItemJson> childItems,
                            @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
@@ -265,7 +265,7 @@ public class InvoiceItemJson extends JsonBase {
             public String getItemDetails() { return itemDetails; }
 
             @Override
-            public Date getCatalogEffectiveDate() {
+            public DateTime getCatalogEffectiveDate() {
                 return catalogEffectiveDate;
             }
 
@@ -385,7 +385,7 @@ public class InvoiceItemJson extends JsonBase {
         return childItems;
     }
 
-    public Date getCatalogEffectiveDate() {
+    public DateTime getCatalogEffectiveDate() {
         return catalogEffectiveDate;
     }
 

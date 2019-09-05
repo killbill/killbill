@@ -35,14 +35,14 @@ import com.google.common.base.MoreObjects;
 public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
 
     public RecurringInvoiceItem(final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
-                                final String productName, final String planName, final String phaseName, final Date catalogEffectiveDate,
+                                final String productName, final String planName, final String phaseName, final DateTime catalogEffectiveDate,
                                 final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final BigDecimal rate, final Currency currency) {
         this(UUIDs.randomUUID(), null, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, startDate, endDate, amount, rate, currency);
     }
 
     public RecurringInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
-                                final String productName, final String planName, final String phaseName, final Date catalogEffectiveDate,
+                                final String productName, final String planName, final String phaseName, final DateTime catalogEffectiveDate,
                                 final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final BigDecimal rate, final Currency currency) {
         this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, null, null, null, null, startDate, endDate, amount, rate, currency, null, null);
@@ -50,7 +50,7 @@ public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
 
 
     public RecurringInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
-                                final String productName, final String planName, final String phaseName, final Date catalogEffectiveDate,
+                                final String productName, final String planName, final String phaseName, final DateTime catalogEffectiveDate,
                                 final String prettyProductName, final String prettyPlanName, final String prettyPhaseName,
                                 @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
                                 final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final Integer quantity, @Nullable final String itemDetails) {

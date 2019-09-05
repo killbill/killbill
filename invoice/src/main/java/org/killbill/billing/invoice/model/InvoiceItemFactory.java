@@ -88,7 +88,7 @@ public class InvoiceItemFactory {
         String prettyPlanPhaseName = prettyNames[2];
         String prettyUsageName = prettyNames[3];
 
-        final Date catalogEffectiveDate = invoiceItemModelDao.getCatalogEffectiveDate() != null ? invoiceItemModelDao.getCatalogEffectiveDate().toDate() : null;
+        final DateTime catalogEffectiveDate = invoiceItemModelDao.getCatalogEffectiveDate() != null ? invoiceItemModelDao.getCatalogEffectiveDate() : null;
 
         final InvoiceItem item;
         switch (type) {

@@ -452,7 +452,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                input.getPlanName(),
                                                input.getPhaseName(),
                                                input.getUsageName(),
-                                               CatalogDateHelper.toUTCDateTime(input.getCatalogEffectiveDate()),
+                                               input.getCatalogEffectiveDate(),
                                                input.getStartDate(),
                                                input.getEndDate(),
                                                input.getAmount(),

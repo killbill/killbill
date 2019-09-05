@@ -1639,7 +1639,7 @@ public class AccountResource extends JaxRsResourceBase {
             }
 
             @Override
-            public Date getCatalogEffectiveDate() {
+            public DateTime getCatalogEffectiveDate() {
                 return null;
             }
 

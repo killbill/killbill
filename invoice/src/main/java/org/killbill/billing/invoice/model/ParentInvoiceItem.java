@@ -42,7 +42,7 @@ public class ParentInvoiceItem extends InvoiceItemBase {
     }
 
     @Override
-    public Date getCatalogEffectiveDate() {
+    public DateTime getCatalogEffectiveDate() {
         return null;
     }
 

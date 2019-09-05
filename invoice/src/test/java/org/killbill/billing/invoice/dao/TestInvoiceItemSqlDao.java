@@ -77,7 +77,7 @@ public class TestInvoiceItemSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertNull(result1.getCatalogEffectiveDate());
 
 
-        // No catalogEffectiveDate
+        // With catalogEffectiveDate
         final UUID invoiceItemId2 = UUID.randomUUID();
         final DateTime catalogEffectiveDate = new DateTime().withMillis(0);
         dao.create(new InvoiceItemModelDao(invoiceItemId2, null, InvoiceItemType.FIXED, UUID.randomUUID(), UUID.randomUUID(), null, null, null, "description",
