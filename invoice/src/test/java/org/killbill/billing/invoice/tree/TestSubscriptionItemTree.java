@@ -64,6 +64,40 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     private final String phaseName = "my-phase";
     private final Currency currency = Currency.USD;
 
+
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1205")
+    public void testBlockUnblock() {
+
+        final LocalDate startDate = new LocalDate(2019, 4, 27);
+        final LocalDate blockDate = new LocalDate(2019, 5, 3);
+        final LocalDate endDate = new LocalDate(2019, 5, 27);
+
+        final BigDecimal rate = new BigDecimal("29.95");
+        final BigDecimal amount = rate;
+
+        final InvoiceItem recurring1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, startDate, endDate, amount, rate, currency);
+        final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate, endDate, new BigDecimal("-23.96"), currency, recurring1.getId());
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(recurring1);
+        tree.addItem(repair1);
+        tree.build();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        expectedResult.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, startDate, blockDate, new BigDecimal("5.99"), rate, currency));
+
+        verifyResult(tree.getView(), expectedResult);
+
+        tree.flatten(true);
+        tree.buildForMerge();
+
+        expectedResult.clear();
+        expectedResult.addAll(ImmutableList.of(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, blockDate, new BigDecimal("-5.99"), currency, recurring1.getId())));
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+
+
     @Test(groups = "fast", description = "Complex multi-level tree, mostly used to test the tree printer")
     public void testMultipleLevels() throws Exception {
         final LocalDate startDate = new LocalDate(2014, 1, 1);
@@ -541,6 +575,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         } catch (final IllegalStateException e) {
         }
     }
+
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testDoubleBillingOnDifferentInvoices() {
