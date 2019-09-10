@@ -333,7 +333,7 @@ public class InvoiceDispatcher {
         try {
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, dryRunArguments, context);
-            if (billingEvents.isEmpty()) {
+            if (billingEvents.isAccountAutoInvoiceOff()) {
                 return null;
             }
 
