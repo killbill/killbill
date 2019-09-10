@@ -110,7 +110,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2019, 4, 27), new LocalDate(2019, 5, 17), InvoiceItemType.RECURRING, new BigDecimal("9.98")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2019, 5, 17), new LocalDate(2019, 5, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("5.99")));
-                                    
+
          */
 
     }
