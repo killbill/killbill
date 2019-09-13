@@ -76,7 +76,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final BigDecimal rate = new BigDecimal("29.95");
         final BigDecimal amount = rate;
 
-        final InvoiceItem recurring1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, startDate, endDate, amount, rate, currency);
+        final InvoiceItem recurring1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, amount, rate, currency);
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate, endDate, new BigDecimal("-23.96"), currency, recurring1.getId());
         final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(recurring1);
@@ -84,7 +84,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.build();
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
-        expectedResult.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, startDate, blockDate, new BigDecimal("5.99"), rate, currency));
+        expectedResult.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, blockDate, new BigDecimal("5.99"), rate, currency));
 
         verifyResult(tree.getView(), expectedResult);
 

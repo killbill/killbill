@@ -257,7 +257,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         final InvoiceModelDao firstInvoice = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, new LocalDate(2019, 4, 27), new LocalDate(2019, 4, 27), account.getCurrency(), false, InvoiceStatus.COMMITTED, false);
         final UUID initialRecuringItemId = UUID.randomUUID();
         firstInvoice.addInvoiceItem(new InvoiceItemModelDao(initialRecuringItemId, clock.getUTCNow(), InvoiceItemType.RECURRING, firstInvoice.getId(), account.getId(), null, null, entitlementId, "",
-                                                            "Blowdart", "blowdart-monthly-notrial", "blowdart-monthly-notrial-evergreen", null,
+                                                            "Blowdart", "blowdart-monthly-notrial", "blowdart-monthly-notrial-evergreen", null, null,
                                                             new LocalDate(2019, 4, 27), new LocalDate(2019, 5, 27),
                                                             new BigDecimal("29.95"), new BigDecimal("29.95"), account.getCurrency(), null, null, null));
 
@@ -266,7 +266,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         // Invoice 2: REPAIR_ADJ 2019-5-3 -> 2019-5-27 => Simulate the BLOCK billing on 2019-5-3
         final InvoiceModelDao secondInvoice = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, new LocalDate(2019, 5, 3), new LocalDate(2019, 5, 3), account.getCurrency(), false, InvoiceStatus.COMMITTED, false);
         secondInvoice.addInvoiceItem(new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.REPAIR_ADJ, secondInvoice.getId(), account.getId(), null, null, entitlementId, "",
-                                                             null, null, null, null,
+                                                             null, null, null, null, null,
                                                              new LocalDate(2019, 5, 3), new LocalDate(2019, 5, 27),
                                                              new BigDecimal("-23.96"), null, account.getCurrency(), initialRecuringItemId, null, null));
         insertInvoiceItems(secondInvoice);
@@ -277,12 +277,12 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         final InvoiceModelDao thirdInvoice = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, new LocalDate(2019, 5, 3), new LocalDate(2019, 5, 3), account.getCurrency(), false, InvoiceStatus.COMMITTED, false);
         final UUID secondRecurringItemId = UUID.randomUUID();
         thirdInvoice.addInvoiceItem(new InvoiceItemModelDao(secondRecurringItemId, clock.getUTCNow(), InvoiceItemType.RECURRING, thirdInvoice.getId(), account.getId(), null, null, entitlementId, "",
-                                                            "Blowdart", "blowdart-monthly-notrial", "blowdart-monthly-notrial-evergreen", null,
+                                                            "Blowdart", "blowdart-monthly-notrial", "blowdart-monthly-notrial-evergreen", null, null,
                                                             new LocalDate(2019, 4, 27), new LocalDate(2019, 5, 27),
                                                             new BigDecimal("29.95"), new BigDecimal("29.95"), account.getCurrency(), null, null, null));
 
         thirdInvoice.addInvoiceItem(new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.REPAIR_ADJ, thirdInvoice.getId(), account.getId(), null, null, entitlementId, "",
-                                                            null, null, null, null,
+                                                            null, null, null, null, null,
                                                             new LocalDate(2019, 4, 27), new LocalDate(2019, 5, 03),
                                                             new BigDecimal("-5.99"), null, account.getCurrency(), initialRecuringItemId, null, null));
         insertInvoiceItems(thirdInvoice);
@@ -291,7 +291,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         final InvoiceModelDao fourthInvoice = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, new LocalDate(2019, 5, 17), new LocalDate(2019, 5, 17), account.getCurrency(), false, InvoiceStatus.COMMITTED, false);
 
         fourthInvoice.addInvoiceItem(new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.REPAIR_ADJ, fourthInvoice.getId(), account.getId(), null, null, entitlementId, "",
-                                                             null, null, null, null,
+                                                             null, null, null, null, null,
                                                              new LocalDate(2019, 5, 17), new LocalDate(2019, 5, 27),
                                                              new BigDecimal("-9.98"), null, account.getCurrency(), secondRecurringItemId, null, null));
 
@@ -301,7 +301,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         final InvoiceModelDao fifthInvoice = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, new LocalDate(2019, 5, 17), new LocalDate(2019, 5, 17), account.getCurrency(), false, InvoiceStatus.COMMITTED, false);
         final UUID thirdRecurringItemId = UUID.randomUUID();
         fifthInvoice.addInvoiceItem(new InvoiceItemModelDao(thirdRecurringItemId, clock.getUTCNow(), InvoiceItemType.RECURRING, fifthInvoice.getId(), account.getId(), null, null, entitlementId, "",
-                                                            "Blowdart", "blowdart-monthly-notrial", "blowdart-monthly-notrial-evergreen", null,
+                                                            "Blowdart", "blowdart-monthly-notrial", "blowdart-monthly-notrial-evergreen", null, null,
                                                             new LocalDate(2019, 4, 27), new LocalDate(2019, 5, 17),
                                                             new BigDecimal("5.99"), new BigDecimal("29.95"), account.getCurrency(), null, null, null));
 
@@ -338,7 +338,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
 
-        invoiceDao.createInvoice(invoice, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, internalCallContext);
+        invoiceDao.createInvoice(invoice, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
     }
     private void verifyNoInvoiceDueOnDate(final UUID accountId, final LocalDate targetDate) {
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
