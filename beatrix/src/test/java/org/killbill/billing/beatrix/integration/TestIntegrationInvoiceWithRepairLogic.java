@@ -668,7 +668,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         // Move clock to 2013-09-17
         clock.addDays(30);
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
