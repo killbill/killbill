@@ -168,7 +168,7 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
 
-        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(1, 1, childAccount);
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(1, 3, childAccount);
 
         // check invoice generated after clear child account
         invoiceChecker.checkInvoice(childAccount.getId(), 3, callContext,
@@ -262,7 +262,7 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         checkODState("OD2", childAccount3.getId());
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, childAccountNoPaymentDelegated.getId());
 
-        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(0, 4, childAccount1, childAccount2, childAccount3);
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(0, 8, childAccount1, childAccount2, childAccount3);
 
     }
 

@@ -533,12 +533,16 @@ public class TestConsumableInArrear extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
 
-        // 2012-04-21 -- block billing effective date is 2012-04-01
+        // 2012-05-21 -- block billing effective date is 2012-04-01
         clock.addDays(20);
-        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         final BlockingState blockingState1 = new DefaultBlockingState(bpSubscription.getBundleId(), BlockingStateType.SUBSCRIPTION_BUNDLE, "state1", "Service", true, true, true, null);
         subscriptionApi.addBlockingState(blockingState1, new LocalDate(2012, 4, 1), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2399.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 21), new LocalDate(2012, 5, 21), InvoiceItemType.CBA_ADJ, new BigDecimal("2399.95")));
 
     }
 }

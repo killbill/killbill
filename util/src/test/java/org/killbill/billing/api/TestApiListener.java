@@ -63,7 +63,7 @@ public class TestApiListener {
 
     private static final Joiner SPACE_JOINER = Joiner.on(" ");
 
-    private static final long DELAY = 60000;
+    private static final long DELAY = 10000;
 
     private final List<NextEvent> nextExpectedEvent;
     private final IDBI idbi;
@@ -80,6 +80,21 @@ public class TestApiListener {
         this.completed = false;
         this.idbi = idbi;
         this.clock = clock;
+    }
+
+    // In some (rare) cases we don't want to listen to events -- e.g event processing causes exceptions
+    public void waitAndIgnoreEvents(long waitMsec) {
+
+        long remaining = waitMsec;
+        try {
+            do {
+                Thread.sleep(100);
+                remaining -= 100;
+            } while(remaining > 0);
+        } catch(InterruptedException ignored) {
+        } finally {
+            reset();
+        }
     }
 
     public void assertListenerStatus() {

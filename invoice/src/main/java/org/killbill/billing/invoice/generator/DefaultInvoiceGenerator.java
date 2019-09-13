@@ -79,7 +79,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                final LocalDate targetDate,
                                                final Currency targetCurrency,
                                                final InternalCallContext context) throws InvoiceApiException {
-        if ((events == null) || (events.size() == 0) || events.isAccountAutoInvoiceOff()) {
+        if ((events == null)  || events.isAccountAutoInvoiceOff()) {
             return new InvoiceWithMetadata(null, ImmutableSet.of(), ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of());
         }
 
