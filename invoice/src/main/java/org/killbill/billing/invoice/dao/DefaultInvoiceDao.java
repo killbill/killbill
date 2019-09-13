@@ -1018,7 +1018,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // First, adjust the same invoice with the CBA amount to "delete"
                 final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
-                                                                               null, null, null, null, null, null, null, context.getCreatedDate().toLocalDate(),
+                                                                               null, null, null, null, null, null, null, null, context.getCreatedDate().toLocalDate(),
                                                                                null, cbaItem.getAmount().negate(), null, cbaItem.getCurrency(), cbaItem.getId());
                 createInvoiceItemFromTransaction(invoiceItemSqlDao, cbaAdjItem, context);
 
@@ -1074,7 +1074,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                         // Add the adjustment on that invoice
                         final InvoiceItemModelDao nextCBAAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoiceFollowing.getId(),
-                                                                                           invoice.getAccountId(), null, null, null, null, null, null, null,
+                                                                                           invoice.getAccountId(), null, null, null, null, null, null, null, null,
                                                                                            context.getCreatedDate().toLocalDate(), null,
                                                                                            positiveCBAAdjItemAmount, null, cbaItem.getCurrency(), cbaItem.getId());
                         createInvoiceItemFromTransaction(invoiceItemSqlDao, nextCBAAdjItem, context);

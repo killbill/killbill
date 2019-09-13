@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.format.ISODateTimeFormat;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.JaxrsResource;
@@ -91,6 +92,10 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceItem.getPrettyPlanName(), "Shotgun Monthly");
         assertEquals(invoiceItem.getPhaseName(), "shotgun-monthly-trial");
         assertEquals(invoiceItem.getPrettyPhaseName(), "shotgun-monthly-trial");
+
+        // Check item is correctly returned with catalog effective date
+        assertEquals(invoiceItem.getCatalogEffectiveDate().compareTo(ISODateTimeFormat.dateTimeParser().parseDateTime("2011-01-01T00:00:00+00:00")), 0);
+
 
         assertEquals(invoiceApi.getInvoice(invoiceJson.getInvoiceId(), Boolean.TRUE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
         assertEquals(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());

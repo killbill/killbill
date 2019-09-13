@@ -143,7 +143,7 @@ public class TestInvoiceFlagBehaviors extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, accountId, clock.getUTCToday(), "some description", BigDecimal.TEN, accountCurrency, null);
         invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
 
-        final UUID invoiceId = invoiceUserApi.createMigrationInvoice(accountId, null, ImmutableList.<InvoiceItem>of(new FixedPriceInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, "foo", "bar", null, null, BigDecimal.ONE, accountCurrency)), callContext);
+        final UUID invoiceId = invoiceUserApi.createMigrationInvoice(accountId, null, ImmutableList.<InvoiceItem>of(new FixedPriceInvoiceItem(UUID.randomUUID(), clock.getUTCNow(), null, accountId, null, null, null, "foo", "bar", null, null, null, BigDecimal.ONE, accountCurrency)), callContext);
 
         final Invoice invoice1 = invoiceUserApi.getInvoice(invoiceId, callContext);
         assertEquals(invoice1.getBalance().compareTo(BigDecimal.ZERO), 0);

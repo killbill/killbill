@@ -17,9 +17,11 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -57,7 +59,7 @@ public class TestInvoiceItemJsonSimple extends JaxrsTestSuiteNoDB {
                                                                     bundleId, subscriptionId, productName, planName, phaseName, usageName,
                                                                     null, null, null, null,
                                                                     type, description,
-                                                                    startDate, endDate, amount, null, currency, null, null, null, auditLogs);
+                                                                    startDate, endDate, amount, null, currency, null, null, new DateTime(), null, auditLogs);
         Assert.assertEquals(invoiceItemJson.getInvoiceItemId(), invoiceItemId);
         Assert.assertEquals(invoiceItemJson.getInvoiceId(), invoiceId);
         Assert.assertEquals(invoiceItemJson.getLinkedInvoiceItemId(), linkedInvoiceItemId);

@@ -78,7 +78,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     protected Currency currency;
     protected String usageName;
     protected ObjectMapper objectMapper;
-
+    protected DateTime catalogEffectiveDate;
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
         if (hasFailed()) {
@@ -95,6 +95,8 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         productName = "productName";
         planName = "planName";
         phaseName = "phaseName";
+        catalogEffectiveDate = clock.getUTCNow();
+
         currency = Currency.USD;
         usageDetailMode = invoiceConfig.getItemResultBehaviorMode(internalCallContext);
         objectMapper = new ObjectMapper();
@@ -178,11 +180,11 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         return block;
     }
 
-    protected BillingEvent createMockBillingEvent(final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) throws Exception {
-        return createMockBillingEvent(BCD, effectiveDate, billingPeriod, usages);
+    protected BillingEvent createMockBillingEvent(final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages, final DateTime catalogEffectiveDate) throws Exception {
+        return createMockBillingEvent(BCD, effectiveDate, billingPeriod, usages, catalogEffectiveDate);
     }
 
-    protected BillingEvent createMockBillingEvent(final int bcd, final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages) throws Exception {
+    protected BillingEvent createMockBillingEvent(final int bcd, final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages, final DateTime catalogEffectiveDate) throws Exception {
         final BillingEvent result = Mockito.mock(BillingEvent.class);
         Mockito.when(result.getCurrency()).thenReturn(currency);
         Mockito.when(result.getBillCycleDayLocal()).thenReturn(bcd);
@@ -190,6 +192,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         Mockito.when(result.getBillingPeriod()).thenReturn(billingPeriod);
         Mockito.when(result.getSubscriptionId()).thenReturn(subscriptionId);
         Mockito.when(result.getBundleId()).thenReturn(bundleId);
+        Mockito.when(result.getCatalogEffectiveDate()).thenReturn(catalogEffectiveDate);
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);

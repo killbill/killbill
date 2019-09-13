@@ -108,5 +108,5 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the catalog version (effective date) associated with this billing event.
      */
-    public DateTime getCatalogEffectiveDate();
+    DateTime getCatalogEffectiveDate();
 }

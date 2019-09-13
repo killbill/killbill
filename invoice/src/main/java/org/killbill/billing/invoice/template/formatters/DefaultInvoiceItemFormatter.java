@@ -18,6 +18,7 @@ package org.killbill.billing.invoice.template.formatters;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.util.Date;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.UUID;
@@ -207,6 +208,11 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public String getItemDetails() { return item.getItemDetails(); }
+
+    @Override
+    public DateTime getCatalogEffectiveDate() {
+        return item.getCatalogEffectiveDate();
+    }
 
     @Override
     public boolean matches(final Object other) {
