@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -606,7 +606,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments2.get(0).getTransactions().get(1).getProcessedCurrency(), Currency.USD);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Verify notifyPendingTransactionOfStateChanged behavior for PENDING->SUCCESS")
     public void testWithPendingPaymentThenSuccess() throws Exception {
         // Verify integration with Overdue in that particular test
         final String configXml = "<overdueConfig>" +
@@ -716,7 +716,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments2.get(0).getPaymentAttempts().get(0).getStateName(), "SUCCESS");
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Verify notifyPendingTransactionOfStateChanged behavior for PENDING->FAILURE")
     public void testWithPendingPaymentThenFailure() throws Exception {
         clock.setDay(new LocalDate(2012, 4, 1));
 
@@ -793,7 +793,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments2.get(0).getPaymentAttempts().get(0).getStateName(), "ABORTED");
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Verify fixPaymentTransactionState behavior for SUCCESS->FAILURE")
     public void testWithSuccessfulPaymentFixedToFailure() throws Exception {
         // Verify integration with Overdue in that particular test
         final String configXml = "<overdueConfig>" +
@@ -898,7 +898,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         checkODState("OD1", account.getId());
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Verify fixPaymentTransactionState behavior for FAILURE->SUCCESS")
     public void testWithFailedPaymentFixedToSuccess() throws Exception {
         // Verify integration with Overdue in that particular test
         final String configXml = "<overdueConfig>" +
@@ -1042,7 +1042,6 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertEquals(invoice2.getBalance().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
 
-
         final PaymentTransaction originalTransaction = originalPayment.getTransactions().get(0);
 
         // Let 's hack invoice_payment table by hand to simulate a non completion of the payment (onSuccessCall was never called)
@@ -1097,7 +1096,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", description = "Verify fixPaymentTransactionState behavior for UNKNOWN->SUCCESS")
     public void testWithUNKNOWNPaymentFixedToSuccess() throws Exception {
         // Verify integration with Overdue in that particular test
         final String configXml = "<overdueConfig>" +
@@ -1232,8 +1231,8 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments2.get(0).getPaymentAttempts().get(0).getStateName(), "SUCCESS");
     }
 
-    @Test(groups = "slow")
-    public void testWithUNKNOWNPaymentFixedToSuccessViaJanitorFlow() throws Exception {
+    @Test(groups = "slow", description = "Verify getPayment behavior for UNKNOWN->SUCCESS -- https://github.com/killbill/killbill/issues/1017")
+    public void testWithUNKNOWNPaymentFixedToSuccessViaGETJanitorFlow() throws Exception {
         // Verify integration with Overdue in that particular test
         final String configXml = "<overdueConfig>" +
                                  "   <accountOverdueStates>" +

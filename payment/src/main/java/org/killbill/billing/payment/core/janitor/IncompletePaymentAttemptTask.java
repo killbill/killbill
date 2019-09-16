@@ -164,9 +164,16 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         }
     }
 
-    @Override
     public void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) {
-        // Nothing
+        if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(event.getStatus())) {
+            return;
+        }
+        insertNewNotificationForUnresolvedTransactionIfNeeded(event.getPaymentTransactionId(),
+                                                              event.getStatus(),
+                                                              0,
+                                                              event.getUserToken(),
+                                                              event.getSearchKey1(),
+                                                              event.getSearchKey2());
     }
 
     private DateTime getCreatedDateBefore() {
