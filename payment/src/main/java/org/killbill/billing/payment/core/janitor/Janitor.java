@@ -86,8 +86,9 @@ public class Janitor {
 
                                                                                 }
                                                                                 final JanitorNotificationKey janitorKey = (JanitorNotificationKey) notificationKey;
+                                                                                // Backward compatibility: keep the class name as-is
                                                                                 if (janitorKey.getTaskName().equals(incompletePaymentTransactionTask.getClass().toString())) {
-                                                                                    incompletePaymentTransactionTask.processNotification(janitorKey, userToken, accountRecordId, tenantRecordId);
+                                                                                    incompletePaymentAttemptTask.processNotification(janitorKey, userToken, accountRecordId, tenantRecordId);
                                                                                 }
                                                                             }
                                                                         }

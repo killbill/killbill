@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.janitor;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -45,6 +46,7 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
+import org.killbill.commons.locker.LockFailedException;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +72,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
     private static final long MAX_ATTEMPTS_PER_ITERATIONS = 1000L;
 
     private final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
+    private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
 
     @Inject
     public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory,
@@ -80,9 +83,11 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
                                         final PaymentControlStateMachineHelper retrySMHelper,
                                         final AccountInternalApi accountInternalApi,
                                         final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
-                                        final GlobalLocker locker) {
+                                        final GlobalLocker locker,
+                                        final IncompletePaymentTransactionTask incompletePaymentTransactionTask) {
         super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, locker);
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
+        this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
     }
 
     @Override
@@ -162,6 +167,24 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         } catch (final PaymentApiException e) {
             log.warn("Error completing paymentAttemptId='{}'", attempt.getId(), e);
         }
+    }
+
+    protected void processNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) {
+        try {
+            tryToProcessNotification(notificationKey, userToken, accountRecordId, tenantRecordId);
+        } catch (final LockFailedException e) {
+            log.warn("Error locking accountRecordId='{}', will attempt to retry later", accountRecordId, e);
+
+            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
+            final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(notificationKey.getUuidKey(), internalTenantContext);
+            if (TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
+                insertNewNotificationForUnresolvedTransactionIfNeeded(notificationKey.getUuidKey(), paymentTransaction.getTransactionStatus(), notificationKey.getAttemptNumber(), userToken, accountRecordId, tenantRecordId);
+            }
+        }
+    }
+
+    protected void tryToProcessNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) throws LockFailedException {
+        incompletePaymentTransactionTask.tryToProcessNotification(notificationKey, userToken, accountRecordId, tenantRecordId);
     }
 
     public void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) {

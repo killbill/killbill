@@ -74,7 +74,7 @@ public class TestCompletionTaskBase extends PaymentTestSuiteWithEmbeddedDB {
         private final Iterable<PaymentAttemptModelDao> itemsForIteration;
 
         public IncompletePaymentAttemptTaskWithException(final Iterable<PaymentAttemptModelDao> itemsForIteration, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig, final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper, final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi, final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final GlobalLocker locker) {
-            super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, locker);
+            super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, locker, incompletePaymentTransactionTask);
             this.itemsForIteration = itemsForIteration;
         }
 
