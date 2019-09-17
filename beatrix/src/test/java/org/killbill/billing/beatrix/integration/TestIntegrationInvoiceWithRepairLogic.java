@@ -828,7 +828,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     //
     //    Full item adjustments scenarios
     //
-    //    Case V1: Cancellation EOT => Balance is $0 and nothing to regenerate
+    //    Case V1: Cancellation SOT => Balance is $0 and nothing to regenerate
     //    Case V2: Cancellation IMM => Balance is $0 and regenerate the new piece (proposed item)
     //    Case V3: Cancellation EOT => Balance is $0 and nothing to regenerate  **** Our weird behavior ov V3 behaving like V1 ****
 
