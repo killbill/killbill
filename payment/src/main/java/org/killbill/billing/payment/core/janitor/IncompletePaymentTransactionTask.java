@@ -17,7 +17,6 @@
 
 package org.killbill.billing.payment.core.janitor;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,11 +26,11 @@ import javax.inject.Inject;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
+import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -56,6 +55,8 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+// Janitor implementation for payment transactions only (see IncompletePaymentAttemptTask for payments going through the control APIs).
+// Invoked on-the-fly or as part of the Janitor notification queue
 public class IncompletePaymentTransactionTask extends CompletionTaskBase<PaymentTransactionModelDao> {
 
     private static final Logger log = LoggerFactory.getLogger(IncompletePaymentTransactionTask.class);
@@ -195,42 +196,23 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             return transactionStatus;
         }
 
-        // Update processedAmount and processedCurrency
-        final BigDecimal processedAmount;
-        if (TransactionStatus.SUCCESS.equals(transactionStatus) || TransactionStatus.PENDING.equals(transactionStatus)) {
-            if (paymentTransactionInfoPlugin == null || paymentTransactionInfoPlugin.getAmount() == null) {
-                processedAmount = paymentTransaction.getProcessedAmount();
-            } else {
-                processedAmount = paymentTransactionInfoPlugin.getAmount();
-            }
-        } else {
-            processedAmount = BigDecimal.ZERO;
-        }
-        final Currency processedCurrency;
-        if (paymentTransactionInfoPlugin == null || paymentTransactionInfoPlugin.getCurrency() == null) {
-            processedCurrency = paymentTransaction.getProcessedCurrency();
-        } else {
-            processedCurrency = paymentTransactionInfoPlugin.getCurrency();
-        }
-
-        // Update the gatewayErrorCode, gatewayError if we got a paymentTransactionInfoPlugin
-        final String gatewayErrorCode = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayErrorCode() : paymentTransaction.getGatewayErrorCode();
-        final String gatewayError = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin.getGatewayError() : paymentTransaction.getGatewayErrorMsg();
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+        final PaymentAutomatonDAOHelper paymentAutomatonDAOHelper = new PaymentAutomatonDAOHelper(paymentDao,
+                                                                                                  internalCallContext,
+                                                                                                  paymentStateMachineHelper);
 
         log.info("Repairing paymentId='{}', paymentTransactionId='{}', currentTransactionStatus='{}', newTransactionStatus='{}'",
                  paymentId, paymentTransaction.getId(), paymentTransaction.getTransactionStatus(), transactionStatus);
-
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, callContext);
-
-        // Recompute new lastSuccessPaymentState. This is important to be able to allow new operations on the state machine (for e.g an AUTH_SUCCESS would now allow a CAPTURE operation)
-        if (paymentStateMachineHelper.isSuccessState(newPaymentState)) {
-            final String lastSuccessPaymentState = newPaymentState;
-            paymentDao.updatePaymentAndTransactionOnCompletion(accountId, paymentTransaction.getAttemptId(), paymentId, paymentTransaction.getTransactionType(), newPaymentState, lastSuccessPaymentState,
-                                                               paymentTransaction.getId(), transactionStatus, processedAmount, processedCurrency, gatewayErrorCode, gatewayError, internalCallContext);
-        } else {
-            paymentDao.updatePaymentAndTransactionOnCompletion(accountId, paymentTransaction.getAttemptId(), paymentId, paymentTransaction.getTransactionType(), newPaymentState,
-                                                               paymentTransaction.getId(), transactionStatus, processedAmount, processedCurrency, gatewayErrorCode, gatewayError, internalCallContext);
-        }
+        paymentAutomatonDAOHelper.processPaymentInfoPlugin(transactionStatus,
+                                                           paymentTransactionInfoPlugin,
+                                                           newPaymentState,
+                                                           paymentTransaction.getProcessedAmount(),
+                                                           paymentTransaction.getProcessedCurrency(),
+                                                           accountId,
+                                                           paymentTransaction.getAttemptId(),
+                                                           paymentId,
+                                                           paymentTransaction.getId(),
+                                                           paymentTransaction.getTransactionType());
 
         return null;
     }

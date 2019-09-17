@@ -55,6 +55,8 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+    // Very similar implementation as the Janitor (see IncompletePaymentTransactionTask / IncompletePaymentAttemptTask)
+    // The code is different enough to make it difficult to share unfortunately
     @Override
     public void fixPaymentTransactionState(final Payment payment,
                                            final PaymentTransaction paymentTransaction,
