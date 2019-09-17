@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -97,10 +95,10 @@ abstract class CompletionTaskBase<T> {
 
     public interface JanitorIterationCallback {
 
-        public <T> T doIteration();
+        public Boolean doIteration();
     }
 
-    protected <T> T doJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) {
+    protected Boolean doJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) {
         try {
             return tryToDoJanitorOperationWithAccountLock(callback, internalTenantContext);
         } catch (final LockFailedException e) {
@@ -109,7 +107,7 @@ abstract class CompletionTaskBase<T> {
         return null;
     }
 
-    protected <T> T tryToDoJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) throws LockFailedException {
+    protected Boolean tryToDoJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) throws LockFailedException {
         GlobalLock lock = null;
         try {
             final ImmutableAccountData account = accountInternalApi.getImmutableAccountDataByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
@@ -130,12 +128,12 @@ abstract class CompletionTaskBase<T> {
         return new DefaultCallContext(null, tenantContext.getTenantId(), taskName, CallOrigin.INTERNAL, UserType.SYSTEM, UUIDs.randomUUID(), clock);
     }
 
-    protected void insertNewNotificationForUnresolvedTransactionIfNeeded(final UUID paymentTransactionId, final TransactionStatus transactionStatus, @Nullable final Integer attemptNumber, @Nullable final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        // When we come from a GET path, we don't want to insert a new notification
-        if (attemptNumber == null) {
-            return;
-        }
-
+    protected void insertNewNotificationForUnresolvedTransactionIfNeeded(final UUID paymentTransactionId,
+                                                                         final TransactionStatus transactionStatus,
+                                                                         final Integer attemptNumber,
+                                                                         final UUID userToken,
+                                                                         final Long accountRecordId,
+                                                                         final Long tenantRecordId) {
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
 
         // Increment value before we insert

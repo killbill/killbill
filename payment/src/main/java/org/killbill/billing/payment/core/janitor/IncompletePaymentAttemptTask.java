@@ -223,7 +223,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
     }
 
     protected void tryToProcessNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) throws LockFailedException {
-        incompletePaymentTransactionTask.tryToProcessNotification(notificationKey, userToken, accountRecordId, tenantRecordId);
+        incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeededWithAccountLock(notificationKey, userToken, accountRecordId, tenantRecordId);
     }
 
     public void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) {

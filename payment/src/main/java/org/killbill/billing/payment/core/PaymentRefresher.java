@@ -87,6 +87,7 @@ import com.google.common.collect.Ordering;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationFromPlugins;
 
+// Retrieve payment(s), making sure the Janitor is invoked (on-the-fly Janitor)
 public class PaymentRefresher extends ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentRefresher.class);
@@ -116,6 +117,7 @@ public class PaymentRefresher extends ProcessorBase {
     protected void onJanitorChange(final PaymentTransactionModelDao curPaymentTransactionModelDao,
                                    final InternalTenantContext internalTenantContext) {}
 
+    // Invoke the Janitor on-the-fly for all GET operations and for most payment operations (except notifyPendingPaymentOfStateChanged)
     public PaymentModelDao invokeJanitor(final PaymentModelDao curPaymentModelDao,
                                          final Collection<PaymentTransactionModelDao> curTransactionsModelDao,
                                          @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions,
@@ -400,7 +402,7 @@ public class PaymentRefresher extends ProcessorBase {
         return toPayment(paymentModelDao, transactionsForPayment, pluginTransactions, withAttempts, tenantContextWithAccountRecordId);
     }
 
-    // Used in bulk get API (getAccountPayments)
+    // Used in both single get APIs and bulk get APIs
     private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Collection<PaymentTransactionModelDao> allTransactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final boolean withAttempts, final InternalTenantContext internalTenantContext) {
         // Need to filter for optimized codepaths looking up by account_record_id
         final Collection<PaymentTransactionModelDao> transactionsModelDao = new LinkedList<PaymentTransactionModelDao>(Collections2.filter(allTransactionsModelDao, new Predicate<PaymentTransactionModelDao>() {
