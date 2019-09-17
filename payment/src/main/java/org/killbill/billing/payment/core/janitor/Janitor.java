@@ -26,7 +26,6 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.payment.core.PaymentExecutors;
-import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
@@ -102,7 +101,6 @@ public class Janitor {
         this.isStopped = false;
 
         incompletePaymentAttemptTask.start();
-        incompletePaymentTransactionTask.start();
 
         janitorExecutor = paymentExecutors.getJanitorExecutorService();
 
@@ -112,11 +110,6 @@ public class Janitor {
         final TimeUnit attemptCompletionRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
         final long attemptCompletionPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
         janitorExecutor.scheduleAtFixedRate(incompletePaymentAttemptTask, attemptCompletionPeriod, attemptCompletionPeriod, attemptCompletionRateUnit);
-
-        // Start task for completing incomplete payment attempts
-        final TimeUnit erroredCompletionRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
-        final long erroredCompletionPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
-        janitorExecutor.scheduleAtFixedRate(incompletePaymentTransactionTask, erroredCompletionPeriod, erroredCompletionPeriod, erroredCompletionRateUnit);
     }
 
     public void stop() throws NoSuchNotificationQueue {
@@ -126,7 +119,6 @@ public class Janitor {
         }
 
         incompletePaymentAttemptTask.stop();
-        incompletePaymentTransactionTask.stop();
 
         try {
             /* Previously submitted tasks will be executed with shutdown(); when task executes as a result of shutdown being called

@@ -18,7 +18,6 @@
 package org.killbill.billing.payment.core.janitor;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,7 +54,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
-abstract class CompletionTaskBase<T> implements Runnable {
+abstract class CompletionTaskBase<T> {
 
     private static final Logger log = LoggerFactory.getLogger(CompletionTaskBase.class);
 
@@ -74,8 +73,6 @@ abstract class CompletionTaskBase<T> implements Runnable {
 
     protected NotificationQueue janitorQueue;
 
-    private volatile boolean isStopped;
-
     public CompletionTaskBase(final InternalCallContextFactory internalCallContextFactory,
                               final PaymentConfig paymentConfig,
                               final PaymentDao paymentDao,
@@ -92,55 +89,14 @@ abstract class CompletionTaskBase<T> implements Runnable {
         this.retrySMHelper = retrySMHelper;
         this.accountInternalApi = accountInternalApi;
         this.locker = locker;
-        this.isStopped = false;
     }
-
-    @Override
-    public void run() {
-        if (isStopped) {
-            log.info("Janitor was requested to stop");
-            return;
-        }
-
-        final Iterator<T> iterator = getItemsForIteration().iterator();
-        try {
-            while (iterator.hasNext()) {
-                final T item = iterator.next();
-                if (isStopped) {
-                    log.info("Janitor was requested to stop");
-                    return;
-                }
-                try {
-                    doIteration(item);
-                } catch (final Exception e) {
-                    log.warn(e.getMessage());
-                }
-            }
-        } finally {
-            // In case the loop stops early, make sure to close the underlying DB connection
-            while (iterator.hasNext()) {
-                iterator.next();
-            }
-        }
-    }
-
-    public synchronized void start() {
-        this.isStopped = false;
-    }
-
-    public synchronized void stop() {
-        this.isStopped = true;
-    }
-
-    public abstract Iterable<T> getItemsForIteration();
-
-    public abstract void doIteration(final T item);
 
     public void attachJanitorQueue(final NotificationQueue janitorQueue) {
         this.janitorQueue = janitorQueue;
     }
 
     public interface JanitorIterationCallback {
+
         public <T> T doIteration();
     }
 

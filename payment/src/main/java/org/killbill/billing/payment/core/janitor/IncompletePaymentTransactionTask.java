@@ -76,17 +76,6 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         this.paymentPluginServiceRegistration = paymentPluginServiceRegistration;
     }
 
-    @Override
-    public Iterable<PaymentTransactionModelDao> getItemsForIteration() {
-        // This is not triggered by Janitor proper but instead relies on bus event + notificationQ
-        return ImmutableList.of();
-    }
-
-    @Override
-    public void doIteration(final PaymentTransactionModelDao paymentTransaction) {
-        // Nothing
-    }
-
     protected void tryToProcessNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) throws LockFailedException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
         tryToDoJanitorOperationWithAccountLock(new JanitorIterationCallback() {

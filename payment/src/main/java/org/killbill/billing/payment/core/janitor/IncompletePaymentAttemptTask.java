@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.janitor;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,7 +62,7 @@ import com.google.common.collect.Iterables;
  * If the state of the transaction associated with the attempt completed, but the attempt state machine did not,
  * we rerun the retry state machine to complete the call and transition the attempt into a terminal state.
  */
-public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttemptModelDao> {
+public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttemptModelDao> implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(IncompletePaymentAttemptTask.class);
 
@@ -73,6 +74,8 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
 
     private final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
+
+    private volatile boolean isStopped;
 
     @Inject
     public IncompletePaymentAttemptTask(final InternalCallContextFactory internalCallContextFactory,
@@ -88,9 +91,46 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, locker);
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
         this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
+        this.isStopped = false;
+    }
+
+    public synchronized void start() {
+        this.isStopped = false;
+    }
+
+    public synchronized void stop() {
+        this.isStopped = true;
     }
 
     @Override
+    public void run() {
+        if (isStopped) {
+            log.info("Janitor was requested to stop");
+            return;
+        }
+
+        final Iterator<PaymentAttemptModelDao> iterator = getItemsForIteration().iterator();
+        try {
+            while (iterator.hasNext()) {
+                final PaymentAttemptModelDao item = iterator.next();
+                if (isStopped) {
+                    log.info("Janitor was requested to stop");
+                    return;
+                }
+                try {
+                    doIteration(item);
+                } catch (final Exception e) {
+                    log.warn(e.getMessage());
+                }
+            }
+        } finally {
+            // In case the loop stops early, make sure to close the underlying DB connection
+            while (iterator.hasNext()) {
+                iterator.next();
+            }
+        }
+    }
+
     public Iterable<PaymentAttemptModelDao> getItemsForIteration() {
         final Pagination<PaymentAttemptModelDao> incompleteAttempts = paymentDao.getPaymentAttemptsByStateAcrossTenants(retrySMHelper.getInitialState().getName(), getCreatedDateBefore(), 0L, MAX_ATTEMPTS_PER_ITERATIONS);
         if (incompleteAttempts.getTotalNbRecords() > 0) {
@@ -99,7 +139,6 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         return incompleteAttempts;
     }
 
-    @Override
     public void doIteration(final PaymentAttemptModelDao attempt) {
         // We don't grab account lock here as the lock will be taken when calling the completeRun API.
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(attempt.getTenantRecordId(), attempt.getAccountRecordId());
