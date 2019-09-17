@@ -84,7 +84,7 @@ public class TestCompletionTaskBase extends PaymentTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public void doIteration(final PaymentAttemptModelDao attempt) {
+        public boolean doIteration(final PaymentAttemptModelDao attempt) {
             throw new NullPointerException("NPE for tests");
         }
     }

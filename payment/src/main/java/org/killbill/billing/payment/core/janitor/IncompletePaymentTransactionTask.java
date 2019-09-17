@@ -23,7 +23,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -44,7 +46,9 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
+import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.clock.Clock;
+import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
@@ -77,86 +81,75 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         this.paymentPluginServiceRegistration = paymentPluginServiceRegistration;
     }
 
-    // We're processing a Janitor notification: we'll go back to the plugin, find the matching plugin transaction (using the kbTransactionId) and update the payment & transaction states if needed
-    void updatePaymentAndTransactionIfNeededWithAccountLock(final JanitorNotificationKey notificationKey,
-                                                            final UUID userToken,
-                                                            final Long accountRecordId,
-                                                            final long tenantRecordId) throws LockFailedException {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
-        final UUID accountId = internalCallContextFactory.createTenantContext(internalTenantContext).getAccountId();
-        tryToDoJanitorOperationWithAccountLock(new JanitorIterationCallback() {
-            @Override
-            public Boolean doIteration() {
-                return updatePaymentAndTransactionIfNeededWithAccountLock(accountId,
-                                                                          notificationKey.getUuidKey(),
-                                                                          null,
-                                                                          notificationKey.getAttemptNumber(),
-                                                                          userToken,
-                                                                          internalTenantContext);
-            }
-        }, internalTenantContext);
-    }
-
     // On-the-fly Janitor: we already have the latest plugin information, we just update the payment & transaction states if needed
-    public boolean updatePaymentAndTransactionIfNeededWithAccountLock(final PaymentModelDao payment,
-                                                                      final PaymentTransactionModelDao paymentTransaction,
-                                                                      final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
-                                                                      final InternalTenantContext internalTenantContext) {
-        // In the GET case, make sure we bail as early as possible (see PaymentRefresher)
-        if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
-            // Nothing to do
+    public boolean updatePaymentAndTransactionIfNeeded(final UUID accountId,
+                                                       final UUID paymentTransactionId,
+                                                       final TransactionStatus currentTransactionStatus,
+                                                       final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
+                                                       final InternalTenantContext internalTenantContext) {
+        try {
+            final TransactionStatus latestTransactionStatus = updatePaymentAndTransactionIfNeeded(accountId,
+                                                                                                  paymentTransactionId,
+                                                                                                  currentTransactionStatus,
+                                                                                                  paymentTransactionInfoPlugin,
+                                                                                                  null,
+                                                                                                  null,
+                                                                                                  internalTenantContext);
+            return latestTransactionStatus == null;
+        } catch (final LockFailedException e) {
+            log.warn("Error locking accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
             return false;
         }
-
-        final Boolean result = doJanitorOperationWithAccountLock(new JanitorIterationCallback() {
-            @Override
-            public Boolean doIteration() {
-                return updatePaymentAndTransactionIfNeededWithAccountLock(payment.getAccountId(),
-                                                                          paymentTransaction.getId(),
-                                                                          paymentTransactionInfoPlugin,
-                                                                          null,
-                                                                          null,
-                                                                          internalTenantContext);
-            }
-        }, internalTenantContext);
-        return result != null && result;
     }
 
-    private boolean updatePaymentAndTransactionIfNeededWithAccountLock(final UUID accountId,
-                                                                       final UUID paymentTransactionId,
-                                                                       @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
-                                                                       @Nullable final Integer attemptNumber,
-                                                                       @Nullable final UUID userToken,
-                                                                       final InternalTenantContext internalTenantContext) {
+    TransactionStatus updatePaymentAndTransactionIfNeeded(final UUID accountId,
+                                                          final UUID paymentTransactionId,
+                                                          @Nullable final TransactionStatus currentTransactionStatus,
+                                                          @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
+                                                          @Nullable final Integer attemptNumber,
+                                                          @Nullable final UUID userToken,
+                                                          final InternalTenantContext internalTenantContext) throws LockFailedException {
+        // In the GET case, make sure we bail as early as possible (see PaymentRefresher)
+        if (currentTransactionStatus != null && !TRANSACTION_STATUSES_TO_CONSIDER.contains(currentTransactionStatus)) {
+            // Nothing to do
+            return null;
+        }
+
+        return tryToDoJanitorOperationWithAccountLock(new JanitorIterationCallback() {
+            @Override
+            public TransactionStatus doIteration() {
+                return updatePaymentAndTransactionIfNeeded(accountId,
+                                                           paymentTransactionId,
+                                                           paymentTransactionInfoPlugin,
+                                                           attemptNumber,
+                                                           userToken,
+                                                           internalTenantContext);
+            }
+        }, internalTenantContext);
+    }
+
+    private TransactionStatus updatePaymentAndTransactionIfNeeded(final UUID accountId,
+                                                                  final UUID paymentTransactionId,
+                                                                  @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
+                                                                  @Nullable final Integer attemptNumber,
+                                                                  @Nullable final UUID userToken,
+                                                                  final InternalTenantContext internalTenantContext) {
         // State may have changed since we originally retrieved with no lock
         final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(paymentTransactionId, internalTenantContext);
         if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
             // Nothing to do
-            return false;
+            return null;
         }
 
         // On-the-fly Janitor already has the latest state, avoid a round-trip to the plugin
         final PaymentTransactionInfoPlugin latestPaymentTransactionInfoPlugin = paymentTransactionInfoPlugin != null ? paymentTransactionInfoPlugin : getLatestPaymentTransactionInfoPlugin(paymentTransaction, internalTenantContext);
-        final TransactionStatus newTransactionStatus = updatePaymentAndTransactionInternal(accountId,
-                                                                                           paymentTransaction,
-                                                                                           latestPaymentTransactionInfoPlugin,
-                                                                                           internalTenantContext);
-        final boolean hasChanged = newTransactionStatus == null;
-        // Don't insert a notification for the on-the-fly Janitor
-        final boolean shouldInsertNotification = attemptNumber != null;
-        if (!hasChanged && shouldInsertNotification) {
-            insertNewNotificationForUnresolvedTransactionIfNeeded(paymentTransaction.getId(),
-                                                                  newTransactionStatus,
-                                                                  attemptNumber,
-                                                                  userToken,
-                                                                  internalTenantContext.getAccountRecordId(),
-                                                                  internalTenantContext.getTenantRecordId());
-        }
-
-        return hasChanged;
+        return updatePaymentAndTransactionInternal(accountId,
+                                                   paymentTransaction,
+                                                   latestPaymentTransactionInfoPlugin,
+                                                   internalTenantContext);
     }
 
-    // Return the new transactionStatus in case the state wasn't updated, null otherwise
+    // Return the latest transactionStatus in case the state wasn't updated, null otherwise
     private TransactionStatus updatePaymentAndTransactionInternal(final UUID accountId,
                                                                   final PaymentTransactionModelDao paymentTransaction,
                                                                   final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
@@ -258,5 +251,26 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             paymentTransactionInfoPlugin = undefinedPaymentTransaction;
         }
         return paymentTransactionInfoPlugin;
+    }
+
+    public interface JanitorIterationCallback {
+
+        public TransactionStatus doIteration();
+    }
+
+    private TransactionStatus tryToDoJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) throws LockFailedException {
+        GlobalLock lock = null;
+        try {
+            final ImmutableAccountData account = accountInternalApi.getImmutableAccountDataByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
+            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getId().toString(), paymentConfig.getMaxGlobalLockRetries());
+            return callback.doIteration();
+        } catch (final AccountApiException e) {
+            log.warn("Error retrieving accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
+        } finally {
+            if (lock != null) {
+                lock.release();
+            }
+        }
+        return null;
     }
 }

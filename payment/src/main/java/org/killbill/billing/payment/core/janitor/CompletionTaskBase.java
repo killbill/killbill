@@ -22,9 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
-import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -38,11 +36,8 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.PaymentConfig;
-import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.clock.Clock;
-import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
-import org.killbill.commons.locker.LockFailedException;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.skife.config.TimeSpan;
@@ -91,36 +86,6 @@ abstract class CompletionTaskBase<T> {
 
     public void attachJanitorQueue(final NotificationQueue janitorQueue) {
         this.janitorQueue = janitorQueue;
-    }
-
-    public interface JanitorIterationCallback {
-
-        public Boolean doIteration();
-    }
-
-    protected Boolean doJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) {
-        try {
-            return tryToDoJanitorOperationWithAccountLock(callback, internalTenantContext);
-        } catch (final LockFailedException e) {
-            log.warn("Error locking accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
-        }
-        return null;
-    }
-
-    protected Boolean tryToDoJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) throws LockFailedException {
-        GlobalLock lock = null;
-        try {
-            final ImmutableAccountData account = accountInternalApi.getImmutableAccountDataByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
-            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getId().toString(), paymentConfig.getMaxGlobalLockRetries());
-            return callback.doIteration();
-        } catch (final AccountApiException e) {
-            log.warn("Error retrieving accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
-        } finally {
-            if (lock != null) {
-                lock.release();
-            }
-        }
-        return null;
     }
 
     protected CallContext createCallContext(final String taskName, final InternalTenantContext internalTenantContext) {

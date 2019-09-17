@@ -176,11 +176,11 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                 PaymentPluginStatus.PROCESSED,
                 "200",
                 "OK");
-        incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeededWithAccountLock(
-                paymentModel,
-                transactionModel,
-                paymentTransactionInfoPlugin,
-                internalCallContext);
+        incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded(paymentModel.getAccountId(),
+                                                                             transactionModel.getId(),
+                                                                             payment.getTransactions().get(0).getTransactionStatus(),
+                                                                             paymentTransactionInfoPlugin,
+                                                                             internalCallContext);
 
         final PaymentModelDao paymentAfterJanitor = paymentDao.getPayment(payment.getId(), internalCallContext);
         Assert.assertEquals(paymentAfterJanitor.getStateName(), "CAPTURE_SUCCESS");

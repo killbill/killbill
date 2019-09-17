@@ -145,6 +145,6 @@ public class Janitor {
     }
 
     public void processPaymentEvent(final PaymentInternalEvent event) {
-        incompletePaymentAttemptTask.processPaymentEvent(event, janitorQueue);
+        incompletePaymentAttemptTask.processPaymentEvent(event);
     }
 }
