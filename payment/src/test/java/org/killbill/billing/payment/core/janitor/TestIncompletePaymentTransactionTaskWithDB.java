@@ -91,7 +91,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
         final JanitorNotificationKey notificationKey = new JanitorNotificationKey(transactionId, incompletePaymentTransactionTask.getClass().toString(), 1);
         final UUID userToken = UUID.randomUUID();
 
-        Assert.assertTrue(Iterables.isEmpty(incompletePaymentTransactionTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())));
+        Assert.assertTrue(Iterables.isEmpty(incompletePaymentAttemptTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())));
 
         GlobalLock lock = null;
         try {
@@ -99,7 +99,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
 
             incompletePaymentAttemptTask.processNotification(notificationKey, userToken, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
-            final Iterable<NotificationEventWithMetadata<NotificationEvent>> futureNotifications = incompletePaymentTransactionTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+            final Iterable<NotificationEventWithMetadata<NotificationEvent>> futureNotifications = incompletePaymentAttemptTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
             Assert.assertFalse(Iterables.isEmpty(futureNotifications));
             final NotificationEventWithMetadata<NotificationEvent> notificationEventWithMetadata = ImmutableList.<NotificationEventWithMetadata<NotificationEvent>>copyOf(futureNotifications).get(0);
             Assert.assertEquals(notificationEventWithMetadata.getUserToken(), userToken);

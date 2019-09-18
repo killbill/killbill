@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.janitor;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -34,7 +35,6 @@ import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
@@ -43,13 +43,17 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
-import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
-import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
+import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,12 +62,14 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import static org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask.TRANSACTION_STATUSES_TO_CONSIDER;
+
 // Janitor implementation for payments going through the control APIs.
 // Invoked on-the-fly or as part of the Janitor notification queue
 // Also invoked by a scheduled executor service to complete 'partially' incomplete payment attempts: if the state of
 // the transaction associated with the attempt completed, but the attempt state machine did not, we rerun
 // the retry state machine to complete the call and transition the attempt into a terminal state.
-public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAttemptModelDao> implements Runnable {
+public class IncompletePaymentAttemptTask implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(IncompletePaymentAttemptTask.class);
 
@@ -73,8 +79,17 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
     //
     private static final long MAX_ATTEMPTS_PER_ITERATIONS = 1000L;
 
+    private final PaymentConfig paymentConfig;
+    private final Clock clock;
+    private final PaymentDao paymentDao;
+    private final InternalCallContextFactory internalCallContextFactory;
+    private final PaymentControlStateMachineHelper retrySMHelper;
+    private final AccountInternalApi accountInternalApi;
     private final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner;
     private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
+
+    @VisibleForTesting
+    NotificationQueue janitorQueue;
 
     private volatile boolean isStopped;
 
@@ -83,24 +98,59 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
                                         final PaymentConfig paymentConfig,
                                         final PaymentDao paymentDao,
                                         final Clock clock,
-                                        final PaymentStateMachineHelper paymentStateMachineHelper,
                                         final PaymentControlStateMachineHelper retrySMHelper,
                                         final AccountInternalApi accountInternalApi,
                                         final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
-                                        final GlobalLocker locker,
                                         final IncompletePaymentTransactionTask incompletePaymentTransactionTask) {
-        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, locker);
+        this.internalCallContextFactory = internalCallContextFactory;
+        this.paymentConfig = paymentConfig;
+        this.paymentDao = paymentDao;
+        this.clock = clock;
+        this.retrySMHelper = retrySMHelper;
+        this.accountInternalApi = accountInternalApi;
         this.pluginControlledPaymentAutomatonRunner = pluginControlledPaymentAutomatonRunner;
         this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
         this.isStopped = false;
     }
 
-    public synchronized void start() {
+    void attachJanitorQueue(final NotificationQueue janitorQueue) {
+        this.janitorQueue = janitorQueue;
+    }
+
+    synchronized void start() {
         this.isStopped = false;
     }
 
-    public synchronized void stop() {
+    synchronized void stop() {
         this.isStopped = true;
+    }
+
+    void processNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
+
+        try {
+            updatePaymentAndTransactionIfNeeded(notificationKey, userToken, internalTenantContext);
+        } catch (final LockFailedException e) {
+            log.warn("Error locking accountRecordId='{}', will attempt to retry later", accountRecordId, e);
+
+            final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(notificationKey.getUuidKey(), internalTenantContext);
+            if (TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
+                insertNewNotificationForUnresolvedTransactionIfNeeded(notificationKey.getUuidKey(), paymentTransaction.getTransactionStatus(), notificationKey.getAttemptNumber(), userToken, accountRecordId, tenantRecordId);
+            }
+        }
+    }
+
+    // We're processing a payment event: this will go through the Janitor notification queue
+    void processPaymentEvent(final PaymentInternalEvent event) {
+        if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(event.getStatus())) {
+            return;
+        }
+        insertNewNotificationForUnresolvedTransactionIfNeeded(event.getPaymentTransactionId(),
+                                                              event.getStatus(),
+                                                              0,
+                                                              event.getUserToken(),
+                                                              event.getSearchKey1(),
+                                                              event.getSearchKey2());
     }
 
     @Override
@@ -145,8 +195,12 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
     public boolean doIteration(final PaymentAttemptModelDao attempt) {
         // We don't grab account lock here as the lock will be taken when calling the completeRun API.
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(attempt.getTenantRecordId(), attempt.getAccountRecordId());
-        final CallContext callContext = createCallContext("AttemptCompletionJanitorTask", tenantContext);
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(attempt.getAccountId(), callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantContext.getTenantRecordId(),
+                                                                                                             tenantContext.getAccountRecordId(),
+                                                                                                             "AttemptCompletionJanitorTask",
+                                                                                                             CallOrigin.INTERNAL,
+                                                                                                             UserType.SYSTEM,
+                                                                                                             UUIDs.randomUUID());
 
         final List<PaymentTransactionModelDao> transactions = paymentDao.getPaymentTransactionsByExternalKey(attempt.getTransactionExternalKey(), tenantContext);
         final List<PaymentTransactionModelDao> filteredTransactions = ImmutableList.copyOf(Iterables.filter(transactions, new Predicate<PaymentTransactionModelDao>() {
@@ -193,7 +247,7 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
                                                                                                   null,
                                                                                                   PluginPropertySerializer.deserialize(attempt.getPluginProperties()),
                                                                                                   internalCallContext,
-                                                                                                  callContext);
+                                                                                                  internalCallContextFactory.createCallContext(internalCallContext));
 
             paymentStateContext.setAttemptId(attempt.getId()); // Normally set by leavingState Callback
             paymentStateContext.setPaymentTransactionModelDao(transaction); // Normally set by raw state machine
@@ -214,25 +268,10 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         return false;
     }
 
-    protected void processNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) {
-        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
-
-        try {
-            updatePaymentAndTransactionIfNeeded(notificationKey, userToken, internalTenantContext);
-        } catch (final LockFailedException e) {
-            log.warn("Error locking accountRecordId='{}', will attempt to retry later", accountRecordId, e);
-
-            final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(notificationKey.getUuidKey(), internalTenantContext);
-            if (TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
-                insertNewNotificationForUnresolvedTransactionIfNeeded(notificationKey.getUuidKey(), paymentTransaction.getTransactionStatus(), notificationKey.getAttemptNumber(), userToken, accountRecordId, tenantRecordId);
-            }
-        }
-    }
-
     // We're processing a Janitor notification: we'll go back to the plugin, find the matching plugin transaction (using the kbTransactionId) and update the payment, transaction and attempt states if needed
-    boolean updatePaymentAndTransactionIfNeeded(final JanitorNotificationKey notificationKey,
-                                                final UUID userToken,
-                                                final InternalTenantContext internalTenantContext) throws LockFailedException {
+    private boolean updatePaymentAndTransactionIfNeeded(final JanitorNotificationKey notificationKey,
+                                                        final UUID userToken,
+                                                        final InternalTenantContext internalTenantContext) throws LockFailedException {
         final UUID accountId = internalCallContextFactory.createTenantContext(internalTenantContext).getAccountId();
         final TransactionStatus latestTransactionStatus = incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded(accountId,
                                                                                                                                notificationKey.getUuidKey(),
@@ -316,16 +355,45 @@ public class IncompletePaymentAttemptTask extends CompletionTaskBase<PaymentAtte
         return hasTransactionChanged || hasAttemptChanged;
     }
 
-    public void processPaymentEvent(final PaymentInternalEvent event) {
-        if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(event.getStatus())) {
-            return;
+    private void insertNewNotificationForUnresolvedTransactionIfNeeded(final UUID paymentTransactionId,
+                                                                       final TransactionStatus transactionStatus,
+                                                                       final Integer attemptNumber,
+                                                                       final UUID userToken,
+                                                                       final Long accountRecordId,
+                                                                       final Long tenantRecordId) {
+        final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
+
+        // Increment value before we insert
+        final Integer newAttemptNumber = attemptNumber + 1;
+        final NotificationEvent key = new JanitorNotificationKey(paymentTransactionId, IncompletePaymentTransactionTask.class.toString(), newAttemptNumber);
+        final DateTime notificationTime = getNextNotificationTime(transactionStatus, newAttemptNumber, tenantContext);
+        // Will be null in the GET path or when we run out opf attempts..
+        if (notificationTime != null) {
+            try {
+                janitorQueue.recordFutureNotification(notificationTime, key, userToken, accountRecordId, tenantRecordId);
+            } catch (final IOException e) {
+                log.warn("Failed to insert future notification for paymentTransactionId = {}: {}", paymentTransactionId, e.getMessage());
+            }
         }
-        insertNewNotificationForUnresolvedTransactionIfNeeded(event.getPaymentTransactionId(),
-                                                              event.getStatus(),
-                                                              0,
-                                                              event.getUserToken(),
-                                                              event.getSearchKey1(),
-                                                              event.getSearchKey2());
+    }
+
+    @VisibleForTesting
+    DateTime getNextNotificationTime(final TransactionStatus transactionStatus, final Integer attemptNumber, final InternalTenantContext internalTenantContext) {
+        final List<TimeSpan> retries;
+        if (TransactionStatus.UNKNOWN.equals(transactionStatus)) {
+            retries = paymentConfig.getUnknownTransactionsRetries(internalTenantContext);
+        } else if (TransactionStatus.PENDING.equals(transactionStatus)) {
+            retries = paymentConfig.getPendingTransactionsRetries(internalTenantContext);
+        } else {
+            retries = ImmutableList.of();
+            log.warn("Unexpected transactionStatus='{}' from janitor, ignore...", transactionStatus);
+        }
+
+        if (attemptNumber > retries.size()) {
+            return null;
+        }
+        final TimeSpan nextDelay = retries.get(attemptNumber - 1);
+        return clock.getUTCNow().plusMillis((int) nextDelay.getMillis());
     }
 
     private DateTime getCreatedDateBefore() {

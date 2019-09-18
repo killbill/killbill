@@ -33,7 +33,6 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
-import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
@@ -42,12 +41,13 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
-import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.globallocker.LockerType;
-import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
@@ -61,23 +61,36 @@ import com.google.common.collect.Iterables;
 
 // Janitor implementation for payment transactions only (see IncompletePaymentAttemptTask for payments going through the control APIs).
 // Invoked on-the-fly or as part of the Janitor notification queue
-public class IncompletePaymentTransactionTask extends CompletionTaskBase<PaymentTransactionModelDao> {
+public class IncompletePaymentTransactionTask {
 
     private static final Logger log = LoggerFactory.getLogger(IncompletePaymentTransactionTask.class);
 
+    static final ImmutableList<TransactionStatus> TRANSACTION_STATUSES_TO_CONSIDER = ImmutableList.<TransactionStatus>builder().add(TransactionStatus.PENDING)
+                                                                                                                               .add(TransactionStatus.UNKNOWN)
+                                                                                                                               .build();
+
+    private final PaymentConfig paymentConfig;
+    private final PaymentDao paymentDao;
+    private final InternalCallContextFactory internalCallContextFactory;
+    private final PaymentStateMachineHelper paymentStateMachineHelper;
+    private final AccountInternalApi accountInternalApi;
+    private final GlobalLocker locker;
     private final PaymentPluginServiceRegistration paymentPluginServiceRegistration;
 
     @Inject
     public IncompletePaymentTransactionTask(final InternalCallContextFactory internalCallContextFactory,
                                             final PaymentConfig paymentConfig,
                                             final PaymentDao paymentDao,
-                                            final Clock clock,
                                             final PaymentStateMachineHelper paymentStateMachineHelper,
-                                            final PaymentControlStateMachineHelper retrySMHelper,
                                             final AccountInternalApi accountInternalApi,
                                             final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                                             final GlobalLocker locker) {
-        super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, locker);
+        this.internalCallContextFactory = internalCallContextFactory;
+        this.paymentConfig = paymentConfig;
+        this.paymentDao = paymentDao;
+        this.paymentStateMachineHelper = paymentStateMachineHelper;
+        this.accountInternalApi = accountInternalApi;
+        this.locker = locker;
         this.paymentPluginServiceRegistration = paymentPluginServiceRegistration;
     }
 
@@ -154,7 +167,6 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
                                                                   final PaymentTransactionModelDao paymentTransaction,
                                                                   final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
                                                                   final InternalTenantContext internalTenantContext) {
-        final CallContext callContext = createCallContext("IncompletePaymentTransactionTask", internalTenantContext);
         final UUID paymentId = paymentTransaction.getPaymentId();
 
         // First obtain the new transactionStatus,
@@ -189,7 +201,12 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
             return transactionStatus;
         }
 
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, callContext);
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(internalTenantContext.getTenantRecordId(),
+                                                                                                             internalTenantContext.getAccountRecordId(),
+                                                                                                             "IncompletePaymentTransactionTask",
+                                                                                                             CallOrigin.INTERNAL,
+                                                                                                             UserType.SYSTEM,
+                                                                                                             UUIDs.randomUUID());
         final PaymentAutomatonDAOHelper paymentAutomatonDAOHelper = new PaymentAutomatonDAOHelper(paymentDao,
                                                                                                   internalCallContext,
                                                                                                   paymentStateMachineHelper);
@@ -253,9 +270,9 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         return paymentTransactionInfoPlugin;
     }
 
-    public interface JanitorIterationCallback {
+    private interface JanitorIterationCallback {
 
-        public TransactionStatus doIteration();
+        TransactionStatus doIteration();
     }
 
     private TransactionStatus tryToDoJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) throws LockFailedException {

@@ -53,7 +53,6 @@ public class Janitor {
     private final PaymentExecutors paymentExecutors;
 
     private final IncompletePaymentAttemptTask incompletePaymentAttemptTask;
-    private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
     private NotificationQueue janitorQueue;
     private ScheduledExecutorService janitorExecutor;
 
@@ -61,13 +60,11 @@ public class Janitor {
 
     @Inject
     public Janitor(final IncompletePaymentAttemptTask incompletePaymentAttemptTask,
-                   final IncompletePaymentTransactionTask incompletePaymentTransactionTask,
                    final GlobalLocker locker,
                    final PaymentConfig paymentConfig,
                    final NotificationQueueService notificationQueueService,
                    final PaymentExecutors paymentExecutors) {
         this.incompletePaymentAttemptTask = incompletePaymentAttemptTask;
-        this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
         this.notificationQueueService = notificationQueueService;
         this.paymentExecutors = paymentExecutors;
         this.paymentConfig = paymentConfig;
@@ -86,14 +83,13 @@ public class Janitor {
                                                                                 }
                                                                                 final JanitorNotificationKey janitorKey = (JanitorNotificationKey) notificationKey;
                                                                                 // Backward compatibility: keep the class name as-is
-                                                                                if (janitorKey.getTaskName().equals(incompletePaymentTransactionTask.getClass().toString())) {
+                                                                                if (janitorKey.getTaskName().equals(IncompletePaymentTransactionTask.class.toString())) {
                                                                                     incompletePaymentAttemptTask.processNotification(janitorKey, userToken, accountRecordId, tenantRecordId);
                                                                                 }
                                                                             }
                                                                         }
                                                                        );
 
-        incompletePaymentTransactionTask.attachJanitorQueue(janitorQueue);
         incompletePaymentAttemptTask.attachJanitorQueue(janitorQueue);
     }
 
