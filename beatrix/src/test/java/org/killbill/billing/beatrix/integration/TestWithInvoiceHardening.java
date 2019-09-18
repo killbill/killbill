@@ -109,8 +109,6 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         subscriptionApi.addBlockingState(blockingState4, new LocalDate(2019, 5, 3), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        /*
-        TODO
 
         // 2019-05-17
         clock.addDays(14);
@@ -138,9 +136,6 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         clock.addDays(10);
         assertListenerStatus();
-
-         */
-
     }
 
     @Test(groups = "slow")

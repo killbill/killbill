@@ -19,7 +19,6 @@
 package org.killbill.billing.invoice.tree;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -60,16 +59,9 @@ public class Item {
     private final DateTime createdDate;
     private final UUID linkedId;
     private final DateTime catalogEffectiveDate;
-
+    private final ItemAction action;
     private BigDecimal currentRepairedAmount;
     private BigDecimal adjustedAmount;
-
-    private final ItemAction action;
-
-    public enum ItemAction {
-        ADD,
-        CANCEL
-    }
 
     public Item(final Item item, final ItemAction action) {
         this.id = item.id;
@@ -142,9 +134,10 @@ public class Item {
             return new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, newStartDate, newEndDate, positiveAmount, rate, currency);
         } else {
             // We first compute the maximum amount after adjustment and that sets the amount limit of how much can be repaired.
-            final BigDecimal maxAvailableAmountForRepair = getNetAmount();
-            final BigDecimal positiveAmountForRepair = positiveAmount.compareTo(maxAvailableAmountForRepair) <= 0 ? positiveAmount : maxAvailableAmountForRepair;
-            return positiveAmountForRepair.compareTo(BigDecimal.ZERO) > 0 ? new RepairAdjInvoiceItem(targetInvoiceId, accountId, newStartDate, newEndDate, positiveAmountForRepair.negate(), currency, linkedId) : null;
+            final BigDecimal netAmount = getNetAmount();
+            final BigDecimal maxAmountForRepair = positiveAmount.compareTo(netAmount) <= 0 ? positiveAmount : netAmount;
+            final BigDecimal resultingAmountForRepair = maxAmountForRepair.compareTo(BigDecimal.ZERO) > 0 ? maxAmountForRepair : BigDecimal.ZERO;
+            return new RepairAdjInvoiceItem(targetInvoiceId, accountId, newStartDate, newEndDate, resultingAmountForRepair.negate(), currency, linkedId);
         }
     }
 
@@ -154,7 +147,7 @@ public class Item {
     }
 
     public void incrementCurrentRepairedAmount(final BigDecimal increment) {
-        Preconditions.checkState(increment.compareTo(BigDecimal.ZERO) > 0, "Invalid repair increment='%s', item=%s", increment, this);
+        Preconditions.checkState(increment.compareTo(BigDecimal.ZERO) >= 0, "Invalid repair increment='%s', item=%s", increment, this);
         currentRepairedAmount = currentRepairedAmount.add(increment);
     }
 
@@ -332,5 +325,10 @@ public class Item {
         result = 31 * result + (adjustedAmount != null ? adjustedAmount.hashCode() : 0);
         result = 31 * result + (action != null ? action.hashCode() : 0);
         return result;
+    }
+
+    public enum ItemAction {
+        ADD,
+        CANCEL
     }
 }

@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -94,13 +95,20 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
 
+        final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices);
+        final Set<UUID> toBeIgnored = invoicePruner.getFullyRepairedItemsClosure();
         final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId);
         if (existingInvoices != null) {
             for (final Invoice invoice : existingInvoices) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
+                    if (toBeIgnored.contains(item.getId())) {
+                       continue;
+                    }
+
                     if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charges etc.
                         !eventSet.getSubscriptionIdsWithAutoInvoiceOff()
                                  .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
+
                         accountItemTree.addExistingItem(item);
 
                         trackInvoiceItemCreatedDay(item, createdItemsPerDayPerSubscription, internalCallContext);

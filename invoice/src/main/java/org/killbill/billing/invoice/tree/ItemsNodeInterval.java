@@ -21,18 +21,13 @@ package org.killbill.billing.invoice.tree;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
-import org.killbill.billing.invoice.tree.Item.ItemAction;
 import org.killbill.billing.util.jackson.ObjectMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -115,9 +110,8 @@ public class ItemsNodeInterval extends NodeInterval {
      * @param targetInvoiceId
      */
     public void buildForExistingItems(final Collection<Item> output, final UUID targetInvoiceId) {
-        // We start by pruning useless entries to simplify the build phase.
-        pruneAndValidateTree();
-
+        // Sanity on the tree
+        validateTree();
         build(output, targetInvoiceId, false);
     }
 
@@ -200,7 +194,7 @@ public class ItemsNodeInterval extends NodeInterval {
      *
      * @return linked item if fully adjusted, null otherwise
      */
-    public Item addAdjustment(final InvoiceItem item, final UUID targetInvoiceId) {
+    public Item addAdjustment(final InvoiceItem item) {
         final UUID targetId = item.getLinkedItemId();
 
         final NodeInterval node = findNode(new SearchCallback() {
@@ -216,14 +210,8 @@ public class ItemsNodeInterval extends NodeInterval {
         Preconditions.checkNotNull(targetItem, "Unable to find item with id='%s', itemsInterval=%s", targetId, targetItemsInterval);
 
         final BigDecimal adjustmentAmount = item.getAmount().negate();
-        if (targetItem.getAmount().compareTo(adjustmentAmount) == 0) {
-            // Full item adjustment - treat it like a repair
-            addExistingItem(new ItemsNodeInterval(this, new Item(item, targetItem.getStartDate(), targetItem.getEndDate(), targetInvoiceId, ItemAction.CANCEL)));
-            return targetItem;
-        } else {
-            targetItem.incrementAdjustedAmount(adjustmentAmount);
-            return null;
-        }
+        targetItem.incrementAdjustedAmount(adjustmentAmount);
+        return null;
     }
 
     private void build(final Collection<Item> output, final UUID targetInvoiceId, final boolean mergeMode) {
@@ -243,15 +231,9 @@ public class ItemsNodeInterval extends NodeInterval {
     }
 
     //
-    // Before we build the tree, we make a first pass at removing full repaired items; those can come in two shapes:
-    // Case A - The first one, is the mergeCancellingPairs logics which simply look for one CANCEL pointing to one ADD item in the same
-    //   NodeInterval; this is fairly simple, and *only* requires removing those items and remove the interval from the tree when
-    //   it has no more leaves and no more items.
-    // Case B - This is a bit more involved: We look for full repair that happened in pieces; this will translate to an ADD element of a NodeInterval,
-    // whose children completely map the interval (isPartitionedByChildren) and where each child will have a CANCEL item pointing to the ADD.
-    // When we detect such nodes, we delete both the ADD in the parent interval and the CANCEL in the children (and cleanup the interval if it does not have items)
+    // This is not strictly necessary -- just there to add a layer of sanity on what our tree contains
     //
-    private void pruneAndValidateTree() {
+    private void validateTree() {
         final NodeInterval root = this;
         walkTree(new WalkCallback() {
             @Override
@@ -262,13 +244,6 @@ public class ItemsNodeInterval extends NodeInterval {
                 }
 
                 final ItemsInterval curNodeItems = ((ItemsNodeInterval) curNode).getItemsInterval();
-
-                // Case A:
-                final boolean isEmpty = curNodeItems.mergeCancellingPairs();
-                if (isEmpty && curNode.getLeftChild() == null) {
-                    curNode.getParent().removeChild(curNode);
-                }
-
                 for (final Item curCancelItem : curNodeItems.get_CANCEL_items()) {
                     // Sanity: cancelled items should only be in the same node or parents
                     if (curNode.getLeftChild() != null) {
@@ -312,53 +287,6 @@ public class ItemsNodeInterval extends NodeInterval {
                                });
                         Preconditions.checkState(curAddItem.getNetAmount().compareTo(totalRepaired.get()) >= 0, "Item %s overly repaired", curAddItem);
                     }
-                }
-
-                if (!curNode.isPartitionedByChildren()) {
-                    return;
-                }
-
-                // Case B -- look for such case, and if found (foundFullRepairByParts) we fix them below.
-                List<Item> curNodeItemsToBeRemoved = new ArrayList<Item>();
-                final Iterator<Item> it = curNodeItems.get_ADD_items().iterator();
-                // For each item on this curNode interval we check if there is a matching set of CANCEL items on the children (resulting in completely cancelling that item).
-                while (it.hasNext()) {
-
-                    final Item curAddItem = it.next();
-
-                    //
-                    // We already know the children partition fully the 'curNode' interval, we just need to see if for each piece
-                    // we find a matching CANCEL item pointing to this 'curAddItem'
-                    //
-                    NodeInterval curChild = curNode.getLeftChild();
-                    Map<ItemsInterval, Item> childrenCancellingToBeRemoved = new HashMap<ItemsInterval, Item>();
-
-                    // Note that because of previous iterations, curChild could now be null so we need to initialize the foundFullRepairByParts based on that new state.
-                    boolean foundFullRepairByParts = curChild != null;
-                    while (curChild != null) {
-                        final ItemsInterval curChildItems = ((ItemsNodeInterval) curChild).getItemsInterval();
-                        Item cancellingItem = curChildItems.getCancellingItemIfExists(curAddItem.getId());
-                        if (cancellingItem == null) {
-                            foundFullRepairByParts = false;
-                            break;
-                        }
-                        childrenCancellingToBeRemoved.put(curChildItems, cancellingItem);
-                        curChild = curChild.getRightSibling();
-                    }
-
-                    if (foundFullRepairByParts) {
-                        for (ItemsInterval curItemsInterval : childrenCancellingToBeRemoved.keySet()) {
-                            curItemsInterval.remove(childrenCancellingToBeRemoved.get(curItemsInterval));
-                            if (curItemsInterval.getItems().isEmpty()) {
-                                curNode.removeChild(curItemsInterval.getNodeInterval());
-                            }
-                        }
-                        curNodeItemsToBeRemoved.add(curAddItem);
-                    }
-                }
-                // Finally Execute the removal of the curNodeItems outside of the upper while loop so as to not trigger ConcurrentModificationException (see #641)
-                for (Item curNodeItemsRemoval : curNodeItemsToBeRemoved) {
-                    curNodeItems.remove(curNodeItemsRemoval);
                 }
             }
         });

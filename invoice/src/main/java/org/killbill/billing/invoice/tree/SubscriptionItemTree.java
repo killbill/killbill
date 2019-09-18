@@ -44,7 +44,6 @@ import com.google.common.collect.Ordering;
 public class SubscriptionItemTree {
 
     private final List<Item> items = new LinkedList<Item>();
-    private final List<Item> existingFullyAdjustedItems = new LinkedList<Item>();
     private final List<InvoiceItem> existingIgnoredItems = new LinkedList<InvoiceItem>();
     private final List<InvoiceItem> remainingIgnoredItems = new LinkedList<InvoiceItem>();
     private final List<InvoiceItem> pendingItemAdj = new LinkedList<InvoiceItem>();
@@ -132,10 +131,7 @@ public class SubscriptionItemTree {
                 }
             }).orNull();
             if (ignoredLinkedItem == null) {
-                final Item fullyAdjustedItem = root.addAdjustment(item, targetInvoiceId);
-                if (fullyAdjustedItem != null) {
-                    existingFullyAdjustedItems.add(fullyAdjustedItem);
-                }
+                root.addAdjustment(item);
             }
         }
         pendingItemAdj.clear();
@@ -226,23 +222,7 @@ public class SubscriptionItemTree {
         tmp.addAll(Collections2.filter(Collections2.transform(items, new Function<Item, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final Item input) {
-                final InvoiceItem resultingCandidate = input.toInvoiceItem();
-
-                // Post merge, the ADD items are the candidates for the resulting RECURRING items (see toInvoiceItem()).
-                // We will ignore any resulting item matching existing items on disk though as these are the result of full item adjustments.
-                // See https://github.com/killbill/killbill/issues/654
-                if (isMerged) {
-                    for (final Item existingAdjustedItem : existingFullyAdjustedItems) {
-                        // Note: we DO keep the item in case of partial matches, e.g. if the new proposed item end date is before
-                        // the existing (adjusted) item. See TestSubscriptionItemTree#testMaxedOutProRation
-                        final InvoiceItem fullyAdjustedInvoiceItem = existingAdjustedItem.toInvoiceItem();
-                        if (resultingCandidate.matches(fullyAdjustedInvoiceItem)) {
-                            return null;
-                        }
-                    }
-                }
-
-                return resultingCandidate;
+                return input.toInvoiceItem();
             }
         }), new Predicate<InvoiceItem>() {
             @Override
@@ -295,7 +275,6 @@ public class SubscriptionItemTree {
         sb.append(", isBuilt=").append(isBuilt);
         sb.append(", isMerged=").append(isMerged);
         sb.append(", items=").append(items);
-        sb.append(", existingFullyAdjustedItems=").append(existingFullyAdjustedItems);
         sb.append(", existingIgnoredItems=").append(existingIgnoredItems);
         sb.append(", remainingIgnoredItems=").append(remainingIgnoredItems);
         sb.append(", pendingItemAdj=").append(pendingItemAdj);
