@@ -228,7 +228,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
         }
 
         try {
-            log.info("Completing attemptId='{}'", attempt.getId());
+            log.info("Completing attemptId='{}', stateName='{}'", attempt.getId(), attempt.getStateName());
 
             final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
             final boolean isApiPayment = true; // unclear
@@ -273,16 +273,6 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                         final UUID userToken,
                                                         final InternalTenantContext internalTenantContext) throws LockFailedException {
         final UUID accountId = internalCallContextFactory.createTenantContext(internalTenantContext).getAccountId();
-        final TransactionStatus latestTransactionStatus = incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded(accountId,
-                                                                                                                               notificationKey.getUuidKey(),
-                                                                                                                               null,
-                                                                                                                               null,
-                                                                                                                               notificationKey.getAttemptNumber(),
-                                                                                                                               userToken,
-                                                                                                                               internalTenantContext);
-        return latestTransactionStatus == null;
-
-        /* TODO https://github.com/killbill/killbill/issues/1061.
         return updatePaymentAndTransactionIfNeeded(accountId,
                                                    notificationKey.getUuidKey(),
                                                    null,
@@ -290,7 +280,6 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                    notificationKey.getAttemptNumber(),
                                                    userToken,
                                                    internalTenantContext);
-         */
     }
 
     // On-the-fly Janitor: we already have the latest plugin information, we just update the payment, transaction and attempt states if needed
@@ -347,8 +336,10 @@ public class IncompletePaymentAttemptTask implements Runnable {
         if (paymentTransactionModelDao.getAttemptId() != null) {
             final PaymentAttemptModelDao paymentAttemptModelDao = paymentDao.getPaymentAttempt(paymentTransactionModelDao.getAttemptId(), internalTenantContext);
             if (paymentAttemptModelDao != null) {
-                // Run the completion part of the state machine to call the plugins and update the attempt in the right terminal state)
-                hasAttemptChanged = doIteration(paymentAttemptModelDao);
+                if (hasTransactionChanged || retrySMHelper.getInitialState().getName().equals(paymentAttemptModelDao.getStateName())) {
+                    // Run the completion part of the state machine to call the plugins and update the attempt in the right terminal state)
+                    hasAttemptChanged = doIteration(paymentAttemptModelDao);
+                }
             }
         }
 
