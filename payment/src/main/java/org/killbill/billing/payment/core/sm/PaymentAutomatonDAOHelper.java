@@ -145,10 +145,37 @@ public class PaymentAutomatonDAOHelper {
                                                                   final UUID paymentId,
                                                                   final UUID transactionId,
                                                                   final TransactionType transactionType) {
+        final String lastSuccessPaymentState = paymentSMHelper.isSuccessState(currentPaymentStateName) ? currentPaymentStateName : null;
+        return processPaymentInfoPlugin(transactionStatus,
+                                        paymentInfoPlugin,
+                                        currentPaymentStateName,
+                                        lastSuccessPaymentState,
+                                        defaultProcessedAmount,
+                                        defaultProcessedCurrency,
+                                        accountId,
+                                        attemptId,
+                                        paymentId,
+                                        transactionId,
+                                        transactionType,
+                                        false);
+    }
+
+    public PaymentAndTransactionModelDao processPaymentInfoPlugin(final TransactionStatus transactionStatus,
+                                                                  @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
+                                                                  final String currentPaymentStateName,
+                                                                  @Nullable final String lastSuccessPaymentState,
+                                                                  final BigDecimal defaultSuccessfulProcessedAmount,
+                                                                  final Currency defaultProcessedCurrency,
+                                                                  final UUID accountId,
+                                                                  final UUID attemptId,
+                                                                  final UUID paymentId,
+                                                                  final UUID transactionId,
+                                                                  final TransactionType transactionType,
+                                                                  final boolean forceOverrideLastSuccessPaymentState) {
         final BigDecimal processedAmount;
         if (TransactionStatus.SUCCESS.equals(transactionStatus) || TransactionStatus.PENDING.equals(transactionStatus)) {
             if (paymentInfoPlugin == null || paymentInfoPlugin.getAmount() == null) {
-                processedAmount = defaultProcessedAmount;
+                processedAmount = defaultSuccessfulProcessedAmount;
             } else {
                 processedAmount = paymentInfoPlugin.getAmount();
             }
@@ -165,8 +192,7 @@ public class PaymentAutomatonDAOHelper {
         final String gatewayErrorMsg = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayError();
 
         final PaymentAndTransactionModelDao paymentAndTransactionModelDao;
-        if (paymentSMHelper.isSuccessState(currentPaymentStateName)) {
-            final String lastSuccessPaymentState = currentPaymentStateName;
+        if (lastSuccessPaymentState != null || forceOverrideLastSuccessPaymentState) {
             paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(accountId,
                                                                                                attemptId,
                                                                                                paymentId,
