@@ -40,7 +40,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-
 //
 // This is invoked prior we build the tree of existing items to make sure we simplify the view,
 // and in particular in cases of complex repair (see #1205), we don't end up inserting items
@@ -88,7 +87,7 @@ public class InvoicePruner {
     // In case of full repair return all items linked to the original RECURRING item
     public Set<UUID> getFullyRepairedItemsClosure() throws InvoiceApiException {
         try {
-            Set<UUID> result = new HashSet();
+            final Set<UUID> result = new HashSet();
             for (AdjustedRecurringItem cur : map.values()) {
                 result.addAll(cur.getFullyRepairedLinkedItems());
             }
@@ -128,6 +127,7 @@ public class InvoicePruner {
             build();
             return result;
         }
+
 
         public RecurringInvoiceItem getTarget() {
             build();
@@ -185,21 +185,23 @@ public class InvoicePruner {
                 }
             }
 
-            final BigDecimal remaining = target.getAmount().subtract(repairedAmount);
-            final int comp = remaining.compareTo(BigDecimal.ZERO);
+            final BigDecimal remainingFromRepair = target.getAmount().subtract(repairedAmount);
+            final int compRepair = remainingFromRepair.compareTo(BigDecimal.ZERO);
 
-            if (comp == 0) {
+            if (compRepair == 0) {
                 // Keep previous precondition behavior
                 Preconditions.checkState(adjusted == null || adjusted.isEmpty(), "Too many repairs for invoiceItemId='%s'", target.getId());
                 result.add(target.getId());
                 result.addAll(getIds(repaired));
-            }
+            } else {
 
-            // Keep previous precondition behavior
-            final BigDecimal adjustedAmount = sumAmounts(adjusted).negate();
-            final int compWithAdjustments = remaining.subtract(adjustedAmount).compareTo(BigDecimal.ZERO);
-            if (compWithAdjustments == -1) {
-                Preconditions.checkState(false, "Too many repairs for invoiceItemId='%s'", target.getId());
+
+                // Keep previous precondition behavior
+                final BigDecimal adjustedAmount = sumAmounts(adjusted).negate();
+                final int compWithAdjustments = remainingFromRepair.subtract(adjustedAmount).compareTo(BigDecimal.ZERO);
+                if (compWithAdjustments == -1) {
+                    Preconditions.checkState(false, "Too many repairs for invoiceItemId='%s'", target.getId());
+                }
             }
 
             this.isBuilt = true;

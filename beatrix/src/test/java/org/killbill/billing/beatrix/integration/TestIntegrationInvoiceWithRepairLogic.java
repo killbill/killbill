@@ -47,6 +47,7 @@ import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
+import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -62,7 +63,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
     @Inject
     protected InvoiceDao invoiceDao;
-
 
     @Test(groups = "slow")
     public void testSimplePartialRepairWithItemAdjustment() throws Exception {
@@ -482,8 +482,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         checkNoMoreInvoiceToGenerate(account);
     }
 
-
-
     @Test(groups = "slow")
     public void testRepairWithFullRemainingItemAdjustment() throws Exception {
         final LocalDate today = new LocalDate(2013, 7, 19);
@@ -550,8 +548,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
     }
 
-
-
     @Test(groups = "slow")
     public void testPartialItemAdjFollowedWithRepair() throws Exception {
         final LocalDate today = new LocalDate(2013, 7, 19);
@@ -578,7 +574,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -598,7 +593,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         checkNoMoreInvoiceToGenerate(account);
 
-
         // Move clock to 2013-09-17
         clock.addDays(30);
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
@@ -612,7 +606,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2013, 8, 18), InvoiceItemType.ITEM_ADJ, new BigDecimal("-197.26")),
                 // CBA rebalanced from invoice 3
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2013, 9, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("-2202.69"))
-                );
+                                                                );
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
@@ -620,12 +614,9 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2013, 9, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("2202.69")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
-
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
     }
-
-
 
     //
     // This is the exact same test as testRepairWithFullRemainingItemAdjustment except we now only do a partial item adjustment.
@@ -748,7 +739,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final Invoice lastInvoice = invoices.get(1);
         invoiceChecker.checkInvoice(lastInvoice.getId(), callContext, toBeChecked);
 
-
         //
         // Let's add a bunch of items by hand to pretend we have lots of cancelling items that should be cleaned (data issue after a potential invoice bug)
         //
@@ -774,7 +764,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                                                                        bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "Shotgun", "shotgun-monthly", "shotgun-monthly-evergreen", null,
                                                                        null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("249.95"), new BigDecimal("249.95"), account.getCurrency(), null);
 
-
         final InvoiceItemModelDao repair21 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
                                                                      bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null, null,
                                                                      null, new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 13), new BigDecimal("-100.95"), new BigDecimal("-100.95"), account.getCurrency(), recurring2.getId());
@@ -787,12 +776,9 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                                                                      bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null, null,
                                                                      null, new LocalDate(2012, 5, 22), new LocalDate(2012, 6, 1), new BigDecimal("-49"), new BigDecimal("-49"), account.getCurrency(), recurring2.getId());
 
-
-
         final InvoiceItemModelDao recurring3 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.RECURRING, lastInvoice.getId(), lastInvoice.getAccountId(),
                                                                        bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), "", "Shotgun", "shotgun-monthly", "shotgun-monthly-evergreen", null,
                                                                        null, new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), new BigDecimal("249.95"), new BigDecimal("249.95"), account.getCurrency(), null);
-
 
         final InvoiceItemModelDao repair3 = new InvoiceItemModelDao(lastInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, lastInvoice.getId(), lastInvoice.getAccountId(),
                                                                     bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null, null,
@@ -809,7 +795,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         newItems.add(repair3);
         shellInvoice.addInvoiceItems(newItems);
         invoiceDao.createInvoice(shellInvoice, ImmutableSet.of(), new FutureAccountNotifications(), null, internalCallContext);
-
 
         // Move ahead one month, verify nothing from previous data was generated
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -832,10 +817,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     //    Case V2: Cancellation IMM => Balance is $0 and regenerate the new piece (proposed item)
     //    Case V3: Cancellation EOT => Balance is $0 and nothing to regenerate  **** Our weird behavior ov V3 behaving like V1 ****
 
-
     @Test(groups = "slow")
     public void testRepairWithFullItemAdjustmentV1() throws Exception {
-
 
         DefaultEntitlement bpEntitlement = setupTestRepairWithFullItemAdjustment();
 
@@ -846,7 +829,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         assertListenerStatus();
 
-        List<Invoice>  invoices = invoiceUserApi.getInvoicesByAccount(bpEntitlement.getAccountId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(bpEntitlement.getAccountId(), false, false, callContext);
         assertEquals(invoices.size(), 3);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
@@ -857,13 +840,9 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
-
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(bpEntitlement.getAccountId(), callContext);
         assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
-
     }
-
-
 
     @Test(groups = "slow")
     public void testRepairWithFullItemAdjustmentV2() throws Exception {
@@ -890,9 +869,51 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(bpEntitlement.getAccountId(), callContext);
         assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
-
     }
 
+    //
+    // Same scenario as previous one but we insert a RECURRING for 2013-8-18 -> 2013-9-17 to simulate old full item adjustment behavior
+    //
+    @Test(groups = "slow")
+    public void testRepairWithFullItemAdjustmentV2WithOldData() throws Exception {
+
+        DefaultEntitlement bpEntitlement = setupTestRepairWithFullItemAdjustment();
+
+        final InvoiceModelDao invoiceForPreviousBehavior = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), bpEntitlement.getAccountId(), null, new LocalDate(2013, 9, 17), new LocalDate(2013, 9, 17), Currency.USD, false, InvoiceStatus.COMMITTED, false);
+
+        invoiceForPreviousBehavior.addInvoiceItem(new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.RECURRING, invoiceForPreviousBehavior.getId(), bpEntitlement.getAccountId(), null, null, bpEntitlement.getId(), "",
+                                                                          "Shotgun", "shotgun-annual", "shotgun-annual-evergreen", null, null,
+                                                                          new LocalDate(2013, 8, 18), new LocalDate(2013, 9, 17),
+                                                                          new BigDecimal("197.26"), new BigDecimal("2399.95"), Currency.USD, null, null, null));
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        insertInvoiceItems(invoiceForPreviousBehavior);
+        assertListenerStatus();
+
+        //
+        // Move clock to 2013-09-17
+        clock.addDays(30);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
+        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(bpEntitlement.getAccountId(), false, false, callContext);
+        assertEquals(invoices.size(), 3);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2013, 8, 18), InvoiceItemType.ITEM_ADJ, new BigDecimal("-2399.95")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+        // This is the invoice + item we inserted by hand to simulate the old data; we verify there is nothing more
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2013, 9, 17), InvoiceItemType.RECURRING, new BigDecimal("197.26")));
+        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
+
+        final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(bpEntitlement.getAccountId(), callContext);
+        assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
+
+        checkNoMoreInvoiceToGenerate(bpEntitlement.getAccountId());
+    }
 
     @Test(groups = "slow")
     public void testRepairWithFullItemAdjustmentV3() throws Exception {
@@ -960,6 +981,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         checkNoMoreInvoiceToGenerate(account);
 
         return bpEntitlement;
+    }
+
+    private void insertInvoiceItems(final InvoiceModelDao invoice) {
+        final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
+        invoiceDao.createInvoice(invoice, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
     }
 
 }

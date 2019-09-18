@@ -156,6 +156,10 @@ public class Item {
         return amount.subtract(adjustedAmount).subtract(currentRepairedAmount);
     }
 
+    public boolean isFullyAdjusted() {
+        return amount.subtract(adjustedAmount).compareTo(BigDecimal.ZERO) == 0;
+    }
+
     public ItemAction getAction() {
         return action;
     }

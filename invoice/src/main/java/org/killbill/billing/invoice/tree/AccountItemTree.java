@@ -99,27 +99,6 @@ public class AccountItemTree {
         // Only used to retrieve the original item for linked items
         allExistingItems.add(existingItem);
 
-        switch (existingItem.getInvoiceItemType()) {
-            case EXTERNAL_CHARGE:
-            case TAX:
-            case CBA_ADJ:
-            case CREDIT_ADJ:
-            case USAGE:
-                return;
-
-            case RECURRING:
-            case REPAIR_ADJ:
-            case FIXED:
-            case ITEM_ADJ:
-                break;
-            case PARENT_SUMMARY:
-                break;
-
-            default:
-                Preconditions.checkState(false, "Unknown invoice item type " + existingItem.getInvoiceItemType());
-
-        }
-
         if (existingItem.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ) {
             final InvoiceItem linkedInvoiceItem = getLinkedInvoiceItem(existingItem, allExistingItems);
             if (linkedInvoiceItem != null &&

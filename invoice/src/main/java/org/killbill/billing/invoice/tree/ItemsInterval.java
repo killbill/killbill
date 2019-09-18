@@ -219,6 +219,12 @@ public class ItemsInterval {
         if (parentAddItem != null) {
             Preconditions.checkState(parentAddItem.getId() != null, "Invalid ADD item=%s", parentAddItem);
             addItemsToBeCancelled.add(parentAddItem.getId());
+
+            // Old behavior compatibility for full item adjustment (Temp code should go away as move in time)
+            // discard as double billing potential old full item adj data that looks like REPAIR
+            if (parentAddItem.isFullyAdjusted()) {
+                addItemsCancelled.add(parentAddItem.getId());
+            }
         }
 
         final Item parentCancelItem = parentItemsInterval.getResulting_CANCEL_ItemNoChecks();

@@ -61,6 +61,9 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     private final String phaseName = "my-phase";
     private final Currency currency = Currency.USD;
 
+
+
+
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1205")
     public void testBlockUnblock() {
 
@@ -933,6 +936,41 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
+
+
+    @Test(groups = "fast")
+    public void testRepairWithFullItemAdjustment() {
+
+        final LocalDate startDate = new LocalDate(2014, 1, 1);
+        final LocalDate itemAdjDate = new LocalDate(2014, 1, 2);
+        final LocalDate endDate = new LocalDate(2014, 2, 1);
+
+        final LocalDate cancelDate = new LocalDate(2014, 1, 23);
+
+        final BigDecimal rate1 = new BigDecimal("12.00");
+        final BigDecimal amount1 = rate1;
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        final InvoiceItem originalAdjusted = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, endDate, amount1, rate1, currency);
+        final InvoiceItem itemAdj = new ItemAdjInvoiceItem(originalAdjusted, itemAdjDate, amount1.negate(), currency);
+
+        // Simulate
+        final InvoiceItem newItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, cancelDate, amount1, rate1, currency);
+
+        tree.addItem(originalAdjusted);
+        tree.addItem(itemAdj);
+        tree.addItem(newItem);
+        tree.flatten(true);
+
+        tree.mergeProposedItem(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, cancelDate, amount1, rate1, currency));
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+
+
     @Test(groups = "fast")
     public void testMergeMonthlyToAnnualWithNoProRation() {
 
@@ -992,7 +1030,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.getRoot().jsonSerializeTree(new ObjectMapper(), outputStream);
 
         final String json = outputStream.toString("UTF-8");
-        final String expectedJson = "[{\"start\":\"2014-01-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"startDate\":\"2014-01-01\",\"endDate\":\"2015-01-01\",\"amount\":10.00,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\"}]},[{\"start\":\"2014-08-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"48db1317-9a6e-4666-bcc5-fc7d3d0defc8\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":1.00,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\"},{\"id\":\"02ec57f5-2723-478b-86ba-ebeaedacb9db\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":10.00,\"currency\":\"USD\",\"linkedId\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"action\":\"CANCEL\"}]}]]";
+        final String expectedJson = "[{\"start\":\"2014-01-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"startDate\":\"2014-01-01\",\"endDate\":\"2015-01-01\",\"amount\":10.00,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\",\"fullyAdjusted\":false}]},[{\"start\":\"2014-08-01\",\"end\":\"2015-01-01\",\"items\":[{\"id\":\"48db1317-9a6e-4666-bcc5-fc7d3d0defc8\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":1.00,\"currency\":\"USD\",\"linkedId\":null,\"action\":\"ADD\",\"fullyAdjusted\":false},{\"id\":\"02ec57f5-2723-478b-86ba-ebeaedacb9db\",\"startDate\":\"2014-08-01\",\"endDate\":\"2015-01-01\",\"amount\":10.00,\"currency\":\"USD\",\"linkedId\":\"e8ba6ce7-9bd4-417d-af53-70951ecaa99f\",\"action\":\"CANCEL\",\"fullyAdjusted\":false}]}]]";
 
         assertEquals(json, expectedJson);
     }

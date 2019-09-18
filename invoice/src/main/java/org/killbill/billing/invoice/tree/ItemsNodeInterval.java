@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.tree.Item.ItemAction;
 import org.killbill.billing.util.jackson.ObjectMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -271,7 +272,7 @@ public class ItemsNodeInterval extends NodeInterval {
                 }
 
                 for (final Item curAddItem : curNodeItems.get_ADD_items()) {
-                    // Sanity: verify the item hasn't been adjusted too much
+                    // Sanity: verify the item hasn't been repaired too much
                     if (curNode.getLeftChild() != null) {
                         final AtomicReference<BigDecimal> totalRepaired = new AtomicReference<BigDecimal>(BigDecimal.ZERO);
                         curNode.getLeftChild()
@@ -286,6 +287,19 @@ public class ItemsNodeInterval extends NodeInterval {
                                    }
                                });
                         Preconditions.checkState(curAddItem.getNetAmount().compareTo(totalRepaired.get()) >= 0, "Item %s overly repaired", curAddItem);
+                    }
+
+                    // Old behavior compatibility for full item adjustment (Temp code should go away as move in time)
+                    // If we see a fully adjusted item and an existing child (one ADD item), we discard the fully adjusted item
+                    // in such a way that we are left with the child that will look like the proposed and nothing will be generated.
+                    if (curAddItem.isFullyAdjusted()) {
+                        final NodeInterval leftChild = curNode.getLeftChild();
+                        if (leftChild != null) {
+                            final ItemsInterval leftChildItems = ((ItemsNodeInterval) leftChild).getItemsInterval();
+                            if (leftChildItems.getItems().size() == 1 && leftChildItems.getItems().get(0).getAction() == ItemAction.ADD) {
+                                curNodeItems.remove(curAddItem);
+                            }
+                        }
                     }
                 }
             }
