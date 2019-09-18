@@ -24,20 +24,18 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
-import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.clock.Clock;
-import org.killbill.commons.locker.GlobalLocker;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class TestCompletionTaskBase extends PaymentTestSuiteWithEmbeddedDB {
+public class TestIncompletePaymentAttemptTaskWithDB extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/757")
     public void testHandleRuntimeExceptions() throws PaymentApiException {
@@ -57,11 +55,10 @@ public class TestCompletionTaskBase extends PaymentTestSuiteWithEmbeddedDB {
                                                                                                                  paymentConfig,
                                                                                                                  paymentDao,
                                                                                                                  clock,
-                                                                                                                 paymentSMHelper,
                                                                                                                  paymentControlStateMachineHelper,
                                                                                                                  accountApi,
                                                                                                                  pluginControlPaymentAutomatonRunner,
-                                                                                                                 locker);
+                                                                                                                 incompletePaymentTransactionTask);
 
         incompletePaymentAttemptTaskWithException.run();
 
@@ -73,8 +70,16 @@ public class TestCompletionTaskBase extends PaymentTestSuiteWithEmbeddedDB {
 
         private final Iterable<PaymentAttemptModelDao> itemsForIteration;
 
-        public IncompletePaymentAttemptTaskWithException(final Iterable<PaymentAttemptModelDao> itemsForIteration, final InternalCallContextFactory internalCallContextFactory, final PaymentConfig paymentConfig, final PaymentDao paymentDao, final Clock clock, final PaymentStateMachineHelper paymentStateMachineHelper, final PaymentControlStateMachineHelper retrySMHelper, final AccountInternalApi accountInternalApi, final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner, final GlobalLocker locker) {
-            super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, locker);
+        public IncompletePaymentAttemptTaskWithException(final Iterable<PaymentAttemptModelDao> itemsForIteration,
+                                                         final InternalCallContextFactory internalCallContextFactory,
+                                                         final PaymentConfig paymentConfig,
+                                                         final PaymentDao paymentDao,
+                                                         final Clock clock,
+                                                         final PaymentControlStateMachineHelper retrySMHelper,
+                                                         final AccountInternalApi accountInternalApi,
+                                                         final PluginControlPaymentAutomatonRunner pluginControlledPaymentAutomatonRunner,
+                                                         final IncompletePaymentTransactionTask incompletePaymentTransactionTask) {
+            super(internalCallContextFactory, paymentConfig, paymentDao, clock, retrySMHelper, accountInternalApi, pluginControlledPaymentAutomatonRunner, incompletePaymentTransactionTask);
             this.itemsForIteration = itemsForIteration;
         }
 
@@ -84,7 +89,7 @@ public class TestCompletionTaskBase extends PaymentTestSuiteWithEmbeddedDB {
         }
 
         @Override
-        public void doIteration(final PaymentAttemptModelDao attempt) {
+        public boolean doIteration(final PaymentAttemptModelDao attempt) {
             throw new NullPointerException("NPE for tests");
         }
     }
