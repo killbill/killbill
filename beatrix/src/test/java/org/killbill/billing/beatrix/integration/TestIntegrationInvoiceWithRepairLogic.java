@@ -824,24 +824,22 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         // Move clock to 2013-09-17
         clock.addDays(30);
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
         bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.START_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
 
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(bpEntitlement.getAccountId(), false, false, callContext);
-        assertEquals(invoices.size(), 3);
+        assertEquals(invoices.size(), 2);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2013, 8, 18), InvoiceItemType.ITEM_ADJ, new BigDecimal("-2399.95")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, BigDecimal.ZERO));
-        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
-
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(bpEntitlement.getAccountId(), callContext);
         assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
+
+        checkNoMoreInvoiceToGenerate(bpEntitlement.getAccountId());
     }
 
     @Test(groups = "slow")
@@ -852,23 +850,21 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         ////
         // Move clock to 2013-09-17
         clock.addDays(30);
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
         bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(bpEntitlement.getAccountId(), false, false, callContext);
-        assertEquals(invoices.size(), 3);
+        assertEquals(invoices.size(), 2);
         ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2013, 8, 18), InvoiceItemType.ITEM_ADJ, new BigDecimal("-2399.95")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, BigDecimal.ZERO));
-        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
-
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(bpEntitlement.getAccountId(), callContext);
         assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
+
+        checkNoMoreInvoiceToGenerate(bpEntitlement.getAccountId());
     }
 
     //
@@ -936,6 +932,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(bpEntitlement.getAccountId(), callContext);
         assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);
 
+        checkNoMoreInvoiceToGenerate(bpEntitlement.getAccountId());
     }
 
     private DefaultEntitlement setupTestRepairWithFullItemAdjustment() throws Exception {
@@ -982,15 +979,14 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         return bpEntitlement;
     }
+
     private void insertInvoiceItems(final InvoiceModelDao invoice) {
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
         invoiceDao.createInvoice(invoice, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
     }
 
-
     @Test(groups = "slow")
     public void testRepairWithFullItemAdjustmentInParts() throws Exception {
-
 
         final LocalDate today = new LocalDate(2013, 7, 19);
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
@@ -1034,7 +1030,6 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         refundPaymentWithInvoiceItemAdjAndCheckForCompletion(account, payment1, iias, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_ADJUSTMENT);
         checkNoMoreInvoiceToGenerate(account);
 
-
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice1.getId(), originalRecurringId, new LocalDate(2013, 8, 18), new BigDecimal("1000"), account.getCurrency(), "", "", ImmutableList.of(), callContext);
         assertListenerStatus();
@@ -1045,23 +1040,18 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         // Move clock to 2013-09-17
         clock.addDays(30);
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
         bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(bpEntitlement.getAccountId(), false, false, callContext);
-        assertEquals(invoices.size(), 3);
+        assertEquals(invoices.size(), 2);
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2013, 8, 18), InvoiceItemType.ITEM_ADJ, new BigDecimal("-1000")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2013, 8, 18), InvoiceItemType.ITEM_ADJ, new BigDecimal("-1000")),
                 new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2013, 8, 18), InvoiceItemType.ITEM_ADJ, new BigDecimal("-399.95")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
-
-        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2013, 9, 17), new LocalDate(2014, 8, 18), InvoiceItemType.REPAIR_ADJ, BigDecimal.ZERO));
-        invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
-
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(bpEntitlement.getAccountId(), callContext);
         assertEquals(accountBalance.compareTo(BigDecimal.ZERO), 0);

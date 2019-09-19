@@ -18,6 +18,7 @@
 
 package org.killbill.billing.invoice.tree;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -160,7 +161,13 @@ public class AccountItemTree {
         for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
             final List<InvoiceItem> simplifiedView = tree.getView();
             if (simplifiedView.size() > 0) {
-                result.addAll(simplifiedView);
+                for (final InvoiceItem i : simplifiedView) {
+                    // Filter out $0 REPAIR_ADJ - these items make a lot of sense conceptually for us but may confuse users...
+                    if (i.getAmount().compareTo(BigDecimal.ZERO) == 0 && i.getInvoiceItemType() == InvoiceItemType.REPAIR_ADJ) {
+                        continue;
+                    }
+                    result.add(i);
+                }
             }
         }
         return result;
