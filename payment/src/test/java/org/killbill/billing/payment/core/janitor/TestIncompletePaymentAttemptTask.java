@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,10 +28,10 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-public class TestIncompletePaymentTransactionTask extends PaymentTestSuiteNoDB {
+public class TestIncompletePaymentAttemptTask extends PaymentTestSuiteNoDB {
 
     @Inject
-    protected IncompletePaymentTransactionTask incompletePaymentTransactionTask;
+    protected IncompletePaymentAttemptTask incompletePaymentAttemptTask;
 
     @Test(groups = "fast")
     public void testGetNextNotificationTime() {
@@ -39,12 +39,10 @@ public class TestIncompletePaymentTransactionTask extends PaymentTestSuiteNoDB {
 
         // Based on config "5m,1h,1d,1d,1d,1d,1d"
         for (int i = 1; i < 8; i++) {
-            final DateTime nextTime = incompletePaymentTransactionTask.getNextNotificationTime(TransactionStatus.UNKNOWN, i, internalCallContext);
+            final DateTime nextTime = incompletePaymentAttemptTask.getNextNotificationTime(TransactionStatus.UNKNOWN, i, internalCallContext);
             assertNotNull(nextTime);
             assertTrue(nextTime.compareTo(initTime) > 0);
-            if (i == 0) {
-                assertTrue(nextTime.compareTo(initTime.plusMinutes(5).plusSeconds(1)) < 0);
-            } else if (i == 1) {
+            if (i == 1) {
                 assertTrue(nextTime.compareTo(initTime.plusHours(1).plusSeconds(1)) < 0);
             } else if (i == 2) {
                 assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
@@ -58,6 +56,6 @@ public class TestIncompletePaymentTransactionTask extends PaymentTestSuiteNoDB {
                 assertTrue(nextTime.compareTo(initTime.plusDays(1).plusSeconds(1)) < 0);
             }
         }
-        assertNull(incompletePaymentTransactionTask.getNextNotificationTime(TransactionStatus.UNKNOWN, 8, internalCallContext));
+        assertNull(incompletePaymentAttemptTask.getNextNotificationTime(TransactionStatus.UNKNOWN, 8, internalCallContext));
     }
 }
