@@ -37,6 +37,7 @@ import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PaymentRefresher;
+import org.killbill.billing.payment.core.janitor.IncompletePaymentAttemptTask;
 import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
@@ -114,6 +115,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected Janitor janitor;
     @Inject
     protected IncompletePaymentTransactionTask incompletePaymentTransactionTask;
+    @Inject
+    protected IncompletePaymentAttemptTask incompletePaymentAttemptTask;
     @Inject
     protected GlobalLocker locker;
     @Inject
