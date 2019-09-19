@@ -343,7 +343,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                 paymentControlPluginNames != null &&
                 paymentControlPluginNames.size() == 1 &&
                 InvoicePaymentControlPluginApi.PLUGIN_NAME.equals(paymentControlPluginNames.get(0))) {
-                log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'. Invoice has already been paid", attemptId, toPluginNamesOnError(paymentControlPluginNames));
+                log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames));
             } else {
                 log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
             }

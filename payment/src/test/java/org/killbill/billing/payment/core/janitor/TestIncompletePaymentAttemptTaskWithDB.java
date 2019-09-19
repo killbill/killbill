@@ -89,7 +89,7 @@ public class TestIncompletePaymentAttemptTaskWithDB extends PaymentTestSuiteWith
         }
 
         @Override
-        public boolean doIteration(final PaymentAttemptModelDao attempt) {
+        public boolean doIteration(final PaymentAttemptModelDao attempt, final boolean isApiPayment) {
             throw new NullPointerException("NPE for tests");
         }
     }

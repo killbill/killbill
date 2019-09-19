@@ -319,6 +319,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
             if (!InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
                 // abort payment if the invoice status is not COMMITTED
+                log.info("Aborting payment: invoiceId='{}' is NOT COMMITTED", invoice.getId());
                 return new DefaultPriorPaymentControlResult(true);
             }
 
@@ -327,6 +328,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             final AccountData accountData = accountApi.getAccountById(invoice.getAccountId(), internalContext);
             if (((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) || // Valid when we initially create the child invoice (even if parent invoice does not exist yet)
                 (invoice.getParentAccountId() != null))  { // Valid after we have unparented the child
+                log.info("Aborting payment: invoiceId='{}' is delegated to parent", invoice.getId());
                 return new DefaultPriorPaymentControlResult(true);
             }
 
@@ -334,6 +336,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             // Is remaining amount > 0 ?
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
             if (requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                log.info("Aborting payment: invoiceId='{}' has already been paid", invoice.getId());
                 return new DefaultPriorPaymentControlResult(true);
             }
 
@@ -356,6 +359,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
 
             // Are we in auto-payoff ?
             if (insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
+                log.info("Aborting payment: invoiceId='{}' is AUTO_PAY_OFF", invoice.getId());
                 return new DefaultPriorPaymentControlResult(true);
             }
 
@@ -656,7 +660,6 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     private BigDecimal validateAndComputePaymentAmount(final Invoice invoice, @Nullable final BigDecimal inputAmount, final boolean isApiPayment) throws PaymentControlApiException {
 
         if (invoice.getBalance().compareTo(BigDecimal.ZERO) <= 0) {
-            log.info("invoiceId='{}' has already been paid", invoice.getId());
             return BigDecimal.ZERO;
         }
 

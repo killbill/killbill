@@ -135,7 +135,13 @@ public class IncompletePaymentAttemptTask implements Runnable {
 
             final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(notificationKey.getUuidKey(), internalTenantContext);
             if (TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
-                insertNewNotificationForUnresolvedTransactionIfNeeded(notificationKey.getUuidKey(), paymentTransaction.getTransactionStatus(), notificationKey.getAttemptNumber(), userToken, accountRecordId, tenantRecordId);
+                insertNewNotificationForUnresolvedTransactionIfNeeded(notificationKey.getUuidKey(),
+                                                                      paymentTransaction.getTransactionStatus(),
+                                                                      notificationKey.getAttemptNumber(),
+                                                                      userToken,
+                                                                      isApiPayment(notificationKey),
+                                                                      accountRecordId,
+                                                                      tenantRecordId);
             }
         }
     }
@@ -149,6 +155,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                               event.getStatus(),
                                                               0,
                                                               event.getUserToken(),
+                                                              isApiPayment(event),
                                                               event.getSearchKey1(),
                                                               event.getSearchKey2());
     }
@@ -169,7 +176,10 @@ public class IncompletePaymentAttemptTask implements Runnable {
                     return;
                 }
                 try {
-                    doIteration(item);
+                    // isApiPayment=false might not always be correct here: a payment with control plugin
+                    // might have been triggered from the API and crashed in an INIT state, which the loop
+                    // would attempt to fix here. But this is really an edge case.
+                    doIteration(item, false);
                 } catch (final Exception e) {
                     log.warn(e.getMessage());
                 }
@@ -191,8 +201,12 @@ public class IncompletePaymentAttemptTask implements Runnable {
         return incompleteAttempts;
     }
 
+    // Since the code is a bit tedious to follow, I'm adding some notes here on where isApiPayment is used (valid as of 09/19/2019 - might become stale!):
+    //  * Passed through to plugins as PaymentControlContext#isApiPayment (e.g. InvoicePaymentControlPluginApi)
+    //  * Used in PaymentEnteringStateCallback to decide whether to send a PaymentErrorInternalEvent
+    // To ensure that payments are retried, isApiPayment must be true (see https://github.com/killbill/killbill/issues/880).
     @VisibleForTesting
-    public boolean doIteration(final PaymentAttemptModelDao attempt) {
+    public boolean doIteration(final PaymentAttemptModelDao attempt, final boolean isApiPayment) {
         // We don't grab account lock here as the lock will be taken when calling the completeRun API.
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(attempt.getTenantRecordId(), attempt.getAccountRecordId());
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(tenantContext.getTenantRecordId(),
@@ -231,7 +245,6 @@ public class IncompletePaymentAttemptTask implements Runnable {
             log.info("Completing attemptId='{}', stateName='{}'", attempt.getId(), attempt.getStateName());
 
             final Account account = accountInternalApi.getAccountById(attempt.getAccountId(), tenantContext);
-            final boolean isApiPayment = true; // unclear
             final PaymentStateControlContext paymentStateContext = new PaymentStateControlContext(attempt.toPaymentControlPluginNames(),
                                                                                                   isApiPayment,
                                                                                                   null,
@@ -279,6 +292,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                    null,
                                                    notificationKey.getAttemptNumber(),
                                                    userToken,
+                                                   isApiPayment(notificationKey),
                                                    internalTenantContext);
     }
 
@@ -287,6 +301,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                        final UUID paymentTransactionId,
                                                        final TransactionStatus currentTransactionStatus,
                                                        final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
+                                                       final boolean isApiPayment,
                                                        final InternalTenantContext internalTenantContext) {
         try {
             return updatePaymentAndTransactionIfNeeded(accountId,
@@ -295,6 +310,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                        paymentTransactionInfoPlugin,
                                                        null,
                                                        null,
+                                                       isApiPayment,
                                                        internalTenantContext);
         } catch (final LockFailedException e) {
             log.warn("Error locking accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
@@ -308,6 +324,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                         @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
                                                         @Nullable final Integer attemptNumber,
                                                         @Nullable final UUID userToken,
+                                                        final boolean isApiPayment,
                                                         final InternalTenantContext internalTenantContext) throws LockFailedException {
         // First, fix the transaction itself
         final TransactionStatus latestTransactionStatus = incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded(accountId,
@@ -316,6 +333,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                                                                                                paymentTransactionInfoPlugin,
                                                                                                                                attemptNumber,
                                                                                                                                userToken,
+                                                                                                                               isApiPayment,
                                                                                                                                internalTenantContext);
         final boolean hasTransactionChanged = latestTransactionStatus == null;
 
@@ -326,6 +344,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                                   latestTransactionStatus,
                                                                   attemptNumber,
                                                                   userToken,
+                                                                  isApiPayment,
                                                                   internalTenantContext.getAccountRecordId(),
                                                                   internalTenantContext.getTenantRecordId());
         }
@@ -338,7 +357,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
             if (paymentAttemptModelDao != null) {
                 if (hasTransactionChanged || retrySMHelper.getInitialState().getName().equals(paymentAttemptModelDao.getStateName())) {
                     // Run the completion part of the state machine to call the plugins and update the attempt in the right terminal state)
-                    hasAttemptChanged = doIteration(paymentAttemptModelDao);
+                    hasAttemptChanged = doIteration(paymentAttemptModelDao, isApiPayment);
                 }
             }
         }
@@ -350,13 +369,14 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                                        final TransactionStatus transactionStatus,
                                                                        final Integer attemptNumber,
                                                                        final UUID userToken,
+                                                                       final boolean isApiPayment,
                                                                        final Long accountRecordId,
                                                                        final Long tenantRecordId) {
         final InternalTenantContext tenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);
 
         // Increment value before we insert
         final Integer newAttemptNumber = attemptNumber + 1;
-        final NotificationEvent key = new JanitorNotificationKey(paymentTransactionId, IncompletePaymentTransactionTask.class.toString(), newAttemptNumber);
+        final NotificationEvent key = new JanitorNotificationKey(paymentTransactionId, IncompletePaymentTransactionTask.class.toString(), isApiPayment, newAttemptNumber);
         final DateTime notificationTime = getNextNotificationTime(transactionStatus, newAttemptNumber, tenantContext);
         // Will be null in the GET path or when we run out opf attempts..
         if (notificationTime != null) {
@@ -390,5 +410,15 @@ public class IncompletePaymentAttemptTask implements Runnable {
     private DateTime getCreatedDateBefore() {
         final long delayBeforeNowMs = paymentConfig.getIncompleteAttemptsTimeSpanDelay().getMillis();
         return clock.getUTCNow().minusMillis((int) delayBeforeNowMs);
+    }
+
+    private boolean isApiPayment(final JanitorNotificationKey notificationKey) {
+        // For old data, assume it is not an API payment
+        return notificationKey.getApiPayment() == null ? false : notificationKey.getApiPayment();
+    }
+
+    private boolean isApiPayment(final PaymentInternalEvent event) {
+        // For old data, assume it is not an API payment
+        return event.isApiPayment() == null ? false : event.isApiPayment();
     }
 }
