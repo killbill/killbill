@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -132,7 +132,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(refreshedPaymentModelDao.getStateName(), "AUTH_ERRORED");
         Assert.assertNull(refreshedPaymentModelDao.getLastSuccessStateName());
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
-        Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedCurrency(), Currency.EUR);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorCode(), "");
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorMsg(), "");
@@ -244,7 +244,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(refreshedPaymentModelDao.getStateName(), "AUTH_ERRORED");
         Assert.assertNull(refreshedPaymentModelDao.getLastSuccessStateName());
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
-        Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedCurrency(), Currency.EUR);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorCode(), "error-code");
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorMsg(), "error-msg");

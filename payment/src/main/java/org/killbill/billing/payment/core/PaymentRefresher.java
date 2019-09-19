@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -87,6 +87,7 @@ import com.google.common.collect.Ordering;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationFromPlugins;
 
+// Retrieve payment(s), making sure the Janitor is invoked (on-the-fly Janitor)
 public class PaymentRefresher extends ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentRefresher.class);
@@ -113,9 +114,18 @@ public class PaymentRefresher extends ProcessorBase {
         this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
     }
 
-    protected void onJanitorChange(final PaymentTransactionModelDao curPaymentTransactionModelDao,
-                                   final InternalTenantContext internalTenantContext) {}
+    protected boolean invokeJanitor(final UUID accountId,
+                                    final PaymentTransactionModelDao paymentTransactionModelDao,
+                                    final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
+                                    final InternalTenantContext internalTenantContext) {
+        return incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded(accountId,
+                                                                                    paymentTransactionModelDao.getId(),
+                                                                                    paymentTransactionModelDao.getTransactionStatus(),
+                                                                                    paymentTransactionInfoPlugin,
+                                                                                    internalTenantContext);
+    }
 
+    // Invoke the Janitor on-the-fly for all GET operations and for most payment operations (except notifyPendingPaymentOfStateChanged)
     public PaymentModelDao invokeJanitor(final PaymentModelDao curPaymentModelDao,
                                          final Collection<PaymentTransactionModelDao> curTransactionsModelDao,
                                          @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions,
@@ -129,12 +139,13 @@ public class PaymentRefresher extends ProcessorBase {
             if (paymentTransactionInfoPlugin != null) {
                 // Make sure to invoke the Janitor task in case the plugin fixes its state on the fly
                 // See https://github.com/killbill/killbill/issues/341
-                final boolean hasChanged = incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeededWithAccountLock(newPaymentModelDao, newPaymentTransactionModelDao, paymentTransactionInfoPlugin, internalTenantContext);
+                final boolean hasChanged = invokeJanitor(newPaymentModelDao.getAccountId(),
+                                                         newPaymentTransactionModelDao,
+                                                         paymentTransactionInfoPlugin,
+                                                         internalTenantContext);
                 if (hasChanged) {
                     newPaymentModelDao = paymentDao.getPayment(newPaymentModelDao.getId(), internalTenantContext);
                     newPaymentTransactionModelDao = paymentDao.getPaymentTransaction(newPaymentTransactionModelDao.getId(), internalTenantContext);
-
-                    onJanitorChange(curPaymentTransactionModelDao, internalTenantContext);
                 }
             } else {
                 log.debug("Unable to find transaction={} from pluginTransactions={}", curPaymentTransactionModelDao, pluginTransactions);
@@ -400,7 +411,7 @@ public class PaymentRefresher extends ProcessorBase {
         return toPayment(paymentModelDao, transactionsForPayment, pluginTransactions, withAttempts, tenantContextWithAccountRecordId);
     }
 
-    // Used in bulk get API (getAccountPayments)
+    // Used in both single get APIs and bulk get APIs
     private Payment toPayment(final PaymentModelDao curPaymentModelDao, final Collection<PaymentTransactionModelDao> allTransactionsModelDao, @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions, final boolean withAttempts, final InternalTenantContext internalTenantContext) {
         // Need to filter for optimized codepaths looking up by account_record_id
         final Collection<PaymentTransactionModelDao> transactionsModelDao = new LinkedList<PaymentTransactionModelDao>(Collections2.filter(allTransactionsModelDao, new Predicate<PaymentTransactionModelDao>() {
