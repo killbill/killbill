@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,8 +18,6 @@
 
 package org.killbill.billing.util.entity.dao;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.Iterator;
 
 import javax.annotation.Nullable;
@@ -31,19 +29,28 @@ import org.killbill.billing.util.entity.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class DefaultPaginationSqlDaoHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultPaginationSqlDaoHelper.class);
 
     // Number large enough so that small installations have access to an accurate count
     // but small enough to not impact very large deployments
-    // TODO Should this be configurable per tenant?
-    private static final Long SIMPLE_PAGINATION_THRESHOLD = 20000L;
+    private static final Long DEFAULT_SIMPLE_PAGINATION_THRESHOLD = 20000L;
 
     private final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
+    private final Long simplePaginationThreshold;
 
     public DefaultPaginationSqlDaoHelper(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao) {
+        this(transactionalSqlDao, DEFAULT_SIMPLE_PAGINATION_THRESHOLD);
+    }
+
+    @VisibleForTesting
+    DefaultPaginationSqlDaoHelper(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao,
+                                  final Long simplePaginationThreshold) {
         this.transactionalSqlDao = transactionalSqlDao;
+        this.simplePaginationThreshold = simplePaginationThreshold;
     }
 
     public <E extends Entity, M extends EntityModelDao<E>, S extends EntitySqlDao<M, E>> Pagination<M> getPagination(final Class<? extends EntitySqlDao<M, E>> sqlDaoClazz,
@@ -77,24 +84,10 @@ public class DefaultPaginationSqlDaoHelper {
             maxNbRecords = null;
         } else {
             // The count to get maxNbRecords can be expensive on very large datasets. As a heuristic to check how large that number is,
-            // we retrieve 1 record at offset SIMPLE_PAGINATION_THRESHOLD (pretty fast). If we've found a record, that means the count is larger
+            // we retrieve 1 record at offset simplePaginationThreshold (pretty fast). If we've found a record, that means the count is larger
             // than this threshold and we don't issue the full count query
-            final Iterator<M> simplePaginationIterator = paginationIteratorBuilder.build((S) sqlDao, SIMPLE_PAGINATION_THRESHOLD, 1L, ordering, context);
-            final boolean veryLargeDataSet = simplePaginationIterator.hasNext();
-
-            // Make sure to free resources (https://github.com/killbill/killbill/issues/853)
-            if (simplePaginationIterator instanceof Closeable) {
-                // Always the case with the current implementation (simplePaginationIterator is a org.skife.jdbi.v2.ResultIterator)
-                try {
-                    ((Closeable) simplePaginationIterator).close();
-                } catch (final IOException e) {
-                    logger.warn("Unable to close iterator", e);
-                }
-            } else {
-                while (simplePaginationIterator.hasNext()) {
-                    simplePaginationIterator.next();
-                }
-            }
+            final Long recordIdAtSimplePaginationOffset = sqlDao.getRecordIdAtOffset(simplePaginationThreshold);
+            final boolean veryLargeDataSet = recordIdAtSimplePaginationOffset != null;
 
             if (veryLargeDataSet) {
                 maxNbRecords = null;
