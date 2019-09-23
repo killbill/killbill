@@ -25,6 +25,7 @@
     <filter>
         <filter-name>instrumentedFilter</filter-name>
         <filter-class>com.codahale.metrics.servlet.InstrumentedFilter</filter-class>
+        <async-supported>true</async-supported>
     </filter>
     <filter-mapping>
         <filter-name>instrumentedFilter</filter-name>
@@ -34,6 +35,7 @@
         <!-- Filter all requests through Shiro -->
         <filter-name>ShiroFilter</filter-name>
         <filter-class>org.apache.shiro.web.servlet.ShiroFilter</filter-class>
+        <async-supported>true</async-supported>
     </filter>
     <filter-mapping>
         <!-- The Shiro filter-mapping should come first -->
@@ -48,6 +50,7 @@
         <!-- Guice emulates Servlet API with DI -->
         <filter-name>guiceFilter</filter-name>
         <filter-class>org.killbill.billing.server.filters.KillbillGuiceFilter</filter-class>
+        <async-supported>true</async-supported>
     </filter>
     <filter-mapping>
         <filter-name>guiceFilter</filter-name>
