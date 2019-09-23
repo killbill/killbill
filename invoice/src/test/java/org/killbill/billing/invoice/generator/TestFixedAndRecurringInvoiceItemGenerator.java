@@ -658,6 +658,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         }
     }
 
+    // Test fully repaired item get removed and instead we generate correct item
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testOverlappingItemsWithRepair() throws InvoiceApiException {
         final LocalDate startDate = new LocalDate("2016-01-01");
@@ -708,7 +709,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         startDate,
                                                         startDate.plusDays(29),
-                                                        BigDecimal.ONE.negate(), // Note! The amount will not matter
+                                                        amount.negate(),
                                                         account.getCurrency(),
                                                         invoice.getInvoiceItems().get(0).getId()));
         existingInvoices.add(invoice);
@@ -729,6 +730,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         assertEquals(generatedItems.get(0).getAmount().compareTo(amount), 0);
     }
 
+    // Also a case we REPAIR amount does not match the dates and the current logic is to assert on the dates
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testOverlappingItemsWithTooManyRepairs() throws InvoiceApiException {
         final LocalDate startDate = new LocalDate("2016-01-01");
@@ -779,7 +781,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         startDate,
                                                         startDate.plusDays(29),
-                                                        BigDecimal.ONE.negate(), // Note! The amount will not matter
+                                                        amount.negate(), // Note! The amount will not matter
                                                         account.getCurrency(),
                                                         invoice.getInvoiceItems().get(0).getId()));
         // Twice!
@@ -795,14 +797,14 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         existingInvoices.add(invoice);
 
         try {
-            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
-                                                                                                         UUID.randomUUID(),
-                                                                                                         events,
-                                                                                                         existingInvoices,
-                                                                                                         startDate,
-                                                                                                         account.getCurrency(),
-                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         internalCallContext).getItems();
+            fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                UUID.randomUUID(),
+                                                                events,
+                                                                existingInvoices,
+                                                                startDate,
+                                                                account.getCurrency(),
+                                                                new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -986,24 +988,24 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         startDate,
                                                         startDate.plusMonths(1),
-                                                        BigDecimal.ONE.negate(),
+                                                        amount.negate(),
                                                         account.getCurrency(),
                                                         invoice.getInvoiceItems().get(0).getId()));
         invoice.addInvoiceItem(new ItemAdjInvoiceItem(invoice.getInvoiceItems().get(0),
                                                       startDate,
-                                                      amount.negate(), // Note! The amount will matter
+                                                      BigDecimal.ONE.negate(), // Note! The amount will matter
                                                       account.getCurrency()));
         existingInvoices.add(invoice);
 
         try {
-            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
-                                                                                                         UUID.randomUUID(),
-                                                                                                         events,
-                                                                                                         existingInvoices,
-                                                                                                         startDate,
-                                                                                                         account.getCurrency(),
-                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         internalCallContext).getItems();
+            fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                UUID.randomUUID(),
+                                                                events,
+                                                                existingInvoices,
+                                                                startDate,
+                                                                account.getCurrency(),
+                                                                new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -1259,18 +1261,18 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         existingInvoices.add(invoice);
 
         try {
-            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
-                                                                                                         UUID.randomUUID(),
-                                                                                                         events,
-                                                                                                         existingInvoices,
-                                                                                                         startDate,
-                                                                                                         account.getCurrency(),
-                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         internalCallContext).getItems();
+            fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                UUID.randomUUID(),
+                                                                events,
+                                                                existingInvoices,
+                                                                startDate,
+                                                                account.getCurrency(),
+                                                                new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
-            assertTrue(e.getCause().getMessage().endsWith("overly repaired"));
+            assertTrue(e.getCause().getMessage().startsWith("Too many repairs"));
         }
     }
 
