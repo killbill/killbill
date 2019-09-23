@@ -168,8 +168,8 @@ public class BillingEventSetJson {
         public BillingEventJson(final BillingEvent event) {
             this.bcdLocal = event.getBillCycleDayLocal();
             this.alignment = event.getBillingAlignment();
-            this.planName = event.getPlan().getName();
-            this.phaseName = event.getPlanPhase().getName();
+            this.planName = event.getPlan() != null ? event.getPlan().getName() : null;
+            this.phaseName = event.getPlanPhase() != null ? event.getPlanPhase().getName() : null;
             this.billingPeriod = event.getBillingPeriod();
             this.effDate = event.getEffectiveDate();
             this.fixedPrice = event.getFixedPrice();
