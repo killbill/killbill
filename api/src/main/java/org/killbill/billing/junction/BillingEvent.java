@@ -83,7 +83,7 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the recurring price for the phase
      */
-    BigDecimal getRecurringPrice() throws CatalogApiException;
+    BigDecimal getRecurringPrice();
 
     /**
      * @return the currency for the account being invoiced

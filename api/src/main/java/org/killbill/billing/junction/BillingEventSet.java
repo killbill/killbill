@@ -26,6 +26,8 @@ import java.util.UUID;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 public interface BillingEventSet extends SortedSet<BillingEvent> {
 
     public boolean isAccountAutoInvoiceOff();
@@ -37,4 +39,7 @@ public interface BillingEventSet extends SortedSet<BillingEvent> {
     public List<UUID> getSubscriptionIdsWithAutoInvoiceOff();
 
     public Map<String, Usage> getUsages();
+
+    public byte[] toLZJzon();
+
 }

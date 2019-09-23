@@ -808,7 +808,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         newItems.add(recurring3);
         newItems.add(repair3);
         shellInvoice.addInvoiceItems(newItems);
-        invoiceDao.createInvoice(shellInvoice, ImmutableSet.of(), new FutureAccountNotifications(), null, internalCallContext);
+        invoiceDao.createInvoice(shellInvoice, null, ImmutableSet.of(), new FutureAccountNotifications(), null, internalCallContext);
 
 
         // Move ahead one month, verify nothing from previous data was generated

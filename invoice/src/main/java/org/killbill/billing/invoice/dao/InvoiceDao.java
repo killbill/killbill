@@ -44,6 +44,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     // Used by InvoiceDispatcher only for regular invoice runs
     void createInvoice(final InvoiceModelDao invoice,
+                       final byte[] lzJsonBillingEvents,
                        final Set<InvoiceTrackingModelDao> trackingIds,
                        final FutureAccountNotifications callbackDateTimePerSubscriptions,
                        final ExistingInvoiceMetadata existingInvoiceMetadata,
@@ -51,6 +52,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     // Used by APIs, for HA, etc.
     List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
+                                             final byte[] lzJsonBillingEvents,
                                              final Set<InvoiceTrackingModelDao> trackingIds,
                                              final InternalCallContext context);
 

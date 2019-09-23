@@ -569,7 +569,7 @@ public class InvoiceDispatcher {
             } else {
                 log.info("Generated null invoice for accountId='{}', targetDate='{}'", accountId, originalTargetDate);
 
-                final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
+                final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, billingEvents.toLZJzon(), clock.getUTCToday(),
                                                                            internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), internalCallContext.getUserToken());
 
                 commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
@@ -625,7 +625,7 @@ public class InvoiceDispatcher {
 
                 // Commit invoice on disk
                 final ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(existingInvoices);
-                commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, trackingIds, futureAccountNotifications, existingInvoiceMetadata, internalCallContext);
+                commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, billingEvents.toLZJzon(), trackingIds, futureAccountNotifications, existingInvoiceMetadata, internalCallContext);
                 success = true;
 
                 try {
@@ -813,19 +813,20 @@ public class InvoiceDispatcher {
     private void commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
                                                         final FutureAccountNotifications futureAccountNotifications,
                                                         final InternalCallContext context) {
-        commitInvoiceAndSetFutureNotifications(account, null, ImmutableSet.of(), futureAccountNotifications, null, context);
+        commitInvoiceAndSetFutureNotifications(account,  null, null, ImmutableSet.of(), futureAccountNotifications, null, context);
     }
 
 
     private void commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
                                                         @Nullable final InvoiceModelDao invoiceModelDao,
+                                                        final byte[] lzBillingEvents,
                                                         final Set<InvoiceTrackingModelDao> trackingIds,
                                                         final FutureAccountNotifications futureAccountNotifications,
                                                         final ExistingInvoiceMetadata existingInvoiceMetadata,
                                                         final InternalCallContext context) {
         final boolean isThereAnyItemsLeft = invoiceModelDao != null && !invoiceModelDao.getInvoiceItems().isEmpty();
         if (isThereAnyItemsLeft) {
-            invoiceDao.createInvoice(invoiceModelDao, trackingIds, futureAccountNotifications, existingInvoiceMetadata, context);
+            invoiceDao.createInvoice(invoiceModelDao, lzBillingEvents, trackingIds, futureAccountNotifications, existingInvoiceMetadata, context);
         } else {
             invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, context);
         }
@@ -1125,7 +1126,7 @@ public class InvoiceDispatcher {
             List<InvoiceModelDao> invoices = new ArrayList<InvoiceModelDao>();
             invoices.add(draftParentInvoice);
             log.info("Adding new itemId='{}', amount='{}' on existing DRAFT invoiceId='{}'", parentInvoiceItem.getId(), childInvoiceAmount, draftParentInvoice.getId());
-            invoiceDao.createInvoices(invoices, ImmutableSet.of(), parentContext);
+            invoiceDao.createInvoices(invoices, null, ImmutableSet.of(), parentContext);
         } else {
             if (shouldIgnoreChildInvoice(childInvoice, childInvoiceAmount)) {
                 return;
@@ -1137,7 +1138,7 @@ public class InvoiceDispatcher {
             draftParentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
 
             log.info("Adding new itemId='{}', amount='{}' on new DRAFT invoiceId='{}'", parentInvoiceItem.getId(), childInvoiceAmount, draftParentInvoice.getId());
-            invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(draftParentInvoice), ImmutableSet.of(), parentContext);
+            invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(draftParentInvoice), null, ImmutableSet.of(), parentContext);
         }
 
         // save parent child invoice relation
@@ -1239,7 +1240,7 @@ public class InvoiceDispatcher {
                                                             parentSummaryInvoiceItem.getId(),
                                                             null);
             parentInvoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(adj));
-            invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(parentInvoiceModelDao), ImmutableSet.of(), parentContext);
+            invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(parentInvoiceModelDao), null, ImmutableSet.of(), parentContext);
             return;
         }
 

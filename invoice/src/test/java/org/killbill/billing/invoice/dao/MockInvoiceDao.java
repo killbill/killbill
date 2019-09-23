@@ -65,6 +65,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice,
+                              final byte[] lzBillingEvents,
                               final Set<InvoiceTrackingModelDao> trackingIds,
                               final FutureAccountNotifications callbackDateTimePerSubscriptions,
                               final ExistingInvoiceMetadata existingInvoiceMetadata,
@@ -75,7 +76,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                           InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice), invoice.getCurrency(),
-                                                          context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
+                                                          lzBillingEvents, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
         } catch (final PersistentBus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
@@ -88,6 +89,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoiceModelDaos,
+                                                    final byte[] lzBillingEvents,
                                                     final Set<InvoiceTrackingModelDao> trackingIds,
                                                     final InternalCallContext context) {
         synchronized (monitor) {

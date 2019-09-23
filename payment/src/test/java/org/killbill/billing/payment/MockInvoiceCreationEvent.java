@@ -82,6 +82,11 @@ public class MockInvoiceCreationEvent extends BusEventBase implements InvoiceCre
     }
 
     @Override
+    public byte[] getLZBillingEvents() {
+        return new byte[0];
+    }
+
+    @Override
     public String toString() {
         return "DefaultInvoiceCreationNotification [invoiceId=" + invoiceId + ", accountId=" + accountId + ", amountOwed=" + amountOwed + ", currency=" + currency + ", invoiceCreationDate=" + invoiceCreationDate + "]";
     }

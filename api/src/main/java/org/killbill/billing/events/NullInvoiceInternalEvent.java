@@ -18,5 +18,5 @@ package org.killbill.billing.events;
 
 
 public interface NullInvoiceInternalEvent extends InvoiceInternalEvent {
-
+    public byte[] getLZBillingEvents();
 }

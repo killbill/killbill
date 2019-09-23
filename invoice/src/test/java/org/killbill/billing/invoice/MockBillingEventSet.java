@@ -77,6 +77,11 @@ public class MockBillingEventSet extends TreeSet<BillingEvent> implements Billin
         return Collections.emptyMap();
     }
 
+    @Override
+    public byte[] toLZJzon() {
+        return new byte[0];
+    }
+
     public void setAccountInvoiceOff(final boolean isAccountInvoiceOff) {
         this.isAccountInvoiceOff = isAccountInvoiceOff;
     }

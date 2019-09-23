@@ -29,4 +29,6 @@ public interface InvoiceCreationInternalEvent extends InvoiceInternalEvent {
 
     public Currency getCurrency();
 
+    public byte[] getLZBillingEvents();
+
 }

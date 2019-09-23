@@ -32,12 +32,18 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.junction.plumbing.billing.json.BillingEventSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements SortedSet<BillingEvent>, BillingEventSet {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultBillingEventSet.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -94,6 +100,16 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
             result.put(cur.getName(), cur);
         }
         return result;
+    }
+
+    @Override
+    public byte[] toLZJzon()  {
+        try {
+            return BillingEventSerializer.serialize(this);
+        } catch (JsonProcessingException e) {
+            logger.warn("Failed to serialize billing events ", e);
+            return null;
+        }
     }
 
     @Override

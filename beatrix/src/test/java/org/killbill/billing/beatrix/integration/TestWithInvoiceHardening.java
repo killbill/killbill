@@ -338,7 +338,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
 
-        invoiceDao.createInvoice(invoice, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
+        invoiceDao.createInvoice(invoice, null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
     }
     private void verifyNoInvoiceDueOnDate(final UUID accountId, final LocalDate targetDate) {
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
