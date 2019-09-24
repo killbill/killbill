@@ -31,18 +31,15 @@ public class DefaultNullInvoiceEvent extends BusEventBase implements NullInvoice
 
     private final UUID accountId;
     private final LocalDate processingDate;
-    private final byte[] lzBillingEvents;
 
     @JsonCreator
     public DefaultNullInvoiceEvent(@JsonProperty("accountId") final UUID accountId,
-                                   @JsonProperty("lzBillingEvents") final byte[] lzBillingEvents,
                                    @JsonProperty("processingDate") final LocalDate processingDate,
                                    @JsonProperty("searchKey1") final Long searchKey1,
                                    @JsonProperty("searchKey2") final Long searchKey2,
                                    @JsonProperty("userToken") final UUID userToken) {
         super(searchKey1, searchKey2, userToken);
         this.accountId = accountId;
-        this.lzBillingEvents = lzBillingEvents;
         this.processingDate = processingDate;
 
     }
@@ -60,12 +57,6 @@ public class DefaultNullInvoiceEvent extends BusEventBase implements NullInvoice
 
     public LocalDate getProcessingDate() {
         return processingDate;
-    }
-
-    @JsonProperty("lzBillingEvents")
-    @Override
-    public byte[] getLZBillingEvents() {
-        return lzBillingEvents;
     }
 
     @Override

@@ -569,7 +569,7 @@ public class InvoiceDispatcher {
             } else {
                 log.info("Generated null invoice for accountId='{}', targetDate='{}'", accountId, originalTargetDate);
 
-                final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, billingEvents.toLZJzon(), clock.getUTCToday(),
+                final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
                                                                            internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), internalCallContext.getUserToken());
 
                 commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);

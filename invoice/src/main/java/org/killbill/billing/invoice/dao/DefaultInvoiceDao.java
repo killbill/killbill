@@ -367,6 +367,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             public List<InvoiceItemModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
                 final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+                final InvoiceBillingEventSqlDao billingEventSqlDao = entitySqlDaoWrapperFactory.become(InvoiceBillingEventSqlDao.class);
 
                 final ExistingInvoiceMetadata existingInvoiceMetadata;
                 if (existingInvoiceMetadataOrNull == null) {
@@ -385,6 +386,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         // Create the invoice if this is not a shell invoice and it does not already exist
                         if (invoiceOnDisk == null) {
                             createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
+                            billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), lzJsonBillingEvents, context.getCreatedDate()), context);
                             createdInvoiceIds.add(invoiceModelDao.getId());
                         } else if (invoiceOnDisk.getStatus() == InvoiceStatus.DRAFT && invoiceModelDao.getStatus() == InvoiceStatus.COMMITTED) {
                             invoiceSqlDao.updateStatus(invoiceModelDao.getId().toString(), InvoiceStatus.COMMITTED.toString(), context);
@@ -1268,7 +1270,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             // This is called for a new COMMITTED invoice (which cannot be writtenOff as it does not exist yet, so rawBalance == balance)
             final BigDecimal rawBalance = InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice);
             final DefaultInvoiceCreationEvent event = new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                                                      rawBalance, invoice.getCurrency(), lzJsonBillingEvents,
+                                                                                      rawBalance, invoice.getCurrency(),
                                                                                       context.getAccountRecordId(), context.getTenantRecordId(),
                                                                                       context.getUserToken());
             eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getHandle().getConnection());

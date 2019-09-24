@@ -33,14 +33,12 @@ public class DefaultInvoiceCreationEvent extends BusEventBase implements Invoice
     private final UUID accountId;
     private final BigDecimal amountOwed;
     private final Currency currency;
-    private final byte[] lzBillingEvents;
 
     @JsonCreator
     public DefaultInvoiceCreationEvent(@JsonProperty("invoiceId") final UUID invoiceId,
                                        @JsonProperty("accountId") final UUID accountId,
                                        @JsonProperty("amountOwed") final BigDecimal amountOwed,
                                        @JsonProperty("currency") final Currency currency,
-                                       @JsonProperty("lzBillingEvents") final byte[] lzBillingEvents,
                                        @JsonProperty("searchKey1") final Long searchKey1,
                                        @JsonProperty("searchKey2") final Long searchKey2,
                                        @JsonProperty("userToken") final UUID userToken) {
@@ -49,7 +47,6 @@ public class DefaultInvoiceCreationEvent extends BusEventBase implements Invoice
         this.accountId = accountId;
         this.amountOwed = amountOwed;
         this.currency = currency;
-        this.lzBillingEvents = lzBillingEvents;
     }
 
     @JsonIgnore
@@ -76,12 +73,6 @@ public class DefaultInvoiceCreationEvent extends BusEventBase implements Invoice
     @Override
     public Currency getCurrency() {
         return currency;
-    }
-
-    @JsonProperty("lzBillingEvents")
-    @Override
-    public byte[] getLZBillingEvents() {
-        return lzBillingEvents;
     }
 
     @Override

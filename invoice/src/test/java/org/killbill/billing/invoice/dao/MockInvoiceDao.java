@@ -76,7 +76,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
         try {
             eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                           InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice), invoice.getCurrency(),
-                                                          lzBillingEvents, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
+                                                          context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
         } catch (final PersistentBus.EventBusException ex) {
             throw new RuntimeException(ex);
         }
