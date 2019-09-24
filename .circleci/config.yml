@@ -138,7 +138,7 @@ jobs:
           command: |
             set +e
 
-            KILLBILL_VERSION=`grep -E '<version>([0-9]+\.[0-9]+\.[0-9]+)</version>' pom.xml | sed -n '2p' | sed 's/[\t \n]*<version>\(.*\)<\/version>[\t \n]*/\1/'`
+            KILLBILL_VERSION=`grep -E '<version>([0-9]+\.[0-9]+\.[0-9]+)(-SNAPSHOT)?</version>' pom.xml | sed -n '2p' | sed 's/[\t \n]*<version>\(.*\)<\/version>[\t \n]*/\1/'`
             echo "Detected Kill Bill version: $KILLBILL_VERSION"
 
             mvn clean install -DskipTests=true
