@@ -138,6 +138,9 @@ jobs:
           command: |
             set +e
 
+            KILLBILL_VERSION=`grep -E '<version>([0-9]+\.[0-9]+\.[0-9]+)</version>' pom.xml | sed -n '2p' | sed 's/[\t \n]*<version>\(.*\)<\/version>[\t \n]*/\1/'`
+            echo "Detected Kill Bill version: $KILLBILL_VERSION"
+
             mvn clean install -DskipTests=true
             mkdir -p /tmp/test-results
             nohup ./bin/start-server -s > /tmp/test-results/killbill.log 2>&1 &
@@ -153,7 +156,12 @@ jobs:
                 echo "Switching to branch ${CIRCLE_BRANCH}"
                 git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
               else
-                echo "killbill-integration-tests doesn't have a branch ${CIRCLE_BRANCH}, staying on master"
+                if [ -n "$(echo $KILLBILL_VERSION | grep -E '^0.21')" ]; then
+                  echo "Switching to branch work-for-release-0.21.x"
+                  git checkout -b work-for-release-0.21.x origin/work-for-release-0.21.x
+                else
+                  echo "killbill-integration-tests doesn't have a branch ${CIRCLE_BRANCH}, staying on master"
+                fi
               fi
             fi
 
