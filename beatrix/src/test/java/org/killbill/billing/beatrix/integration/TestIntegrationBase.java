@@ -378,9 +378,13 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected void checkNoMoreInvoiceToGenerate(final Account account) {
+        checkNoMoreInvoiceToGenerate(account.getId());
+    }
+
+    protected void checkNoMoreInvoiceToGenerate(final UUID accountId) {
         busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), callContext);
             fail("Should not have generated an extra invoice");
         } catch (final InvoiceApiException e) {
             assertListenerStatus();

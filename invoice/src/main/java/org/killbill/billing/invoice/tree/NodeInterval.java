@@ -186,25 +186,6 @@ public class NodeInterval {
         preTmpChild.rightSibling = curNode.getRightSibling();
     }
 
-    @JsonIgnore
-    public boolean isPartitionedByChildren() {
-
-        if (leftChild == null) {
-            return false;
-        }
-
-        LocalDate curDate = start;
-        NodeInterval curChild = leftChild;
-        while (curChild != null) {
-            if (curChild.getStart().compareTo(curDate) > 0) {
-                return false;
-            }
-            curDate = curChild.getEnd();
-            curChild = curChild.getRightSibling();
-        }
-        return (curDate.compareTo(end) == 0);
-    }
-
     /**
      * Return the first node satisfying the date and match callback.
      *
@@ -445,7 +426,7 @@ public class NodeInterval {
      */
     public interface WalkCallback {
 
-        public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent);
+        void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent);
     }
 
     /**
@@ -474,14 +455,14 @@ public class NodeInterval {
          * @param startDate startDate of the new interval to build
          * @param endDate   endDate of the new interval to build
          */
-        public void onMissingInterval(NodeInterval curNode, LocalDate startDate, LocalDate endDate);
+        void onMissingInterval(NodeInterval curNode, LocalDate startDate, LocalDate endDate);
 
         /**
          * Called when we hit a node with no children
          *
          * @param curNode current node
          */
-        public void onLastNode(NodeInterval curNode);
+        void onLastNode(NodeInterval curNode);
     }
 
     /**
@@ -496,7 +477,7 @@ public class NodeInterval {
          * @param existingNode
          * @return this is the return value for the addNode method
          */
-        public boolean onExistingNode(final NodeInterval existingNode);
+        boolean onExistingNode(final NodeInterval existingNode);
 
         /**
          * Called prior to insert the new node in the tree
@@ -504,6 +485,6 @@ public class NodeInterval {
          * @param insertionNode the parent node where this new node would be inserted
          * @return true if addNode should proceed with the insertion and false otherwise
          */
-        public boolean shouldInsertNode(final NodeInterval insertionNode);
+        boolean shouldInsertNode(final NodeInterval insertionNode);
     }
 }
