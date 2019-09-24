@@ -56,7 +56,7 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
 
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
 
-        final List<RawUsageRecord> resultFromPlugin = getUsageFromPlugin(startDate, endDate, tenantContext);
+        final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, tenantContext);
         if (resultFromPlugin != null) {
             return resultFromPlugin;
         }

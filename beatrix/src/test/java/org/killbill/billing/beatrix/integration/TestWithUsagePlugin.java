@@ -202,6 +202,25 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
             return result;
         }
 
+        @Override
+        public List<RawUsageRecord> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+            final List<RawUsageRecord> result = new LinkedList<>();
+            for (final LocalDate curDate : usageData.keySet()) {
+                if (curDate.compareTo(startDate) >= 0 && curDate.compareTo(endDate) < 0) {
+                    final List<RawUsageRecord> rawUsageRecords = usageData.get(curDate);
+                    if (rawUsageRecords != null && !rawUsageRecords.isEmpty()) {
+
+                        for (RawUsageRecord record : rawUsageRecords) {
+                            if (subscriptionId.equals(record.getSubscriptionId())) {
+                                result.add(record);
+                            }
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
         public void recordUsageData(final UUID subscriptionId, final String trackingId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
 
             List<RawUsageRecord> record = usageData.get(startDate);
