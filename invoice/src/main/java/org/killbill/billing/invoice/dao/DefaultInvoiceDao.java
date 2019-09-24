@@ -386,7 +386,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         // Create the invoice if this is not a shell invoice and it does not already exist
                         if (invoiceOnDisk == null) {
                             createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
-                            billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), lzJsonBillingEvents, context.getCreatedDate()), context);
+                            if (lzJsonBillingEvents != null) {
+                                billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), lzJsonBillingEvents, context.getCreatedDate()), context);
+                            }
                             createdInvoiceIds.add(invoiceModelDao.getId());
                         } else if (invoiceOnDisk.getStatus() == InvoiceStatus.DRAFT && invoiceModelDao.getStatus() == InvoiceStatus.COMMITTED) {
                             invoiceSqlDao.updateStatus(invoiceModelDao.getId().toString(), InvoiceStatus.COMMITTED.toString(), context);
