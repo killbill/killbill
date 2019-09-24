@@ -61,7 +61,7 @@ public class TestInvoiceBillingEventSqlDao extends InvoiceTestSuiteWithEmbeddedD
                                             final InvoiceBillingEventModelDao result = (InvoiceBillingEventModelDao) dao.create(entry, internalCallContext);
 
                                             Assert.assertEquals(result.getInvoiceId(), invoiceId);
-                                            Assert.assertEquals(result.getNzBillingEvents(), data);
+                                            Assert.assertEquals(result.getLzBillingEvents(), data);
                                             return null;
                                         }
                                     });

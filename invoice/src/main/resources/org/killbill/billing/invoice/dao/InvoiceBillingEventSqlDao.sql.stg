@@ -4,14 +4,14 @@ tableName() ::= "invoice_billing_events"
 
 tableFields(prefix) ::= <<
   <prefix>invoice_id
-, <prefix>nz_billing_events
+, <prefix>lz_billing_events
 , <prefix>created_by
 , <prefix>created_date
 >>
 
 tableValues() ::= <<
   :invoiceId
-, :nzBillingEvents
+, :lzBillingEvents
 , :createdBy
 , :createdDate
 >>

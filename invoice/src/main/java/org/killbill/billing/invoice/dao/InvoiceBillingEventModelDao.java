@@ -28,15 +28,15 @@ import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 public class InvoiceBillingEventModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
     private UUID invoiceId;
-    private byte[] nzBillingEvents;
+    private byte[] lzBillingEvents;
 
     public InvoiceBillingEventModelDao() {
     }
 
-    public InvoiceBillingEventModelDao(final UUID invoiceId, final byte[] nzBillingEvents, final DateTime createdDate) {
+    public InvoiceBillingEventModelDao(final UUID invoiceId, final byte[] lzBillingEvents, final DateTime createdDate) {
         super(UUID.randomUUID(), createdDate, createdDate);
         this.invoiceId = invoiceId;
-        this.nzBillingEvents = nzBillingEvents;
+        this.lzBillingEvents = lzBillingEvents;
     }
 
     public UUID getInvoiceId() {
@@ -47,12 +47,12 @@ public class InvoiceBillingEventModelDao extends EntityModelDaoBase implements E
         this.invoiceId = invoiceId;
     }
 
-    public byte[] getNzBillingEvents() {
-        return nzBillingEvents;
+    public byte[] getLzBillingEvents() {
+        return lzBillingEvents;
     }
 
-    public void setNzBillingEvents(final byte[] nzBillingEvents) {
-        this.nzBillingEvents = nzBillingEvents;
+    public void setLzBillingEvents(final byte[] lzBillingEvents) {
+        this.lzBillingEvents = lzBillingEvents;
     }
 
     @Override

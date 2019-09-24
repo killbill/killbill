@@ -241,7 +241,7 @@ CREATE TABLE invoice_billing_events (
     record_id serial unique,
     id varchar(36) NOT NULL,
     invoice_id varchar(36) NOT NULL,
-	nz_billing_events blob NOT NULL,
+	lz_billing_events blob NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,
     account_record_id bigint /*! unsigned */ not null,
