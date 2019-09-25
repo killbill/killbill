@@ -77,6 +77,7 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
                                                            processedCurrency,
                                                            gatewayErrorCode,
                                                            gatewayErrorMsg,
+                                                           true,
                                                            internalCallContext);
 
         final PaymentTransactionModelDao updatedSecondPaymentTransactionModelDao = paymentDao.getPaymentTransaction(specifiedSecondPaymentTransactionModelDao.getId(), internalCallContext);

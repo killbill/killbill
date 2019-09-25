@@ -63,11 +63,13 @@ public class PaymentControlAwareRefresher extends PaymentRefresher {
     protected boolean invokeJanitor(final UUID accountId,
                                     final PaymentTransactionModelDao paymentTransactionModelDao,
                                     final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
+                                    final boolean isApiPayment,
                                     final InternalTenantContext internalTenantContext) {
         return incompletePaymentAttemptTask.updatePaymentAndTransactionIfNeeded(accountId,
                                                                                 paymentTransactionModelDao.getId(),
                                                                                 paymentTransactionModelDao.getTransactionStatus(),
                                                                                 paymentTransactionInfoPlugin,
+                                                                                isApiPayment,
                                                                                 internalTenantContext);
     }
 }

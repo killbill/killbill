@@ -31,6 +31,7 @@ import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.broadcast.dao.BroadcastDao;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.customfield.api.DefaultCustomFieldUserApi;
@@ -102,6 +103,8 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected BroadcastDao broadcastDao;
     @Inject
     protected Set<Realm> realms;
+    @Inject
+    protected CacheControllerDispatcher cacheControllerDispatcher;
 
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
