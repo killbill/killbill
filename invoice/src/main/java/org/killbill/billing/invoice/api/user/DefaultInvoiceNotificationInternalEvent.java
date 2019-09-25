@@ -78,6 +78,17 @@ public class DefaultInvoiceNotificationInternalEvent extends BusEventBase implem
     }
 
     @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("DefaultInvoiceNotificationInternalEvent{");
+        sb.append("targetDate=").append(targetDate);
+        sb.append(", accountId=").append(accountId);
+        sb.append(", amountOwed=").append(amountOwed);
+        sb.append(", currency=").append(currency);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
