@@ -91,7 +91,7 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     @Override
     public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
 
-        final List<RawUsageRecord> rawUsage = getUsageFromPlugin(startDate, endDate, tenantContext);
+        final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, startDate, endDate, tenantContext);
         if (rawUsage != null) {
             final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(subscriptionId, unitType, rawUsage);
             return new DefaultRolledUpUsage(subscriptionId, startDate, endDate, rolledUpAmount);
@@ -111,7 +111,7 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
         for (LocalDate curDate : transitionTimes) {
             if (prevDate != null) {
 
-                final List<RawUsageRecord> rawUsage = getUsageFromPlugin(prevDate, curDate, tenantContext);
+                final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, prevDate, curDate, tenantContext);
                 if (rawUsage != null) {
                     final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(subscriptionId, null, rawUsage);
                     result.add(new DefaultRolledUpUsage(subscriptionId, prevDate, curDate, rolledUpAmount));
