@@ -129,7 +129,8 @@ public class PaymentAutomatonDAOHelper {
                                                                                                      paymentStateContext.getAttemptId(),
                                                                                                      paymentStateContext.getPaymentId(),
                                                                                                      paymentStateContext.getPaymentTransactionModelDao().getId(),
-                                                                                                     paymentStateContext.getTransactionType());
+                                                                                                     paymentStateContext.getTransactionType(),
+                                                                                                     paymentStateContext.isApiPayment());
         // Update the context
         paymentStateContext.setPaymentModelDao(paymentAndTransactionModelDao.getPaymentModelDao());
         paymentStateContext.setPaymentTransactionModelDao(paymentAndTransactionModelDao.getPaymentTransactionModelDao());
@@ -144,7 +145,8 @@ public class PaymentAutomatonDAOHelper {
                                                                   final UUID attemptId,
                                                                   final UUID paymentId,
                                                                   final UUID transactionId,
-                                                                  final TransactionType transactionType) {
+                                                                  final TransactionType transactionType,
+                                                                  final boolean isApiPayment) {
         final String lastSuccessPaymentState = paymentSMHelper.isSuccessState(currentPaymentStateName) ? currentPaymentStateName : null;
         return processPaymentInfoPlugin(transactionStatus,
                                         paymentInfoPlugin,
@@ -157,6 +159,7 @@ public class PaymentAutomatonDAOHelper {
                                         paymentId,
                                         transactionId,
                                         transactionType,
+                                        isApiPayment,
                                         false);
     }
 
@@ -171,6 +174,7 @@ public class PaymentAutomatonDAOHelper {
                                                                   final UUID paymentId,
                                                                   final UUID transactionId,
                                                                   final TransactionType transactionType,
+                                                                  final boolean isApiPayment,
                                                                   final boolean forceOverrideLastSuccessPaymentState) {
         final BigDecimal processedAmount;
         if (TransactionStatus.SUCCESS.equals(transactionStatus) || TransactionStatus.PENDING.equals(transactionStatus)) {
@@ -205,6 +209,7 @@ public class PaymentAutomatonDAOHelper {
                                                                                                processedCurrency,
                                                                                                gatewayErrorCode,
                                                                                                gatewayErrorMsg,
+                                                                                               isApiPayment,
                                                                                                internalCallContext);
         } else {
             paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(accountId,
@@ -218,6 +223,7 @@ public class PaymentAutomatonDAOHelper {
                                                                                                processedCurrency,
                                                                                                gatewayErrorCode,
                                                                                                gatewayErrorMsg,
+                                                                                               isApiPayment,
                                                                                                internalCallContext);
         }
 

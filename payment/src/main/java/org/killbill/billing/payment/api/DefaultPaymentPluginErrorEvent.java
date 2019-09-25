@@ -1,11 +1,13 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -40,11 +42,12 @@ public class DefaultPaymentPluginErrorEvent extends DefaultPaymentInternalEvent 
                                           @JsonProperty("status") final TransactionStatus status,
                                           @JsonProperty("transactionType") final TransactionType transactionType,
                                           @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                          @JsonProperty("apiPayment") final Boolean isApiPayment,
                                           @JsonProperty("message") final String message,
                                           @JsonProperty("searchKey1") final Long searchKey1,
                                           @JsonProperty("searchKey2") final Long searchKey2,
                                           @JsonProperty("userToken") final UUID userToken) {
-        super(accountId, paymentId, paymentTransactionId, amount, currency, status, transactionType, effectiveDate, searchKey1, searchKey2, userToken);
+        super(accountId, paymentId, paymentTransactionId, amount, currency, status, transactionType, effectiveDate, isApiPayment, searchKey1, searchKey2, userToken);
         this.message = message;
     }
 

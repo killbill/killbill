@@ -69,6 +69,7 @@ public abstract class PaymentEnteringStateCallback implements EnteringStateCallb
                                                                         null,
                                                                         paymentStateContext.getTransactionType(),
                                                                         null,
+                                                                        paymentStateContext.isApiPayment(),
                                                                         "Early abortion of payment transaction",
                                                                         paymentStateContext.getInternalCallContext().getAccountRecordId(),
                                                                         paymentStateContext.getInternalCallContext().getTenantRecordId(),

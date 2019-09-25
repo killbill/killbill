@@ -88,7 +88,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                                           callContext);
 
         final UUID transactionId = payment.getTransactions().get(0).getId();
-        final JanitorNotificationKey notificationKey = new JanitorNotificationKey(transactionId, incompletePaymentTransactionTask.getClass().toString(), 1);
+        final JanitorNotificationKey notificationKey = new JanitorNotificationKey(transactionId, incompletePaymentTransactionTask.getClass().toString(), true, 1);
         final UUID userToken = UUID.randomUUID();
 
         Assert.assertTrue(Iterables.isEmpty(incompletePaymentAttemptTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())));
@@ -151,6 +151,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                 Currency.EUR,
                 "200",
                 "Ok",
+                true,
                 internalCallContext);
 
         paymentApi.createCapture(account,
@@ -180,6 +181,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                                                              transactionModel.getId(),
                                                                              payment.getTransactions().get(0).getTransactionStatus(),
                                                                              paymentTransactionInfoPlugin,
+                                                                             true,
                                                                              internalCallContext);
 
         final PaymentModelDao paymentAfterJanitor = paymentDao.getPayment(payment.getId(), internalCallContext);

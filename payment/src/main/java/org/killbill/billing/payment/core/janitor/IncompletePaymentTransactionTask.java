@@ -99,6 +99,7 @@ public class IncompletePaymentTransactionTask {
                                                        final UUID paymentTransactionId,
                                                        final TransactionStatus currentTransactionStatus,
                                                        final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
+                                                       final boolean isApiPayment,
                                                        final InternalTenantContext internalTenantContext) {
         try {
             final TransactionStatus latestTransactionStatus = updatePaymentAndTransactionIfNeeded(accountId,
@@ -107,6 +108,7 @@ public class IncompletePaymentTransactionTask {
                                                                                                   paymentTransactionInfoPlugin,
                                                                                                   null,
                                                                                                   null,
+                                                                                                  isApiPayment,
                                                                                                   internalTenantContext);
             return latestTransactionStatus == null;
         } catch (final LockFailedException e) {
@@ -121,6 +123,7 @@ public class IncompletePaymentTransactionTask {
                                                           @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
                                                           @Nullable final Integer attemptNumber,
                                                           @Nullable final UUID userToken,
+                                                          final boolean isApiPayment,
                                                           final InternalTenantContext internalTenantContext) throws LockFailedException {
         // In the GET case, make sure we bail as early as possible (see PaymentRefresher)
         if (currentTransactionStatus != null && !TRANSACTION_STATUSES_TO_CONSIDER.contains(currentTransactionStatus)) {
@@ -136,6 +139,7 @@ public class IncompletePaymentTransactionTask {
                                                            paymentTransactionInfoPlugin,
                                                            attemptNumber,
                                                            userToken,
+                                                           isApiPayment,
                                                            internalTenantContext);
             }
         }, internalTenantContext);
@@ -146,6 +150,7 @@ public class IncompletePaymentTransactionTask {
                                                                   @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
                                                                   @Nullable final Integer attemptNumber,
                                                                   @Nullable final UUID userToken,
+                                                                  final boolean isApiPayment,
                                                                   final InternalTenantContext internalTenantContext) {
         // State may have changed since we originally retrieved with no lock
         final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(paymentTransactionId, internalTenantContext);
@@ -159,6 +164,7 @@ public class IncompletePaymentTransactionTask {
         return updatePaymentAndTransactionInternal(accountId,
                                                    paymentTransaction,
                                                    latestPaymentTransactionInfoPlugin,
+                                                   isApiPayment,
                                                    internalTenantContext);
     }
 
@@ -166,6 +172,7 @@ public class IncompletePaymentTransactionTask {
     private TransactionStatus updatePaymentAndTransactionInternal(final UUID accountId,
                                                                   final PaymentTransactionModelDao paymentTransaction,
                                                                   final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
+                                                                  final boolean isApiPayment,
                                                                   final InternalTenantContext internalTenantContext) {
         final UUID paymentId = paymentTransaction.getPaymentId();
 
@@ -222,7 +229,8 @@ public class IncompletePaymentTransactionTask {
                                                            paymentTransaction.getAttemptId(),
                                                            paymentId,
                                                            paymentTransaction.getId(),
-                                                           paymentTransaction.getTransactionType());
+                                                           paymentTransaction.getTransactionType(),
+                                                           isApiPayment);
 
         return null;
     }
