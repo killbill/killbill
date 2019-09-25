@@ -204,18 +204,12 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
 
         @Override
         public List<RawUsageRecord> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
-            final List<RawUsageRecord> result = new LinkedList<>();
-            for (final LocalDate curDate : usageData.keySet()) {
-                if (curDate.compareTo(startDate) >= 0 && curDate.compareTo(endDate) < 0) {
-                    final List<RawUsageRecord> rawUsageRecords = usageData.get(curDate);
-                    if (rawUsageRecords != null && !rawUsageRecords.isEmpty()) {
 
-                        for (RawUsageRecord record : rawUsageRecords) {
-                            if (subscriptionId.equals(record.getSubscriptionId())) {
-                                result.add(record);
-                            }
-                        }
-                    }
+            final List<RawUsageRecord> result = new ArrayList<>();
+            final List<RawUsageRecord> usageForAccount = getUsageForAccount(startDate, endDate, tenantContext);
+            for (final RawUsageRecord cur : usageForAccount) {
+                if (cur.getSubscriptionId().equals(subscriptionId)) {
+                    result.add(cur);
                 }
             }
             return result;

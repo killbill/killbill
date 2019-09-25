@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.LocalDate;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
@@ -51,7 +53,7 @@ public class BaseUserApi {
         return getUsageFromPlugin(subscriptionId, startDate, endDate, tenantContext);
     }
 
-    private List<RawUsageRecord> getUsageFromPlugin(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+    private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
 
         final Set<String> allServices = pluginRegistry.getAllServices();
         // No plugin registered
