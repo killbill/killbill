@@ -78,7 +78,7 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
 
     @SqlQuery
     List<M> getByIdsIncludedDeleted(@BindIn("ids") final Collection<String> ids,
-                     @SmartBindBean final InternalTenantContext context);
+                                    @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<M> getByAccountRecordId(@SmartBindBean final InternalTenantContext context);
@@ -115,6 +115,9 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
                            @Define("orderBy") final String orderBy,
                            @Define("ordering") final String ordering,
                            @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public Long getRecordIdAtOffset(@Bind("offset") final Long offset);
 
     @SqlQuery
     public Long getCount(@SmartBindBean final InternalTenantContext context);
