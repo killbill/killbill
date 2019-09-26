@@ -55,11 +55,13 @@ import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
+import org.killbill.billing.invoice.dao.serialization.BillingEventSerializer;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
+import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditLevel;
@@ -315,21 +317,24 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice,
+                              final BillingEventSet billingEvents,
                               final Set<InvoiceTrackingModelDao> trackingIds,
                               final FutureAccountNotifications callbackDateTimePerSubscriptions,
                               final ExistingInvoiceMetadata existingInvoiceMetadata,
                               final InternalCallContext context) {
-        createInvoices(ImmutableList.<InvoiceModelDao>of(invoice), trackingIds, callbackDateTimePerSubscriptions, existingInvoiceMetadata, false, context);
+        createInvoices(ImmutableList.<InvoiceModelDao>of(invoice), billingEvents, trackingIds, callbackDateTimePerSubscriptions, existingInvoiceMetadata, false, context);
     }
 
     @Override
     public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
+                                                    final BillingEventSet billingEvents,
                                                     final Set<InvoiceTrackingModelDao> trackingIds,
                                                     final InternalCallContext context) {
-        return createInvoices(invoices, trackingIds, new FutureAccountNotifications(), null, true, context);
+        return createInvoices(invoices, billingEvents, trackingIds, new FutureAccountNotifications(), null, true, context);
     }
 
     private List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> invoices,
+                                                     @Nullable final BillingEventSet billingEvents,
                                                      final Set<InvoiceTrackingModelDao> trackingIds,
                                                      final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                      @Nullable final ExistingInvoiceMetadata existingInvoiceMetadataOrNull,
@@ -364,6 +369,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             public List<InvoiceItemModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
                 final InvoiceItemSqlDao transInvoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+                final InvoiceBillingEventSqlDao billingEventSqlDao = entitySqlDaoWrapperFactory.become(InvoiceBillingEventSqlDao.class);
 
                 final ExistingInvoiceMetadata existingInvoiceMetadata;
                 if (existingInvoiceMetadataOrNull == null) {
@@ -382,6 +388,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         // Create the invoice if this is not a shell invoice and it does not already exist
                         if (invoiceOnDisk == null) {
                             createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
+                            if (billingEvents != null) {
+                                billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), BillingEventSerializer.serialize(billingEvents), context.getCreatedDate()), context);
+                            }
                             createdInvoiceIds.add(invoiceModelDao.getId());
                         } else if (invoiceOnDisk.getStatus() == InvoiceStatus.DRAFT && invoiceModelDao.getStatus() == InvoiceStatus.COMMITTED) {
                             invoiceSqlDao.updateStatus(invoiceModelDao.getId().toString(), InvoiceStatus.COMMITTED.toString(), context);

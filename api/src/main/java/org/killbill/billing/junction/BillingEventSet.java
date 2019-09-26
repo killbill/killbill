@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.UUID;
 
-import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Usage;
 
 public interface BillingEventSet extends SortedSet<BillingEvent> {

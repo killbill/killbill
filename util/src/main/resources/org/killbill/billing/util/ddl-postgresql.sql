@@ -7,6 +7,9 @@ CREATE DOMAIN mediumtext AS text;
 /* PostgreSQL uses BYTEA to manage all BLOB types */
 DROP DOMAIN IF EXISTS mediumblob CASCADE;
 CREATE DOMAIN mediumblob AS bytea;
+DROP DOMAIN IF EXISTS blob CASCADE;
+CREATE DOMAIN blob AS bytea;
+
 
 CREATE OR REPLACE LANGUAGE plpgsql;
 

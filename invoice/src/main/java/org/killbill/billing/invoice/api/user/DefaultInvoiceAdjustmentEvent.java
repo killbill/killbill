@@ -51,6 +51,7 @@ public class DefaultInvoiceAdjustmentEvent extends BusEventBase implements Invoi
         return accountId;
     }
 
+
     @JsonIgnore
     @Override
     public BusInternalEventType getBusEventType() {

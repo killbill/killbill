@@ -35,6 +35,7 @@ import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.Pagination;
@@ -44,6 +45,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     // Used by InvoiceDispatcher only for regular invoice runs
     void createInvoice(final InvoiceModelDao invoice,
+                       final BillingEventSet billingEvents,
                        final Set<InvoiceTrackingModelDao> trackingIds,
                        final FutureAccountNotifications callbackDateTimePerSubscriptions,
                        final ExistingInvoiceMetadata existingInvoiceMetadata,
@@ -51,6 +53,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     // Used by APIs, for HA, etc.
     List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
+                                             final BillingEventSet billingEvents,
                                              final Set<InvoiceTrackingModelDao> trackingIds,
                                              final InternalCallContext context);
 

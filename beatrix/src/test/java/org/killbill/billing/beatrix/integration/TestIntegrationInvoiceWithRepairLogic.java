@@ -794,7 +794,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         newItems.add(recurring3);
         newItems.add(repair3);
         shellInvoice.addInvoiceItems(newItems);
-        invoiceDao.createInvoice(shellInvoice, ImmutableSet.of(), new FutureAccountNotifications(), null, internalCallContext);
+        invoiceDao.createInvoice(shellInvoice, null, ImmutableSet.of(), new FutureAccountNotifications(), null, internalCallContext);
 
         // Move ahead one month, verify nothing from previous data was generated
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -984,7 +984,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     }
     private void insertInvoiceItems(final InvoiceModelDao invoice) {
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
-        invoiceDao.createInvoice(invoice, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
+        invoiceDao.createInvoice(invoice, null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
     }
 
 

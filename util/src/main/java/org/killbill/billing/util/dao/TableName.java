@@ -42,6 +42,7 @@ public enum TableName {
     INVOICES("invoices", ObjectType.INVOICE, INVOICE_HISTORY),
     INVOICE_TRACKING_ID_HISTORY("invoice_tracking_id_history"),
     INVOICE_TRACKING_IDS("invoice_tracking_ids", null, INVOICE_TRACKING_ID_HISTORY),
+    INVOICE_BILLING_EVENTS("invoice_billing_events"),
     INVOICE_PARENT_CHILDREN("invoice_parent_children"),
     NODE_INFOS("node_infos"),
     PAYMENT_ATTEMPT_HISTORY("payment_attempt_history"),
