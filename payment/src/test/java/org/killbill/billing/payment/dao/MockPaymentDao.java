@@ -238,18 +238,18 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
                                                                                  final String currentPaymentStateName, final UUID transactionId,
                                                                                  final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
-                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg, final boolean isApiPayment, final InternalCallContext context) {
         return updatePaymentAndTransactionOnCompletion(accountId, attemptId, paymentId, transactionType,
                                                        currentPaymentStateName, null, transactionId,
                                                        paymentStatus, processedAmount, processedCurrency,
-                                                       gatewayErrorCode, gatewayErrorMsg, context);
+                                                       gatewayErrorCode, gatewayErrorMsg, isApiPayment, context);
     }
 
     @Override
     public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
                                                                                  final String currentPaymentStateName, final String lastSuccessPaymentStateName, final UUID transactionId,
                                                                                  final TransactionStatus paymentStatus, final BigDecimal processedAmount, final Currency processedCurrency,
-                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg, final InternalCallContext context) {
+                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg, final boolean isApiPayment, final InternalCallContext context) {
         final PaymentAndTransactionModelDao paymentAndTransactionModelDao = new PaymentAndTransactionModelDao();
 
         synchronized (this) {

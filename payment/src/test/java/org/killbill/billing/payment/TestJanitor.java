@@ -329,7 +329,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
-                                                           "foo", "bar", internalCallContext);
+                                                           "foo", "bar", true, internalCallContext);
         testListener.assertListenerStatus();
 
         // Move clock for notification to be processed
@@ -362,7 +362,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
-                                                           "foo", "bar", internalCallContext);
+                                                           "foo", "bar", true, internalCallContext);
         testListener.assertListenerStatus();
 
         final List<AuditLogWithHistory> paymentTransactionHistoryBeforeJanitor = paymentDao.getPaymentTransactionAuditLogsWithHistoryForId(payment.getTransactions().get(0).getId(), AuditLevel.FULL, internalCallContext);
@@ -409,7 +409,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.UNKNOWN, requestedAmount, account.getCurrency(),
-                                                           "foo", "bar", internalCallContext);
+                                                           "foo", "bar", true, internalCallContext);
         testListener.assertListenerStatus();
 
         // Move clock for notification to be processed
@@ -442,7 +442,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.PENDING, requestedAmount, account.getCurrency(),
-                                                           "loup", "chat", internalCallContext);
+                                                           "loup", "chat", true, internalCallContext);
         testListener.assertListenerStatus();
 
         // Move clock for notification to be processed ((default config is set for one hour)
@@ -481,7 +481,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
         paymentDao.updatePaymentAndTransactionOnCompletion(account.getId(), null, payment.getId(), TransactionType.AUTHORIZE, paymentStateName, paymentStateName,
                                                            payment.getTransactions().get(0).getId(), TransactionStatus.PENDING, requestedAmount, account.getCurrency(),
-                                                           "loup", "chat", internalCallContext);
+                                                           "loup", "chat", true, internalCallContext);
         testListener.assertListenerStatus();
 
         // 1h, 1d

@@ -547,7 +547,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                                                             ImmutableList.<PluginProperty>of(),
                                                                                                             PAYMENT_OPTIONS,
                                                                                                             callContext);
-                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;

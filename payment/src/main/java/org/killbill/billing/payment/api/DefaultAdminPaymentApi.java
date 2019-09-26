@@ -128,6 +128,7 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
                                                            payment.getId(),
                                                            paymentTransaction.getId(),
                                                            paymentTransaction.getTransactionType(),
+                                                           true,
                                                            true);
 
         // If there is a payment attempt associated with that transaction, we need to update it as well
@@ -142,7 +143,7 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
         if (paymentAttemptModelDao != null) {
             // We can re-use the logic from IncompletePaymentAttemptTask as it is doing very similar work (i.e. run the completion part of
             // the state machine to call the plugins and update the attempt in the right terminal state)
-            incompletePaymentAttemptTask.doIteration(paymentAttemptModelDao);
+            incompletePaymentAttemptTask.doIteration(paymentAttemptModelDao, true);
         }
     }
 }

@@ -160,6 +160,14 @@ order by t.<orderBy> <ordering>
 ;
 >>
 
+getRecordIdAtOffset(offset) ::= <<
+select <recordIdField("")>
+from <tableName()>
+order by <recordIdField("")> ASC
+limit 1 offset :offset
+;
+>>
+
 getCount() ::= <<
 select
 count(1) as count

@@ -120,6 +120,12 @@ public class CompletionControlOperation extends OperationControlCallback {
 
     @Override
     protected Payment doCallSpecificOperationCallback() throws PaymentApiException {
-        return paymentRefresher.getPayment(paymentStateContext.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), paymentStateContext.getCallContext(), paymentStateContext.getInternalCallContext());
+        return paymentRefresher.getPayment(paymentStateContext.getPaymentId(),
+                                           false,
+                                           false,
+                                           paymentStateContext.isApiPayment(),
+                                           ImmutableList.<PluginProperty>of(),
+                                           paymentStateContext.getCallContext(),
+                                           paymentStateContext.getInternalCallContext());
     }
 }

@@ -19,6 +19,9 @@ package org.killbill.billing.usage.api;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
@@ -42,7 +45,15 @@ public class BaseUserApi {
     //   and the usage module will look for data inside its own table.
     // * If not, a possibly empty (or not) list should be returned (and the usage module will *not* look for data inside its own table)
     //
-    protected List<RawUsageRecord> getUsageFromPlugin(final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+    protected List<RawUsageRecord> getAccountUsageFromPlugin(final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+        return getUsageFromPlugin(null, startDate, endDate, tenantContext);
+    }
+
+    protected List<RawUsageRecord> getSubscriptionUsageFromPlugin(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+        return getUsageFromPlugin(subscriptionId, startDate, endDate, tenantContext);
+    }
+
+    private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
 
         final Set<String> allServices = pluginRegistry.getAllServices();
         // No plugin registered
@@ -53,12 +64,14 @@ public class BaseUserApi {
         for (final String service : allServices) {
             final UsagePluginApi plugin = pluginRegistry.getServiceForName(service);
 
-            final List<RawUsageRecord> result = plugin.getUsageForAccount(startDate, endDate, tenantContext);
+            final List<RawUsageRecord> result = subscriptionId != null ?
+                                                plugin.getUsageForSubscription(subscriptionId, startDate, endDate, tenantContext) :
+                                                plugin.getUsageForAccount(startDate, endDate, tenantContext);
             // First plugin registered, returns result -- could be empty List if no usage was recorded.
             if (result != null) {
 
                 for (final RawUsageRecord cur : result) {
-                    if (cur.getDate().compareTo(startDate) < 0 || cur.getDate().compareTo(endDate) >=0) {
+                    if (cur.getDate().compareTo(startDate) < 0 || cur.getDate().compareTo(endDate) >= 0) {
                         logger.warn("Usage plugin returned usage data with date {}, not in the specified range [{} -> {}[",
                                     cur.getDate(), startDate, endDate);
                     }
@@ -69,5 +82,6 @@ public class BaseUserApi {
         // All registered plugins returned null
         return null;
     }
+
 
 }
