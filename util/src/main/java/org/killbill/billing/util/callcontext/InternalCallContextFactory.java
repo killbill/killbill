@@ -49,6 +49,7 @@ public class InternalCallContextFactory {
     // Long, not long, to avoid NPE with ==
     public static final Long INTERNAL_TENANT_RECORD_ID = 0L;
 
+    // This needs to be kept in sync with KillbillMDCInsertingServletFilter
     public static final String MDC_KB_ACCOUNT_RECORD_ID = "kb.accountRecordId";
     public static final String MDC_KB_TENANT_RECORD_ID = "kb.tenantRecordId";
     public static final String MDC_KB_USER_TOKEN = "kb.userToken";
