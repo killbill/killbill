@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.dao;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -28,15 +29,16 @@ import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 public class InvoiceBillingEventModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
     private UUID invoiceId;
-    private byte[] lzBillingEvents;
+    private byte[] billingEvents;
 
+    /* For the DAO mapper */
     public InvoiceBillingEventModelDao() {
     }
 
-    public InvoiceBillingEventModelDao(final UUID invoiceId, final byte[] lzBillingEvents, final DateTime createdDate) {
-        super(UUID.randomUUID(), createdDate, createdDate);
+    public InvoiceBillingEventModelDao(final UUID invoiceId, final byte[] billingEvents, final DateTime createdDate) {
+        super(UUIDs.randomUUID(), createdDate, createdDate);
         this.invoiceId = invoiceId;
-        this.lzBillingEvents = lzBillingEvents;
+        this.billingEvents = billingEvents;
     }
 
     public UUID getInvoiceId() {
@@ -47,12 +49,12 @@ public class InvoiceBillingEventModelDao extends EntityModelDaoBase implements E
         this.invoiceId = invoiceId;
     }
 
-    public byte[] getLzBillingEvents() {
-        return lzBillingEvents;
+    public byte[] getBillingEvents() {
+        return billingEvents;
     }
 
-    public void setLzBillingEvents(final byte[] lzBillingEvents) {
-        this.lzBillingEvents = lzBillingEvents;
+    public void setBillingEvents(final byte[] billingEvents) {
+        this.billingEvents = billingEvents;
     }
 
     @Override

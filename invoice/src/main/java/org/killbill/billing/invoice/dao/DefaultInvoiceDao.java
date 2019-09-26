@@ -55,11 +55,13 @@ import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
+import org.killbill.billing.invoice.dao.serialization.BillingEventSerializer;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
+import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditLevel;
@@ -315,24 +317,24 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public void createInvoice(final InvoiceModelDao invoice,
-                              final byte[] lzJsonBillingEvents,
+                              final BillingEventSet billingEvents,
                               final Set<InvoiceTrackingModelDao> trackingIds,
                               final FutureAccountNotifications callbackDateTimePerSubscriptions,
                               final ExistingInvoiceMetadata existingInvoiceMetadata,
                               final InternalCallContext context) {
-        createInvoices(ImmutableList.<InvoiceModelDao>of(invoice), lzJsonBillingEvents, trackingIds, callbackDateTimePerSubscriptions, existingInvoiceMetadata, false, context);
+        createInvoices(ImmutableList.<InvoiceModelDao>of(invoice), billingEvents, trackingIds, callbackDateTimePerSubscriptions, existingInvoiceMetadata, false, context);
     }
 
     @Override
     public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
-                                                    final byte[] lzJsonBillingEvents,
+                                                    final BillingEventSet billingEvents,
                                                     final Set<InvoiceTrackingModelDao> trackingIds,
                                                     final InternalCallContext context) {
-        return createInvoices(invoices, lzJsonBillingEvents, trackingIds, new FutureAccountNotifications(), null, true, context);
+        return createInvoices(invoices, billingEvents, trackingIds, new FutureAccountNotifications(), null, true, context);
     }
 
     private List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> invoices,
-                                                     final byte[] lzJsonBillingEvents,
+                                                     @Nullable final BillingEventSet billingEvents,
                                                      final Set<InvoiceTrackingModelDao> trackingIds,
                                                      final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                      @Nullable final ExistingInvoiceMetadata existingInvoiceMetadataOrNull,
@@ -386,8 +388,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         // Create the invoice if this is not a shell invoice and it does not already exist
                         if (invoiceOnDisk == null) {
                             createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
-                            if (lzJsonBillingEvents != null) {
-                                billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), lzJsonBillingEvents, context.getCreatedDate()), context);
+                            if (billingEvents != null) {
+                                billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), BillingEventSerializer.serialize(billingEvents), context.getCreatedDate()), context);
                             }
                             createdInvoiceIds.add(invoiceModelDao.getId());
                         } else if (invoiceOnDisk.getStatus() == InvoiceStatus.DRAFT && invoiceModelDao.getStatus() == InvoiceStatus.COMMITTED) {
@@ -420,7 +422,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     if (InvoiceStatus.COMMITTED.equals(invoiceModelDao.getStatus())) {
                         if (wasInvoiceCreatedOrCommitted) {
-                            notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, lzJsonBillingEvents, context);
+                            notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
                         } else if (hasInvoiceBeenAdjusted) {
                             adjustedCommittedInvoiceIds.add(invoiceModelDao.getId());
                         }
@@ -1246,7 +1248,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                 // Invoice creation event sent on COMMITTED
                 if (InvoiceStatus.COMMITTED.equals(newStatus)) {
-                    notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, null, context);
+                    notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, context);
                 // Deactivate any usage trackingIds if necessary
                 } else if (InvoiceStatus.VOID.equals(newStatus)) {
                     final InvoiceTrackingSqlDao trackingSqlDao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
@@ -1267,7 +1269,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
-    private void notifyBusOfInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoiceModelDao invoice, final byte[] lzJsonBillingEvents, final InternalCallContext context) {
+    private void notifyBusOfInvoiceCreation(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoiceModelDao invoice, final InternalCallContext context) {
         try {
             // This is called for a new COMMITTED invoice (which cannot be writtenOff as it does not exist yet, so rawBalance == balance)
             final BigDecimal rawBalance = InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice);
@@ -1441,14 +1443,14 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Add child CBA complexity and notify bus on child invoice creation
                 final CBALogicWrapper childCbaWrapper = new CBALogicWrapper(childAccount.getId(), childInvoicesTags, childAccountContext, entitySqlDaoWrapperFactory);
                 childCbaWrapper.runCBALogicWithNotificationEvents(ImmutableSet.of(), ImmutableSet.of(childInvoice.getId()), ImmutableList.of(childInvoice));
-                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, childInvoice, null, childAccountContext);
+                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, childInvoice, childAccountContext);
 
 
 
                 // Add parent CBA complexity and notify bus on child invoice creation
                 final CBALogicWrapper cbaWrapper = new CBALogicWrapper(childAccount.getParentAccountId(), parentInvoicesTags, parentAccountContext, entitySqlDaoWrapperFactory);
                 cbaWrapper.runCBALogicWithNotificationEvents(ImmutableSet.of(), ImmutableSet.of(parentInvoice.getId()), ImmutableList.of(parentInvoice));
-                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, parentInvoice, null, parentAccountContext);
+                notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, parentInvoice, parentAccountContext);
 
                 return null;
             }

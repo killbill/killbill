@@ -15,7 +15,7 @@
  * under the License.
  */
 
-package org.killbill.billing.junction.plumbing.billing.json;
+package org.killbill.billing.invoice.dao.serialization;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -38,17 +38,17 @@ public class BillingEventSetJson {
     private final boolean autoInvoiceOff;
     private final boolean autoInvoiceDraft;
     private final boolean autoInvoiceReuseDraft;
-    private final List<SubscriptionBillingEventJson> events;
+    private final List<SubscriptionBillingEventJson> subs;
 
     @JsonCreator
     public BillingEventSetJson(@JsonProperty("autoInvoiceOff") final boolean autoInvoiceOff,
                                @JsonProperty("autoInvoiceDraft") final boolean autoInvoiceDraft,
                                @JsonProperty("autoInvoiceReuseDraft") final boolean autoInvoiceReuseDraft,
-                               @JsonProperty("events") final List<SubscriptionBillingEventJson> events) {
+                               @JsonProperty("subs") final List<SubscriptionBillingEventJson> subs) {
         this.autoInvoiceOff = autoInvoiceOff;
         this.autoInvoiceDraft = autoInvoiceDraft;
         this.autoInvoiceReuseDraft = autoInvoiceReuseDraft;
-        this.events = events;
+        this.subs = subs;
     }
 
     @JsonProperty("autoInvoiceOff")
@@ -66,15 +66,16 @@ public class BillingEventSetJson {
         return autoInvoiceReuseDraft;
     }
 
-    public List<SubscriptionBillingEventJson> getEvents() {
-        return events;
+    @JsonProperty("subs")
+    public List<SubscriptionBillingEventJson> getSubscriptionEvents() {
+        return subs;
     }
 
     public BillingEventSetJson(final BillingEventSet eventSet) {
         this.autoInvoiceOff = eventSet.isAccountAutoInvoiceOff();
         this.autoInvoiceDraft = eventSet.isAccountAutoInvoiceDraft();
         this.autoInvoiceReuseDraft = eventSet.isAccountAutoInvoiceReuseDraft();
-        this.events = new ArrayList<>();
+        this.subs = new ArrayList<>();
 
         final Iterator<BillingEvent> it = eventSet.iterator();
         SubscriptionBillingEventJson activeSubscription = null;
@@ -83,7 +84,7 @@ public class BillingEventSetJson {
             if (activeSubscription == null || !activeSubscription.getSubscriptionId().equals(cur.getSubscriptionId())) {
                 activeSubscription = new SubscriptionBillingEventJson(cur.getSubscriptionId(),
                                                                       eventSet.getSubscriptionIdsWithAutoInvoiceOff().contains(cur.getSubscriptionId()));
-                events.add(activeSubscription);
+                subs.add(activeSubscription);
             }
             activeSubscription.addBillingEvent(new BillingEventJson(cur));
         }

@@ -625,7 +625,7 @@ public class InvoiceDispatcher {
 
                 // Commit invoice on disk
                 final ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(existingInvoices);
-                commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, billingEvents.toLZJzon(), trackingIds, futureAccountNotifications, existingInvoiceMetadata, internalCallContext);
+                commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, billingEvents, trackingIds, futureAccountNotifications, existingInvoiceMetadata, internalCallContext);
                 success = true;
 
                 try {
@@ -819,14 +819,14 @@ public class InvoiceDispatcher {
 
     private void commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
                                                         @Nullable final InvoiceModelDao invoiceModelDao,
-                                                        final byte[] lzBillingEvents,
+                                                        final BillingEventSet billingEvents,
                                                         final Set<InvoiceTrackingModelDao> trackingIds,
                                                         final FutureAccountNotifications futureAccountNotifications,
                                                         final ExistingInvoiceMetadata existingInvoiceMetadata,
                                                         final InternalCallContext context) {
         final boolean isThereAnyItemsLeft = invoiceModelDao != null && !invoiceModelDao.getInvoiceItems().isEmpty();
         if (isThereAnyItemsLeft) {
-            invoiceDao.createInvoice(invoiceModelDao, lzBillingEvents, trackingIds, futureAccountNotifications, existingInvoiceMetadata, context);
+            invoiceDao.createInvoice(invoiceModelDao, billingEvents, trackingIds, futureAccountNotifications, existingInvoiceMetadata, context);
         } else {
             invoiceDao.setFutureAccountNotificationsForEmptyInvoice(account.getId(), futureAccountNotifications, context);
         }

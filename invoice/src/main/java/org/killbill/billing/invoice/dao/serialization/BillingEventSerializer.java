@@ -15,14 +15,14 @@
  * under the License.
  */
 
-package org.killbill.billing.junction.plumbing.billing.json;
+package org.killbill.billing.invoice.dao.serialization;
+
+import java.io.IOException;
 
 import org.killbill.billing.junction.BillingEventSet;
-
-import com.ning.compress.lzf.LZFEncoder;
+import org.xerial.snappy.Snappy;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -39,10 +39,10 @@ public class BillingEventSerializer {
         mapper.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     }
 
-    public static byte[] serialize(final BillingEventSet eventSet) throws JsonProcessingException {
+    public static byte[] serialize(final BillingEventSet eventSet) throws IOException {
 
         final BillingEventSetJson json = new BillingEventSetJson(eventSet);
         final byte[] data = mapper.writeValueAsBytes(json);
-        return LZFEncoder.encode(data);
+        return Snappy.compress(data);
     }
 }
