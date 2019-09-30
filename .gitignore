@@ -122,3 +122,4 @@ buildNumber.properties
 *.db
 logs/
 .logs
+util/sql

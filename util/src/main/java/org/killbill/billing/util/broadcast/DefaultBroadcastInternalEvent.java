@@ -64,4 +64,14 @@ public class DefaultBroadcastInternalEvent extends BusEventBase implements Broad
     public BusInternalEventType getBusEventType() {
         return BusInternalEventType.BROADCAST_SERVICE;
     }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("DefaultBroadcastInternalEvent{");
+        sb.append("serviceName='").append(serviceName).append('\'');
+        sb.append(", type='").append(type).append('\'');
+        sb.append(", jsonEvent='").append(jsonEvent).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

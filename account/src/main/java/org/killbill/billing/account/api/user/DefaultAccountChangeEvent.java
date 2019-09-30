@@ -87,6 +87,15 @@ public class DefaultAccountChangeEvent extends BusEventBase implements AccountCh
     }
 
     @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("DefaultAccountChangeEvent{");
+        sb.append("changedFields=").append(changedFields);
+        sb.append(", accountId=").append(accountId);
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
