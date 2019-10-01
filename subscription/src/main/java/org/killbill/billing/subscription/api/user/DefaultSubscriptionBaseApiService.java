@@ -253,7 +253,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 final DateTime effectiveDate = subscriptions.get(subscription);
 
                 // If subscription was future cancelled at an earlier date we disallow the operation -- i.e,
-                // user should first uncancel prior trying to cancel again
+                // user should first uncancel prior trying to cancel again.
+                // However, note that in case a future cancellation already exists with a greater or equal effectiveDate,
+                // the operation is allowed, but such existing cancellation would become invalidated (is_active=0)
                 final SubscriptionBaseTransition pendingTransition = subscription.getPendingTransition();
                 if (pendingTransition != null &&
                     pendingTransition.getTransitionType() == SubscriptionBaseTransitionType.CANCEL &&
