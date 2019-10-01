@@ -717,7 +717,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
     }
 
-    @Test(groups = "slow", description = "Can create an entitlement with an account with autoPayOff")
+    @Test(groups = "slow", description = "Can create an entitlement with an account with autoPayOff -- https://github.com/killbill/killbill/issues/1193", enabled = false)
     public void testcreateSubscriptionWithAutoPayOff() throws Exception {
         final Account accountJson = createAccount();
         assertNotNull(accountJson);

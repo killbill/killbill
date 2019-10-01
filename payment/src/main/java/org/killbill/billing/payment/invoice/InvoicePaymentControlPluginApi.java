@@ -679,7 +679,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
         final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getAttemptPaymentId(), paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(),
                                                                            paymentControlContext.getAccountId(), PLUGIN_NAME,
-                                                                           paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(),
+                                                                           paymentControlContext.getPaymentId(),
                                                                            computedAmount, paymentControlContext.getCurrency(), CREATED_BY, paymentControlContext.getCreatedDate());
         controlDao.insertAutoPayOff(data);
         return true;

@@ -462,6 +462,64 @@ public class TestInvoicePayment extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
+    public void testWithoutDefaultPaymentMethodAndAUTO_PAY_OFF() throws Exception {
+        // 2012-05-01T00:03:42.000Z
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        final AccountData accountData = getAccountData(0);
+        final Account account = createAccount(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final Invoice invoice1 = invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+
+        // No invoice payment
+        Assert.assertEquals(invoice1.getPayments().size(), 0);
+
+        // There is one dangling payment attempt (not easy to get to...)
+        final List<AuditLog> paymentAttemptsAuditLogs1 = new ArrayList<AuditLog>();
+        for (final AuditLog auditLog : auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, callContext).getAuditLogs()) {
+            if (auditLog.getAuditedObjectType() == ObjectType.PAYMENT_ATTEMPT) {
+                paymentAttemptsAuditLogs1.add(auditLog);
+            }
+        }
+        Assert.assertEquals(paymentAttemptsAuditLogs1.size(), 2); // One INSERT and one UPDATE
+        final PaymentAttemptModelDao paymentAttempt1 = paymentDao.getPaymentAttempt(paymentAttemptsAuditLogs1.get(0).getAuditedEntityId(), internalCallContext);
+        Assert.assertEquals(paymentAttempt1.getStateName(), "ABORTED");
+
+        // Put the account in AUTO_PAY_OFF
+        add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        // 2012-05-31 => DAY 30 have to get out of trial {I0, P0}
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE);
+
+        Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
+
+        // Invoice is not paid
+        Assert.assertEquals(paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext).size(), 0);
+        Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // There is no invoice payment
+        Assert.assertEquals(invoice2.getPayments().size(), 0);
+
+        // There is another dangling payment attempt (not easy to get to...)
+        final List<AuditLog> paymentAttemptsAuditLogs2 = new ArrayList<AuditLog>();
+        for (final AuditLog auditLog : auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, callContext).getAuditLogs()) {
+            if (auditLog.getAuditedObjectType() == ObjectType.PAYMENT_ATTEMPT && !paymentAttemptsAuditLogs1.contains(auditLog)) {
+                paymentAttemptsAuditLogs2.add(auditLog);
+            }
+        }
+        Assert.assertEquals(paymentAttemptsAuditLogs2.size(), 2); // One INSERT and one UPDATE
+        final PaymentAttemptModelDao paymentAttempt2 = paymentDao.getPaymentAttempt(paymentAttemptsAuditLogs2.get(0).getAuditedEntityId(), internalCallContext);
+        Assert.assertEquals(paymentAttempt2.getStateName(), "ABORTED");
+        // Just verify we've found the right one
+        Assert.assertNotEquals(paymentAttempt2.getId(), paymentAttempt1.getId());
+    }
+
+    @Test(groups = "slow")
     public void testPaymentDifferentCurrencyByPaymentPlugin() throws Exception {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));

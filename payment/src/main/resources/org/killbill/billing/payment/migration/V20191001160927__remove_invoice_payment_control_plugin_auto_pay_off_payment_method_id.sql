@@ -1,0 +1,1 @@
+alter table invoice_payment_control_plugin_auto_pay_off drop column payment_method_id;
