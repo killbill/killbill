@@ -51,4 +51,12 @@ public class DefaultTenantConfigDeletionInternalEvent extends BusEventBase imple
     public BusInternalEventType getBusEventType() {
         return BusInternalEventType.TENANT_CONFIG_DELETION;
     }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("DefaultTenantConfigDeletionInternalEvent{");
+        sb.append("key='").append(key).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }
