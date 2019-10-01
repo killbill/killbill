@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
 
@@ -89,7 +90,6 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
             return true;
         }
     }
-
 
 
 
@@ -153,6 +153,85 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         checkNode(firstChildLevel2, 0, firstChildLevel1, null, secondChildLevel2);
         checkNode(secondChildLevel2, 0, firstChildLevel1, null, null);
         checkNode(thirdChildLevel2, 0, thirdChildLevel1, null, null);
+    }
+
+    @Test(groups = "fast")
+    public void testAddOverlapNode1() {
+        final DummyNodeInterval root = new DummyNodeInterval();
+
+        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
+        root.addNode(top, CALLBACK);
+
+        final DummyNodeInterval firstChild = createNodeInterval("2014-01-03", "2014-01-07");
+        root.addNode(firstChild, CALLBACK);
+
+        try {
+            final DummyNodeInterval newNode = createNodeInterval("2014-01-01", "2014-01-04");
+            root.addNode(newNode, CALLBACK);
+            fail("Should fail to insert node");
+        } catch (final IllegalStateException e) {
+        }
+    }
+
+    @Test(groups = "fast")
+    public void testAddOverlapNode2() {
+        final DummyNodeInterval root = new DummyNodeInterval();
+
+        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
+        root.addNode(top, CALLBACK);
+
+        final DummyNodeInterval firstChild = createNodeInterval("2014-01-01", "2014-01-07");
+        root.addNode(firstChild, CALLBACK);
+        final DummyNodeInterval secondChild = createNodeInterval("2014-01-12", "2014-01-15");
+        root.addNode(secondChild, CALLBACK);
+
+        try {
+            final DummyNodeInterval newNode = createNodeInterval("2014-01-07", "2014-01-13");
+            root.addNode(newNode, CALLBACK);
+            fail("Should fail to insert node");
+        } catch (final IllegalStateException e) {
+        }
+    }
+
+    @Test(groups = "fast")
+    public void testAddOverlapNode3() {
+        final DummyNodeInterval root = new DummyNodeInterval();
+
+        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
+        root.addNode(top, CALLBACK);
+
+        final DummyNodeInterval firstChild = createNodeInterval("2014-01-01", "2014-01-07");
+        root.addNode(firstChild, CALLBACK);
+        final DummyNodeInterval secondChild = createNodeInterval("2014-01-12", "2014-01-15");
+        root.addNode(secondChild, CALLBACK);
+
+        try {
+            final DummyNodeInterval newNode = createNodeInterval("2014-01-06", "2014-01-12");
+            root.addNode(newNode, CALLBACK);
+            fail("Should fail to insert node");
+        } catch (final IllegalStateException e) {
+        }
+    }
+
+
+    @Test(groups = "fast")
+    public void testAddOverlapNode4() {
+        final DummyNodeInterval root = new DummyNodeInterval();
+
+        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
+        root.addNode(top, CALLBACK);
+
+        final DummyNodeInterval firstChild = createNodeInterval("2014-01-01", "2014-01-07");
+        root.addNode(firstChild, CALLBACK);
+        final DummyNodeInterval secondChild = createNodeInterval("2014-01-12", "2014-01-15");
+        root.addNode(secondChild, CALLBACK);
+
+        try {
+            final DummyNodeInterval newNode = createNodeInterval("2014-01-14", "2014-01-18");
+            root.addNode(newNode, CALLBACK);
+            fail("Should fail to insert node");
+        } catch (final IllegalStateException e) {
+        }
     }
 
     @Test(groups = "fast")

@@ -123,7 +123,11 @@ public class NodeInterval {
 
             if (newNode.getStart().compareTo(curChild.getStart()) < 0) {
 
-                Preconditions.checkState(newNode.getEnd().compareTo(end) <= 0);
+                Preconditions.checkState(newNode.getEnd().compareTo(curChild.getStart()) <= 0,
+                                         "Failed to insert new node %s, end date overlaps with right child %s", newNode, curChild);
+
+                Preconditions.checkState(prevChild == null || newNode.getStart().compareTo(prevChild.getEnd()) >= 0,
+                                         "Failed to insert new node %s, start date overlaps with left child %s", newNode, prevChild);
 
                 if (callback.shouldInsertNode(this)) {
                     newNode.rightSibling = curChild;
@@ -140,6 +144,9 @@ public class NodeInterval {
             prevChild = curChild;
             curChild = curChild.rightSibling;
         }
+
+        Preconditions.checkState(newNode.getStart().compareTo(prevChild.getEnd()) >= 0,
+                                 "Failed to insert new node %s, start date overlaps with left child %s", newNode, prevChild);
 
         if (callback.shouldInsertNode(this)) {
             prevChild.rightSibling = newNode;
@@ -326,34 +333,40 @@ public class NodeInterval {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("NodeInterval{");
-        sb.append("this=[")
+        final StringBuilder sb = new StringBuilder();
+        sb.append("[")
           .append(start)
           .append(",")
           .append(end)
           .append("]");
+        return sb.toString();
+    }
+
+    public String toStringVerbose() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append(toString());
         if (parent == null) {
-            sb.append(", parent=").append(parent);
+            sb.append(", prnt=").append(parent);
         } else {
-            sb.append(", parent=[")
+            sb.append(", prnt=[")
               .append(parent.getStart())
               .append(",")
               .append(parent.getEnd())
               .append("]");
         }
         if (leftChild == null) {
-            sb.append(", leftChild=").append(leftChild);
+            sb.append(", lCh=").append(leftChild);
         } else {
-            sb.append(", leftChild=[")
+            sb.append(", lCh=[")
               .append(leftChild.getStart())
               .append(",")
               .append(leftChild.getEnd())
               .append("]");
         }
         if (rightSibling == null) {
-            sb.append(", rightSibling=").append(rightSibling);
+            sb.append(", rSib=").append(rightSibling);
         } else {
-            sb.append(", rightSibling=[")
+            sb.append(", rSib=[")
               .append(rightSibling.getStart())
               .append(",")
               .append(rightSibling.getEnd())
