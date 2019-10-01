@@ -54,6 +54,7 @@ import org.killbill.billing.subscription.alignment.PlanAligner;
 import org.killbill.billing.subscription.alignment.TimedPhase;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.svcs.DefaultPlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
@@ -174,11 +175,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public boolean cancel(final DefaultSubscriptionBase subscription, final CallContext context) throws SubscriptionBaseApiException {
-        final EntitlementState currentState = subscription.getState();
-        if (currentState == EntitlementState.CANCELLED) {
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
-        }
-
         final Plan currentPlan = subscription.getCurrentOrPendingPlan();
         final PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getName(), null);
 
@@ -199,10 +195,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public boolean cancelWithRequestedDate(final DefaultSubscriptionBase subscription, final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionBaseApiException {
-        final EntitlementState currentState = subscription.getState();
-        if (currentState == EntitlementState.CANCELLED) {
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
-        }
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
@@ -216,10 +208,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public boolean cancelWithPolicy(final DefaultSubscriptionBase subscription, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-        final EntitlementState currentState = subscription.getState();
-        if (currentState == EntitlementState.CANCELLED) {
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
-        }
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         try {
@@ -257,7 +245,24 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         try {
             for (final DefaultSubscriptionBase subscription : subscriptions.keySet()) {
+
+                final EntitlementState currentState = subscription.getState();
+                if (currentState == EntitlementState.CANCELLED) {
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
+                }
                 final DateTime effectiveDate = subscriptions.get(subscription);
+
+                // If subscription was future cancelled at an earlier date we disallow the operation -- i.e,
+                // user should first uncancel prior trying to cancel again.
+                // However, note that in case a future cancellation already exists with a greater or equal effectiveDate,
+                // the operation is allowed, but such existing cancellation would become invalidated (is_active=0)
+                final SubscriptionBaseTransition pendingTransition = subscription.getPendingTransition();
+                if (pendingTransition != null &&
+                    pendingTransition.getTransitionType() == SubscriptionBaseTransitionType.CANCEL &&
+                    pendingTransition.getEffectiveTransitionTime().compareTo(effectiveDate) < 0) {
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), "PENDING CANCELLED");
+                }
+
                 validateEffectiveDate(subscription, effectiveDate);
 
                 subscriptionsToBeCancelled.add(subscription);
