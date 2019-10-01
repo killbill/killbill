@@ -406,7 +406,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testWithoutDefaultPaymentMethodt() throws Exception {
+    public void testWithoutDefaultPaymentMethod() throws Exception {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
