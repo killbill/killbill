@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +54,11 @@ import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.xmlloader.XMLLoader;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.Handle;
@@ -333,8 +337,22 @@ public class TestInvoicePayment extends TestIntegrationBase {
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        final Invoice invoice1 = invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+
+        // No invoice payment
+        Assert.assertEquals(invoice1.getPayments().size(), 0);
+
+        // There is one dangling payment attempt (not easy to get to...)
+        final List<AuditLog> paymentAttemptsAuditLogs1 = new ArrayList<AuditLog>();
+        for (final AuditLog auditLog : auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, callContext).getAuditLogs()) {
+            if (auditLog.getAuditedObjectType() == ObjectType.PAYMENT_ATTEMPT) {
+                paymentAttemptsAuditLogs1.add(auditLog);
+            }
+        }
+        Assert.assertEquals(paymentAttemptsAuditLogs1.size(), 2); // One INSERT and one UPDATE
+        final PaymentAttemptModelDao paymentAttempt1 = paymentDao.getPaymentAttempt(paymentAttemptsAuditLogs1.get(0).getAuditedEntityId(), internalCallContext);
+        Assert.assertEquals(paymentAttempt1.getStateName(), "ABORTED");
 
         // Put the account in AUTO_PAY_OFF to make sure payment system does not try to pay the initial invoice
         add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
@@ -349,6 +367,22 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertEquals(paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext).size(), 0);
         Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("249.95")), 0);
         Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // No invoice payment
+        Assert.assertEquals(invoice2.getPayments().size(), 0);
+
+        // There is another dangling payment attempt (not easy to get to...)
+        final List<AuditLog> paymentAttemptsAuditLogs2 = new ArrayList<AuditLog>();
+        for (final AuditLog auditLog : auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, callContext).getAuditLogs()) {
+            if (auditLog.getAuditedObjectType() == ObjectType.PAYMENT_ATTEMPT && !paymentAttemptsAuditLogs1.contains(auditLog)) {
+                paymentAttemptsAuditLogs2.add(auditLog);
+            }
+        }
+        Assert.assertEquals(paymentAttemptsAuditLogs2.size(), 2); // One INSERT and one UPDATE
+        final PaymentAttemptModelDao paymentAttempt2 = paymentDao.getPaymentAttempt(paymentAttemptsAuditLogs2.get(0).getAuditedEntityId(), internalCallContext);
+        Assert.assertEquals(paymentAttempt2.getStateName(), "ABORTED");
+        // Just verify we've found the right one
+        Assert.assertNotEquals(paymentAttempt2.getId(), paymentAttempt1.getId());
 
         // Trigger partial payment
         final Payment payment1 = createPaymentAndCheckForCompletion(account, invoice2, BigDecimal.TEN, account.getCurrency(), NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -369,6 +403,62 @@ public class TestInvoicePayment extends TestIntegrationBase {
         invoice2 = invoiceUserApi.getInvoice(invoice2.getId(), callContext);
         Assert.assertEquals(invoice2.getBalance().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testWithoutDefaultPaymentMethodt() throws Exception {
+        // 2012-05-01T00:03:42.000Z
+        clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
+
+        final AccountData accountData = getAccountData(0);
+        final Account account = createAccount(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final Invoice invoice1 = invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 5, 1), callContext);
+
+        // No invoice payment
+        Assert.assertEquals(invoice1.getPayments().size(), 0);
+
+        // There is one dangling payment attempt (not easy to get to...)
+        final List<AuditLog> paymentAttemptsAuditLogs1 = new ArrayList<AuditLog>();
+        for (final AuditLog auditLog : auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, callContext).getAuditLogs()) {
+            if (auditLog.getAuditedObjectType() == ObjectType.PAYMENT_ATTEMPT) {
+                paymentAttemptsAuditLogs1.add(auditLog);
+            }
+        }
+        Assert.assertEquals(paymentAttemptsAuditLogs1.size(), 2); // One INSERT and one UPDATE
+        final PaymentAttemptModelDao paymentAttempt1 = paymentDao.getPaymentAttempt(paymentAttemptsAuditLogs1.get(0).getAuditedEntityId(), internalCallContext);
+        Assert.assertEquals(paymentAttempt1.getStateName(), "ABORTED");
+
+        // 2012-05-31 => DAY 30 have to get out of trial {I0, P0}
+        // Note that there is a INVOICE_PAYMENT_ERROR event in that case, unlike the AUTO_PAY_OFF/MANUAL_PAY usecase
+        addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR);
+
+        Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 31), new LocalDate(2012, 6, 30), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkChargedThroughDate(baseEntitlement.getId(), new LocalDate(2012, 6, 30), callContext);
+
+        // Invoice is not paid
+        Assert.assertEquals(paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext).size(), 0);
+        Assert.assertEquals(invoice2.getBalance().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
+
+        // There is no invoice payment
+        Assert.assertEquals(invoice2.getPayments().size(), 0);
+
+        // There is another dangling payment attempt (not easy to get to...)
+        final List<AuditLog> paymentAttemptsAuditLogs2 = new ArrayList<AuditLog>();
+        for (final AuditLog auditLog : auditUserApi.getAccountAuditLogs(account.getId(), AuditLevel.FULL, callContext).getAuditLogs()) {
+            if (auditLog.getAuditedObjectType() == ObjectType.PAYMENT_ATTEMPT && !paymentAttemptsAuditLogs1.contains(auditLog)) {
+                paymentAttemptsAuditLogs2.add(auditLog);
+            }
+        }
+        Assert.assertEquals(paymentAttemptsAuditLogs2.size(), 2); // One INSERT and one UPDATE
+        final PaymentAttemptModelDao paymentAttempt2 = paymentDao.getPaymentAttempt(paymentAttemptsAuditLogs2.get(0).getAuditedEntityId(), internalCallContext);
+        Assert.assertEquals(paymentAttempt2.getStateName(), "ABORTED");
+        // Just verify we've found the right one
+        Assert.assertNotEquals(paymentAttempt2.getId(), paymentAttempt1.getId());
     }
 
     @Test(groups = "slow")
