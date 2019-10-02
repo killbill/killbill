@@ -502,6 +502,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContext);
+
+        // Retrieve the tags for the ACCOUNT object to correctly implement callCompletion in the simple use-cases.
+        // In reality, this is much more complex though and not all scenarii are supported (e.g. entitlement plugin could add some tags on the fly).
+        final List<Tag> accountTags = tagUserApi.getTagsForAccountType(current.getAccountId(), ObjectType.ACCOUNT, false, callContext);
+
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
              private boolean isImmediateOp = true;
@@ -509,8 +515,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
             @Override
             public Response doOperation(final CallContext ctx) throws EntitlementApiException,
                                                                       AccountApiException {
-
-                final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContext);
                 final LocalDate inputLocalDate = toLocalDate(requestedDate);
                 final Entitlement newEntitlement;
 
@@ -543,7 +547,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
         };
 
-        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>();
+        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>(accountTags);
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
@@ -593,6 +597,12 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContext);
+
+        // Retrieve the tags for the ACCOUNT object to correctly implement callCompletion in the simple use-cases.
+        // In reality, this is much more complex though and not all scenarii are supported (e.g. entitlement plugin could add some tags on the fly).
+        final List<Tag> accountTags = tagUserApi.getTagsForAccountType(current.getAccountId(), ObjectType.ACCOUNT, false, callContext);
+
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
             private boolean isImmediateOp = true;
@@ -601,7 +611,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
             public Response doOperation(final CallContext ctx)
                     throws EntitlementApiException,
                            SubscriptionApiException {
-                final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, ctx);
                 final LocalDate inputLocalDate = toLocalDate(requestedDate);
                 final Entitlement newEntitlement;
                 if (billingPolicy == null && entitlementPolicy == null) {
@@ -639,7 +648,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
         };
 
-        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>();
+        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>(accountTags);
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
@@ -695,9 +704,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         private final List<Tag> accountTags;
 
-        public CompletionUserRequestEntitlement(final UUID userToken, @Nullable final List<Tag> accountTags) {
+        public CompletionUserRequestEntitlement(final UUID userToken, final List<Tag> accountTags) {
             super(userToken);
-            this.accountTags = MoreObjects.firstNonNull(accountTags, ImmutableList.<Tag>of());
+            this.accountTags = accountTags;
         }
 
         @Override
@@ -803,10 +812,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         // All tags for the ACCOUNT object
         private final List<Tag> accountTags;
-
-        public EntitlementCallCompletion() {
-            this(null);
-        }
 
         public EntitlementCallCompletion(final List<Tag> accountTags) {
             this.accountTags = accountTags;

@@ -830,8 +830,10 @@ public class TestEntitlement extends TestJaxrsBase {
         assertNotNull(accountJson);
 
         // assign autoPaymentOff tag to account
-        Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 1L)), requestOptions);
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
+        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 1L)), requestOptions);
         assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
+        callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
@@ -845,24 +847,63 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList("notrial");
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ACCOUNT_CHANGE,
+                                           ExtBusEventType.INVOICE_CREATION); // The BCD is updated in that case
         final Subscription subscriptionJson = subscriptionApi.createSubscription(input, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(subscriptionJson);
+        callbackServlet.assertListenerStatus();
 
         // verify that number of invoices is now 1
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 1);
 
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+
+        // Change Plan
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE,
+                                           ExtBusEventType.SUBSCRIPTION_CHANGE,
+                                           ExtBusEventType.INVOICE_CREATION);
+        subscriptionApi.changeSubscriptionPlan(subscriptionJson.getSubscriptionId(),
+                                               newInput,
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               BillingActionPolicy.IMMEDIATE,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Cancel subscription (entitlement IMM, billing EOT)
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL);
+        subscriptionApi.cancelSubscriptionPlan(newInput.getSubscriptionId(),
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               null,
+                                               null,
+                                               null,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
     }
 
     @Test(groups = "slow", description = "Can create an entitlement with an account with autoInvoicingOff -- https://github.com/killbill/killbill/pull/1196")
-    public void testCreateSubscriptionWithAutoInvoicingOff() throws Exception {
+    public void testCreateChangeAndCancelSubscriptionWithAutoInvoicingOff() throws Exception {
         final Account accountJson = createAccount();
         assertNotNull(accountJson);
 
         // assign autoInvoicingOff tag to account
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
         final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 2L)), requestOptions);
         assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_INVOICING_OFF");
+        callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
@@ -876,6 +917,9 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList("notrial");
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION); // Note that the BCD isn't set
         final Subscription subscriptionJson = subscriptionApi.createSubscription(input,
                                                                                  null,
                                                                                  null,
@@ -892,16 +936,50 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+
+
+        // Change Plan
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE,
+                                           ExtBusEventType.SUBSCRIPTION_CHANGE);
+        subscriptionApi.changeSubscriptionPlan(subscriptionJson.getSubscriptionId(),
+                                               newInput,
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               BillingActionPolicy.IMMEDIATE,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Cancel subscription (entitlement and billing IMM since there is no BCD set)
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL);
+        subscriptionApi.cancelSubscriptionPlan(newInput.getSubscriptionId(),
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               null,
+                                               null,
+                                               null,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
     }
 
     @Test(groups = "slow", description = "Can create an entitlement with an account with autoInvoicingDraft")
-    public void testCreateSubscriptionWithAutoInvoicingDraft() throws Exception {
+    public void testCreateChangeAndCancelSubscriptionWithAutoInvoicingDraft() throws Exception {
         final Account accountJson = createAccount();
         assertNotNull(accountJson);
 
         // assign AUTO_INVOICING_DRAFT tag to account
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
         final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 8L)), requestOptions);
         assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_INVOICING_DRAFT");
+        callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
@@ -915,6 +993,10 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList("notrial");
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ACCOUNT_CHANGE); // The BCD is updated in that case
         final Subscription subscriptionJson = subscriptionApi.createSubscription(input,
                                                                                  null,
                                                                                  null,
@@ -925,6 +1007,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                  NULL_PLUGIN_PROPERTIES,
                                                                                  requestOptions);
         assertNotNull(subscriptionJson);
+        callbackServlet.assertListenerStatus();
 
         // verify that number of invoices is 1 (DRAFT). Note that we have to poll because callCompletion will return
         // before the DRAFT invoice is generated (there is no event to synchronize on)
@@ -938,6 +1021,36 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+
+        // Change Plan
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE,
+                                           ExtBusEventType.SUBSCRIPTION_CHANGE);
+        subscriptionApi.changeSubscriptionPlan(subscriptionJson.getSubscriptionId(),
+                                               newInput,
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               BillingActionPolicy.IMMEDIATE,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Cancel subscription (entitlement IMM, billing EOT)
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL);
+        subscriptionApi.cancelSubscriptionPlan(newInput.getSubscriptionId(),
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               null,
+                                               null,
+                                               null,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
     }
 
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
