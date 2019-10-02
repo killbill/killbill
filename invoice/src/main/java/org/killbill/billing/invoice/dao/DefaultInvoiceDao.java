@@ -437,9 +437,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Bulk insert the invoice items
                 createInvoiceItemsFromTransaction(transInvoiceItemSqlDao, invoiceItemsToCreate, context);
 
-
-
-
                 // CBA COMPLEXITY...
                 //
                 // Optimized path where we don't need to refresh invoices
@@ -464,11 +461,11 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         return ImmutableList.<InvoiceItemModelDao>of();
                     } else {
                         return transInvoiceItemSqlDao.getByIds(Collections2.<InvoiceItemModelDao, String>transform(invoiceItemsToCreate, new Function<InvoiceItemModelDao, String>() {
-                                                                                                                       @Override
-                                                                                                                       public String apply(final InvoiceItemModelDao input) {
-                                                                                                                           return input.getId().toString();
-                                                                                                                       }
-                                                                                                                   }),
+                                                                   @Override
+                                                                   public String apply(final InvoiceItemModelDao input) {
+                                                                       return input.getId().toString();
+                                                                   }
+                                                               }),
                                                                context);
                     }
                 } else {
@@ -477,7 +474,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
-
 
     @Override
     public List<InvoiceModelDao> getInvoicesBySubscription(final UUID subscriptionId, final InternalTenantContext context) {
@@ -944,7 +940,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 //
                 // In case of notifyOfPaymentInit we always want to record the row with success = false
                 // Otherwise, if the payment id is null, the payment wasn't attempted (e.g. no payment method so we don't record an attempt but send
-                // an event nonetheless (e.g. for Overdue)
+                // an event nonetheless (e.g. for Overdue))
                 //
                 if (!completion || invoicePayment.getPaymentId() != null) {
                     //
@@ -963,8 +959,19 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     if (existingAttempt == null) {
                         createAndRefresh(transactional, invoicePayment, context);
                     } else {
+                        final UUID updatedPaymentId;
+                        if (invoicePayment.getPaymentId() == null) {
+                            // Likely invalid state (https://github.com/killbill/killbill/issues/1230) but go ahead nonetheless to run the payment state machine validations
+                            updatedPaymentId = existingAttempt.getPaymentId();
+                        } else if (existingAttempt.getPaymentId() == null) {
+                            updatedPaymentId = invoicePayment.getPaymentId();
+                        } else {
+                            Preconditions.checkState(invoicePayment.getPaymentId().equals(existingAttempt.getPaymentId()),
+                                                     "PaymentAttempt cannot change paymentId: attemptId=%s, newInvoicePaymentId=%s, existingPaymentId=%s", existingAttempt.getId(), invoicePayment.getPaymentId(), existingAttempt.getPaymentId());
+                            updatedPaymentId = invoicePayment.getPaymentId();
+                        }
                         transactional.updateAttempt(existingAttempt.getId().toString(),
-                                                    invoicePayment.getPaymentId().toString(),
+                                                    updatedPaymentId == null ? null : updatedPaymentId.toString(),
                                                     invoicePayment.getPaymentDate().toDate(),
                                                     invoicePayment.getAmount(),
                                                     invoicePayment.getCurrency(),
@@ -1249,7 +1256,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Invoice creation event sent on COMMITTED
                 if (InvoiceStatus.COMMITTED.equals(newStatus)) {
                     notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, context);
-                // Deactivate any usage trackingIds if necessary
+                    // Deactivate any usage trackingIds if necessary
                 } else if (InvoiceStatus.VOID.equals(newStatus)) {
                     final InvoiceTrackingSqlDao trackingSqlDao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
                     final List<InvoiceTrackingModelDao> invoiceTrackingModelDaos = trackingSqlDao.getTrackingsForInvoices(ImmutableList.of(invoiceId.toString()), context);
@@ -1433,19 +1440,15 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Keep invoice up-to-date for CBA below
                 parentInvoice.addInvoiceItem(parentCreditItem);
 
-
                 // Create Mapping relation
                 final InvoiceParentChildrenSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceParentChildrenSqlDao.class);
                 final InvoiceParentChildModelDao invoiceRelation = new InvoiceParentChildModelDao(parentInvoice.getId(), childInvoice.getId(), childInvoice.getAccountId());
                 createAndRefresh(transactional, invoiceRelation, parentAccountContext);
 
-
                 // Add child CBA complexity and notify bus on child invoice creation
                 final CBALogicWrapper childCbaWrapper = new CBALogicWrapper(childAccount.getId(), childInvoicesTags, childAccountContext, entitySqlDaoWrapperFactory);
                 childCbaWrapper.runCBALogicWithNotificationEvents(ImmutableSet.of(), ImmutableSet.of(childInvoice.getId()), ImmutableList.of(childInvoice));
                 notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, childInvoice, childAccountContext);
-
-
 
                 // Add parent CBA complexity and notify bus on child invoice creation
                 final CBALogicWrapper cbaWrapper = new CBALogicWrapper(childAccount.getParentAccountId(), parentInvoicesTags, parentAccountContext, entitySqlDaoWrapperFactory);
@@ -1456,8 +1459,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
-
-
 
     @Override
     public List<InvoiceItemModelDao> getInvoiceItemsByParentInvoice(final UUID parentInvoiceId, final InternalTenantContext context) throws InvoiceApiException {
@@ -1480,7 +1481,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             }
         });
     }
-
 
     @Override
     public List<AuditLogWithHistory> getInvoiceAuditLogsWithHistoryForId(final UUID invoiceId, final AuditLevel auditLevel, final InternalTenantContext context) {
@@ -1565,8 +1565,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         }
     }
 
-
-
     // PERF: fetch tags once. See also https://github.com/killbill/killbill/issues/720.
     private List<Tag> getInvoicesTags(final InternalTenantContext context) {
         return tagInternalApi.getTagsForAccountType(ObjectType.INVOICE, false, context);
@@ -1575,7 +1573,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private static boolean checkAgainstExistingInvoiceItemState(final InvoiceItemModelDao existingInvoiceItem, final InvoiceItemModelDao inputInvoiceItem) {
         boolean itemShouldBeUpdated = false;
         if (inputInvoiceItem.getAmount() != null) {
-            itemShouldBeUpdated = existingInvoiceItem.getAmount() == null /* unlikely */|| inputInvoiceItem.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0;
+            itemShouldBeUpdated = existingInvoiceItem.getAmount() == null /* unlikely */ || inputInvoiceItem.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0;
         } else if (!itemShouldBeUpdated && inputInvoiceItem.getDescription() != null) {
             itemShouldBeUpdated = existingInvoiceItem.getDescription() == null || inputInvoiceItem.getDescription().compareTo(existingInvoiceItem.getDescription()) != 0;
         } else if (!itemShouldBeUpdated && inputInvoiceItem.getItemDetails() != null) {
