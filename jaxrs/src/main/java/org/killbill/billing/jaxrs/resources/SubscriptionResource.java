@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -105,6 +105,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -351,11 +352,16 @@ public class SubscriptionResource extends JaxRsResourceBase {
             baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementSpecifierWithAddOns);
         }
 
+
+        // Retrieve the tags for the ACCOUNT object to correctly implement callCompletion in the simple use-cases.
+        // In reality, this is much more complex though and not all scenarii are supported (e.g. entitlement plugin could add some tags on the fly).
         final List<Tag> accountTags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.ACCOUNT, false, callContext);
 
         final EntitlementCallCompletionCallback<List<UUID>> callback = new EntitlementCallCompletionCallback<List<UUID>>() {
 
-            // By default, wait for invoice and payment (101 use-case - this won't always work though)
+            // By default, wait for invoice and payment
+            // This is very 101 and won't always work though: an entitlement plugin could override dates on the fly,
+            // an invoice plugin could reschedule the invoice generation, etc.
             private boolean isImmediateOp = true;
 
             @Override
@@ -370,19 +376,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
                             break;
                         }
                     }
-                }
-
-                // Check to see if billing is off for the account, in which case, we won't have to wait for any event.
-                // This should take care of the 101 use-case (https://github.com/killbill/killbill/issues/1193), but in reality,
-                // this is much more complex and not all scenarii are supported (e.g. entitlement plugin could add the tag on the fly)
-                final boolean found_AUTO_INVOICING_OFF = ControlTagType.isAutoInvoicingOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
-                    @Override
-                    public UUID apply(final Tag tag) {
-                        return tag.getTagDefinitionId();
-                    }
-                }));
-                if (found_AUTO_INVOICING_OFF) {
-                    isImmediateOp = false;
                 }
 
                 return entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifierList, renameKeyIfExistsAndUnused, pluginProperties, callContext);
@@ -704,7 +697,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         public CompletionUserRequestEntitlement(final UUID userToken, @Nullable final List<Tag> accountTags) {
             super(userToken);
-            this.accountTags = accountTags;
+            this.accountTags = MoreObjects.firstNonNull(accountTags, ImmutableList.<Tag>of());
         }
 
         @Override
@@ -715,6 +708,29 @@ public class SubscriptionResource extends JaxRsResourceBase {
         @Override
         public void onBlockingState(final BlockingTransitionInternalEvent event) {
             log.info(String.format("Got event BlockingTransitionInternalEvent token = %s", event.getUserToken()));
+
+            // Additional checks to see if we need to wait for an invoice (https://github.com/killbill/killbill/issues/1193)
+            // We do the checks in onBlockingState, as it's always guaranteed to be fired, unlike onSubscriptionBaseTransition.
+
+            // Check to see if billing is off for the account, in which case, we won't have to wait for any invoice
+            final boolean found_AUTO_INVOICING_OFF = ControlTagType.isAutoInvoicingOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
+                @Override
+                public UUID apply(final Tag tag) {
+                    return tag.getTagDefinitionId();
+                }
+            }));
+            if (found_AUTO_INVOICING_OFF) {
+                notifyForCompletion();
+                return;
+            }
+
+            // For AUTO_INVOICING_DRAFT, there won't be any invoice event either
+            for (final Tag tag : accountTags) {
+                if (ControlTagType.AUTO_INVOICING_DRAFT.getId().equals(tag.getTagDefinitionId())) {
+                    notifyForCompletion();
+                    return;
+                }
+            }
         }
 
         @Override
@@ -730,17 +746,15 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 notifyForCompletion();
             }
 
-            if (accountTags != null) {
-                final boolean found_AUTO_PAY_OFF = ControlTagType.isAutoPayOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
-                    @Override
-                    public UUID apply(final Tag tag) {
-                        return tag.getTagDefinitionId();
-                    }
-                }));
-                // For AUTO_PAY_OFF, we've decided not to send an event in InvoicePaymentControlPluginApi (https://github.com/killbill/killbill/issues/812)
-                if (found_AUTO_PAY_OFF) {
-                    notifyForCompletion();
+            final boolean found_AUTO_PAY_OFF = ControlTagType.isAutoPayOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
+                @Override
+                public UUID apply(final Tag tag) {
+                    return tag.getTagDefinitionId();
                 }
+            }));
+            // For AUTO_PAY_OFF, we've decided not to send an event in InvoicePaymentControlPluginApi (https://github.com/killbill/killbill/issues/812)
+            if (found_AUTO_PAY_OFF) {
+                notifyForCompletion();
             }
         }
 
