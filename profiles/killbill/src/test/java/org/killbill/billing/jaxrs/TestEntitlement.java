@@ -825,7 +825,7 @@ public class TestEntitlement extends TestJaxrsBase {
     }
 
     @Test(groups = "slow", description = "Can create an entitlement with an account with autoPayOff -- https://github.com/killbill/killbill/issues/1193")
-    public void testCreateSubscriptionWithAutoPayOff() throws Exception {
+    public void testCreateChangeAndCancelSubscriptionWithAutoPayOff() throws Exception {
         final Account accountJson = createAccount();
         assertNotNull(accountJson);
 
@@ -862,6 +862,10 @@ public class TestEntitlement extends TestJaxrsBase {
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
+        // Avoid test timing issues
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
         // Change Plan
         final Subscription newInput = new Subscription();
         newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
@@ -877,6 +881,10 @@ public class TestEntitlement extends TestJaxrsBase {
                                                BillingActionPolicy.IMMEDIATE,
                                                NULL_PLUGIN_PROPERTIES,
                                                requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Avoid test timing issues
+        clock.addDays(1);
         callbackServlet.assertListenerStatus();
 
         // Cancel subscription (entitlement IMM, billing EOT)
@@ -930,6 +938,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                  NULL_PLUGIN_PROPERTIES,
                                                                                  requestOptions);
         assertNotNull(subscriptionJson);
+        callbackServlet.assertListenerStatus();
 
         // verify that number of invoices is still 0
         assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
@@ -937,6 +946,9 @@ public class TestEntitlement extends TestJaxrsBase {
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
+        // Avoid test timing issues
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
 
         // Change Plan
         final Subscription newInput = new Subscription();
@@ -952,6 +964,10 @@ public class TestEntitlement extends TestJaxrsBase {
                                                BillingActionPolicy.IMMEDIATE,
                                                NULL_PLUGIN_PROPERTIES,
                                                requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Avoid test timing issues
+        clock.addDays(1);
         callbackServlet.assertListenerStatus();
 
         // Cancel subscription (entitlement and billing IMM since there is no BCD set)
@@ -1022,6 +1038,10 @@ public class TestEntitlement extends TestJaxrsBase {
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
+        // Avoid test timing issues
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
         // Change Plan
         final Subscription newInput = new Subscription();
         newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
@@ -1036,6 +1056,10 @@ public class TestEntitlement extends TestJaxrsBase {
                                                BillingActionPolicy.IMMEDIATE,
                                                NULL_PLUGIN_PROPERTIES,
                                                requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Avoid test timing issues
+        clock.addDays(1);
         callbackServlet.assertListenerStatus();
 
         // Cancel subscription (entitlement IMM, billing EOT)
