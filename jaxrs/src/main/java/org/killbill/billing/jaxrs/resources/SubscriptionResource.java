@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -350,6 +351,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
             baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementSpecifierWithAddOns);
         }
 
+        final List<Tag> accountTags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.ACCOUNT, false, callContext);
+
         final EntitlementCallCompletionCallback<List<UUID>> callback = new EntitlementCallCompletionCallback<List<UUID>>() {
 
             // By default, wait for invoice and payment (101 use-case - this won't always work though)
@@ -372,7 +375,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 // Check to see if billing is off for the account, in which case, we won't have to wait for any event.
                 // This should take care of the 101 use-case (https://github.com/killbill/killbill/issues/1193), but in reality,
                 // this is much more complex and not all scenarii are supported (e.g. entitlement plugin could add the tag on the fly)
-                final List<Tag> accountTags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.ACCOUNT, false, callContext);
                 final boolean found_AUTO_INVOICING_OFF = ControlTagType.isAutoInvoicingOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
                     @Override
                     public UUID apply(final Tag tag) {
@@ -417,7 +419,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 }
             }
         };
-        final EntitlementCallCompletion<List<UUID>> callCompletionCreation = new EntitlementCallCompletion<List<UUID>>();
+        final EntitlementCallCompletion<List<UUID>> callCompletionCreation = new EntitlementCallCompletion<List<UUID>>(accountTags);
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
@@ -698,8 +700,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     private static final class CompletionUserRequestEntitlement extends CompletionUserRequestBase {
 
-        public CompletionUserRequestEntitlement(final UUID userToken) {
+        private final List<Tag> accountTags;
+
+        public CompletionUserRequestEntitlement(final UUID userToken, @Nullable final List<Tag> accountTags) {
             super(userToken);
+            this.accountTags = accountTags;
         }
 
         @Override
@@ -720,10 +725,22 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         @Override
         public void onInvoiceCreation(final InvoiceCreationInternalEvent event) {
-
             log.info("Got event InvoiceCreationNotification token='{}'", event.getUserToken());
             if (event.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
                 notifyForCompletion();
+            }
+
+            if (accountTags != null) {
+                final boolean found_AUTO_PAY_OFF = ControlTagType.isAutoPayOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
+                    @Override
+                    public UUID apply(final Tag tag) {
+                        return tag.getTagDefinitionId();
+                    }
+                }));
+                // For AUTO_PAY_OFF, we've decided not to send an event in InvoicePaymentControlPluginApi (https://github.com/killbill/killbill/issues/812)
+                if (found_AUTO_PAY_OFF) {
+                    notifyForCompletion();
+                }
             }
         }
 
@@ -770,11 +787,22 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     private class EntitlementCallCompletion<T> {
 
+        // All tags for the ACCOUNT object
+        private final List<Tag> accountTags;
+
+        public EntitlementCallCompletion() {
+            this(null);
+        }
+
+        public EntitlementCallCompletion(final List<Tag> accountTags) {
+            this.accountTags = accountTags;
+        }
+
         public Response withSynchronization(final EntitlementCallCompletionCallback<T> callback,
                                             final long timeoutSec,
                                             final boolean callCompletion,
                                             final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException {
-            final CompletionUserRequestEntitlement waiter = callCompletion ? new CompletionUserRequestEntitlement(callContext.getUserToken()) : null;
+            final CompletionUserRequestEntitlement waiter = callCompletion ? new CompletionUserRequestEntitlement(callContext.getUserToken(), accountTags) : null;
             try {
                 if (waiter != null) {
                     killbillHandler.registerCompletionUserRequestWaiter(waiter);
