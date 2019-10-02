@@ -683,7 +683,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         @Override
         public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent event) {
-
             log.info("Got event SubscriptionBaseTransition token='{}', type='{}', remaining='{}'", event.getUserToken(), event.getTransitionType(), event.getRemainingEventsForUserOperation());
         }
 

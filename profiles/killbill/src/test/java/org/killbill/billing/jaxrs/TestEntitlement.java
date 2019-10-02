@@ -74,7 +74,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term);
 
         // Retrieves with GET
         Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
@@ -154,7 +154,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term);
 
         // Retrieves with GET
         Subscription objFromJson = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
@@ -238,7 +238,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.ANNUAL;
 
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                 ProductCategory.BASE, term, true);
+                                                                 ProductCategory.BASE, term);
 
         // Retrieves with GET
         Subscription objFromJson = subscriptionApi.getSubscription(subscriptionJson.getSubscriptionId(), requestOptions);
@@ -704,7 +704,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 false,
                                                                                 false,
                                                                                 true,
-                                                                                10L,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
                                                                                 NULL_PLUGIN_PROPERTIES,
                                                                                 requestOptions);
 
@@ -749,7 +749,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 false,
                                                                                 false,
                                                                                 true,
-                                                                                10L,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
                                                                                 NULL_PLUGIN_PROPERTIES,
                                                                                 requestOptions);
 
@@ -794,7 +794,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 false,
                                                                                 false,
                                                                                 true,
-                                                                                10L,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
                                                                                 NULL_PLUGIN_PROPERTIES,
                                                                                 requestOptions);
 
@@ -840,7 +840,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList("notrial");
 
-        final Subscription subscriptionJson = subscriptionApi.createSubscription(input, null, null, null, null, true, 10L, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscriptionJson = subscriptionApi.createSubscription(input, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(subscriptionJson);
 
         // verify that number of invoices is now 1
@@ -887,7 +887,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
 
         final Subscription subscription = createSubscription(accountJson.getAccountId(), "99999", "Shotgun",
-                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY);
 
         // 2012-05-25
         // Move outside of trial
@@ -932,7 +932,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term);
 
         Assert.assertEquals(entitlementJson.getBillCycleDayLocal(), new Integer(25));
 
@@ -969,7 +969,15 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBundleExternalKey("somethingSpecial");
         input.setPlanName("shotgun-monthly");
 
-        final Subscription entitlementJson = subscriptionApi.createSubscription(input, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                null,
+                                                                                null,
+                                                                                false,
+                                                                                false,
+                                                                                true,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
         Assert.assertEquals(entitlementJson.getProductName(), "Shotgun");
         Assert.assertEquals(entitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
         Assert.assertEquals(entitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
@@ -998,7 +1006,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term);
 
         // Change plan in the future
         final String newProductName = "Assault-Rifle";

@@ -52,7 +52,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
@@ -788,11 +787,11 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Add a bundle, subscription and move the clock to get the first invoice
         createSubscription(childAccount1.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
-                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                           ProductCategory.BASE, BillingPeriod.MONTHLY);
         createSubscription(childAccount2.getAccountId(), UUID.randomUUID().toString(), "Pistol",
-                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                           ProductCategory.BASE, BillingPeriod.MONTHLY);
         createSubscription(childAccount3.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
-                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                           ProductCategory.BASE, BillingPeriod.MONTHLY);
 
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
                                            ExtBusEventType.SUBSCRIPTION_PHASE,

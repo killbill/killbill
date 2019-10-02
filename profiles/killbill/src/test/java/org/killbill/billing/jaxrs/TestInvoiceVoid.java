@@ -158,7 +158,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
         // Add a bundle and subscription
         createSubscription(childAccount1.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
-                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                           ProductCategory.BASE, BillingPeriod.MONTHLY);
 
         // trigger an invoice generation
         callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_CREATION);
@@ -208,7 +208,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
         // Add a bundle and subscription
         createSubscription(childAccount1.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
-                           ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                           ProductCategory.BASE, BillingPeriod.MONTHLY);
 
         // trigger an invoice generation
         callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION);
