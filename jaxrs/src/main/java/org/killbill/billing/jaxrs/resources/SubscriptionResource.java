@@ -51,12 +51,8 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingStateType;
-import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApi;
@@ -118,7 +114,6 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildBaseEntitlementWithAddOnsSpecifier;
 import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildEntitlementSpecifier;
-import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildPlanPhasePriceOverrides;
 
 @Path(JaxrsResource.SUBSCRIPTIONS_PATH)
 @Api(value = JaxrsResource.SUBSCRIPTIONS_PATH, description = "Operations on subscriptions", tags = "Subscription")
@@ -352,14 +347,27 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         final EntitlementCallCompletionCallback<List<UUID>> callback = new EntitlementCallCompletionCallback<List<UUID>>() {
+
+            private boolean isImmediateOp = true;
+
             @Override
             public List<UUID> doOperation(final CallContext ctx) throws EntitlementApiException {
+                for (final BaseEntitlementWithAddOnsSpecifier spec: baseEntitlementWithAddOnsSpecifierList) {
+                    if (spec.getBillingEffectiveDate() != null) {
+                        final LocalDate nowInAccountTimeZone = new LocalDate(callContext.getCreatedDate(), spec.getBillingEffectiveDate().getChronology().getZone());
+                        if (spec.getBillingEffectiveDate().isAfter(nowInAccountTimeZone)) {
+                            isImmediateOp = false;
+                            break;
+                        }
+                    }
+                }
+
                 return entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifierList, renameKeyIfExistsAndUnused, pluginProperties, callContext);
             }
 
             @Override
             public boolean isImmOperation() {
-                return true;
+                return isImmediateOp;
             }
 
             @Override
@@ -592,9 +600,15 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
                 final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(newEntitlement.getId(), ctx);
 
-                final LocalDate nowInAccountTimeZone = new LocalDate(callContext.getCreatedDate(), subscription.getBillingEndDate().getChronology().getZone());
-                isImmediateOp = subscription.getBillingEndDate() != null &&
-                                !subscription.getBillingEndDate().isAfter(nowInAccountTimeZone);
+                if (subscription.getBillingEndDate() != null) {
+                    final LocalDate nowInAccountTimeZone = new LocalDate(callContext.getCreatedDate(), subscription.getBillingEndDate().getChronology().getZone());
+                    if (subscription.getBillingEndDate().isAfter(nowInAccountTimeZone)) {
+                        isImmediateOp = false;
+                    }
+                } else {
+                    isImmediateOp = false;
+                }
+
                 return Response.status(Status.NO_CONTENT).build();
             }
 
@@ -728,6 +742,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         T doOperation(final CallContext ctx) throws EntitlementApiException, InterruptedException, TimeoutException, AccountApiException, SubscriptionApiException;
 
+        // If true, wait for events (operation is immediate, i.e. there are events to wait for)
         boolean isImmOperation();
 
         Response doResponseOk(final T operationResponse) throws SubscriptionApiException, AccountApiException, CatalogApiException;
