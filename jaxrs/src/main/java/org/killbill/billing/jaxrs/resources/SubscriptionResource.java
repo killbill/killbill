@@ -95,13 +95,17 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -348,18 +352,35 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         final EntitlementCallCompletionCallback<List<UUID>> callback = new EntitlementCallCompletionCallback<List<UUID>>() {
 
+            // By default, wait for invoice and payment (101 use-case - this won't always work though)
             private boolean isImmediateOp = true;
 
             @Override
             public List<UUID> doOperation(final CallContext ctx) throws EntitlementApiException {
-                for (final BaseEntitlementWithAddOnsSpecifier spec: baseEntitlementWithAddOnsSpecifierList) {
+                for (final BaseEntitlementWithAddOnsSpecifier spec : baseEntitlementWithAddOnsSpecifierList) {
                     if (spec.getBillingEffectiveDate() != null) {
                         final LocalDate nowInAccountTimeZone = new LocalDate(callContext.getCreatedDate(), spec.getBillingEffectiveDate().getChronology().getZone());
                         if (spec.getBillingEffectiveDate().isAfter(nowInAccountTimeZone)) {
+                            // At least one subscription has a billing date in the future: don't wait for any event
+                            // We don't support callCompletion=true for a bulk creation call with dates all over the place
                             isImmediateOp = false;
                             break;
                         }
                     }
+                }
+
+                // Check to see if billing is off for the account, in which case, we won't have to wait for any event.
+                // This should take care of the 101 use-case (https://github.com/killbill/killbill/issues/1193), but in reality,
+                // this is much more complex and not all scenarii are supported (e.g. entitlement plugin could add the tag on the fly)
+                final List<Tag> accountTags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.ACCOUNT, false, callContext);
+                final boolean found_AUTO_INVOICING_OFF = ControlTagType.isAutoInvoicingOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
+                    @Override
+                    public UUID apply(final Tag tag) {
+                        return tag.getTagDefinitionId();
+                    }
+                }));
+                if (found_AUTO_INVOICING_OFF) {
+                    isImmediateOp = false;
                 }
 
                 return entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifierList, renameKeyIfExistsAndUnused, pluginProperties, callContext);

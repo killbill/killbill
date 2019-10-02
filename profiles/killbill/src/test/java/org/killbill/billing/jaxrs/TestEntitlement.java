@@ -850,6 +850,45 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
     }
 
+    @Test(groups = "slow", description = "Can create an entitlement with an account with autoInvoicingOff -- https://github.com/killbill/killbill/pull/1196")
+    public void testCreateSubscriptionWithAutoInvoicingOff() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // assign autoInvoicingOff tag to account
+        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 2L)), requestOptions);
+        assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_INVOICING_OFF");
+
+        // verify that number of invoices and payments for account is still 0
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+
+        // create a subscription with no trial plan
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Blowdart");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList("notrial");
+
+        final Subscription subscriptionJson = subscriptionApi.createSubscription(input,
+                                                                                 null,
+                                                                                 null,
+                                                                                 false,
+                                                                                 false,
+                                                                                 true,
+                                                                                 DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                 NULL_PLUGIN_PROPERTIES,
+                                                                                 requestOptions);
+        assertNotNull(subscriptionJson);
+
+        // verify that number of invoices is still 0
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
+
+        // verify that number of payments is still 0 (no attempts)
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+    }
+
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
     public void testOverwriteEntitlementBCDOnCreate() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
