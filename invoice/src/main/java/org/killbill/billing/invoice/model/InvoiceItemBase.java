@@ -295,23 +295,45 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
         final StringBuilder sb = new StringBuilder();
         sb.append(getInvoiceItemType());
         sb.append("{");
+        boolean isFirst = true;
         if (startDate != null) {
-            sb.append("startDate=").append(startDate);
+            sb.append("startDate='").append(startDate).append('\'');
+            isFirst = false;
         }
         if (endDate != null) {
-            sb.append("endDate=").append(endDate);
+            if (!isFirst) {
+                sb.append(", ");
+            }
+            sb.append("endDate='").append(endDate).append('\'');
+            isFirst = false;
         }
         if (amount != null) {
-            sb.append("amount=").append(amount);
+            if (!isFirst) {
+                sb.append(", ");
+            }
+            sb.append("amount='").append(amount).append('\'');
+            isFirst = false;
         }
         if (rate != null) {
-            sb.append("rate=").append(rate);
+            if (!isFirst) {
+                sb.append(", ");
+            }
+            sb.append("rate='").append(rate).append('\'');
+            isFirst = false;
         }
         if (subscriptionId != null) {
-            sb.append("subscriptionId=").append(subscriptionId);
+            if (!isFirst) {
+                sb.append(", ");
+            }
+            sb.append("subscriptionId='").append(subscriptionId).append('\'');
+            isFirst = false;
         }
         if (linkedItemId != null) {
-            sb.append("linkedItemId=").append(linkedItemId);
+            if (!isFirst) {
+                sb.append(", ");
+            }
+            sb.append("linkedItemId='").append(linkedItemId).append('\'');
+            isFirst = false;
         }
         sb.append('}');
         return sb.toString();
