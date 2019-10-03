@@ -38,7 +38,7 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
 
     private AddNodeCallback CALLBACK = new DummyAddNodeCallback();
 
-    public class DummyNodeInterval extends NodeInterval {
+    public class DummyNodeInterval extends ItemsNodeInterval {
 
         private final UUID id;
 
@@ -46,7 +46,7 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
             this.id = UUID.randomUUID();
         }
 
-        public DummyNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
+        public DummyNodeInterval(final DummyNodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
             super(parent, startDate, endDate);
             this.id = UUID.randomUUID();
         }
@@ -81,12 +81,12 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
     public class DummyAddNodeCallback implements AddNodeCallback {
 
         @Override
-        public boolean onExistingNode(final NodeInterval existingNode) {
+        public boolean onExistingNode(final NodeInterval existingNode, final ItemsNodeInterval updatedNewNode) {
             return false;
         }
 
         @Override
-        public boolean shouldInsertNode(final NodeInterval insertionNode) {
+        public boolean shouldInsertNode(final NodeInterval insertionNode, final ItemsNodeInterval updatedNewNode) {
             return true;
         }
     }

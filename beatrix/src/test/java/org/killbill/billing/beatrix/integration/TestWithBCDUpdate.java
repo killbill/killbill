@@ -157,14 +157,15 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 15), new LocalDate(2016, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 15), new LocalDate(2016, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-137.07")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("112.88")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
         // 2016-6-01 : Original notification for 2016-6-01 (prior BCD change)
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         clock.addDays(17);
+
+
         assertListenerStatus();
 
 
@@ -189,8 +190,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 10), new LocalDate(2016, 8, 10), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 10), new LocalDate(2016, 7, 15), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-41.66")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 15), new LocalDate(2016, 8, 10), InvoiceItemType.RECURRING, new BigDecimal("209.64")));
         invoiceChecker.checkInvoice(invoices.get(4).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -290,8 +290,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 10), new LocalDate(2016, 6, 10), InvoiceItemType.RECURRING, new BigDecimal("599.95")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 10), new LocalDate(2016, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-425.77")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 6, 10), InvoiceItemType.RECURRING, new BigDecimal("174.18")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -324,8 +323,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 10), new LocalDate(2017, 5, 10), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 10), new LocalDate(2017, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2340.77")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 5, 1), new LocalDate(2017, 5, 10), InvoiceItemType.RECURRING, new BigDecimal("59.18")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -392,8 +390,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         List<Invoice> invoices = null;
 
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 4), new LocalDate(2016, 7, 4), InvoiceItemType.RECURRING, new BigDecimal("1999.95")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 4), new LocalDate(2016, 7, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-1799.96")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 1), new LocalDate(2016, 7, 4), InvoiceItemType.RECURRING, new BigDecimal("200.00")));
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         invoiceChecker.checkInvoice(invoices.get(5).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
