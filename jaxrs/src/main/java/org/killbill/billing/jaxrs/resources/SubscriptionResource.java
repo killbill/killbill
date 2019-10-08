@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -105,7 +104,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -299,10 +297,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
         Preconditions.checkArgument(Iterables.size(entitlementsWithAddOns) > 0, "No subscription specified to create");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         Preconditions.checkArgument(Iterables.size(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns()) > 0, "SubscriptionJson body should be specified");
-        final Account account = accountUserApi.getAccountById(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns().get(0).getAccountId(), callContext);
+        final Account account = accountUserApi.getAccountById(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns().get(0).getAccountId(), callContextNoAccountId);
+        final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
 
         final Collection<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
 
@@ -351,11 +350,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                                                                                                   isMigrated);
             baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementSpecifierWithAddOns);
         }
-
-
-        // Retrieve the tags for the ACCOUNT object to correctly implement callCompletion in the simple use-cases.
-        // In reality, this is much more complex though and not all scenarii are supported (e.g. entitlement plugin could add some tags on the fly).
-        final List<Tag> accountTags = tagUserApi.getTagsForAccountType(account.getId(), ObjectType.ACCOUNT, false, callContext);
 
         final EntitlementCallCompletionCallback<List<UUID>> callback = new EntitlementCallCompletionCallback<List<UUID>>() {
 
@@ -412,7 +406,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 }
             }
         };
-        final EntitlementCallCompletion<List<UUID>> callCompletionCreation = new EntitlementCallCompletion<List<UUID>>(accountTags);
+        final EntitlementCallCompletion<List<UUID>> callCompletionCreation = new EntitlementCallCompletion<List<UUID>>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
@@ -500,13 +494,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
         Preconditions.checkArgument(requestedDate == null || billingPolicy == null, "Only one of requestedDate or billingPolicy should be specified");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContext);
-
-        // Retrieve the tags for the ACCOUNT object to correctly implement callCompletion in the simple use-cases.
-        // In reality, this is much more complex though and not all scenarii are supported (e.g. entitlement plugin could add some tags on the fly).
-        final List<Tag> accountTags = tagUserApi.getTagsForAccountType(current.getAccountId(), ObjectType.ACCOUNT, false, callContext);
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContextNoAccountId);
+        final CallContext callContext = context.createCallContextWithAccountId(current.getAccountId(), createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
@@ -547,7 +538,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
         };
 
-        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>(accountTags);
+        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
@@ -594,14 +585,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                            @HeaderParam(HDR_COMMENT) final String comment,
                                            @javax.ws.rs.core.Context final UriInfo uriInfo,
                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
-        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContext);
-
-        // Retrieve the tags for the ACCOUNT object to correctly implement callCompletion in the simple use-cases.
-        // In reality, this is much more complex though and not all scenarii are supported (e.g. entitlement plugin could add some tags on the fly).
-        final List<Tag> accountTags = tagUserApi.getTagsForAccountType(current.getAccountId(), ObjectType.ACCOUNT, false, callContext);
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContextNoAccountId);
+        final CallContext callContext = context.createCallContextWithAccountId(current.getAccountId(), createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
@@ -648,7 +636,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             }
         };
 
-        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>(accountTags);
+        final EntitlementCallCompletion<Response> callCompletionCreation = new EntitlementCallCompletion<Response>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
@@ -810,18 +798,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     private class EntitlementCallCompletion<T> {
 
-        // All tags for the ACCOUNT object
-        private final List<Tag> accountTags;
-
-        public EntitlementCallCompletion(final List<Tag> accountTags) {
-            this.accountTags = accountTags;
-        }
-
         public Response withSynchronization(final EntitlementCallCompletionCallback<T> callback,
                                             final long timeoutSec,
                                             final boolean callCompletion,
                                             final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException {
-            final CompletionUserRequestEntitlement waiter = callCompletion ? new CompletionUserRequestEntitlement(callContext.getUserToken(), accountTags) : null;
+            final CompletionUserRequestEntitlement waiter;
+            if (callCompletion) {
+                // Retrieve the tags for the ACCOUNT object to correctly implement callCompletion in the simple use-cases.
+                // In reality, this is much more complex though and not all scenarii are supported (e.g. entitlement plugin could add some tags on the fly).
+                final List<Tag> accountTags = tagUserApi.getTagsForAccountType(callContext.getAccountId(), ObjectType.ACCOUNT, false, callContext);
+                waiter = new CompletionUserRequestEntitlement(callContext.getUserToken(), accountTags);
+            } else {
+                waiter = null;
+            }
             try {
                 if (waiter != null) {
                     killbillHandler.registerCompletionUserRequestWaiter(waiter);
