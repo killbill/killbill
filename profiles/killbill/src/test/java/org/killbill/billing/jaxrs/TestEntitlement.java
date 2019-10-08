@@ -779,6 +779,55 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
     }
 
+    @Test(groups = "slow", description = "Can create an entitlement with a future billing date v2 -- see https://github.com/killbill/killbill/pull/1234#discussion_r332148759")
+    public void testCreateSubscriptionBillingInTheFutureV2() throws Exception {
+        // 2012-04-25T00:03:42.000Z
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        // Move clock back to 2012-04-25T00:01:42.000Z (we want a reference time in the future)
+        clock.setTime(new DateTime(2012, 4, 25, 0, 1, 42, 0));
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Shotgun");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        // Verify callCompletion works (related to https://github.com/killbill/killbill/issues/1193)
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                null,
+                                                                                new LocalDate(2012, 4, 25),
+                                                                                false,
+                                                                                false,
+                                                                                true,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
+
+        Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
+        Assert.assertNull(entitlementJson.getChargedThroughDate());
+        Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
+        Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
+        Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
+        Assert.assertEquals(entitlementJson.getPriceList(), input.getPriceList());
+
+        // Retrieves with GET
+        final Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription, entitlementJson);
+        Assert.assertEquals(subscription.getPrices().size(), 2);
+        Assert.assertEquals(subscription.getPrices().get(0).getPhaseName(), "shotgun-monthly-trial");
+        Assert.assertEquals(subscription.getPrices().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(subscription.getPrices().get(0).getRecurringPrice());
+        Assert.assertEquals(subscription.getPrices().get(1).getPhaseName(), "shotgun-monthly-evergreen");
+        Assert.assertNull(subscription.getPrices().get(1).getFixedPrice());
+        Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
+    }
+
     @Test(groups = "slow", description = "Can create an entitlement with a past billing date")
     public void testCreateSubscriptionBillingInThePast() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);

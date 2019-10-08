@@ -49,6 +49,8 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.TimeAwareContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
@@ -362,8 +364,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
             public List<UUID> doOperation(final CallContext ctx) throws EntitlementApiException {
                 for (final BaseEntitlementWithAddOnsSpecifier spec : baseEntitlementWithAddOnsSpecifierList) {
                     if (spec.getBillingEffectiveDate() != null) {
-                        final LocalDate nowInAccountTimeZone = new LocalDate(callContext.getCreatedDate(), spec.getBillingEffectiveDate().getChronology().getZone());
-                        if (spec.getBillingEffectiveDate().isAfter(nowInAccountTimeZone)) {
+                        final boolean inTheFuture = isInTheFuture(spec.getBillingEffectiveDate(), account);
+                        if (inTheFuture) {
                             // At least one subscription has a billing date in the future: don't wait for any event
                             // We don't support callCompletion=true for a bulk creation call with dates all over the place
                             isImmediateOp = false;
@@ -598,7 +600,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
             @Override
             public Response doOperation(final CallContext ctx)
                     throws EntitlementApiException,
-                           SubscriptionApiException {
+                           SubscriptionApiException,
+                           AccountApiException {
                 final LocalDate inputLocalDate = toLocalDate(requestedDate);
                 final Entitlement newEntitlement;
                 if (billingPolicy == null && entitlementPolicy == null) {
@@ -612,10 +615,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 }
 
                 final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(newEntitlement.getId(), ctx);
-
                 if (subscription.getBillingEndDate() != null) {
-                    final LocalDate nowInAccountTimeZone = new LocalDate(callContext.getCreatedDate(), subscription.getBillingEndDate().getChronology().getZone());
-                    if (subscription.getBillingEndDate().isAfter(nowInAccountTimeZone)) {
+                    final Account account = accountUserApi.getAccountById(subscription.getAccountId(), callContext);
+                    final boolean inTheFuture = isInTheFuture(subscription.getBillingEndDate(), account);
+                    if (inTheFuture) {
                         isImmediateOp = false;
                     }
                 } else {
@@ -950,6 +953,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Override
     protected ObjectType getObjectType() {
         return ObjectType.SUBSCRIPTION;
+    }
+
+    private boolean isInTheFuture(final LocalDate effectiveDate, final ImmutableAccountData account) {
+        final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
+        return timeAwareContext.toUTCDateTime(effectiveDate).isAfter(clock.getUTCNow());
     }
 
     private Account getAccountFromSubscriptionJson(final SubscriptionJson entitlementJson, final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException {
