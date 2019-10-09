@@ -181,7 +181,7 @@ public class TestChargeback extends TestJaxrsBase {
 
         // Create subscription
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), "6253283", "Shotgun",
-                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY);
         assertNotNull(subscriptionJson);
 
         // Move after the trial period to trigger an invoice with a non-zero invoice item

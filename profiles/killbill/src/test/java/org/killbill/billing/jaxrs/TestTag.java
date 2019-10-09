@@ -116,7 +116,7 @@ public class TestTag extends TestJaxrsBase {
         final Account account = createAccountWithDefaultPaymentMethod();
 
         final Subscription subscriptionJson = createSubscription(account.getAccountId(), "87544332", "Shotgun",
-                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY);
 
         int nbAllowedControlTagType = 0;
         for (final ControlTagType controlTagType : ControlTagType.values()) {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -49,14 +49,12 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.TimeAwareContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingStateType;
-import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.EntitlementApi;
@@ -99,13 +97,17 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.tag.ControlTagType;
+import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -118,7 +120,6 @@ import io.swagger.annotations.ApiResponses;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildBaseEntitlementWithAddOnsSpecifier;
 import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildEntitlementSpecifier;
-import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildPlanPhasePriceOverrides;
 
 @Path(JaxrsResource.SUBSCRIPTIONS_PATH)
 @Api(value = JaxrsResource.SUBSCRIPTIONS_PATH, description = "Operations on subscriptions", tags = "Subscription")
@@ -298,10 +299,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
         Preconditions.checkArgument(Iterables.size(entitlementsWithAddOns) > 0, "No subscription specified to create");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
         Preconditions.checkArgument(Iterables.size(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns()) > 0, "SubscriptionJson body should be specified");
-        final Account account = accountUserApi.getAccountById(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns().get(0).getAccountId(), callContext);
+        final Account account = accountUserApi.getAccountById(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns().get(0).getAccountId(), callContextNoAccountId);
+        final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
 
         final Collection<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
 
@@ -352,14 +354,32 @@ public class SubscriptionResource extends JaxRsResourceBase {
         }
 
         final EntitlementCallCompletionCallback<List<UUID>> callback = new EntitlementCallCompletionCallback<List<UUID>>() {
+
+            // By default, wait for invoice and payment
+            // This is very 101 and won't always work though: an entitlement plugin could override dates on the fly,
+            // an invoice plugin could reschedule the invoice generation, etc.
+            private boolean isImmediateOp = true;
+
             @Override
             public List<UUID> doOperation(final CallContext ctx) throws EntitlementApiException {
+                for (final BaseEntitlementWithAddOnsSpecifier spec : baseEntitlementWithAddOnsSpecifierList) {
+                    if (spec.getBillingEffectiveDate() != null) {
+                        final boolean inTheFuture = isInTheFuture(spec.getBillingEffectiveDate(), account);
+                        if (inTheFuture) {
+                            // At least one subscription has a billing date in the future: don't wait for any event
+                            // We don't support callCompletion=true for a bulk creation call with dates all over the place
+                            isImmediateOp = false;
+                            break;
+                        }
+                    }
+                }
+
                 return entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifierList, renameKeyIfExistsAndUnused, pluginProperties, callContext);
             }
 
             @Override
             public boolean isImmOperation() {
-                return true;
+                return isImmediateOp;
             }
 
             @Override
@@ -476,7 +496,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
         Preconditions.checkArgument(requestedDate == null || billingPolicy == null, "Only one of requestedDate or billingPolicy should be specified");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContextNoAccountId);
+        final CallContext callContext = context.createCallContextWithAccountId(current.getAccountId(), createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
@@ -485,8 +508,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
             @Override
             public Response doOperation(final CallContext ctx) throws EntitlementApiException,
                                                                       AccountApiException {
-
-                final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContext);
                 final LocalDate inputLocalDate = toLocalDate(requestedDate);
                 final Entitlement newEntitlement;
 
@@ -566,8 +587,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                            @HeaderParam(HDR_COMMENT) final String comment,
                                            @javax.ws.rs.core.Context final UriInfo uriInfo,
                                            @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
-        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContextNoAccountId);
+        final CallContext callContext = context.createCallContextWithAccountId(current.getAccountId(), createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
@@ -576,8 +600,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
             @Override
             public Response doOperation(final CallContext ctx)
                     throws EntitlementApiException,
-                           SubscriptionApiException {
-                final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, ctx);
+                           SubscriptionApiException,
+                           AccountApiException {
                 final LocalDate inputLocalDate = toLocalDate(requestedDate);
                 final Entitlement newEntitlement;
                 if (billingPolicy == null && entitlementPolicy == null) {
@@ -591,10 +615,16 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 }
 
                 final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(newEntitlement.getId(), ctx);
+                if (subscription.getBillingEndDate() != null) {
+                    final Account account = accountUserApi.getAccountById(subscription.getAccountId(), callContext);
+                    final boolean inTheFuture = isInTheFuture(subscription.getBillingEndDate(), account);
+                    if (inTheFuture) {
+                        isImmediateOp = false;
+                    }
+                } else {
+                    isImmediateOp = false;
+                }
 
-                final LocalDate nowInAccountTimeZone = new LocalDate(callContext.getCreatedDate(), subscription.getBillingEndDate().getChronology().getZone());
-                isImmediateOp = subscription.getBillingEndDate() != null &&
-                                !subscription.getBillingEndDate().isAfter(nowInAccountTimeZone);
                 return Response.status(Status.NO_CONTENT).build();
             }
 
@@ -663,19 +693,44 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     private static final class CompletionUserRequestEntitlement extends CompletionUserRequestBase {
 
-        public CompletionUserRequestEntitlement(final UUID userToken) {
+        private final List<Tag> accountTags;
+
+        public CompletionUserRequestEntitlement(final UUID userToken, final List<Tag> accountTags) {
             super(userToken);
+            this.accountTags = accountTags;
         }
 
         @Override
         public void onSubscriptionBaseTransition(final EffectiveSubscriptionInternalEvent event) {
-
             log.info("Got event SubscriptionBaseTransition token='{}', type='{}', remaining='{}'", event.getUserToken(), event.getTransitionType(), event.getRemainingEventsForUserOperation());
         }
 
         @Override
         public void onBlockingState(final BlockingTransitionInternalEvent event) {
             log.info(String.format("Got event BlockingTransitionInternalEvent token = %s", event.getUserToken()));
+
+            // Additional checks to see if we need to wait for an invoice (https://github.com/killbill/killbill/issues/1193)
+            // We do the checks in onBlockingState, as it's always guaranteed to be fired, unlike onSubscriptionBaseTransition.
+
+            // Check to see if billing is off for the account, in which case, we won't have to wait for any invoice
+            final boolean found_AUTO_INVOICING_OFF = ControlTagType.isAutoInvoicingOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
+                @Override
+                public UUID apply(final Tag tag) {
+                    return tag.getTagDefinitionId();
+                }
+            }));
+            if (found_AUTO_INVOICING_OFF) {
+                notifyForCompletion();
+                return;
+            }
+
+            // For AUTO_INVOICING_DRAFT, there won't be any invoice event either
+            for (final Tag tag : accountTags) {
+                if (ControlTagType.AUTO_INVOICING_DRAFT.getId().equals(tag.getTagDefinitionId())) {
+                    notifyForCompletion();
+                    return;
+                }
+            }
         }
 
         @Override
@@ -686,9 +741,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         @Override
         public void onInvoiceCreation(final InvoiceCreationInternalEvent event) {
-
             log.info("Got event InvoiceCreationNotification token='{}'", event.getUserToken());
             if (event.getAmountOwed().compareTo(BigDecimal.ZERO) <= 0) {
+                notifyForCompletion();
+            }
+
+            final boolean found_AUTO_PAY_OFF = ControlTagType.isAutoPayOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
+                @Override
+                public UUID apply(final Tag tag) {
+                    return tag.getTagDefinitionId();
+                }
+            }));
+            // For AUTO_PAY_OFF, we've decided not to send an event in InvoicePaymentControlPluginApi (https://github.com/killbill/killbill/issues/812)
+            if (found_AUTO_PAY_OFF) {
                 notifyForCompletion();
             }
         }
@@ -728,6 +793,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         T doOperation(final CallContext ctx) throws EntitlementApiException, InterruptedException, TimeoutException, AccountApiException, SubscriptionApiException;
 
+        // If true, wait for events (operation is immediate, i.e. there are events to wait for)
         boolean isImmOperation();
 
         Response doResponseOk(final T operationResponse) throws SubscriptionApiException, AccountApiException, CatalogApiException;
@@ -739,7 +805,15 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                             final long timeoutSec,
                                             final boolean callCompletion,
                                             final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException {
-            final CompletionUserRequestEntitlement waiter = callCompletion ? new CompletionUserRequestEntitlement(callContext.getUserToken()) : null;
+            final CompletionUserRequestEntitlement waiter;
+            if (callCompletion) {
+                // Retrieve the tags for the ACCOUNT object to correctly implement callCompletion in the simple use-cases.
+                // In reality, this is much more complex though and not all scenarii are supported (e.g. entitlement plugin could add some tags on the fly).
+                final List<Tag> accountTags = tagUserApi.getTagsForAccountType(callContext.getAccountId(), ObjectType.ACCOUNT, false, callContext);
+                waiter = new CompletionUserRequestEntitlement(callContext.getUserToken(), accountTags);
+            } else {
+                waiter = null;
+            }
             try {
                 if (waiter != null) {
                     killbillHandler.registerCompletionUserRequestWaiter(waiter);
@@ -879,6 +953,11 @@ public class SubscriptionResource extends JaxRsResourceBase {
     @Override
     protected ObjectType getObjectType() {
         return ObjectType.SUBSCRIPTION;
+    }
+
+    private boolean isInTheFuture(final LocalDate effectiveDate, final ImmutableAccountData account) {
+        final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
+        return timeAwareContext.toUTCDateTime(effectiveDate).isAfter(clock.getUTCNow());
     }
 
     private Account getAccountFromSubscriptionJson(final SubscriptionJson entitlementJson, final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException {

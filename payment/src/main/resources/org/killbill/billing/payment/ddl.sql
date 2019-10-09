@@ -218,7 +218,6 @@ CREATE TABLE invoice_payment_control_plugin_auto_pay_off (
     account_id varchar(36) NOT NULL,
     plugin_name varchar(50) NOT NULL,
     payment_id varchar(36),
-    payment_method_id varchar(36) NOT NULL,
     amount numeric(15,9),
     currency varchar(3),
     is_active boolean default true,
