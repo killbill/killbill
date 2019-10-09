@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -48,10 +48,9 @@ public class TestInvoicePaymentControlDao extends PaymentTestSuiteWithEmbeddedDB
         final UUID accountId = UUID.randomUUID();
         final UUID attemptId = UUID.randomUUID();
         final UUID paymentId = UUID.randomUUID();
-        final UUID methodId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("13.33");
         final DateTime utcNow = clock.getUTCNow();
-        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao(attemptId, "key1", "tkey1", accountId, "XXX", paymentId, methodId, amount, Currency.USD, "lulu", utcNow);
+        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao(attemptId, "key1", "tkey1", accountId, "XXX", paymentId, amount, Currency.USD, "lulu", utcNow);
         dao.insertAutoPayOff(entry1);
 
         final List<PluginAutoPayOffModelDao> entries = dao.getAutoPayOffEntry(accountId);
@@ -61,7 +60,6 @@ public class TestInvoicePaymentControlDao extends PaymentTestSuiteWithEmbeddedDB
         assertEquals(entries.get(0).getAccountId(), accountId);
         assertEquals(entries.get(0).getPluginName(), "XXX");
         assertEquals(entries.get(0).getPaymentId(), paymentId);
-        assertEquals(entries.get(0).getPaymentMethodId(), methodId);
         assertEquals(entries.get(0).getAmount().compareTo(amount), 0);
         assertEquals(entries.get(0).getCurrency(), Currency.USD);
         assertEquals(entries.get(0).getCreatedBy(), "lulu");
@@ -74,14 +72,13 @@ public class TestInvoicePaymentControlDao extends PaymentTestSuiteWithEmbeddedDB
         final UUID accountId = UUID.randomUUID();
         final UUID attemptId = UUID.randomUUID();
         final UUID paymentId1 = UUID.randomUUID();
-        final UUID methodId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("13.33");
         final DateTime utcNow = clock.getUTCNow();
-        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao(attemptId, "key1", "tkey1", accountId, "XXX", paymentId1, methodId, amount, Currency.USD, "lulu", utcNow);
+        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao(attemptId, "key1", "tkey1", accountId, "XXX", paymentId1, amount, Currency.USD, "lulu", utcNow);
         dao.insertAutoPayOff(entry1);
 
         final UUID paymentId2 = UUID.randomUUID();
-        final PluginAutoPayOffModelDao entry2 = new PluginAutoPayOffModelDao(attemptId, "key2", "tkey2", accountId, "XXX", paymentId2, methodId, amount, Currency.USD, "lulu", utcNow);
+        final PluginAutoPayOffModelDao entry2 = new PluginAutoPayOffModelDao(attemptId, "key2", "tkey2", accountId, "XXX", paymentId2, amount, Currency.USD, "lulu", utcNow);
         dao.insertAutoPayOff(entry2);
 
         final List<PluginAutoPayOffModelDao> entries = dao.getAutoPayOffEntry(accountId);
@@ -94,10 +91,9 @@ public class TestInvoicePaymentControlDao extends PaymentTestSuiteWithEmbeddedDB
         final UUID accountId = UUID.randomUUID();
         final UUID paymentId1 = UUID.randomUUID();
         final UUID attemptId = UUID.randomUUID();
-        final UUID methodId = UUID.randomUUID();
         final BigDecimal amount = new BigDecimal("13.33");
         final DateTime utcNow = clock.getUTCNow();
-        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao(attemptId, "key1", "tkey1", accountId, "XXX", paymentId1, methodId, amount, Currency.USD, "lulu", utcNow);
+        final PluginAutoPayOffModelDao entry1 = new PluginAutoPayOffModelDao(attemptId, "key1", "tkey1", accountId, "XXX", paymentId1, amount, Currency.USD, "lulu", utcNow);
         dao.insertAutoPayOff(entry1);
 
         final List<PluginAutoPayOffModelDao> entries = dao.getAutoPayOffEntry(UUID.randomUUID());

@@ -97,8 +97,7 @@ public class TestAdmin extends TestJaxrsBase {
                                UUID.randomUUID().toString(),
                                "Shotgun",
                                ProductCategory.BASE,
-                               BillingPeriod.MONTHLY,
-                               true);
+                               BillingPeriod.MONTHLY);
             clock.addDays(2);
 
             Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), i + 1);

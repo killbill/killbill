@@ -55,7 +55,6 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
@@ -324,7 +323,6 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             }
 
             // Get account and check if it is child and payment is delegated to parent => abort
-
             final AccountData accountData = accountApi.getAccountById(invoice.getAccountId(), internalContext);
             if (((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) || // Valid when we initially create the child invoice (even if parent invoice does not exist yet)
                 (invoice.getParentAccountId() != null))  { // Valid after we have unparented the child
@@ -332,18 +330,23 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 return new DefaultPriorPaymentControlResult(true);
             }
 
-
-            // Is remaining amount > 0 ?
+            // Is remaining amount > 0?
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
             if (requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
                 log.info("Aborting payment: invoiceId='{}' has already been paid", invoice.getId());
                 return new DefaultPriorPaymentControlResult(true);
             }
 
+            // Are we in auto-payoff (do the check as soon as possible -- https://github.com/killbill/killbill/issues/812)?
+            if (insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
+                log.info("Aborting payment: invoiceId='{}' is AUTO_PAY_OFF", invoice.getId());
+                return new DefaultPriorPaymentControlResult(true);
+            }
 
-            // Do we have a  paymentMethod ?
+            // Do we have a paymentMethod?
             if (paymentControlPluginContext.getPaymentMethodId() == null) {
                 log.warn("Payment for invoiceId='{}' was not triggered, accountId='{}' doesn't have a default payment method", invoiceId, paymentControlPluginContext.getAccountId());
+                // This will simply send a bus event
                 invoiceApi.recordPaymentAttemptCompletion(invoiceId,
                                                           paymentControlPluginContext.getAmount(),
                                                           paymentControlPluginContext.getCurrency(),
@@ -353,13 +356,6 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                           paymentControlPluginContext.getCreatedDate(),
                                                           false,
                                                           internalContext);
-                return new DefaultPriorPaymentControlResult(true);
-            }
-
-
-            // Are we in auto-payoff ?
-            if (insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
-                log.info("Aborting payment: invoiceId='{}' is AUTO_PAY_OFF", invoice.getId());
                 return new DefaultPriorPaymentControlResult(true);
             }
 
@@ -683,7 +679,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
         final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getAttemptPaymentId(), paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(),
                                                                            paymentControlContext.getAccountId(), PLUGIN_NAME,
-                                                                           paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(),
+                                                                           paymentControlContext.getPaymentId(),
                                                                            computedAmount, paymentControlContext.getCurrency(), CREATED_BY, paymentControlContext.getCreatedDate());
         controlDao.insertAutoPayOff(data);
         return true;
