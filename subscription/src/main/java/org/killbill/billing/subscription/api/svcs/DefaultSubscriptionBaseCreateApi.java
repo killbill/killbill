@@ -189,10 +189,10 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
             bundle = dao.getSubscriptionBundleFromId(subscriptionBaseWithAddOnsSpecifier.getBundleId(), context);
             if (bundle == null) {
                 log.warn("getBundleWithSanity: bundle is missing");
-                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER, String.format("bundle %s does not exist", subscriptionBaseWithAddOnsSpecifier.getBundleId()));
             } else if (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null && !subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey().equals(bundle.getExternalKey())) {
                 log.warn("getBundleWithSanity: specified bundleExternalKey {} doesn't match existing bundleExternalKey {}", subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(), bundle.getExternalKey());
-                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
+                throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER, String.format("specified bundle externalKey %s doesn't match existing bundle externalKey %s", subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(), bundle.getExternalKey()));
             }
         } else if (subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey() != null) {
             final SubscriptionBaseBundle tmp = getActiveBundleForKey(subscriptionBaseWithAddOnsSpecifier.getBundleExternalKey(), catalog, context);
@@ -305,7 +305,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
                     basePlan = plan;
                 } else {
                     log.warn("createPlansIfNeededAndReorderBPOrStandaloneSpecFirstWithSanity: multiple basePlanSpecifier");
-                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER, "multiple base plan specifiers");
                 }
             } else {
                 addOnSpecifiers.add(cur);
@@ -322,7 +322,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
 
         if (!outputEntitlementSpecifier.isEmpty() && !standaloneSpecifiers.isEmpty()) {
             log.warn("createPlansIfNeededAndReorderBPOrStandaloneSpecFirstWithSanity: both outputEntitlementSpecifier and standaloneSpecifiers specified");
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER, "mix of base/add-on specifier(s) and standalone specifier(s)");
         }
 
         if (standaloneSpecifiers.isEmpty()) {
