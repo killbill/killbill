@@ -393,7 +393,8 @@ public class InternalCallContextFactory {
         if (context.getTenantId() == null) {
             return INTERNAL_TENANT_RECORD_ID;
         } else {
-            // This is always safe (the tenant context was created from the api key and secret)
+            // This is always safe coming from JAX-RS (the tenant context was created from the api key and secret),
+            // but not when coming from plugins via API
             return getTenantRecordIdUnsafe(context.getTenantId(), ObjectType.TENANT);
         }
     }
@@ -420,9 +421,6 @@ public class InternalCallContextFactory {
 
     private boolean objectBelongsToTheRightTenant(final UUID objectId, final ObjectType objectType, final Long realTenantRecordId) throws ObjectDoesNotExist {
         final Long objectTenantRecordId = getTenantRecordIdUnsafe(objectId, objectType);
-        if (objectTenantRecordId == null) {
-            throw new ObjectDoesNotExist(String.format("Object id=%s type=%s doesn't exist!", objectId, objectType));
-        }
         return objectTenantRecordId.equals(realTenantRecordId);
     }
 
@@ -435,7 +433,12 @@ public class InternalCallContextFactory {
     }
 
     private Long getTenantRecordIdUnsafe(final UUID objectId, final ObjectType objectType) {
-        return nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, tenantRecordIdCacheController);
+        final Long objectTenantRecordId = nonEntityDao.retrieveTenantRecordIdFromObject(objectId, objectType, tenantRecordIdCacheController);
+        // The tenant should always exist at this point
+        if (objectTenantRecordId == null) {
+            throw new ObjectDoesNotExist(String.format("Object id=%s type=%s doesn't exist!", objectId, objectType));
+        }
+        return objectTenantRecordId;
     }
 
     public static final class ObjectDoesNotExist extends IllegalStateException {
