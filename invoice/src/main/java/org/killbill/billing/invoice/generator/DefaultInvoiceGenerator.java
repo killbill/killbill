@@ -35,6 +35,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceGeneratorResult;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
@@ -130,6 +131,18 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         LocalDate maxDate = targetDate;
 
         for (final Invoice invoice : existingInvoices) {
+
+            // See https://github.com/killbill/killbill/issues/1241
+            boolean containsUsageOrRecurringItems = Iterables.any(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+                @Override
+                public boolean apply(final InvoiceItem input) {
+                    return input.getInvoiceItemType() == InvoiceItemType.RECURRING || input.getInvoiceItemType() == InvoiceItemType.USAGE;
+                }
+            });
+            if (!containsUsageOrRecurringItems) {
+                continue;
+            }
+
             if ((invoice.getTargetDate() != null) && invoice.getTargetDate().isAfter(maxDate)) {
                 maxDate = invoice.getTargetDate();
             }
