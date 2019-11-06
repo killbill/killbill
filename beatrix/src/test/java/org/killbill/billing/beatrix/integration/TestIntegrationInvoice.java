@@ -305,7 +305,6 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2019, 1, 1), new LocalDate(2019, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
-        // Move through time and verify we get the same invoice
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
