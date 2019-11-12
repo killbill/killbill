@@ -229,7 +229,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                                                                  public boolean apply(final InvoiceModelDao invoice) {
                                                                                                                                      return !invoice.isMigrated() &&
                                                                                                                                             (fromDate == null || invoice.getTargetDate().compareTo(fromDate) >= 0) &&
-                                                                                                                                            (upToDate == null || invoice.getTargetDate().compareTo(upToDate) < 0) &&
+                                                                                                                                            (upToDate == null || invoice.getTargetDate().compareTo(upToDate) <= 0) &&
                                                                                                                                             (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()));
                                                                                                                                  }
                                                                                                                              })));

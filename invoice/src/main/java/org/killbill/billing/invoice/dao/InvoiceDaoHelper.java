@@ -184,7 +184,7 @@ public class InvoiceDaoHelper {
                 return InvoiceStatus.COMMITTED.equals(in.getStatus()) &&
                        (balance.compareTo(BigDecimal.ZERO) >= 1 && !in.isWrittenOff()) &&
                        (startDate == null || in.getTargetDate() == null || in.getTargetDate().compareTo(startDate) >= 0) &&
-                       (upToDate == null || in.getTargetDate() == null || in.getTargetDate().compareTo(upToDate) < 0);
+                       (upToDate == null || in.getTargetDate() == null || in.getTargetDate().compareTo(upToDate) <= 0);
             }
         });
         return new ArrayList<InvoiceModelDao>(unpaidInvoices);
