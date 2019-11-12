@@ -319,7 +319,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getEvents().get(2).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME);
         Assert.assertEquals(subscription.getEvents().get(2).getProduct(), "Shotgun");
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, false, false, false, AuditLevel.FULL, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
 
@@ -434,7 +434,7 @@ public class TestEntitlement extends TestJaxrsBase {
         }
         assertEquals(found, 3);
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 1);
         assertEquals(invoiceApi.getInvoiceTags(invoices.get(0).getInvoiceId(), requestOptions).size(), 0);
@@ -453,7 +453,7 @@ public class TestEntitlement extends TestJaxrsBase {
             assertEquals(subscription.getState(), EntitlementState.CANCELLED);
         }
 
-        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(invoicesAfterClose.size(), 1);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 1);
@@ -527,7 +527,7 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(bundles.size(), 2);
         assertFalse(bundles.get(0).getExternalKey().equals(bundles.get(1).getExternalKey()));
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 1);
         assertEquals(invoiceApi.getInvoiceTags(invoices.get(0).getInvoiceId(), requestOptions).size(), 0);
@@ -578,7 +578,7 @@ public class TestEntitlement extends TestJaxrsBase {
             }
         }
 
-        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoicesAfterClose.size(), 1);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 0);
@@ -685,7 +685,7 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(bundles.size(), 1);
         assertEquals(bundles.get(0).getSubscriptions().size(), 3);
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoices.size(), 2);
     }
 
@@ -885,7 +885,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
         // create a subscription with no trial plan
@@ -906,7 +906,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices is now 1
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 1);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 1);
 
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
@@ -963,7 +963,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
         // create a subscription with no trial plan
@@ -990,7 +990,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices is still 0
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
 
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
@@ -1047,7 +1047,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
         // create a subscription with no trial plan
@@ -1079,7 +1079,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Awaitility.await().atMost(10, TimeUnit.SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+                final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
                 return invoicesForAccount.size() == 1 && invoicesForAccount.get(0).getStatus() == InvoiceStatus.DRAFT;
             }
         });

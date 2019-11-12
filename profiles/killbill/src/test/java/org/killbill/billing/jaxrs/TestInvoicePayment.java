@@ -297,7 +297,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         // Verify targetInvoiceId is not null. See #1014
         assertEquals(invoicePaymentApi.getInvoicePayment(invoicePayment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions).getTargetInvoiceId(), invoicePayment.getTargetInvoiceId());
 
-        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
         // Verify this is the correct value
@@ -332,7 +332,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         clock.addDays(32);
         callbackServlet.assertListenerStatus();
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(invoices.size(), 2);
 
         final InvoicePayment invoicePayment1 = new InvoicePayment();
