@@ -76,7 +76,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
         assertEquals(invoices.size(), 1);
 
         final UUID unpaidInvoiceId = invoices.iterator().next().getId();

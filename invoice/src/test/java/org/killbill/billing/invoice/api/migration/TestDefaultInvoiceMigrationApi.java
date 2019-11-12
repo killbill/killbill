@@ -102,7 +102,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         Assert.assertEquals(byAccountAndDate.size(), 1);
         Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
 
-        final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, new LocalDate(date_regular.plusDays(1)), callContext);
+        final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, null, new LocalDate(date_regular.plusDays(1)), callContext);
         Assert.assertEquals(unpaid.size(), 1);
         Assert.assertEquals(unpaid.iterator().next().getId(), regularInvoiceId);
     }
