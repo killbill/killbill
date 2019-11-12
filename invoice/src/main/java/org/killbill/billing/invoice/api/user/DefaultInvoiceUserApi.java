@@ -163,9 +163,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final boolean includeVoidedInvoices, final TenantContext context) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final LocalDate upToDate, final boolean includeVoidedInvoices, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(includeVoidedInvoices, fromDate, internalTenantContext);
+        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(includeVoidedInvoices, fromDate, upToDate, internalTenantContext);
         return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
@@ -260,9 +260,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final TenantContext context) {
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate startDate, final LocalDate upToDate, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalTenantContext);
+        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, startDate, upToDate, internalTenantContext);
         return fromInvoiceModelDao(unpaidInvoicesByAccountId, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 

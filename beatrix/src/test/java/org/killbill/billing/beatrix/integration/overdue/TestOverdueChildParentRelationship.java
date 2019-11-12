@@ -305,7 +305,7 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
     }
 
     private List<Invoice> getUnpaidInvoicesOrderFromRecent() {
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext);
         // Sort in reverse order to first pay most recent invoice-- that way overdue state may only flip when we reach the last one.
         final List<Invoice> sortedInvoices = new LinkedList<Invoice>(invoices);
         Collections.sort(sortedInvoices, new Comparator<Invoice>() {
