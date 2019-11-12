@@ -442,7 +442,7 @@ public class AccountResource extends JaxRsResourceBase {
             }
         }
 
-        final Collection<Invoice> unpaidInvoices = writeOffUnpaidInvoices || itemAdjustUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, callContext) : ImmutableList.<Invoice>of();
+        final Collection<Invoice> unpaidInvoices = writeOffUnpaidInvoices || itemAdjustUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, null, callContext) : ImmutableList.<Invoice>of();
         if (writeOffUnpaidInvoices) {
             for (final Invoice cur : unpaidInvoices) {
                 invoiceApi.tagInvoiceAsWrittenOff(cur.getId(), callContext);
@@ -663,6 +663,7 @@ public class AccountResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getInvoicesForAccount(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_START_DATE) final String startDateStr,
+                                          @QueryParam(QUERY_END_DATE) final String endDateStr,
                                           @QueryParam(QUERY_WITH_MIGRATION_INVOICES) @DefaultValue("false") final boolean withMigrationInvoices,
                                           @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                           @QueryParam(QUERY_INCLUDE_VOIDED_INVOICES) @DefaultValue("false") final boolean includeVoidedInvoices,
@@ -675,16 +676,17 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
         final LocalDate startDate = startDateStr != null ? LOCAL_DATE_FORMATTER.parseLocalDate(startDateStr) : null;
+        final LocalDate endDate = endDateStr != null ? LOCAL_DATE_FORMATTER.parseLocalDate(endDateStr) : null;
 
         // Verify the account exists
         accountUserApi.getAccountById(accountId, tenantContext);
 
         final List<Invoice> invoices;
         if (unpaidInvoicesOnly) {
-            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, tenantContext));
+            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext));
         } else {
-            invoices = startDate != null ?
-                       invoiceApi.getInvoicesByAccount(accountId, startDate, includeVoidedInvoices, tenantContext) :
+            invoices = startDate != null || endDate != null ?
+                       invoiceApi.getInvoicesByAccount(accountId, startDate, endDate, includeVoidedInvoices, tenantContext) :
                        invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, tenantContext);
         }
 
@@ -756,7 +758,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final LocalDate inputDate = targetDate == null ? clock.getUTCToday() : toLocalDate(targetDate);
 
-        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), inputDate, callContext);
+        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), null, inputDate, callContext);
 
         BigDecimal remainingRequestPayment = paymentAmount;
         if (remainingRequestPayment == null) {
@@ -821,7 +823,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(data.getAccountId(), callContext);
 
         final boolean hasDefaultPaymentMethod = account.getPaymentMethodId() != null || isDefault;
-        final Collection<Invoice> unpaidInvoices = payAllUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext) :
+        final Collection<Invoice> unpaidInvoices = payAllUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext) :
                                                    Collections.<Invoice>emptyList();
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0 && !hasDefaultPaymentMethod) {
             return Response.status(Status.BAD_REQUEST).build();
@@ -919,7 +921,7 @@ public class AccountResource extends JaxRsResourceBase {
         paymentApi.setDefaultPaymentMethod(account, paymentMethodId, pluginProperties, callContext);
 
         if (payAllUnpaidInvoices) {
-            final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+            final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext);
             for (final Invoice invoice : unpaidInvoices) {
                 createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), paymentMethodId, false, null, null, pluginProperties, callContext);
             }

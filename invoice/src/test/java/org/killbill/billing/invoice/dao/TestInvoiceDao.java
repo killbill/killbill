@@ -508,21 +508,45 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoice(invoice2, context);
 
         List<InvoiceModelDao> invoices;
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), null, context);
         assertEquals(invoices.size(), 2);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 6), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 6), null, context);
         assertEquals(invoices.size(), 2);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 11), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 10, 11), null, context);
         assertEquals(invoices.size(), 1);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 12, 6), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 12, 6), null, context);
         assertEquals(invoices.size(), 1);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2012, 1, 1), context);
+        invoices = invoiceDao.getInvoicesByAccount(false, new LocalDate(2012, 1, 1), null, context);
         assertEquals(invoices.size(), 0);
     }
+
+    @Test(groups = "slow")
+    public void testGetInvoicesForAccountBeforeDate() throws EntityPersistenceException {
+        final UUID accountId = account.getId();
+        final LocalDate targetDate1 = new LocalDate(2011, 10, 6);
+        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate1, Currency.USD);
+        invoiceUtil.createInvoice(invoice1, context);
+
+        final LocalDate targetDate2 = new LocalDate(2011, 12, 6);
+        final Invoice invoice2 = new DefaultInvoice(accountId, clock.getUTCToday(), targetDate2, Currency.USD);
+        invoiceUtil.createInvoice(invoice2, context);
+
+        List<InvoiceModelDao> invoices;
+        invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 12, 7), context);
+        assertEquals(invoices.size(), 2);
+
+        invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 12, 5), context);
+        assertEquals(invoices.size(), 1);
+
+        invoices = invoiceDao.getInvoicesByAccount(false, null, new LocalDate(2011, 10, 5), context);
+        assertEquals(invoices.size(), 0);
+
+    }
+
 
     @Test(groups = "slow")
     public void testAccountBalance() throws EntityPersistenceException {
@@ -1124,11 +1148,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         Collection<InvoiceModelDao> invoices;
 
         upToDate = new LocalDate(2011, 1, 1);
-        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
         assertEquals(invoices.size(), 0);
 
         upToDate = new LocalDate(2012, 1, 1);
-        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
         assertEquals(invoices.size(), 1);
 
         final LocalDate targetDate2 = new LocalDate(2011, 7, 1);
@@ -1145,11 +1169,11 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoiceItem(item3, context);
 
         upToDate = new LocalDate(2011, 1, 1);
-        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
         assertEquals(invoices.size(), 0);
 
         upToDate = new LocalDate(2012, 1, 1);
-        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
         assertEquals(invoices.size(), 2);
     }
 
@@ -1179,26 +1203,26 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         Collection<InvoiceModelDao> invoices;
 
         upToDate = new LocalDate(2011, 1, 1);
-        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
         assertEquals(invoices.size(), 0);
 
         upToDate = new LocalDate(2012, 1, 1);
-        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
         assertEquals(invoices.size(), 1);
 
-        List<InvoiceModelDao> allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), context);
+        List<InvoiceModelDao> allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), null, context);
         assertEquals(allInvoicesByAccount.size(), 1);
 
         // insert DRAFT invoice
         createCredit(accountId, new LocalDate(2011, 12, 31), BigDecimal.TEN, true);
 
-        allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), context);
+        allInvoicesByAccount = invoiceDao.getInvoicesByAccount(false, new LocalDate(2011, 1, 1), null, context);
         assertEquals(allInvoicesByAccount.size(), 2);
         assertEquals(allInvoicesByAccount.get(0).getStatus(), InvoiceStatus.COMMITTED);
         assertEquals(allInvoicesByAccount.get(1).getStatus(), InvoiceStatus.DRAFT);
 
         upToDate = new LocalDate(2012, 1, 1);
-        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, upToDate, context);
+        invoices = invoiceDao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
         assertEquals(invoices.size(), 1);
     }
 
