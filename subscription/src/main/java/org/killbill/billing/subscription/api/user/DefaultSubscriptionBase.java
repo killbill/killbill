@@ -743,7 +743,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 throw new SubscriptionBaseError(String.format(
                         "Unexpected policy type %s", policy.toString()));
         }
-        return (candidateResult.compareTo(getStartDate()) < 0) ? getStartDate() : candidateResult;
+        // Finally we verify we won't cancel prior the beginning of our current PHASE  -- mostly as a sanity or for test stability
+        final DateTime lastTransitionTime  = getCurrentPhaseStart();
+        return (candidateResult.compareTo(lastTransitionTime) < 0) ? lastTransitionTime : candidateResult;
     }
 
     public DateTime getCurrentPhaseStart() {
