@@ -177,7 +177,7 @@ public class SubscriptionApiBase {
                         policy = planChangeResult.getPolicy();
                     }
                     // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
-                    changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy, null, -1, context);
+                    changeEffectiveDate = subscriptionForChange.getEffectiveDateForPolicy(policy, null, -1, context);
                 }
                 dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, plan.getPriceList().getName(), changeEffectiveDate, true, entitlementSpecifier.getBillCycleDay(), catalog, context);
                 break;
@@ -195,7 +195,7 @@ public class SubscriptionApiBase {
                         policy = catalog.planCancelPolicy(spec, clock.getUTCNow(), subscriptionForCancellation.getStartDate());
                     }
                     // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
-                    cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy, null, -1, context);
+                    cancelEffectiveDate = subscriptionForCancellation.getEffectiveDateForPolicy(policy, null, -1, context);
                 }
                 dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, cancelEffectiveDate, true, catalog, context);
                 break;
