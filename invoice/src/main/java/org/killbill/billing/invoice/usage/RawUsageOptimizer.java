@@ -122,7 +122,9 @@ public class RawUsageOptimizer {
             final InvoiceItem item = iterator.previous();
             if (!(item instanceof UsageInvoiceItem)) {
                 // Help to debug https://github.com/killbill/killbill/issues/1095
-                log.warn("RawUsageOptimizer : item id={}, expected to see an UsageInvoiceItem type, got {}", item.getId(), item);
+                log.warn("RawUsageOptimizer : item id={}, expected to see an UsageInvoiceItem type, got class {}",
+                         item.getId(),
+                         (item != null ? item.getClass() : null));
             }
             final Usage usage = knownUsage.get(item.getUsageName());
 
