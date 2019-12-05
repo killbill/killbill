@@ -204,16 +204,21 @@ public class InvoicePruner {
                 if (compRepair == 0) {
                     // Keep previous precondition behavior and check there is no extra adjustment on top of it.
                     // @see TestIntegrationInvoiceWithRepairLogic#testWithFullRepairAndExistingPartialAdjustment
-                    Preconditions.checkState(adjusted == null || adjusted.isEmpty(), "Too many repairs for invoiceItemId='%s'", target.getId());
+                    Preconditions.checkState(adjusted == null || adjusted.isEmpty(), "Too many repairs for invoiceItemId='%s', fully repaired and adjusted='%s'",
+                                             target.getId(),
+                                             totalAdjusted);
                     result.add(target.getId());
                     result.addAll(getIds(repaired));
                 } else {
                     // Keep previous precondition behavior and check the sum of total repair + total adjustments is not more than original amount
-                    final BigDecimal adjustedAmount = sumAmounts(adjusted).negate();
-                    final int compWithAdjustments = remainingFromRepair.subtract(adjustedAmount).compareTo(BigDecimal.ZERO);
+                    final int compWithAdjustments = remainingFromRepair.subtract(totalAdjusted).compareTo(BigDecimal.ZERO);
                     if (compWithAdjustments == -1) {
                         // @see TestIntegrationInvoiceWithRepairLogic#testWithPartialRepairAndExistingPartialTooLargeAdjustment
-                        Preconditions.checkState(false, "Too many repairs for invoiceItemId='%s'", target.getId());
+                        Preconditions.checkState(false, "Too many repairs for invoiceItemId='%s', partially repaired='%s', partially adjusted='%s', total='%s'",
+                                                 target.getId(),
+                                                 repairedAmount,
+                                                 totalAdjusted,
+                                                 target.getAmount());
                     }
                 }
             }
