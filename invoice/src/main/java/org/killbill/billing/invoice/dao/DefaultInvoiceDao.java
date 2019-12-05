@@ -409,7 +409,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                             invoiceItemsToCreate.add(invoiceItemModelDao);
                             allInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
                         } else if (InvoicePluginDispatcher.ALLOWED_INVOICE_ITEM_TYPES.contains(invoiceItemModelDao.getType()) &&
-                                   // The restriction on the amount is to deal with https://github.com/killbill/killbill/issues/993 - and esnure that duplicate
+                                   // The restriction on the amount is to deal with https://github.com/killbill/killbill/issues/993 - and ensure that duplicate
                                    // items would not be re-written
                                    (invoiceItemModelDao.getAmount().compareTo(existingInvoiceItem.getAmount()) != 0)) {
                             if (checkAgainstExistingInvoiceItemState(existingInvoiceItem, invoiceItemModelDao)) {

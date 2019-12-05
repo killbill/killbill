@@ -185,22 +185,36 @@ public class InvoicePruner {
                 }
             }
 
-            final BigDecimal remainingFromRepair = target.getAmount().subtract(repairedAmount);
-            final int compRepair = remainingFromRepair.compareTo(BigDecimal.ZERO);
 
-            if (compRepair == 0) {
-                // Keep previous precondition behavior
-                Preconditions.checkState(adjusted == null || adjusted.isEmpty(), "Too many repairs for invoiceItemId='%s'", target.getId());
-                result.add(target.getId());
-                result.addAll(getIds(repaired));
+            final BigDecimal totalAdjusted = sumAmounts(adjusted).negate();
+            final BigDecimal remainingFromAdjusted = target.getAmount().subtract(totalAdjusted);
+            final int compAdjOnly = remainingFromAdjusted.compareTo(BigDecimal.ZERO);
+            if (compAdjOnly == -1) {
+                // We adjusted too much :-(
+                // In normal cases, the code should prevent this : https://github.com/killbill/killbill/blob/killbill-0.21.6/invoice/src/main/java/org/killbill/billing/invoice/dao/InvoiceDaoHelper.java#L115
+                // However, this is possible to bypass this logic when ITEM_ADJ are added from within a invoice plugin, so we ignore it -- this does not seem to create too much side effects.
+                // @see TestIntegrationInvoiceWithRepairLogic#testAdjustmentsToolarge
+                //
             } else {
+                final BigDecimal remainingFromRepair = target.getAmount().subtract(repairedAmount);
+                final int compRepair = remainingFromRepair.compareTo(BigDecimal.ZERO);
 
 
-                // Keep previous precondition behavior
-                final BigDecimal adjustedAmount = sumAmounts(adjusted).negate();
-                final int compWithAdjustments = remainingFromRepair.subtract(adjustedAmount).compareTo(BigDecimal.ZERO);
-                if (compWithAdjustments == -1) {
-                    Preconditions.checkState(false, "Too many repairs for invoiceItemId='%s'", target.getId());
+                // We repaired the whole thing
+                if (compRepair == 0) {
+                    // Keep previous precondition behavior and check there is no extra adjustment on top of it.
+                    // @see TestIntegrationInvoiceWithRepairLogic#testWithFullRepairAndExistingPartialAdjustment
+                    Preconditions.checkState(adjusted == null || adjusted.isEmpty(), "Too many repairs for invoiceItemId='%s'", target.getId());
+                    result.add(target.getId());
+                    result.addAll(getIds(repaired));
+                } else {
+                    // Keep previous precondition behavior and check the sum of total repair + total adjustments is not more than original amount
+                    final BigDecimal adjustedAmount = sumAmounts(adjusted).negate();
+                    final int compWithAdjustments = remainingFromRepair.subtract(adjustedAmount).compareTo(BigDecimal.ZERO);
+                    if (compWithAdjustments == -1) {
+                        // @see TestIntegrationInvoiceWithRepairLogic#testWithPartialRepairAndExistingPartialTooLargeAdjustment
+                        Preconditions.checkState(false, "Too many repairs for invoiceItemId='%s'", target.getId());
+                    }
                 }
             }
 
