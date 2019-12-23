@@ -268,4 +268,50 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 4, 1), new LocalDate(2017, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
     }
+
+
+
+
+
+    @Test(groups = "slow")
+    public void testExternalChargeInTheFuture() throws Exception {
+
+        final int billingDay = 1;
+        final DateTime initialCreationDate = new DateTime(2019, 1, 1, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+
+
+        // Create external charge with an effective date a year from now
+        final LocalDate chargeEffectiveDate = clock.getToday(account.getTimeZone()).plusYears(1);
+        final List<InvoiceItem> invoiceItemList = new ArrayList<InvoiceItem>();
+        ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(null, account.getId(), null, "", chargeEffectiveDate, chargeEffectiveDate, BigDecimal.TEN, account.getCurrency(), null);
+        invoiceItemList.add(item);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final List<InvoiceItem> chargeItems = invoiceUserApi.insertExternalCharges(account.getId(), chargeEffectiveDate, invoiceItemList, true, null, callContext);
+        assertListenerStatus();
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(chargeEffectiveDate, chargeEffectiveDate, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+
+
+        DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2019, 1, 1), new LocalDate(2019, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+    }
+
+
 }
