@@ -26,7 +26,7 @@ import org.skife.config.TimeSpan;
 public interface JaxrsConfig extends KillbillConfig {
 
     @Config("org.killbill.jaxrs.threads.pool.nb")
-    @Default("30")
+    @Default("10")
     @Description("Number of threads for jaxrs executor")
     int getJaxrsThreadNb();
 
