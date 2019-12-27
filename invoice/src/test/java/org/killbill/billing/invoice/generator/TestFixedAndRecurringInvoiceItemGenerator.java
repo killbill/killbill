@@ -1393,4 +1393,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
         }
     }
+
+
+
 }

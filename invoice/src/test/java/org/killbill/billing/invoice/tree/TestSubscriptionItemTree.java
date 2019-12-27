@@ -1175,6 +1175,30 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
+
+
+
+    @Test(groups = "fast", description="https://github.com/killbill/killbill/issues/1251")
+    public void testRecuring$0PriceNoCatalogEffectiveDate() {
+        final LocalDate startDate = new LocalDate(2019, 11, 1);
+        final LocalDate endDate = new LocalDate(2019, 12, 1);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+
+        final DateTime catalogEffectiveDate = new DateTime();
+
+        final InvoiceItem existing1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null /* catalogEffectiveDate  */, startDate, endDate, BigDecimal.ZERO, BigDecimal.ZERO, currency);
+        tree.addItem(existing1);
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, startDate, endDate, BigDecimal.ZERO, BigDecimal.ZERO, currency);
+        tree.mergeProposedItem(proposed1);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of();
+        verifyResult(tree.getView(), expectedResult);
+    }
+
     private void printTreeJSON(final SubscriptionItemTree tree) throws IOException {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         tree.getRoot().jsonSerializeTree(OBJECT_MAPPER, outputStream);

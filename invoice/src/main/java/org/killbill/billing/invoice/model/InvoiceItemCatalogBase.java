@@ -129,9 +129,10 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
         final InvoiceItemCatalogBase that = (InvoiceItemCatalogBase) o;
         if (catalogEffectiveDate != null && that.catalogEffectiveDate != null && catalogEffectiveDate.compareTo(that.catalogEffectiveDate) != 0) {
             return false;
-        } else if ((catalogEffectiveDate != null && that.catalogEffectiveDate == null) ||
-                   (catalogEffectiveDate == null && that.catalogEffectiveDate != null)) {
-            return false;
+        } else if (catalogEffectiveDate == null || that.catalogEffectiveDate == null) {
+            /* At least one such item has a 'null' catalogEffectiveDate, reflecting a prior 0.22 release item
+             * => we default to true to avoid re-generating existing items (See https://github.com/killbill/killbill/issues/1251)
+             */
         }
 
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
