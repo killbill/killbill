@@ -158,12 +158,12 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
                 if (predicate.apply(element)) {
                     hasSeenObjectType = true;
                     return element;
-                } else if (hasSeenObjectType) {
+                } /* else if (hasSeenObjectType) {
                     // Optimization trick: audit log records are ordered first by table name
                     // (hence object type) - when we are done and we switch to another ObjectType,
                     // we are guaranteed there is nothing left to do
                     return endOfData();
-                }
+                } */
             }
 
             return endOfData();
