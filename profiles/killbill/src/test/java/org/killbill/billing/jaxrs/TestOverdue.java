@@ -54,7 +54,7 @@ public class TestOverdue extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
 
@@ -79,7 +79,7 @@ public class TestOverdue extends TestJaxrsBase {
         // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
         // a refresh overdue notification kicks in after the first payment, which makes the account goes CLEAR and
         // triggers an AUTO_INVOICE_OFF tag removal (hence adjustment of the other invoices balance).
-        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         final List<Invoice> mostRecentInvoiceFirst = Ordering.<Invoice>from(new Comparator<Invoice>() {
             @Override
             public int compare(final Invoice invoice1, final Invoice invoice2) {
@@ -126,11 +126,11 @@ public class TestOverdue extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
 
-        final List<Invoice> invoicesNoTag = accountApi.getInvoicesForAccount(accountJsonNoTag.getAccountId(), null, requestOptions);
+        final List<Invoice> invoicesNoTag = accountApi.getInvoicesForAccount(accountJsonNoTag.getAccountId(), null, null, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoicesNoTag.size(), 2);
 
@@ -179,11 +179,11 @@ public class TestOverdue extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
 
-        final List<Invoice> invoicesNoTag = accountApi.getInvoicesForAccount(accountJsonNoTag.getAccountId(), null, requestOptions);
+        final List<Invoice> invoicesNoTag = accountApi.getInvoicesForAccount(accountJsonNoTag.getAccountId(), null, null, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoicesNoTag.size(), 2);
 

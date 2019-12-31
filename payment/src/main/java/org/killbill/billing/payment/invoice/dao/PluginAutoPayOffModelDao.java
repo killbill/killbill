@@ -1,7 +1,8 @@
 /*
- * Copyright 2014 Groupon, Inc
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Groupon licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -31,7 +32,6 @@ public class PluginAutoPayOffModelDao {
     private UUID accountId;
     private String pluginName;
     private UUID paymentId;
-    private UUID paymentMethodId;
     private BigDecimal amount;
     private Currency currency;
     private String createdBy;
@@ -41,12 +41,12 @@ public class PluginAutoPayOffModelDao {
     }
 
     public PluginAutoPayOffModelDao(final UUID attemptId, final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName,
-                                    final UUID paymentId, final UUID paymentMethodId, final BigDecimal amount, final Currency currency, final String createdBy, final DateTime createdDate) {
-        this(-1L, attemptId, paymentExternalKey, transactionExternalKey, accountId, pluginName, paymentId, paymentMethodId, amount, currency, createdBy, createdDate);
+                                    final UUID paymentId, final BigDecimal amount, final Currency currency, final String createdBy, final DateTime createdDate) {
+        this(-1L, attemptId, paymentExternalKey, transactionExternalKey, accountId, pluginName, paymentId, amount, currency, createdBy, createdDate);
     }
 
     public PluginAutoPayOffModelDao(final Long recordId, UUID attemptId, final String paymentExternalKey, final String transactionExternalKey, final UUID accountId, final String pluginName,
-                                    final UUID paymentId, final UUID paymentMethodId, final BigDecimal amount, final Currency currency, final String createdBy, final DateTime createdDate) {
+                                    final UUID paymentId, final BigDecimal amount, final Currency currency, final String createdBy, final DateTime createdDate) {
         this.recordId = recordId;
         this.attemptId = attemptId;
         this.paymentExternalKey = paymentExternalKey;
@@ -54,7 +54,6 @@ public class PluginAutoPayOffModelDao {
         this.accountId = accountId;
         this.pluginName = pluginName;
         this.paymentId = paymentId;
-        this.paymentMethodId = paymentMethodId;
         this.amount = amount;
         this.currency = currency;
         this.createdBy = createdBy;
@@ -117,14 +116,6 @@ public class PluginAutoPayOffModelDao {
         this.paymentId = paymentId;
     }
 
-    public UUID getPaymentMethodId() {
-        return paymentMethodId;
-    }
-
-    public void setPaymentMethodId(final UUID paymentMethodId) {
-        this.paymentMethodId = paymentMethodId;
-    }
-
     public BigDecimal getAmount() {
         return amount;
     }
@@ -155,6 +146,24 @@ public class PluginAutoPayOffModelDao {
 
     public void setCreatedDate(final DateTime createdDate) {
         this.createdDate = createdDate;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("PluginAutoPayOffModelDao{");
+        sb.append("recordId=").append(recordId);
+        sb.append(", attemptId=").append(attemptId);
+        sb.append(", paymentExternalKey='").append(paymentExternalKey).append('\'');
+        sb.append(", transactionExternalKey='").append(transactionExternalKey).append('\'');
+        sb.append(", accountId=").append(accountId);
+        sb.append(", pluginName='").append(pluginName).append('\'');
+        sb.append(", paymentId=").append(paymentId);
+        sb.append(", amount=").append(amount);
+        sb.append(", currency=").append(currency);
+        sb.append(", createdBy='").append(createdBy).append('\'');
+        sb.append(", createdDate=").append(createdDate);
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override
@@ -192,9 +201,6 @@ public class PluginAutoPayOffModelDao {
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
-        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null) {
-            return false;
-        }
         if (pluginName != null ? !pluginName.equals(that.pluginName) : that.pluginName != null) {
             return false;
         }
@@ -216,7 +222,6 @@ public class PluginAutoPayOffModelDao {
         result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
         result = 31 * result + (pluginName != null ? pluginName.hashCode() : 0);
         result = 31 * result + (paymentId != null ? paymentId.hashCode() : 0);
-        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (createdBy != null ? createdBy.hashCode() : 0);

@@ -463,13 +463,13 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     private DefaultBaseEntitlementWithAddOnsSpecifier getFirstBaseEntitlementWithAddOnsSpecifier(final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers) throws SubscriptionBaseApiException {
         if (baseEntitlementWithAddOnsSpecifiers == null) {
             log.warn("getFirstBaseEntitlementWithAddOnsSpecifier: baseEntitlementWithAddOnsSpecifiers is null");
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER, "no base entitlement specifier");
         }
 
         final Iterator<BaseEntitlementWithAddOnsSpecifier> iterator = baseEntitlementWithAddOnsSpecifiers.iterator();
         if (!iterator.hasNext()) {
             log.warn("getFirstBaseEntitlementWithAddOnsSpecifier: baseEntitlementWithAddOnsSpecifiers is empty");
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER);
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_INVALID_ENTITLEMENT_SPECIFIER, "empty base entitlement specifier");
         }
 
         return (DefaultBaseEntitlementWithAddOnsSpecifier) iterator.next();

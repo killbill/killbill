@@ -185,7 +185,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             Preconditions.checkState(policy != BillingActionPolicy.START_OF_TERM, "A default START_OF_TERM policy is not availaible");
 
-            final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, null, -1, null);
+            final DateTime effectiveDate = subscription.getEffectiveDateForPolicy(policy, null, -1, null);
 
             return doCancelPlan(ImmutableMap.<DefaultSubscriptionBase, DateTime>of(subscription, effectiveDate), catalog, internalCallContext);
         } catch (final CatalogApiException e) {
@@ -228,7 +228,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                                                                                                  clock.getUTCNow(),
                                                                                                                                                  subscription.getStartDate()));
                 final Integer accountBillCycleDayLocal = accountInternalApi.getBCD(context);
-                final DateTime effectiveDate = subscription.getPlanChangeEffectiveDate(policy, billingAlignment, accountBillCycleDayLocal, context);
+                final DateTime effectiveDate = subscription.getEffectiveDateForPolicy(policy, billingAlignment, accountBillCycleDayLocal, context);
                 subscriptionsWithEffectiveDate.put(subscription, effectiveDate);
             }
             return doCancelPlan(subscriptionsWithEffectiveDate, catalog, context);
@@ -342,7 +342,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
 
         if (policyMaybeNull != null) {
-            return subscription.getPlanChangeEffectiveDate(policyMaybeNull, null, -1, null);
+            return subscription.getEffectiveDateForPolicy(policyMaybeNull, null, -1, null);
         } else if (requestedDateWithMs != null) {
             return DefaultClock.truncateMs(requestedDateWithMs);
         } else {

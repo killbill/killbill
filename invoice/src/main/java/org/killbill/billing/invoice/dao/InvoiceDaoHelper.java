@@ -168,13 +168,13 @@ public class InvoiceDaoHelper {
         return requestedPositiveAmount;
     }
 
-    public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final UUID accountId, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final LocalDate upToDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final UUID accountId, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, @Nullable LocalDate startDate, final LocalDate upToDate, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoices = getAllInvoicesByAccountFromTransaction(false, invoicesTags, entitySqlDaoWrapperFactory, context);
         log.debug("Found invoices={} for accountId={}", invoices, accountId);
-        return getUnpaidInvoicesByAccountFromTransaction(invoices, upToDate);
+        return getUnpaidInvoicesByAccountFromTransaction(invoices, startDate, upToDate);
     }
 
-    public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final List<InvoiceModelDao> invoices, @Nullable final LocalDate upToDate) {
+    public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final List<InvoiceModelDao> invoices,  @Nullable LocalDate startDate, @Nullable final LocalDate upToDate) {
         final Collection<InvoiceModelDao> unpaidInvoices = Collections2.filter(invoices, new Predicate<InvoiceModelDao>() {
             @Override
             public boolean apply(final InvoiceModelDao in) {
@@ -183,7 +183,8 @@ public class InvoiceDaoHelper {
                 log.debug("Computed balance={} for invoice={}", balance, in);
                 return InvoiceStatus.COMMITTED.equals(in.getStatus()) &&
                        (balance.compareTo(BigDecimal.ZERO) >= 1 && !in.isWrittenOff()) &&
-                       (upToDate == null || in.getTargetDate() == null || !in.getTargetDate().isAfter(upToDate));
+                       (startDate == null || in.getTargetDate() == null || in.getTargetDate().compareTo(startDate) >= 0) &&
+                       (upToDate == null || in.getTargetDate() == null || in.getTargetDate().compareTo(upToDate) <= 0);
             }
         });
         return new ArrayList<InvoiceModelDao>(unpaidInvoices);

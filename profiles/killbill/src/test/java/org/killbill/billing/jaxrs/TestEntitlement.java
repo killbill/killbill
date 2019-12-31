@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,8 +22,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
@@ -36,6 +39,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.BulkSubscriptionsBundles;
 import org.killbill.billing.client.model.Bundles;
+import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Subscriptions;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
@@ -48,6 +52,7 @@ import org.killbill.billing.client.model.gen.Subscription;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
@@ -74,7 +79,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term);
 
         // Retrieves with GET
         Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
@@ -85,8 +90,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertNull(subscription.getPrices().get(1).getFixedPrice());
         Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
 
-        Assert.assertTrue(subscription.equals(entitlementJson));
-
+        Assert.assertEquals(subscription, entitlementJson);
 
         final Subscription subscription2 = subscriptionApi.getSubscriptionByKey(subscription.getExternalKey(), requestOptions);
         assertEquals(subscription2.getBundleExternalKey(), "99999");
@@ -155,7 +159,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term);
 
         // Retrieves with GET
         Subscription objFromJson = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
@@ -239,7 +243,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.ANNUAL;
 
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                 ProductCategory.BASE, term, true);
+                                                                 ProductCategory.BASE, term);
 
         // Retrieves with GET
         Subscription objFromJson = subscriptionApi.getSubscription(subscriptionJson.getSubscriptionId(), requestOptions);
@@ -315,7 +319,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getEvents().get(2).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME);
         Assert.assertEquals(subscription.getEvents().get(2).getProduct(), "Shotgun");
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, false, false, false, AuditLevel.FULL, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
 
@@ -430,7 +434,7 @@ public class TestEntitlement extends TestJaxrsBase {
         }
         assertEquals(found, 3);
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 1);
         assertEquals(invoiceApi.getInvoiceTags(invoices.get(0).getInvoiceId(), requestOptions).size(), 0);
@@ -449,7 +453,7 @@ public class TestEntitlement extends TestJaxrsBase {
             assertEquals(subscription.getState(), EntitlementState.CANCELLED);
         }
 
-        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(invoicesAfterClose.size(), 1);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 1);
@@ -523,7 +527,7 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(bundles.size(), 2);
         assertFalse(bundles.get(0).getExternalKey().equals(bundles.get(1).getExternalKey()));
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 1);
         assertEquals(invoiceApi.getInvoiceTags(invoices.get(0).getInvoiceId(), requestOptions).size(), 0);
@@ -574,7 +578,7 @@ public class TestEntitlement extends TestJaxrsBase {
             }
         }
 
-        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoicesAfterClose.size(), 1);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 0);
@@ -681,12 +685,12 @@ public class TestEntitlement extends TestJaxrsBase {
         assertEquals(bundles.size(), 1);
         assertEquals(bundles.get(0).getSubscriptions().size(), 3);
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
         assertEquals(invoices.size(), 2);
     }
 
-    @Test(groups = "slow", description = "Can create an entitlement in the future")
-    public void testcreateSubscriptionInTheFuture() throws Exception {
+    @Test(groups = "slow", description = "Can create an entitlement with a future entitlement date")
+    public void testCreateSubscriptionEntitlementInTheFuture() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
@@ -698,8 +702,21 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setProductCategory(ProductCategory.BASE);
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        final Subscription entitlementJson = subscriptionApi.createSubscription(input, initialDate.toLocalDate().plusMonths(1), null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        // Verify callCompletion works (related to https://github.com/killbill/killbill/issues/1193)
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                initialDate.toLocalDate().plusMonths(1),
+                                                                                null,
+                                                                                false,
+                                                                                false,
+                                                                                true,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
 
+        Assert.assertEquals(entitlementJson.getState(), EntitlementState.PENDING);
+        Assert.assertEquals(entitlementJson.getChargedThroughDate(), initialDate.toLocalDate());
+        Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate().plusMonths(1));
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
         Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
@@ -707,7 +724,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Retrieves with GET
         final Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
-        Assert.assertTrue(subscription.equals(entitlementJson));
+        Assert.assertEquals(subscription, entitlementJson);
         Assert.assertEquals(subscription.getPrices().size(), 2);
         Assert.assertEquals(subscription.getPrices().get(0).getPhaseName(), "shotgun-monthly-trial");
         Assert.assertEquals(subscription.getPrices().get(0).getFixedPrice(), BigDecimal.ZERO);
@@ -717,17 +734,158 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
     }
 
-    @Test(groups = "slow", description = "Can create an entitlement with an account with autoPayOff")
-    public void testcreateSubscriptionWithAutoPayOff() throws Exception {
+    @Test(groups = "slow", description = "Can create an entitlement with a future billing date")
+    public void testCreateSubscriptionBillingInTheFuture() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Shotgun");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        // Verify callCompletion works (related to https://github.com/killbill/killbill/issues/1193)
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                null,
+                                                                                initialDate.toLocalDate().plusMonths(1),
+                                                                                false,
+                                                                                false,
+                                                                                true,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
+
+        Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
+        Assert.assertNull(entitlementJson.getChargedThroughDate());
+        Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate().plusMonths(1));
+        Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
+        Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
+        Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
+        Assert.assertEquals(entitlementJson.getPriceList(), input.getPriceList());
+
+        // Retrieves with GET
+        final Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription, entitlementJson);
+        Assert.assertEquals(subscription.getPrices().size(), 2);
+        Assert.assertEquals(subscription.getPrices().get(0).getPhaseName(), "shotgun-monthly-trial");
+        Assert.assertEquals(subscription.getPrices().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(subscription.getPrices().get(0).getRecurringPrice());
+        Assert.assertEquals(subscription.getPrices().get(1).getPhaseName(), "shotgun-monthly-evergreen");
+        Assert.assertNull(subscription.getPrices().get(1).getFixedPrice());
+        Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
+    }
+
+    @Test(groups = "slow", description = "Can create an entitlement with a future billing date v2 -- see https://github.com/killbill/killbill/pull/1234#discussion_r332148759")
+    public void testCreateSubscriptionBillingInTheFutureV2() throws Exception {
+        // 2012-04-25T00:03:42.000Z
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        // Move clock back to 2012-04-25T00:01:42.000Z (we want a reference time in the future)
+        clock.setTime(new DateTime(2012, 4, 25, 0, 1, 42, 0));
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Shotgun");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        // Verify callCompletion works (related to https://github.com/killbill/killbill/issues/1193)
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                null,
+                                                                                new LocalDate(2012, 4, 25),
+                                                                                false,
+                                                                                false,
+                                                                                true,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
+
+        Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
+        Assert.assertNull(entitlementJson.getChargedThroughDate());
+        Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
+        Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
+        Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
+        Assert.assertEquals(entitlementJson.getPriceList(), input.getPriceList());
+
+        // Retrieves with GET
+        final Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription, entitlementJson);
+        Assert.assertEquals(subscription.getPrices().size(), 2);
+        Assert.assertEquals(subscription.getPrices().get(0).getPhaseName(), "shotgun-monthly-trial");
+        Assert.assertEquals(subscription.getPrices().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(subscription.getPrices().get(0).getRecurringPrice());
+        Assert.assertEquals(subscription.getPrices().get(1).getPhaseName(), "shotgun-monthly-evergreen");
+        Assert.assertNull(subscription.getPrices().get(1).getFixedPrice());
+        Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
+    }
+
+    @Test(groups = "slow", description = "Can create an entitlement with a past billing date")
+    public void testCreateSubscriptionBillingInThePast() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Shotgun");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        // Verify callCompletion works (related to https://github.com/killbill/killbill/issues/1193)
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                null,
+                                                                                initialDate.toLocalDate().minusMonths(1),
+                                                                                false,
+                                                                                false,
+                                                                                true,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
+
+        Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(entitlementJson.getChargedThroughDate(), new LocalDate("2012-05-24"));
+        Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate().minusMonths(1));
+        Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
+        Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
+        Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
+        Assert.assertEquals(entitlementJson.getPriceList(), input.getPriceList());
+
+        // Retrieves with GET
+        final Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription, entitlementJson);
+        Assert.assertEquals(subscription.getPrices().size(), 2);
+        Assert.assertEquals(subscription.getPrices().get(0).getPhaseName(), "shotgun-monthly-trial");
+        Assert.assertEquals(subscription.getPrices().get(0).getFixedPrice(), BigDecimal.ZERO);
+        Assert.assertNull(subscription.getPrices().get(0).getRecurringPrice());
+        Assert.assertEquals(subscription.getPrices().get(1).getPhaseName(), "shotgun-monthly-evergreen");
+        Assert.assertNull(subscription.getPrices().get(1).getFixedPrice());
+        Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
+    }
+
+    @Test(groups = "slow", description = "Can create an entitlement with an account with autoPayOff -- https://github.com/killbill/killbill/issues/1193")
+    public void testCreateChangeAndCancelSubscriptionWithAutoPayOff() throws Exception {
         final Account accountJson = createAccount();
         assertNotNull(accountJson);
 
         // assign autoPaymentOff tag to account
-        Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 1L)), requestOptions);
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
+        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 1L)), requestOptions);
         assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
+        callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
         // create a subscription with no trial plan
@@ -738,14 +896,234 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList("notrial");
 
-        final Subscription subscriptionJson = subscriptionApi.createSubscription(input, null, null, null, null, true, 10L, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ACCOUNT_CHANGE,
+                                           ExtBusEventType.INVOICE_CREATION); // The BCD is updated in that case
+        final Subscription subscriptionJson = subscriptionApi.createSubscription(input, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(subscriptionJson);
+        callbackServlet.assertListenerStatus();
 
         // verify that number of invoices is now 1
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).size(), 1);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 1);
 
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+
+        // Avoid test timing issues
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
+        // Change Plan
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE,
+                                           ExtBusEventType.SUBSCRIPTION_CHANGE,
+                                           ExtBusEventType.INVOICE_CREATION);
+        subscriptionApi.changeSubscriptionPlan(subscriptionJson.getSubscriptionId(),
+                                               newInput,
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               BillingActionPolicy.IMMEDIATE,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Avoid test timing issues
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
+        // Cancel subscription (entitlement IMM, billing EOT)
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL);
+        subscriptionApi.cancelSubscriptionPlan(newInput.getSubscriptionId(),
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               null,
+                                               null,
+                                               null,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
+    }
+
+    @Test(groups = "slow", description = "Can create an entitlement with an account with autoInvoicingOff -- https://github.com/killbill/killbill/pull/1196")
+    public void testCreateChangeAndCancelSubscriptionWithAutoInvoicingOff() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // assign autoInvoicingOff tag to account
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
+        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 2L)), requestOptions);
+        assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_INVOICING_OFF");
+        callbackServlet.assertListenerStatus();
+
+        // verify that number of invoices and payments for account is still 0
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+
+        // create a subscription with no trial plan
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Blowdart");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList("notrial");
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION); // Note that the BCD isn't set
+        final Subscription subscriptionJson = subscriptionApi.createSubscription(input,
+                                                                                 null,
+                                                                                 null,
+                                                                                 false,
+                                                                                 false,
+                                                                                 true,
+                                                                                 DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                 NULL_PLUGIN_PROPERTIES,
+                                                                                 requestOptions);
+        assertNotNull(subscriptionJson);
+        callbackServlet.assertListenerStatus();
+
+        // verify that number of invoices is still 0
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
+
+        // verify that number of payments is still 0 (no attempts)
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+
+        // Avoid test timing issues
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
+        // Change Plan
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE,
+                                           ExtBusEventType.SUBSCRIPTION_CHANGE);
+        subscriptionApi.changeSubscriptionPlan(subscriptionJson.getSubscriptionId(),
+                                               newInput,
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               BillingActionPolicy.IMMEDIATE,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Avoid test timing issues
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
+        // Cancel subscription (entitlement and billing IMM since there is no BCD set)
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL);
+        subscriptionApi.cancelSubscriptionPlan(newInput.getSubscriptionId(),
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               null,
+                                               null,
+                                               null,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
+    }
+
+    @Test(groups = "slow", description = "Can create an entitlement with an account with autoInvoicingDraft")
+    public void testCreateChangeAndCancelSubscriptionWithAutoInvoicingDraft() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // assign AUTO_INVOICING_DRAFT tag to account
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
+        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 8L)), requestOptions);
+        assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_INVOICING_DRAFT");
+        callbackServlet.assertListenerStatus();
+
+        // verify that number of invoices and payments for account is still 0
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+
+        // create a subscription with no trial plan
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Blowdart");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList("notrial");
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION,
+                                           ExtBusEventType.ACCOUNT_CHANGE); // The BCD is updated in that case
+        final Subscription subscriptionJson = subscriptionApi.createSubscription(input,
+                                                                                 null,
+                                                                                 null,
+                                                                                 false,
+                                                                                 false,
+                                                                                 true,
+                                                                                 DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                 NULL_PLUGIN_PROPERTIES,
+                                                                                 requestOptions);
+        assertNotNull(subscriptionJson);
+        callbackServlet.assertListenerStatus();
+
+        // verify that number of invoices is 1 (DRAFT). Note that we have to poll because callCompletion will return
+        // before the DRAFT invoice is generated (there is no event to synchronize on)
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+                return invoicesForAccount.size() == 1 && invoicesForAccount.get(0).getStatus() == InvoiceStatus.DRAFT;
+            }
+        });
+
+        // verify that number of payments is still 0 (no attempts)
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
+
+        // Avoid test timing issues
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
+        // Change Plan
+        final Subscription newInput = new Subscription();
+        newInput.setSubscriptionId(subscriptionJson.getSubscriptionId());
+        newInput.setPlanName("pistol-monthly");
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE,
+                                           ExtBusEventType.SUBSCRIPTION_CHANGE);
+        subscriptionApi.changeSubscriptionPlan(subscriptionJson.getSubscriptionId(),
+                                               newInput,
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               BillingActionPolicy.IMMEDIATE,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Avoid test timing issues
+        clock.addDays(1);
+        callbackServlet.assertListenerStatus();
+
+        // Cancel subscription (entitlement IMM, billing EOT)
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL);
+        subscriptionApi.cancelSubscriptionPlan(newInput.getSubscriptionId(),
+                                               null,
+                                               true,
+                                               DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                               null,
+                                               null,
+                                               null,
+                                               NULL_PLUGIN_PROPERTIES,
+                                               requestOptions);
+        callbackServlet.assertListenerStatus();
     }
 
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
@@ -776,7 +1154,6 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscriptionT.getEvents().size(), 3);
     }
 
-
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription when changing plan")
     public void testOverwriteEntitlementBCDOnChange() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
@@ -786,7 +1163,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
 
         final Subscription subscription = createSubscription(accountJson.getAccountId(), "99999", "Shotgun",
-                                                                ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                                                                ProductCategory.BASE, BillingPeriod.MONTHLY);
 
         // 2012-05-25
         // Move outside of trial
@@ -820,8 +1197,6 @@ public class TestEntitlement extends TestJaxrsBase {
 
     }
 
-
-
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
     public void testMoveEntitlementBCD() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
@@ -833,7 +1208,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term);
 
         Assert.assertEquals(entitlementJson.getBillCycleDayLocal(), new Integer(25));
 
@@ -870,7 +1245,15 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBundleExternalKey("somethingSpecial");
         input.setPlanName("shotgun-monthly");
 
-        final Subscription entitlementJson = subscriptionApi.createSubscription(input, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                null,
+                                                                                null,
+                                                                                false,
+                                                                                false,
+                                                                                true,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
         Assert.assertEquals(entitlementJson.getProductName(), "Shotgun");
         Assert.assertEquals(entitlementJson.getBillingPeriod(), BillingPeriod.MONTHLY);
         Assert.assertEquals(entitlementJson.getPriceList(), DefaultPriceListSet.DEFAULT_PRICELIST_NAME);
@@ -899,7 +1282,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final BillingPeriod term = BillingPeriod.MONTHLY;
 
         final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "99999", productName,
-                                                                ProductCategory.BASE, term, true);
+                                                                ProductCategory.BASE, term);
 
         // Change plan in the future
         final String newProductName = "Assault-Rifle";
@@ -942,6 +1325,4 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(refreshedSubscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
 
     }
-
-
 }

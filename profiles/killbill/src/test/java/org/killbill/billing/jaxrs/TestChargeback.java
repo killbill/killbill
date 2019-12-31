@@ -140,7 +140,7 @@ public class TestChargeback extends TestJaxrsBase {
     }
 
     private void createAndVerifyChargeback(final InvoicePayment payment) throws KillBillClientException {
-        List<Invoice> invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, requestOptions);
+        List<Invoice> invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, null, requestOptions);
         // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
         Assert.assertEquals(invoices.size(), 2);
         Assert.assertEquals(invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
@@ -165,7 +165,7 @@ public class TestChargeback extends TestJaxrsBase {
         assertEquals(transactions.get(0).getPaymentId(), chargeback.getPaymentId());
 
         // Verify invoice balance
-        invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, null, requestOptions);
         Assert.assertEquals(invoices.size(), 2);
         Assert.assertEquals(invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 1);
     }
@@ -181,7 +181,7 @@ public class TestChargeback extends TestJaxrsBase {
 
         // Create subscription
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), "6253283", "Shotgun",
-                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY);
         assertNotNull(subscriptionJson);
 
         // Move after the trial period to trigger an invoice with a non-zero invoice item
@@ -193,7 +193,7 @@ public class TestChargeback extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // Retrieve the invoice
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
         assertEquals(invoices.size(), 2);
         assertTrue(invoices.get(1).getAmount().doubleValue() > 0);

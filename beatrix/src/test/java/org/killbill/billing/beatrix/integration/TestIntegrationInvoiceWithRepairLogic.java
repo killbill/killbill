@@ -29,6 +29,7 @@ import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
@@ -42,6 +43,8 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -58,6 +61,8 @@ import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
@@ -1069,4 +1074,199 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         checkNoMoreInvoiceToGenerate(account);
 
     }
+
+
+
+    @Test(groups = "slow")
+    public void testWithFullRepairAndExistingPartialAdjustment() throws Exception {
+
+        final LocalDate today = new LocalDate(2013, 7, 19);
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.ANNUAL;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
+
+        // Move out of trials for interesting invoices adjustments
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 2);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+        // Cancelation SOT -> fully repaired
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
+        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.START_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
+
+        final InvoiceItem targetItem = invoices.get(1).getInvoiceItems().get(0);
+        final InvoiceItemModelDao adj = new InvoiceItemModelDao(clock.getUTCNow(), InvoiceItemType.ITEM_ADJ, targetItem.getInvoiceId(), targetItem.getAccountId(),
+                                                                null, null, null, targetItem.getProductName(), targetItem.getPlanName(), targetItem.getPhaseName(), targetItem.getUsageName(),
+                                                                targetItem.getCatalogEffectiveDate(), clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("-1000.00"), null, targetItem.getCurrency(), targetItem.getId());
+
+        final InvoiceModelDao invoiceForAdj = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), bpEntitlement.getAccountId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.COMMITTED, false);
+        invoiceForAdj.addInvoiceItem(adj);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        insertInvoiceItems(invoiceForAdj);
+        assertListenerStatus();
+
+        // __PARK__ account
+        busHandler.pushExpectedEvents(NextEvent.TAG);
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            fail("Should not have generated an extra invoice");
+        } catch (final InvoiceApiException e) { assertListenerStatus();
+            assertTrue(e.getCause().getMessage().startsWith("Too many repairs for invoiceItemId"));
+        } finally {
+            assertListenerStatus();
+        }
+
+
+    }
+
+
+    @Test(groups = "slow")
+    public void testWithPartialRepairAndExistingPartialTooLargeAdjustment() throws Exception {
+
+        final LocalDate today = new LocalDate(2013, 7, 19);
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.ANNUAL;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
+
+        // Move out of trials for interesting invoices adjustments
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 2);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+        clock.addMonths(6);
+        // Cancelation IMM -> partially repaired
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
+        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
+        // 1209.84
+        final InvoiceItem targetItem = invoices.get(1).getInvoiceItems().get(0);
+        final InvoiceItemModelDao adj = new InvoiceItemModelDao(clock.getUTCNow(), InvoiceItemType.ITEM_ADJ, targetItem.getInvoiceId(), targetItem.getAccountId(),
+                                                                null, null, null, targetItem.getProductName(), targetItem.getPlanName(), targetItem.getPhaseName(), targetItem.getUsageName(),
+                                                                targetItem.getCatalogEffectiveDate(), clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("-1300.00"), null, targetItem.getCurrency(), targetItem.getId());
+
+        final InvoiceModelDao invoiceForAdj = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), bpEntitlement.getAccountId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.COMMITTED, false);
+        invoiceForAdj.addInvoiceItem(adj);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        insertInvoiceItems(invoiceForAdj);
+        assertListenerStatus();
+
+        // __PARK__ account
+        busHandler.pushExpectedEvents(NextEvent.TAG);
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            fail("Should not have generated an extra invoice");
+        } catch (final InvoiceApiException e) { assertListenerStatus();
+            assertTrue(e.getCause().getMessage().startsWith("Too many repairs for invoiceItemId"));
+        } finally {
+            assertListenerStatus();
+        }
+
+    }
+
+    @Test(groups = "slow")
+    public void testAdjustmentsToolarge() throws Exception {
+
+        final LocalDate today = new LocalDate(2013, 7, 19);
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.ANNUAL;
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
+
+        // Move out of trials for interesting invoices adjustments
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 2);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 8, 18), new LocalDate(2014, 8, 18), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
+        invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
+
+
+
+        final InvoiceItem targetItem = invoices.get(1).getInvoiceItems().get(0);
+        final InvoiceItemModelDao adj1 = new InvoiceItemModelDao(clock.getUTCNow(), InvoiceItemType.ITEM_ADJ, targetItem.getInvoiceId(), targetItem.getAccountId(),
+                                                                 null, null, null, targetItem.getProductName(), targetItem.getPlanName(), targetItem.getPhaseName(), targetItem.getUsageName(),
+                                                                 targetItem.getCatalogEffectiveDate(), clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("-1000.00"), null, targetItem.getCurrency(), targetItem.getId());
+
+        final InvoiceItemModelDao adj2 = new InvoiceItemModelDao(clock.getUTCNow(), InvoiceItemType.ITEM_ADJ, targetItem.getInvoiceId(), targetItem.getAccountId(),
+                                                                 null, null, null, targetItem.getProductName(), targetItem.getPlanName(), targetItem.getPhaseName(), targetItem.getUsageName(),
+                                                                 targetItem.getCatalogEffectiveDate(), clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("-2000.00"), null, targetItem.getCurrency(), targetItem.getId());
+
+        final InvoiceModelDao invoiceForAdj = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), bpEntitlement.getAccountId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.COMMITTED, false);
+        invoiceForAdj.addInvoiceItem(adj1);
+        invoiceForAdj.addInvoiceItem(adj2);
+
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        insertInvoiceItems(invoiceForAdj);
+        assertListenerStatus();
+
+        checkNoMoreInvoiceToGenerate(account);
+    }
+
+
 }

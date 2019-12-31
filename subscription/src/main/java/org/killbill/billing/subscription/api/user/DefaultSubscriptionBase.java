@@ -691,13 +691,14 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return false;
     }
 
-    public DateTime getPlanChangeEffectiveDate(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
+    public DateTime getEffectiveDateForPolicy(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
 
         final DateTime candidateResult;
         switch (policy) {
             case IMMEDIATE:
                 candidateResult = clock.getUTCNow();
                 break;
+
             case START_OF_TERM:
                 if (chargedThroughDate == null) {
                     candidateResult = getStartDate();
@@ -743,7 +744,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 throw new SubscriptionBaseError(String.format(
                         "Unexpected policy type %s", policy.toString()));
         }
-        return (candidateResult.compareTo(getStartDate()) < 0) ? getStartDate() : candidateResult;
+        // Finally we verify we won't cancel prior the beginning of our current PHASE  -- mostly as a sanity or for test stability
+        final DateTime lastTransitionTime  = getCurrentPhaseStart();
+        return (candidateResult.compareTo(lastTransitionTime) < 0) ? lastTransitionTime : candidateResult;
     }
 
     public DateTime getCurrentPhaseStart() {
@@ -765,8 +768,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 return cur.getEffectiveTransitionTime();
             }
         }
-        throw new SubscriptionBaseError(String.format(
-                "Failed to find CurrentPhaseStart id = %s", getId().toString()));
+        // If the subscription is not yet started we return the startDate
+        return getStartDate();
     }
 
     public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final SubscriptionCatalog catalog) throws CatalogApiException {
