@@ -932,7 +932,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
 
 
-        // Set BCD to be the 5
+        // Set BCD to be the 1
         subscriptionBaseInternalApi.updateBCD(entitlementId, 1, new LocalDate(2018, 7, 1), internalCallContext);
 
         if (checkMigrationFrom_0_20_to_0_22) {
