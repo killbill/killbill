@@ -33,6 +33,7 @@ import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -44,14 +45,21 @@ import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Subscription;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.invoice.dao.InvoiceDao;
+import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
+import org.killbill.billing.invoice.dao.InvoiceModelDao;
+import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -62,7 +70,13 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
     @Inject
     protected SubscriptionBaseInternalApi subscriptionBaseInternalApi;
 
+    @Inject
+    protected InvoiceDao invoiceDao;
 
+    private void insertInvoiceItems(final InvoiceModelDao invoice) {
+        final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
+        invoiceDao.createInvoice(invoice, null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
+    }
 
     @Test(groups = "slow")
     public void testBCDChangeInTrial() throws Exception {
@@ -887,6 +901,77 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.TEN),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 7, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
+
+    }
+
+
+    @Test(groups = "slow")
+    public void testBCDUpgradeMigrationPath_0_20_to_0_22() throws Exception {
+
+        // Change to false to verify new behavior
+        final boolean checkMigrationFrom_0_20_to_0_22 = true;
+
+        final DateTime initialDate = new DateTime(2018, 6, 21, 0, 13, 42, 0, testTimeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(21));
+        assertNotNull(account);
+
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
+
+
+        busHandler.pushExpectedEvents( NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+
+        // We will realign the BCD on the 15 as we create the subscription - ignoring the account setting on 21.
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2018, 6, 21), new LocalDate(2018, 7, 21), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+
+
+
+        // Set BCD to be the 5
+        subscriptionBaseInternalApi.updateBCD(entitlementId, 1, new LocalDate(2018, 7, 1), internalCallContext);
+
+        if (checkMigrationFrom_0_20_to_0_22) {
+            final InvoiceModelDao invoiceForRepair_0_20 = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.COMMITTED, false);
+
+            final UUID originalRecuringItemId = firstInvoice.getInvoiceItems().get(0).getId();
+            final InvoiceItemModelDao repair = new InvoiceItemModelDao(invoiceForRepair_0_20.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, invoiceForRepair_0_20.getId(), account.getId(),
+                                                                       UUID.randomUUID(), entitlementId, null, null, null, null, null,
+                                                                       null, new LocalDate(2018, 7, 1), new LocalDate(2018, 7, 21), new BigDecimal("-13.30"), new BigDecimal("-13.30"), account.getCurrency(), originalRecuringItemId);
+
+            final InvoiceItemModelDao recurring = new InvoiceItemModelDao(invoiceForRepair_0_20.getCreatedDate(), InvoiceItemType.RECURRING, invoiceForRepair_0_20.getId(), account.getId(),
+                                                                          UUID.randomUUID(), entitlementId, "", "Pistol", "pistol-monthly-notrial", "pistol-monthly-notrial-evergreen", null,
+                                                                          null, new LocalDate(2018, 7, 1), new LocalDate(2018, 8, 1), new BigDecimal("19.95"), new BigDecimal("19.95"), account.getCurrency(), null);
+
+
+            invoiceForRepair_0_20.addInvoiceItem(repair);
+            invoiceForRepair_0_20.addInvoiceItem(recurring);
+
+
+            busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+            insertInvoiceItems(invoiceForRepair_0_20);
+            assertListenerStatus();
+        }
+
+        // With existing 0_20 data, nothing will be re-generated -> shows new behavior is compatible with old data
+        if (checkMigrationFrom_0_20_to_0_22) {
+            busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE);
+        } else {
+            busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        }
+
+        // Verify next month
+        clock.addDays(10);  // 2018-7-1
+        assertListenerStatus();
+
+        if (!checkMigrationFrom_0_20_to_0_22) {
+            invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                        new ExpectedInvoiceItemCheck(new LocalDate(2018, 7, 21), new LocalDate(2018, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("7.08")));
+        }
 
     }
 }

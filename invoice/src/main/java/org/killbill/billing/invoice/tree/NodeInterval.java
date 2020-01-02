@@ -147,6 +147,10 @@ public class NodeInterval {
                 }
 
             } else if (newNode.getStart().compareTo(curChild.getEnd()) < 0) {
+
+                Preconditions.checkState(newNode.getStart().compareTo(curChild.getStart()) >= 0,
+                                         "Failed to insert new node %s, start date is prior last child start date %s", newNode, curChild);
+
                 // newNode will need to be split so it can be inserted
                 final NodeInterval[] newNodes = ((ItemsNodeInterval) newNode).split(curChild.getEnd());
                 curChild.getParent().addNode(newNodes[0], callback);
