@@ -69,7 +69,7 @@ public class ItemsNodeInterval extends NodeInterval {
     public ItemsNodeInterval[] split(final LocalDate splitDate) {
 
         Preconditions.checkState(splitDate.compareTo(start) > 0 && splitDate.compareTo(end) < 0,
-                                 "TODO");
+                                 String.format("Unexpected item split with startDate='%s' and endDate='%s'", start, end));
 
         Preconditions.checkState(leftChild == null);
         Preconditions.checkState(rightSibling == null);
@@ -190,7 +190,7 @@ public class ItemsNodeInterval extends NodeInterval {
                 // If this new node is about to be inserted at the root level, this means the proposed item overlaps any
                 // existing item. We keep these as-is, outside of the tree: they will become part of the resulting list.
                 if (insertionNode.isRoot()) {
-                    // If updatedNewNode was rebalanced and it is fully repaired by its child blah blah TODO
+                    // If updatedNewNode was rebalanced and it is fully repaired by its children it just gets canceled out.
                     LocalDate curDate = updatedNewNode.start;
                     NodeInterval curChild = updatedNewNode.leftChild;
                     while (curChild != null &&
@@ -287,26 +287,28 @@ public class ItemsNodeInterval extends NodeInterval {
     }
 
     private void build(final Collection<Item> output, final UUID targetInvoiceId, final boolean mergeMode) {
-        final List<Item> tmp = new LinkedList<Item>(output);
+        final List<Item> tmpOutput = new LinkedList<Item>(output);
         output.clear();
         build(new BuildNodeCallback() {
             @Override
             public void onMissingInterval(final NodeInterval curNode, final LocalDate startDate, final LocalDate endDate) {
                 final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
-                items.buildForMissingInterval(startDate, endDate, targetInvoiceId, tmp, mergeMode);
+                items.buildForMissingInterval(startDate, endDate, targetInvoiceId, tmpOutput, mergeMode);
             }
 
             @Override
             public void onLastNode(final NodeInterval curNode) {
                 final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
-                items.buildFromItems(tmp, mergeMode);
+                items.buildFromItems(tmpOutput, mergeMode);
             }
         });
 
-        // Join items that were split to fit in the tree
-        // TODO should we worry about order ?
+        //
+        // Join items that were previously split to fit in the tree as necessary.
+        //
+        // 1. Build a map for each item pointing to a heap of (potential) split items
         final Map<UUID, PriorityQueue<Item>> joinMap = new HashMap<>();
-        for (final Item i : tmp) {
+        for (final Item i : tmpOutput) {
             PriorityQueue<Item> l = joinMap.get(i.getId());
             if (l == null) {
                 l = new PriorityQueue<>(new Comparator<Item>() {
@@ -320,6 +322,7 @@ public class ItemsNodeInterval extends NodeInterval {
             l.add(i);
         }
 
+        // 2. For each entry in the map, check which items can be re-joined based on their contiguous periods
         for (final PriorityQueue<Item> v : joinMap.values()) {
 
             Item prev = v.poll();
