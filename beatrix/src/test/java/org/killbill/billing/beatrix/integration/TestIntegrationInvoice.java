@@ -30,6 +30,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -39,6 +40,7 @@ import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -55,6 +57,54 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationInvoice extends TestIntegrationBase {
+
+    @Test(groups = "slow")
+    public void testWithInArrearSubscription() throws Exception {
+        final DateTime initialCreationDate = new DateTime(2020, 1, 1, 0, 0, 0, 0, testTimeZone);
+        clock.setTime(initialCreationDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial", null);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+
+        // 2020-02-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+
+        // 2020-03-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 2, 1), new LocalDate(2020, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+
+        // Cancel 2020-03-01
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.of(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        for (int i= 0; i < 7; i++) {
+            clock.addMonths(1);
+            assertListenerStatus();
+        }
+
+    }
 
     @Test(groups = "slow")
     public void testApplyCreditOnExistingBalance() throws Exception {
