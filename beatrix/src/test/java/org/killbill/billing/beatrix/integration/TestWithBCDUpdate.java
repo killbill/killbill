@@ -663,7 +663,6 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         // Change to the paying plan (alignment is CHANGE_OF_PLAN: we end up in TRIAL)
-        // Extra NULL_INVOICE event because invoice computes a future notification effective right away
         final PlanPhaseSpecifier specWithTrial = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "trial", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE,  NextEvent.INVOICE);
         baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(specWithTrial), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
