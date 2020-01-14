@@ -210,7 +210,8 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     }
 
     // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
-    private List<InvoiceItem> processRecurringEvent(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
+    @VisibleForTesting
+    List<InvoiceItem> processRecurringEvent(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
                                                     final LocalDate targetDate, final Currency currency,
                                                     final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger,
                                                     final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
@@ -230,7 +231,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                 final Plan currentPlan = thisEvent.getPlan();
                 Preconditions.checkNotNull(currentPlan, "Unexpected null Plan name event = %s", thisEvent);
 
-                // For FIXEDTERM phases we need to stop when the specified duration has been reached
+                // For FIXED_TERM phases we need to stop when the specified duration has been reached
                 final LocalDate maxEndDate = thisEvent.getPlanPhase().getPhaseType() == PhaseType.FIXEDTERM ?
                                              thisEvent.getPlanPhase().getDuration().addToLocalDate(thisEventEffectiveDate) :
                                              null;

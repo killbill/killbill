@@ -199,6 +199,11 @@
             <artifactId>killbill-queue</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-junction</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-queue</artifactId>
             <type>test-jar</type>
