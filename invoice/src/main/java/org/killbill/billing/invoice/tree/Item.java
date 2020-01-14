@@ -89,6 +89,30 @@ public class Item {
         this.action = action;
     }
 
+    public Item(final Item item, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount) {
+        this.id = item.id;
+        this.accountId = item.accountId;
+        this.bundleId = item.bundleId;
+        this.subscriptionId = item.subscriptionId;
+        this.targetInvoiceId = item.targetInvoiceId;
+        this.invoiceId = item.invoiceId;
+        this.productName = item.productName;
+        this.planName = item.planName;
+        this.phaseName = item.phaseName;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.amount = amount;
+        this.rate = item.rate;
+        this.currency = item.currency;
+        this.catalogEffectiveDate = item.catalogEffectiveDate;
+        this.action = item.action;
+        this.linkedId = item.linkedId;
+        this.createdDate = item.createdDate;
+        this.currentRepairedAmount = item.currentRepairedAmount;
+        this.adjustedAmount = item.adjustedAmount;
+    }
+
+
     public Item(final InvoiceItem item, final UUID targetInvoiceId, final ItemAction action) {
         this(item, item.getStartDate(), item.getEndDate(), targetInvoiceId, action);
     }
@@ -115,6 +139,31 @@ public class Item {
 
         this.currentRepairedAmount = BigDecimal.ZERO;
         this.adjustedAmount = BigDecimal.ZERO;
+    }
+
+    public Item[] split(final LocalDate splitDate) {
+
+        Preconditions.checkState(action == ItemAction.ADD);
+        Preconditions.checkState(currentRepairedAmount.compareTo(BigDecimal.ZERO) == 0);
+        Preconditions.checkState(adjustedAmount.compareTo(BigDecimal.ZERO) == 0);
+
+
+        final Item[] result =  new Item[2];
+
+        final BigDecimal amount0 = InvoiceDateUtils.calculateProrationBetweenDates(startDate, splitDate, Days.daysBetween(startDate, endDate).getDays()).multiply(amount);
+        final BigDecimal amount1 = amount.subtract(amount0);
+
+        result[0] = new Item(this, this.startDate, splitDate, amount0);
+        result[1] = new Item(this, splitDate, this.endDate, amount1);
+        return result;
+    }
+
+    public static Item join(final Item item1, final Item item2) {
+
+        Preconditions.checkState(item1.getId().equals(item2.getId()));
+        Preconditions.checkState(item1.getEndDate().equals(item2.getStartDate()));
+
+        return new Item(item1, item1.getStartDate(), item2.getEndDate(), item1.getAmount().add(item2.getAmount()));
     }
 
     public InvoiceItem toInvoiceItem() {

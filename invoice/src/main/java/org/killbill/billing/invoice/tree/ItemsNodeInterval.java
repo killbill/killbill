@@ -22,7 +22,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -47,9 +52,39 @@ public class ItemsNodeInterval extends NodeInterval {
         this.items = new ItemsInterval(this);
     }
 
+    private ItemsNodeInterval(final ItemsInterval items) {
+        this.items = items;
+    }
+
     public ItemsNodeInterval(final ItemsNodeInterval parent, final Item item) {
         super(parent, item.getStartDate(), item.getEndDate());
         this.items = new ItemsInterval(this, item);
+    }
+
+    public ItemsNodeInterval(final ItemsNodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
+        super(parent, startDate, endDate);
+        this.items = new ItemsInterval(this);
+    }
+
+    public ItemsNodeInterval[] split(final LocalDate splitDate) {
+
+        Preconditions.checkState(splitDate.compareTo(start) > 0 && splitDate.compareTo(end) < 0,
+                                 String.format("Unexpected item split with startDate='%s' and endDate='%s'", start, end));
+
+        Preconditions.checkState(leftChild == null);
+        Preconditions.checkState(rightSibling == null);
+
+        final List<Item> rawItems = items.getItems();
+        Preconditions.checkState(rawItems.size() == 1);
+
+        final Item[] splitItems = rawItems.get(0).split(splitDate);
+
+        final ItemsNodeInterval split1 = new ItemsNodeInterval((ItemsNodeInterval) this.parent, splitItems[0]);
+        final ItemsNodeInterval split2 = new ItemsNodeInterval((ItemsNodeInterval) this.parent, splitItems[1]);
+        final ItemsNodeInterval[] result = new ItemsNodeInterval[2];
+        result[0] = split1;
+        result[1] = split2;
+        return result;
     }
 
     @JsonIgnore
@@ -68,12 +103,13 @@ public class ItemsNodeInterval extends NodeInterval {
      */
     public void addExistingItem(final ItemsNodeInterval newNode) {
         Preconditions.checkState(newNode.getItems().size() == 1, "Invalid node=%s", newNode);
-        final Item item = newNode.getItems().get(0);
 
         addNode(newNode,
                 new AddNodeCallback() {
                     @Override
-                    public boolean onExistingNode(final NodeInterval existingNode) {
+                    public boolean onExistingNode(final NodeInterval existingNode, final ItemsNodeInterval updatedNewNode) {
+
+                        final Item item = updatedNewNode.getItems().get(0);
                         final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItemsInterval();
                         existingOrNewNodeItems.add(item);
                         // There is no new node added but instead we just populated the list of items for the already existing node
@@ -81,7 +117,7 @@ public class ItemsNodeInterval extends NodeInterval {
                     }
 
                     @Override
-                    public boolean shouldInsertNode(final NodeInterval insertionNode) {
+                    public boolean shouldInsertNode(final NodeInterval insertionNode, final ItemsNodeInterval updatedNewNode) {
                         // Always want to insert node in the tree when we find the right place.
                         return true;
                     }
@@ -122,46 +158,81 @@ public class ItemsNodeInterval extends NodeInterval {
      * @param newNode a new proposed item
      * @return true if the item was merged and will trigger a repair or false if the proposed item should be kept as such and no repair generated
      */
-    public boolean addProposedItem(final ItemsNodeInterval newNode) {
+    public List<ItemsNodeInterval> addProposedItem(final ItemsNodeInterval newNode) {
         Preconditions.checkState(newNode.getItems().size() == 1, "Invalid node=%s", newNode);
-        final Item item = newNode.getItems().get(0);
 
-        return addNode(newNode, new AddNodeCallback() {
+        final List<ItemsNodeInterval> newNodes = new LinkedList<>();
+
+        addNode(newNode, new AddNodeCallback() {
             @Override
-            public boolean onExistingNode(final NodeInterval existingNode) {
+            public boolean onExistingNode(final NodeInterval existingNode, final ItemsNodeInterval updatedNewNode) {
+
+                final Item item = updatedNewNode.getItems().get(0);
+
                 // If we receive a new proposed that is the same kind as the reversed existing (current node),
                 // we match existing and proposed. If not, we keep the proposed item as-is outside of the tree.
-                if (isSameKind((ItemsNodeInterval) existingNode)) {
+                if (isSameKind((ItemsNodeInterval) existingNode, item)) {
                     final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItemsInterval();
                     existingOrNewNodeItems.cancelItems(item);
                     return true;
                 } else {
+                    newNodes.add(updatedNewNode);
                     return false;
                 }
             }
 
             @Override
-            public boolean shouldInsertNode(final NodeInterval insertionNode) {
+            public boolean shouldInsertNode(final NodeInterval insertionNode, final ItemsNodeInterval updatedNewNode) {
+
+                final Item item = updatedNewNode.getItems().get(0);
+
                 // At this stage, we're currently merging a proposed item that does not fit any of the existing intervals.
                 // If this new node is about to be inserted at the root level, this means the proposed item overlaps any
                 // existing item. We keep these as-is, outside of the tree: they will become part of the resulting list.
                 if (insertionNode.isRoot()) {
+                    // If updatedNewNode was rebalanced and it is fully repaired by its children it just gets canceled out.
+                    LocalDate curDate = updatedNewNode.start;
+                    NodeInterval curChild = updatedNewNode.leftChild;
+                    while (curChild != null &&
+                           curChild.start.equals(curDate) &&
+                           isSameKind((ItemsNodeInterval) curChild, item)) {
+                        curDate = curChild.end;
+                        curChild = curChild.rightSibling;
+                    }
+
+                    if (curDate.equals(updatedNewNode.end)) {
+                        updatedNewNode.getItems().clear();
+                        curChild = updatedNewNode.leftChild;
+                        while (curChild != null) {
+                            ((ItemsNodeInterval) curChild).getItems().clear();
+                            curChild = curChild.rightSibling;
+                        }
+                        return false;
+                    }
+
+                    newNodes.add(updatedNewNode);
                     return false;
                 }
 
                 // If we receive a new proposed that is the same kind as the reversed existing (parent node),
                 // we want to insert it to generate a piece of repair (see SubscriptionItemTree#buildForMerge).
                 // If not, we keep the proposed item as-is outside of the tree.
-                return isSameKind((ItemsNodeInterval) insertionNode);
+                final boolean result = isSameKind((ItemsNodeInterval) insertionNode, item);
+                if (!result) {
+                    newNodes.add(updatedNewNode);
+                }
+                return result;
             }
 
-            private boolean isSameKind(final ItemsNodeInterval insertionNode) {
+            private boolean isSameKind(final ItemsNodeInterval insertionNode, final Item item) {
                 final List<Item> insertionNodeItems = insertionNode.getItems();
                 Preconditions.checkState(insertionNodeItems.size() == 1, "Expected existing node to have only one item");
                 final Item insertionNodeItem = insertionNodeItems.get(0);
                 return insertionNodeItem.isSameKind(item);
             }
         });
+
+        return newNodes;
     }
 
     /**
@@ -216,20 +287,62 @@ public class ItemsNodeInterval extends NodeInterval {
     }
 
     private void build(final Collection<Item> output, final UUID targetInvoiceId, final boolean mergeMode) {
+        final List<Item> tmpOutput = new LinkedList<Item>(output);
+        output.clear();
         build(new BuildNodeCallback() {
             @Override
             public void onMissingInterval(final NodeInterval curNode, final LocalDate startDate, final LocalDate endDate) {
                 final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
-                items.buildForMissingInterval(startDate, endDate, targetInvoiceId, output, mergeMode);
+                items.buildForMissingInterval(startDate, endDate, targetInvoiceId, tmpOutput, mergeMode);
             }
 
             @Override
             public void onLastNode(final NodeInterval curNode) {
                 final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
-                items.buildFromItems(output, mergeMode);
+                items.buildFromItems(tmpOutput, mergeMode);
             }
         });
+
+        //
+        // Join items that were previously split to fit in the tree as necessary.
+        //
+        // 1. Build a map for each item pointing to a heap of (potential) split items
+        final Map<UUID, PriorityQueue<Item>> joinMap = new HashMap<>();
+        for (final Item i : tmpOutput) {
+            PriorityQueue<Item> l = joinMap.get(i.getId());
+            if (l == null) {
+                l = new PriorityQueue<>(new Comparator<Item>() {
+                    @Override
+                    public int compare(final Item o1, final Item o2) {
+                        return o1.getStartDate().compareTo(o2.getEndDate());
+                    }
+                });
+                joinMap.put(i.getId(), l);
+            }
+            l.add(i);
+        }
+
+        // 2. For each entry in the map, check which items can be re-joined based on their contiguous periods
+        for (final PriorityQueue<Item> v : joinMap.values()) {
+
+            Item prev = v.poll();
+            Item cur = null;
+            while ((cur = v.poll()) != null) {
+                if (prev.getEndDate().compareTo(cur.getStartDate()) == 0) {
+                    prev = Item.join(prev, cur);
+                } else {
+                    output.add(prev);
+                    prev = cur;
+                }
+            }
+            if (prev != null) {
+                output.add(prev);
+            }
+        }
     }
+
+
+
 
     //
     // This is not strictly necessary -- just there to add a layer of sanity on what our tree contains

@@ -20,6 +20,9 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -29,20 +32,36 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
+import org.killbill.billing.invoice.dao.InvoiceDao;
+import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
+import org.killbill.billing.invoice.dao.InvoiceModelDao;
+import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationBase {
+
+    @Inject
+    protected InvoiceDao invoiceDao;
+
+    private void insertInvoiceItems(final InvoiceModelDao invoice) {
+        final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
+        invoiceDao.createInvoice(invoice, null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
+    }
 
     @Test(groups = "slow")
     public void testChangeMonthlyToAnnual() throws Exception {
@@ -366,8 +385,8 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
 
         toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 4), new LocalDate(2013, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("2380.22")),
-                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 12), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2327.62")));
+                new ExpectedInvoiceItemCheck(new LocalDate(2013, 5, 1), new LocalDate(2013, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("203.83")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 12), new LocalDate(2012, 6, 4), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-151.23")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -436,5 +455,96 @@ public class TestIntegrationWithDifferentBillingPeriods extends TestIntegrationB
 
         checkNoMoreInvoiceToGenerate(account);
     }
+
+
+    @Test(groups = "slow")
+    public void testPauseResumeAnnualWithInvoicingOffMigrationPath_0_20_to_0_22() throws Exception {
+
+        // We take april as it has 30 days (easier to play with BCD)
+        final LocalDate today = new LocalDate(2012, 4, 1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDeltaFromReality(today.toDateTimeAtCurrentTime(DateTimeZone.UTC).getMillis() - clock.getUTCNow().getMillis());
+
+        final String productName = "Shotgun";
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        assertNotNull(bpEntitlement);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
+
+        // Move out of trials for interesting invoices adjustments
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(31);
+        assertListenerStatus();
+
+        // Auto invoice off
+        busHandler.pushExpectedEvents(NextEvent.TAG);
+        tagUserApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
+        assertListenerStatus();
+
+        // 2012-5-12
+        clock.addDays(10);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.pause(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2012-6-4
+        clock.addDays(23);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.resume(bpEntitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        ///
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 2);
+        final Invoice secondInvoice = invoices.get(1);
+
+
+        final UUID originalRecuringItemId = secondInvoice.getInvoiceItems().get(0).getId();
+        final InvoiceModelDao invoiceForRepair_0_20 = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.COMMITTED, false);
+
+        final InvoiceItemModelDao repair = new InvoiceItemModelDao(invoiceForRepair_0_20.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, invoiceForRepair_0_20.getId(), account.getId(),
+                                                                   UUID.randomUUID(), bpEntitlement.getId(), null, null, null, null, null,
+                                                                   null, new LocalDate(2012, 5, 12), new LocalDate(2013, 5, 1), new BigDecimal("-2327.62"), new BigDecimal("-2327.62"), account.getCurrency(), originalRecuringItemId);
+
+        final InvoiceItemModelDao recurring = new InvoiceItemModelDao(invoiceForRepair_0_20.getCreatedDate(), InvoiceItemType.RECURRING, invoiceForRepair_0_20.getId(), account.getId(),
+                                                                      UUID.randomUUID(), bpEntitlement.getId(), "", "Shotgun", "shotgun-monthly", "shotgun-monthly-evergreen", null,
+                                                                      null, new LocalDate(2012, 6, 4), new LocalDate(2013, 6, 1), new BigDecimal("2380.22"), new BigDecimal("2380.22"), account.getCurrency(), null);
+
+        invoiceForRepair_0_20.addInvoiceItem(repair);
+        invoiceForRepair_0_20.addInvoiceItem(recurring);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        insertInvoiceItems(invoiceForRepair_0_20);
+        assertListenerStatus();
+
+        //
+        // We should not generate any invoice, instead, we generate a new invoice with 2 canceling items
+        //
+        //busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.NULL_INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.INVOICE);
+        tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 4);
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 4), new LocalDate(2013, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("2380.22")),
+                // Cancels similar item previously added from 0_22
+                new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 4), new LocalDate(2013, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2380.22")));
+        invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, toBeChecked);
+
+
+        checkNoMoreInvoiceToGenerate(account);
+    }
+
+
 
 }
