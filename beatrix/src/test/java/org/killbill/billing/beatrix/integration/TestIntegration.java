@@ -681,7 +681,7 @@ public class TestIntegration extends TestIntegrationBase {
         // MOVE TIME TO AFTER TRIAL AND EXPECT BOTH EVENTS :  NextEvent.PHASE NextEvent.INVOICE
         //
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);  // 2012-3-4
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
@@ -703,7 +703,7 @@ public class TestIntegration extends TestIntegrationBase {
         Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
 
         // MOVE CLOCK FORWARD ADN CHECK THERE IS NO NEW INVOICE
-        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
+        clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS); // 2012-4-5
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
         entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
@@ -712,6 +712,11 @@ public class TestIntegration extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 5), new LocalDate(2012, 5, 2), InvoiceItemType.RECURRING, new BigDecimal("224.96")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 5), new LocalDate(2012, 4, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("-224.96")));
+
+        // Verify next invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(27);  // 2012-5-2
+        assertListenerStatus();
 
         checkNoMoreInvoiceToGenerate(account);
     }
@@ -807,13 +812,16 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDays(4);
         assertListenerStatus();
 
+        // 2012-04-02
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
-        clock.addMonths(3);
+        clock.addMonths(17);
         assertListenerStatus();
 
         // No new invoices
         invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
         assertEquals(invoices.size(), 3);
+
+        checkNoMoreInvoiceToGenerate(account);
     }
 
     @Test(groups = "slow")

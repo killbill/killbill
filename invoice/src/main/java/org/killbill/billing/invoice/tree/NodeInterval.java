@@ -93,14 +93,14 @@ public class NodeInterval {
         Preconditions.checkNotNull(callback);
 
         if (!isRoot() && newNode.getStart().compareTo(start) == 0 && newNode.getEnd().compareTo(end) == 0) {
-            return callback.onExistingNode(this);
+            return callback.onExistingNode(this, (ItemsNodeInterval) newNode);
         }
 
         computeRootInterval(newNode);
 
         newNode.parent = this;
         if (leftChild == null) {
-            if (callback.shouldInsertNode(this)) {
+            if (callback.shouldInsertNode(this, (ItemsNodeInterval) newNode)) {
                 leftChild = newNode;
                 return true;
             } else {
@@ -111,21 +111,30 @@ public class NodeInterval {
         NodeInterval prevChild = null;
         NodeInterval curChild = leftChild;
         while (curChild != null) {
+
+            // newNode is contained, we go deeper in the tree
             if (curChild.isItemContained(newNode)) {
                 return curChild.addNode(newNode, callback);
             }
 
+            // newNode overlaps, we have to rebalance
             if (curChild.isItemOverlap(newNode)) {
                 if (rebalance(newNode)) {
-                    return callback.shouldInsertNode(this);
+                    return callback.shouldInsertNode(this, (ItemsNodeInterval) newNode);
                 }
             }
 
+            // newNode starts before cur element, try to insert before
             if (newNode.getStart().compareTo(curChild.getStart()) < 0) {
 
-                Preconditions.checkState(newNode.getEnd().compareTo(end) <= 0);
+                // We have not implemented all cases so adding preconditions
+                Preconditions.checkState(newNode.getEnd().compareTo(curChild.getStart()) <= 0,
+                                         "Failed to insert new node %s, end date overlaps with right child %s", newNode, curChild);
 
-                if (callback.shouldInsertNode(this)) {
+                Preconditions.checkState(prevChild == null || newNode.getStart().compareTo(prevChild.getEnd()) >= 0,
+                                         "Failed to insert new node %s, start date overlaps with left child %s", newNode, prevChild);
+
+                if (callback.shouldInsertNode(this, (ItemsNodeInterval) newNode)) {
                     newNode.rightSibling = curChild;
                     if (prevChild == null) {
                         leftChild = newNode;
@@ -136,17 +145,39 @@ public class NodeInterval {
                 } else {
                     return false;
                 }
+
+            } else if (newNode.getStart().compareTo(curChild.getEnd()) < 0) {
+
+                Preconditions.checkState(newNode.getStart().compareTo(curChild.getStart()) >= 0,
+                                         "Failed to insert new node %s, start date is prior last child start date %s", newNode, curChild);
+
+                // newNode will need to be split so it can be inserted
+                final NodeInterval[] newNodes = ((ItemsNodeInterval) newNode).split(curChild.getEnd());
+                curChild.getParent().addNode(newNodes[0], callback);
+                curChild.getParent().addNode(newNodes[1], callback);
+                return true;
             }
             prevChild = curChild;
             curChild = curChild.rightSibling;
         }
 
-        if (callback.shouldInsertNode(this)) {
+        if (newNode.getStart().compareTo(prevChild.getEnd()) < 0) {
+            final NodeInterval[] newNodes = ((ItemsNodeInterval) newNode).split(prevChild.getEnd());
+            prevChild.getParent().addNode(newNodes[0], callback);
+            prevChild.getParent().addNode(newNodes[1], callback);
+            return true;
+        }
+
+        Preconditions.checkState(newNode.getStart().compareTo(prevChild.getEnd()) >= 0,
+                                 "Failed to insert new node %s, start date overlaps with left child %s", newNode, prevChild);
+
+        if (callback.shouldInsertNode(this, (ItemsNodeInterval) newNode)) {
             prevChild.rightSibling = newNode;
             return true;
         } else {
             return false;
         }
+
     }
 
     public void removeChild(final NodeInterval toBeRemoved) {
@@ -326,34 +357,40 @@ public class NodeInterval {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("NodeInterval{");
-        sb.append("this=[")
+        final StringBuilder sb = new StringBuilder();
+        sb.append("[")
           .append(start)
           .append(",")
           .append(end)
           .append("]");
+        return sb.toString();
+    }
+
+    public String toStringVerbose() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append(toString());
         if (parent == null) {
-            sb.append(", parent=").append(parent);
+            sb.append(", prnt=").append(parent);
         } else {
-            sb.append(", parent=[")
+            sb.append(", prnt=[")
               .append(parent.getStart())
               .append(",")
               .append(parent.getEnd())
               .append("]");
         }
         if (leftChild == null) {
-            sb.append(", leftChild=").append(leftChild);
+            sb.append(", lCh=").append(leftChild);
         } else {
-            sb.append(", leftChild=[")
+            sb.append(", lCh=[")
               .append(leftChild.getStart())
               .append(",")
               .append(leftChild.getEnd())
               .append("]");
         }
         if (rightSibling == null) {
-            sb.append(", rightSibling=").append(rightSibling);
+            sb.append(", rSib=").append(rightSibling);
         } else {
-            sb.append(", rightSibling=[")
+            sb.append(", rSib=[")
               .append(rightSibling.getStart())
               .append(",")
               .append(rightSibling.getEnd())
@@ -477,7 +514,7 @@ public class NodeInterval {
          * @param existingNode
          * @return this is the return value for the addNode method
          */
-        boolean onExistingNode(final NodeInterval existingNode);
+        boolean onExistingNode(final NodeInterval existingNode, final ItemsNodeInterval updatedNewNode);
 
         /**
          * Called prior to insert the new node in the tree
@@ -485,6 +522,6 @@ public class NodeInterval {
          * @param insertionNode the parent node where this new node would be inserted
          * @return true if addNode should proceed with the insertion and false otherwise
          */
-        boolean shouldInsertNode(final NodeInterval insertionNode);
+        boolean shouldInsertNode(final NodeInterval insertionNode, final ItemsNodeInterval updatedNewNode);
     }
 }

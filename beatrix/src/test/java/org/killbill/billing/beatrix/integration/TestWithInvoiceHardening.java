@@ -119,7 +119,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         assertListenerStatus();
 
 
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         final BlockingState blockingState5 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "UNBLOCK_4_27", "SERVICE_4_27", false, false, false, null);
         subscriptionApi.addBlockingState(blockingState5, new LocalDate(2019, 4, 27), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
