@@ -194,6 +194,10 @@ public class InvoiceWithMetadata {
             }
         }
 
+        public void clearNextRecurringDate() {
+            nextRecurringDate = null;
+        }
+
         public LocalDate getNextRecurringDate() {
             return nextRecurringDate;
         }

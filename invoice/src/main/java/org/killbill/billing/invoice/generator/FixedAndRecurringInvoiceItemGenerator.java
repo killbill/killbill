@@ -210,15 +210,19 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     }
 
     // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
-    private List<InvoiceItem> processRecurringEvent(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
+    @VisibleForTesting
+    List<InvoiceItem> processRecurringEvent(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
                                                     final LocalDate targetDate, final Currency currency,
                                                     final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger,
-                                                    final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
+                                                    final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
                                                     final InternalCallContext internalCallContext) throws InvoiceApiException {
 
         try {
             final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
-
+            final LocalDate thisEventEffectiveDate = internalCallContext.toLocalDate(thisEvent.getEffectiveDate());
+            if (thisEventEffectiveDate.compareTo(targetDate) > 0) {
+                return items;
+            }
 
             // Handle recurring items
             final BillingPeriod billingPeriod = thisEvent.getBillingPeriod();
@@ -227,13 +231,13 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                 final Plan currentPlan = thisEvent.getPlan();
                 Preconditions.checkNotNull(currentPlan, "Unexpected null Plan name event = %s", thisEvent);
 
-                // For FIXEDTERM phases we need to stop when the specified duration has been reached
+                // For FIXED_TERM phases we need to stop when the specified duration has been reached
                 final LocalDate maxEndDate = thisEvent.getPlanPhase().getPhaseType() == PhaseType.FIXEDTERM ?
-                                             thisEvent.getPlanPhase().getDuration().addToLocalDate(internalCallContext.toLocalDate(thisEvent.getEffectiveDate())) :
+                                             thisEvent.getPlanPhase().getDuration().addToLocalDate(thisEventEffectiveDate) :
                                              null;
 
                 final BillingMode recurringBillingMode = currentPlan.getRecurringBillingMode();
-                final LocalDate startDate = internalCallContext.toLocalDate(thisEvent.getEffectiveDate());
+                final LocalDate startDate = thisEventEffectiveDate;
 
                 if (!startDate.isAfter(targetDate)) {
                     final LocalDate endDate = (nextEvent == null) ? null : internalCallContext.toLocalDate(nextEvent.getEffectiveDate());
@@ -272,11 +276,16 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                         }
                     }
                     updatePerSubscriptionNextNotificationDate(thisEvent.getSubscriptionId(), itemDataWithNextBillingCycleDate.getNextBillingCycleDate(), items, recurringBillingMode,
-                                                              perSubscriptionFutureNotificationDate);
+                                                              perSubscriptionFutureNotificationDates);
+                }
+            } else {
+                final SubscriptionFutureNotificationDates futureNotificationDates = perSubscriptionFutureNotificationDates.get(thisEvent.getSubscriptionId());
+                if (futureNotificationDates != null) {
+                    futureNotificationDates.clearNextRecurringDate();
                 }
             }
 
-            // For debugging purposes
+                // For debugging purposes
             invoiceItemGeneratorLogger.append(thisEvent, items);
 
             return items;
