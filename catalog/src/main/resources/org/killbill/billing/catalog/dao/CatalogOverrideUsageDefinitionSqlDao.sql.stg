@@ -49,7 +49,7 @@ values(
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where record_id = :recordId
 and tenant_record_id = :tenantRecordId
@@ -57,7 +57,7 @@ and tenant_record_id = :tenantRecordId
 >>
 
 getByAttributes() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where parent_usage_name = :parentUsageName
 and tenant_record_id = :tenantRecordId
@@ -75,9 +75,3 @@ and pu.tenant_record_id = :tenantRecordId
 order by pu.usage_number asc
 ;
 >>
-
-
-getLastInsertId() ::= <<
-    select LAST_INSERT_ID();
->>
-

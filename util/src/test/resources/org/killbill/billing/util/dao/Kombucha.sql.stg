@@ -17,5 +17,9 @@ tableValues() ::= <<
 >>
 
 isItTimeForKombucha() ::= <<
-select hour(current_timestamp(0)) \< 24 as is_time;
+select count(*) = 0 as is_time from kombucha;
+>>
+
+searchQuery(prefix) ::= <<
+  <prefix>tea = :searchKey
 >>

@@ -30,13 +30,11 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 public interface BillingEvent extends Comparable<BillingEvent> {
 
     UUID getSubscriptionId();
-
 
     UUID getBundleId();
 
@@ -51,7 +49,6 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      * @return the BillingAlignment for this transition
      */
     BillingAlignment getBillingAlignment();
-
 
     /**
      * @return the date for when that event became effective
@@ -86,19 +83,16 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the recurring price for the phase
      */
-    BigDecimal getRecurringPrice(DateTime requestedDate) throws CatalogApiException;
+    BigDecimal getRecurringPrice();
 
     /**
      * @return the currency for the account being invoiced
      */
     Currency getCurrency();
 
-
-    public DateTime getLastChangePlanDate();
-
-        /**
-         * @return the transition type of the underlying subscription event that triggered this
-         */
+    /**
+     * @return the transition type of the underlying subscription event that triggered this
+     */
     SubscriptionBaseTransitionType getTransitionType();
 
     /**
@@ -109,11 +103,10 @@ public interface BillingEvent extends Comparable<BillingEvent> {
     /**
      * @return the list of {@code Usage} section
      */
-    List<Usage> getUsages(/*DateTime requestedDate*/) throws CatalogApiException;
+    List<Usage> getUsages() throws CatalogApiException;
 
     /**
-     *
      * @return the catalog version (effective date) associated with this billing event.
      */
-    public DateTime getCatalogEffectiveDate();
+    DateTime getCatalogEffectiveDate();
 }

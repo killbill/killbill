@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,7 +22,7 @@ import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 
 @KillBillSqlDaoStringTemplate("/org/killbill/billing/util/dao/Kombucha.sql.stg")
-interface KombuchaSqlDao extends EntitySqlDao<KombuchaModelDao, Kombucha> {
+public interface KombuchaSqlDao extends EntitySqlDao<KombuchaModelDao, Kombucha> {
 
     @SqlQuery
     public boolean isItTimeForKombucha();

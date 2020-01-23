@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlIDREF;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
@@ -83,6 +84,11 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     @Override
     public Collection<Product> getIncluded() {
         return included.getEntries();
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return getRoot();
     }
 
     @Override

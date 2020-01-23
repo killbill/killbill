@@ -71,7 +71,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
 
     private UUID createAndCheckMigrationInvoice(final UUID accountId) throws InvoiceApiException {
 
-        final InvoiceItem recurringItem = new RecurringInvoiceItem(null, accountId, null, null, "productName", "planName", "phaseName", new LocalDate(2016, 2, 1), new LocalDate(2016, 3, 1), MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_CURRENCY);
+        final InvoiceItem recurringItem = new RecurringInvoiceItem(null, accountId, null, null, "productName", "planName", "phaseName", null, new LocalDate(2016, 2, 1), new LocalDate(2016, 3, 1), MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_CURRENCY);
         final UUID migrationInvoiceId = invoiceUserApi.createMigrationInvoice(accountId, date_migrated, ImmutableList.of(recurringItem), callContext);
         Assert.assertNotNull(migrationInvoiceId);
         //Double check it was created and values are correct
@@ -98,11 +98,11 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
         Assert.assertEquals(byAccount.size(), 1);
         Assert.assertEquals(byAccount.get(0).getId(), regularInvoiceId);
 
-        final List<Invoice> byAccountAndDate = invoiceUserApi.getInvoicesByAccount(accountId, date_migrated.minusDays(1), false, callContext);
+        final List<Invoice> byAccountAndDate = invoiceUserApi.getInvoicesByAccount(accountId, date_migrated.minusDays(1), null, false, callContext);
         Assert.assertEquals(byAccountAndDate.size(), 1);
         Assert.assertEquals(byAccountAndDate.get(0).getId(), regularInvoiceId);
 
-        final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, new LocalDate(date_regular.plusDays(1)), callContext);
+        final Collection<Invoice> unpaid = invoiceUserApi.getUnpaidInvoicesByAccountId(accountId, null, new LocalDate(date_regular.plusDays(1)), callContext);
         Assert.assertEquals(unpaid.size(), 1);
         Assert.assertEquals(unpaid.iterator().next().getId(), regularInvoiceId);
     }

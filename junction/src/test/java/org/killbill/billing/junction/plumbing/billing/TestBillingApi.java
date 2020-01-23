@@ -30,16 +30,15 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.MockCatalog;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.PriceList;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -59,6 +58,7 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBillingEven
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.dao.MockTagDao;
 import org.mockito.Mockito;
@@ -105,27 +105,27 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         effectiveSubscriptionTransitions = new LinkedList<EffectiveSubscriptionInternalEvent>();
 
         final DateTime subscriptionStartDate = clock.getUTCNow().minusDays(3);
-        subscription = new MockSubscription(subId, bunId, null, subscriptionStartDate, subscriptionStartDate);
+        subscription = new MockSubscription(subId, bunId, null, null, subscriptionStartDate, subscriptionStartDate);
         final List<SubscriptionBase> subscriptions = ImmutableList.<SubscriptionBase>of(subscription);
+        //Mockito.when(subscription.getBillingAlignment(Mockito.<PlanPhaseSpecifier>any(), Mockito.<DateTime>any(), Mockito.<Catalog>any())).thenReturn(BillingAlignment.ACCOUNT);
 
         Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
         Mockito.when(subscriptionInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
-        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(Mockito.<Catalog>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<UUID, List<SubscriptionBase>>builder()
+        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(Mockito.<VersionedCatalog>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<UUID, List<SubscriptionBase>>builder()
                                                                                                                                                           .put(bunId, subscriptions)
                                                                                                                                                           .build());
         Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
-        Mockito.when(subscriptionInternalApi.getSubscriptionBillingEvents(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(billingTransitions);
+        Mockito.when(subscriptionInternalApi.getSubscriptionBillingEvents(Mockito.<VersionedCatalog>any(), Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(billingTransitions);
         Mockito.when(subscriptionInternalApi.getAllTransitions(Mockito.<SubscriptionBase>any(), Mockito.<InternalTenantContext>any())).thenReturn(effectiveSubscriptionTransitions);
 
-        final DefaultVersionedCatalog versionedCatalog = catalogService.getFullCatalog(true, true, internalCallContext);
+        final VersionedCatalog versionedCatalog = catalogService.getFullCatalog(true, true, internalCallContext);
         catalog = (MockCatalog) Iterables.getLast(versionedCatalog.getVersions());
         Mockito.when(catalogService.getFullCatalog(true, true, internalCallContext)).thenReturn(versionedCatalog);
 
-        Mockito.when(catalogInternalApi.getFullCatalog(true, true, internalCallContext)).thenReturn(catalog);
         // Set a default alignment
-        catalog.setBillingAlignment(BillingAlignment.ACCOUNT);
+        ((MockSubscription) subscription).setBillingAlignment(BillingAlignment.ACCOUNT);
 
         // Cleanup mock daos
         ((MockBlockingStateDao) blockingStateDao).clear();
@@ -140,7 +140,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsNoBillingPeriod() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         // The trial has no billing period
         final PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
@@ -153,13 +153,14 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsSubscriptionAligned() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
         final Account account = createAccount(1);
 
-        catalog.setBillingAlignment(BillingAlignment.SUBSCRIPTION);
+        ((MockSubscription) subscription).setBillingAlignment(BillingAlignment.SUBSCRIPTION);
+
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
         // The expected BCD is when the subscription started since we skip the trial phase
@@ -168,7 +169,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsAccountAligned() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -181,14 +182,15 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsBundleAligned() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findPlan("7-Horn1USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("7-Horn1USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[0];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
         final Account account = createAccount(1);
 
-        catalog.setBillingAlignment(BillingAlignment.BUNDLE);
-        ((MockSubscription) subscription).setPlan(catalog.findPlan("3-PickupTrialEvergreen10USD", now));
+        ((MockSubscription) subscription).setPlan(catalog.findPlan("3-PickupTrialEvergreen10USD"));
+        ((MockSubscription) subscription).setBillingAlignment(BillingAlignment.BUNDLE);
+
 
         final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
         // The expected BCD is when the subscription started
@@ -197,7 +199,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsWithBlock() throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         final DateTime now = createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -219,7 +221,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsAutoInvoicingOffAccount() throws CatalogApiException, AccountApiException, TagApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -235,7 +237,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsAutoInvoicingOffBundle() throws CatalogApiException, AccountApiException, TagApiException, SubscriptionBaseApiException {
-        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD", clock.getUTCNow());
+        final Plan nextPlan = catalog.findPlan("3-PickupTrialEvergreen10USD");
         final PlanPhase nextPhase = nextPlan.getAllPhases()[1];
         createSubscriptionCreationEvent(nextPlan, nextPhase);
 
@@ -265,9 +267,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         }
 
         if (recurringPrice != null) {
-            Assert.assertEquals(recurringPrice.getPrice(Currency.USD), event.getRecurringPrice(time));
+            Assert.assertEquals(recurringPrice.getPrice(Currency.USD), event.getRecurringPrice());
         } else {
-            assertNull(event.getRecurringPrice(time));
+            assertNull(event.getRecurringPrice());
         }
 
         Assert.assertEquals(BCD, event.getBillCycleDayLocal());
@@ -296,16 +298,15 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
     private DateTime createSubscriptionCreationEvent(final Plan nextPlan, final PlanPhase nextPhase) throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
         final DateTime then = now.minusDays(1);
-        final PriceList nextPriceList = catalog.findPriceListForPlan(nextPlan.getName(), now, now);
-
         final EffectiveSubscriptionInternalEvent t = new MockEffectiveSubscriptionEvent(
                 eventId, subId, bunId, bunKey, then, now, null, null, null, null, null, EntitlementState.ACTIVE,
                 nextPlan.getName(), nextPhase.getName(),
-                nextPriceList.getName(), null, 1L,
+                nextPlan.getPriceList().getName(), null, 1L,
                 SubscriptionBaseTransitionType.CREATE, 1, null, 1L, 2L, null);
 
         effectiveSubscriptionTransitions.add(t);
-        billingTransitions.add(new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CREATE, nextPlan.getName(), nextPhase.getName(), now, 1L, now, null));
+        billingTransitions.add(new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CREATE, nextPlan, nextPhase, now, 1L, null,
+                                                                   CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate())));
 
         return now;
     }

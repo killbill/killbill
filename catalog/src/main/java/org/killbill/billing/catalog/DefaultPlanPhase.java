@@ -41,6 +41,7 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.Recurring;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -116,6 +117,12 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
             }
         }
         throw new CatalogApiException(ErrorCode.CAT_BAD_PHASE_NAME, phaseName);
+    }
+
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return root;
     }
 
     @Override

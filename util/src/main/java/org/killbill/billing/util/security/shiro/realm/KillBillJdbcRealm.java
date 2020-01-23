@@ -29,9 +29,9 @@ import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 
 public class KillBillJdbcRealm extends JdbcRealm {
 
-    protected static final String KILLBILL_SALTED_AUTHENTICATION_QUERY = "select password, password_salt from users where username = ? and is_active";
-    protected static final String KILLBILL_USER_ROLES_QUERY = "select role_name from user_roles where username = ? and is_active";
-    protected static final String KILLBILL_PERMISSIONS_QUERY = "select permission from roles_permissions where role_name = ? and is_active";
+    protected static final String KILLBILL_SALTED_AUTHENTICATION_QUERY = "select password, password_salt from users where username = ? and is_active = '1'";
+    protected static final String KILLBILL_USER_ROLES_QUERY = "select role_name from user_roles where username = ? and is_active = '1'";
+    protected static final String KILLBILL_PERMISSIONS_QUERY = "select permission from roles_permissions where role_name = ? and is_active = '1'";
 
     private final DataSource dataSource;
     private final SecurityConfig securityConfig;

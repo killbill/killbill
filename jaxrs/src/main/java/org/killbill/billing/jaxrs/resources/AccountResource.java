@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -51,6 +52,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -124,7 +126,6 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
-import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -163,7 +164,6 @@ public class AccountResource extends JaxRsResourceBase {
     private final InvoiceUserApi invoiceApi;
     private final InvoicePaymentApi invoicePaymentApi;
     private final OverdueApi overdueApi;
-    private final PaymentConfig paymentConfig;
     private final JaxrsExecutors jaxrsExecutors;
     private final JaxrsConfig jaxrsConfig;
     private final RecordIdApi recordIdApi;
@@ -181,7 +181,6 @@ public class AccountResource extends JaxRsResourceBase {
                            final SubscriptionApi subscriptionApi,
                            final OverdueApi overdueApi,
                            final Clock clock,
-                           final PaymentConfig paymentConfig,
                            final JaxrsExecutors jaxrsExecutors,
                            final JaxrsConfig jaxrsConfig,
                            final Context context,
@@ -192,7 +191,6 @@ public class AccountResource extends JaxRsResourceBase {
         this.invoiceApi = invoiceApi;
         this.invoicePaymentApi = invoicePaymentApi;
         this.overdueApi = overdueApi;
-        this.paymentConfig = paymentConfig;
         this.jaxrsExecutors = jaxrsExecutors;
         this.jaxrsConfig = jaxrsConfig;
         this.recordIdApi = recordIdApi;
@@ -444,7 +442,7 @@ public class AccountResource extends JaxRsResourceBase {
             }
         }
 
-        final Collection<Invoice> unpaidInvoices = writeOffUnpaidInvoices || itemAdjustUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, callContext) : ImmutableList.<Invoice>of();
+        final Collection<Invoice> unpaidInvoices = writeOffUnpaidInvoices || itemAdjustUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, null, callContext) : ImmutableList.<Invoice>of();
         if (writeOffUnpaidInvoices) {
             for (final Invoice cur : unpaidInvoices) {
                 invoiceApi.tagInvoiceAsWrittenOff(cur.getId(), callContext);
@@ -665,7 +663,7 @@ public class AccountResource extends JaxRsResourceBase {
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getInvoicesForAccount(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_START_DATE) final String startDateStr,
-                                          @QueryParam(QUERY_INVOICE_WITH_ITEMS) @DefaultValue("false") final boolean withItems,
+                                          @QueryParam(QUERY_END_DATE) final String endDateStr,
                                           @QueryParam(QUERY_WITH_MIGRATION_INVOICES) @DefaultValue("false") final boolean withMigrationInvoices,
                                           @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                           @QueryParam(QUERY_INCLUDE_VOIDED_INVOICES) @DefaultValue("false") final boolean includeVoidedInvoices,
@@ -678,16 +676,17 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
         final LocalDate startDate = startDateStr != null ? LOCAL_DATE_FORMATTER.parseLocalDate(startDateStr) : null;
+        final LocalDate endDate = endDateStr != null ? LOCAL_DATE_FORMATTER.parseLocalDate(endDateStr) : null;
 
         // Verify the account exists
         accountUserApi.getAccountById(accountId, tenantContext);
 
         final List<Invoice> invoices;
         if (unpaidInvoicesOnly) {
-            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, tenantContext));
+            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext));
         } else {
-            invoices = startDate != null ?
-                       invoiceApi.getInvoicesByAccount(accountId, startDate, includeVoidedInvoices, tenantContext) :
+            invoices = startDate != null || endDate != null ?
+                       invoiceApi.getInvoicesByAccount(accountId, startDate, endDate, includeVoidedInvoices, tenantContext) :
                        invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, tenantContext);
         }
 
@@ -695,7 +694,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
         for (final Invoice invoice : invoices) {
-            result.add(new InvoiceJson(invoice, withItems, null, accountAuditLogs));
+            result.add(new InvoiceJson(invoice, null, accountAuditLogs));
         }
 
         return Response.status(Status.OK).entity(result).build();
@@ -759,7 +758,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final LocalDate inputDate = targetDate == null ? clock.getUTCToday() : toLocalDate(targetDate);
 
-        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), inputDate, callContext);
+        final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), null, inputDate, callContext);
 
         BigDecimal remainingRequestPayment = paymentAmount;
         if (remainingRequestPayment == null) {
@@ -787,11 +786,13 @@ public class AccountResource extends JaxRsResourceBase {
         // If the amount requested is greater than what had to be paid and if this an for an external payment (check, ..)
         // then we apply some credit on the account.
         //
+        final BigDecimal creditAmount = remainingRequestPayment;
         if (externalPayment && remainingRequestPayment.compareTo(BigDecimal.ZERO) > 0) {
-            invoiceApi.insertCredit(account.getId(), remainingRequestPayment, clock.getUTCToday(), account.getCurrency(), true, "pay all invoices", null, pluginProperties, callContext);
+            invoiceApi.insertCredits(account.getId(), clock.getUTCToday(), ImmutableList.of(createCreditItem(account.getId(), creditAmount, account.getCurrency())), true, pluginProperties, callContext);
         }
         return Response.status(Status.NO_CONTENT).build();
     }
+
 
     @TimedResource
     @POST
@@ -822,7 +823,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(data.getAccountId(), callContext);
 
         final boolean hasDefaultPaymentMethod = account.getPaymentMethodId() != null || isDefault;
-        final Collection<Invoice> unpaidInvoices = payAllUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext) :
+        final Collection<Invoice> unpaidInvoices = payAllUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext) :
                                                    Collections.<Invoice>emptyList();
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0 && !hasDefaultPaymentMethod) {
             return Response.status(Status.BAD_REQUEST).build();
@@ -920,7 +921,7 @@ public class AccountResource extends JaxRsResourceBase {
         paymentApi.setDefaultPaymentMethod(account, paymentMethodId, pluginProperties, callContext);
 
         if (payAllUnpaidInvoices) {
-            final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+            final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext);
             for (final Invoice invoice : unpaidInvoices) {
                 createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), paymentMethodId, false, null, null, pluginProperties, callContext);
             }
@@ -1097,7 +1098,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
         final OverdueState overdueState = overdueApi.getOverdueStateFor(account.getId(), tenantContext);
 
-        return Response.status(Status.OK).entity(new OverdueStateJson(overdueState, paymentConfig)).build();
+        return Response.status(Status.OK).entity(new OverdueStateJson(overdueState)).build();
     }
 
 
@@ -1130,6 +1131,20 @@ public class AccountResource extends JaxRsResourceBase {
 
         return Response.status(Status.OK).entity(result).build();
     }
+
+    @TimedResource
+    @GET
+    @Path("/" + BLOCK + "/{blockingId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve blocking state audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Blocking state  not found")})
+    public Response getBlockingStateAuditLogsWithHistory(@PathParam("blockingId") final UUID blockingId,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = subscriptionApi.getBlockingStateAuditLogsWithHistoryForId(blockingId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
+    }
+
 
     @TimedResource
     @POST
@@ -1527,6 +1542,126 @@ public class AccountResource extends JaxRsResourceBase {
                 return new AuditLogJson(input);
             }
         }));
+    }
+
+
+    private InvoiceItem createCreditItem(final UUID accountId, final BigDecimal creditAmount, final Currency currency) {
+        return  new InvoiceItem() {
+            @Override
+            public InvoiceItemType getInvoiceItemType() {
+                return InvoiceItemType.CREDIT_ADJ;
+            }
+            @Override
+            public UUID getInvoiceId() {
+                return null;
+            }
+            @Override
+            public UUID getAccountId() {
+                return accountId;
+            }
+            @Override
+            public UUID getChildAccountId() {
+                return null;
+            }
+            @Override
+            public LocalDate getStartDate() {
+                return null;
+            }
+            @Override
+            public LocalDate getEndDate() {
+                return null;
+            }
+            @Override
+            public BigDecimal getAmount() {
+                return creditAmount;
+            }
+            @Override
+            public Currency getCurrency() {
+                return currency;
+            }
+            @Override
+            public String getDescription() {
+                return "pay all invoices";
+            }
+            @Override
+            public UUID getBundleId() {
+                return null;
+            }
+            @Override
+            public UUID getSubscriptionId() {
+                return null;
+            }
+            @Override
+            public String getProductName() {
+                return null;
+            }
+            @Override
+            public String getPrettyProductName() {
+                return null;
+            }
+            @Override
+            public String getPlanName() {
+                return null;
+            }
+            @Override
+            public String getPrettyPlanName() {
+                return null;
+            }
+            @Override
+            public String getPhaseName() {
+                return null;
+            }
+            @Override
+            public String getPrettyPhaseName() {
+                return null;
+            }
+            @Override
+            public String getUsageName() {
+                return null;
+            }
+            @Override
+            public String getPrettyUsageName() {
+                return null;
+            }
+            @Override
+            public BigDecimal getRate() {
+                return null;
+            }
+            @Override
+            public UUID getLinkedItemId() {
+                return null;
+            }
+            @Override
+            public Integer getQuantity() {
+                return null;
+            }
+            @Override
+            public String getItemDetails() {
+                return null;
+            }
+
+            @Override
+            public DateTime getCatalogEffectiveDate() {
+                return null;
+            }
+
+            @Override
+            public boolean matches(final Object o) {
+                return false;
+            }
+            @Override
+            public UUID getId() {
+                return null;
+            }
+            @Override
+            public DateTime getCreatedDate() {
+                return null;
+            }
+            @Override
+            public DateTime getUpdatedDate() {
+                return null;
+            }
+        };
     }
 
 

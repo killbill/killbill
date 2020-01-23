@@ -88,7 +88,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
                 final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
                                                                                                      paymentStateContext.getPaymentMethodId(),
-                                                                                                     null,
+                                                                                                     paymentStateControlContext.getOriginalPaymentPluginName(),
                                                                                                      paymentStateControlContext.getAttemptId(),
                                                                                                      paymentStateContext.getPaymentId(),
                                                                                                      paymentStateContext.getPaymentExternalKey(),
@@ -175,7 +175,7 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
         final PriorPaymentControlResult result = controlPluginRunner.executePluginPriorCalls(paymentStateContext.getAccount(),
                                                                                              paymentControlContextArg.getPaymentMethodId(),
-                                                                                             null,
+                                                                                             paymentControlContextArg.getPaymentPluginName(),
                                                                                              paymentStateControlContext.getAttemptId(),
                                                                                              paymentStateContext.getPaymentId(),
                                                                                              paymentStateContext.getPaymentExternalKey(),

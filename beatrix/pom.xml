@@ -19,13 +19,18 @@
     <parent>
         <artifactId>killbill</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.20.15-SNAPSHOT</version>
+        <version>0.21.10-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-beatrix</artifactId>
     <packaging>jar</packaging>
     <name>killbill-beatrix</name>
     <dependencies>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
@@ -269,6 +274,11 @@
         <dependency>
             <groupId>org.kill-bill.billing.plugin</groupId>
             <artifactId>killbill-plugin-api-notification</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-usage</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -317,11 +317,7 @@ public class TestInvoiceHelper {
     }
 
     public void createPayment(final InvoicePayment invoicePayment, final InternalCallContext internalCallContext) {
-        try {
-            invoicePaymentSqlDao.create(new InvoicePaymentModelDao(invoicePayment), internalCallContext);
-        } catch (final EntityPersistenceException e) {
-            Assert.fail(e.getMessage());
-        }
+        invoicePaymentSqlDao.create(new InvoicePaymentModelDao(invoicePayment), internalCallContext);
     }
 
     public void verifyInvoice(final UUID invoiceId, final double balance, final double cbaAmount, final InternalTenantContext context) throws InvoiceApiException {
@@ -409,18 +405,13 @@ public class TestInvoiceHelper {
             }
 
             @Override
-            public BigDecimal getRecurringPrice(DateTime requestedDate) {
+            public BigDecimal getRecurringPrice() {
                 return recurringPrice;
             }
 
             @Override
             public Currency getCurrency() {
                 return currency;
-            }
-
-            @Override
-            public DateTime getLastChangePlanDate() {
-                return effectiveDate;
             }
 
             @Override

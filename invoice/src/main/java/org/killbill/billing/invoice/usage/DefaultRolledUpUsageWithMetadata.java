@@ -20,22 +20,24 @@ package org.killbill.billing.invoice.usage;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.api.RolledUpUnit;
-import org.killbill.billing.usage.api.RolledUpUsage;
 
-public class DefaultRolledUpUsage implements RolledUpUsage {
+public class DefaultRolledUpUsageWithMetadata implements RolledUpUsageWithMetadata {
 
     private final UUID subscriptionId;
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final List<RolledUpUnit> rolledUpUnits;
+    private final DateTime catalogEffectiveDate;
 
-    public DefaultRolledUpUsage(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits) {
+    public DefaultRolledUpUsageWithMetadata(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits, final DateTime catalogEffectiveDate) {
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
         this.endDate = endDate;
         this.rolledUpUnits = rolledUpUnits;
+        this.catalogEffectiveDate = catalogEffectiveDate;
     }
 
     @Override
@@ -56,6 +58,11 @@ public class DefaultRolledUpUsage implements RolledUpUsage {
     @Override
     public List<RolledUpUnit> getRolledUpUnits() {
         return rolledUpUnits;
+    }
+
+    @Override
+    public DateTime getCatalogEffectiveDate() {
+        return catalogEffectiveDate;
     }
 }
 

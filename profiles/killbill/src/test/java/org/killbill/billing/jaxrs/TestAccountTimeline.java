@@ -27,12 +27,13 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.model.InvoiceItems;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AccountTimeline;
 import org.killbill.billing.client.model.gen.AuditLog;
-import org.killbill.billing.client.model.gen.Credit;
 import org.killbill.billing.client.model.gen.EventSubscription;
 import org.killbill.billing.client.model.gen.Invoice;
+import org.killbill.billing.client.model.gen.InvoiceItem;
 import org.killbill.billing.client.model.gen.InvoicePayment;
 import org.killbill.billing.client.model.gen.InvoicePaymentTransaction;
 import org.killbill.billing.client.model.gen.Payment;
@@ -79,12 +80,15 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final DateTime endTime = clock.getUTCNow();
 
         // Add credit
-        final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions).get(1);
+        final Invoice invoice = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).get(1);
         final BigDecimal creditAmount = BigDecimal.ONE;
-        final Credit credit = new Credit();
+        final InvoiceItem credit = new InvoiceItem();
         credit.setAccountId(accountJson.getAccountId());
-        credit.setCreditAmount(creditAmount);
-        creditApi.createCredit(credit, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        credit.setAmount(creditAmount);
+
+        final InvoiceItems credits = new InvoiceItems();
+        credits.add(credit);
+        creditApi.createCredits(credits, true, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Add refund
         final Payment postedPayment = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).get(0);
@@ -99,7 +103,7 @@ public class TestAccountTimeline extends TestJaxrsBase {
         final InvoicePaymentTransaction chargeback = new InvoicePaymentTransaction();
         chargeback.setPaymentId(postedPayment.getPaymentId());
         chargeback.setAmount(chargebackAmount);
-        invoicePaymentApi.createChargeback(postedPayment.getPaymentId(), chargeback, requestOptions);
+        invoicePaymentApi.createChargeback(postedPayment.getPaymentId(), chargeback, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Verify payments
         verifyPayments(accountJson.getAccountId(), startTime, endTime, refundAmount, chargebackAmount);
@@ -216,9 +220,9 @@ public class TestAccountTimeline extends TestJaxrsBase {
             final AccountTimeline timeline = getAccountTimeline(accountId, auditLevel);
 
             // Verify credits
-            final List<Credit> credits = timeline.getInvoices().get(1).getCredits();
+            final List<InvoiceItem> credits = timeline.getInvoices().get(1).getCredits();
             Assert.assertEquals(credits.size(), 1);
-            Assert.assertEquals(credits.get(0).getCreditAmount().compareTo(creditAmount.negate()), 0);
+            Assert.assertEquals(credits.get(0).getAmount().compareTo(creditAmount.negate()), 0);
 
             // Verify audits
             final List<AuditLog> creditAuditLogs = credits.get(0).getAuditLogs();

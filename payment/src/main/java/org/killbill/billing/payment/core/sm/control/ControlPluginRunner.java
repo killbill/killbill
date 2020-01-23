@@ -119,6 +119,12 @@ public class ControlPluginRunner {
             }
 
             if (prevResult.getAdjustedPaymentMethodId() != null) {
+                // We only allow setting the paymentMethodId but disallow overwriting an existing paymentMethodId for a given Payment. See #1097
+                if (paymentMethodId != null) {
+                    throw new PaymentControlApiException(String.format("Not allowed to overwrite paymentMethodId '%s' for payment '%s'",
+                                                                       paymentMethodId, paymentId));
+                }
+
                 inputPaymentMethodId = prevResult.getAdjustedPaymentMethodId();
             }
             if (prevResult.getAdjustedPluginName() != null) {

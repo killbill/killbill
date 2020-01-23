@@ -172,6 +172,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                                  plan.getName(),
                                                                                  planPhase.getName(),
                                                                                  null,
+                                                                                 null,
                                                                                  effectiveDate.toLocalDate(),
                                                                                  effectiveDate.plusMonths(1).toLocalDate(),
                                                                                  BigDecimal.TEN,
@@ -189,6 +190,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                                  plan.getName(),
                                                                                  planPhase.getName(),
                                                                                  null,
+                                                                                 null,
                                                                                  effectiveDate.plusDays(1).toLocalDate(),
                                                                                  effectiveDate.plusMonths(1).toLocalDate(),
                                                                                  BigDecimal.TEN,
@@ -198,7 +200,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao1);
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao2);
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), ImmutableSet.of(), context);
+        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), events, ImmutableSet.of(), context);
 
         try {
             dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);

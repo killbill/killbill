@@ -95,12 +95,10 @@ public class TestPaymentMethodProcessorWithDB extends PaymentTestSuiteWithEmbedd
         Assert.assertEquals(history1.getTenantRecordId(), paymentMethodModelDao.getTenantRecordId());
         Assert.assertEquals(history1.getExternalKey(), paymentMethodModelDao.getExternalKey());
         Assert.assertTrue(history1.isActive());
-        // Note: it looks like we don't consider this as a DELETE, probably because we can un-delete such payment methods?
-        Assert.assertEquals(auditLogsWithHistory.get(1).getChangeType(), ChangeType.UPDATE);
+        Assert.assertEquals(auditLogsWithHistory.get(1).getChangeType(), ChangeType.DELETE);
         Assert.assertEquals(history2.getAccountRecordId(), paymentMethodModelDao.getAccountRecordId());
         Assert.assertEquals(history2.getTenantRecordId(), paymentMethodModelDao.getTenantRecordId());
         Assert.assertEquals(history2.getExternalKey(), paymentMethodModelDao.getExternalKey());
-        // Note: upon deletion, the recorded state is the same as before the delete
-        Assert.assertTrue(history2.isActive());
+        Assert.assertFalse(history2.isActive());
     }
 }

@@ -48,7 +48,8 @@ import com.google.common.base.Preconditions;
 public class SubscriptionResourceHelpers {
 
     public static EntitlementSpecifier buildEntitlementSpecifier(final SubscriptionJson subscriptionJson,
-                                                                 final Currency currency) {
+                                                                 final Currency currency,
+                                                                 final String externalKey) {
         final PlanPhaseSpecifier planPhaseSpecifier = subscriptionJson.getPlanName() != null ?
                                                       new PlanPhaseSpecifier(subscriptionJson.getPlanName(), subscriptionJson.getPhaseType()) :
                                                       new PlanPhaseSpecifier(subscriptionJson.getProductName(),
@@ -67,6 +68,11 @@ public class SubscriptionResourceHelpers {
             @Override
             public Integer getBillCycleDay() {
                 return subscriptionJson.getBillCycleDayLocal();
+            }
+
+            @Override
+            public String getExternalKey() {
+                return externalKey;
             }
 
             @Override
@@ -251,7 +257,7 @@ public class SubscriptionResourceHelpers {
             }
 
             @Override
-            public String getExternalKey() {
+            public String getBundleExternalKey() {
                 return bundleExternalKey;
             }
 

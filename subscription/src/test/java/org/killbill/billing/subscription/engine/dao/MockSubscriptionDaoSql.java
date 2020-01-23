@@ -21,6 +21,7 @@ package org.killbill.billing.subscription.engine.dao;
 import javax.inject.Named;
 
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -38,7 +39,7 @@ public class MockSubscriptionDaoSql extends DefaultSubscriptionDao {
     @Inject
     public MockSubscriptionDaoSql(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
                                   final PersistentBus eventBus, final CacheControllerDispatcher cacheControllerDispatcher,
-                                  final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(dbi, roDbi, clock, addonUtils, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+                                  final NonEntityDao nonEntityDao, final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(dbi, roDbi, clock, addonUtils, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, auditDao, internalCallContextFactory);
     }
 }

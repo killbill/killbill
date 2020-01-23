@@ -35,7 +35,9 @@ import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.billing.catalog.override.PriceOverride;
+import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -53,19 +55,20 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     public StandaloneCatalogWithPriceOverride() {
     }
 
-    public StandaloneCatalogWithPriceOverride(final StandaloneCatalog catalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
+    public StandaloneCatalogWithPriceOverride(final StaticCatalog catalog, final PriceOverride priceOverride, final Long tenantRecordId, final InternalCallContextFactory internalCallContextFactory) {
         // Initialize from input catalog
         setCatalogName(catalog.getCatalogName());
         setEffectiveDate(catalog.getEffectiveDate());
-        setProducts(catalog.getCurrentProducts());
-        setPlans(catalog.getCurrentPlans());
-        setPriceLists(catalog.getPriceLists());
-        setPlanRules(catalog.getPlanRules());
-        setSupportedCurrencies(catalog.getCurrentSupportedCurrencies());
-        setUnits(catalog.getCurrentUnits());
+        setProducts(catalog.getProducts());
+        setPlans(catalog.getPlans());
+        setPriceLists(((StandaloneCatalog) catalog).getPriceLists());
+        setPlanRules((DefaultPlanRules) catalog.getPlanRules());
+        setSupportedCurrencies(catalog.getSupportedCurrencies());
+        setUnits((DefaultUnit[]) catalog.getUnits());
         this.tenantRecordId = tenantRecordId;
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
+        initialize(this);
     }
 
     public Long getTenantRecordId() {
@@ -77,8 +80,8 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     }
 
     @Override
-    public Plan createOrFindCurrentPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
-        final Plan defaultPlan = super.createOrFindCurrentPlan(spec, null);
+    public Plan createOrFindPlan(final PlanSpecifier spec, final PlanPhasePriceOverridesWithCallContext overrides) throws CatalogApiException {
+        final Plan defaultPlan = super.createOrFindPlan(spec, null);
         if (overrides == null ||
             overrides.getOverrides() == null ||
             overrides.getOverrides().isEmpty()) {
@@ -90,7 +93,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     }
 
     @Override
-    public DefaultPlan findCurrentPlan(final String planName) throws CatalogApiException {
+    public DefaultPlan findPlan(final String planName) throws CatalogApiException {
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
         if (m.matches()) {
             final DefaultPlan plan = maybeGetOverriddenPlan(planName);
@@ -98,16 +101,16 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
                 return plan;
             }
         }
-        return super.findCurrentPlan(planName);
+        return super.findPlan(planName);
     }
 
     @Override
-    public Product findCurrentProduct(final String productName) throws CatalogApiException {
-        return super.findCurrentProduct(productName);
+    public Product findProduct(final String productName) throws CatalogApiException {
+        return super.findProduct(productName);
     }
 
     @Override
-    public PlanPhase findCurrentPhase(final String phaseName) throws CatalogApiException {
+    public PlanPhase findPhase(final String phaseName) throws CatalogApiException {
         final String planName = DefaultPlanPhase.planName(phaseName);
         final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
         if (m.matches()) {
@@ -116,7 +119,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
                 return plan.findPhase(phaseName);
             }
         }
-        return super.findCurrentPhase(phaseName);
+        return super.findPhase(phaseName);
     }
 
     private DefaultPlan maybeGetOverriddenPlan(final String planName) throws CatalogApiException {

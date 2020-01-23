@@ -209,8 +209,8 @@ CREATE INDEX transaction_history_tenant_account_record_id ON payment_transaction
 
 
 /*  PaymentControlPlugin lives  here until this becomes a first class citizen plugin */
-DROP TABLE IF EXISTS _invoice_payment_control_plugin_auto_pay_off;
-CREATE TABLE _invoice_payment_control_plugin_auto_pay_off (
+DROP TABLE IF EXISTS invoice_payment_control_plugin_auto_pay_off;
+CREATE TABLE invoice_payment_control_plugin_auto_pay_off (
     record_id serial unique,
     attempt_id varchar(36) NOT NULL,
     payment_external_key varchar(255) NOT NULL,
@@ -218,7 +218,6 @@ CREATE TABLE _invoice_payment_control_plugin_auto_pay_off (
     account_id varchar(36) NOT NULL,
     plugin_name varchar(50) NOT NULL,
     payment_id varchar(36),
-    payment_method_id varchar(36) NOT NULL,
     amount numeric(15,9),
     currency varchar(3),
     is_active boolean default true,
@@ -226,4 +225,4 @@ CREATE TABLE _invoice_payment_control_plugin_auto_pay_off (
     created_date datetime NOT NULL,
     PRIMARY KEY (record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-CREATE INDEX _invoice_payment_control_plugin_auto_pay_off_account ON _invoice_payment_control_plugin_auto_pay_off(account_id);
+CREATE INDEX invoice_payment_control_plugin_auto_pay_off_account ON invoice_payment_control_plugin_auto_pay_off(account_id);

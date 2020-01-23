@@ -21,7 +21,6 @@ package org.killbill.billing.junction.plumbing.billing;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,12 +36,10 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
-import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.junction.BillingEvent;
@@ -94,7 +91,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
-        final Catalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
+        final VersionedCatalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
 
         // Check to see if billing is off for the account
         final List<Tag> tagsForAccount = tagApi.getTagsForAccount(false, context);
@@ -114,7 +111,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
         final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(fullCatalog, context);
 
-
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
         result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
@@ -123,8 +119,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             log.info("No billing event for accountId='{}'", accountId);
             return result;
         }
-
-
 
         // Pretty-print the events, before and after the blocking calculator does its magic
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
@@ -151,7 +145,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                             final DefaultBillingEventSet result,
                                             final Set<UUID> skipSubscriptionsSet,
                                             final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount,
-                                            final Catalog catalog,
+                                            final VersionedCatalog catalog,
                                             final List<Tag> tagsForAccount) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         final int currentAccountBCD = accountApi.getBCD(context);
         addBillingEventsForBundles(bundles,
@@ -173,7 +167,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                             final DefaultBillingEventSet result,
                                             final Set<UUID> skipSubscriptionsSet,
                                             final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount,
-                                            final Catalog catalog,
+                                            final VersionedCatalog catalog,
                                             final List<Tag> tagsForAccount,
                                             final int currentAccountBCD) throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
         // In dryRun mode, when we care about invoice generated for new BASE subscription, no such bundle exists yet; we still
@@ -241,7 +235,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                 continue;
             }
 
-            final BigDecimal recurringPrice = event.getRecurringPrice(event.getEffectiveDate());
+            final BigDecimal recurringPrice = event.getRecurringPrice();
             final boolean hasRecurringPrice = recurringPrice != null; // Note: could be zero (BCD would still be set, by convention)
             final boolean hasUsage = event.getUsages() != null && !event.getUsages().isEmpty();
             if (!hasRecurringPrice &&
@@ -275,12 +269,12 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
                                                  final Set<UUID> skipSubscriptionsSet,
-                                                 final Catalog catalog) throws CatalogApiException {
+                                                 final VersionedCatalog catalog) throws SubscriptionBaseApiException, CatalogApiException {
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
 
         for (final SubscriptionBase subscription : subscriptions) {
 
-            final List<SubscriptionBillingEvent> billingTransitions = subscriptionApi.getSubscriptionBillingEvents(subscription, context);
+            final List<SubscriptionBillingEvent> billingTransitions = subscriptionApi.getSubscriptionBillingEvents(catalog, subscription, context);
             if (billingTransitions.isEmpty() ||
                 (billingTransitions.get(0).getType() != SubscriptionBaseTransitionType.CREATE &&
                  billingTransitions.get(0).getType() != SubscriptionBaseTransitionType.TRANSFER)) {
@@ -290,20 +284,27 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             }
 
             Integer overridenBCD = null;
+            int bcdLocal = 0;
+            BillingAlignment alignment = null;
             for (final SubscriptionBillingEvent transition : billingTransitions) {
-                final BillingAlignment alignment = catalog.billingAlignment(getPlanPhaseSpecifierFromTransition(catalog, transition), transition.getEffectiveDate(), subscription.getStartDate());
 
-                //
-                // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
-                // occurs below (which is based on billing alignment policy). Also multiple of those BCD_CHANGE transitions could occur,
-                // to define different intervals with different billing cycle days.
-                //
-                overridenBCD = transition.getBcdLocal() != null ? transition.getBcdLocal() : overridenBCD;
-                final int bcdLocal = overridenBCD != null ?
-                                     overridenBCD :
-                                     calculateBcdForTransition(alignment, bcdCache, baseSubscription, subscription, currentAccountBCD, context);
+                if (transition.getType() != SubscriptionBaseTransitionType.CANCEL) {
+                    final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(transition.getPlan().getName(), transition.getPlanPhase().getPhaseType());
+                    alignment = subscription.getBillingAlignment(spec, transition.getEffectiveDate(), catalog);
 
-                final BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdLocal, alignment, account.getCurrency(), catalog);
+                    //
+                    // A BCD_CHANGE transition defines a new billCycleDayLocal for the subscription and this overrides whatever computation
+                    // occurs below (which is based on billing alignment policy). Also multiple of those BCD_CHANGE transitions could occur,
+                    // to define different intervals with different billing cycle days.
+                    //
+                    overridenBCD = transition.getBcdLocal() != null ? transition.getBcdLocal() : overridenBCD;
+                    bcdLocal = overridenBCD != null ?
+                               overridenBCD :
+                               calculateBcdForTransition(alignment, bcdCache, baseSubscription, subscription, currentAccountBCD, context);
+
+                }
+
+                final BillingEvent event = new DefaultBillingEvent(transition, subscription, bcdLocal, alignment, account.getCurrency());
                 result.add(event);
             }
         }
@@ -315,12 +316,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             alignment = BillingAlignment.SUBSCRIPTION;
         }
         return BillCycleDayCalculator.calculateBcdForAlignment(bcdCache, subscription, baseSubscription, alignment, internalTenantContext, accountBillCycleDayLocal);
-    }
-
-    private PlanPhaseSpecifier getPlanPhaseSpecifierFromTransition(final Catalog catalog, final SubscriptionBillingEvent transition) throws CatalogApiException {
-        final Plan plan = catalog.findPlan(transition.getPlanName(), transition.getEffectiveDate(), transition.getLastChangePlanDate());
-        final PlanPhase phase =  plan.findPhase(transition.getPlanPhaseName());
-        return new PlanPhaseSpecifier(plan.getName(), phase.getPhaseType());
     }
 
     private boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {
@@ -352,17 +347,17 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags, @Nullable final UUID objectId) {
         return ImmutableList.<Tag>copyOf(Iterables.<Tag>filter(tags,
-                                                                  new Predicate<Tag>() {
-                                                                      @Override
-                                                                      public boolean apply(final Tag input) {
-                                                                          if (objectId == null) {
-                                                                              return objectType == input.getObjectType();
-                                                                          } else {
-                                                                              return objectType == input.getObjectType() && objectId.equals(input.getObjectId());
-                                                                          }
+                                                               new Predicate<Tag>() {
+                                                                   @Override
+                                                                   public boolean apply(final Tag input) {
+                                                                       if (objectId == null) {
+                                                                           return objectType == input.getObjectType();
+                                                                       } else {
+                                                                           return objectType == input.getObjectType() && objectId.equals(input.getObjectId());
+                                                                       }
 
-                                                                      }
-                                                                  }));
+                                                                   }
+                                                               }));
     }
 
     private List<SubscriptionBase> getSubscriptionsForAccountByBundleId(final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount, final UUID bundleId) {

@@ -55,6 +55,7 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.entitlement.api.SubscriptionBundle;
+import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
@@ -64,6 +65,7 @@ import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -71,6 +73,7 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.CustomField;
@@ -161,6 +164,19 @@ public class BundleResource extends JaxRsResourceBase {
             result.add(json);
         }
         return Response.status(Status.OK).entity(result).build();
+    }
+
+    @TimedResource
+    @GET
+    @Path("/{bundleId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve bundle audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Subscription bundle not found")})
+    public Response getBundleAuditLogsWithHistory(@PathParam("bundleId") final UUID bundleId,
+                                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = subscriptionApi.getSubscriptionBundleAuditLogsWithHistoryForId(bundleId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 
     @TimedResource

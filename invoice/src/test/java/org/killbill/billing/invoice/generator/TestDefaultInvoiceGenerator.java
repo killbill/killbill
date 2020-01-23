@@ -917,7 +917,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final LocalDate startDate = new LocalDate(2013, 06, 15);
         final LocalDate endDate = new LocalDate(2013, 07, 15);
         final InvoiceItem recurringInvoiceItem = new RecurringInvoiceItem(existingInvoice.getId(), accountId, subscription.getBundleId(),
-                                                                          subscription.getId(), null, plan.getName(), phase.getName(),
+                                                                          subscription.getId(), null, plan.getName(), phase.getName(), null,
                                                                           startDate, endDate, recurringPrice.getPrice(currency),
                                                                           recurringPrice.getPrice(currency), Currency.USD);
         existingInvoice.addInvoiceItem(recurringInvoiceItem);

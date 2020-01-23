@@ -30,6 +30,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -112,7 +113,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoad() throws CatalogApiException {
-        final DefaultVersionedCatalog c = loader.loadDefaultCatalog(Resources.getResource("versionedCatalog").toString());
+        final VersionedCatalog c = loader.loadDefaultCatalog(Resources.getResource("versionedCatalog").toString());
         Assert.assertEquals(c.getVersions().size(), 4);
         DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
         Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
@@ -129,7 +130,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
         final VersionedCatalog c = loader.loadDefaultCatalog("SpyCarBasic.xml");
         Assert.assertEquals(c.getVersions().size(), 1);
         final DateTime dt = new DateTime("2013-02-08T00:00:00+00:00");
-        Assert.assertEquals(c.getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
         Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
     }
 
@@ -140,10 +141,10 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoadCatalogFromInsideResourceFolder() throws CatalogApiException {
-        final DefaultVersionedCatalog c = loader.loadDefaultCatalog("com/acme/SpyCarCustom.xml");
+        final VersionedCatalog c = loader.loadDefaultCatalog("com/acme/SpyCarCustom.xml");
         Assert.assertEquals(c.getVersions().size(), 1);
         final DateTime dt = new DateTime("2015-10-04T00:00:00+00:00");
-        Assert.assertEquals(c.getEffectiveDate(), dt.toDate());
+        Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
         Assert.assertEquals(c.getCatalogName(), "SpyCarCustom");
     }
 

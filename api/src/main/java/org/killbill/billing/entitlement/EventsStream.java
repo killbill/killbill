@@ -38,6 +38,8 @@ public interface EventsStream {
 
     UUID getEntitlementId();
 
+    String getExternalKey();
+
     EntitlementState getEntitlementState();
 
     LocalDate getEntitlementEffectiveStartDate();

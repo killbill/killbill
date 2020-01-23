@@ -101,14 +101,14 @@ public class AuditChecker {
     public void checkBundleCreated(final UUID bundleId, final CallContext context) {
         final List<AuditLog> auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         Assert.assertTrue(auditLogsForBundles.size() >= 1);
-        checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.get(0), bundleId, BundleSqlDao.class, false, false);
+        checkAuditLog(ChangeType.INSERT, context, auditLogsForBundles.get(0), bundleId, BundleSqlDao.class, true, false);
     }
 
     // Pass the call callcontext used to update the bundle
     public void checkBundleUpdated(final UUID bundleId, final CallContext context) {
         final List<AuditLog> auditLogsForBundles = getAuditLogsForBundle(bundleId, context);
         Assert.assertTrue(auditLogsForBundles.size() > 1);
-        checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.get(auditLogsForBundles.size() - 1), bundleId, BundleSqlDao.class, false, false);
+        checkAuditLog(ChangeType.UPDATE, context, auditLogsForBundles.get(auditLogsForBundles.size() - 1), bundleId, BundleSqlDao.class, true, false);
     }
 
     /**
@@ -119,7 +119,7 @@ public class AuditChecker {
     public void checkSubscriptionCreated(final UUID bundleId, final UUID subscriptionId, final CallContext context) {
         final List<AuditLog> auditLogsForSubscription = getAuditLogsForSubscription(bundleId, subscriptionId, context);
         Assert.assertTrue(auditLogsForSubscription.size() >= 1);
-        checkAuditLog(ChangeType.INSERT, context, auditLogsForSubscription.get(0), subscriptionId, SubscriptionSqlDao.class, false, true);
+        checkAuditLog(ChangeType.INSERT, context, auditLogsForSubscription.get(0), subscriptionId, SubscriptionSqlDao.class, true, true);
     }
 
     // Pass the call callcontext used to update the subscription
@@ -127,7 +127,7 @@ public class AuditChecker {
         final List<AuditLog> auditLogsForSubscription = getAuditLogsForSubscription(bundleId, subscriptionId, context);
         Assert.assertEquals(auditLogsForSubscription.size(), 2);
         checkAuditLog(ChangeType.INSERT, auditLogsForSubscription.get(0));
-        checkAuditLog(ChangeType.UPDATE, context, auditLogsForSubscription.get(1), subscriptionId, SubscriptionSqlDao.class, false, false);
+        checkAuditLog(ChangeType.UPDATE, context, auditLogsForSubscription.get(1), subscriptionId, SubscriptionSqlDao.class, true, false);
     }
 
     /**
@@ -138,7 +138,7 @@ public class AuditChecker {
     public void checkSubscriptionEventCreated(final UUID bundleId, final UUID subscriptionEventId, final CallContext context) {
         final List<AuditLog> auditLogsForSubscriptionEvent = getAuditLogsForSubscriptionEvent(bundleId, subscriptionEventId, context);
         Assert.assertEquals(auditLogsForSubscriptionEvent.size(), 1);
-        checkAuditLog(ChangeType.INSERT, context, auditLogsForSubscriptionEvent.get(0), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
+        checkAuditLog(ChangeType.INSERT, context, auditLogsForSubscriptionEvent.get(0), subscriptionEventId, SubscriptionEventSqlDao.class, true, true);
     }
 
     // Pass the call callcontext used to update the subscription event
@@ -146,7 +146,7 @@ public class AuditChecker {
         final List<AuditLog> auditLogsForSubscriptionEvent = getAuditLogsForSubscriptionEvent(bundleId, subscriptionEventId, context);
         Assert.assertEquals(auditLogsForSubscriptionEvent.size(), 2);
         checkAuditLog(ChangeType.INSERT, auditLogsForSubscriptionEvent.get(0));
-        checkAuditLog(ChangeType.UPDATE, context, auditLogsForSubscriptionEvent.get(1), subscriptionEventId, SubscriptionEventSqlDao.class, false, true);
+        checkAuditLog(ChangeType.UPDATE, context, auditLogsForSubscriptionEvent.get(1), subscriptionEventId, SubscriptionEventSqlDao.class, true, true);
     }
 
     /**
@@ -156,12 +156,12 @@ public class AuditChecker {
     public void checkInvoiceCreated(final Invoice invoice, final CallContext context) {
         final List<AuditLog> invoiceLogs = getAuditLogForInvoice(invoice, context);
         //Assert.assertEquals(invoiceLogs.size(), 1);
-        checkAuditLog(ChangeType.INSERT, context, invoiceLogs.get(0), invoice.getId(), InvoiceSqlDao.class, false, false);
+        checkAuditLog(ChangeType.INSERT, context, invoiceLogs.get(0), invoice.getId(), InvoiceSqlDao.class, true, false);
 
         for (InvoiceItem cur : invoice.getInvoiceItems()) {
             final List<AuditLog> auditLogs = getAuditLogForInvoiceItem(cur, context);
             Assert.assertTrue(auditLogs.size() >= 1);
-            checkAuditLog(ChangeType.INSERT, context, auditLogs.get(0), cur.getId(), InvoiceItemSqlDao.class, false, false);
+            checkAuditLog(ChangeType.INSERT, context, auditLogs.get(0), cur.getId(), InvoiceItemSqlDao.class, true, false);
         }
     }
 

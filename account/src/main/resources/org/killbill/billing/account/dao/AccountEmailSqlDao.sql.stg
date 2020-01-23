@@ -4,7 +4,7 @@ tableName() ::= "account_emails"
 
 historyTableName() ::= "account_email_history"
 
-andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active = '1'"
 
 tableFields(prefix) ::= <<
   account_id
@@ -32,14 +32,14 @@ select
   <allTableFields("t.")>
 from <tableName()> t
 where t.account_id = :accountId
-and t.is_active
+and t.is_active = '1'
 <AND_CHECK_TENANT("t.")>
 ;
 >>
 
 markEmailAsDeleted() ::= <<
 update <tableName()>
-set is_active = false
+set is_active = '0'
 where <idField("")> = :id
 <AND_CHECK_TENANT("")>
 ;

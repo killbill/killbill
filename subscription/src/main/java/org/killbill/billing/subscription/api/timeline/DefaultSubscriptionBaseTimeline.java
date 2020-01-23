@@ -22,52 +22,43 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
+import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
+import org.killbill.clock.Clock;
 
 public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline {
 
     private final UUID id;
     private final List<ExistingEvent> existingEvents;
+    private final Clock clock;
 
-    public DefaultSubscriptionBaseTimeline(final DefaultSubscriptionBase input, final Catalog catalog) throws CatalogApiException {
+    public DefaultSubscriptionBaseTimeline(final DefaultSubscriptionBase input, final SubscriptionCatalog catalog, final Clock clock) throws CatalogApiException {
         this.id = input.getId();
+        this.clock = clock;
         this.existingEvents = toExistingEvents(catalog, input.getCategory(), input.getEvents());
     }
 
-    private BillingPeriod getBillingPeriod(final Catalog catalog, @Nullable final String phaseName, final DateTime effectiveDate, DateTime startDate) throws CatalogApiException {
-        if (phaseName == null) {
-            return BillingPeriod.NO_BILLING_PERIOD;
-        }
-        final PlanPhase phase = catalog.findPhase(phaseName, effectiveDate, startDate);
-        return phase.getRecurring() != null ? phase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-    }
-
-    private List<ExistingEvent> toExistingEvents(final Catalog catalog, final ProductCategory category, final List<SubscriptionBaseEvent> events)
+    private List<ExistingEvent> toExistingEvents(final SubscriptionCatalog catalog, final ProductCategory category, final List<SubscriptionBaseEvent> events)
             throws CatalogApiException {
 
         final List<ExistingEvent> result = new LinkedList<SubscriptionBaseTimeline.ExistingEvent>();
 
         Plan prevPlan = null;
         String prevProductName = null;
-        BillingPeriod prevBillingPeriod = null;
         String prevPriceListName = null;
         PhaseType prevPhaseType = null;
 
@@ -81,7 +72,6 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
             startDate = (startDate == null) ? cur.getEffectiveDate() : startDate;
 
             String productName = null;
-            BillingPeriod billingPeriod = null;
             String priceListName = null;
             PhaseType phaseType = null;
             Plan plan = null;
@@ -97,7 +87,6 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     phaseType = prevPlan != null ? prevPlan.findPhase(phaseEV.getPhase()).getPhaseType() : null;
                     plan = prevPlan;
                     productName = prevProductName;
-                    billingPeriod = getBillingPeriod(catalog, phaseEV.getPhase(), cur.getEffectiveDate(), startDate);
                     priceListName = prevPriceListName;
                     break;
 
@@ -113,7 +102,6 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     plan = (userEV.getEventPlan() != null) ? catalog.findPlan(userEV.getEventPlan(), cur.getEffectiveDate(), startDate) : null;
                     phaseType = (plan != null && userEV.getEventPlanPhase() != null) ? plan.findPhase(userEV.getEventPlanPhase()).getPhaseType() : prevPhaseType;
                     productName = (plan != null) ? plan.getProduct().getName() : prevProductName;
-                    billingPeriod = (userEV.getEventPlanPhase() != null) ? getBillingPeriod(catalog, userEV.getEventPlanPhase(), cur.getEffectiveDate(), startDate) : prevBillingPeriod;
                     priceListName = (userEV.getPriceList() != null) ? userEV.getPriceList() : prevPriceListName;
                     break;
             }
@@ -168,7 +156,6 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
 
             prevPlan = plan;
             prevProductName = productName;
-            prevBillingPeriod = billingPeriod;
             prevPriceListName = priceListName;
             prevPhaseType = phaseType;
 

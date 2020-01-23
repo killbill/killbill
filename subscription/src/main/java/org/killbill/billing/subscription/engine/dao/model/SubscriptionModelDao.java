@@ -28,9 +28,12 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
+import com.google.common.base.MoreObjects;
+
 public class SubscriptionModelDao extends EntityModelDaoBase implements EntityModelDao<SubscriptionBase> {
 
     private UUID bundleId;
+    private String externalKey;
     private ProductCategory category;
     private DateTime startDate;
     private DateTime bundleStartDate;
@@ -39,10 +42,11 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
 
     public SubscriptionModelDao() { /* For the DAO mapper */ }
 
-    public SubscriptionModelDao(final UUID id, final UUID bundleId, final ProductCategory category, final DateTime startDate, final DateTime bundleStartDate,
+    public SubscriptionModelDao(final UUID id, final UUID bundleId, final String externalKey, final ProductCategory category, final DateTime startDate, final DateTime bundleStartDate,
                                 final DateTime chargedThroughDate, final boolean migrated, final DateTime createdDate, final DateTime updateDate) {
         super(id, createdDate, updateDate);
         this.bundleId = bundleId;
+        this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());;
         this.category = category;
         this.startDate = startDate;
         this.bundleStartDate = bundleStartDate;
@@ -51,12 +55,16 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
     }
 
     public SubscriptionModelDao(final DefaultSubscriptionBase src) {
-        this(src.getId(), src.getBundleId(), src.getCategory(), src.getAlignStartDate(), src.getBundleStartDate(),
+        this(src.getId(), src.getBundleId(), src.getExternalKey(), src.getCategory(), src.getAlignStartDate(), src.getBundleStartDate(),
              src.getChargedThroughDate(), src.isMigrated(), src.getCreatedDate(), src.getUpdatedDate());
     }
 
     public UUID getBundleId() {
         return bundleId;
+    }
+
+    public String getExternalKey() {
+        return externalKey;
     }
 
     public ProductCategory getCategory() {
@@ -78,6 +86,10 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
 
     public void setBundleId(final UUID bundleId) {
         this.bundleId = bundleId;
+    }
+
+    public void setExternalKey(final String externalKey) {
+        this.externalKey = externalKey;
     }
 
     public void setCategory(final ProductCategory category) {
@@ -112,6 +124,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         return new DefaultSubscriptionBase(new SubscriptionBuilder()
                                             .setId(src.getId())
                                             .setBundleId(src.getBundleId())
+                                            .setExternalKey(src.getExternalKey())
                                             .setBundleExternalKey(externalKey)
                                             .setCategory(src.getCategory())
                                             .setCreatedDate(src.getCreatedDate())
@@ -129,6 +142,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         final StringBuilder sb = new StringBuilder();
         sb.append("SubscriptionModelDao");
         sb.append("{bundleId=").append(bundleId);
+        sb.append(", externalKey=").append(externalKey);
         sb.append(", category=").append(category);
         sb.append(", startDate=").append(startDate);
         sb.append(", bundleStartDate=").append(bundleStartDate);
@@ -155,6 +169,9 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
         if (bundleId != null ? !bundleId.equals(that.bundleId) : that.bundleId != null) {
             return false;
         }
+        if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
+            return false;
+        }
         if (bundleStartDate != null ? !bundleStartDate.equals(that.bundleStartDate) : that.bundleStartDate != null) {
             return false;
         }
@@ -178,6 +195,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (category != null ? category.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);
         result = 31 * result + (bundleStartDate != null ? bundleStartDate.hashCode() : 0);
@@ -193,7 +211,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
 
     @Override
     public TableName getHistoryTableName() {
-        return null;
+        return TableName.SUBSCRIPTION_HISTORY;
     }
 
 }

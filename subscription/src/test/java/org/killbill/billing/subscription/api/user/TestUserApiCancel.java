@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,7 +35,7 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
-import org.killbill.billing.entity.EntityPersistenceException;
+import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBillingApiException;
@@ -329,11 +329,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final Handle handle = dbi.open();
         final SubscriptionEventSqlDao sqlDao = handle.attach(SubscriptionEventSqlDao.class);
-        try {
-            sqlDao.create(newCancelEvent, internalCallContext);
-        } catch (EntityPersistenceException e) {
-            Assert.fail(e.getMessage());
-        }
+        sqlDao.create(newCancelEvent, internalCallContext);
 
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
         // The extra cancel event is being ignored
@@ -522,6 +518,56 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription2.getStartDate().compareTo(subscription.getStartDate()), 0);
         assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
         assertNull(subscription2.getCurrentPlan());
+    }
+
+
+    @Test(groups = "slow", description="See https://github.com/killbill/killbill/issues/1207")
+    public void testDoubleFutureLaterCancellation() throws SubscriptionBaseApiException {
+
+        final String prod = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String planSet = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        // CREATE
+        DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, prod, term, planSet);
+        PlanPhase trialPhase = subscription.getCurrentPhase();
+        assertEquals(trialPhase.getPhaseType(), PhaseType.TRIAL);
+
+        // NEXT PHASE
+        final DateTime expectedPhaseTrialChange = TestSubscriptionHelper.addDuration(subscription.getStartDate(), trialPhase.getDuration());
+        testUtil.checkNextPhaseChange(subscription, 1, expectedPhaseTrialChange);
+
+        // MOVE TO NEXT PHASE : 2012-06-07
+        testListener.pushExpectedEvent(NextEvent.PHASE);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+        clock.addDeltaFromReality(it.toDurationMillis());
+
+        assertListenerStatus();
+        trialPhase = subscription.getCurrentPhase();
+        assertEquals(trialPhase.getPhaseType(), PhaseType.EVERGREEN);
+
+        // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
+        final Duration ctd = testUtil.getDurationMonth(1);
+        final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
+        subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+
+        assertEquals(subscription.getLastActiveProduct().getName(), prod);
+        assertEquals(subscription.getLastActivePriceList().getName(), planSet);
+        assertEquals(subscription.getLastActiveBillingPeriod(), term);
+        assertEquals(subscription.getLastActiveCategory(), ProductCategory.BASE);
+
+        // EARLIER CANCELLATION EOT -> 2012-07-01
+        subscription.cancelWithDate(clock.getUTCNow().plusDays(25), callContext);
+
+        try {
+            // CANCEL EOT -> 2012-07-06
+            subscription.cancel(callContext);
+            Assert.fail("Cancellation should fail as it is already future cancelled");
+        } catch (final SubscriptionBaseApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CANCEL_BAD_STATE.getCode());
+        }
+
     }
 
 }

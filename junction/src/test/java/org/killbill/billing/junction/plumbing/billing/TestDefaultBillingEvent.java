@@ -16,35 +16,21 @@
 
 package org.killbill.billing.junction.plumbing.billing;
 
-import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.mockito.Mockito;
+import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.junction.JunctionTestSuiteNoDB;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import org.killbill.billing.catalog.DefaultPrice;
-import org.killbill.billing.catalog.MockInternationalPrice;
-import org.killbill.billing.catalog.MockPlan;
-import org.killbill.billing.catalog.MockPlanPhase;
-import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.subscription.api.SubscriptionBase;
-import org.killbill.billing.junction.JunctionTestSuiteNoDB;
-import org.killbill.billing.junction.BillingEvent;
-
+@SuppressWarnings("RedundantThrows")
 public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
 
     private static final UUID ID_ZERO = new UUID(0L, 0L);
@@ -174,32 +160,4 @@ public class TestDefaultBillingEvent extends JunctionTestSuiteNoDB {
         Assert.assertEquals(event.toString(), "DefaultBillingEvent{type=CREATE, effectiveDate=2012-01-01T00:02:04.000Z, planPhaseName=Test-trial, subscriptionId=00000000-0000-0000-0000-000000000000, totalOrdering=1}");
     }
 
-    private BillingEvent createEvent(final SubscriptionBase sub, final DateTime effectiveDate, final SubscriptionBaseTransitionType type) throws CatalogApiException {
-        return createEvent(sub, effectiveDate, type, 1L);
-    }
-
-    private BillingEvent createEvent(final SubscriptionBase sub, final DateTime effectiveDate, final SubscriptionBaseTransitionType type, final long totalOrdering) throws CatalogApiException {
-        final int billCycleDay = 1;
-
-        final Plan shotgun = new MockPlan();
-        final PlanPhase shotgunMonthly = createMockMonthlyPlanPhase(null, BigDecimal.ZERO, PhaseType.TRIAL);
-
-        return new DefaultBillingEvent(sub.getId(), sub.getBundleId(), effectiveDate,
-                                       shotgun, shotgunMonthly, BigDecimal.ZERO,
-                                       Currency.USD, BillingPeriod.NO_BILLING_PERIOD, effectiveDate, billCycleDay,
-                                       "Test Event 1", totalOrdering, type, false, null);
-    }
-
-    private MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,
-                                                     final BigDecimal fixedRate, final PhaseType phaseType) {
-        return new MockPlanPhase(new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD)),
-                                 new MockInternationalPrice(new DefaultPrice(fixedRate, Currency.USD)),
-                                 BillingPeriod.MONTHLY, phaseType);
-    }
-
-    private SubscriptionBase subscription(final UUID id) {
-        final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
-        Mockito.when(subscription.getId()).thenReturn(id);
-        return subscription;
-    }
 }

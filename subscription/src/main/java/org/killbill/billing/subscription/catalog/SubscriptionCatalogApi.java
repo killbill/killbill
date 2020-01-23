@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,21 +15,12 @@
  * under the License.
  */
 
-package org.killbill.billing.usage;
+package org.killbill.billing.subscription.catalog;
 
-import java.util.UUID;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.CatalogApiException;
 
-import org.joda.time.LocalDate;
+public interface SubscriptionCatalogApi {
+    public SubscriptionCatalog getFullCatalog(InternalTenantContext context) throws CatalogApiException;
 
-public interface RawUsage {
-
-    UUID getSubscriptionId();
-
-    LocalDate getDate();
-
-    String getUnitType();
-
-    Long getAmount();
-
-    String getTrackingId();
 }

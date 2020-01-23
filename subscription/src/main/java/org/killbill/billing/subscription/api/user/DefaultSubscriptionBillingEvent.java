@@ -17,27 +17,33 @@
 
 package org.killbill.billing.subscription.api.user;
 
+import java.util.Date;
+
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent {
 
     private final SubscriptionBaseTransitionType type;
-    private final String planName;
-    private final String planPhaseName;
+    private final Plan plan;
+    private final PlanPhase planPhase;
     private final DateTime effectiveDate;
     private final Long totalOrdering;
-    private final DateTime lastChangePlanDate;
     private final Integer bcdLocal;
+    private final DateTime catalogEffectiveDate;
 
-    public DefaultSubscriptionBillingEvent(final SubscriptionBaseTransitionType type, final String planName, final String planPhaseName, final DateTime effectiveDate, final Long totalOrdering, final DateTime lastChangePlanDate, final Integer bcdLocal) {
+    public DefaultSubscriptionBillingEvent(final SubscriptionBaseTransitionType type, final Plan plan,
+                                           final PlanPhase planPhase, final DateTime effectiveDate,
+                                           final Long totalOrdering, final Integer bcdLocal, final DateTime catalogEffectiveDate) {
         this.type = type;
-        this.planName = planName;
-        this.planPhaseName = planPhaseName;
+        this.plan = plan;
+        this.planPhase = planPhase;
         this.effectiveDate = effectiveDate;
         this.totalOrdering = totalOrdering;
-        this.lastChangePlanDate = lastChangePlanDate;
         this.bcdLocal = bcdLocal;
+        this.catalogEffectiveDate = catalogEffectiveDate;
     }
 
     @Override
@@ -46,13 +52,13 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     }
 
     @Override
-    public String getPlanName() {
-        return planName;
+    public Plan getPlan() {
+        return plan;
     }
 
     @Override
-    public String getPlanPhaseName() {
-        return planPhaseName;
+    public PlanPhase getPlanPhase() {
+        return planPhase;
     }
 
     @Override
@@ -66,25 +72,38 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     }
 
     @Override
-    public DateTime getLastChangePlanDate() {
-        return lastChangePlanDate;
+    public Integer getBcdLocal() {
+        return bcdLocal;
     }
 
     @Override
-    public Integer getBcdLocal() {
-        return bcdLocal;
+    public DateTime getCatalogEffectiveDate() {
+        return catalogEffectiveDate;
     }
 
     @Override
     public String toString() {
         return "DefaultSubscriptionBillingEvent{" +
                "type=" + type +
-               ", planName='" + planName + '\'' +
-               ", planPhaseName='" + planPhaseName + '\'' +
+               ", plan='" + plan.getName() + '\'' +
+               ", planPhase='" + planPhase.getName() + '\'' +
                ", effectiveDate=" + effectiveDate +
                ", totalOrdering=" + totalOrdering +
-               ", lastChangePlanDate=" + lastChangePlanDate +
+               ", catalogEffectiveDate=" + catalogEffectiveDate +
                ", bcdLocal=" + bcdLocal +
                '}';
+    }
+
+    @Override
+    public int compareTo(final SubscriptionBillingEvent o) {
+        if (getEffectiveDate().compareTo(o.getEffectiveDate()) != 0) {
+            return getEffectiveDate().compareTo(o.getEffectiveDate());
+        } else if (getTotalOrdering().compareTo(o.getTotalOrdering()) != 0) {
+            return getTotalOrdering().compareTo(o.getTotalOrdering());
+        } else {
+            final Date effectiveDate = getPlan().getCatalog().getEffectiveDate();
+            final Date oEeffectiveDate = o.getPlan().getCatalog().getEffectiveDate();
+            return effectiveDate.compareTo(oEeffectiveDate);
+        }
     }
 }

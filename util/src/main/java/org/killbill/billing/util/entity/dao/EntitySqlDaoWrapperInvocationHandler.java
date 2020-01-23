@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2012 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,15 +22,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,16 +38,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
-import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.cache.Cachable;
 import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.cache.CachableKey;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.EntityAudit;
 import org.killbill.billing.util.dao.EntityHistoryModelDao;
@@ -63,16 +58,16 @@ import org.skife.jdbi.v2.StatementContext;
 import org.skife.jdbi.v2.exceptions.DBIException;
 import org.skife.jdbi.v2.exceptions.StatementException;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
+import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.unstable.BindIn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 /**
@@ -119,7 +114,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             return prof.executeWithProfiling(ProfilingFeatureType.DAO, getProfilingId(null, method), new WithProfilingCallback<Object, Throwable>() {
                 @Override
                 public Object execute() throws Throwable {
-                    return invokeSafely(proxy, method, args);
+                    return invokeSafely(method, args);
                 }
             });
         } catch (final Throwable t) {
@@ -187,16 +182,15 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         errorDuringTransaction(t, method, null);
     }
 
-    private Object invokeSafely(final Object proxy, final Method method, final Object[] args) throws Throwable {
-
+    private Object invokeSafely(final Method method, final Object[] args) throws Throwable {
         final Audited auditedAnnotation = method.getAnnotation(Audited.class);
-        final Cachable cachableAnnotation = method.getAnnotation(Cachable.class);
+
+        final boolean isROQuery = method.getAnnotation(SqlQuery.class) != null;
+        Preconditions.checkState(auditedAnnotation != null || isROQuery, "Non-@SqlQuery method %s without @Audited annotation", method);
 
         // This can't be AUDIT'ed and CACHABLE'd at the same time as we only cache 'get'
         if (auditedAnnotation != null) {
             return invokeWithAuditAndHistory(auditedAnnotation, method, args);
-        } else if (cachableAnnotation != null && cacheControllerDispatcher != null) {
-            return invokeWithCaching(cachableAnnotation, method, args);
         } else {
             return invokeRaw(method, args);
         }
@@ -220,113 +214,17 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         });
     }
 
-    private Object invokeWithCaching(final Cachable cachableAnnotation, final Method method, final Object[] args)
-            throws Throwable {
-        final ObjectType objectType = getObjectType();
-        final CacheType cacheType = cachableAnnotation.value();
-        final CacheController<Object, Object> cache = cacheControllerDispatcher.getCacheController(cacheType);
-        // TODO Change NonEntityDao to take in TableName instead to cache things like TenantBroadcastModelDao (no ObjectType)
-        if (cache != null && objectType != null) {
-            // Find all arguments marked with @CachableKey
-            final Map<Integer, Object> keyPieces = new LinkedHashMap<Integer, Object>();
-            final Annotation[][] annotations = getAnnotations(method);
-            for (int i = 0; i < annotations.length; i++) {
-                for (int j = 0; j < annotations[i].length; j++) {
-                    final Annotation annotation = annotations[i][j];
-                    if (CachableKey.class.equals(annotation.annotationType())) {
-                        // CachableKey position starts at 1
-                        keyPieces.put(((CachableKey) annotation).value() - 1, args[i]);
-                        break;
-                    }
-                }
-            }
-
-            // Build the Cache key
-            final String cacheKey = buildCacheKey(keyPieces);
-
-            final InternalTenantContext internalTenantContext = (InternalTenantContext) Iterables.find(ImmutableList.copyOf(args), new Predicate<Object>() {
-                @Override
-                public boolean apply(final Object input) {
-                    return input instanceof InternalTenantContext;
-                }
-            }, null);
-            final CacheLoaderArgument cacheLoaderArgument = new CacheLoaderArgument(objectType, args, internalTenantContext, handle);
-            return cache.get(cacheKey, cacheLoaderArgument);
-        } else {
-            return invokeRaw(method, args);
-        }
-    }
-
-    /**
-     * Extract object from sqlDaoClass by looking at first parameter type (EntityModelDao) and
-     * constructing an empty object so we can call the getObjectType method on it.
-     *
-     * @return the objectType associated to that handler
-     * @throws InstantiationException
-     * @throws IllegalAccessException
-     * @throws ClassNotFoundException
-     */
-    private ObjectType getObjectType() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-
-        int foundIndexForEntitySqlDao = -1;
-        // If the sqlDaoClass implements multiple interfaces, first figure out which one is the EntitySqlDao
-        for (int i = 0; i < sqlDaoClass.getGenericInterfaces().length; i++) {
-            final Type type = sqlDaoClass.getGenericInterfaces()[0];
-            if (!(type instanceof java.lang.reflect.ParameterizedType)) {
-                // AuditSqlDao for example won't extend EntitySqlDao
-                return null;
-            }
-
-            if (EntitySqlDao.class.getName().equals(((Class) ((java.lang.reflect.ParameterizedType) type).getRawType()).getName())) {
-                foundIndexForEntitySqlDao = i;
-                break;
-            }
-        }
-        // Find out from the parameters of the EntitySqlDao which one is the EntityModelDao, and extract his (sub)type to finally return the ObjectType
-        if (foundIndexForEntitySqlDao >= 0) {
-            final Type[] types = ((java.lang.reflect.ParameterizedType) sqlDaoClass.getGenericInterfaces()[foundIndexForEntitySqlDao]).getActualTypeArguments();
-            int foundIndexForEntityModelDao = -1;
-            for (int i = 0; i < types.length; i++) {
-                final Class clz = ((Class) types[i]);
-                final Type[] genericInterfaces = clz.getGenericInterfaces();
-                for (final Type genericInterface : genericInterfaces) {
-                    if (genericInterface instanceof ParameterizedType) {
-                        if (EntityModelDao.class.getName().equals(((Class) ((ParameterizedType) genericInterface).getRawType()).getName())) {
-                            foundIndexForEntityModelDao = i;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (foundIndexForEntityModelDao >= 0) {
-                final String modelClassName = ((Class) types[foundIndexForEntityModelDao]).getName();
-
-                final Class<? extends EntityModelDao<?>> clz = (Class<? extends EntityModelDao<?>>) Class.forName(modelClassName);
-
-                final EntityModelDao<?> modelDao = (EntityModelDao<?>) clz.newInstance();
-                return modelDao.getTableName().getObjectType();
-            }
-        }
-        return null;
-    }
-
     private Object invokeWithAuditAndHistory(final Audited auditedAnnotation, final Method method, final Object[] args) throws Throwable {
-        final InternalCallContext context = retrieveContextFromArguments(args);
+        final InternalCallContext contextMaybeWithoutAccountRecordId = retrieveContextFromArguments(args);
         final List<String> entityIds = retrieveEntityIdsFromArguments(method, args);
-
+        Preconditions.checkState(!entityIds.isEmpty(), "@Audited Sql method must have entities (@Bind(\"id\")) as arguments");
+        // We cannot always infer the TableName from the signature
+        TableName tableName = retrieveTableNameFromArgumentsIfPossible(Arrays.asList(args));
         final ChangeType changeType = auditedAnnotation.value();
+        final boolean isBatchQuery = method.getAnnotation(SqlBatch.class) != null;
 
         // Get the current state before deletion for the history tables
-        final Map<String, M> deletedEntities = new HashMap<String, M>();
-        // Unfortunately, we cannot just look at DELETE as "markAsInactive" operations are often treated as UPDATE
-        if (changeType == ChangeType.UPDATE || changeType == ChangeType.DELETE) {
-            for (final String entityId : entityIds) {
-                deletedEntities.put(entityId, sqlDao.getById(entityId, context));
-                printSQLWarnings();
-            }
-        }
-
+        final Map<Long, M> deletedAndUpdatedEntities = new HashMap<Long, M>();
         // Real jdbc call
         final Object obj = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, getProfilingId("raw", method), new WithProfilingCallback<Object, Throwable>() {
             @Override
@@ -335,18 +233,77 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             }
         });
 
-        M m = null;
-        for (final String entityId : entityIds) {
-            m = updateHistoryAndAudit(entityId, deletedEntities.get(entityId), changeType, context);
+        if (entityIds.isEmpty() ) {
+            return obj;
         }
 
-        // PERF: override the return value with the reHydrated entity to avoid an extra 'get' in the transaction,
-        // (see EntityDaoBase#createAndRefresh for an example, but it works for updates as well).
-        if (entityIds.size() == 1) {
-            return m;
+        InternalCallContext context = null;
+        // Retrieve record_id(s) for audit and history tables
+        final List<Long> entityRecordIds = new LinkedList<Long>();
+        if (changeType == ChangeType.INSERT) {
+            Preconditions.checkNotNull(tableName, "Insert query should have an EntityModelDao as argument: %s", args);
+
+            if (isBatchQuery) {
+                entityRecordIds.addAll((Collection<? extends Long>) obj);
+            } else {
+                entityRecordIds.add((Long) obj);
+            }
+
+            // Snowflake
+            if (TableName.ACCOUNT.equals(tableName)) {
+                Preconditions.checkState(entityIds.size() == 1, "Bulk insert of accounts isn't supported");
+                // AccountModelDao in practice
+                final TimeZoneAwareEntity accountModelDao = retrieveTimeZoneAwareEntityFromArguments(args);
+                context = internalCallContextFactory.createInternalCallContext(accountModelDao, entityRecordIds.get(0), contextMaybeWithoutAccountRecordId);
+            }
         } else {
-            // jDBI will return the number of rows modified otherwise
+            // Rehydrate entry with latest state
+            final List<M> retrievedEntities = sqlDao.getByIdsIncludedDeleted(entityIds, contextMaybeWithoutAccountRecordId);
+            printSQLWarnings();
+            for (final M entity : retrievedEntities) {
+                deletedAndUpdatedEntities.put(entity.getRecordId(), entity);
+                entityRecordIds.add(entity.getRecordId());
+                if (tableName == null) {
+                    tableName = entity.getTableName();
+                } else {
+                    Preconditions.checkState(tableName == entity.getTableName(), "Entities with different TableName");
+                }
+            }
+        }
+        Preconditions.checkState(entityIds.size() == entityRecordIds.size(), "SqlDao method has %s as ids but found %s as recordIds", entityIds, entityRecordIds);
+
+        // Context validations
+        if (context != null) {
+            // context was already updated, see above (createAccount code path). Just make sure we don't attempt to bulk create
+            Preconditions.checkState(entityIds.size() == 1, "Bulk insert of accounts isn't supported");
+        } else {
+            context = contextMaybeWithoutAccountRecordId;
+            final boolean tableWithoutAccountRecordId = tableName == TableName.TENANT || tableName == TableName.TENANT_BROADCASTS || tableName == TableName.TENANT_KVS || tableName == TableName.TAG_DEFINITIONS || tableName == TableName.SERVICE_BRODCASTS || tableName == TableName.NODE_INFOS;
+            Preconditions.checkState(context.getAccountRecordId() != null || tableWithoutAccountRecordId,
+                                     "accountRecordId should be set for tableName=%s and changeType=%s", tableName, changeType);
+        }
+
+        final Collection<M> reHydratedEntities = updateHistoryAndAudit(entityRecordIds, deletedAndUpdatedEntities, tableName, changeType, context);
+        if (method.getReturnType().equals(Void.TYPE)) {
+            // Return early
+            return null;
+        } else if (isBatchQuery) {
+            // Return the raw jdbc response (generated keys)
             return obj;
+        } else {
+            // PERF: override the return value with the reHydrated entity to avoid an extra 'get' in the transaction,
+            // (see EntityDaoBase#createAndRefresh for an example, but it works for updates as well).
+            Preconditions.checkState(entityRecordIds.size() == 1, "Invalid number of entityRecordIds: %s", entityRecordIds);
+
+            if (!reHydratedEntities.isEmpty()) {
+                Preconditions.checkState(reHydratedEntities.size() == 1, "Invalid number of entities: %s", reHydratedEntities);
+                return Iterables.<M>getFirst(reHydratedEntities, null);
+            } else {
+                // Updated entity not retrieved yet, we have to go back to the database
+                final M entity = sqlDao.getByRecordId(entityRecordIds.get(0), context);
+                printSQLWarnings();
+                return entity;
+            }
         }
     }
 
@@ -399,37 +356,41 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                rawKey;
     }
 
-    private M updateHistoryAndAudit(final String entityId, @Nullable final M deletedEntity, final ChangeType changeType, final InternalCallContext context) throws Throwable {
-        final Object reHydratedEntity = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, getProfilingId("history/audit", null), new WithProfilingCallback<Object, Throwable>() {
+    // Update history and audit tables.
+    // PERF: if the latest entities had to be fetched from the database, return them. Otherwise, return null.
+    private Collection<M> updateHistoryAndAudit(final List<Long> entityRecordIds,
+                                                final Map<Long, M> deletedAndUpdatedEntities,
+                                                final TableName tableName,
+                                                final ChangeType changeType,
+                                                final InternalCallContext context) throws Throwable {
+        final Object reHydratedEntitiesOrNull = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, getProfilingId("history/audit", null), new WithProfilingCallback<Object, Throwable>() {
             @Override
-            public M execute() throws Throwable {
-                final M reHydratedEntity;
-                if (changeType == ChangeType.DELETE) {
-                    reHydratedEntity = deletedEntity;
+            public Collection<M> execute() {
+                if (tableName.getHistoryTableName() == null) {
+                    insertAudits(entityRecordIds, tableName, changeType, context);
+                    return deletedAndUpdatedEntities.values();
                 } else {
-                    // See note above regarding "markAsInactive" operations
-                    reHydratedEntity = MoreObjects.firstNonNull(sqlDao.getById(entityId, context), deletedEntity);
-                    printSQLWarnings();
-                }
-                Preconditions.checkNotNull(reHydratedEntity, "reHydratedEntity cannot be null");
-                final Long entityRecordId = reHydratedEntity.getRecordId();
-                final TableName tableName = reHydratedEntity.getTableName();
+                    // Make sure to re-hydrate the objects first (especially needed for create calls)
+                    final Collection<M> reHydratedEntities = new ArrayList<>(entityRecordIds.size());
+                    if (deletedAndUpdatedEntities.isEmpty()) {
+                        reHydratedEntities.addAll((List<M>) sqlDao.getByRecordIds(entityRecordIds, context));
+                        printSQLWarnings();
+                    } else {
+                        reHydratedEntities.addAll(deletedAndUpdatedEntities.values());
+                    }
+                    Preconditions.checkState(reHydratedEntities.size() == entityRecordIds.size(), "Wrong number of reHydratedEntities=%s (entityRecordIds=%s)", reHydratedEntities, entityRecordIds);
 
-                // Note: audit entries point to the history record id
-                final Long historyRecordId;
-                if (tableName.getHistoryTableName() != null) {
-                    historyRecordId = insertHistory(entityRecordId, reHydratedEntity, changeType, context);
-                } else {
-                    historyRecordId = entityRecordId;
-                }
+                    final Collection<Long> auditTargetRecordIds = insertHistories(reHydratedEntities, changeType, context);
+                    // Note: audit entries point to the history record id
+                    Preconditions.checkState(auditTargetRecordIds.size() == entityRecordIds.size(), "Wrong number of auditTargetRecordIds=%s (entityRecordIds=%s)", auditTargetRecordIds, entityRecordIds);
+                    insertAudits(auditTargetRecordIds, tableName, changeType, context);
 
-                // Make sure to re-hydrate the object (especially needed for create calls)
-                insertAudits(tableName, reHydratedEntity, entityRecordId, historyRecordId, changeType, context);
-                return reHydratedEntity;
+                    return reHydratedEntities;
+                }
             }
         });
         //noinspection unchecked
-        return (M) reHydratedEntity;
+        return (Collection<M>) reHydratedEntitiesOrNull;
     }
 
     private List<String> retrieveEntityIdsFromArguments(final Method method, final Object[] args) {
@@ -500,62 +461,65 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             }
             return (InternalCallContext) arg;
         }
-        return null;
+        throw new IllegalStateException("No InternalCallContext specified in args: " + Arrays.toString(args));
     }
 
-    private Long insertHistory(final Long entityRecordId, final M entityModelDao, final ChangeType changeType, final InternalCallContext context) {
-        final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(entityModelDao, entityRecordId, changeType, null, context.getCreatedDate());
-        final Long recordId = sqlDao.addHistoryFromTransaction(history, context);
+    private TableName retrieveTableNameFromArgumentsIfPossible(final Iterable args) {
+        TableName tableName = null;
+        for (final Object arg : args) {
+            TableName argTableName = null;
+            if (arg instanceof EntityModelDao) {
+                argTableName = ((EntityModelDao) arg).getTableName();
+            } else if (arg instanceof Iterable) {
+                argTableName = retrieveTableNameFromArgumentsIfPossible((Iterable) arg);
+            }
+
+            if (tableName == null) {
+                tableName = argTableName;
+            } else if (argTableName != null) {
+                Preconditions.checkState(tableName == argTableName, "SqlDao method with different TableName in args: %s", args);
+            }
+        }
+        return tableName;
+    }
+
+    private TimeZoneAwareEntity retrieveTimeZoneAwareEntityFromArguments(final Object[] args) {
+        for (final Object arg : args) {
+            if (!(arg instanceof TimeZoneAwareEntity)) {
+                continue;
+            }
+            return (TimeZoneAwareEntity) arg;
+        }
+        throw new IllegalStateException("TimeZoneAwareEntity should have been found among " + args);
+    }
+
+    private List<Long> insertHistories(final Iterable<M> reHydratedEntityModelDaos, final ChangeType changeType, final InternalCallContext context) {
+        final Collection<EntityHistoryModelDao<M, E>> histories = new LinkedList<EntityHistoryModelDao<M, E>>();
+        for (final M reHydratedEntityModelDao : reHydratedEntityModelDaos) {
+            final EntityHistoryModelDao<M, E> history = new EntityHistoryModelDao<M, E>(reHydratedEntityModelDao, reHydratedEntityModelDao.getRecordId(), changeType, null, context.getCreatedDate());
+            histories.add(history);
+        }
+
+        final List<Long> recordIds = sqlDao.addHistoriesFromTransaction(histories, context);
         printSQLWarnings();
-        return recordId;
+        return recordIds;
     }
 
-    private void insertAudits(final TableName tableName, final M entityModelDao, final Long entityRecordId, final Long historyRecordId, final ChangeType changeType, final InternalCallContext contextMaybeWithoutAccountRecordId) {
+    // Bulk insert all audit logs for this operation
+    private void insertAudits(final Iterable<Long> auditTargetRecordIds,
+                              final TableName tableName,
+                              final ChangeType changeType,
+                              final InternalCallContext context) {
         final TableName destinationTableName = MoreObjects.firstNonNull(tableName.getHistoryTableName(), tableName);
-        final EntityAudit audit = new EntityAudit(destinationTableName, historyRecordId, changeType, contextMaybeWithoutAccountRecordId.getCreatedDate());
 
-        final InternalCallContext context;
-        // Populate the account record id when creating the account record
-        if (TableName.ACCOUNT.equals(tableName) && ChangeType.INSERT.equals(changeType)) {
-            // AccountModelDao in practice
-            final TimeZoneAwareEntity accountModelDao = (TimeZoneAwareEntity) entityModelDao;
-            context = internalCallContextFactory.createInternalCallContext(accountModelDao, entityRecordId, contextMaybeWithoutAccountRecordId);
-        } else {
-            context = contextMaybeWithoutAccountRecordId;
+        final Collection<EntityAudit> audits = new LinkedList<EntityAudit>();
+        for (final Long auditTargetRecordId : auditTargetRecordIds) {
+            final EntityAudit audit = new EntityAudit(destinationTableName, auditTargetRecordId, changeType, context.getCreatedDate());
+            audits.add(audit);
         }
-        sqlDao.insertAuditFromTransaction(audit, context);
+
+        sqlDao.insertAuditsFromTransaction(audits, context);
         printSQLWarnings();
-
-        // We need to invalidate the caches. There is a small window of doom here where caches will be stale.
-        // TODO Knowledge on how the key is constructed is also in AuditSqlDao
-        if (tableName.getHistoryTableName() != null) {
-            final CacheController<String, List> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG_VIA_HISTORY);
-            if (cacheController != null) {
-                final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName.getHistoryTableName(), 1, tableName.getHistoryTableName(), 2, entityRecordId));
-                cacheController.remove(key);
-            }
-        } else {
-            final CacheController<String, List> cacheController = cacheControllerDispatcher.getCacheController(CacheType.AUDIT_LOG);
-            if (cacheController != null) {
-                final String key = buildCacheKey(ImmutableMap.<Integer, Object>of(0, tableName, 1, entityRecordId));
-                cacheController.remove(key);
-            }
-        }
-    }
-
-    private String buildCacheKey(final Map<Integer, Object> keyPieces) {
-        final StringBuilder cacheKey = new StringBuilder();
-        for (int i = 0; i < keyPieces.size(); i++) {
-            // To normalize the arguments and avoid casing issues, we make all pieces of the key uppercase.
-            // Since the database engine may be case insensitive and we use arguments of the SQL method call
-            // to build the key, the key has to be case insensitive as well.
-            final String str = String.valueOf(keyPieces.get(i)).toUpperCase();
-            cacheKey.append(str);
-            if (i < keyPieces.size() - 1) {
-                cacheKey.append(CacheControllerDispatcher.CACHE_KEY_SEPARATOR);
-            }
-        }
-        return cacheKey.toString();
     }
 
     private String getProfilingId(@Nullable final String prefix, @Nullable final Method method) {

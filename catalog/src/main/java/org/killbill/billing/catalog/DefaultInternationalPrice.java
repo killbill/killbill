@@ -106,7 +106,7 @@ public class DefaultInternationalPrice extends ValidatingConfig<StandaloneCatalo
 
     @Override
     public ValidationErrors validate(final StandaloneCatalog catalog, final ValidationErrors errors) {
-        final Currency[] supportedCurrencies = catalog.getCurrentSupportedCurrencies();
+        final Currency[] supportedCurrencies = catalog.getSupportedCurrencies();
         for (final Price p : prices) {
             final Currency currency = p.getCurrency();
             if (!currencyIsSupported(currency, supportedCurrencies)) {

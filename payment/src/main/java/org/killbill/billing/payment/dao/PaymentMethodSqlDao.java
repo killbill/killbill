@@ -40,7 +40,7 @@ import org.skife.jdbi.v2.sqlobject.customizers.Define;
 public interface PaymentMethodSqlDao extends EntitySqlDao<PaymentMethodModelDao, PaymentMethod> {
 
     @SqlUpdate
-    @Audited(ChangeType.UPDATE)
+    @Audited(ChangeType.DELETE)
     void markPaymentMethodAsDeleted(@Bind("id") final String paymentMethodId,
                                     @SmartBindBean final InternalCallContext context);
 

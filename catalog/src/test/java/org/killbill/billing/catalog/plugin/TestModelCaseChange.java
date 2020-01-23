@@ -22,6 +22,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.rules.CaseChange;
 
 public class TestModelCaseChange implements CaseChange {
@@ -62,6 +63,11 @@ public class TestModelCaseChange implements CaseChange {
         this.toProductCategory = toProductCategory;
         this.toBillingPeriod = toBillingPeriod;
         this.toPriceList = toPriceList;
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return null;
     }
 
     @Override

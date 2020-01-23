@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -224,6 +224,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
+    public String getExternalKey() {
+        return eventsStream.getExternalKey();
+     }
+
+    @Override
     public UUID getBundleId() {
         return eventsStream.getBundleId();
     }
@@ -234,7 +239,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public String getExternalKey() {
+    public String getBundleExternalKey() {
         return eventsStream.getBundleExternalKey();
     }
 
@@ -318,7 +323,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final LocalDate billingEffectiveDate = overrideBillingEffectiveDate ? entitlementEffectiveDate : null;
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 entitlementEffectiveDate,
                 billingEffectiveDate,
@@ -336,7 +341,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final WithEntitlementPlugin<Entitlement> cancelEntitlementWithPlugin = new WithEntitlementPlugin<Entitlement>() {
 
             @Override
-            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public Entitlement doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 if (eventsStream.isEntitlementCancelled()) {
                     throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
                 }
@@ -384,7 +389,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 null,
                 null,
@@ -402,7 +407,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final WithEntitlementPlugin<Void> uncancelEntitlementWithPlugin = new WithEntitlementPlugin<Void>() {
 
             @Override
-            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public Void doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 if (eventsStream.isSubscriptionCancelled()) {
                     throw new EntitlementApiException(ErrorCode.SUB_UNCANCEL_BAD_STATE, getId());
                 }
@@ -467,7 +472,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 entitlementEffectiveDate,
                 entitlementEffectiveDate,
@@ -484,7 +489,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final WithEntitlementPlugin<Entitlement> cancelEntitlementWithPlugin = new WithEntitlementPlugin<Entitlement>() {
             @Override
-            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public Entitlement doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 if (eventsStream.isEntitlementCancelled()) {
                     throw new EntitlementApiException(ErrorCode.SUB_CANCEL_BAD_STATE, getId(), EntitlementState.CANCELLED);
                 }
@@ -549,7 +554,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 null,
                 null,
@@ -566,7 +571,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final WithEntitlementPlugin<Entitlement> changePlanWithPlugin = new WithEntitlementPlugin<Entitlement>() {
             @Override
-            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public Entitlement doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 if (!eventsStream.isEntitlementActive()) {
                     throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
                 }
@@ -620,7 +625,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 null,
                 null,
@@ -638,7 +643,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final WithEntitlementPlugin<Void> undoChangePlanEntitlementWithPlugin = new WithEntitlementPlugin<Void>() {
 
             @Override
-            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public Void doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
 
                 try {
                     getSubscriptionBase().undoChangePlan(callContext);
@@ -665,7 +670,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 effectiveDate,
                 effectiveDate,
@@ -682,7 +687,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final WithEntitlementPlugin<Entitlement> changePlanWithPlugin = new WithEntitlementPlugin<Entitlement>() {
             @Override
-            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public Entitlement doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
 
                 if (effectiveDate != null && effectiveDate.compareTo(eventsStream.getEntitlementEffectiveStartDate()) < 0) {
                     throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
@@ -740,7 +745,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 getBundleId(),
-                getExternalKey(),
+                getBundleExternalKey(),
                 null,
                 null,
                 null,
@@ -757,7 +762,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
 
         final WithEntitlementPlugin<Entitlement> changePlanWithPlugin = new WithEntitlementPlugin<Entitlement>() {
             @Override
-            public Entitlement doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public Entitlement doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
 
 
                 final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);

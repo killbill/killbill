@@ -32,7 +32,6 @@ public class OverdueStateJson {
 
     private final String name;
     private final String externalMessage;
-    private final List<Integer> daysBetweenPaymentRetries;
     private final Boolean isDisableEntitlementAndChangesBlocked;
     private final Boolean isBlockChanges;
     private final Boolean isClearState;
@@ -41,25 +40,21 @@ public class OverdueStateJson {
     @JsonCreator
     public OverdueStateJson(@JsonProperty("name") final String name,
                             @JsonProperty("externalMessage") final String externalMessage,
-                            @JsonProperty("daysBetweenPaymentRetries") final List<Integer> daysBetweenPaymentRetries,
                             @JsonProperty("isDisableEntitlementAndChangesBlocked") final Boolean isDisableEntitlementAndChangesBlocked,
                             @JsonProperty("isBlockChanges") final Boolean isBlockChanges,
                             @JsonProperty("isClearState") final Boolean isClearState,
                             @JsonProperty("reevaluationIntervalDays") final Integer reevaluationIntervalDays) {
         this.name = name;
         this.externalMessage = externalMessage;
-        this.daysBetweenPaymentRetries = daysBetweenPaymentRetries;
         this.isDisableEntitlementAndChangesBlocked = isDisableEntitlementAndChangesBlocked;
         this.isBlockChanges = isBlockChanges;
         this.isClearState = isClearState;
         this.reevaluationIntervalDays = reevaluationIntervalDays;
     }
 
-    public OverdueStateJson(final OverdueState overdueState, final PaymentConfig paymentConfig) {
+    public OverdueStateJson(final OverdueState overdueState) {
         this.name = overdueState.getName();
         this.externalMessage = overdueState.getExternalMessage();
-        // TODO this is broken if the per tenant system property was updated, but should we really return that in the OverdueState ?
-        this.daysBetweenPaymentRetries = paymentConfig.getPaymentFailureRetryDays(null);
         this.isDisableEntitlementAndChangesBlocked = overdueState.isDisableEntitlementAndChangesBlocked();
         this.isBlockChanges = overdueState.isBlockChanges();
         this.isClearState = overdueState.isClearState();
@@ -83,10 +78,6 @@ public class OverdueStateJson {
 
     public String getExternalMessage() {
         return externalMessage;
-    }
-
-    public List<Integer> getDaysBetweenPaymentRetries() {
-        return daysBetweenPaymentRetries;
     }
 
     @JsonProperty("isDisableEntitlementAndChangesBlocked")
@@ -114,7 +105,6 @@ public class OverdueStateJson {
         sb.append("OverdueStateJson");
         sb.append("{name='").append(name).append('\'');
         sb.append(", externalMessage='").append(externalMessage).append('\'');
-        sb.append(", daysBetweenPaymentRetries=").append(daysBetweenPaymentRetries);
         sb.append(", isDisableEntitlementAndChangesBlocked=").append(isDisableEntitlementAndChangesBlocked);
         sb.append(", isBlockChanges=").append(isBlockChanges);
         sb.append(", isClearState=").append(isClearState);
@@ -135,9 +125,6 @@ public class OverdueStateJson {
         final OverdueStateJson that = (OverdueStateJson) o;
 
         if (isBlockChanges != null ? !isBlockChanges.equals(that.isBlockChanges) : that.isBlockChanges != null) {
-            return false;
-        }
-        if (daysBetweenPaymentRetries != null ? !daysBetweenPaymentRetries.equals(that.daysBetweenPaymentRetries) : that.daysBetweenPaymentRetries != null) {
             return false;
         }
         if (isDisableEntitlementAndChangesBlocked != null ? !isDisableEntitlementAndChangesBlocked.equals(that.isDisableEntitlementAndChangesBlocked) : that.isDisableEntitlementAndChangesBlocked != null) {
@@ -163,7 +150,6 @@ public class OverdueStateJson {
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (externalMessage != null ? externalMessage.hashCode() : 0);
-        result = 31 * result + (daysBetweenPaymentRetries != null ? daysBetweenPaymentRetries.hashCode() : 0);
         result = 31 * result + (isDisableEntitlementAndChangesBlocked != null ? isDisableEntitlementAndChangesBlocked.hashCode() : 0);
         result = 31 * result + (isBlockChanges != null ? isBlockChanges.hashCode() : 0);
         result = 31 * result + (isClearState != null ? isClearState.hashCode() : 0);

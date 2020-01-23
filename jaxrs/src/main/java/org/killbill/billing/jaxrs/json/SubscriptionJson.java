@@ -57,6 +57,7 @@ public class SubscriptionJson extends JsonBase {
     private final UUID bundleId;
     private final UUID subscriptionId;
     private final String externalKey;
+    private final String bundleExternalKey;
     private final LocalDate startDate;
     @ApiModelProperty(required = true)
     private final String productName;
@@ -299,6 +300,7 @@ public class SubscriptionJson extends JsonBase {
     @JsonCreator
     public SubscriptionJson(@JsonProperty("accountId") @Nullable final UUID accountId,
                             @JsonProperty("bundleId") @Nullable final UUID bundleId,
+                            @JsonProperty("bundleExternalKey") @Nullable final String bundleExternalKey,
                             @JsonProperty("subscriptionId") @Nullable final UUID subscriptionId,
                             @JsonProperty("externalKey") @Nullable final String externalKey,
                             @JsonProperty("startDate") @Nullable final LocalDate startDate,
@@ -338,6 +340,7 @@ public class SubscriptionJson extends JsonBase {
         this.bundleId = bundleId;
         this.subscriptionId = subscriptionId;
         this.externalKey = externalKey;
+        this.bundleExternalKey = bundleExternalKey;
         this.events = events;
         this.priceOverrides = priceOverrides;
         this.prices = prices;
@@ -393,6 +396,7 @@ public class SubscriptionJson extends JsonBase {
         this.bundleId = subscription.getBundleId();
         this.subscriptionId = subscription.getId();
         this.externalKey = subscription.getExternalKey();
+        this.bundleExternalKey = subscription.getBundleExternalKey();
         this.events = new LinkedList<EventSubscriptionJson>();
         // We fill the catalog info every time we get the currency from the account (even if this is not overridden Plan)
         this.prices = new ArrayList<PhasePriceJson>();
@@ -433,6 +437,10 @@ public class SubscriptionJson extends JsonBase {
 
     public UUID getSubscriptionId() {
         return subscriptionId;
+    }
+
+    public String getBundleExternalKey() {
+        return bundleExternalKey;
     }
 
     public String getExternalKey() {
@@ -512,6 +520,7 @@ public class SubscriptionJson extends JsonBase {
         final StringBuilder sb = new StringBuilder("SubscriptionJson{");
         sb.append("accountId='").append(accountId).append('\'');
         sb.append(", bundleId='").append(bundleId).append('\'');
+        sb.append(", bundleExternalKey='").append(bundleExternalKey).append('\'');
         sb.append(", subscriptionId='").append(subscriptionId).append('\'');
         sb.append(", externalKey='").append(externalKey).append('\'');
         sb.append(", startDate=").append(startDate);
@@ -570,6 +579,9 @@ public class SubscriptionJson extends JsonBase {
         if (events != null ? !events.equals(that.events) : that.events != null) {
             return false;
         }
+        if (bundleExternalKey != null ? !bundleExternalKey.equals(that.bundleExternalKey) : that.bundleExternalKey != null) {
+            return false;
+        }
         if (externalKey != null ? !externalKey.equals(that.externalKey) : that.externalKey != null) {
             return false;
         }
@@ -613,6 +625,7 @@ public class SubscriptionJson extends JsonBase {
     public int hashCode() {
         int result = accountId != null ? accountId.hashCode() : 0;
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
+        result = 31 * result + (bundleExternalKey != null ? bundleExternalKey.hashCode() : 0);
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (externalKey != null ? externalKey.hashCode() : 0);
         result = 31 * result + (startDate != null ? startDate.hashCode() : 0);

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,10 +22,12 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.DefaultPriceListSet;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -36,11 +38,24 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseWithAdd
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionEventModelDao;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
+import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
+import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
@@ -56,6 +71,7 @@ import static org.testng.Assert.assertEquals;
 
 public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
+    private EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     protected UUID accountId;
 
     @Override
@@ -72,12 +88,67 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         final AccountData accountData = subscriptionTestInitializer.initAccountData(clock);
         final Account account = createAccount(accountData);
         accountId = account.getId();
+
+        transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, new CacheControllerDispatcher(), nonEntityDao, internalCallContextFactory);
     }
 
     @Override // to ignore events
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
         if (hasFailed()) {
+            final String externalKey = "12345";
+            final DateTime startDate = clock.getUTCNow();
+            final DateTime createdDate = startDate.plusSeconds(10);
+
+            final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
+            final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+
+            final List<SubscriptionBaseBundle> result = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
+            assertEquals(result.size(), 1);
+            assertEquals(result.get(0).getExternalKey(), bundle.getExternalKey());
+
+            // Operation succeeds but nothing new got created because bundle is empty
+            dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+            final List<SubscriptionBaseBundle> result2 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
+            assertEquals(result2.size(), 1);
+
+            // Create a subscription and this time operation should fail
+            final SubscriptionBuilder builder = new SubscriptionBuilder()
+                    .setId(UUIDs.randomUUID())
+                    .setBundleId(bundle.getId())
+                    .setBundleExternalKey(bundle.getExternalKey())
+                    .setCategory(ProductCategory.BASE)
+                    .setBundleStartDate(startDate)
+                    .setAlignStartDate(startDate)
+                    .setMigrated(false);
+
+            final ApiEventBuilder createBuilder = new ApiEventBuilder()
+                    .setSubscriptionId(builder.getId())
+                    .setEventPlan("shotgun-monthly")
+                    .setEventPlanPhase("shotgun-monthly-trial")
+                    .setEventPriceList(DefaultPriceListSet.DEFAULT_PRICELIST_NAME)
+                    .setEffectiveDate(startDate)
+                    .setFromDisk(true);
+            final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
+
+            final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
+            testListener.pushExpectedEvents(NextEvent.CREATE);
+            final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
+                                                                                                                ImmutableList.<SubscriptionBase>of(subscription));
+            dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
+                                              ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+                                              catalog,
+                                              internalCallContext);
+            assertListenerStatus();
+
+            // Operation Should now fail
+            try {
+                dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+                Assert.fail("Should fail to create new subscription bundle with existing key");
+            } catch (SubscriptionBaseApiException e) {
+                assertEquals(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode(), e.getCode());
+            }
+
             return;
         }
         subscriptionTestInitializer.stopTestFramework(testListener, busService, subscriptionBaseService);
@@ -86,7 +157,12 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testBundleExternalKeyReused() throws Exception {
 
-        final String externalKey = "12345";
+    }
+
+    @Test(groups = "slow")
+    public void testBundleExternalKeyTransferred() throws Exception {
+
+        final String externalKey = "2534125sdfsd";
         final DateTime startDate = clock.getUTCNow();
         final DateTime createdDate = startDate.plusSeconds(10);
 
@@ -97,12 +173,91 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getExternalKey(), bundle.getExternalKey());
 
-        // Operation succeeds but nothing new got created because bundle is empty
-        dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+        final List<AuditLog> auditLogsBeforeRenaming = auditUserApi.getAuditLogs(bundle.getId(), ObjectType.BUNDLE, AuditLevel.FULL, callContext);
+        assertEquals(auditLogsBeforeRenaming.size(), 1);
+        assertEquals(auditLogsBeforeRenaming.get(0).getChangeType(), ChangeType.INSERT);
+
+        // Update key to 'internal KB value 'kbtsf-12345:'
+        dao.updateBundleExternalKey(bundle.getId(), "kbtsf-12345:" + bundle.getExternalKey(), internalCallContext);
         final List<SubscriptionBaseBundle> result2 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result2.size(), 1);
 
-        // Create a subscription and this time operation should fail
+        final List<AuditLog> auditLogsAfterRenaming = auditUserApi.getAuditLogs(bundle.getId(), ObjectType.BUNDLE, AuditLevel.FULL, callContext);
+        assertEquals(auditLogsAfterRenaming.size(), 2);
+        assertEquals(auditLogsAfterRenaming.get(0).getChangeType(), ChangeType.INSERT);
+        assertEquals(auditLogsAfterRenaming.get(1).getChangeType(), ChangeType.UPDATE);
+
+        // Create new bundle with original key, verify all results show original key, stripping down internal prefix
+        final DefaultSubscriptionBaseBundle bundleDef2 = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
+        final SubscriptionBaseBundle bundle2 = dao.createSubscriptionBundle(bundleDef2, catalog, true, internalCallContext);
+        final List<SubscriptionBaseBundle> result3 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
+        assertEquals(result3.size(), 2);
+        assertEquals(result3.get(0).getId(), bundle.getId());
+        assertEquals(result3.get(0).getExternalKey(), bundle2.getExternalKey());
+        assertEquals(result3.get(1).getId(), bundle2.getId());
+        assertEquals(result3.get(1).getExternalKey(), bundle2.getExternalKey());
+
+        final List<AuditLog> auditLogs2BeforeRenaming = auditUserApi.getAuditLogs(bundle2.getId(), ObjectType.BUNDLE, AuditLevel.FULL, callContext);
+        assertEquals(auditLogs2BeforeRenaming.size(), 1);
+        assertEquals(auditLogs2BeforeRenaming.get(0).getChangeType(), ChangeType.INSERT);
+
+        // This time we call the lower SqlDao to rename the bundle automatically and verify we still get same # results,
+        // with original key
+        transactionalSqlDao.execute(false,
+                                    new EntitySqlDaoTransactionWrapper<Void>() {
+                                        @Override
+                                        public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                                            entitySqlDaoWrapperFactory.become(BundleSqlDao.class).renameBundleExternalKey(ImmutableList.<String>of(bundle2.getId().toString()), "foo", internalCallContext);
+                                            return null;
+                                        }
+                                    });
+        final List<SubscriptionBaseBundle> result4 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
+        assertEquals(result4.size(), 2);
+        assertEquals(result4.get(0).getExternalKey(), bundle2.getExternalKey());
+        assertEquals(result4.get(0).getId(), bundle.getId());
+        assertEquals(result4.get(1).getExternalKey(), bundle2.getExternalKey());
+        assertEquals(result4.get(1).getId(), bundle2.getId());
+
+        final List<AuditLog> auditLogs2AfterRenaming = auditUserApi.getAuditLogs(bundle2.getId(), ObjectType.BUNDLE, AuditLevel.FULL, callContext);
+        assertEquals(auditLogs2AfterRenaming.size(), 2);
+        assertEquals(auditLogs2AfterRenaming.get(0).getChangeType(), ChangeType.INSERT);
+        assertEquals(auditLogs2AfterRenaming.get(1).getChangeType(), ChangeType.UPDATE);
+
+        // Create bundle one more time
+        final DefaultSubscriptionBaseBundle bundleDef3 = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
+        final SubscriptionBaseBundle bundle3 = dao.createSubscriptionBundle(bundleDef3, catalog, true, internalCallContext);
+        final List<SubscriptionBaseBundle> result5 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
+        assertEquals(result5.size(), 3);
+        assertEquals(result5.get(0).getExternalKey(), bundle2.getExternalKey());
+        assertEquals(result5.get(1).getExternalKey(), bundle2.getExternalKey());
+        assertEquals(result5.get(2).getExternalKey(), bundle2.getExternalKey());
+    }
+
+    @Test(groups = "slow")
+    public void testWithAuditAndHistory() throws SubscriptionBaseApiException {
+        final String bundleExternalKey = "54341455sttfs1";
+        final DateTime startDate = clock.getUTCNow();
+
+        final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(bundleExternalKey, accountId, startDate, startDate, startDate, startDate);
+        final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+
+        final List<AuditLogWithHistory> bundleHistory1 =  dao.getSubscriptionBundleAuditLogsWithHistoryForId(bundle.getId(), AuditLevel.FULL, internalCallContext);
+        assertEquals(bundleHistory1.size(), 1);
+        final AuditLogWithHistory bundleHistoryRow1 = bundleHistory1.get(0);
+        assertEquals(bundleHistoryRow1.getChangeType(), ChangeType.INSERT);
+        final SubscriptionBundleModelDao historyRow1 = (SubscriptionBundleModelDao) bundleHistoryRow1.getEntity();
+        assertEquals(historyRow1.getExternalKey(), bundle.getExternalKey());
+        assertEquals(historyRow1.getAccountId(), bundle.getAccountId());
+
+        dao.updateBundleExternalKey(bundle.getId(), "you changed me!", internalCallContext);
+        final List<AuditLogWithHistory> bundleHistory2 =  dao.getSubscriptionBundleAuditLogsWithHistoryForId(bundle.getId(), AuditLevel.FULL, internalCallContext);
+        assertEquals(bundleHistory2.size(), 2);
+        final AuditLogWithHistory bundleHistoryRow2 = bundleHistory2.get(1);
+        assertEquals(bundleHistoryRow2.getChangeType(), ChangeType.UPDATE);
+        final SubscriptionBundleModelDao historyRow2 = (SubscriptionBundleModelDao) bundleHistoryRow2.getEntity();
+        assertEquals(historyRow2.getExternalKey(), "you changed me!");
+        assertEquals(historyRow2.getAccountId(), bundle.getAccountId());
+
         final SubscriptionBuilder builder = new SubscriptionBuilder()
                 .setId(UUIDs.randomUUID())
                 .setBundleId(bundle.getId())
@@ -125,67 +280,82 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.CREATE);
         final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
                                                                                                             ImmutableList.<SubscriptionBase>of(subscription));
-        dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
-                                          ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
-                                          catalog,
-                                          internalCallContext);
+
+        final List<SubscriptionBaseEvent> resultSubscriptions = dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
+                                                                                                  ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+                                                                                                  catalog,
+                                                                                                  internalCallContext);
         assertListenerStatus();
+        assertEquals(resultSubscriptions.size(), 1);
+        final SubscriptionBaseEvent subscriptionBaseEvent = resultSubscriptions.get(0);
 
-        // Operation Should now fail
-        try {
-            dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
-            Assert.fail("Should fail to create new subscription bundle with existing key");
-        } catch (SubscriptionBaseApiException e) {
-            assertEquals(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS.getCode(), e.getCode());
-        }
+
+        final List<AuditLogWithHistory> subscriptionHistory =  dao.getSubscriptionAuditLogsWithHistoryForId(subscriptionBaseEvent.getSubscriptionId(), AuditLevel.FULL, internalCallContext);
+        assertEquals(subscriptionHistory.size(), 1);
+
+        final AuditLogWithHistory subscriptionHistoryRow1 = subscriptionHistory.get(0);
+        assertEquals(subscriptionHistoryRow1.getChangeType(), ChangeType.INSERT);
+        final SubscriptionModelDao subHistoryRow1 = (SubscriptionModelDao) subscriptionHistoryRow1.getEntity();
+        assertEquals(subHistoryRow1.getBundleId(), bundle.getId());
+        assertEquals(subHistoryRow1.getCategory(), ProductCategory.BASE);
+
+
+        final List<AuditLogWithHistory> subscriptionEventHistory =  dao.getSubscriptionEventAuditLogsWithHistoryForId(subscriptionBaseEvent.getId(), AuditLevel.FULL, internalCallContext);
+
+        final AuditLogWithHistory subscriptionEventHistoryRow1 = subscriptionEventHistory.get(0);
+        assertEquals(subscriptionEventHistoryRow1.getChangeType(), ChangeType.INSERT);
+        final SubscriptionEventModelDao subEventHistoryRow1 = (SubscriptionEventModelDao) subscriptionEventHistoryRow1.getEntity();
+        assertEquals(subEventHistoryRow1.getSubscriptionId(), subscriptionBaseEvent.getSubscriptionId());
+        assertEquals(subEventHistoryRow1.getEventType(), EventType.API_USER);
+        assertEquals(subEventHistoryRow1.getUserType(), ApiEventType.CREATE);
+        assertEquals(subEventHistoryRow1.getPlanName(), "shotgun-monthly");
+        assertEquals(subEventHistoryRow1.getIsActive(), true);
     }
 
-    @Test(groups = "slow")
-    public void testBundleExternalKeyTransferred() throws Exception {
 
-        final String externalKey = "2534125sdfsd";
+    @Test(groups = "slow")
+    public void testSubscriptionExternalKey() throws SubscriptionBaseApiException, CatalogApiException {
+        final String externalKey = "6577564455sgwers2";
         final DateTime startDate = clock.getUTCNow();
-        final DateTime createdDate = startDate.plusSeconds(10);
 
-        final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
-        final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
+        final SubscriptionBuilder builder = new SubscriptionBuilder()
+                .setId(UUIDs.randomUUID())
+                .setBundleId(bundle.getId())
+                .setExternalKey(externalKey)
+                .setBundleExternalKey(bundle.getExternalKey())
+                .setCategory(ProductCategory.BASE)
+                .setBundleStartDate(startDate)
+                .setAlignStartDate(startDate)
+                .setMigrated(false);
 
-        final List<SubscriptionBaseBundle> result = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
-        assertEquals(result.size(), 1);
-        assertEquals(result.get(0).getExternalKey(), bundle.getExternalKey());
+        final ApiEventBuilder createBuilder = new ApiEventBuilder()
+                .setSubscriptionId(builder.getId())
+                .setEventPlan("shotgun-monthly")
+                .setEventPlanPhase("shotgun-monthly-trial")
+                .setEventPriceList(DefaultPriceListSet.DEFAULT_PRICELIST_NAME)
+                .setEffectiveDate(startDate)
+                .setFromDisk(true);
+        final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
 
-        // Update key to 'internal KB value 'kbtsf-12345:'
-        dao.updateBundleExternalKey(bundle.getId(), "kbtsf-12345:" + bundle.getExternalKey(), internalCallContext);
-        final List<SubscriptionBaseBundle> result2 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
-        assertEquals(result2.size(), 1);
 
-        // Create new bundle with original key, verify all results show original key, stripping down internal prefix
-        final DefaultSubscriptionBaseBundle bundleDef2 = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
-        final SubscriptionBaseBundle bundle2 = dao.createSubscriptionBundle(bundleDef2, catalog, true, internalCallContext);
-        final List<SubscriptionBaseBundle> result3 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
-        assertEquals(result3.size(), 2);
-        assertEquals(result3.get(0).getExternalKey(), bundle2.getExternalKey());
-        assertEquals(result3.get(1).getExternalKey(), bundle2.getExternalKey());
+        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
+                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        final List<SubscriptionBaseEvent> resultSubscriptions = dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
+                                                                                                  ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+                                                                                                  catalog,
+                                                                                                  internalCallContext);
+        assertListenerStatus();
+        assertEquals(resultSubscriptions.size(), 1);
 
-        // This time we call the lower SqlDao to rename the bundle automatically and verify we still get same # results,
-        // with original key
-        dbi.onDemand(BundleSqlDao.class).renameBundleExternalKey(externalKey, "foo", internalCallContext);
-        final List<SubscriptionBaseBundle> result4 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
-        assertEquals(result4.size(), 2);
-        assertEquals(result4.get(0).getExternalKey(), bundle2.getExternalKey());
-        assertEquals(result4.get(1).getExternalKey(), bundle2.getExternalKey());
+        final SubscriptionBase s = dao.getSubscriptionFromId(resultSubscriptions.get(0).getSubscriptionId(), catalog, internalCallContext);
+        assertEquals(s.getExternalKey(), externalKey);
 
-        // Create bundle one more time
-        final DefaultSubscriptionBaseBundle bundleDef3 = new DefaultSubscriptionBaseBundle(externalKey, accountId, startDate, startDate, createdDate, createdDate);
-        final SubscriptionBaseBundle bundle3 = dao.createSubscriptionBundle(bundleDef3, catalog, true, internalCallContext);
-        final List<SubscriptionBaseBundle> result5 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
-        assertEquals(result5.size(), 3);
-        assertEquals(result5.get(0).getExternalKey(), bundle2.getExternalKey());
-        assertEquals(result5.get(1).getExternalKey(), bundle2.getExternalKey());
-        assertEquals(result5.get(2).getExternalKey(), bundle2.getExternalKey());
     }
 
-    @Test(groups = "slow")
+
+        @Test(groups = "slow")
     public void testDirtyFlag() throws Throwable {
         final IDBI dbiSpy = Mockito.spy(dbi);
         final IDBI roDbiSpy = Mockito.spy(roDbi);
@@ -197,6 +367,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                            bus,
                                                                            controlCacheDispatcher,
                                                                            nonEntityDao,
+                                                                           auditDao,
                                                                            internalCallContextFactory);
         Mockito.verify(dbiSpy, Mockito.times(0)).open();
         Mockito.verify(roDbiSpy, Mockito.times(0)).open();

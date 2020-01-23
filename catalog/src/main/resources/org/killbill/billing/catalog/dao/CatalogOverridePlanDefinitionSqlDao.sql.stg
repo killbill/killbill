@@ -47,8 +47,3 @@ where record_id = :recordId
 and tenant_record_id = :tenantRecordId
 ;
 >>
-
-getLastInsertId() ::= <<
-    select LAST_INSERT_ID();
->>
-

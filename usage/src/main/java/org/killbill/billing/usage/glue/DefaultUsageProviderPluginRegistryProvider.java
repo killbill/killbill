@@ -1,6 +1,6 @@
 /*
- * Copyright 2016 Groupon, Inc
- * Copyright 2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,17 +15,18 @@
  * under the License.
  */
 
-package org.killbill.billing.catalog;
+package org.killbill.billing.usage.glue;
 
-import java.util.Date;
+import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
+import com.google.inject.Provider;
 
-public abstract class CatalogDateHelper {
+public class DefaultUsageProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<UsagePluginApi>> {
 
-    // From JDK to Joda (see http://www.joda.org/joda-time/userguide.html#JDK_Interoperability)
-    public static DateTime toUTCDateTime(final Date date) {
-        return new DateTime(date).toDateTime(DateTimeZone.UTC);
+    @Override
+    public OSGIServiceRegistration<UsagePluginApi> get() {
+        final DefaultUsageProviderPluginRegistry pluginRegistry = new DefaultUsageProviderPluginRegistry();
+        return pluginRegistry;
     }
 }

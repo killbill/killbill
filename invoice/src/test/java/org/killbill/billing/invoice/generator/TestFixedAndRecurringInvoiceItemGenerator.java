@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -45,6 +46,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceItemGeneratorLogger;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
@@ -53,16 +55,23 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.junction.plumbing.billing.DefaultBillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -70,6 +79,8 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
 
     private Account account;
     private SubscriptionBase subscription;
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(TestFixedAndRecurringInvoiceItemGenerator.class);
 
     @Override
     @BeforeMethod(groups = "fast")
@@ -87,6 +98,11 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         }
     }
 
+    //
+    //
+    //                           IS_SAME_DAY_AND_SAME_SUBSCRIPTION TESTS
+    //
+    //
     @Test(groups = "fast")
     public void testIsSameDayAndSameSubscriptionWithNullPrevEvent() {
 
@@ -119,7 +135,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
 
         final UUID invoiceId = UUID.randomUUID();
         final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), UUID.randomUUID(), UUID.randomUUID(), null, plan.getName(),
-                                                                      phase.getName(), invoiceItemDate, fixedPriceAmount, Currency.USD);
+                                                                      phase.getName(), null, invoiceItemDate, fixedPriceAmount, Currency.USD);
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-01-08"),
                                                                       plan, phase,
@@ -142,7 +158,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
 
         final UUID invoiceId = UUID.randomUUID();
         final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), subscription.getBundleId(), subscription.getId(), null, plan.getName(),
-                                                                      phase.getName(), invoiceItemDate, fixedPriceAmount, Currency.USD);
+                                                                      phase.getName(), null, invoiceItemDate, fixedPriceAmount, Currency.USD);
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-02-01"),
                                                                       plan, phase,
@@ -165,7 +181,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
 
         final UUID invoiceId = UUID.randomUUID();
         final InvoiceItem prevInvoiceItem = new FixedPriceInvoiceItem(invoiceId, account.getId(), subscription.getBundleId(), subscription.getId(), null, plan.getName(),
-                                                                      phase.getName(), invoiceItemDate, fixedPriceAmount, Currency.USD);
+                                                                      phase.getName(), null, invoiceItemDate, fixedPriceAmount, Currency.USD);
 
         final BillingEvent event = invoiceUtil.createMockBillingEvent(account, subscription, new DateTime("2016-01-08"),
                                                                       plan, phase,
@@ -176,6 +192,12 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         assertTrue(fixedAndRecurringInvoiceItemGenerator.isSameDayAndSameSubscription(prevInvoiceItem, event, internalCallContext));
     }
 
+
+    //
+    //
+    //                           PROCESS_FIXED_BILLING_EVENTS TESTS
+    //
+    //
     @Test(groups = "fast")
     public void testProcessFixedBillingEventsWithCancellationOnSameDay() throws InvoiceApiException {
 
@@ -293,6 +315,12 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         assertEquals(proposedItems.get(0).getAmount().compareTo(fixedPriceAmount3), 0);
     }
 
+
+    //
+    //
+    //                           GENERATE_ITEMS TESTS
+    //
+    //
     @Test(groups = "fast")
     public void testSafetyBoundsTooManyInvoiceItemsForGivenSubscriptionAndInvoiceDate() throws InvoiceApiException {
         final int threshold = 15;
@@ -332,6 +360,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                             null,
                                                             event.getPlan().getName(),
                                                             event.getPlanPhase().getName(),
+                                                            null,
                                                             startDate.plusMonths(i),
                                                             startDate.plusMonths(1 + i),
                                                             amount,
@@ -361,6 +390,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                             null,
                                                             event.getPlan().getName(),
                                                             event.getPlanPhase().getName(),
+                                                            null,
                                                             startDate.plusMonths(i),
                                                             startDate.plusMonths(1 + i),
                                                             amount,
@@ -422,6 +452,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                              null,
                                                              event.getPlan().getName(),
                                                              event.getPlanPhase().getName(),
+                                                             null,
                                                              "Buggy fixed item",
                                                              startDate,
                                                              amount,
@@ -480,6 +511,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                             null,
                                                             event.getPlan().getName(),
                                                             event.getPlanPhase().getName(),
+                                                            null,
                                                             startDate,
                                                             startDate.plusMonths(1),
                                                             amount,
@@ -542,6 +574,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -605,6 +638,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -620,6 +654,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -651,6 +686,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         }
     }
 
+    // Test fully repaired item get removed and instead we generate correct item
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testOverlappingItemsWithRepair() throws InvoiceApiException {
         final LocalDate startDate = new LocalDate("2016-01-01");
@@ -688,6 +724,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -700,7 +737,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         startDate,
                                                         startDate.plusDays(29),
-                                                        BigDecimal.ONE.negate(), // Note! The amount will not matter
+                                                        amount.negate(),
                                                         account.getCurrency(),
                                                         invoice.getInvoiceItems().get(0).getId()));
         existingInvoices.add(invoice);
@@ -721,6 +758,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         assertEquals(generatedItems.get(0).getAmount().compareTo(amount), 0);
     }
 
+    // Also a case we REPAIR amount does not match the dates and the current logic is to assert on the dates
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testOverlappingItemsWithTooManyRepairs() throws InvoiceApiException {
         final LocalDate startDate = new LocalDate("2016-01-01");
@@ -758,6 +796,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -770,7 +809,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         startDate,
                                                         startDate.plusDays(29),
-                                                        BigDecimal.ONE.negate(), // Note! The amount will not matter
+                                                        amount.negate(), // Note! The amount will not matter
                                                         account.getCurrency(),
                                                         invoice.getInvoiceItems().get(0).getId()));
         // Twice!
@@ -786,14 +825,14 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         existingInvoices.add(invoice);
 
         try {
-            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
-                                                                                                         UUID.randomUUID(),
-                                                                                                         events,
-                                                                                                         existingInvoices,
-                                                                                                         startDate,
-                                                                                                         account.getCurrency(),
-                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         internalCallContext).getItems();
+            fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                UUID.randomUUID(),
+                                                                events,
+                                                                existingInvoices,
+                                                                startDate,
+                                                                account.getCurrency(),
+                                                                new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -838,6 +877,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         event.getPlan().getName(),
                                                         event.getPlanPhase().getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusDays(29),
                                                         amount,
@@ -963,6 +1003,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         "my-plan",
                                                         "my-plan-monthly",
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -975,24 +1016,24 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         account.getId(),
                                                         startDate,
                                                         startDate.plusMonths(1),
-                                                        BigDecimal.ONE.negate(),
+                                                        amount.negate(),
                                                         account.getCurrency(),
                                                         invoice.getInvoiceItems().get(0).getId()));
         invoice.addInvoiceItem(new ItemAdjInvoiceItem(invoice.getInvoiceItems().get(0),
                                                       startDate,
-                                                      amount.negate(), // Note! The amount will matter
+                                                      BigDecimal.ONE.negate(), // Note! The amount will matter
                                                       account.getCurrency()));
         existingInvoices.add(invoice);
 
         try {
-            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
-                                                                                                         UUID.randomUUID(),
-                                                                                                         events,
-                                                                                                         existingInvoices,
-                                                                                                         startDate,
-                                                                                                         account.getCurrency(),
-                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         internalCallContext).getItems();
+            fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                UUID.randomUUID(),
+                                                                events,
+                                                                existingInvoices,
+                                                                startDate,
+                                                                account.getCurrency(),
+                                                                new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -1052,6 +1093,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         plan.getName(),
                                                         planPhase.getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -1137,6 +1179,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         plan.getName(),
                                                         planPhase.getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -1222,6 +1265,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         plan.getName(),
                                                         planPhase.getName(),
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         amount,
@@ -1245,20 +1289,27 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         existingInvoices.add(invoice);
 
         try {
-            final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
-                                                                                                         UUID.randomUUID(),
-                                                                                                         events,
-                                                                                                         existingInvoices,
-                                                                                                         startDate,
-                                                                                                         account.getCurrency(),
-                                                                                                         new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         internalCallContext).getItems();
+            fixedAndRecurringInvoiceItemGenerator.generateItems(account,
+                                                                UUID.randomUUID(),
+                                                                events,
+                                                                existingInvoices,
+                                                                startDate,
+                                                                account.getCurrency(),
+                                                                new HashMap<UUID, SubscriptionFutureNotificationDates>(),
+                                                                internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
-            assertTrue(e.getCause().getMessage().endsWith("overly repaired"));
+            assertTrue(e.getCause().getMessage().startsWith("Too many repairs"));
         }
     }
+
+
+    //
+    //
+    //                           SAFETY_BOUNDS TESTS
+    //
+    //
 
     // Simulate a bug in the generator where two fixed items for the same day and subscription end up in the resulting items
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
@@ -1276,6 +1327,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                             null,
                                                                             "planName",
                                                                             "phaseName",
+                                                                            null,
                                                                             "description",
                                                                             startDate,
                                                                             BigDecimal.ONE,
@@ -1301,6 +1353,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                          null,
                                                          "planName",
                                                          "phaseName",
+                                                         null,
                                                          "description",
                                                          startDate,
                                                          // Amount shouldn't have any effect
@@ -1332,6 +1385,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                           null,
                                                                           "planName",
                                                                           "phaseName",
+                                                                          null,
                                                                           startDate,
                                                                           startDate.plusMonths(1),
                                                                           BigDecimal.ONE,
@@ -1358,6 +1412,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                         null,
                                                         "planName",
                                                         "phaseName",
+                                                        null,
                                                         startDate,
                                                         startDate.plusMonths(1),
                                                         // Amount shouldn't have any effect
@@ -1373,4 +1428,592 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
         }
     }
+
+
+    //
+    //
+    //                           PROCESS_RECURRING_EVENT TESTS
+    //
+    //
+
+
+    //
+    // Scenario:
+    // - IN_ADVANCE
+    // - one CREATE billing event
+    // - targetDate = CREATE date
+    //
+    // => Expect one item + 1 notification
+    //
+    @Test(groups = "fast")
+    public void testInAdvance1() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ADVANCE;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+
+        final LocalDate targetDate = eventDate1;
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+        assertEquals(invoiceItems.size(), 1);
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate1);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(1));
+    }
+
+    //
+    // Scenario:
+    // - IN_ADVANCE
+    // - one CREATE billing event
+    // - targetDate < CREATE date
+    //
+    // => Expect nothing
+    //
+    @Test(groups = "fast")
+    public void testInAdvance2() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ADVANCE;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+
+        final LocalDate targetDate = eventDate1.minusDays(1);
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+        assertEquals(invoiceItems.size(), 0);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertNull(notifications);
+    }
+
+
+    //
+    // Scenario:
+    // - IN_ADVANCE
+    // - one CREATE billing event
+    // - targetDate in the future (> 1 billingPeriod)
+    //
+    // => Expect 2 items item + 1 notification
+    //
+    @Test(groups = "fast")
+    public void testInAdvance3() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ADVANCE;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+
+        final LocalDate targetDate = eventDate1.plusMonths(1);
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+        assertEquals(invoiceItems.size(), 2);
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate1);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+
+        assertEquals(invoiceItems.get(1).getStartDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(1).getEndDate(), eventDate1.plusMonths(2));
+        assertEquals(invoiceItems.get(1).getAmount().compareTo(BigDecimal.TEN), 0);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(2));
+    }
+
+    //
+    // Scenario:
+    // - IN_ADVANCE
+    // - one CREATE billing event
+    // - one future CHANGE billing event (used to compute period endDate)
+    // - targetDate = CREATE date
+    //
+    // => Expect one item + 1 notification
+    //
+    @Test(groups = "fast")
+    public void testInAdvance4a() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ADVANCE;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+        final LocalDate eventDate2 = new LocalDate("2020-01-15");
+        final BillingEvent event2 = createDefaultBillingEvent(eventDate2, null, BigDecimal.ONE, SubscriptionBaseTransitionType.CHANGE, 1, 2, billingMode);
+
+
+        final LocalDate targetDate = eventDate1;
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, event2, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+        assertEquals(invoiceItems.size(), 1);
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate1);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate2);
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), -1);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate2);
+    }
+
+
+    //
+    // Scenario: Similar to testInAdvance4a but the CHANGE event is a month after leading to 2 items generated
+    // - IN_ADVANCE
+    // - one CREATE billing event
+    // - one future CHANGE billing event (used to compute period endDate)
+    // - targetDate = CREATE date + 1 month
+    //
+    // => Expect 2 items + 1 notification
+    //
+
+    @Test(groups = "fast")
+    public void testInAdvance4b() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ADVANCE;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+        final LocalDate eventDate2 = new LocalDate("2020-02-15");
+        final BillingEvent event2 = createDefaultBillingEvent(eventDate2, null, BigDecimal.ONE, SubscriptionBaseTransitionType.CHANGE, 1, 2, billingMode);
+
+
+        final LocalDate targetDate = eventDate1.plusMonths(1);
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, event2, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+        assertEquals(invoiceItems.size(), 2);
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate1);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+
+        assertEquals(invoiceItems.get(1).getStartDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(1).getEndDate(), eventDate2);
+        assertEquals(invoiceItems.get(1).getAmount().compareTo(BigDecimal.TEN), -1);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate2);
+    }
+
+
+
+    //
+    // Scenario: Call processRecurringEvent 2 in a row
+    // - IN_ADVANCE
+    // - one CREATE billing event
+    // - one future CHANGE billing event (used to compute period endDate)
+    // - targetDate = CHANGE date
+    //
+    // => Expect one item + 1 notification
+    //
+    @Test(groups = "fast")
+    public void testInAdvance5() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ADVANCE;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+        final LocalDate eventDate2 = new LocalDate("2020-01-15");
+        final BillingEvent event2 = createDefaultBillingEvent(eventDate2, null, BigDecimal.ONE, SubscriptionBaseTransitionType.CHANGE, 1, 2, billingMode);
+
+
+        final LocalDate targetDate = eventDate2;
+        List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, event2, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+
+        assertEquals(invoiceItems.size(), 1);
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate1);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate2);
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), -1);
+
+
+        SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate2);
+
+        // Call processRecurringEvent another time for  eventDate2
+        invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event2, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+
+        assertEquals(invoiceItems.size(), 1);
+
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate2);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), -1);
+
+        notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(1));
+    }
+
+
+    //
+    // Scenario: Start with future notification and verify the CANCEL event clears it
+    // - IN_ADVANCE
+    // - one CANCEL billing event
+    // - targetDate = CANCEL date
+    //
+    // => Expect nothing
+    //
+    @Test(groups = "fast")
+    public void testInAdvance6() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ADVANCE;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        /*final BillingEvent event1 = */ createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+        // Set next notification date
+        SubscriptionFutureNotificationDates subscriptionFutureNotificationDates = new SubscriptionFutureNotificationDates(billingMode);
+        subscriptionFutureNotificationDates.updateNextRecurringDateIfRequired(eventDate1.plusMonths(1));
+        perSubscriptionFutureNotificationDates.put(subscription.getId(), subscriptionFutureNotificationDates);
+
+        final LocalDate eventDate2 = new LocalDate("2020-01-15");
+        final BillingEvent event2 = createDefaultBillingEvent(eventDate2, null, null, SubscriptionBaseTransitionType.CANCEL, 1, 2, billingMode);
+
+
+        final LocalDate targetDate = eventDate2;
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event2, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+        assertEquals(invoiceItems.size(), 0);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertNull(notifications.getNextRecurringDate());
+    }
+
+
+    //
+    // Scenario: Verify CREATE (IN_ARREAR) generates initial future notification and nothing more
+    // - IN_ARREAR
+    // - one CREATE billing event
+    // - targetDate = CREATE date
+    //
+    // => Expect 1 notification
+    //
+    @Test(groups = "fast")
+    public void testInArrear1() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ARREAR;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+
+        final LocalDate targetDate = eventDate1;
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+        assertEquals(invoiceItems.size(), 0);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(1));
+    }
+
+    //
+    // Scenario:
+    // - IN_ARREAR
+    // - one CREATE billing event
+    // - targetDate < CREATE date
+    //
+    // => Expect nothing
+    //
+    @Test(groups = "fast")
+    public void testInArrear2() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ARREAR;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+
+        final LocalDate targetDate = eventDate1.minusDays(1);
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+        assertEquals(invoiceItems.size(), 0);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertNull(notifications);
+    }
+
+
+    //
+    // Scenario:
+    // - IN_ARREAR
+    // - one CREATE billing event
+    // - targetDate in the future (> 1 billingPeriod)
+    //
+    // => Expect 1 item item + 1 notification
+    //
+    @Test(groups = "fast")
+    public void testInArrear3() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ARREAR;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+
+        final LocalDate targetDate = eventDate1.plusMonths(1);
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+        assertEquals(invoiceItems.size(), 1);
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate1);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(2));
+    }
+
+
+
+    //
+    // Scenario:
+    // - IN_ARREAR
+    // - one CREATE billing event
+    // - one future CHANGE billing event (used to compute period endDate)
+    // - targetDate = CREATE date
+    //
+    // => Expect 1 notification
+    //
+    @Test(groups = "fast")
+    public void testInArrear4a() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ARREAR;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+        final LocalDate eventDate2 = new LocalDate("2020-01-15");
+        final BillingEvent event2 = createDefaultBillingEvent(eventDate2, null, BigDecimal.ONE, SubscriptionBaseTransitionType.CHANGE, 1, 2, billingMode);
+
+
+        final LocalDate targetDate = eventDate1;
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, event2, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+        assertEquals(invoiceItems.size(), 0);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(1));
+    }
+
+    //
+    // Scenario: Similar to testInArrear4b but change event is 1 MONTH after leading to 1 item being generated
+    // - IN_ARREAR
+    // - one CREATE billing event
+    // - one future CHANGE billing event (used to compute period endDate)
+    // - targetDate = CREATE date + 1 month
+    //
+    // => Expect 1 item + 1 notification
+    //
+    @Test(groups = "fast")
+    public void testInArrear4b() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ARREAR;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+        final LocalDate eventDate2 = new LocalDate("2020-02-15");
+        final BillingEvent event2 = createDefaultBillingEvent(eventDate2, null, BigDecimal.ONE, SubscriptionBaseTransitionType.CHANGE, 1, 2, billingMode);
+
+
+        final LocalDate targetDate = eventDate1.plusMonths(1);
+        List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, event2, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+        assertEquals(invoiceItems.size(), 1);
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate1);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+
+        SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(2));
+
+
+        // Bonus 1: ... move targetDate to CHANGE date +. We see the same thing because 'thisEvent'=event1 we are still considering
+        final LocalDate newTargetDate = eventDate2;
+        invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, event2, newTargetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+        assertEquals(invoiceItems.size(), 2);
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate1);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+
+        assertEquals(invoiceItems.get(1).getStartDate(), eventDate1.plusMonths(1));
+        assertEquals(invoiceItems.get(1).getEndDate(), eventDate2);
+        assertEquals(invoiceItems.get(1).getAmount().compareTo(BigDecimal.TEN), -1);
+
+        notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(2));
+
+        // Bonus 2: ... thisEvent=event2
+        invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event2, null, newTargetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+        assertEquals(invoiceItems.size(), 0);
+
+    }
+
+
+    //
+    // Scenario: Call processRecurringEvent 2 in a row
+    // - IN_ARREAR
+    // - one CREATE billing event
+    // - one future CHANGE billing event
+    // - targetDate = CHANGE date
+    //
+    // => Expect one item + 1 notification first time and no new item for the CHANGE
+    //
+    @Test(groups = "fast")
+    public void testInArrear5() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ARREAR;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        final BillingEvent event1 = createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+        final LocalDate eventDate2 = new LocalDate("2020-01-15");
+        final BillingEvent event2 = createDefaultBillingEvent(eventDate2, null, BigDecimal.ONE, SubscriptionBaseTransitionType.CHANGE, 1, 2, billingMode);
+
+
+        final LocalDate targetDate = eventDate2;
+        List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event1, event2, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+
+
+        assertEquals(invoiceItems.size(), 1);
+        assertEquals(invoiceItems.get(0).getStartDate(), eventDate1);
+        assertEquals(invoiceItems.get(0).getEndDate(), eventDate2);
+        assertEquals(invoiceItems.get(0).getAmount().compareTo(BigDecimal.TEN), -1);
+
+
+        SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(1));
+
+        // Call processRecurringEvent another time for  eventDate2
+        invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event2, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+        assertEquals(invoiceItems.size(), 0);
+
+        notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertEquals(notifications.getNextRecurringDate(), eventDate1.plusMonths(1));
+    }
+
+
+    //
+    // Scenario: Start with future notification and verify the CANCEL event clears it
+    // - IN_ARREAR
+    // - one CANCEL billing event
+    // - targetDate = CANCEL date
+    //
+    // => Expect nothing
+    //
+    @Test(groups = "fast")
+    public void testInArrear6() throws InvoiceApiException {
+
+        final BillingMode billingMode = BillingMode.IN_ARREAR;
+
+        final UUID invoiceId = UUID.randomUUID();
+        final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "recurring", logger);
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
+
+        final LocalDate eventDate1 = new LocalDate("2020-01-01");
+        /*final BillingEvent event1 = */ createDefaultBillingEvent(eventDate1, null, BigDecimal.TEN, SubscriptionBaseTransitionType.CREATE, 1, 1, billingMode);
+
+        // Set next notification date
+        SubscriptionFutureNotificationDates subscriptionFutureNotificationDates = new SubscriptionFutureNotificationDates(billingMode);
+        subscriptionFutureNotificationDates.updateNextRecurringDateIfRequired(eventDate1.plusMonths(1));
+        perSubscriptionFutureNotificationDates.put(subscription.getId(), subscriptionFutureNotificationDates);
+
+        final LocalDate eventDate2 = new LocalDate("2020-01-15");
+        final BillingEvent event2 = createDefaultBillingEvent(eventDate2, null, null, SubscriptionBaseTransitionType.CANCEL, 1, 2, billingMode);
+
+
+        final LocalDate targetDate = eventDate2;
+        final List<InvoiceItem> invoiceItems = fixedAndRecurringInvoiceItemGenerator.processRecurringEvent(invoiceId, account.getId(), event2, null, targetDate, account.getCurrency(), invoiceItemGeneratorLogger, perSubscriptionFutureNotificationDates, internalCallContext);
+        assertEquals(invoiceItems.size(), 0);
+
+        final SubscriptionFutureNotificationDates notifications = perSubscriptionFutureNotificationDates.get(subscription.getId());
+        assertNull(notifications.getNextRecurringDate());
+    }
+
+
+    private BillingEvent createDefaultBillingEvent(final LocalDate eventDate, final BigDecimal fixedAmount, final BigDecimal recurringPrice, final SubscriptionBaseTransitionType eventType, final int billCycleDay, final long ordering, final BillingMode billingMode) {
+
+
+        final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(recurringPrice, account.getCurrency()));
+        final MockPlan plan = new MockPlan("my-plan");
+        plan.setRecurringBillingMode(billingMode);
+
+        final PlanPhase planPhase = new MockPlanPhase(price, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
+
+        final boolean isDisabledOrBlocked = (eventType == SubscriptionBaseTransitionType.CANCEL || eventType ==  SubscriptionBaseTransitionType.START_BILLING_DISABLED);
+        final BillingPeriod billingPeriod = recurringPrice == null ? BillingPeriod.NO_BILLING_PERIOD : BillingPeriod.MONTHLY;
+        // Rely on real (junction) BillingEvent instead of MockBillingEvent to test the real behavior
+        return new DefaultBillingEvent(subscription.getId(),
+                                       subscription.getBundleId(),
+                                       eventDate.toDateTimeAtStartOfDay(),
+                                       plan,
+                                       planPhase,
+                                       fixedAmount,
+                                       recurringPrice,
+                                       ImmutableList.of(),
+                                       account.getCurrency(),
+                                       billingPeriod,
+                                       billCycleDay,
+                                       "desc",
+                                       ordering,
+                                       eventType,
+                                       isDisabledOrBlocked);
+
+
+    }
+
+
 }

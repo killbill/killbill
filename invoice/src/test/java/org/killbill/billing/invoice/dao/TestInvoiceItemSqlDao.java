@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.dao;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
@@ -30,13 +31,13 @@ import org.testng.annotations.Test;
 public class TestInvoiceItemSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
-    public void testUpdaiteteItemFields() throws Exception {
+    public void testUpdateItemFields() throws Exception {
         final InvoiceItemSqlDao dao = dbi.onDemand(InvoiceItemSqlDao.class);
 
         final UUID invoiceItemId = UUID.randomUUID();
 
         dao.create(new InvoiceItemModelDao(invoiceItemId, null, InvoiceItemType.FIXED, UUID.randomUUID(), UUID.randomUUID(), null, null, null, "description",
-                                           null, null, null, null, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, null), internalCallContext);
+                                           null, null, null, null, null, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, null), internalCallContext);
 
         // Update all fields
         dao.updateItemFields(invoiceItemId.toString(), new BigDecimal("2.00"), "new description", "new items", internalCallContext);
@@ -60,5 +61,30 @@ public class TestInvoiceItemSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(UpdatedItem.getDescription(), "newer description");
         Assert.assertEquals(UpdatedItem.getItemDetails(), "new items");
 
+    }
+
+    @Test(groups = "slow")
+    public void testWithOrWithoutCatalogEffectiveDate() throws Exception {
+        final InvoiceItemSqlDao dao = dbi.onDemand(InvoiceItemSqlDao.class);
+
+
+        // No catalogEffectiveDate
+        final UUID invoiceItemId1 = UUID.randomUUID();
+        dao.create(new InvoiceItemModelDao(invoiceItemId1, null, InvoiceItemType.FIXED, UUID.randomUUID(), UUID.randomUUID(), null, null, null, "description",
+                                           null, null, null, null, null, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, null), internalCallContext);
+
+        InvoiceItemModelDao result1 = dao.getById(invoiceItemId1.toString(), internalCallContext);
+        Assert.assertNull(result1.getCatalogEffectiveDate());
+
+
+        // With catalogEffectiveDate
+        final UUID invoiceItemId2 = UUID.randomUUID();
+        final DateTime catalogEffectiveDate = new DateTime().withMillis(0);
+        dao.create(new InvoiceItemModelDao(invoiceItemId2, null, InvoiceItemType.FIXED, UUID.randomUUID(), UUID.randomUUID(), null, null, null, "description",
+                                           null, null, null, null, catalogEffectiveDate, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, null), internalCallContext);
+
+        InvoiceItemModelDao result2 = dao.getById(invoiceItemId2.toString(), internalCallContext);
+        Assert.assertNotNull(result2.getCatalogEffectiveDate());
+        Assert.assertTrue(result2.getCatalogEffectiveDate().compareTo(catalogEffectiveDate) == 0);
     }
 }

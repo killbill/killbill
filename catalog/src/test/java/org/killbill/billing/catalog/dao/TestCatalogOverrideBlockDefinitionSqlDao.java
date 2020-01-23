@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -45,18 +45,18 @@ public class TestCatalogOverrideBlockDefinitionSqlDao extends CatalogTestSuiteWi
     @Test(groups = "slow")
     public void testBasic() throws Exception {
 
-        final CatalogOverrideBlockDefinitionModelDao obj1 = new CatalogOverrideBlockDefinitionModelDao("p1", "USD", BigDecimal.ONE, 1 , 1, clock.getUTCNow());
+        final CatalogOverrideBlockDefinitionModelDao obj1 = new CatalogOverrideBlockDefinitionModelDao("p1", "USD", BigDecimal.ONE, 17.3 , 1, clock.getUTCNow());
         performTestInTransaction(new WithCatalogOverrideBlockDefinitionSqlDaoTransaction<Void>() {
             @Override
             public Void doTransaction(final CatalogOverrideBlockDefinitionSqlDao sqlDao) {
-                sqlDao.create(obj1, internalCallContext);
-                final Long lastInserted = sqlDao.getLastInsertId();
+                final Long lastInserted = sqlDao.create(obj1, internalCallContext);
 
                 final CatalogOverrideBlockDefinitionModelDao rehydrated = sqlDao.getByRecordId(lastInserted, internalCallContext);
                 assertEquals(rehydrated.getParentUnitName(), obj1.getParentUnitName());
                 assertEquals(rehydrated.getCurrency(), obj1.getCurrency());
                 assertEquals(rehydrated.getPrice().compareTo(obj1.getPrice()), 0);
                 assertEquals(rehydrated.getSize(), obj1.getSize());
+                assertEquals(rehydrated.getSize(), 17.3);
                 assertEquals(rehydrated.getMax(), obj1.getMax());
                 return null;
             }

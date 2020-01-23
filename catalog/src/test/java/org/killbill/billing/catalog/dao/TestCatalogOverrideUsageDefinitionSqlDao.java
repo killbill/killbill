@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -51,8 +51,7 @@ public class TestCatalogOverrideUsageDefinitionSqlDao extends CatalogTestSuiteWi
         performTestInTransaction(new WithCatalogOverrideUsageDefinitionSqlDaoTransaction<Void>() {
             @Override
             public Void doTransaction(final CatalogOverrideUsageDefinitionSqlDao sqlDao) {
-                sqlDao.create(obj1, internalCallContext);
-                final Long lastInserted = sqlDao.getLastInsertId();
+                final Long lastInserted = sqlDao.create(obj1, internalCallContext);
 
                 final CatalogOverrideUsageDefinitionModelDao rehydrated = sqlDao.getByRecordId(lastInserted, internalCallContext);
                 assertEquals(rehydrated.getParentUsageName(), obj1.getParentUsageName());

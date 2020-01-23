@@ -29,10 +29,12 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 
 import com.google.common.base.MoreObjects;
@@ -81,7 +83,7 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
-    public List<BlockingState> getBlockingAllForAccountRecordId(final Catalog catalog, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingAllForAccountRecordId(final VersionedCatalog catalog, final InternalTenantContext context) {
         return MoreObjects.firstNonNull(blockingStatesPerAccountRecordId.get(context.getAccountRecordId()), ImmutableList.<BlockingState>of());
     }
 
@@ -103,6 +105,11 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     @Override
     public void unactiveBlockingState(final UUID blockableId, final InternalCallContext context) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getBlockingStateAuditLogsWithHistoryForId(final UUID blockableId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        return null;
     }
 
     public synchronized void clear() {

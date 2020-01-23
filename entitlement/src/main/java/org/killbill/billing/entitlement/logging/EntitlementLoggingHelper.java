@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,41 +33,6 @@ import org.slf4j.Logger;
 
 public abstract class EntitlementLoggingHelper {
 
-    public static void logCreateEntitlement(final Logger log,
-                                            final UUID bundleId,
-                                            final PlanPhaseSpecifier spec,
-                                            final List<PlanPhasePriceOverride> overrides,
-                                            final LocalDate entitlementDate,
-                                            final LocalDate billingDate) {
-
-        if (log.isInfoEnabled()) {
-            final StringBuilder logLine = new StringBuilder("Create")
-                    .append(bundleId != null ? " AO " : " BP ")
-                    .append("Entitlement: ");
-
-            if (bundleId != null) {
-                logLine.append("bundleId='")
-                       .append(bundleId)
-                       .append("'");
-            }
-            logPlanPhaseSpecifier(logLine, spec, true, true);
-            if (overrides != null && !overrides.isEmpty()) {
-                logPlanPhasePriceOverrides(logLine, overrides);
-            }
-            if (entitlementDate != null) {
-                logLine.append(", entDate='")
-                       .append(entitlementDate)
-                       .append("'");
-            }
-            if (billingDate != null) {
-                logLine.append(", billDate='")
-                       .append(billingDate)
-                       .append("'");
-            }
-            log.info(logLine.toString());
-        }
-    }
-
     public static void logCreateEntitlementsWithAOs(final Logger log, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementSpecifiersWithAddOns) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Create Entitlements with AddOns: ");
@@ -75,7 +40,7 @@ public abstract class EntitlementLoggingHelper {
             if (baseEntitlementSpecifiersWithAddOns != null && baseEntitlementSpecifiersWithAddOns.iterator().hasNext()) {
                 for (final BaseEntitlementWithAddOnsSpecifier cur : baseEntitlementSpecifiersWithAddOns) {
                     logCreateEntitlementWithAOs(logLine,
-                                                cur.getExternalKey(),
+                                                cur.getBundleExternalKey(),
                                                 cur.getEntitlementSpecifier(),
                                                 cur.getEntitlementEffectiveDate(),
                                                 cur.getBillingEffectiveDate());
@@ -91,21 +56,32 @@ public abstract class EntitlementLoggingHelper {
                                                     final LocalDate entitlementDate,
                                                     final LocalDate billingDate) {
         if (externalKey != null) {
-            logLine.append("key='")
+            logLine.append("bundleKey='")
                    .append(externalKey)
                    .append("'");
         }
         if (entitlementDate != null) {
-            logLine.append(", entDate='")
+            if (externalKey != null) {
+                logLine.append(", ");
+            }
+            logLine.append("entDate='")
                    .append(entitlementDate)
                    .append("'");
         }
         if (billingDate != null) {
-            logLine.append(", billDate='")
+            if (externalKey != null || entitlementDate != null) {
+                logLine.append(", ");
+            }
+            logLine.append("billDate='")
                    .append(billingDate)
                    .append("'");
         }
-        logEntitlementSpecifier(logLine, entitlementSpecifiers);
+        if (entitlementSpecifiers != null && entitlementSpecifiers.iterator().hasNext()) {
+            if (externalKey != null || entitlementDate != null || billingDate != null) {
+                logLine.append(", ");
+            }
+            logEntitlementSpecifier(logLine, entitlementSpecifiers);
+        }
     }
 
     public static void logPauseResumeEntitlement(final Logger log,
@@ -327,38 +303,44 @@ public abstract class EntitlementLoggingHelper {
     }
 
     private static void logEntitlementSpecifier(final StringBuilder logLine, final Iterable<EntitlementSpecifier> entitlementSpecifiers) {
-        if (entitlementSpecifiers != null && entitlementSpecifiers.iterator().hasNext()) {
-            logLine.append(",'[");
-            boolean first = true;
-            for (EntitlementSpecifier cur : entitlementSpecifiers) {
-                if (!first) {
-                    logLine.append(",");
-                }
-                logPlanPhaseSpecifier(logLine, cur.getPlanPhaseSpecifier(), false, false);
-                logPlanPhasePriceOverrides(logLine, cur.getOverrides());
-                first = false;
+        logLine.append("'[");
+        boolean first = true;
+        for (final EntitlementSpecifier cur : entitlementSpecifiers) {
+            if (!first) {
+                logLine.append(",");
             }
-            logLine.append("]'");
+            logPlanPhaseSpecifier(logLine, cur.getPlanPhaseSpecifier(), false, false);
+            logPlanPhasePriceOverrides(logLine, cur.getOverrides());
+            first = false;
         }
+        logLine.append("]'");
     }
 
-    private static void logPlanPhaseSpecifier(final StringBuilder logLine, final PlanPhaseSpecifier spec, boolean addComma, boolean addParentheseQuote) {
+    private static void logPlanPhaseSpecifier(final StringBuilder logLine, final PlanPhaseSpecifier spec, final boolean addComma, final boolean addParenthesisQuote) {
         if (spec != null) {
             if (addComma) {
                 logLine.append(", ");
             }
-            logLine.append("spec=");
-            if (addParentheseQuote) {
-                logLine.append("'(");
+            if (spec.getPlanName() != null) {
+                logLine.append("planName=");
+                if (addParenthesisQuote) {
+                    logLine.append("'(");
+                }
+                logLine.append(spec.getPlanName());
+            } else {
+                logLine.append("spec=");
+                if (addParenthesisQuote) {
+                    logLine.append("'(");
+                }
+                logLine.append(spec.getProductName() != null ? spec.getProductName() : "null");
+                logLine.append(":");
+                logLine.append(spec.getBillingPeriod() != null ? spec.getBillingPeriod() : "null");
+                logLine.append(":");
+                logLine.append(spec.getPriceListName() != null ? spec.getPriceListName() : "null");
             }
-            logLine.append(spec.getProductName() != null ? spec.getProductName() : "null");
-            logLine.append(":");
-            logLine.append(spec.getBillingPeriod() != null ? spec.getBillingPeriod() : "null");
             logLine.append(":");
             logLine.append(spec.getPhaseType() != null ? spec.getPhaseType() : "null");
-            logLine.append(":");
-            logLine.append(spec.getPriceListName() != null ? spec.getPriceListName() : "null");
-            if (addParentheseQuote) {
+            if (addParenthesisQuote) {
                 logLine.append(")'");
             }
         }

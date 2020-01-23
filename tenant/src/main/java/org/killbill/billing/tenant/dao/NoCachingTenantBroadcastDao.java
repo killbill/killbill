@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,6 +28,7 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
@@ -42,8 +43,9 @@ import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastModelDao, Entity, TenantApiException> implements TenantBroadcastDao {
 
     @Inject
-    public NoCachingTenantBroadcastDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, @Named(DefaultTenantModule.NO_CACHING_TENANT) final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, null, null, internalCallContextFactory), TenantBroadcastSqlDao.class);
+    public NoCachingTenantBroadcastDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock,
+                                       final NonEntityDao nonEntityDao, @Named(DefaultTenantModule.NO_CACHING_TENANT) final InternalCallContextFactory internalCallContextFactory) {
+        super(nonEntityDao, null, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, null, null, internalCallContextFactory), TenantBroadcastSqlDao.class);
     }
 
     @Override
@@ -53,11 +55,6 @@ public class NoCachingTenantBroadcastDao extends EntityDaoBase<TenantBroadcastMo
 
     @Override
     protected TenantApiException generateAlreadyExistsException(final TenantBroadcastModelDao entity, final InternalCallContext context) {
-        throw new IllegalStateException("Not implemented by NoCachingTenantBroadcastDao");
-    }
-
-    @Override
-    public Long getRecordId(final UUID id, final InternalTenantContext context) {
         throw new IllegalStateException("Not implemented by NoCachingTenantBroadcastDao");
     }
 

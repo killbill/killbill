@@ -49,7 +49,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
         final DefaultCaseChangePlanAlignment caseAlignment = new DefaultCaseChangePlanAlignment().setAlignment(PlanAlignmentChange.START_OF_SUBSCRIPTION);
         final DefaultCasePriceList casePriceList = new DefaultCasePriceList().setToPriceList(priceList2);
 
-        cat.getPlanRules().
+        ((DefaultPlanRules) cat.getPlanRules()).
                 setChangeCase(new DefaultCaseChangePlanPolicy[]{casePolicy}).
                    setChangeAlignmentCase(new DefaultCaseChangePlanAlignment[]{caseAlignment}).
                    setPriceListCase(new DefaultCasePriceList[]{casePriceList});
@@ -58,14 +58,14 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testExistingPriceListIsKept() throws CatalogApiException {
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final PlanPhaseSpecifier from = new PlanPhaseSpecifier(product1.getName(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN);
         final PlanSpecifier to = new PlanSpecifier(product1.getName(), BillingPeriod.ANNUAL, priceList1.getName());
 
         PlanChangeResult result = null;
         try {
-            result = cat.getPlanRules().planChange(from, to, cat);
+            result = ((DefaultPlanRules) cat.getPlanRules()).getPlanChangeResult(from, to);
         } catch (IllegalPlanChange e) {
             Assert.fail("We should not have triggered this error");
         } catch (CatalogApiException e) {
@@ -81,7 +81,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
     public void testBaseCase() throws CatalogApiException {
         final DefaultProduct product1 = cat.getCurrentProduct(0);
         final DefaultProduct product2 = cat.getCurrentProduct(1);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[0];
 
         final PlanPhaseSpecifier from = new PlanPhaseSpecifier(product1.getName(), BillingPeriod.MONTHLY, priceList1.getName(), PhaseType.EVERGREEN);
@@ -89,7 +89,7 @@ public class TestPlanRules extends CatalogTestSuiteNoDB {
 
         PlanChangeResult result = null;
         try {
-            result = cat.getPlanRules().planChange(from, to, cat);
+            result = cat.getPlanRules().getPlanChangeResult(from, to);
         } catch (IllegalPlanChange e) {
             Assert.fail("We should not have triggered this error");
         } catch (CatalogApiException e) {

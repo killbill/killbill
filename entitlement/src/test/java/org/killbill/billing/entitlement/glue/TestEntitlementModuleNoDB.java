@@ -27,6 +27,8 @@ import org.killbill.billing.mock.glue.MockNonEntityDaoModule;
 import org.killbill.billing.mock.glue.MockSubscriptionModule;
 import org.killbill.billing.mock.glue.MockTagModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.audit.dao.AuditDao;
+import org.killbill.billing.util.audit.dao.MockAuditDao;
 import org.killbill.clock.ClockMock;
 
 public class TestEntitlementModuleNoDB extends TestEntitlementModule {
@@ -47,6 +49,7 @@ public class TestEntitlementModuleNoDB extends TestEntitlementModule {
         install(new MockSubscriptionModule(configSource));
         install(new MockCatalogModule(configSource));
         install(new MockAccountModule(configSource));
+        bind(AuditDao.class).toInstance(new MockAuditDao());
     }
 
     @Override

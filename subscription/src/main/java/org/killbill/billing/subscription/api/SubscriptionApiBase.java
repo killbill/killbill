@@ -30,13 +30,13 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanChangeResult;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -47,6 +47,7 @@ import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
@@ -73,7 +74,7 @@ public class SubscriptionApiBase {
         this.clock = clock;
     }
 
-    protected SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    protected SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final SubscriptionCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
         final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
         for (final SubscriptionBaseBundle cur : existingBundles) {
             final List<DefaultSubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), ImmutableList.<SubscriptionBaseEvent>of(), catalog, context);
@@ -90,7 +91,7 @@ public class SubscriptionApiBase {
     }
 
     protected SubscriptionBase getBaseSubscription(final UUID bundleId,
-                                                   final Catalog catalog,
+                                                   final SubscriptionCatalog catalog,
                                                    final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
         final SubscriptionBase result = dao.getBaseSubscription(bundleId, catalog, context);
         if (result == null) {
@@ -101,7 +102,7 @@ public class SubscriptionApiBase {
 
     protected List<DefaultSubscriptionBase> getSubscriptionsForBundle(final UUID bundleId,
                                                                       @Nullable final DryRunArguments dryRunArguments,
-                                                                      final Catalog catalog,
+                                                                      final SubscriptionCatalog catalog,
                                                                       final AddonUtils addonUtils,
                                                                       final TenantContext tenantContext,
                                                                       final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
@@ -123,7 +124,7 @@ public class SubscriptionApiBase {
                                       @Nullable final DryRunArguments dryRunArguments,
                                       final Collection<SubscriptionBaseEvent> outputDryRunEvents,
                                       final Collection<DefaultSubscriptionBase> outputSubscriptions,
-                                      final Catalog catalog,
+                                      final SubscriptionCatalog catalog,
                                       final AddonUtils addonUtils,
                                       final TenantContext tenantContext,
                                       final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
@@ -140,9 +141,10 @@ public class SubscriptionApiBase {
 
         // Create an overridesWithContext with a null context to indicate this is dryRun and no price overridden plan should be created.
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(entitlementSpecifier.getOverrides(), null);
+        final StaticCatalog versionCatalog = catalog.versionForDate(utcNow);
         final Plan plan = isInputSpecNullOrEmpty ?
                           null :
-                          catalog.createOrFindPlan(inputSpec, overridesWithContext, utcNow);
+                          versionCatalog.createOrFindPlan(inputSpec, overridesWithContext);
 
         switch (dryRunArguments.getAction()) {
             case START_BILLING:
@@ -150,7 +152,7 @@ public class SubscriptionApiBase {
                 final DateTime startEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : utcNow;
                 final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, addonUtils, context);
                 final UUID subscriptionId = UUIDs.randomUUID();
-                dryRunEvents = apiService.getEventsOnCreation(subscriptionId, startEffectiveDate, bundleStartDate, plan, inputSpec.getPhaseType(), plan.getPriceListName(),
+                dryRunEvents = apiService.getEventsOnCreation(subscriptionId, startEffectiveDate, bundleStartDate, plan, inputSpec.getPhaseType(), plan.getPriceList().getName(),
                                                               startEffectiveDate, entitlementSpecifier.getBillCycleDay(), catalog, context);
                 final SubscriptionBuilder builder = new SubscriptionBuilder()
                         .setId(subscriptionId)
@@ -175,9 +177,9 @@ public class SubscriptionApiBase {
                         policy = planChangeResult.getPolicy();
                     }
                     // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
-                    changeEffectiveDate = subscriptionForChange.getPlanChangeEffectiveDate(policy, null, -1, context);
+                    changeEffectiveDate = subscriptionForChange.getEffectiveDateForPolicy(policy, null, -1, context);
                 }
-                dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, plan.getPriceListName(), changeEffectiveDate, true, entitlementSpecifier.getBillCycleDay(), catalog, context);
+                dryRunEvents = apiService.getEventsOnChangePlan(subscriptionForChange, plan, plan.getPriceList().getName(), changeEffectiveDate, true, entitlementSpecifier.getBillCycleDay(), catalog, context);
                 break;
 
             case STOP_BILLING:
@@ -193,7 +195,7 @@ public class SubscriptionApiBase {
                         policy = catalog.planCancelPolicy(spec, clock.getUTCNow(), subscriptionForCancellation.getStartDate());
                     }
                     // We pass null for billingAlignment, accountTimezone, account BCD because this is not available which means that dryRun with START_OF_TERM BillingPolicy will fail
-                    cancelEffectiveDate = subscriptionForCancellation.getPlanChangeEffectiveDate(policy, null, -1, context);
+                    cancelEffectiveDate = subscriptionForCancellation.getEffectiveDateForPolicy(policy, null, -1, context);
                 }
                 dryRunEvents = apiService.getEventsOnCancelPlan(subscriptionForCancellation, cancelEffectiveDate, true, catalog, context);
                 break;
@@ -262,7 +264,7 @@ public class SubscriptionApiBase {
     protected SubscriptionBaseBundle createBundleForAccount(final UUID accountId,
                                                             final String bundleKey,
                                                             final boolean renameCancelledBundleIfExist,
-                                                            final Catalog catalog,
+                                                            final SubscriptionCatalog catalog,
                                                             final CacheController<UUID, UUID> accountIdCacheController,
                                                             final InternalCallContext context) throws SubscriptionBaseApiException {
         final DateTime now = context.getCreatedDate();
@@ -292,7 +294,7 @@ public class SubscriptionApiBase {
 
     protected DefaultSubscriptionBase createSubscriptionForApiUse(final SubscriptionBuilder builder,
                                                                   final List<SubscriptionBaseEvent> events,
-                                                                  final Catalog catalog,
+                                                                  final SubscriptionCatalog catalog,
                                                                   final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder, apiService, clock);
         if (!events.isEmpty()) {

@@ -29,7 +29,6 @@ import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
@@ -42,11 +41,13 @@ import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -80,20 +81,21 @@ public class CatalogJson {
         this.priceLists = priceLists;
     }
 
-    public CatalogJson(final Catalog catalog, final DateTime requestedDate) throws CatalogApiException {
+    public CatalogJson(final StaticCatalog catalog) throws CatalogApiException {
+
         name = catalog.getCatalogName();
-        effectiveDate = catalog.getStandaloneCatalogEffectiveDate(requestedDate);
-        currencies = Arrays.asList(catalog.getSupportedCurrencies(requestedDate));
+        effectiveDate = catalog.getEffectiveDate();
+        currencies = Arrays.asList(catalog.getSupportedCurrencies());
         priceLists = new ArrayList<PriceListJson>();
 
         List<UnitJson> units = new ArrayList<UnitJson>();
-        for (final Unit unit : catalog.getUnits(requestedDate)) {
+        for (final Unit unit : catalog.getUnits()) {
             final UnitJson unitJson = new UnitJson(unit.getName(), unit.getPrettyName());
             units.add(unitJson);
         }
         this.units = units;
 
-        final Collection<Plan> plans = catalog.getPlans(requestedDate);
+        final Collection<Plan> plans = catalog.getPlans();
         final Map<String, ProductJson> productMap = new HashMap<String, ProductJson>();
         for (final Plan plan : plans) {
             // Build the product associated with this plan
@@ -114,7 +116,7 @@ public class CatalogJson {
 
         products = ImmutableList.<ProductJson>copyOf(productMap.values());
 
-        final PriceListSet priceLists = catalog.getPriceLists(requestedDate);
+        final PriceListSet priceLists = catalog.getPriceLists();
         for (PriceList childPriceList : priceLists.getAllPriceLists()) {
             this.priceLists.add(new PriceListJson(childPriceList));
         }

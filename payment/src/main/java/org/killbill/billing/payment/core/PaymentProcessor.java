@@ -289,7 +289,7 @@ public class PaymentProcessor extends ProcessorBase {
             if (runJanitor) {
                 final PaymentPluginApi plugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, internalCallContext);
                 final List<PaymentTransactionInfoPlugin> pluginTransactions = paymentRefresher.getPaymentTransactionInfoPlugins(plugin, paymentModelDao, properties, callContext);
-                paymentModelDao = paymentRefresher.invokeJanitor(paymentModelDao, paymentTransactionsForCurrentPayment, pluginTransactions, internalCallContext);
+                paymentModelDao = paymentRefresher.invokeJanitor(paymentModelDao, paymentTransactionsForCurrentPayment, pluginTransactions, isApiPayment, internalCallContext);
             }
 
             if (paymentStateContext.getPaymentTransactionExternalKey() != null) {
@@ -328,7 +328,7 @@ public class PaymentProcessor extends ProcessorBase {
 
         paymentAutomatonRunner.run(paymentStateContext, daoHelper, currentStateName, transactionType);
 
-        return paymentRefresher.getPayment(paymentStateContext.getPaymentModelDao(), true, false, properties, callContext, internalCallContext);
+        return paymentRefresher.getPayment(paymentStateContext.getPaymentModelDao(), true, false, isApiPayment, properties, callContext, internalCallContext);
     }
 
     private void runSanityOnTransactionExternalKey(final Iterable<PaymentTransactionModelDao> allPaymentTransactionsForKey,

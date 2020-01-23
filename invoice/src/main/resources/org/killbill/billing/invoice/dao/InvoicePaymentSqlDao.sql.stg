@@ -1,6 +1,7 @@
 import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "invoice_payments"
+historyTableName() ::= "invoice_payment_history"
 
 tableFields(prefix) ::= <<
   <prefix>type
@@ -131,7 +132,7 @@ updateAttempt() ::= <<
     payment_cookie_id = :paymentCookieId,
     linked_invoice_payment_id := :linkedInvoicePaymentId,
     success := :success
-    WHERE record_id = :recordId
+    WHERE id = :id
     <AND_CHECK_TENANT("")>
     ;
 >>

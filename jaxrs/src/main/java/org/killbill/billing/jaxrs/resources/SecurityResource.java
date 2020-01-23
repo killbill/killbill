@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -98,9 +98,8 @@ public class SecurityResource extends JaxRsResourceBase {
     public Response getCurrentUserPermissions(@javax.ws.rs.core.Context final HttpServletRequest request) {
         // The getCurrentUserPermissions takes a TenantContext which is not used because permissions are cross tenants (at this point)
         final TenantContext nullTenantContext = null;
-        final Set<Permission> permissions = securityApi.getCurrentUserPermissions(nullTenantContext);
-        final List<String> json = ImmutableList.<String>copyOf(Iterables.<Permission, String>transform(permissions, Functions.toStringFunction()));
-        return Response.status(Status.OK).entity(json).build();
+        final Set<String> permissions = securityApi.getCurrentUserPermissions(nullTenantContext);
+        return Response.status(Status.OK).entity(permissions).build();
     }
 
     @TimedResource

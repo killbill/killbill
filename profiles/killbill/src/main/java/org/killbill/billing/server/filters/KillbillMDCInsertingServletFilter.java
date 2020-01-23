@@ -33,6 +33,7 @@ import com.sun.jersey.spi.container.ContainerResponseWriter;
 
 import static org.killbill.billing.util.callcontext.InternalCallContextFactory.MDC_KB_ACCOUNT_RECORD_ID;
 import static org.killbill.billing.util.callcontext.InternalCallContextFactory.MDC_KB_TENANT_RECORD_ID;
+import static org.killbill.billing.util.callcontext.InternalCallContextFactory.MDC_KB_USER_TOKEN;
 
 @Singleton
 public class KillbillMDCInsertingServletFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -75,9 +76,10 @@ public class KillbillMDCInsertingServletFilter implements ContainerRequestFilter
             // Removing possibly inexistent item is OK
             MDC.remove(MDC_REQUEST_ID);
 
-            // Cleanup
+            // Cleanup (this needs to be kept in sync with InternalCallContextFactory)
             MDC.remove(MDC_KB_ACCOUNT_RECORD_ID);
             MDC.remove(MDC_KB_TENANT_RECORD_ID);
+            MDC.remove(MDC_KB_USER_TOKEN);
         }
     }
 }

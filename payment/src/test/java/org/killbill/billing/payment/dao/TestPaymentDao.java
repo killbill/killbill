@@ -198,7 +198,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(transactions.size(), 2);
 
         paymentDao.updatePaymentAndTransactionOnCompletion(accountId, savedTransactionModelDao2.getAttemptId(), savedPayment.getId(), savedTransactionModelDao2.getTransactionType(), "AUTH_ABORTED", "AUTH_SUCCESS", transactionModelDao2.getId(), TransactionStatus.SUCCESS,
-                                                           BigDecimal.ONE, Currency.USD, null, "nothing", internalCallContext);
+                                                           BigDecimal.ONE, Currency.USD, null, "nothing", true, internalCallContext);
 
         final PaymentModelDao savedPayment4 = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
         assertEquals(savedPayment4.getId(), paymentModelDao.getId());
@@ -244,7 +244,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(savedTransactionModelDao4.getGatewayErrorMsg(), "nothing");
 
         paymentDao.updatePaymentAndTransactionOnCompletion(accountId, savedTransactionModelDao2.getAttemptId(), savedPayment.getId(), savedTransactionModelDao2.getTransactionType(), "AUTH_ABORTED", null, transactionModelDao2.getId(), TransactionStatus.SUCCESS,
-                                                           BigDecimal.ONE, Currency.USD, null, "nothing", internalCallContext);
+                                                           BigDecimal.ONE, Currency.USD, null, "nothing", true, internalCallContext);
 
         final PaymentModelDao savedPayment4Again = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
         assertEquals(savedPayment4Again.getId(), paymentModelDao.getId());
@@ -252,7 +252,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         assertNull(savedPayment4Again.getLastSuccessStateName());
 
         paymentDao.updatePaymentAndTransactionOnCompletion(accountId, savedTransactionModelDao2.getAttemptId(), savedPayment.getId(), savedTransactionModelDao2.getTransactionType(), "AUTH_ABORTED", "AUTH_SUCCESS", transactionModelDao2.getId(), TransactionStatus.SUCCESS,
-                                                           BigDecimal.ONE, Currency.USD, null, "nothing", internalCallContext);
+                                                           BigDecimal.ONE, Currency.USD, null, "nothing", true, internalCallContext);
 
         final PaymentModelDao savedPayment4Final = paymentDao.getPayment(savedPayment.getId(), internalCallContext);
         assertEquals(savedPayment4Final.getId(), paymentModelDao.getId());
@@ -358,7 +358,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
             final String newPaymentState = "XXX_FAILED";
             paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), paymentTransaction.getAttemptId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, payment.getLastSuccessStateName(),
                                                                paymentTransaction.getId(), TransactionStatus.PAYMENT_FAILURE, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
-                                                               paymentTransaction.getGatewayErrorCode(), paymentTransaction.getGatewayErrorMsg(), internalCallContext);
+                                                               paymentTransaction.getGatewayErrorCode(), paymentTransaction.getGatewayErrorMsg(), true, internalCallContext);
         }
 
         final List<PaymentTransactionModelDao> result2 = getPendingTransactions(paymentModelDao.getId());
@@ -375,7 +375,7 @@ public class TestPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
             final String newPaymentState = "XXX_FAILED";
             paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(), paymentTransaction.getAttemptId(), payment.getId(), paymentTransaction.getTransactionType(), newPaymentState, payment.getLastSuccessStateName(),
                                                                paymentTransaction.getId(), TransactionStatus.PAYMENT_FAILURE, paymentTransaction.getProcessedAmount(), paymentTransaction.getProcessedCurrency(),
-                                                               paymentTransaction.getGatewayErrorCode(), paymentTransaction.getGatewayErrorMsg(), internalCallContext);
+                                                               paymentTransaction.getGatewayErrorCode(), paymentTransaction.getGatewayErrorMsg(), true, internalCallContext);
         }
 
         final List<PaymentTransactionModelDao> result3 = getPendingTransactions(paymentModelDao.getId());

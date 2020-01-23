@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,7 +36,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.api.BlockingApiException;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -47,11 +47,15 @@ import org.killbill.billing.entitlement.block.BlockingChecker.BlockingAggregator
 import org.killbill.billing.entitlement.block.StatelessBlockingChecker;
 import org.killbill.billing.entitlement.engine.core.BlockingTransitionNotificationKey;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -114,16 +118,18 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     private final PersistentBus eventBus;
     private final CacheController<String, UUID> objectIdCacheController;
     private final NonEntityDao nonEntityDao;
+    private final AuditDao auditDao;
 
     private final StatelessBlockingChecker statelessBlockingChecker = new StatelessBlockingChecker();
 
     public DefaultBlockingStateDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
-                                   final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BlockingStateSqlDao.class);
+                                   final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(nonEntityDao, cacheControllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BlockingStateSqlDao.class);
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
         this.eventBus = eventBus;
         this.objectIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
+        this.auditDao = auditDao;
         this.nonEntityDao = nonEntityDao;
     }
 
@@ -181,7 +187,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     }
 
     @Override
-    public List<BlockingState> getBlockingAllForAccountRecordId(final Catalog catalog, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingAllForAccountRecordId(final VersionedCatalog catalog, final InternalTenantContext context) {
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -383,6 +389,17 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
                 sqlDao.unactiveEvent(id.toString(), context);
                 return null;
+            }
+        });
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getBlockingStateAuditLogsWithHistoryForId(final UUID blockableId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
+            @Override
+            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
+                final BlockingStateSqlDao transactional = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
+                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.BLOCKING_STATES, blockableId, auditLevel, context);
             }
         });
     }

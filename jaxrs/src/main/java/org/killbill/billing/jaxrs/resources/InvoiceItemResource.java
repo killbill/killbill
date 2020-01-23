@@ -34,6 +34,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.killbill.billing.ObjectType;
@@ -41,18 +42,22 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
+import org.killbill.billing.invoice.api.InvoiceUserApi;
+import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.clock.Clock;
@@ -71,12 +76,29 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class InvoiceItemResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "invoiceItemId";
 
+    private final InvoiceUserApi invoiceApi;
+
     @Inject
     public InvoiceItemResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi,
-                               final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final PaymentApi paymentApi,
+                               final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final InvoiceUserApi invoiceApi, final PaymentApi paymentApi,
                                final InvoicePaymentApi invoicePaymentApi, final SubscriptionApi subscriptionApi, final Clock clock, final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, subscriptionApi, clock, context);
+        this.invoiceApi = invoiceApi;
     }
+
+    @TimedResource
+    @GET
+    @Path("/{invoiceItemId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve invoice item audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice item not found")})
+    public Response getInvoiceItemAuditLogsWithHistory(@PathParam("invoiceItemId") final UUID invoiceItemId,
+                                                       @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = invoiceApi.getInvoiceItemAuditLogsWithHistoryForId(invoiceItemId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
+    }
+
 
     @TimedResource
     @GET

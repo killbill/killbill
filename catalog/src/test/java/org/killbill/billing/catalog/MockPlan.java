@@ -92,7 +92,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public MockPlan(final String name, final DefaultProduct product, final DefaultPlanPhase[] planPhases, final DefaultPlanPhase finalPhase, final int plansAllowedInBundle) {
-        this.staticCatalog = new StandaloneCatalog(new Date());
+        this.root = new StandaloneCatalog(new Date());
         setName(name);
         setProduct(product);
         setFinalPhase(finalPhase);
@@ -116,6 +116,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public MockPlan(final MockPlanPhase mockPlanPhase) {
+        this.root = new StandaloneCatalog(new Date());
         setName("Test");
         setProduct(MockProduct.createBicycle());
         setFinalPhase(mockPlanPhase);
@@ -124,6 +125,7 @@ public class MockPlan extends DefaultPlan {
     }
 
     public MockPlan(final String planName) {
+        this.root = new StandaloneCatalog(new Date());
         setName(planName);
         setProduct(new MockProduct());
         setFinalPhase(new MockPlanPhase(this));

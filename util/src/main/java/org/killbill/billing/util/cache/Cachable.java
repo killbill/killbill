@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -22,12 +22,11 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.ImmutableAccountData;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.util.config.tenant.PerTenantConfig;
 
@@ -39,8 +38,6 @@ public @interface Cachable {
     String ACCOUNT_RECORD_ID_CACHE_NAME = "account-record-id";
     String TENANT_RECORD_ID_CACHE_NAME = "tenant-record-id";
     String OBJECT_ID_CACHE_NAME = "object-id";
-    String AUDIT_LOG_CACHE_NAME = "audit-log";
-    String AUDIT_LOG_VIA_HISTORY_CACHE_NAME = "audit-log-via-history";
     String TENANT_CATALOG_CACHE_NAME = "tenant-catalog";
     String TENANT_PAYMENT_STATE_MACHINE_CONFIG_CACHE_NAME = "tenant-payment-state-machine-config";
     String TENANT_OVERDUE_CONFIG_CACHE_NAME = "tenant-overdue-config";
@@ -70,14 +67,8 @@ public @interface Cachable {
         /* Mapping from object 'recordId (Long as String)' -> object 'id (UUID)'  */
         OBJECT_ID(OBJECT_ID_CACHE_NAME, String.class, UUID.class, true),
 
-        /* Mapping from object 'tableName::targetRecordId' -> matching objects 'List<AuditLogModelDao>' */
-        AUDIT_LOG(AUDIT_LOG_CACHE_NAME, String.class, List.class, true),
-
-        /* Mapping from object 'tableName::historyTableName::targetRecordId' -> matching objects 'List<AuditLogModelDao>' */
-        AUDIT_LOG_VIA_HISTORY(AUDIT_LOG_VIA_HISTORY_CACHE_NAME, String.class, List.class, true),
-
         /* Tenant catalog cache */
-        TENANT_CATALOG(TENANT_CATALOG_CACHE_NAME, Long.class, Catalog.class, false),
+        TENANT_CATALOG(TENANT_CATALOG_CACHE_NAME, Long.class, VersionedCatalog.class, false),
 
         /* Tenant payment state machine config cache (String -> SerializableStateMachineConfig) */
         TENANT_PAYMENT_STATE_MACHINE_CONFIG(TENANT_PAYMENT_STATE_MACHINE_CONFIG_CACHE_NAME, String.class, Object.class, false),
@@ -121,6 +112,15 @@ public @interface Cachable {
             this.isKeyPrefixedWithTableName = isKeyPrefixedWithTableName;
         }
 
+        public static CacheType findByName(final String input) {
+            for (final CacheType cacheType : CacheType.values()) {
+                if (cacheType.cacheName.equals(input)) {
+                    return cacheType;
+                }
+            }
+            return null;
+        }
+
         public String getCacheName() {
             return cacheName;
         }
@@ -134,14 +134,5 @@ public @interface Cachable {
         }
 
         public boolean isKeyPrefixedWithTableName() { return isKeyPrefixedWithTableName; }
-
-        public static CacheType findByName(final String input) {
-            for (final CacheType cacheType : CacheType.values()) {
-                if (cacheType.cacheName.equals(input)) {
-                    return cacheType;
-                }
-            }
-            return null;
-        }
     }
 }

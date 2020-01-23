@@ -156,7 +156,12 @@ public class NodesInfoResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_REASON) final String reason,
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
-                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException {
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) {
+        // Add in the broadcast message the Kill Bill version -- this is needed by the KPM plugin for instance
+        final NodeInfo currentNodeInfo = killbillInfoApi.getCurrentNodeInfo();
+        if (currentNodeInfo != null) {
+            json.getNodeCommandProperties().add(new NodeCommandPropertyJson("kbVersion", currentNodeInfo.getKillbillVersion()));
+        }
 
         final NodeCommandMetadata metadata = toNodeCommandMetadata(json);
 

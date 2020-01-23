@@ -1,8 +1,9 @@
 import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "blocking_states"
+historyTableName() ::= "blocking_state_history"
 
-andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active = '1'"
 
 defaultOrderBy(prefix) ::= <<
 order by <prefix>effective_date ASC, <recordIdField(prefix)> ASC
@@ -50,7 +51,7 @@ from
 where blockable_id = :blockableId
 and service = :service
 and effective_date \<= :effectiveDate
-and is_active
+and is_active = '1'
 <AND_CHECK_TENANT("")>
 -- We want the current state, hence the order desc and limit 1
 order by effective_date desc, record_id desc
@@ -112,7 +113,7 @@ from
 <tableName()>
 where blockable_id = :blockableId
 and service = :service
-and is_active
+and is_active = '1'
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;
@@ -121,7 +122,7 @@ and is_active
 unactiveEvent() ::= <<
 update
 <tableName()>
-set is_active = false
+set is_active = '0'
 where id = :id
 <AND_CHECK_TENANT("")>
 ;

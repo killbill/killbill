@@ -53,15 +53,15 @@ public class TestBundle extends TestJaxrsBase {
         final Account accountJson;
         accountJson = createAccount();
 
-        final Subscription subscription = createSubscription(accountJson.getAccountId(), null, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
-        Assert.assertNotNull(subscription.getExternalKey());
+        final Subscription subscription = createSubscription(accountJson.getAccountId(), null, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY);
+        Assert.assertNotNull(subscription.getBundleExternalKey());
     }
 
     @Test(groups = "slow", description = "Can retrieve bundles by external key")
     public void testBundleOk() throws Exception {
         final Account accountJson = createAccount();
 
-        createSubscription(accountJson.getAccountId(), "123467", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        createSubscription(accountJson.getAccountId(), "123467", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY);
 
         // Retrieves by external key
         final List<Bundle> objFromJson = accountApi.getAccountBundles(accountJson.getAccountId(), "123467", null, requestOptions);
@@ -71,8 +71,8 @@ public class TestBundle extends TestJaxrsBase {
     @Test(groups = "slow", description = "Can retrieve account bundles")
     public void testBundleFromAccount() throws Exception {
         final Account accountJson = createAccount();
-        createSubscription(accountJson.getAccountId(), "156567", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
-        createSubscription(accountJson.getAccountId(), "265658", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+        createSubscription(accountJson.getAccountId(), "156567", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY);
+        createSubscription(accountJson.getAccountId(), "265658", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY);
 
         final List<Bundle> objFromJson = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         Assert.assertEquals(objFromJson.size(), 2);
@@ -113,7 +113,7 @@ public class TestBundle extends TestJaxrsBase {
         final String bundleExternalKey = "93199";
 
         final Subscription entitlementJsonNoEvents = createSubscription(accountJson.getAccountId(), bundleExternalKey, productName,
-                                                                       ProductCategory.BASE, term, true);
+                                                                       ProductCategory.BASE, term);
 
         Bundles existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
         assertEquals(existingBundles.size(), 1);
@@ -169,7 +169,7 @@ public class TestBundle extends TestJaxrsBase {
         final String bundleExternalKey = "93199";
 
         final Subscription entitlement = createSubscription(accountJson.getAccountId(), bundleExternalKey, productName,
-                                                           ProductCategory.BASE, term, true);
+                                                           ProductCategory.BASE, term);
 
         Bundles existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
         assertEquals(existingBundles.size(), 1);
@@ -206,7 +206,7 @@ public class TestBundle extends TestJaxrsBase {
         final Account accountJson = createAccount();
 
         for (int i = 0; i < 5; i++) {
-            createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+            createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY);
         }
 
         final Bundles allBundles = bundleApi.getBundles(requestOptions);

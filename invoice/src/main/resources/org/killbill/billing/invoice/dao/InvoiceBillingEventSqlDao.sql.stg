@@ -1,0 +1,17 @@
+import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
+
+tableName() ::= "invoice_billing_events"
+
+tableFields(prefix) ::= <<
+  <prefix>invoice_id
+, <prefix>billing_events
+, <prefix>created_by
+, <prefix>created_date
+>>
+
+tableValues() ::= <<
+  :invoiceId
+, :billingEvents
+, :createdBy
+, :createdDate
+>>

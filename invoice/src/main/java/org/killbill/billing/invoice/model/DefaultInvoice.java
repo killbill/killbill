@@ -28,8 +28,9 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -49,6 +50,8 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     private final List<InvoiceItem> invoiceItems;
     private final List<InvoicePayment> payments;
+    private final List<String> trackingIds;
+
     private final UUID accountId;
     private final Integer invoiceNumber;
     private final LocalDate invoiceDate;
@@ -61,7 +64,6 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     private final InvoiceStatus status;
     private final boolean isParentInvoice;
     private final Invoice parentInvoice;
-
 
 
     // Used to create a new invoice
@@ -80,7 +82,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     }
 
     // This CTOR is used to return an existing invoice and must include everything (items, payments, tags,..)
-    public DefaultInvoice(final InvoiceModelDao invoiceModelDao, @Nullable final Catalog catalog) {
+    public DefaultInvoice(final InvoiceModelDao invoiceModelDao, @Nullable final VersionedCatalog catalog) {
         this(invoiceModelDao.getId(), invoiceModelDao.getCreatedDate(), invoiceModelDao.getAccountId(),
              invoiceModelDao.getInvoiceNumber(), invoiceModelDao.getInvoiceDate(), invoiceModelDao.getTargetDate(),
              invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated(),
@@ -98,6 +100,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
                 return new DefaultInvoicePayment(input);
             }
         }));
+        addTrackingIds(invoiceModelDao.getTrackingIds());
     }
 
     public DefaultInvoice(final InvoiceModelDao invoiceModelDao) {
@@ -124,6 +127,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this.isWrittenOff = isWrittenOff;
         this.invoiceItems = new ArrayList<InvoiceItem>();
         this.payments = new ArrayList<InvoicePayment>();
+        this.trackingIds = new ArrayList<String>();
         this.status = status;
         this.isParentInvoice = isParentInvoice;
         this.parentInvoice = (parentInvoice != null) ? new DefaultInvoice(parentInvoice) : null;
@@ -156,6 +160,16 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     @Override
     public List<InvoiceItem> getInvoiceItems() {
         return invoiceItems;
+    }
+
+    @Override
+    public List<String> getTrackingIds() {
+        return trackingIds;
+    }
+
+    @Override
+    public boolean addTrackingIds(final Collection<String> trackingIds) {
+        return this.trackingIds.addAll(trackingIds);
     }
 
     @Override

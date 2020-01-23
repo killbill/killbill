@@ -31,6 +31,7 @@ import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
@@ -101,10 +102,16 @@ public class DefaultControlInitiated implements LeavingStateCallback {
             stateContext.setPaymentTransactionExternalKey(paymentTransactionIdForNewPaymentTransaction.toString());
         }
 
-        if (stateContext.getPaymentMethodId() == null) {
-            // Similar logic in PaymentAutomatonRunner
-            stateContext.setPaymentMethodId(stateContext.getAccount().getPaymentMethodId());
+        // The user specified the payment Method to use for a new payment or we computed which one to use for a subsequent payment
+        // In this case, we also want to provide the associated plugin name
+        if (stateContext.getPaymentMethodId() != null) {
+            final PaymentMethodModelDao pm = paymentDao.getPaymentMethod(stateContext.getPaymentMethodId(), stateContext.getInternalCallContext());
+            // Payment method was deleted
+            if (pm != null) {
+                stateContext.setOriginalPaymentPluginName(pm.getPluginName());
+            }
         }
+
 
         if (state.getName().equals(initialState.getName()) || state.getName().equals(retriedState.getName())) {
             try {

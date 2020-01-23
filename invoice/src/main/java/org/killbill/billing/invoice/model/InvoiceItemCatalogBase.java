@@ -18,6 +18,7 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -30,6 +31,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 
 public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceItem {
 
+    protected final DateTime catalogEffectiveDate;
     protected final String productName;
     protected final String planName;
     protected final String phaseName;
@@ -41,28 +43,23 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
     protected final String prettyUsageName;
 
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                                  @Nullable final UUID subscriptionId, @Nullable final String description,
+                                  @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final DateTime catalogEffectiveDate,
                                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, final InvoiceItemType invoiceItemType) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, null, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, null, null, invoiceItemType);
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, catalogEffectiveDate, null, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, null, null, invoiceItemType);
     }
 
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                                  @Nullable final UUID subscriptionId, @Nullable final String description,
+                                  @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final DateTime catalogEffectiveDate,
                                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId,
                                   @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, null, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails, invoiceItemType);
+        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, catalogEffectiveDate, null, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails, invoiceItemType);
     }
 
     public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName,
-                                  @Nullable final String usageName, @Nullable final String prettyProductName, @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
-                                  final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, final InvoiceItemType invoiceItemType) {
-        this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPhaseName, prettyUsageName,
-             startDate, endDate, amount, rate, currency, linkedItemId, null, null, invoiceItemType);
-    }
-
-    public InvoiceItemCatalogBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
-                                  @Nullable final UUID subscriptionId, @Nullable final String description, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName,
+                                  @Nullable final UUID subscriptionId, @Nullable final String description,
+                                  @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final DateTime catalogEffectiveDate,
                                   @Nullable final String prettyProductName, @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
                                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId,
                                   @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
@@ -71,6 +68,7 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
         this.planName = planName;
         this.phaseName = phaseName;
         this.usageName = usageName;
+        this.catalogEffectiveDate = catalogEffectiveDate;
         this.prettyProductName = prettyProductName;
         this.prettyPlanName = prettyPlanName;
         this.prettyPhaseName = prettyPhaseName;
@@ -118,12 +116,25 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
     }
 
     @Override
+    public DateTime getCatalogEffectiveDate() {
+        return catalogEffectiveDate;
+    }
+
+    @Override
     public boolean matches(final Object o) {
 
         if (!super.matches(o)) {
             return false;
         }
         final InvoiceItemCatalogBase that = (InvoiceItemCatalogBase) o;
+        if (catalogEffectiveDate != null && that.catalogEffectiveDate != null && catalogEffectiveDate.compareTo(that.catalogEffectiveDate) != 0) {
+            return false;
+        } else if (catalogEffectiveDate == null || that.catalogEffectiveDate == null) {
+            /* At least one such item has a 'null' catalogEffectiveDate, reflecting a prior 0.22 release item
+             * => we default to true to avoid re-generating existing items (See https://github.com/killbill/killbill/issues/1251)
+             */
+        }
+
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
             return false;
         }
@@ -136,6 +147,7 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
     @Override
     public int hashCode() {
         int result = super.hashCode();
+        result = 31 * result + (catalogEffectiveDate != null ? catalogEffectiveDate.hashCode() : 0);
         result = 31 * result + (planName != null ? planName.hashCode() : 0);
         result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
         result = 31 * result + (usageName != null ? usageName.hashCode() : 0);
@@ -147,6 +159,7 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
         // Note: we don't use all fields here, as the output would be overwhelming
         // (we output all invoice items as they are generated).
         final StringBuilder sb = new StringBuilder().append(invoiceItemType).append("{");
+        //sb.append("catalogEffectiveDate='").append(catalogEffectiveDate).append('\'');
         sb.append("productName='").append(productName).append('\'');
         sb.append(", planName='").append(planName).append('\'');
         sb.append(", phaseName='").append(phaseName).append('\'');

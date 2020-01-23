@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +43,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -52,11 +54,15 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.api.SubscriptionApiException;
+import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.jaxrs.json.AuditLogJson;
@@ -64,6 +70,7 @@ import org.killbill.billing.jaxrs.json.BillingExceptionJson;
 import org.killbill.billing.jaxrs.json.BillingExceptionJson.StackTraceElementJson;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
+import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.JsonBase;
 import org.killbill.billing.jaxrs.json.PaymentTransactionJson;
 import org.killbill.billing.jaxrs.json.PluginPropertyJson;
@@ -591,6 +598,60 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         };
     }
 
+    protected Iterable<InvoiceItem> validateSanitizeAndTranformInputItems(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
+        try {
+            final Iterable<InvoiceItemJson> sanitized = Iterables.transform(inputItems, new Function<InvoiceItemJson, InvoiceItemJson>() {
+                @Override
+                public InvoiceItemJson apply(final InvoiceItemJson input) {
+                    if (input.getCurrency() != null) {
+                        if (!input.getCurrency().equals(accountCurrency)) {
+                            throw new IllegalArgumentException(input.getCurrency().toString());
+                        }
+                        return input;
+                    } else {
+                        return new InvoiceItemJson(null,
+                                                   input.getInvoiceId(),
+                                                   input.getLinkedInvoiceItemId(),
+                                                   input.getAccountId(),
+                                                   input.getChildAccountId(),
+                                                   input.getBundleId(),
+                                                   input.getSubscriptionId(),
+                                                   input.getProductName(),
+                                                   input.getPlanName(),
+                                                   input.getPhaseName(),
+                                                   input.getUsageName(),
+                                                   input.getPrettyProductName(),
+                                                   input.getPrettyPlanName(),
+                                                   input.getPrettyPhaseName(),
+                                                   input.getPrettyUsageName(),
+                                                   input.getItemType(),
+                                                   input.getDescription(),
+                                                   input.getStartDate(),
+                                                   input.getEndDate(),
+                                                   input.getAmount(),
+                                                   input.getRate(),
+                                                   accountCurrency,
+                                                   input.getQuantity(),
+                                                   input.getItemDetails(),
+                                                   input.getCatalogEffectiveDate(),
+                                                   null,
+                                                   null);
+                    }
+                }
+            });
+
+            return Iterables.transform(sanitized, new Function<InvoiceItemJson, InvoiceItem>() {
+                @Override
+                public InvoiceItem apply(final InvoiceItemJson input) {
+                    return input.toInvoiceItem();
+                }
+            });
+        } catch (IllegalArgumentException e) {
+            throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, accountCurrency, e.getMessage());
+        }
+    }
+
+
     public static Iterable<PaymentTransaction> getPaymentTransactions(final List<Payment> payments, final TransactionType transactionType) {
         return Iterables.concat(Iterables.transform(payments, new Function<Payment, Iterable<PaymentTransaction>>() {
             @Override
@@ -635,11 +696,6 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
     }
 
-    protected void logDeprecationParameterWarningIfNeeded(@Nullable final String deprecatedParam, final String... replacementParams) {
-        if (deprecatedParam != null) {
-            log.warn(String.format("Parameter %s is being deprecated: Instead use parameters %s", deprecatedParam, Joiner.on(",").join(replacementParams)));
-        }
-    }
 
     protected Response createPaymentResponse(final UriInfo uriInfo, final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey, final HttpServletRequest request) {
         final PaymentTransaction createdTransaction = findCreatedTransaction(payment, transactionType, transactionExternalKey);
@@ -725,4 +781,19 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             }
         }));
     }
+
+    public static void filterCatalogVersions(final VersionedCatalog fullCatalog, @Nullable final DateTime requestedDate) {
+
+        if (requestedDate == null) {
+            return;
+        }
+
+        final StaticCatalog target = fullCatalog.getVersion(requestedDate.toDate());
+
+        // Since we cannot reconstruct a DefaultVersionedCatalog with all its JAXB annotation
+        // we filter the existing versions list from the original object
+        fullCatalog.getVersions().clear();
+        fullCatalog.getVersions().add(target);
+    }
+
 }

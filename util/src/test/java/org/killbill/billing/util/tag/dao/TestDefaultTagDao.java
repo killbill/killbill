@@ -1,7 +1,9 @@
 /*
- * Copyright 2010-2012 Ning, Inc.
+ * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -20,6 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.dao.TableName;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -130,11 +136,19 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(createdTagDefinition.getDescription(), description);
         assertListenerStatus();
 
+        final List<AuditLog> auditLogs1 = auditDao.getAuditLogsForId(TableName.TAG_DEFINITIONS, createdTagDefinition.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(auditLogs1.size(), 1);
+        Assert.assertEquals(auditLogs1.get(0).getChangeType(), ChangeType.INSERT);
+
         // Make sure we can create a tag
         eventsListener.pushExpectedEvent(NextEvent.TAG);
         final Tag tag = new DescriptiveTag(createdTagDefinition.getId(), objectType, objectId, internalCallContext.getCreatedDate());
         tagDao.create(new TagModelDao(tag), internalCallContext);
         assertListenerStatus();
+
+        final List<AuditLog> auditLogs2 = auditDao.getAuditLogsForId(TableName.TAG, tag.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(auditLogs2.size(), 1);
+        Assert.assertEquals(auditLogs2.get(0).getChangeType(), ChangeType.INSERT);
 
         // Make sure we can retrieve it via the DAO
         final List<TagModelDao> foundTags = tagDao.getTagsForObject(objectId, objectType, false, internalCallContext);
@@ -148,6 +162,11 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
         eventsListener.pushExpectedEvent(NextEvent.TAG);
         tagDao.deleteTag(objectId, objectType, createdTagDefinition.getId(), internalCallContext);
         assertListenerStatus();
+
+        final List<AuditLog> auditLogs3 = auditDao.getAuditLogsForId(TableName.TAG, tag.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(auditLogs3.size(), 2);
+        Assert.assertEquals(auditLogs3.get(0).getChangeType(), ChangeType.INSERT);
+        Assert.assertEquals(auditLogs3.get(1).getChangeType(), ChangeType.DELETE);
 
         // Make sure the tag is deleted
         Assert.assertEquals(tagDao.getTagsForObject(objectId, objectType, false, internalCallContext).size(), 0);
@@ -184,5 +203,4 @@ public class TestDefaultTagDao extends UtilTestSuiteWithEmbeddedDB {
             Assert.assertEquals(ErrorCode.TAG_ALREADY_EXISTS.getCode(), e.getCode());
         }
     }
-
 }

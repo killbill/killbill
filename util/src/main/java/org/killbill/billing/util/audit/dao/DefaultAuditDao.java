@@ -173,11 +173,20 @@ public class DefaultAuditDao implements AuditDao {
 
     @Override
     public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
+
+        List<AuditLog> result = ImmutableList.of();
         if (tableName.hasHistoryTable()) {
-            return doGetAuditLogsViaHistoryForId(tableName, objectId, auditLevel, context);
-        } else {
-            return doGetAuditLogsForId(tableName, objectId, auditLevel, context);
+            result = doGetAuditLogsViaHistoryForId(tableName, objectId, auditLevel, context);
         }
+
+        // Starting 0.22 all (most of) our object types have associated history tables, but for folks migrating to 0.22.x such history
+        // tables may not be populated, so we also attempt a direct audit search if not result were found through history tables.
+        // (or for the few object types not having history tables).
+        // See https://github.com/killbill/killbill/issues/1252
+        if (result.isEmpty()) {
+            result = doGetAuditLogsForId(tableName, objectId, auditLevel, context);
+        }
+        return result;
     }
 
     @Override

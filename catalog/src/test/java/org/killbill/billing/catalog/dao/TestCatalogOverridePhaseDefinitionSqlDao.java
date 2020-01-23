@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -51,8 +51,7 @@ public class TestCatalogOverridePhaseDefinitionSqlDao extends CatalogTestSuiteWi
         performTestInTransaction(new WithCatalogOverridePhaseDefinitionSqlDaoTransaction<Void>() {
             @Override
             public Void doTransaction(final CatalogOverridePhaseDefinitionSqlDao sqlDao) {
-                sqlDao.create(obj1, internalCallContext);
-                final Long lastInserted = sqlDao.getLastInsertId();
+                final Long lastInserted = sqlDao.create(obj1, internalCallContext);
 
                 final CatalogOverridePhaseDefinitionModelDao rehydrated = sqlDao.getByRecordId(lastInserted, internalCallContext);
                 assertEquals(rehydrated.getParentPhaseName(), obj1.getParentPhaseName());
@@ -72,8 +71,7 @@ public class TestCatalogOverridePhaseDefinitionSqlDao extends CatalogTestSuiteWi
         performTestInTransaction(new WithCatalogOverridePhaseDefinitionSqlDaoTransaction<Void>() {
             @Override
             public Void doTransaction(final CatalogOverridePhaseDefinitionSqlDao sqlDao) {
-                sqlDao.create(obj1, internalCallContext);
-                final Long lastInserted = sqlDao.getLastInsertId();
+                final Long lastInserted = sqlDao.create(obj1, internalCallContext);
 
                 final CatalogOverridePhaseDefinitionModelDao rehydrated = sqlDao.getByRecordId(lastInserted, internalCallContext);
                 assertEquals(rehydrated.getParentPhaseName(), obj1.getParentPhaseName());

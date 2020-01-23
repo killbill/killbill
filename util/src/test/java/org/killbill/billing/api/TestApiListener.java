@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2011 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,9 +18,9 @@
 
 package org.killbill.billing.api;
 
+import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -363,11 +363,20 @@ public class TestApiListener {
         public PendingBusOrNotificationCallback(final Clock clock) {
             this.clock = clock;
         }
+
         @Override
         public Long withHandle(final Handle handle) throws Exception {
-            return (Long) handle.select("select count(distinct record_id) count from bus_events").get(0).get("count") +
-                   (Long) handle.select("select count(distinct record_id) count from notifications where effective_date < ?", clock.getUTCNow().toDate()).get(0).get("count") +
-                   (Long) handle.select("select count(distinct record_id) count from notifications where processing_state = 'IN_PROCESSING'").get(0).get("count");
+            return toLong(handle.select("select count(distinct record_id) count from bus_events").get(0).get("count")) +
+                   toLong(handle.select("select count(distinct record_id) count from notifications where effective_date < ?", clock.getUTCNow().toDate()).get(0).get("count")) +
+                   toLong(handle.select("select count(distinct record_id) count from notifications where processing_state = 'IN_PROCESSING'").get(0).get("count"));
+        }
+
+        private static Long toLong(final Object o) {
+            if (o instanceof BigDecimal) {
+                return ((BigDecimal) o).longValue();
+            } else {
+                return (Long) o;
+            }
         }
     }
 

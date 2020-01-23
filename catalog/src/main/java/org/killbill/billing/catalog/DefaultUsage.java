@@ -38,6 +38,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.TierPriceOverride;
@@ -100,6 +101,11 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
 
     // Required for deserialization
     public DefaultUsage() {
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return root;
     }
 
     public DefaultUsage(final Usage in, UsagePriceOverride override, Currency currency) {

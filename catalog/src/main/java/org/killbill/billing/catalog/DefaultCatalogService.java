@@ -23,6 +23,7 @@ import javax.inject.Named;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.platform.api.KillbillService;
@@ -91,16 +92,16 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
     }
 
     @Override
-    public DefaultVersionedCatalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
+    public VersionedCatalog getFullCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
         return getCatalog(useDefaultCatalog, filterTemplateCatalog, false, context);
     }
 
     @Override
-    public DefaultVersionedCatalog getFullCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
+    public VersionedCatalog getFullCatalogForInternalUse(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final InternalTenantContext context) throws CatalogApiException {
         return getCatalog(useDefaultCatalog, filterTemplateCatalog, true, context);
     }
 
-    private DefaultVersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext context) throws CatalogApiException {
+    private VersionedCatalog getCatalog(final boolean useDefaultCatalog, final boolean filterTemplateCatalog, final boolean internalUse, final InternalTenantContext context) throws CatalogApiException {
         return catalogCache.getCatalog(useDefaultCatalog, filterTemplateCatalog, internalUse, context);
     }
 }

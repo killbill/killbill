@@ -37,10 +37,11 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.Invoice;
@@ -66,10 +67,13 @@ import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagApiException;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -127,6 +131,26 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         this.eventBus = eventBus;
     }
 
+    private static List<InvoiceItem> negateCreditItems(final List<InvoiceItem> input) {
+        final Iterable<InvoiceItem> tmp = Iterables.transform(input, new Function<InvoiceItem, InvoiceItem>() {
+            @Override
+            public InvoiceItem apply(final InvoiceItem creditItem) {
+                return new CreditAdjInvoiceItem(creditItem.getId(),
+                                                creditItem.getCreatedDate(),
+                                                creditItem.getInvoiceId(),
+                                                creditItem.getAccountId(),
+                                                creditItem.getStartDate(),
+                                                creditItem.getDescription(),
+                                                creditItem.getAmount().negate(),
+                                                creditItem.getRate(),
+                                                creditItem.getCurrency(),
+                                                creditItem.getQuantity(),
+                                                creditItem.getItemDetails());
+            }
+        });
+        return ImmutableList.copyOf(tmp);
+    }
+
     @Override
     public List<Invoice> getInvoicesByAccount(final UUID accountId, boolean includesMigrated, final boolean includeVoidedInvoices, final TenantContext context) {
 
@@ -139,9 +163,9 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final boolean includeVoidedInvoices, final TenantContext context) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final LocalDate upToDate, final boolean includeVoidedInvoices, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(includeVoidedInvoices, fromDate, internalTenantContext);
+        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(includeVoidedInvoices, fromDate, upToDate, internalTenantContext);
         return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
@@ -236,12 +260,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final TenantContext context) {
+    public List<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate startDate, final LocalDate upToDate, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, upToDate, internalTenantContext);
+        final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, startDate, upToDate, internalTenantContext);
         return fromInvoiceModelDao(unpaidInvoicesByAccountId, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
-
 
     @Override
     public Invoice triggerDryRunInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments, final CallContext context) throws InvoiceApiException {
@@ -303,9 +326,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                              externalChargeItem.getAmount(), externalChargeItem.getCurrency(), externalChargeItem.getItemDetails());
     }
 
-
-
-
     @Override
     public List<InvoiceItem> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> charges, final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
         return insertItems(accountId, effectiveDate, InvoiceItemType.EXTERNAL_CHARGE, charges, autoCommit, properties, context);
@@ -322,40 +342,14 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         if (creditItem == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NO_SUCH_CREDIT, creditId);
         }
-
-        return new CreditAdjInvoiceItem(creditItem.getId(), creditItem.getCreatedDate(), creditItem.getInvoiceId(), creditItem.getAccountId(),
-                                        creditItem.getStartDate(), creditItem.getDescription(), creditItem.getAmount().negate(), creditItem.getCurrency(), creditItem.getItemDetails());
+        return negateCreditItems(ImmutableList.of(creditItem)).get(0);
     }
 
     @Override
-    public InvoiceItem insertCredit(final UUID accountId, final BigDecimal amount, final LocalDate effectiveDate,
-                                    final Currency currency, final boolean autoCommit, final String description, final String itemDetails, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-        return insertCreditForInvoice(accountId, null, amount, effectiveDate, currency, autoCommit, description, itemDetails, properties, context);
-    }
-
-    @Override
-    public InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount,
-                                              final LocalDate effectiveDate, final Currency currency, final String description, final String itemDetails, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-        return insertCreditForInvoice(accountId, invoiceId, amount, effectiveDate, currency, false, description, itemDetails, properties, context);
-    }
-
-    private InvoiceItem insertCreditForInvoice(final UUID accountId, final UUID invoiceId, final BigDecimal amount, final LocalDate effectiveDate,
-                                               final Currency currency, final boolean autoCommit, final String description, final String itemDetails, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-
-        // Create the new credit
-        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(UUIDs.randomUUID(),
-                                                                 context.getCreatedDate(),
-                                                                 invoiceId,
-                                                                 accountId,
-                                                                 effectiveDate,
-                                                                 description,
-                                                                 amount,
-                                                                 currency,
-                                                                 itemDetails);
-
-
-        final Iterable<InvoiceItem> result =  insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, ImmutableList.<InvoiceItem>of(inputCredit), autoCommit, properties, context);
-        return Iterables.getFirst(result, null);
+    public List<InvoiceItem> insertCredits(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> creditItems,
+                                           final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+        final List<InvoiceItem> items = insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
+        return negateCreditItems(items);
     }
 
     @Override
@@ -458,6 +452,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                input.getPlanName(),
                                                input.getPhaseName(),
                                                input.getUsageName(),
+                                               input.getCatalogEffectiveDate(),
                                                input.getStartDate(),
                                                input.getEndDate(),
                                                input.getAmount(),
@@ -469,12 +464,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }));
         migrationInvoice.addInvoiceItems(itemModelDaos);
 
-        dao.createInvoices(ImmutableList.<InvoiceModelDao>of(migrationInvoice), ImmutableSet.of(), internalCallContext);
+        dao.createInvoices(ImmutableList.<InvoiceModelDao>of(migrationInvoice), null, ImmutableSet.of(), internalCallContext);
         return migrationInvoice.getId();
     }
 
     private List<InvoiceItem> insertItems(final UUID accountId, final LocalDate effectiveDate, final InvoiceItemType itemType, final Iterable<InvoiceItem> inputItems, final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         ImmutableAccountData accountData;
@@ -533,7 +527,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                         curInvoiceForItem = newAndExistingInvoices.get(invoiceIdForItem);
                     }
 
-
                     final InvoiceItem newInvoiceItem;
                     switch (itemType) {
                         case EXTERNAL_CHARGE:
@@ -561,6 +554,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
                             break;
                         case CREDIT_ADJ:
+
                             newInvoiceItem = new CreditAdjInvoiceItem(UUIDs.randomUUID(),
                                                                       context.getCreatedDate(),
                                                                       curInvoiceForItem.getId(),
@@ -569,9 +563,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                       inputItem.getDescription(),
                                                                       // Note! The amount is negated here!
                                                                       inputItem.getAmount().negate(),
-                                                                      accountCurrency,
+                                                                      inputItem.getRate(),
+                                                                      inputItem.getCurrency(),
+                                                                      inputItem.getQuantity(),
                                                                       inputItem.getItemDetails());
-
                             break;
                         case TAX:
                             newInvoiceItem = new TaxInvoiceItem(UUIDs.randomUUID(),
@@ -606,7 +601,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
     }
 
-    private List<Invoice> fromInvoiceModelDao(final Collection<InvoiceModelDao> invoiceModelDaos, final Catalog catalog) {
+    private List<Invoice> fromInvoiceModelDao(final Collection<InvoiceModelDao> invoiceModelDaos, final VersionedCatalog catalog) {
         return ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceModelDaos,
                                                                     new Function<InvoiceModelDao, Invoice>() {
                                                                         @Override
@@ -655,12 +650,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     }
 
-
     @Override
     public List<InvoiceItem> getInvoiceItemsByParentInvoice(final UUID parentInvoiceId, final TenantContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(parentInvoiceId, ObjectType.INVOICE, context);
 
-        final Catalog catalog  = getCatalogSafelyForPrettyNames(internalTenantContext);
+        final VersionedCatalog catalog = getCatalogSafelyForPrettyNames(internalTenantContext);
         return ImmutableList.copyOf(Collections2.transform(dao.getInvoiceItemsByParentInvoice(parentInvoiceId, internalTenantContext),
                                                            new Function<InvoiceItemModelDao, InvoiceItem>() {
                                                                @Override
@@ -670,7 +664,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                            }));
     }
 
-    private Catalog getCatalogSafelyForPrettyNames(final InternalTenantContext internalTenantContext) {
+    private VersionedCatalog getCatalogSafelyForPrettyNames(final InternalTenantContext internalTenantContext) {
 
         try {
             return catalogInternalApi.getFullCatalog(true, true, internalTenantContext);
@@ -690,6 +684,21 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
 
         dao.changeInvoiceStatus(invoiceId, InvoiceStatus.VOID, internalCallContext);
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getInvoiceAuditLogsWithHistoryForId(final UUID invoiceId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return dao.getInvoiceAuditLogsWithHistoryForId(invoiceId, auditLevel, internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getInvoiceItemAuditLogsWithHistoryForId(final UUID invoiceItemId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return dao.getInvoiceItemAuditLogsWithHistoryForId(invoiceItemId, auditLevel, internalCallContextFactory.createInternalTenantContext(invoiceItemId, ObjectType.INVOICE_ITEM, tenantContext));
+    }
+
+    @Override
+    public List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final TenantContext tenantContext) {
+        return dao.getInvoicePaymentAuditLogsWithHistoryForId(invoicePaymentId, auditLevel, internalCallContextFactory.createInternalTenantContext(invoicePaymentId, ObjectType.INVOICE_PAYMENT, tenantContext));
     }
 
     private void canInvoiceBeVoided(final Invoice invoice) throws InvoiceApiException {

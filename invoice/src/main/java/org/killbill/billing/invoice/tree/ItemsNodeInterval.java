@@ -21,12 +21,13 @@ package org.killbill.billing.invoice.tree;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -51,9 +52,39 @@ public class ItemsNodeInterval extends NodeInterval {
         this.items = new ItemsInterval(this);
     }
 
+    private ItemsNodeInterval(final ItemsInterval items) {
+        this.items = items;
+    }
+
     public ItemsNodeInterval(final ItemsNodeInterval parent, final Item item) {
         super(parent, item.getStartDate(), item.getEndDate());
         this.items = new ItemsInterval(this, item);
+    }
+
+    public ItemsNodeInterval(final ItemsNodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
+        super(parent, startDate, endDate);
+        this.items = new ItemsInterval(this);
+    }
+
+    public ItemsNodeInterval[] split(final LocalDate splitDate) {
+
+        Preconditions.checkState(splitDate.compareTo(start) > 0 && splitDate.compareTo(end) < 0,
+                                 String.format("Unexpected item split with startDate='%s' and endDate='%s'", start, end));
+
+        Preconditions.checkState(leftChild == null);
+        Preconditions.checkState(rightSibling == null);
+
+        final List<Item> rawItems = items.getItems();
+        Preconditions.checkState(rawItems.size() == 1);
+
+        final Item[] splitItems = rawItems.get(0).split(splitDate);
+
+        final ItemsNodeInterval split1 = new ItemsNodeInterval((ItemsNodeInterval) this.parent, splitItems[0]);
+        final ItemsNodeInterval split2 = new ItemsNodeInterval((ItemsNodeInterval) this.parent, splitItems[1]);
+        final ItemsNodeInterval[] result = new ItemsNodeInterval[2];
+        result[0] = split1;
+        result[1] = split2;
+        return result;
     }
 
     @JsonIgnore
@@ -72,12 +103,13 @@ public class ItemsNodeInterval extends NodeInterval {
      */
     public void addExistingItem(final ItemsNodeInterval newNode) {
         Preconditions.checkState(newNode.getItems().size() == 1, "Invalid node=%s", newNode);
-        final Item item = newNode.getItems().get(0);
 
         addNode(newNode,
                 new AddNodeCallback() {
                     @Override
-                    public boolean onExistingNode(final NodeInterval existingNode) {
+                    public boolean onExistingNode(final NodeInterval existingNode, final ItemsNodeInterval updatedNewNode) {
+
+                        final Item item = updatedNewNode.getItems().get(0);
                         final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItemsInterval();
                         existingOrNewNodeItems.add(item);
                         // There is no new node added but instead we just populated the list of items for the already existing node
@@ -85,7 +117,7 @@ public class ItemsNodeInterval extends NodeInterval {
                     }
 
                     @Override
-                    public boolean shouldInsertNode(final NodeInterval insertionNode) {
+                    public boolean shouldInsertNode(final NodeInterval insertionNode, final ItemsNodeInterval updatedNewNode) {
                         // Always want to insert node in the tree when we find the right place.
                         return true;
                     }
@@ -115,9 +147,8 @@ public class ItemsNodeInterval extends NodeInterval {
      * @param targetInvoiceId
      */
     public void buildForExistingItems(final Collection<Item> output, final UUID targetInvoiceId) {
-        // We start by pruning useless entries to simplify the build phase.
-        pruneAndValidateTree();
-
+        // Sanity on the tree
+        validateTree();
         build(output, targetInvoiceId, false);
     }
 
@@ -127,46 +158,81 @@ public class ItemsNodeInterval extends NodeInterval {
      * @param newNode a new proposed item
      * @return true if the item was merged and will trigger a repair or false if the proposed item should be kept as such and no repair generated
      */
-    public boolean addProposedItem(final ItemsNodeInterval newNode) {
+    public List<ItemsNodeInterval> addProposedItem(final ItemsNodeInterval newNode) {
         Preconditions.checkState(newNode.getItems().size() == 1, "Invalid node=%s", newNode);
-        final Item item = newNode.getItems().get(0);
 
-        return addNode(newNode, new AddNodeCallback() {
+        final List<ItemsNodeInterval> newNodes = new LinkedList<>();
+
+        addNode(newNode, new AddNodeCallback() {
             @Override
-            public boolean onExistingNode(final NodeInterval existingNode) {
+            public boolean onExistingNode(final NodeInterval existingNode, final ItemsNodeInterval updatedNewNode) {
+
+                final Item item = updatedNewNode.getItems().get(0);
+
                 // If we receive a new proposed that is the same kind as the reversed existing (current node),
                 // we match existing and proposed. If not, we keep the proposed item as-is outside of the tree.
-                if (isSameKind((ItemsNodeInterval) existingNode)) {
+                if (isSameKind((ItemsNodeInterval) existingNode, item)) {
                     final ItemsInterval existingOrNewNodeItems = ((ItemsNodeInterval) existingNode).getItemsInterval();
                     existingOrNewNodeItems.cancelItems(item);
                     return true;
                 } else {
+                    newNodes.add(updatedNewNode);
                     return false;
                 }
             }
 
             @Override
-            public boolean shouldInsertNode(final NodeInterval insertionNode) {
+            public boolean shouldInsertNode(final NodeInterval insertionNode, final ItemsNodeInterval updatedNewNode) {
+
+                final Item item = updatedNewNode.getItems().get(0);
+
                 // At this stage, we're currently merging a proposed item that does not fit any of the existing intervals.
                 // If this new node is about to be inserted at the root level, this means the proposed item overlaps any
                 // existing item. We keep these as-is, outside of the tree: they will become part of the resulting list.
                 if (insertionNode.isRoot()) {
+                    // If updatedNewNode was rebalanced and it is fully repaired by its children it just gets canceled out.
+                    LocalDate curDate = updatedNewNode.start;
+                    NodeInterval curChild = updatedNewNode.leftChild;
+                    while (curChild != null &&
+                           curChild.start.equals(curDate) &&
+                           isSameKind((ItemsNodeInterval) curChild, item)) {
+                        curDate = curChild.end;
+                        curChild = curChild.rightSibling;
+                    }
+
+                    if (curDate.equals(updatedNewNode.end)) {
+                        updatedNewNode.getItems().clear();
+                        curChild = updatedNewNode.leftChild;
+                        while (curChild != null) {
+                            ((ItemsNodeInterval) curChild).getItems().clear();
+                            curChild = curChild.rightSibling;
+                        }
+                        return false;
+                    }
+
+                    newNodes.add(updatedNewNode);
                     return false;
                 }
 
                 // If we receive a new proposed that is the same kind as the reversed existing (parent node),
                 // we want to insert it to generate a piece of repair (see SubscriptionItemTree#buildForMerge).
                 // If not, we keep the proposed item as-is outside of the tree.
-                return isSameKind((ItemsNodeInterval) insertionNode);
+                final boolean result = isSameKind((ItemsNodeInterval) insertionNode, item);
+                if (!result) {
+                    newNodes.add(updatedNewNode);
+                }
+                return result;
             }
 
-            private boolean isSameKind(final ItemsNodeInterval insertionNode) {
+            private boolean isSameKind(final ItemsNodeInterval insertionNode, final Item item) {
                 final List<Item> insertionNodeItems = insertionNode.getItems();
                 Preconditions.checkState(insertionNodeItems.size() == 1, "Expected existing node to have only one item");
                 final Item insertionNodeItem = insertionNodeItems.get(0);
                 return insertionNodeItem.isSameKind(item);
             }
         });
+
+        return newNodes;
     }
 
     /**
@@ -200,7 +266,7 @@ public class ItemsNodeInterval extends NodeInterval {
      *
      * @return linked item if fully adjusted, null otherwise
      */
-    public Item addAdjustment(final InvoiceItem item, final UUID targetInvoiceId) {
+    public Item addAdjustment(final InvoiceItem item) {
         final UUID targetId = item.getLinkedItemId();
 
         final NodeInterval node = findNode(new SearchCallback() {
@@ -216,42 +282,72 @@ public class ItemsNodeInterval extends NodeInterval {
         Preconditions.checkNotNull(targetItem, "Unable to find item with id='%s', itemsInterval=%s", targetId, targetItemsInterval);
 
         final BigDecimal adjustmentAmount = item.getAmount().negate();
-        if (targetItem.getAmount().compareTo(adjustmentAmount) == 0) {
-            // Full item adjustment - treat it like a repair
-            addExistingItem(new ItemsNodeInterval(this, new Item(item, targetItem.getStartDate(), targetItem.getEndDate(), targetInvoiceId, ItemAction.CANCEL)));
-            return targetItem;
-        } else {
-            targetItem.incrementAdjustedAmount(adjustmentAmount);
-            return null;
-        }
+        targetItem.incrementAdjustedAmount(adjustmentAmount);
+        return null;
     }
 
     private void build(final Collection<Item> output, final UUID targetInvoiceId, final boolean mergeMode) {
+        final List<Item> tmpOutput = new LinkedList<Item>(output);
+        output.clear();
         build(new BuildNodeCallback() {
             @Override
             public void onMissingInterval(final NodeInterval curNode, final LocalDate startDate, final LocalDate endDate) {
                 final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
-                items.buildForMissingInterval(startDate, endDate, targetInvoiceId, output, mergeMode);
+                items.buildForMissingInterval(startDate, endDate, targetInvoiceId, tmpOutput, mergeMode);
             }
 
             @Override
             public void onLastNode(final NodeInterval curNode) {
                 final ItemsInterval items = ((ItemsNodeInterval) curNode).getItemsInterval();
-                items.buildFromItems(output, mergeMode);
+                items.buildFromItems(tmpOutput, mergeMode);
             }
         });
+
+        //
+        // Join items that were previously split to fit in the tree as necessary.
+        //
+        // 1. Build a map for each item pointing to a heap of (potential) split items
+        final Map<UUID, PriorityQueue<Item>> joinMap = new HashMap<>();
+        for (final Item i : tmpOutput) {
+            PriorityQueue<Item> l = joinMap.get(i.getId());
+            if (l == null) {
+                l = new PriorityQueue<>(new Comparator<Item>() {
+                    @Override
+                    public int compare(final Item o1, final Item o2) {
+                        return o1.getStartDate().compareTo(o2.getEndDate());
+                    }
+                });
+                joinMap.put(i.getId(), l);
+            }
+            l.add(i);
+        }
+
+        // 2. For each entry in the map, check which items can be re-joined based on their contiguous periods
+        for (final PriorityQueue<Item> v : joinMap.values()) {
+
+            Item prev = v.poll();
+            Item cur = null;
+            while ((cur = v.poll()) != null) {
+                if (prev.getEndDate().compareTo(cur.getStartDate()) == 0) {
+                    prev = Item.join(prev, cur);
+                } else {
+                    output.add(prev);
+                    prev = cur;
+                }
+            }
+            if (prev != null) {
+                output.add(prev);
+            }
+        }
     }
 
+
+
+
     //
-    // Before we build the tree, we make a first pass at removing full repaired items; those can come in two shapes:
-    // Case A - The first one, is the mergeCancellingPairs logics which simply look for one CANCEL pointing to one ADD item in the same
-    //   NodeInterval; this is fairly simple, and *only* requires removing those items and remove the interval from the tree when
-    //   it has no more leaves and no more items.
-    // Case B - This is a bit more involved: We look for full repair that happened in pieces; this will translate to an ADD element of a NodeInterval,
-    // whose children completely map the interval (isPartitionedByChildren) and where each child will have a CANCEL item pointing to the ADD.
-    // When we detect such nodes, we delete both the ADD in the parent interval and the CANCEL in the children (and cleanup the interval if it does not have items)
+    // This is not strictly necessary -- just there to add a layer of sanity on what our tree contains
     //
-    private void pruneAndValidateTree() {
+    private void validateTree() {
         final NodeInterval root = this;
         walkTree(new WalkCallback() {
             @Override
@@ -262,13 +358,6 @@ public class ItemsNodeInterval extends NodeInterval {
                 }
 
                 final ItemsInterval curNodeItems = ((ItemsNodeInterval) curNode).getItemsInterval();
-
-                // Case A:
-                final boolean isEmpty = curNodeItems.mergeCancellingPairs();
-                if (isEmpty && curNode.getLeftChild() == null) {
-                    curNode.getParent().removeChild(curNode);
-                }
-
                 for (final Item curCancelItem : curNodeItems.get_CANCEL_items()) {
                     // Sanity: cancelled items should only be in the same node or parents
                     if (curNode.getLeftChild() != null) {
@@ -296,7 +385,7 @@ public class ItemsNodeInterval extends NodeInterval {
                 }
 
                 for (final Item curAddItem : curNodeItems.get_ADD_items()) {
-                    // Sanity: verify the item hasn't been adjusted too much
+                    // Sanity: verify the item hasn't been repaired too much
                     if (curNode.getLeftChild() != null) {
                         final AtomicReference<BigDecimal> totalRepaired = new AtomicReference<BigDecimal>(BigDecimal.ZERO);
                         curNode.getLeftChild()
@@ -312,53 +401,19 @@ public class ItemsNodeInterval extends NodeInterval {
                                });
                         Preconditions.checkState(curAddItem.getNetAmount().compareTo(totalRepaired.get()) >= 0, "Item %s overly repaired", curAddItem);
                     }
-                }
 
-                if (!curNode.isPartitionedByChildren()) {
-                    return;
-                }
-
-                // Case B -- look for such case, and if found (foundFullRepairByParts) we fix them below.
-                List<Item> curNodeItemsToBeRemoved = new ArrayList<Item>();
-                final Iterator<Item> it = curNodeItems.get_ADD_items().iterator();
-                // For each item on this curNode interval we check if there is a matching set of CANCEL items on the children (resulting in completely cancelling that item).
-                while (it.hasNext()) {
-
-                    final Item curAddItem = it.next();
-
-                    //
-                    // We already know the children partition fully the 'curNode' interval, we just need to see if for each piece
-                    // we find a matching CANCEL item pointing to this 'curAddItem'
-                    //
-                    NodeInterval curChild = curNode.getLeftChild();
-                    Map<ItemsInterval, Item> childrenCancellingToBeRemoved = new HashMap<ItemsInterval, Item>();
-
-                    // Note that because of previous iterations, curChild could now be null so we need to initialize the foundFullRepairByParts based on that new state.
-                    boolean foundFullRepairByParts = curChild != null;
-                    while (curChild != null) {
-                        final ItemsInterval curChildItems = ((ItemsNodeInterval) curChild).getItemsInterval();
-                        Item cancellingItem = curChildItems.getCancellingItemIfExists(curAddItem.getId());
-                        if (cancellingItem == null) {
-                            foundFullRepairByParts = false;
-                            break;
-                        }
-                        childrenCancellingToBeRemoved.put(curChildItems, cancellingItem);
-                        curChild = curChild.getRightSibling();
-                    }
-
-                    if (foundFullRepairByParts) {
-                        for (ItemsInterval curItemsInterval : childrenCancellingToBeRemoved.keySet()) {
-                            curItemsInterval.remove(childrenCancellingToBeRemoved.get(curItemsInterval));
-                            if (curItemsInterval.getItems().isEmpty()) {
-                                curNode.removeChild(curItemsInterval.getNodeInterval());
+                    // Old behavior compatibility for full item adjustment (Temp code should go away as move in time)
+                    // If we see a fully adjusted item and an existing child (one ADD item), we discard the fully adjusted item
+                    // in such a way that we are left with the child that will look like the proposed and nothing will be generated.
+                    if (curAddItem.isFullyAdjusted()) {
+                        final NodeInterval leftChild = curNode.getLeftChild();
+                        if (leftChild != null) {
+                            final ItemsInterval leftChildItems = ((ItemsNodeInterval) leftChild).getItemsInterval();
+                            if (leftChildItems.getItems().size() == 1 && leftChildItems.getItems().get(0).getAction() == ItemAction.ADD) {
+                                curNodeItems.remove(curAddItem);
                             }
                         }
-                        curNodeItemsToBeRemoved.add(curAddItem);
                     }
-                }
-                // Finally Execute the removal of the curNodeItems outside of the upper while loop so as to not trigger ConcurrentModificationException (see #641)
-                for (Item curNodeItemsRemoval : curNodeItemsToBeRemoved) {
-                    curNodeItems.remove(curNodeItemsRemoval);
                 }
             }
         });

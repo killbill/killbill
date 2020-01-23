@@ -49,6 +49,7 @@ import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -145,14 +146,14 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         @Override
         public PriorEntitlementResult priorCall(final EntitlementContext entitlementContext, final Iterable<PluginProperty> properties) throws EntitlementPluginApiException {
             if (planPhasePriceOverride != null) {
-                final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementSpecifier().iterator().next().getPlanPhaseSpecifier(), null, planPhasePriceOverride);
+                final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementSpecifier().iterator().next().getPlanPhaseSpecifier(), null, null,  planPhasePriceOverride);
                 final List<EntitlementSpecifier> entitlementSpecifiers = new ArrayList<EntitlementSpecifier>();
                 entitlementSpecifiers.add(entitlementSpecifier);
 
                 final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier =
                         new DefaultBaseEntitlementWithAddOnsSpecifier(
                                 entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBundleId(),
-                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getExternalKey(),
+                                entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBundleExternalKey(),
                                 entitlementSpecifiers,
                                 entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate(),
                                 entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getBillingEffectiveDate(),
@@ -185,6 +186,10 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
 
         @Override
         public OnSuccessEntitlementResult onSuccessCall(final EntitlementContext entitlementContext, final Iterable<PluginProperty> properties) throws EntitlementPluginApiException {
+            for (final BaseEntitlementWithAddOnsSpecifier specifier : entitlementContext.getBaseEntitlementWithAddOnsSpecifiers()) {
+                Assert.assertNotNull(specifier.getBundleId());
+                Assert.assertNotNull(specifier.getBundleExternalKey());
+            }
             return null;
         }
 

@@ -39,7 +39,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(value="Invoice", parent = JsonBase.class)
 public class InvoiceJson extends JsonBase {
@@ -56,11 +55,12 @@ public class InvoiceJson extends JsonBase {
     private final UUID accountId;
     private final List<InvoiceItemJson> items;
     private final String bundleKeys;
-    private final List<CreditJson> credits;
+    private final List<InvoiceItemJson> credits;
     private final InvoiceStatus status;
     private final Boolean isParentInvoice;
     private final UUID parentInvoiceId;
     private final UUID parentAccountId;
+    private final List<String> trackingIds;
 
     @JsonCreator
     public InvoiceJson(@JsonProperty("amount") final BigDecimal amount,
@@ -75,8 +75,9 @@ public class InvoiceJson extends JsonBase {
                        @JsonProperty("balance") final BigDecimal balance,
                        @JsonProperty("accountId") final UUID accountId,
                        @JsonProperty("bundleKeys") final String bundleKeys,
-                       @JsonProperty("credits") final List<CreditJson> credits,
+                       @JsonProperty("credits") final List<InvoiceItemJson> credits,
                        @JsonProperty("items") final List<InvoiceItemJson> items,
+                       @JsonProperty("trackingIds") final List<String> trackingIds,
                        @JsonProperty("isParentInvoice") final Boolean isParentInvoice,
                        @JsonProperty("parentInvoiceId") final UUID parentInvoiceId,
                        @JsonProperty("parentAccountId") final UUID parentAccountId,
@@ -96,41 +97,41 @@ public class InvoiceJson extends JsonBase {
         this.bundleKeys = bundleKeys;
         this.credits = credits;
         this.items = items;
+        this.trackingIds = trackingIds;
         this.isParentInvoice = isParentInvoice;
         this.parentInvoiceId = parentInvoiceId;
         this.parentAccountId = parentAccountId;
     }
 
     public InvoiceJson(final Invoice input) {
-        this(input, false, null, null);
+        this(input, null, null);
     }
 
-    public InvoiceJson(final Invoice input, final String bundleKeys, final List<CreditJson> credits, final List<AuditLog> auditLogs) {
+    public InvoiceJson(final Invoice input, final String bundleKeys, final List<InvoiceItemJson> credits, final List<AuditLog> auditLogs) {
         this(input.getChargedAmount(), input.getCurrency(), input.getStatus(), input.getCreditedAmount(), input.getRefundedAmount(),
              input.getId(), input.getInvoiceDate(), input.getTargetDate(), String.valueOf(input.getInvoiceNumber()),
-             input.getBalance(), input.getAccountId(), bundleKeys, credits, null, input.isParentInvoice(),
+             input.getBalance(), input.getAccountId(), bundleKeys, credits, null, null, input.isParentInvoice(),
              input.getParentInvoiceId(),
              input.getParentAccountId(),
              toAuditLogJson(auditLogs));
     }
 
-    public InvoiceJson(final Invoice input, final boolean withItems, final List<InvoiceItem> childItems, @Nullable final AccountAuditLogs accountAuditLogs) {
+    public InvoiceJson(final Invoice input, final List<InvoiceItem> childItems, @Nullable final AccountAuditLogs accountAuditLogs) {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoice(input.getId())));
         this.items = new ArrayList<InvoiceItemJson>(input.getInvoiceItems().size());
-        if (withItems || !CollectionUtils.isEmpty(childItems)) {
-            for (final InvoiceItem item : input.getInvoiceItems()) {
-                ImmutableList<InvoiceItem> childItemsFiltered = null;
-                if (item.getInvoiceItemType().equals(InvoiceItemType.PARENT_SUMMARY) && !CollectionUtils.isEmpty(childItems)) {
-                    childItemsFiltered = ImmutableList.copyOf(Iterables.filter(childItems, new Predicate<InvoiceItem>() {
-                        @Override
-                        public boolean apply(@Nullable final InvoiceItem invoice) {
-                            return invoice.getAccountId().equals(item.getChildAccountId());
-                        }
-                    }));
-                }
-                this.items.add(new InvoiceItemJson(item, childItemsFiltered, accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
+        for (final InvoiceItem item : input.getInvoiceItems()) {
+            ImmutableList<InvoiceItem> childItemsFiltered = null;
+            if (item.getInvoiceItemType().equals(InvoiceItemType.PARENT_SUMMARY) && !CollectionUtils.isEmpty(childItems)) {
+                childItemsFiltered = ImmutableList.copyOf(Iterables.filter(childItems, new Predicate<InvoiceItem>() {
+                    @Override
+                    public boolean apply(@Nullable final InvoiceItem invoice) {
+                        return invoice.getAccountId().equals(item.getChildAccountId());
+                    }
+                }));
             }
+            this.items.add(new InvoiceItemJson(item, childItemsFiltered, accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
         }
+        this.trackingIds = input.getTrackingIds();
         this.amount = input.getChargedAmount();
         this.currency = input.getCurrency();
         this.status = input.getStatus();
@@ -147,7 +148,6 @@ public class InvoiceJson extends JsonBase {
         this.isParentInvoice = input.isParentInvoice();
         this.parentInvoiceId = input.getParentInvoiceId();
         this.parentAccountId = input.getParentAccountId();
-
     }
 
     public BigDecimal getAmount() {
@@ -198,7 +198,7 @@ public class InvoiceJson extends JsonBase {
         return bundleKeys;
     }
 
-    public List<CreditJson> getCredits() {
+    public List<InvoiceItemJson> getCredits() {
         return credits;
     }
 
@@ -216,6 +216,10 @@ public class InvoiceJson extends JsonBase {
 
     public UUID getParentAccountId() {
         return parentAccountId;
+    }
+
+    public List<String> getTrackingIds() {
+        return trackingIds;
     }
 
     @Override

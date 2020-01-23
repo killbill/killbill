@@ -304,7 +304,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                                                              this.internalCallContext.getUserToken(),
                                                                                                              this.internalCallContext.getTenantRecordId());
 
-        final Iterable<EntitlementSpecifier> specifiers = ImmutableList.<EntitlementSpecifier>of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), 18, null));
+        final Iterable<EntitlementSpecifier> specifiers = ImmutableList.<EntitlementSpecifier>of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), 18, null, null));
         final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle.getId(),
                                                                                                                                 bundle.getExternalKey(),
                                                                                                                                 specifiers,
@@ -312,9 +312,10 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                                                                                 false);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BCD_CHANGE);
-        final List<SubscriptionBaseWithAddOns> subscriptionBaseWithAddOns = subscriptionInternalApi.createBaseSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
-                                                                                                                                false,
-                                                                                                                                internalCallContext);
+        final List<SubscriptionBaseWithAddOns> subscriptionBaseWithAddOns = subscriptionInternalApi.createBaseSubscriptionsWithAddOns(catalog.getCatalog(),
+                                                                                                                                      ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+                                                                                                                                      false,
+                                                                                                                                      internalCallContext);
         testListener.assertListenerStatus();
 
         assertEquals(subscriptionBaseWithAddOns.size(), 1);

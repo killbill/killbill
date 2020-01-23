@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,17 +25,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.cache.CacheController;
+import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
@@ -43,10 +49,17 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
     protected final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
     protected final DefaultPaginationSqlDaoHelper paginationHelper;
 
+    private final NonEntityDao nonEntityDao;
+    private final CacheController<String, Long> recordIdCacheController;
     private final Class<? extends EntitySqlDao<M, E>> realSqlDao;
     private final Class<U> targetExceptionClass;
 
-    public EntityDaoBase(final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao, final Class<? extends EntitySqlDao<M, E>> realSqlDao) {
+    public EntityDaoBase(final NonEntityDao nonEntityDao,
+                         @Nullable final CacheControllerDispatcher cacheControllerDispatcher,
+                         final EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao,
+                         final Class<? extends EntitySqlDao<M, E>> realSqlDao) {
+        this.nonEntityDao = nonEntityDao;
+        this.recordIdCacheController = cacheControllerDispatcher == null ? null : cacheControllerDispatcher.getCacheController(CacheType.RECORD_ID);
         this.transactionalSqlDao = transactionalSqlDao;
         this.realSqlDao = realSqlDao;
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
@@ -112,13 +125,32 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
         };
     }
 
-    protected <F extends EntityModelDao> F createAndRefresh(final EntitySqlDao transactional, final F entity, final InternalCallContext context) throws EntityPersistenceException {
+    protected <F extends EntityModelDao> F createAndRefresh(final EntitySqlDao transactional, final F entity, final InternalCallContext context) {
         // We have overridden the jDBI return type in EntitySqlDaoWrapperInvocationHandler
         return (F) transactional.create(entity, context);
     }
 
+    protected <F extends EntityModelDao> void bulkCreate(final EntitySqlDao transactional, final List<F> entities, final InternalCallContext context) {
+        if (entities.isEmpty()) {
+            return;
+        } else if (entities.size() == 1) {
+            transactional.create(entities.get(0), context);
+        } else {
+            transactional.create(entities, context);
+        }
+    }
+
     protected boolean checkEntityAlreadyExists(final EntitySqlDao<M, E> transactional, final M entity, final InternalCallContext context) {
-        return transactional.getRecordId(entity.getId().toString(), context) != null;
+        if (entity.getTableName().getObjectType() == null) {
+            // Not a real entity (e.g. TENANT_BROADCASTS)
+            return false;
+        }
+        return getRecordId(entity) != null;
+    }
+
+    @VisibleForTesting
+    public Long getRecordId(final M entity) {
+        return nonEntityDao.retrieveRecordIdFromObject(entity.getId(), entity.getTableName().getObjectType(), recordIdCacheController);
     }
 
     protected void postBusEventFromTransaction(final M entity, final M savedEntity, final ChangeType changeType,
@@ -130,18 +162,6 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
 
     protected String getNaturalOrderingColumns() {
         return "record_id";
-    }
-
-    @Override
-    public Long getRecordId(final UUID id, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Long>() {
-
-            @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final EntitySqlDao<M, E> transactional = entitySqlDaoWrapperFactory.become(realSqlDao);
-                return transactional.getRecordId(id.toString(), context);
-            }
-        });
     }
 
     @Override

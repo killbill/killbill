@@ -108,7 +108,7 @@
     </rules>
 
     <plans>
-        <plan name="pistol-monthly">
+        <plan name="pistol-monthly" prettyName="Beretta">
             <product>Pistol</product>
             <initialPhases>
                 <phase type="TRIAL">

@@ -34,6 +34,8 @@ public interface EntitlementInternalApi {
 
     Entitlement getEntitlementForId(final UUID uuid, final InternalTenantContext tenantContext) throws EntitlementApiException;
 
+    Entitlement getEntitlementForExternalKey(final String externalKey, final InternalTenantContext tenantContext) throws EntitlementApiException;
+
     void pause(UUID bundleId, LocalDate effectiveDate, Iterable<PluginProperty> properties, InternalCallContext context) throws EntitlementApiException;
 
     void resume(UUID bundleId, LocalDate localEffectiveDate, Iterable<PluginProperty> properties, InternalCallContext context) throws EntitlementApiException;

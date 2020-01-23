@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,12 +24,14 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
-import org.skife.jdbi.v2.sqlobject.Bind;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
+import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.BatchChunkSize;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
+import org.skife.jdbi.v2.util.LongMapper;
 
 public interface HistorySqlDao<M extends EntityModelDao<E>, E extends Entity> {
 
@@ -39,8 +41,10 @@ public interface HistorySqlDao<M extends EntityModelDao<E>, E extends Entity> {
     public List<EntityHistoryModelDao<M, E>> getHistoryForTargetRecordId(@Define("bypassMappingRegistryCache") final boolean bypassMappingRegistryCache,
                                                                          @Bind("targetRecordId") final long targetRecordId,
                                                                          @SmartBindBean InternalTenantContext context);
-    @SqlUpdate
-    @GetGeneratedKeys
-    public Long addHistoryFromTransaction(@EntityHistoryBinder EntityHistoryModelDao<M, E> history,
-                                          @SmartBindBean InternalCallContext context);
+
+    @SqlBatch
+    @BatchChunkSize(1000) // Arbitrary value, just a safety mechanism in case of very large datasets
+    @GetGeneratedKeys(value = LongMapper.class, columnName = "record_id")
+    public List<Long> addHistoriesFromTransaction(@EntityHistoryBinder Iterable<EntityHistoryModelDao<M, E>> histories,
+                                                  @SmartBindBean InternalCallContext context);
 }
