@@ -109,6 +109,7 @@ public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
                                                                   null,
                                                                   event.getPlan().getName(),
                                                                   event.getPlanPhase().getName(),
+                                                                  null,
                                                                   invoiceDate,
                                                                   invoiceDate.plusMonths(1),
                                                                   BigDecimal.ZERO,

@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,7 +17,9 @@
 
 package org.killbill.billing.util.security.shiro.realm;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
@@ -40,7 +42,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
@@ -55,8 +56,8 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         }
 
         super.beforeMethod();
-        final KillBillJdbcRealm realm = new KillBillJdbcRealm(helper.getDataSource(), securityConfig);
-        securityManager = new DefaultSecurityManager(realm);
+
+        securityManager = new DefaultSecurityManager(realms);
         SecurityUtils.setSecurityManager(securityManager);
     }
 
@@ -131,9 +132,6 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testInvalidPermissions() {
-        testInvalidPermissionScenario(ImmutableList.of("foo"));
-        testInvalidPermissionScenario(ImmutableList.of("account:garbage"));
-        testInvalidPermissionScenario(ImmutableList.of("tag:delete_tag_definition", "account:hsgdsgdjsgd"));
         testInvalidPermissionScenario(ImmutableList.of("account:credit:vvvv"));
     }
 
@@ -150,8 +148,53 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testAuthorization() throws SecurityApiException {
+    public void testCustomPermissionsAcrossRealms() throws Exception {
+        final String role = "writer_off";
+        final ImmutableList<String> rolePermissions = ImmutableList.<String>of(Permission.INVOICE_CAN_DELETE_CBA.toString(), /* Built-in permission */
+                                                                               "invoice:write_off" /* Built-in group but custom value */,
+                                                                               "acme:kb_dev" /* Custom group and value */);
 
+        securityApi.addRoleDefinition(role, rolePermissions, callContext);
+        validateUserRoles(securityApi.getRoleDefinition(role, callContext), rolePermissions);
+
+        final List<String> roleDefinitions = securityApi.getRoleDefinition(role, callContext);
+        Assert.assertEqualsNoOrder(roleDefinitions.toArray(), rolePermissions.toArray());
+
+        final String username = "tester";
+        final String password = "tester";
+        securityApi.addUserRoles(username, password, ImmutableList.<String>of(role), callContext);
+
+        final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
+        final Subject subject = securityManager.login(null, goodToken);
+        try {
+            ThreadContext.bind(subject);
+
+            // JDBC Realm
+            subject.checkPermission(Permission.INVOICE_CAN_DELETE_CBA.toString());
+            subject.checkPermission("invoice:write_off");
+            subject.checkPermission("acme:kb_dev");
+            // Shiro Realm
+            subject.checkPermission("invoice:credit");
+            subject.checkPermission("customx:customy");
+            try {
+                subject.checkPermission("acme:kb_deployer");
+                Assert.fail("Subject should not have rights to deploy Kill Bill");
+            } catch (final AuthorizationException e) {
+            }
+
+            final Set<String> permissions = securityApi.getCurrentUserPermissions(callContext);
+            final Set<String> expectedPermissions = new HashSet<String>(rolePermissions);
+            expectedPermissions.add("invoice:credit");
+            expectedPermissions.add("customx:customy");
+            Assert.assertEquals(permissions, expectedPermissions);
+        } finally {
+            ThreadContext.unbindSubject();
+            subject.logout();
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testAuthorization() throws SecurityApiException {
         final String username = "i like";
         final String password = "c0ff33";
 
@@ -187,9 +230,96 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         }
     }
 
+    @Test(groups = "slow", description = "Check * behavior with custom permissions")
+    public void testAuthorizationV2() throws SecurityApiException {
+        securityApi.addRoleDefinition("for another user", ImmutableList.of("acme:kb_dev"), callContext);
+
+        final String username = "i like";
+        final String password = "c0ff33";
+        final String role = "for this user";
+        final ImmutableList<String> rolePermissions = ImmutableList.of("*");
+        securityApi.addRoleDefinition(role, rolePermissions, callContext);
+        securityApi.addUserRoles(username, password, ImmutableList.of(role), callContext);
+
+        final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
+        final Subject subject = securityManager.login(null, goodToken);
+        try {
+            ThreadContext.bind(subject);
+            subject.checkPermission(Permission.ACCOUNT_CAN_CHARGE.toString());
+            subject.checkPermission(Permission.INVOICE_CAN_CREDIT.toString());
+            subject.checkPermission(Permission.TAG_CAN_CREATE_TAG_DEFINITION.toString());
+            subject.checkPermission("acme:kb_dev");
+
+            // "*" is not expanded
+            final List<String> roleDefinitions = securityApi.getRoleDefinition(role, callContext);
+            Assert.assertEqualsNoOrder(roleDefinitions.toArray(), rolePermissions.toArray());
+
+            // "*" is not expanded
+            final Set<String> permissions = securityApi.getCurrentUserPermissions(callContext);
+            Assert.assertEquals(permissions, ImmutableList.<String>of("*"));
+
+            securityApi.addRoleDefinition("for yet another user", ImmutableList.of("acme:kb_deployer"), callContext);
+
+            // "*" is not expanded
+            final List<String> roleDefinitions2 = securityApi.getRoleDefinition(role, callContext);
+            Assert.assertEqualsNoOrder(roleDefinitions2.toArray(), rolePermissions.toArray());
+
+            // "*" is not expanded
+            final Set<String> permissions2 = securityApi.getCurrentUserPermissions(callContext);
+            Assert.assertEquals(permissions2, ImmutableList.<String>of("*"));
+        } finally {
+            ThreadContext.unbindSubject();
+            subject.logout();
+        }
+    }
+
+    @Test(groups = "slow", description = "Check group:* behavior with custom permissions")
+    public void testAuthorizationV3() throws SecurityApiException {
+        securityApi.addRoleDefinition("for another user", ImmutableList.of("acme:kb_dev"), callContext);
+
+        final String username = "i like";
+        final String password = "c0ff33";
+        final String role = "for this user";
+        securityApi.addRoleDefinition(role, ImmutableList.of("account", "invoice:*", "tag:create_tag_definition", "acme:*"), callContext);
+        securityApi.addUserRoles(username, password, ImmutableList.of(role), callContext);
+
+        final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
+        final Subject subject = securityManager.login(null, goodToken);
+        try {
+            ThreadContext.bind(subject);
+
+            subject.checkPermission(Permission.ACCOUNT_CAN_CHARGE.toString());
+            subject.checkPermission(Permission.INVOICE_CAN_CREDIT.toString());
+            subject.checkPermission(Permission.TAG_CAN_CREATE_TAG_DEFINITION.toString());
+            subject.checkPermission("acme:kb_dev");
+
+            final Object[] rolePermissions = ImmutableList.of("account:*", "invoice:*", "tag:create_tag_definition", "acme:*").toArray();
+
+            // "*" is not expanded
+            final List<String> roleDefinitions = securityApi.getRoleDefinition(role, callContext);
+            Assert.assertEqualsNoOrder(roleDefinitions.toArray(), rolePermissions);
+
+            // "*" is not expanded
+            final Set<String> permissions = securityApi.getCurrentUserPermissions(callContext);
+            Assert.assertEqualsNoOrder(permissions.toArray(), rolePermissions);
+
+            securityApi.addRoleDefinition("for yet another user", ImmutableList.of("acme:kb_deployer"), callContext);
+
+            // "*" is not expanded
+            final List<String> roleDefinitions2 = securityApi.getRoleDefinition(role, callContext);
+            Assert.assertEqualsNoOrder(roleDefinitions2.toArray(), rolePermissions);
+
+            // "*" is not expanded
+            final Set<String> permissions2 = securityApi.getCurrentUserPermissions(callContext);
+            Assert.assertEqualsNoOrder(permissions2.toArray(), rolePermissions);
+        } finally {
+            ThreadContext.unbindSubject();
+            subject.logout();
+        }
+    }
+
     @Test(groups = "slow")
     public void testUpdateRoleDefinition() throws SecurityApiException {
-
         final String username = "siskiyou";
         final String password = "siskiyou33";
 

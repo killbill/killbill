@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.dao.TableName;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
@@ -139,15 +140,30 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         return accountAuditLogs;
     }
 
+    private enum IteratorState {
+        EXPECT_MORE,
+        FIRST_OBJECT_TYPE_SEEN,
+        FIRST_OBJECT_HISTORY_TYPE_SEEN,
+        DONE
+    }
+
     private final class ObjectTypeFilter extends AbstractIterator<AuditLog> {
 
-        private boolean hasSeenObjectType = false;
+        // For the transition between 0_20 to 0_22 we may end up with audit logs entries that are either
+        // using history table (new 0_22 behavior) or not. To keep our optimization and avoiding going through all entries
+        // we track the state to break early.
+        // Note that for all entries using history we will only have one contiguous range of rows to parse and so this will be as efficient
+        // as it can be (using an iterator).
+        // See https://github.com/killbill/killbill/issues/1252
+        //
+        private IteratorState iteratorState;
 
         private final ObjectType objectType;
         private final Iterator<AuditLog> accountAuditLogs;
 
         private ObjectTypeFilter(final ObjectType objectType, final Iterator<AuditLog> accountAuditLogs) {
             this.objectType = objectType;
+            this.iteratorState = IteratorState.EXPECT_MORE;
             this.accountAuditLogs = accountAuditLogs;
         }
 
@@ -156,13 +172,29 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
             while (accountAuditLogs.hasNext()) {
                 final AuditLog element = accountAuditLogs.next();
                 if (predicate.apply(element)) {
-                    hasSeenObjectType = true;
+
+                    if (iteratorState == IteratorState.EXPECT_MORE) {
+                        final TableName tableName = TableName.fromObjectType(element.getAuditedObjectType());
+                        iteratorState = tableName.hasHistoryTable() ? IteratorState.FIRST_OBJECT_TYPE_SEEN : IteratorState.FIRST_OBJECT_HISTORY_TYPE_SEEN;
+                    }
+
                     return element;
-                } else if (hasSeenObjectType) {
-                    // Optimization trick: audit log records are ordered first by table name
-                    // (hence object type) - when we are done and we switch to another ObjectType,
-                    // we are guaranteed there is nothing left to do
-                    return endOfData();
+                } else {
+
+                    if (iteratorState == IteratorState.FIRST_OBJECT_TYPE_SEEN) {
+                        // We have seen all entries for non history table, perhaps there are entries for history table
+                        iteratorState = IteratorState.EXPECT_MORE;
+                    } else if (iteratorState == IteratorState.FIRST_OBJECT_HISTORY_TYPE_SEEN) {
+                        // We have seen all entries for history table (and because of ordering by table name, all entries from non history table have been seen as well).
+                        iteratorState = IteratorState.DONE;
+                    }
+
+                    if (iteratorState == IteratorState.DONE) {
+                        // Optimization trick: audit log records are ordered first by table name
+                        // (hence object type) - when we are done and we switch to another ObjectType,
+                        // we are guaranteed there is nothing left to do
+                        return endOfData();
+                    }
                 }
             }
 

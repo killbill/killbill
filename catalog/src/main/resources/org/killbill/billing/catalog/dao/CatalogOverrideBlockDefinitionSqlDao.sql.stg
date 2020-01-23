@@ -4,7 +4,7 @@ tableName() ::= "catalog_override_block_definition"
 
 tableFields(prefix) ::= <<
   <prefix>parent_unit_name
-, <prefix>size
+, <prefix>bsize
 , <prefix>max
 , <prefix>currency
 , <prefix>price
@@ -47,7 +47,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where record_id = :recordId
 and tenant_record_id = :tenantRecordId
@@ -55,13 +55,13 @@ and tenant_record_id = :tenantRecordId
 >>
 
 getByAttributes() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where parent_unit_name = :parentUnitName
 and currency = :currency
 and price = :price
 and max = :max
-and size = :size;
+and bsize = :size;
 >>
 
 getOverriddenTierBlocks() ::= <<
@@ -75,7 +75,4 @@ and tb.tenant_record_id = :tenantRecordId
 ;
 >>
 
-getLastInsertId() ::= <<
-select LAST_INSERT_ID();
->>
 

@@ -72,7 +72,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -144,7 +144,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -209,7 +209,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -281,7 +281,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -359,7 +359,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -438,7 +438,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -509,7 +509,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -581,7 +581,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -654,7 +654,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -727,7 +727,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];
@@ -799,7 +799,7 @@ public class TestCaseChange extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product1 = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList1 = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList1 = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultProduct product2 = cat.getCurrentProduct(2);
         final DefaultPriceList priceList2 = cat.getPriceLists().getChildPriceLists()[1];

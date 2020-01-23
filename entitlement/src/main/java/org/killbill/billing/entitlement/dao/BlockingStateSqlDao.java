@@ -60,7 +60,7 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
                                                                              @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
-    @Audited(ChangeType.UPDATE)
+    @Audited(ChangeType.DELETE)
     public void unactiveEvent(@Bind("id") String id,
                               @SmartBindBean final InternalCallContext context);
 }

@@ -156,7 +156,7 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
 
     @Override
     public TableName getHistoryTableName() {
-        return null;
+        return TableName.INVOICE_TRACKING_ID_HISTORY;
     }
 
 }

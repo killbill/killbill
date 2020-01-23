@@ -86,7 +86,9 @@ public class PushNotificationListener {
     public PushNotificationListener(final ObjectMapper mapper, final TenantUserApi tenantApi, final CallContextFactory contextFactory,
                                     final NotificationQueueService notificationQueueService, final InternalCallContextFactory internalCallContextFactory,
                                     final Clock clock, final NotificationConfig notificationConfig) {
-        this.httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeout(TIMEOUT_NOTIFICATION * 1000).build());
+        this.httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
+                                                      .setConnectTimeout(TIMEOUT_NOTIFICATION * 1000)
+                                                      .setRequestTimeout(TIMEOUT_NOTIFICATION * 1000).build());
         this.tenantApi = tenantApi;
         this.contextFactory = contextFactory;
         this.mapper = mapper;
@@ -143,11 +145,9 @@ public class PushNotificationListener {
                         }
                     });
             response = futureStatus.get(timeoutSec, TimeUnit.SECONDS);
-        } catch (final TimeoutException toe) {
-            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber, "Timeout");
-            return false;
         } catch (final Exception e) {
             log.warn("Failed to push notification url='{}', tenantId='{}'", url, tenantId, e);
+            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber, e.getMessage());
             return false;
         }
 
@@ -161,7 +161,7 @@ public class PushNotificationListener {
 
     public void resendPushNotification(final PushNotificationKey key) throws JsonProcessingException {
 
-        final NotificationJson notification = new NotificationJson(key.getEventType() != null ? key.getEventType().toString() : null,
+        final NotificationJson notification = new NotificationJson(key.getEventType(),
                                                                    key.getAccountId(),
                                                                    key.getObjectType() != null ? key.getObjectType().toString() : null,
                                                                    key.getObjectId(),

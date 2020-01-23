@@ -69,9 +69,9 @@ public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
 
         final StandaloneCatalog cat = new MockCatalog().setPlans(ImmutableList.<Plan>of(plan1, plan2));
 
-        Assert.assertEquals(cat.findCurrentPhase("TestPlan1-discount"), phaseDiscount1);
-        Assert.assertEquals(cat.findCurrentPhase("TestPlan2-discount"), phaseDiscount2);
-        Assert.assertEquals(cat.findCurrentPhase("TestPlan1-trial"), phaseTrial1);
-        Assert.assertEquals(cat.findCurrentPhase("TestPlan2-trial"), phaseTrial2);
+        Assert.assertEquals(cat.findPhase("TestPlan1-discount"), phaseDiscount1);
+        Assert.assertEquals(cat.findPhase("TestPlan2-discount"), phaseDiscount2);
+        Assert.assertEquals(cat.findPhase("TestPlan1-trial"), phaseTrial1);
+        Assert.assertEquals(cat.findPhase("TestPlan2-trial"), phaseTrial2);
     }
 }

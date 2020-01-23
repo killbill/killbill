@@ -155,7 +155,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
-        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
+        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), false, AuditLevel.NONE, requestOptions);
         final InvoiceItem itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for the full amount
@@ -185,7 +185,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
-        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
+        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), false, AuditLevel.NONE, requestOptions);
         final InvoiceItem itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for a fraction of the amount
@@ -214,7 +214,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         final InvoicePayment paymentJson = setupScenarioWithPayment(true);
 
         // Get the individual items for the invoice
-        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), true, false, AuditLevel.NONE, requestOptions);
+        final Invoice invoice = invoiceApi.getInvoice(paymentJson.getTargetInvoiceId(), false, AuditLevel.NONE, requestOptions);
         final InvoiceItem itemToAdjust = invoice.getItems().get(0);
 
         // Issue a refund for a fraction of the amount
@@ -297,7 +297,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         // Verify targetInvoiceId is not null. See #1014
         assertEquals(invoicePaymentApi.getInvoicePayment(invoicePayment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions).getTargetInvoiceId(), invoicePayment.getTargetInvoiceId());
 
-        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
         // Verify this is the correct value
@@ -324,7 +324,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         // Add a bundle, subscription and move the clock to get the first invoice
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun",
-                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY);
         assertNotNull(subscriptionJson);
 
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
@@ -332,7 +332,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         clock.addDays(32);
         callbackServlet.assertListenerStatus();
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(invoices.size(), 2);
 
         final InvoicePayment invoicePayment1 = new InvoicePayment();

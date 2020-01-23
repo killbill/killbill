@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -24,27 +24,27 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.mixins.CloseMe;
 import org.skife.jdbi.v2.sqlobject.mixins.Transactional;
+import org.skife.jdbi.v2.util.LongMapper;
 
 @KillBillSqlDaoStringTemplate
 public interface CatalogOverrideTierBlockSqlDao extends Transactional<CatalogOverrideTierBlockSqlDao>, CloseMe {
 
     @SqlUpdate
-    public void create(@SmartBindBean final CatalogOverrideTierBlockModelDao entity,
+    @GetGeneratedKeys(value = LongMapper.class, columnName = "record_id")
+    public Long create(@SmartBindBean final CatalogOverrideTierBlockModelDao entity,
                        @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     public CatalogOverrideTierBlockModelDao getByRecordId(@Bind("recordId") final Long recordId,
-                                                                @SmartBindBean final InternalTenantContext context);
+                                                          @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public Long getTargetTierDefinition(@TierBlockKeysCollectionBinder final Collection<String> concatBlockNumAndBlockDefRecordId,
                                         @Bind("targetCount") final Integer targetCount,
                                         @SmartBindBean final InternalTenantContext context);
-
-    @SqlQuery
-    public Long getLastInsertId();
 }

@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -16,6 +18,7 @@
 
 package org.killbill.billing.subscription.engine.dao;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -32,6 +35,7 @@ import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, SubscriptionBaseBundle> {
@@ -44,7 +48,7 @@ public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, S
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    public void renameBundleExternalKey(@Bind("externalKey") String externalKey,
+    public void renameBundleExternalKey(@BindIn("ids") final Collection<String> ids,
                                         @Define("prefix") final String prefix,
                                         @SmartBindBean final InternalCallContext context);
 
@@ -62,6 +66,10 @@ public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, S
     @SqlQuery
     public List<SubscriptionBundleModelDao> getBundleFromAccount(@Bind("accountId") String accountId,
                                                                  @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public List<SubscriptionBundleModelDao> getBundlesForKey(@Bind("externalKey") String externalKey,
+                                                             @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<SubscriptionBundleModelDao> getBundlesForLikeKey(@Bind("externalKey") String externalKey,

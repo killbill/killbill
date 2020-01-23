@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -51,7 +51,6 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import org.killbill.billing.util.tag.dao.TagSqlDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
@@ -76,7 +75,7 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
     @Inject
     public DefaultCustomFieldDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher controllerDispatcher,
                                  final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus bus, final AuditDao auditDao) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), CustomFieldSqlDao.class);
+        super(nonEntityDao, controllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), CustomFieldSqlDao.class);
         this.bus = bus;
         this.auditDao = auditDao;
     }
@@ -245,4 +244,44 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
                                               limit,
                                               context);
     }
+
+    @Override
+    public Pagination<CustomFieldModelDao> searchCustomFields(final String fieldName, final ObjectType objectType, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(CustomFieldSqlDao.class,
+                                              new PaginationIteratorBuilder<CustomFieldModelDao, CustomField, CustomFieldSqlDao>() {
+                                                  @Override
+                                                  public Long getCount(final CustomFieldSqlDao customFieldSqlDao, final InternalTenantContext context) {
+                                                      return customFieldSqlDao.getSearchCountByObjectTypeAndFieldName(fieldName, objectType, context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<CustomFieldModelDao> build(final CustomFieldSqlDao customFieldSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return customFieldSqlDao.searchByObjectTypeAndFieldName(fieldName, objectType, offset, limit, ordering.toString(), context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
+    }
+
+    @Override
+    public Pagination<CustomFieldModelDao> searchCustomFields(final String fieldName, @Nullable final String fieldValue, final ObjectType objectType, final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPagination(CustomFieldSqlDao.class,
+                                              new PaginationIteratorBuilder<CustomFieldModelDao, CustomField, CustomFieldSqlDao>() {
+                                                  @Override
+                                                  public Long getCount(final CustomFieldSqlDao customFieldSqlDao, final InternalTenantContext context) {
+                                                      return customFieldSqlDao.getSearchCountByObjectTypeAndFieldNameValue(fieldName, fieldValue, objectType, context);
+                                                  }
+
+                                                  @Override
+                                                  public Iterator<CustomFieldModelDao> build(final CustomFieldSqlDao customFieldSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                      return customFieldSqlDao.searchByObjectTypeAndFieldNameValue(fieldName, fieldValue, objectType, offset, limit, ordering.toString(), context);
+                                                  }
+                                              },
+                                              offset,
+                                              limit,
+                                              context);
+    }
+
+
 }

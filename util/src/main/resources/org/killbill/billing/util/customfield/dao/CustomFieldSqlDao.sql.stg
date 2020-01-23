@@ -1,6 +1,6 @@
 import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
-andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active = '1'"
 
 tableName() ::= "custom_fields"
 
@@ -32,7 +32,7 @@ historyTableName() ::= "custom_field_history"
 
 markTagAsDeleted() ::= <<
 update <tableName()>
-set is_active = false
+set is_active = '0'
 where <idField("")> = :id
 <AND_CHECK_TENANT("")>
 ;
@@ -54,7 +54,7 @@ from <tableName()>
 where
 object_id = :objectId
 and object_type = :objectType
-and is_active
+and is_active = '1'
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;
@@ -67,3 +67,60 @@ searchQuery(prefix) ::= <<
   or <prefix>field_name like :likeSearchKey
   or <prefix>field_value like :likeSearchKey
 >>
+
+getSearchCountByObjectTypeAndFieldName() ::= <<
+select
+count(1) as count
+from <tableName()>
+where
+object_type = :objectType
+and field_name = :fieldName
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT("")>
+;
+>>
+
+searchByObjectTypeAndFieldName(ordering) ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where
+object_type = :objectType
+and field_name = :fieldName
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT("")>
+order by <recordIdField("")> <ordering>
+limit :rowCount offset :offset
+;
+>>
+
+getSearchCountByObjectTypeAndFieldNameValue() ::= <<
+select
+count(1) as count
+from <tableName()>
+where
+object_type = :objectType
+and field_name = :fieldName
+and field_value = :fieldValue
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT("")>
+;
+>>
+
+searchByObjectTypeAndFieldNameValue(ordering) ::= <<
+select
+<allTableFields("")>
+from <tableName()>
+where
+object_type = :objectType
+and field_name = :fieldName
+and field_value = :fieldValue
+<andCheckSoftDeletionWithComma("")>
+<AND_CHECK_TENANT("")>
+order by <recordIdField("")> <ordering>
+limit :rowCount offset :offset
+;
+>>
+
+
+

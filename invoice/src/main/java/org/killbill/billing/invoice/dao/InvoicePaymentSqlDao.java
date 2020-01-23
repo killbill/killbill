@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,6 +26,8 @@ import java.util.UUID;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
@@ -69,7 +71,8 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
                                                            @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
-    void updateAttempt(@Bind("recordId") Long recordId,
+    @Audited(ChangeType.UPDATE)
+    void updateAttempt(@Bind("id") String id,
                        @Bind("paymentId") final String paymentId,
                        @Bind("paymentDate") final Date paymentDate,
                        @Bind("amount") final BigDecimal amount,

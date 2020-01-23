@@ -18,6 +18,7 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -39,4 +40,10 @@ public class ParentInvoiceItem extends InvoiceItemBase {
     public String getDescription() {
         return MoreObjects.firstNonNull(description, "Parent summary item");
     }
+
+    @Override
+    public DateTime getCatalogEffectiveDate() {
+        return null;
+    }
+
 }

@@ -20,13 +20,15 @@ package org.killbill.billing.entitlement.dao;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -35,6 +37,7 @@ import org.killbill.billing.entitlement.engine.core.EventsStreamBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -49,8 +52,8 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
 
     public OptimizedProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
                                           final IDBI dbi, final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
-                                          final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
-        super(eventsStreamBuilder, subscriptionBaseInternalApi, dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+                                          final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
+        super(eventsStreamBuilder, subscriptionBaseInternalApi, dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, auditDao, internalCallContextFactory);
     }
 
     /**
@@ -83,7 +86,7 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
                                                         final SubscriptionBase subscription,
                                                         final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                                         final int accountBCD,
-                                                        final Catalog catalog,
+                                                        final VersionedCatalog catalog,
                                                         final InternalTenantContext context) throws EntitlementApiException {
         // blockable id points to a subscription, but make sure it's an add-on
         if (!ProductCategory.ADD_ON.equals(subscription.getCategory())) {

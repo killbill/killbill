@@ -48,11 +48,10 @@ public class InvoicePaymentControlDao {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 final String paymentId = data.getPaymentId() != null ? data.getPaymentId().toString() : null;
-                final String paymentMethodId = data.getPaymentMethodId() != null ? data.getPaymentMethodId().toString() : null;
-                handle.execute("insert into _invoice_payment_control_plugin_auto_pay_off " +
-                               "(attempt_id, payment_external_key, transaction_external_key, account_id, plugin_name, payment_id, payment_method_id, amount, currency, created_by, created_date) values " +
-                               "(?,?,?,?,?,?,?,?,?,?,?)",
-                               data.getAttemptId().toString(), data.getPaymentExternalKey(), data.getTransactionExternalKey(), data.getAccountId(), data.getPluginName(), paymentId, paymentMethodId,
+                handle.execute("insert into invoice_payment_control_plugin_auto_pay_off " +
+                               "(attempt_id, payment_external_key, transaction_external_key, account_id, plugin_name, payment_id, amount, currency, created_by, created_date) values " +
+                               "(?,?,?,?,?,?,?,?,?,?)",
+                               data.getAttemptId().toString(), data.getPaymentExternalKey(), data.getTransactionExternalKey(), data.getAccountId(), data.getPluginName(), paymentId,
                                data.getAmount(), data.getCurrency(), data.getCreatedBy(), data.getCreatedDate()
                               );
                 return null;
@@ -64,7 +63,7 @@ public class InvoicePaymentControlDao {
         return dbi.withHandle(new HandleCallback<List<PluginAutoPayOffModelDao>>() {
             @Override
             public List<PluginAutoPayOffModelDao> withHandle(final Handle handle) throws Exception {
-                final List<Map<String, Object>> queryResult = handle.select("select * from _invoice_payment_control_plugin_auto_pay_off where account_id = ? and is_active", accountId.toString());
+                final List<Map<String, Object>> queryResult = handle.select("select * from invoice_payment_control_plugin_auto_pay_off where account_id = ? and is_active = '1'", accountId.toString());
                 final List<PluginAutoPayOffModelDao> result = new ArrayList<PluginAutoPayOffModelDao>(queryResult.size());
                 for (final Map<String, Object> row : queryResult) {
 
@@ -75,7 +74,6 @@ public class InvoicePaymentControlDao {
                                                                                         UUID.fromString((String) row.get("account_id")),
                                                                                         (String) row.get("plugin_name"),
                                                                                         row.get("payment_id") != null ? UUID.fromString((String) row.get("payment_id")) : null,
-                                                                                        UUID.fromString((String) row.get("payment_method_id")),
                                                                                         (BigDecimal) row.get("amount"),
                                                                                         Currency.valueOf((String) row.get("currency")),
                                                                                         (String) row.get("created_by"),
@@ -92,7 +90,7 @@ public class InvoicePaymentControlDao {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("update _invoice_payment_control_plugin_auto_pay_off set is_active = false where account_id = ?", accountId.toString());
+                handle.execute("update invoice_payment_control_plugin_auto_pay_off set is_active = '0' where account_id = ?", accountId.toString());
                 return null;
             }
         });

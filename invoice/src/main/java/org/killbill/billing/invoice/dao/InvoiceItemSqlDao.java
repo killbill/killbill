@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,14 +39,14 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId,
                                                        @SmartBindBean final InternalTenantContext context);
+
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,
                                                             @SmartBindBean final InternalTenantContext context);
 
-
     @SqlQuery
     List<InvoiceItemModelDao> getAdjustedOrRepairedInvoiceItemsByLinkedId(@Bind("linkedItemId") final String linkedItemId,
-                                                            @SmartBindBean final InternalTenantContext context);
+                                                                          @SmartBindBean final InternalTenantContext context);
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)

@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -47,10 +48,13 @@ import org.killbill.billing.util.tag.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class InvoiceDaoHelper {
@@ -164,13 +168,13 @@ public class InvoiceDaoHelper {
         return requestedPositiveAmount;
     }
 
-    public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final UUID accountId, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final LocalDate upToDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final UUID accountId, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, @Nullable LocalDate startDate, final LocalDate upToDate, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoices = getAllInvoicesByAccountFromTransaction(false, invoicesTags, entitySqlDaoWrapperFactory, context);
         log.debug("Found invoices={} for accountId={}", invoices, accountId);
-        return getUnpaidInvoicesByAccountFromTransaction(invoices, upToDate);
+        return getUnpaidInvoicesByAccountFromTransaction(invoices, startDate, upToDate);
     }
 
-    public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final List<InvoiceModelDao> invoices, @Nullable final LocalDate upToDate) {
+    public List<InvoiceModelDao> getUnpaidInvoicesByAccountFromTransaction(final List<InvoiceModelDao> invoices,  @Nullable LocalDate startDate, @Nullable final LocalDate upToDate) {
         final Collection<InvoiceModelDao> unpaidInvoices = Collections2.filter(invoices, new Predicate<InvoiceModelDao>() {
             @Override
             public boolean apply(final InvoiceModelDao in) {
@@ -179,7 +183,8 @@ public class InvoiceDaoHelper {
                 log.debug("Computed balance={} for invoice={}", balance, in);
                 return InvoiceStatus.COMMITTED.equals(in.getStatus()) &&
                        (balance.compareTo(BigDecimal.ZERO) >= 1 && !in.isWrittenOff()) &&
-                       (upToDate == null || in.getTargetDate() == null || !in.getTargetDate().isAfter(upToDate));
+                       (startDate == null || in.getTargetDate() == null || in.getTargetDate().compareTo(startDate) >= 0) &&
+                       (upToDate == null || in.getTargetDate() == null || in.getTargetDate().compareTo(upToDate) <= 0);
             }
         });
         return new ArrayList<InvoiceModelDao>(unpaidInvoices);
@@ -219,30 +224,39 @@ public class InvoiceDaoHelper {
         // Finally, create the adjustment
         // Note! The amount is negated here!
         return new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.ITEM_ADJ, invoiceItemToBeAdjusted.getInvoiceId(), invoiceItemToBeAdjusted.getAccountId(),
-                                       null, null, null, invoiceItemToBeAdjusted.getProductName(), invoiceItemToBeAdjusted.getPlanName(), invoiceItemToBeAdjusted.getPhaseName(),
-                                       invoiceItemToBeAdjusted.getUsageName(), effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
+                                       null, null, null, invoiceItemToBeAdjusted.getProductName(), invoiceItemToBeAdjusted.getPlanName(), invoiceItemToBeAdjusted.getPhaseName(), invoiceItemToBeAdjusted.getUsageName(),
+                                        invoiceItemToBeAdjusted.getCatalogEffectiveDate(), effectiveDate, effectiveDate, amountToAdjust.negate(), null, currencyForAdjustment, invoiceItemToBeAdjusted.getId());
     }
 
     public void populateChildren(final InvoiceModelDao invoice, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
-        populateChildren(ImmutableList.<InvoiceModelDao>of(invoice), invoicesTags, entitySqlDaoWrapperFactory, context);
+        // !!! Anything updated here needs to also be reflected in   void populateChildren(final Iterable<InvoiceModelDao> invoices,...)
+        setInvoiceItemsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
+        setInvoicePaymentsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
+        setTrackingIdsFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
+        setInvoicesWrittenOff(invoice, invoicesTags);
+        if (!invoice.isParentInvoice()) {
+            setParentInvoice(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
+        }
     }
 
     public void populateChildren(final Iterable<InvoiceModelDao> invoices, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        // !!! Anything updated here needs to also be reflected in   void populateChildren(final InvoiceModelDao invoice,...)
         if (Iterables.isEmpty(invoices)) {
             return;
         }
 
-        getInvoiceItemsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
-        getInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
+        setInvoiceItemsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
+        setInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
+        setTrackingIdsFromTransaction(invoices, entitySqlDaoWrapperFactory, context);
         setInvoicesWrittenOff(invoices, invoicesTags);
 
-        final Iterable<InvoiceModelDao> nonParentInvoices = Iterables.<InvoiceModelDao>filter(invoices,
-                                                                                              new Predicate<InvoiceModelDao>() {
-                                                                                                  @Override
-                                                                                                  public boolean apply(final InvoiceModelDao invoice) {
-                                                                                                      return !invoice.isParentInvoice();
-                                                                                                  }
-                                                                                              });
+        final Iterable<InvoiceModelDao> nonParentInvoices = Iterables.<InvoiceModelDao>filter(invoices, new Predicate<InvoiceModelDao>() {
+            @Override
+            public boolean apply(final InvoiceModelDao invoice) {
+                return !invoice.isParentInvoice();
+            }
+        });
+
         if (!Iterables.isEmpty(nonParentInvoices)) {
             setParentInvoice(nonParentInvoices,
                              invoicesTags,
@@ -268,7 +282,18 @@ public class InvoiceDaoHelper {
         return amount == null ? BigDecimal.ZERO : amount;
     }
 
-    private void getInvoiceItemsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+
+    private void setInvoiceItemsWithinTransaction(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+        final List<InvoiceItemModelDao> invoiceItems = invoiceItemSqlDao.getInvoiceItemsByInvoice(invoice.getId().toString(), context);
+        // Make sure to set invoice items to a non-null value
+        final List<InvoiceItemModelDao> invoiceItemsForInvoice = MoreObjects.firstNonNull(invoiceItems, ImmutableList.<InvoiceItemModelDao>of());
+        log.debug("Found items={} for invoice={}", invoiceItemsForInvoice, invoice);
+        invoice.addInvoiceItems(invoiceItemsForInvoice);
+    }
+
+
+    private void setInvoiceItemsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
         final List<InvoiceItemModelDao> invoiceItemsForAccount = invoiceItemSqlDao.getByAccountRecordId(context);
 
@@ -288,7 +313,22 @@ public class InvoiceDaoHelper {
         }
     }
 
-    private void getInvoicePaymentsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+    private void setInvoicePaymentsWithinTransaction(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
+        final List<InvoicePaymentModelDao> invoicePayments = invoicePaymentSqlDao.getAllPaymentsForInvoiceIncludedInit(invoice.getId().toString(), context);
+        log.debug("Found payments={} for invoice={}", invoicePayments, invoice);
+        invoice.addPayments(invoicePayments);
+
+        for (final InvoicePaymentModelDao invoicePayment : invoicePayments) {
+            if (invoicePayment.getCurrency() != invoicePayment.getProcessedCurrency()) {
+                // If any entry is set with a different processed currency, we use it as a processed currency.
+                invoice.setProcessedCurrency(invoicePayment.getProcessedCurrency());
+                break;
+            }
+        }
+    }
+
+    private void setInvoicePaymentsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
         final List<InvoicePaymentModelDao> invoicePaymentsForAccount = invoicePaymentSqlDao.getByAccountRecordId(context);
 
@@ -316,6 +356,10 @@ public class InvoiceDaoHelper {
         }
     }
 
+    private void setInvoicesWrittenOff(final InvoiceModelDao invoice, final List<Tag> invoicesTags) {
+        setInvoicesWrittenOff(ImmutableList.of(invoice), invoicesTags);
+    }
+
     private void setInvoicesWrittenOff(final Iterable<InvoiceModelDao> invoices, final List<Tag> invoicesTags) {
         final Iterable<Tag> writtenOffTags = filterForWrittenOff(invoicesTags);
         for (final Tag cur : writtenOffTags) {
@@ -331,6 +375,44 @@ public class InvoiceDaoHelper {
         }
     }
 
+    private void setTrackingIdsFromTransaction(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        setTrackingIdsFromTransaction(ImmutableList.of(invoice), entitySqlDaoWrapperFactory, context);
+    }
+
+    private void setTrackingIdsFromTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+
+        final Set<String> invoiceIds = ImmutableSet.<String>copyOf(Iterables.transform(invoices, new Function<InvoiceModelDao, String>() {
+            @Override
+            public String apply(final InvoiceModelDao input) {
+                return input.getId().toString();
+            }
+        }));
+
+        final InvoiceTrackingSqlDao invoiceTrackingidSqlDao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
+        final List<InvoiceTrackingModelDao> trackingIds = invoiceTrackingidSqlDao.getTrackingsForInvoices(invoiceIds, context);
+
+        final Map<UUID, List<InvoiceTrackingModelDao>> invoiceTrackingIdsPerInvoiceId = new HashMap<UUID, List<InvoiceTrackingModelDao>>();
+        for (InvoiceTrackingModelDao cur : trackingIds) {
+            if (invoiceTrackingIdsPerInvoiceId.get(cur.getInvoiceId()) == null) {
+                invoiceTrackingIdsPerInvoiceId.put(cur.getInvoiceId(), new LinkedList<>());
+            }
+            invoiceTrackingIdsPerInvoiceId.get(cur.getInvoiceId()).add(cur);
+        }
+
+        for (final InvoiceModelDao invoice : invoices) {
+            if (invoiceTrackingIdsPerInvoiceId.get(invoice.getId()) != null) {
+                final List<InvoiceTrackingModelDao> perInvoiceTrackingIds = invoiceTrackingIdsPerInvoiceId.get(invoice.getId());
+                final Iterable<String> transform = Iterables.transform(perInvoiceTrackingIds, new Function<InvoiceTrackingModelDao, String>() {
+                    @Override
+                    public String apply(final InvoiceTrackingModelDao input) {
+                        return input.getTrackingId();
+                    }
+                });
+                invoice.addTrackingIds(ImmutableSet.<String>copyOf(transform));
+            }
+        }
+    }
+
     private Iterable<Tag> filterForWrittenOff(final List<Tag> tags) {
         return Iterables.filter(tags, new Predicate<Tag>() {
             @Override
@@ -338,6 +420,26 @@ public class InvoiceDaoHelper {
                 return input.getTagDefinitionId().equals(ControlTagType.WRITTEN_OFF.getId());
             }
         });
+    }
+
+    private void setParentInvoice(final InvoiceModelDao invoice, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext childContext) {
+        final InvoiceParentChildrenSqlDao invoiceParentChildrenSqlDao = entitySqlDaoWrapperFactory.become(InvoiceParentChildrenSqlDao.class);
+        final List<InvoiceParentChildModelDao> mappings = invoiceParentChildrenSqlDao.getParentChildMappingsByChildInvoiceIds(ImmutableList.of(invoice.getId().toString()), childContext);
+        if (mappings.isEmpty()) {
+            return;
+        }
+
+        Preconditions.checkState(mappings.size() == 1, String.format("Expected only one parent mapping for invoice %s", invoice.getId()));
+
+        final UUID parentInvoiceId = mappings.get(0).getParentInvoiceId();
+        final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+        final InvoiceModelDao parentInvoice = invoiceSqlDao.getById(parentInvoiceId.toString(), childContext);
+
+        final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(parentInvoice.getAccountId(), ObjectType.ACCOUNT, internalCallContextFactory.createTenantContext(childContext));
+        final InternalTenantContext parentContext = internalCallContextFactory.createInternalTenantContext(childContext.getTenantRecordId(), parentAccountRecordId);
+        // Note the misnomer here, populateChildren simply populates the content of these invoices (unrelated to HA)
+        populateChildren(parentInvoice, invoicesTags, entitySqlDaoWrapperFactory, parentContext);
+        invoice.addParentInvoice(parentInvoice);
     }
 
     private void setParentInvoice(final Iterable<InvoiceModelDao> childInvoices, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext childContext) {

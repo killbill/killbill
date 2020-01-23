@@ -47,6 +47,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
@@ -716,7 +717,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // We should still be clear
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
-        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 0);
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext).size(), 0);
     }
 
     @Test(groups = "slow", description = "Test overdue after refund with no adjustment", retryAnalyzer = FlakyRetryAnalyzer.class)
@@ -860,7 +861,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // Pay the first one via an external payment - we should then be 5 days apart from the second invoice
         // (which is the earliest unpaid one) and hence come back to a clear state (see configuration)
         paymentPlugin.makeAllInvoicesFailWithError(false);
-        final Invoice firstNonZeroInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
+        final Invoice firstNonZeroInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext).iterator().next();
         createExternalPaymentAndCheckForCompletion(account, firstNonZeroInvoice, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should be clear now
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
@@ -909,7 +910,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // We have two unpaid non-zero dollar invoices at this point
         // Adjust the first (and only) item of the first invoice - we should then be 5 days apart from the second invoice
         // (which is the earliest unpaid one) and hence come back to a clear state (see configuration)
-        final Invoice firstNonZeroInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).iterator().next();
+        final Invoice firstNonZeroInvoice = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext).iterator().next();
         fullyAdjustInvoiceItemAndCheckForCompletion(account, firstNonZeroInvoice, 1, NextEvent.BLOCK, NextEvent.INVOICE_ADJUSTMENT);
         // We should be clear now
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
@@ -972,14 +973,14 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-31 => DAY 30 have to get out of trial before first payment
         addMonthsAndCheckForCompletion(1, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         // Verify that number of unpaid invoices is 1
-        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 1);
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext).size(), 1);
         // Should still be in clear state
         checkODState(OverdueWrapper.CLEAR_STATE_NAME);
 
         // Add 1 month
         addMonthsAndCheckForCompletion(1, NextEvent.INVOICE, NextEvent.BLOCK, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         // Verify that number of unpaid invoices is 2
-        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 2);
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext).size(), 2);
         // Now we should be in OD1
         checkODState("OD1");
 
@@ -988,7 +989,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
                                        NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
                                        NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         // Verify that number of unpaid invoices is 3
-        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 3);
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext).size(), 3);
         // Now we should be in OD2
         checkODState("OD2");
 
@@ -998,7 +999,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
                                        NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
                                        NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
         // Verify that number of unpaid invoices is 4
-        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 4);
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext).size(), 4);
         // We should still be in OD2
         checkODState("OD2");
 
@@ -1009,7 +1010,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
                                        NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR,
                                        NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR, NextEvent.TAG,  NextEvent.BLOCK);
         // Verify that number of unpaid invoices is 5
-        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext).size(), 5);
+        Assert.assertEquals(invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext).size(), 5);
         // Now we should be in OD3
         checkODState("OD3");
 
@@ -1141,8 +1142,11 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.BLOCK);
-        invoiceUserApi.insertCredit(account.getId(), accountBalance, new LocalDate(2012, 06, 30), account.getCurrency(), true, "credit invoice", null, null, callContext);
+        // We rebalance CBA on the last 2 unpaid invoices and therefore we expect 2 INVOICE_ADJUSTMENT events
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT, NextEvent.BLOCK);
+
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(2012, 06, 30), "credit invoice", accountBalance, account.getCurrency(), null);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(2012, 06, 30), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
     }
@@ -1179,7 +1183,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
     }
 
     private List<Invoice> getUnpaidInvoicesOrderFromRecent() {
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext);
         // Sort in reverse order to first pay most recent invoice-- that way overdue state may only flip when we reach the last one.
         final List<Invoice> sortedInvoices = new LinkedList<Invoice>(invoices);
         Collections.sort(sortedInvoices, new Comparator<Invoice>() {

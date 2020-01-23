@@ -39,6 +39,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationErrors;
 
@@ -64,6 +65,11 @@ public class DefaultPriceList extends ValidatingConfig<StandaloneCatalog> implem
     public DefaultPriceList(final DefaultPlan[] plans, final String name) {
         this.plans = new CatalogEntityCollection<Plan>(plans);
         this.name = name;
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return root;
     }
 
     @Override

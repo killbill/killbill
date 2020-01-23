@@ -38,6 +38,7 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
@@ -220,7 +221,9 @@ public class TestWithTaxItems extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("100"), clock.getUTCToday(), account.getCurrency(), true, "VIP", null, null, callContext);
+
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), clock.getUTCToday(), "VIP", new BigDecimal("100"), account.getCurrency(), null);
+        invoiceUserApi.insertCredits(account.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -252,6 +255,57 @@ public class TestWithTaxItems extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
+    public void testWithAdjustments() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Create original subscription (Trial PHASE) -> $0 invoice.
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        // Make sure TestInvoicePluginApi will return an additional TAX item
+        testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(UUID.randomUUID(), null, account.getId(), null, "Tax Item", new LocalDate(2012, 5, 1), new BigDecimal("3.00"), account.getCurrency()));
+
+        // Move to Evergreen PHASE to verify non-dry-run scenario
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        final Invoice secondInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.TAX, new BigDecimal("3.00")));
+
+        final InvoiceItem recurringItemId = Iterables.find(secondInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getInvoiceItemType() == InvoiceItemType.RECURRING;
+            }
+        });
+
+        testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(UUID.randomUUID(), null, account.getId(), null, "Tax Item (refund)", new LocalDate(2012, 5, 8), new BigDecimal("-1.00"), account.getCurrency()));
+
+        clock.addDays(7);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), secondInvoice.getId(), recurringItemId.getId(), new LocalDate(2012, 5, 8), new BigDecimal("10"), account.getCurrency(), "", "", ImmutableList.of(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 5, 8), InvoiceItemType.ITEM_ADJ, new BigDecimal("-10.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), new LocalDate(2012, 5, 8), InvoiceItemType.CBA_ADJ, new BigDecimal("11.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.TAX, new BigDecimal("3.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), null, InvoiceItemType.TAX, new BigDecimal("-1.00")));
+    }
+
+
+
+    @Test(groups = "slow")
     public void testTaxRateStartAndEndDate() throws Exception {
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2017, 11, 15));
@@ -275,7 +329,8 @@ public class TestWithTaxItems extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("100"), clock.getUTCToday(), account.getCurrency(), true, "VIP", null, null, callContext);
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), clock.getUTCToday(), "VIP", new BigDecimal("100"), account.getCurrency(), null);
+        invoiceUserApi.insertCredits(account.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -290,6 +345,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
                         null,
                         null,
                         account.getId(),
+                        null,
                         null,
                         null,
                         null,
@@ -315,6 +371,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
                         null,
                         null,
                         account.getId(),
+                        null,
                         null,
                         null,
                         null,
@@ -431,6 +488,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                 item.getPlanName(),
                                 item.getPhaseName(),
                                 item.getUsageName(),
+                                null,
                                 item.getPrettyProductName(),
                                 item.getPrettyPlanName(),
                                 item.getPrettyPhaseName(),

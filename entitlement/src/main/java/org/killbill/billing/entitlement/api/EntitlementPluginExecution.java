@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -42,7 +42,7 @@ public class EntitlementPluginExecution {
     private final OSGIServiceRegistration<EntitlementPluginApi> pluginRegistry;
 
     public interface WithEntitlementPlugin<T> {
-        T doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException;
+        T doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException;
     }
 
     @Inject
@@ -52,13 +52,13 @@ public class EntitlementPluginExecution {
     }
 
     public void executeWithPlugin(final Callable<Void> preCallbacksCallback, final List<WithEntitlementPlugin> callbacks, final Iterable<EntitlementContext> pluginContexts) throws EntitlementApiException {
-        final List<EntitlementContext> updatedPluginContexts = new LinkedList<EntitlementContext>();
+        final List<DefaultEntitlementContext> updatedPluginContexts = new LinkedList<DefaultEntitlementContext>();
 
         try {
             for (final EntitlementContext pluginContext : pluginContexts) {
                 final PriorEntitlementResult priorEntitlementResult = executePluginPriorCalls(pluginContext);
                 if (priorEntitlementResult != null && priorEntitlementResult.isAborted()) {
-                    throw new EntitlementApiException(ErrorCode.ENT_PLUGIN_API_ABORTED);
+                    throw new EntitlementApiException(ErrorCode.ENT_PLUGIN_API_ABORTED, "");
                 }
                 updatedPluginContexts.add(new DefaultEntitlementContext(pluginContext, priorEntitlementResult));
             }
@@ -67,7 +67,7 @@ public class EntitlementPluginExecution {
 
             try {
                 for (int i = 0; i < updatedPluginContexts.size(); i++) {
-                    final EntitlementContext updatedPluginContext = updatedPluginContexts.get(i);
+                    final DefaultEntitlementContext updatedPluginContext = updatedPluginContexts.get(i);
                     final WithEntitlementPlugin callback = callbacks.get(i);
 
                     callback.doCall(entitlementApi, updatedPluginContext);
@@ -90,9 +90,9 @@ public class EntitlementPluginExecution {
         try {
             final PriorEntitlementResult priorEntitlementResult = executePluginPriorCalls(pluginContext);
             if (priorEntitlementResult != null && priorEntitlementResult.isAborted()) {
-                throw new EntitlementApiException(ErrorCode.ENT_PLUGIN_API_ABORTED);
+                throw new EntitlementApiException(ErrorCode.ENT_PLUGIN_API_ABORTED, "");
             }
-            final EntitlementContext updatedPluginContext = new DefaultEntitlementContext(pluginContext, priorEntitlementResult);
+            final DefaultEntitlementContext updatedPluginContext = new DefaultEntitlementContext(pluginContext, priorEntitlementResult);
             try {
                 final T result = callback.doCall(entitlementApi, updatedPluginContext);
                 executePluginOnSuccessCalls(updatedPluginContext);

@@ -58,16 +58,10 @@ public class Item {
     private final Currency currency;
     private final DateTime createdDate;
     private final UUID linkedId;
-
+    private final DateTime catalogEffectiveDate;
+    private final ItemAction action;
     private BigDecimal currentRepairedAmount;
     private BigDecimal adjustedAmount;
-
-    private final ItemAction action;
-
-    public enum ItemAction {
-        ADD,
-        CANCEL
-    }
 
     public Item(final Item item, final ItemAction action) {
         this.id = item.id;
@@ -84,6 +78,8 @@ public class Item {
         this.amount = item.amount;
         this.rate = item.rate;
         this.currency = item.currency;
+        this.catalogEffectiveDate = item.catalogEffectiveDate;
+
         // In merge mode, the reverse item needs to correctly point to itself (repair of original item)
         this.linkedId = action == ItemAction.ADD ? item.linkedId : this.id;
         this.createdDate = item.createdDate;
@@ -92,6 +88,30 @@ public class Item {
 
         this.action = action;
     }
+
+    public Item(final Item item, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount) {
+        this.id = item.id;
+        this.accountId = item.accountId;
+        this.bundleId = item.bundleId;
+        this.subscriptionId = item.subscriptionId;
+        this.targetInvoiceId = item.targetInvoiceId;
+        this.invoiceId = item.invoiceId;
+        this.productName = item.productName;
+        this.planName = item.planName;
+        this.phaseName = item.phaseName;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.amount = amount;
+        this.rate = item.rate;
+        this.currency = item.currency;
+        this.catalogEffectiveDate = item.catalogEffectiveDate;
+        this.action = item.action;
+        this.linkedId = item.linkedId;
+        this.createdDate = item.createdDate;
+        this.currentRepairedAmount = item.currentRepairedAmount;
+        this.adjustedAmount = item.adjustedAmount;
+    }
+
 
     public Item(final InvoiceItem item, final UUID targetInvoiceId, final ItemAction action) {
         this(item, item.getStartDate(), item.getEndDate(), targetInvoiceId, action);
@@ -114,10 +134,36 @@ public class Item {
         this.currency = item.getCurrency();
         this.linkedId = item.getLinkedItemId();
         this.createdDate = item.getCreatedDate();
+        this.catalogEffectiveDate = item.getCatalogEffectiveDate();
         this.action = action;
 
         this.currentRepairedAmount = BigDecimal.ZERO;
         this.adjustedAmount = BigDecimal.ZERO;
+    }
+
+    public Item[] split(final LocalDate splitDate) {
+
+        Preconditions.checkState(action == ItemAction.ADD);
+        Preconditions.checkState(currentRepairedAmount.compareTo(BigDecimal.ZERO) == 0);
+        Preconditions.checkState(adjustedAmount.compareTo(BigDecimal.ZERO) == 0);
+
+
+        final Item[] result =  new Item[2];
+
+        final BigDecimal amount0 = InvoiceDateUtils.calculateProrationBetweenDates(startDate, splitDate, Days.daysBetween(startDate, endDate).getDays()).multiply(amount);
+        final BigDecimal amount1 = amount.subtract(amount0);
+
+        result[0] = new Item(this, this.startDate, splitDate, amount0);
+        result[1] = new Item(this, splitDate, this.endDate, amount1);
+        return result;
+    }
+
+    public static Item join(final Item item1, final Item item2) {
+
+        Preconditions.checkState(item1.getId().equals(item2.getId()));
+        Preconditions.checkState(item1.getEndDate().equals(item2.getStartDate()));
+
+        return new Item(item1, item1.getStartDate(), item2.getEndDate(), item1.getAmount().add(item2.getAmount()));
     }
 
     public InvoiceItem toInvoiceItem() {
@@ -134,12 +180,13 @@ public class Item {
                                                                      .multiply(amount) : amount;
 
         if (action == ItemAction.ADD) {
-            return new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, newStartDate, newEndDate, positiveAmount, rate, currency);
+            return new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, newStartDate, newEndDate, positiveAmount, rate, currency);
         } else {
             // We first compute the maximum amount after adjustment and that sets the amount limit of how much can be repaired.
-            final BigDecimal maxAvailableAmountForRepair = getNetAmount();
-            final BigDecimal positiveAmountForRepair = positiveAmount.compareTo(maxAvailableAmountForRepair) <= 0 ? positiveAmount : maxAvailableAmountForRepair;
-            return positiveAmountForRepair.compareTo(BigDecimal.ZERO) > 0 ? new RepairAdjInvoiceItem(targetInvoiceId, accountId, newStartDate, newEndDate, positiveAmountForRepair.negate(), currency, linkedId) : null;
+            final BigDecimal netAmount = getNetAmount();
+            final BigDecimal maxAmountForRepair = positiveAmount.compareTo(netAmount) <= 0 ? positiveAmount : netAmount;
+            final BigDecimal resultingAmountForRepair = maxAmountForRepair.compareTo(BigDecimal.ZERO) > 0 ? maxAmountForRepair : BigDecimal.ZERO;
+            return new RepairAdjInvoiceItem(targetInvoiceId, accountId, newStartDate, newEndDate, resultingAmountForRepair.negate(), currency, linkedId);
         }
     }
 
@@ -149,13 +196,17 @@ public class Item {
     }
 
     public void incrementCurrentRepairedAmount(final BigDecimal increment) {
-        Preconditions.checkState(increment.compareTo(BigDecimal.ZERO) > 0, "Invalid repair increment='%s', item=%s", increment, this);
+        Preconditions.checkState(increment.compareTo(BigDecimal.ZERO) >= 0, "Invalid repair increment='%s', item=%s", increment, this);
         currentRepairedAmount = currentRepairedAmount.add(increment);
     }
 
     @JsonIgnore
     public BigDecimal getNetAmount() {
         return amount.subtract(adjustedAmount).subtract(currentRepairedAmount);
+    }
+
+    public boolean isFullyAdjusted() {
+        return amount.subtract(adjustedAmount).compareTo(BigDecimal.ZERO) == 0;
     }
 
     public ItemAction getAction() {
@@ -327,5 +378,10 @@ public class Item {
         result = 31 * result + (adjustedAmount != null ? adjustedAmount.hashCode() : 0);
         result = 31 * result + (action != null ? action.hashCode() : 0);
         return result;
+    }
+
+    public enum ItemAction {
+        ADD,
+        CANCEL
     }
 }

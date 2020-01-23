@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
 import org.killbill.billing.payment.core.janitor.IncompletePaymentAttemptTask;
+import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
@@ -55,6 +56,8 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+    // Very similar implementation as the Janitor (see IncompletePaymentTransactionTask / IncompletePaymentAttemptTask)
+    // The code is different enough to make it difficult to share unfortunately
     @Override
     public void fixPaymentTransactionState(final Payment payment,
                                            final PaymentTransaction paymentTransaction,
@@ -108,19 +111,25 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
             }
         }
 
-        paymentDao.updatePaymentAndTransactionOnCompletion(payment.getAccountId(),
-                                                           null,
-                                                           payment.getId(),
-                                                           paymentTransaction.getTransactionType(),
+        final PaymentAutomatonDAOHelper paymentAutomatonDAOHelper = new PaymentAutomatonDAOHelper(paymentDao,
+                                                                                                  internalCallContext,
+                                                                                                  paymentSMHelper);
+        paymentAutomatonDAOHelper.processPaymentInfoPlugin(transactionStatus,
+                                                           paymentTransaction.getPaymentInfoPlugin(),
                                                            currentPaymentStateName,
                                                            lastSuccessPaymentState,
+                                                           // In case of success, and if we don't have any plugin details,
+                                                           // assume the full amount was paid to correctly reconcile invoice payments
+                                                           // See https://github.com/killbill/killbill/issues/1061#issuecomment-521911301
+                                                           paymentTransaction.getAmount(),
+                                                           paymentTransaction.getCurrency(),
+                                                           payment.getAccountId(),
+                                                           null,
+                                                           payment.getId(),
                                                            paymentTransaction.getId(),
-                                                           transactionStatus,
-                                                           paymentTransaction.getProcessedAmount(),
-                                                           paymentTransaction.getProcessedCurrency(),
-                                                           paymentTransaction.getGatewayErrorCode(),
-                                                           paymentTransaction.getGatewayErrorMsg(),
-                                                           internalCallContext);
+                                                           paymentTransaction.getTransactionType(),
+                                                           true,
+                                                           true);
 
         // If there is a payment attempt associated with that transaction, we need to update it as well
         final List<PaymentAttemptModelDao> paymentAttemptsModelDao = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransaction.getExternalKey(), internalCallContext);
@@ -134,7 +143,7 @@ public class DefaultAdminPaymentApi extends DefaultApiBase implements AdminPayme
         if (paymentAttemptModelDao != null) {
             // We can re-use the logic from IncompletePaymentAttemptTask as it is doing very similar work (i.e. run the completion part of
             // the state machine to call the plugins and update the attempt in the right terminal state)
-            incompletePaymentAttemptTask.doIteration(paymentAttemptModelDao);
+            incompletePaymentAttemptTask.doIteration(paymentAttemptModelDao, true);
         }
     }
 }

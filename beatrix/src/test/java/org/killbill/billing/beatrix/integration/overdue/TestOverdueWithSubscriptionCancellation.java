@@ -101,7 +101,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // DAY 36 -- RIGHT AFTER OD1 (two block events, for the cancellation and the OD1 state)
         // One BLOCK event is for the overdue state transition
         // The 2 other BLOCK are for the entitlement blocking states for both base plan and addOn2
-        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
+        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
         // Should be in OD1
         checkODState("OD1");
@@ -158,7 +158,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // DAY 36 (2012-06-06)-- RIGHT AFTER OD1 (two block events, for the cancellation and the OD1 state)
         // One BLOCK event is for the overdue state transition
         // The 2 other BLOCK are for the entitlement blocking states for both baseEntitlement and baseEntitlement3
-        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE);
+        addDaysAndCheckForCompletion(6, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
 
         // Should be in OD1
         checkODState("OD1");

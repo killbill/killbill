@@ -326,6 +326,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
 
     @Override
     public TableName getHistoryTableName() {
-        return null;
+        return TableName.SUBSCRIPTION_EVENT_HISTORY;
     }
 }

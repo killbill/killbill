@@ -146,6 +146,11 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
+    public String getExternalKey() {
+        return subscription.getExternalKey();
+    }
+
+    @Override
     public SubscriptionBase getBasePlanSubscriptionBase() {
         return baseSubscription;
     }

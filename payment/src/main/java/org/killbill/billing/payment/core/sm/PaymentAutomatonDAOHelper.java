@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -62,13 +62,20 @@ public class PaymentAutomatonDAOHelper {
     private String pluginName = null;
     private PaymentPluginApi paymentPluginApi = null;
 
+    // Used by the Janitor
+    public PaymentAutomatonDAOHelper(final PaymentDao paymentDao,
+                                     final InternalCallContext internalCallContext,
+                                     final PaymentStateMachineHelper paymentSMHelper) {
+        this(null, null, paymentDao, null, internalCallContext, null, paymentSMHelper);
+    }
+
     // Used to build new payments and transactions
     public PaymentAutomatonDAOHelper(final PaymentStateContext paymentStateContext,
                                      final DateTime utcNow, final PaymentDao paymentDao,
                                      final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                                      final InternalCallContext internalCallContext,
                                      final PersistentBus eventBus,
-                                     final PaymentStateMachineHelper paymentSMHelper) throws PaymentApiException {
+                                     final PaymentStateMachineHelper paymentSMHelper) {
         this.paymentStateContext = paymentStateContext;
         this.utcNow = utcNow;
         this.paymentDao = paymentDao;
@@ -110,12 +117,69 @@ public class PaymentAutomatonDAOHelper {
         paymentStateContext.setOnLeavingStateExistingTransactions(existingTransactions);
     }
 
-    public void processPaymentInfoPlugin(final TransactionStatus transactionStatus, @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
+    public void processPaymentInfoPlugin(final TransactionStatus transactionStatus,
+                                         @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
                                          final String currentPaymentStateName) {
+        final PaymentAndTransactionModelDao paymentAndTransactionModelDao = processPaymentInfoPlugin(transactionStatus,
+                                                                                                     paymentInfoPlugin,
+                                                                                                     currentPaymentStateName,
+                                                                                                     paymentStateContext.getAmount(),
+                                                                                                     paymentStateContext.getCurrency(),
+                                                                                                     paymentStateContext.getAccount().getId(),
+                                                                                                     paymentStateContext.getAttemptId(),
+                                                                                                     paymentStateContext.getPaymentId(),
+                                                                                                     paymentStateContext.getPaymentTransactionModelDao().getId(),
+                                                                                                     paymentStateContext.getTransactionType(),
+                                                                                                     paymentStateContext.isApiPayment());
+        // Update the context
+        paymentStateContext.setPaymentModelDao(paymentAndTransactionModelDao.getPaymentModelDao());
+        paymentStateContext.setPaymentTransactionModelDao(paymentAndTransactionModelDao.getPaymentTransactionModelDao());
+    }
+
+    public PaymentAndTransactionModelDao processPaymentInfoPlugin(final TransactionStatus transactionStatus,
+                                                                  @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
+                                                                  final String currentPaymentStateName,
+                                                                  final BigDecimal defaultProcessedAmount,
+                                                                  final Currency defaultProcessedCurrency,
+                                                                  final UUID accountId,
+                                                                  final UUID attemptId,
+                                                                  final UUID paymentId,
+                                                                  final UUID transactionId,
+                                                                  final TransactionType transactionType,
+                                                                  final boolean isApiPayment) {
+        final String lastSuccessPaymentState = paymentSMHelper.isSuccessState(currentPaymentStateName) ? currentPaymentStateName : null;
+        return processPaymentInfoPlugin(transactionStatus,
+                                        paymentInfoPlugin,
+                                        currentPaymentStateName,
+                                        lastSuccessPaymentState,
+                                        defaultProcessedAmount,
+                                        defaultProcessedCurrency,
+                                        accountId,
+                                        attemptId,
+                                        paymentId,
+                                        transactionId,
+                                        transactionType,
+                                        isApiPayment,
+                                        false);
+    }
+
+    public PaymentAndTransactionModelDao processPaymentInfoPlugin(final TransactionStatus transactionStatus,
+                                                                  @Nullable final PaymentTransactionInfoPlugin paymentInfoPlugin,
+                                                                  final String currentPaymentStateName,
+                                                                  @Nullable final String lastSuccessPaymentState,
+                                                                  final BigDecimal defaultSuccessfulProcessedAmount,
+                                                                  final Currency defaultProcessedCurrency,
+                                                                  final UUID accountId,
+                                                                  final UUID attemptId,
+                                                                  final UUID paymentId,
+                                                                  final UUID transactionId,
+                                                                  final TransactionType transactionType,
+                                                                  final boolean isApiPayment,
+                                                                  final boolean forceOverrideLastSuccessPaymentState) {
         final BigDecimal processedAmount;
         if (TransactionStatus.SUCCESS.equals(transactionStatus) || TransactionStatus.PENDING.equals(transactionStatus)) {
             if (paymentInfoPlugin == null || paymentInfoPlugin.getAmount() == null) {
-                processedAmount = paymentStateContext.getAmount();
+                processedAmount = defaultSuccessfulProcessedAmount;
             } else {
                 processedAmount = paymentInfoPlugin.getAmount();
             }
@@ -124,7 +188,7 @@ public class PaymentAutomatonDAOHelper {
         }
         final Currency processedCurrency;
         if (paymentInfoPlugin == null || paymentInfoPlugin.getCurrency() == null) {
-            processedCurrency = paymentStateContext.getCurrency();
+            processedCurrency = defaultProcessedCurrency;
         } else {
             processedCurrency = paymentInfoPlugin.getCurrency();
         }
@@ -132,39 +196,38 @@ public class PaymentAutomatonDAOHelper {
         final String gatewayErrorMsg = paymentInfoPlugin == null ? null : paymentInfoPlugin.getGatewayError();
 
         final PaymentAndTransactionModelDao paymentAndTransactionModelDao;
-        if (paymentSMHelper.isSuccessState(currentPaymentStateName)) {
-            final String lastSuccessPaymentState = currentPaymentStateName;
-            paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(paymentStateContext.getAccount().getId(),
-                                                                                               paymentStateContext.getAttemptId(),
-                                                                                               paymentStateContext.getPaymentId(),
-                                                                                               paymentStateContext.getTransactionType(),
+        if (lastSuccessPaymentState != null || forceOverrideLastSuccessPaymentState) {
+            paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(accountId,
+                                                                                               attemptId,
+                                                                                               paymentId,
+                                                                                               transactionType,
                                                                                                currentPaymentStateName,
                                                                                                lastSuccessPaymentState,
-                                                                                               paymentStateContext.getPaymentTransactionModelDao().getId(),
+                                                                                               transactionId,
                                                                                                transactionStatus,
                                                                                                processedAmount,
                                                                                                processedCurrency,
                                                                                                gatewayErrorCode,
                                                                                                gatewayErrorMsg,
+                                                                                               isApiPayment,
                                                                                                internalCallContext);
         } else {
-            paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(paymentStateContext.getAccount().getId(),
-                                                                                               paymentStateContext.getAttemptId(),
-                                                                                               paymentStateContext.getPaymentId(),
-                                                                                               paymentStateContext.getTransactionType(),
+            paymentAndTransactionModelDao = paymentDao.updatePaymentAndTransactionOnCompletion(accountId,
+                                                                                               attemptId,
+                                                                                               paymentId,
+                                                                                               transactionType,
                                                                                                currentPaymentStateName,
-                                                                                               paymentStateContext.getPaymentTransactionModelDao().getId(),
+                                                                                               transactionId,
                                                                                                transactionStatus,
                                                                                                processedAmount,
                                                                                                processedCurrency,
                                                                                                gatewayErrorCode,
                                                                                                gatewayErrorMsg,
+                                                                                               isApiPayment,
                                                                                                internalCallContext);
         }
 
-        // Update the context
-        paymentStateContext.setPaymentModelDao(paymentAndTransactionModelDao.getPaymentModelDao());
-        paymentStateContext.setPaymentTransactionModelDao(paymentAndTransactionModelDao.getPaymentTransactionModelDao());
+        return paymentAndTransactionModelDao;
     }
 
     public String getPaymentProviderPluginName(final boolean includeDeleted) throws PaymentApiException {

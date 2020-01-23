@@ -116,7 +116,7 @@ public class InvoiceApiHelper {
                 invoiceModelDaos.add(invoiceModelDao);
             }
 
-            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, ImmutableSet.of(), internalCallContext);
+            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, ImmutableSet.of(), internalCallContext);
             success = true;
 
             return fromInvoiceItemModelDao(createdInvoiceItems);
@@ -200,6 +200,7 @@ public class InvoiceApiHelper {
                                           invoiceItemToBeAdjusted.getPlanName(),
                                           invoiceItemToBeAdjusted.getPhaseName(),
                                           invoiceItemToBeAdjusted.getUsageName(),
+                                          invoiceItemToBeAdjusted.getCatalogEffectiveDate(),
                                           effectiveDate,
                                           effectiveDate,
                                           amountToAdjust,

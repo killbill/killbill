@@ -40,6 +40,8 @@ import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimeline.E
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
+import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
+import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
@@ -67,11 +69,12 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         versionedCatalog.add(mockCatalog);
         final CatalogService catalogService = new MockCatalogService(versionedCatalog, cacheControllerDispatcher);
         final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService);
+        final SubscriptionCatalogApi subscriptionCatalogInternalApiWithMockCatalogService = new DefaultSubscriptionCatalogApi(catalogInternalApiWithMockCatalogService, clock);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);
         final SubscriptionBaseTimelineApi timelineApi = Mockito.mock(SubscriptionBaseTimelineApi.class);
-        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, catalogInternalApiWithMockCatalogService, subscriptionInternalApi, apiService, internalCallContextFactory);
+        transferApi = new DefaultSubscriptionBaseTransferApi(clock, dao, timelineApi, subscriptionCatalogInternalApiWithMockCatalogService, subscriptionInternalApi, apiService, internalCallContextFactory);
         // Overrride catalog with our MockCatalog
-        this.catalog = mockCatalog;
+        this.catalog = DefaultSubscriptionCatalogApi.wrapCatalog(versionedCatalog, clock);
     }
 
     @Test(groups = "fast")
@@ -84,7 +87,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusDays(10);
-        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, catalog, internalCallContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, internalCallContext);
 
         Assert.assertEquals(events.size(), 0);
     }
@@ -100,7 +103,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusHours(1);
-        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, catalog, internalCallContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, internalCallContext);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);

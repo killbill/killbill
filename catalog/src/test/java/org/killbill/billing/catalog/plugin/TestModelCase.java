@@ -21,6 +21,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.rules.Case;
 
 public class TestModelCase implements Case {
@@ -41,6 +42,11 @@ public class TestModelCase implements Case {
         this.productCategory = productCategory;
         this.billingPeriod = billingPeriod;
         this.priceList = priceList;
+    }
+
+    @Override
+    public StaticCatalog getCatalog() {
+        return null;
     }
 
     @Override

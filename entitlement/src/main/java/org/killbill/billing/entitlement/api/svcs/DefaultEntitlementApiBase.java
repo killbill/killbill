@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -141,6 +141,14 @@ public class DefaultEntitlementApiBase {
                                       entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);
     }
 
+    public Entitlement getEntitlementForExternalKey(final String externalKey, final InternalTenantContext tenantContext) throws EntitlementApiException {
+        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(externalKey, tenantContext);
+        return new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
+                                      blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
+                                      entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);
+    }
+
+
     public void pause(final UUID bundleId, @Nullable final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
@@ -162,7 +170,7 @@ public class DefaultEntitlementApiBase {
 
         final WithEntitlementPlugin<Void> pauseWithPlugin = new WithEntitlementPlugin<Void>() {
             @Override
-            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public Void doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 try {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
                     blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_BLOCKED, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), localEffectiveDate, true, true, true, baseSubscription, internalCallContext);
@@ -195,7 +203,7 @@ public class DefaultEntitlementApiBase {
                                                                                internalCallContextFactory.createCallContext(internalCallContext));
         final WithEntitlementPlugin<Void> resumeWithPlugin = new WithEntitlementPlugin<Void>() {
             @Override
-            public Void doCall(final EntitlementApi entitlementApi, final EntitlementContext updatedPluginContext) throws EntitlementApiException {
+            public Void doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
                 try {
                     final SubscriptionBase baseSubscription = subscriptionInternalApi.getBaseSubscription(bundleId, internalCallContext);
                     blockUnblockBundle(bundleId, DefaultEntitlementApi.ENT_STATE_CLEAR, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), localEffectiveDate, false, false, false, baseSubscription, internalCallContext);

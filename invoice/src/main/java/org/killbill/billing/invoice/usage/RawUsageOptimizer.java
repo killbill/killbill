@@ -36,14 +36,13 @@ import org.killbill.billing.invoice.generator.InvoiceDateUtils;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.usage.InternalUserApi;
-import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -75,7 +74,7 @@ public class RawUsageOptimizer {
         final LocalDate targetStartDate = config.getMaxRawUsagePreviousPeriod(internalCallContext) >= 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage, internalCallContext) : firstEventStartDate;
         log.debug("ConsumableInArrear accountRecordId='{}', rawUsageStartDate='{}', firstEventStartDate='{}'",
                   internalCallContext.getAccountRecordId(), targetStartDate, firstEventStartDate);
-        final List<RawUsage> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
+        final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
 
         final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(targetStartDate, targetDate, internalCallContext);
         final Set<TrackingRecordId> existingTrackingIds = ImmutableSet.copyOf(Iterables.transform(trackingIds, new Function<InvoiceTrackingModelDao, TrackingRecordId>() {
@@ -120,9 +119,14 @@ public class RawUsageOptimizer {
 
         final ListIterator<InvoiceItem> iterator = sortedUsageItems.listIterator(sortedUsageItems.size());
         while (iterator.hasPrevious()) {
-            final InvoiceItem previous = iterator.previous();
-            Preconditions.checkState(previous instanceof UsageInvoiceItem);
-            final UsageInvoiceItem item = (UsageInvoiceItem) previous;
+            final InvoiceItem item = iterator.previous();
+            if (!(item instanceof UsageInvoiceItem)) {
+                // Help to debug https://github.com/killbill/killbill/issues/1095
+                log.warn("RawUsageOptimizer : item id={}, expected to see an UsageInvoiceItem type, got class {}, classloader = {}",
+                         item.getId(),
+                         (item != null ? item.getClass() : null),
+                         (item != null ? item.getClass().getClassLoader() : null));
+            }
             final Usage usage = knownUsage.get(item.getUsageName());
 
             if (perBillingPeriodMostRecentConsumableInArrearItemEndDate[usage.getBillingPeriod().ordinal()] == null) {
@@ -165,10 +169,10 @@ public class RawUsageOptimizer {
     public static class RawUsageOptimizerResult {
 
         private final LocalDate rawUsageStartDate;
-        private final List<RawUsage> rawUsage;
+        private final List<RawUsageRecord> rawUsage;
         private final Set<TrackingRecordId> existingTrackingIds;
 
-        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsage> rawUsage, final Set<TrackingRecordId> existingTrackingIds) {
+        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsageRecord> rawUsage, final Set<TrackingRecordId> existingTrackingIds) {
             this.rawUsageStartDate = rawUsageStartDate;
             this.rawUsage = rawUsage;
             this.existingTrackingIds = existingTrackingIds;
@@ -178,7 +182,7 @@ public class RawUsageOptimizer {
             return rawUsageStartDate;
         }
 
-        public List<RawUsage> getRawUsage() {
+        public List<RawUsageRecord> getRawUsage() {
             return rawUsage;
         }
 

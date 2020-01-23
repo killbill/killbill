@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,6 +39,7 @@ public abstract class DefaultPaymentInternalEvent extends BusEventBase implement
     private final TransactionStatus status;
     private final TransactionType transactionType;
     private final DateTime effectiveDate;
+    private final Boolean isApiPayment;
 
     @JsonCreator
     public DefaultPaymentInternalEvent(@JsonProperty("accountId") final UUID accountId,
@@ -49,6 +50,7 @@ public abstract class DefaultPaymentInternalEvent extends BusEventBase implement
                                        @JsonProperty("status") final TransactionStatus status,
                                        @JsonProperty("transactionType") final TransactionType transactionType,
                                        @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                       @JsonProperty("apiPayment") final Boolean isApiPayment,
                                        @JsonProperty("searchKey1") final Long searchKey1,
                                        @JsonProperty("searchKey2") final Long searchKey2,
                                        @JsonProperty("userToken") final UUID userToken) {
@@ -61,6 +63,7 @@ public abstract class DefaultPaymentInternalEvent extends BusEventBase implement
         this.status = status;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;
+        this.isApiPayment = isApiPayment;
     }
 
     @Override
@@ -104,10 +107,14 @@ public abstract class DefaultPaymentInternalEvent extends BusEventBase implement
     }
 
     @Override
+    public Boolean isApiPayment() {
+        return isApiPayment;
+    }
+
+    @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(getPaymentInternalEventClass().toString());
-        sb.append(" {accountId=").append(accountId);
+        final StringBuffer sb = new StringBuffer("DefaultPaymentInternalEvent{");
+        sb.append("accountId=").append(accountId);
         sb.append(", paymentId=").append(paymentId);
         sb.append(", paymentTransactionId=").append(paymentTransactionId);
         sb.append(", amount=").append(amount);
@@ -115,6 +122,7 @@ public abstract class DefaultPaymentInternalEvent extends BusEventBase implement
         sb.append(", status=").append(status);
         sb.append(", transactionType=").append(transactionType);
         sb.append(", effectiveDate=").append(effectiveDate);
+        sb.append(", isApiPayment=").append(isApiPayment);
         sb.append('}');
         return sb.toString();
     }
@@ -135,6 +143,7 @@ public abstract class DefaultPaymentInternalEvent extends BusEventBase implement
         result = prime * result
                  + ((currency == null) ? 0 : currency.hashCode());
         result = prime * result + ((status == null) ? 0 : status.hashCode());
+        result = prime * result + ((isApiPayment == null) ? 0 : isApiPayment.hashCode());
         return result;
     }
 
@@ -197,6 +206,13 @@ public abstract class DefaultPaymentInternalEvent extends BusEventBase implement
                 return false;
             }
         } else if (!currency.equals(other.currency)) {
+            return false;
+        }
+        if (isApiPayment == null) {
+            if (other.isApiPayment != null) {
+                return false;
+            }
+        } else if (!isApiPayment.equals(other.isApiPayment)) {
             return false;
         }
         if (status != other.status) {

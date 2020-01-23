@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,12 +18,25 @@
 
 package org.killbill.billing.util.glue;
 
+import java.io.IOException;
+import java.util.Set;
+
+import org.apache.shiro.config.Ini;
+import org.apache.shiro.realm.Realm;
+import org.apache.shiro.realm.text.IniRealm;
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.config.definition.SecurityConfig;
+import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.clock.ClockMock;
+import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.mockito.Mockito;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
 
@@ -49,6 +62,20 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         bind(TestApiListener.class).asEagerSingleton();
     }
 
+    @Provides
+    @Singleton
+    protected Set<Realm> provideRealms(final EmbeddedDB embeddedDB, final SecurityConfig securityConfig) throws IOException {
+        final Ini ini = new Ini();
+        ini.load("[users]\n" +
+                 "tester = tester, creditor\n" +
+                 "[roles]\n" +
+                 "creditor = invoice:credit, customx:customy\n");
+        final Realm iniRealm = new IniRealm(ini);
+        final Realm killBillJdbcRealm = new KillBillJdbcRealm(embeddedDB.getDataSource(), securityConfig);
+
+        return ImmutableSet.<Realm>of(iniRealm, killBillJdbcRealm);
+    }
+
     private final class SecurityModuleWithNoSecurityManager extends SecurityModule {
 
         public SecurityModuleWithNoSecurityManager(final KillbillConfigSource configSource) {
@@ -69,6 +96,5 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
             bind(PluginsInfoApi.class).toInstance(Mockito.mock(PluginsInfoApi.class));
             super.installUserApi();
         }
-
     }
 }

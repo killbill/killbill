@@ -47,6 +47,7 @@ import org.killbill.billing.payment.core.sm.control.ControlPluginRunner;
 import org.killbill.billing.payment.core.sm.control.PaymentStateControlContext;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
+import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
@@ -163,6 +164,13 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
         }
         super.beforeMethod();
         this.utcNow = clock.getUTCNow();
+
+
+        final PaymentMethodModelDao method = new PaymentMethodModelDao(paymentMethodId, UUID.randomUUID().toString(), null, null,
+                                                                       account.getId(), "PAYMENT_PLUGIN", true);
+        // Add the mock payment method
+        final PaymentMethodModelDao savedMethod = paymentDao.insertPaymentMethod(method, internalCallContext);
+
 
         runner = new MockRetryablePaymentAutomatonRunner(
                 paymentDao,

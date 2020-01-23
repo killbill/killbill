@@ -50,6 +50,7 @@ import org.killbill.billing.beatrix.util.SubscriptionChecker;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -101,6 +102,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TestPaymentMethodPluginBase;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -115,6 +117,7 @@ import org.killbill.billing.usage.api.UnitUsageRecord;
 import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
+import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
@@ -299,6 +302,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected KillbillNodesApi nodesApi;
 
     @Inject
+    protected CatalogUserApi catalogUserApi;
+
+    @Inject
     protected CacheControllerDispatcher controllerDispatcher;
 
     @Inject
@@ -306,6 +312,12 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected PaymentConfig paymentConfig;
+
+    @Inject
+    protected AuditUserApi auditUserApi;
+
+    @Inject
+    protected PaymentDao paymentDao;
 
     protected ConfigurableInvoiceConfig invoiceConfig;
 
@@ -374,9 +386,13 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected void checkNoMoreInvoiceToGenerate(final Account account) {
+        checkNoMoreInvoiceToGenerate(account.getId());
+    }
+
+    protected void checkNoMoreInvoiceToGenerate(final UUID accountId) {
         busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), callContext);
             fail("Should not have generated an extra invoice");
         } catch (final InvoiceApiException e) {
             assertListenerStatus();
@@ -522,28 +538,48 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }, events);
     }
 
-    protected Payment createPaymentAndCheckForCompletion(final Account account, final Invoice invoice, final BigDecimal amount, final Currency currency, final NextEvent... events) {
-        return doCallAndCheckForCompletion(new Function<Void, Payment>() {
+    protected Payment createPaymentAndCheckForCompletion(final Account account,
+                                                         final Invoice invoice,
+                                                         final BigDecimal amount,
+                                                         final Currency currency,
+                                                         final NextEvent... events) {
+        try {
+            return createPaymentAndCheckForCompletion(account,
+                                                      invoice,
+                                                      amount,
+                                                      currency,
+                                                      UUID.randomUUID().toString(),
+                                                      UUID.randomUUID().toString(),
+                                                      events);
+        } catch (final PaymentApiException e) {
+            fail(e.toString());
+            return null;
+        }
+    }
+
+    protected Payment createPaymentAndCheckForCompletion(final Account account,
+                                                         final Invoice invoice,
+                                                         final BigDecimal amount,
+                                                         final Currency currency,
+                                                         final String paymentExternalKey,
+                                                         final String transactionExternalKey,
+                                                         final NextEvent... events) throws PaymentApiException {
+        return doCallAndCheckForCompletionWithException(new FunctionWithException<Void, Payment, PaymentApiException>() {
             @Override
-            public Payment apply(@Nullable final Void input) {
-                try {
-                    final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoicePayment(account,
-                                                                                                            invoice.getId(),
-                                                                                                            account.getPaymentMethodId(),
-                                                                                                            null,
-                                                                                                            amount,
-                                                                                                            currency,
-                                                                                                            null,
-                                                                                                            UUID.randomUUID().toString(),
-                                                                                                            UUID.randomUUID().toString(),
-                                                                                                            ImmutableList.<PluginProperty>of(),
-                                                                                                            PAYMENT_OPTIONS,
-                                                                                                            callContext);
-                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
-                } catch (final PaymentApiException e) {
-                    fail(e.toString());
-                    return null;
-                }
+            public Payment apply(@Nullable final Void input) throws PaymentApiException {
+                final InvoicePayment invoicePayment = invoicePaymentApi.createPurchaseForInvoicePayment(account,
+                                                                                                        invoice.getId(),
+                                                                                                        account.getPaymentMethodId(),
+                                                                                                        null,
+                                                                                                        amount,
+                                                                                                        currency,
+                                                                                                        null,
+                                                                                                        paymentExternalKey,
+                                                                                                        transactionExternalKey,
+                                                                                                        ImmutableList.<PluginProperty>of(),
+                                                                                                        PAYMENT_OPTIONS,
+                                                                                                        callContext);
+                return paymentApi.getPayment(invoicePayment.getPaymentId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
             }
         }, events);
     }
@@ -698,7 +734,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList, null);
-                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, new DefaultEntitlementSpecifier(spec, null, overrides), bundleExternalKey, null, billingEffectiveDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, new DefaultEntitlementSpecifier(spec, null, null, overrides), bundleExternalKey, null, billingEffectiveDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
                     assertNotNull(entitlementId);
                     return entitlementApi.getEntitlementForId(entitlementId, callContext);
                 } catch (final EntitlementApiException e) {
@@ -913,6 +949,22 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     private <T> T doCallAndCheckForCompletion(final Function<Void, T> f, final NextEvent... events) {
+        try {
+            return doCallAndCheckForCompletionWithException(new FunctionWithException<Void, T, RuntimeException>() {
+                                                                @Override
+                                                                public T apply(final Void input) throws RuntimeException {
+                                                                    return f.apply(input);
+                                                                }
+                                                            },
+                                                            events);
+        } catch (final RuntimeException e) {
+            fail(e.getMessage());
+            return null;
+        }
+
+    }
+
+    private <T, E extends Throwable> T doCallAndCheckForCompletionWithException(final FunctionWithException<Void, T, E> f, final NextEvent... events) throws E {
         final Joiner joiner = Joiner.on(", ");
         log.debug("            ************    STARTING BUS HANDLER CHECK : {} ********************", joiner.join(events));
 
@@ -923,6 +975,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         log.debug("            ************    DONE WITH BUS HANDLER CHECK    ********************");
         return result;
+    }
+
+    public interface FunctionWithException<F, T, E extends Throwable> {
+
+        T apply(F input) throws E;
     }
 
     protected void recordUsageData(final UUID subscriptionId, final String trackingId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {

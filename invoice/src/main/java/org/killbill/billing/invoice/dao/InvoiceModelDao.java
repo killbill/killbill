@@ -18,8 +18,10 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -33,6 +35,8 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
+
+import com.google.common.collect.ImmutableList;
 
 public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDao<Invoice> {
 
@@ -48,6 +52,8 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     // Not in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
     private List<InvoicePaymentModelDao> invoicePayments = new LinkedList<InvoicePaymentModelDao>();
+    private Set<String> trackingIds = new HashSet<>();
+
     private Currency processedCurrency;
     private InvoiceModelDao parentInvoice;
 
@@ -85,6 +91,14 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     public InvoiceModelDao(final Invoice invoice) {
         this(invoice.getId(), invoice.getCreatedDate(), invoice.getAccountId(), invoice.getInvoiceNumber(), invoice.getInvoiceDate(),
              invoice.getTargetDate(), invoice.getCurrency(), invoice.isMigrationInvoice(), invoice.getStatus(), invoice.isParentInvoice());
+    }
+
+    public List<String> getTrackingIds() {
+        return ImmutableList.copyOf(trackingIds);
+    }
+
+    public void addTrackingIds(final Set<String> trackingIds) {
+        this.trackingIds = trackingIds;
     }
 
     public void addInvoiceItems(final List<InvoiceItemModelDao> invoiceItems) {
@@ -180,6 +194,11 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     }
 
     public boolean isWrittenOff() {
+        return isWrittenOff;
+    }
+
+    // Make BeanInspector happy when invoked from EntityHistoryBinder
+    public boolean getIsWrittenOff() {
         return isWrittenOff;
     }
 
@@ -303,7 +322,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     @Override
     public TableName getHistoryTableName() {
-        return null;
+        return TableName.INVOICE_HISTORY;
     }
 
 }

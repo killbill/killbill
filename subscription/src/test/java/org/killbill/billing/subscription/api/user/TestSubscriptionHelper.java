@@ -34,11 +34,14 @@ import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
@@ -75,6 +78,7 @@ public class TestSubscriptionHelper {
     private final TestApiListener testListener;
     private final SubscriptionDao dao;
     private final InternalCallContextFactory internalCallContextFactory;
+    private final CatalogInternalApi catalogInternalApi;
 
     @Inject
     public TestSubscriptionHelper(final SubscriptionBaseInternalApi subscriptionApi,
@@ -83,6 +87,7 @@ public class TestSubscriptionHelper {
                                   final InternalCallContext internalCallContext,
                                   final TestApiListener testListener,
                                   final SubscriptionDao dao,
+                                  final CatalogInternalApi catalogInternalApi,
                                   final InternalCallContextFactory internalCallContextFactory) {
         this.subscriptionApi = subscriptionApi;
         this.clock = clock;
@@ -90,6 +95,7 @@ public class TestSubscriptionHelper {
         this.internalCallContext = internalCallContext;
         this.testListener = testListener;
         this.dao = dao;
+        this.catalogInternalApi = catalogInternalApi;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
@@ -154,6 +160,15 @@ public class TestSubscriptionHelper {
 
     private DefaultSubscriptionBase createSubscription(final boolean noEvents, @Nullable final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
             throws SubscriptionBaseApiException {
+
+        final VersionedCatalog catalog;
+        try {
+            catalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
+        } catch (CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+
+
         // Make sure the right account information is used
         final InternalCallContext internalCallContext = bundle == null ? this.internalCallContext : internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
                                                                                                                                                          ObjectType.ACCOUNT,
@@ -187,6 +202,11 @@ public class TestSubscriptionHelper {
             }
 
             @Override
+            public String getExternalKey() {
+                return UUID.randomUUID().toString();
+            }
+
+            @Override
             public List<PlanPhasePriceOverride> getOverrides() {
                 return null;
             }
@@ -196,7 +216,9 @@ public class TestSubscriptionHelper {
                                                                                                                                 entitlementSpecifiers,
                                                                                                                                 requestedDate,
                                                                                                                                 false);
-        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionApi.createBaseSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionApi.createBaseSubscriptionsWithAddOns(catalog,
+                                                                                                                        ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
                                                                                                                         false,
                                                                                                                         internalCallContext).get(0);
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionBaseWithAddOns.getSubscriptionBaseList().get(0);

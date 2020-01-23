@@ -19,22 +19,26 @@ package org.killbill.billing.subscription.engine.dao;
 import java.util.Date;
 import java.util.List;
 
-import org.skife.jdbi.v2.sqlobject.Bind;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionModelDao;
+import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.entity.dao.Audited;
+import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
+import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
+import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 
-import org.killbill.billing.subscription.engine.dao.model.SubscriptionModelDao;
-import org.killbill.billing.subscription.api.SubscriptionBase;
-import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.util.entity.dao.Audited;
-import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 
 @KillBillSqlDaoStringTemplate
 public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao, SubscriptionBase> {
+
+    @SqlQuery
+    public SubscriptionModelDao getSubscriptionByExternalKey(@Bind("externalKey") String externalKey,
+                                                             @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<SubscriptionModelDao> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,

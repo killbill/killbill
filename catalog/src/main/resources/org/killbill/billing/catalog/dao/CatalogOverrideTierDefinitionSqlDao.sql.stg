@@ -43,7 +43,7 @@ values (
 >>
 
 getByRecordId() ::= <<
-select <allTableFields()>
+select <allTableFields("")>
 from <tableName()>
 where record_id = :recordId
 and tenant_record_id = :tenantRecordId
@@ -60,8 +60,3 @@ ut.target_usage_def_record_id = :targetUsageDefRecordId
 and ut.tenant_record_id = :tenantRecordId
 ;
 >>
-
-getLastInsertId() ::= <<
-    select LAST_INSERT_ID();
->>
-

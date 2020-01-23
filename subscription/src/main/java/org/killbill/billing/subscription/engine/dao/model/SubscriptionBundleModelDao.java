@@ -157,7 +157,7 @@ public class SubscriptionBundleModelDao extends EntityModelDaoBase implements En
 
     @Override
     public TableName getHistoryTableName() {
-        return null;
+        return TableName.BUNDLE_HISTORY;
     }
 
 }

@@ -19,21 +19,26 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.catalog.api.Catalog;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +54,7 @@ public class InvoiceItemFactory {
         return fromModelDaoWithCatalog(invoiceItemModelDao, null);
     }
 
-    public static InvoiceItem fromModelDaoWithCatalog(final InvoiceItemModelDao invoiceItemModelDao, @Nullable final Catalog catalog) {
+    public static InvoiceItem fromModelDaoWithCatalog(final InvoiceItemModelDao invoiceItemModelDao, @Nullable final VersionedCatalog catalog) {
         if (invoiceItemModelDao == null) {
             return null;
         }
@@ -83,16 +88,18 @@ public class InvoiceItemFactory {
         String prettyPlanPhaseName = prettyNames[2];
         String prettyUsageName = prettyNames[3];
 
+        final DateTime catalogEffectiveDate = invoiceItemModelDao.getCatalogEffectiveDate() != null ? invoiceItemModelDao.getCatalogEffectiveDate() : null;
+
         final InvoiceItem item;
         switch (type) {
             case EXTERNAL_CHARGE:
                 item = new ExternalChargeInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails);
                 break;
             case FIXED:
-                item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, amount, currency);
+                item = new FixedPriceInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, amount, currency, quantity, itemDetails);
                 break;
             case RECURRING:
-                item = new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency);
+                item = new RecurringInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, description, startDate, endDate, amount, rate, currency, quantity, itemDetails);
                 break;
             case CBA_ADJ:
                 item = new CreditBalanceAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, linkedItemId, description, amount, currency);
@@ -107,10 +114,10 @@ public class InvoiceItemFactory {
                 item = new ItemAdjInvoiceItem(id, createdDate, invoiceId, accountId, startDate, description, amount, rate, currency, linkedItemId, quantity, itemDetails);
                 break;
             case USAGE:
-                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, rate, currency, quantity, itemDetails);
+                item = new UsageInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, rate, currency, quantity, itemDetails);
                 break;
             case TAX:
-                item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, currency, linkedItemId, itemDetails);
+                item = new TaxInvoiceItem(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPlanPhaseName, prettyUsageName, startDate, endDate, description, amount, currency, linkedItemId, itemDetails);
                 break;
             case PARENT_SUMMARY:
                 item = new ParentInvoiceItem(id, createdDate, invoiceId, accountId, childAccountId, amount, currency, description);
@@ -124,7 +131,7 @@ public class InvoiceItemFactory {
     //
     // Returns an array of string for 'pretty' names [prettyPlanName, prettyPlanPhaseName, prettyUsageName]
     //
-    private static String[] computePrettyName(final InvoiceItemType type, final DateTime createdDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final Catalog catalog) {
+    private static String[] computePrettyName(final InvoiceItemType type, final DateTime transitionDate, @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final VersionedCatalog catalog) {
 
         final String[] result = new String[4];
 
@@ -141,7 +148,25 @@ public class InvoiceItemFactory {
             if (computePrettyName) {
 
                 if (planName != null) {
-                    final Plan plan = catalog.findPlan(planName, createdDate);
+
+                    // We are simply looking for the most recent version of a catalog version having such plan
+                    // Finding the right entry would require some expensive operations which are probably not worth it for this use case.
+                    Plan plan = null;
+                    final List<StaticCatalog> versions = catalog.getVersions();
+                    for (int i = versions.size() - 1; i >= 0; i--) {
+                        final StaticCatalog curVersion = versions.get(i);
+                        try {
+                            plan = curVersion.findPlan(planName);
+                        } catch (final CatalogApiException e) {
+                            if (e.getCode() != ErrorCode.CAT_NO_SUCH_PLAN.getCode()) {
+                                throw e;
+                            }
+                        }
+                        if (plan != null) {
+                            break;
+                        }
+                    }
+
                     if (plan != null) {
                         prettyPlanName = plan.getPrettyName();
 

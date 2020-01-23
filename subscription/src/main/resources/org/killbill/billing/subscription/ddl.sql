@@ -26,11 +26,41 @@ CREATE INDEX idx_ent_1 ON subscription_events(subscription_id, is_active, effect
 CREATE INDEX idx_ent_2 ON subscription_events(subscription_id, effective_date, created_date, id);
 CREATE INDEX subscription_events_tenant_account_record_id ON subscription_events(tenant_record_id, account_record_id);
 
+
+DROP TABLE IF EXISTS subscription_event_history;
+CREATE TABLE subscription_event_history (
+    record_id serial unique,
+    id varchar(36) NOT NULL,
+    target_record_id bigint /*! unsigned */ not null,
+    event_type varchar(15) NOT NULL,
+    user_type varchar(25) DEFAULT NULL,
+    effective_date datetime NOT NULL,
+    subscription_id varchar(36) NOT NULL,
+    plan_name varchar(255) DEFAULT NULL,
+    phase_name varchar(255) DEFAULT NULL,
+    price_list_name varchar(64) DEFAULT NULL,
+    billing_cycle_day_local int DEFAULT NULL,
+    is_active boolean default true,
+    change_type varchar(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
+    PRIMARY KEY(record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE INDEX subscription_event_history_target_record_id ON subscription_event_history(target_record_id);
+CREATE INDEX subscription_event_history_tenant_record_id ON subscription_event_history(tenant_record_id);
+
+
+
 DROP TABLE IF EXISTS subscriptions;
 CREATE TABLE subscriptions (
     record_id serial unique,
     id varchar(36) NOT NULL,
     bundle_id varchar(36) NOT NULL,
+    external_key varchar(255) NOT NULL,
     category varchar(32) NOT NULL,
     start_date datetime NOT NULL,
     bundle_start_date datetime NOT NULL,
@@ -45,8 +75,35 @@ CREATE TABLE subscriptions (
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
 CREATE UNIQUE INDEX subscriptions_id ON subscriptions(id);
+CREATE UNIQUE INDEX subscriptions_external_key ON subscriptions(external_key, tenant_record_id);
 CREATE INDEX subscriptions_bundle_id ON subscriptions(bundle_id);
 CREATE INDEX subscriptions_tenant_account_record_id ON subscriptions(tenant_record_id, account_record_id);
+
+DROP TABLE IF EXISTS subscription_history;
+CREATE TABLE subscription_history (
+    record_id serial unique,
+    id varchar(36) NOT NULL,
+    target_record_id bigint /*! unsigned */ not null,
+    bundle_id varchar(36) NOT NULL,
+    external_key varchar(255) NOT NULL,
+    category varchar(32) NOT NULL,
+    start_date datetime NOT NULL,
+    bundle_start_date datetime NOT NULL,
+    charged_through_date datetime DEFAULT NULL,
+    migrated bool NOT NULL default FALSE,
+    change_type varchar(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
+    PRIMARY KEY(record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE INDEX subscription_history_target_record_id ON subscription_history(target_record_id);
+CREATE INDEX subscription_history_tenant_record_id ON subscription_history(tenant_record_id);
+
+
 
 DROP TABLE IF EXISTS bundles;
 CREATE TABLE bundles (
@@ -69,3 +126,23 @@ CREATE UNIQUE INDEX bundles_external_key ON bundles(external_key, tenant_record_
 CREATE INDEX bundles_account ON bundles(account_id);
 CREATE INDEX bundles_tenant_account_record_id ON bundles(tenant_record_id, account_record_id);
 
+DROP TABLE IF EXISTS bundle_history;
+CREATE TABLE bundle_history (
+    record_id serial unique,
+    id varchar(36) NOT NULL,
+    target_record_id bigint /*! unsigned */ not null,
+    external_key varchar(255) NOT NULL,
+    account_id varchar(36) NOT NULL,
+    last_sys_update_date datetime,
+    original_created_date datetime NOT NULL,
+    change_type varchar(6) NOT NULL,
+    created_by varchar(50) NOT NULL,
+    created_date datetime NOT NULL,
+    updated_by varchar(50) NOT NULL,
+    updated_date datetime NOT NULL,
+    account_record_id bigint /*! unsigned */ not null,
+    tenant_record_id bigint /*! unsigned */ not null default 0,
+    PRIMARY KEY(record_id)
+) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
+CREATE INDEX bundle_history_target_record_id ON bundle_history(target_record_id);
+CREATE INDEX bundle_history_tenant_record_id ON bundle_history(tenant_record_id);

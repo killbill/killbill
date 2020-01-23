@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,9 +33,9 @@ import javax.inject.Singleton;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.entitlement.EntitlementService;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -46,6 +46,9 @@ import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
@@ -177,21 +180,16 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     @Inject
     public ProxyBlockingStateDao(final EventsStreamBuilder eventsStreamBuilder, final SubscriptionBaseInternalApi subscriptionBaseInternalApi,
                                  final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
-                                 final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory) {
+                                 final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
         this.eventsStreamBuilder = eventsStreamBuilder;
         this.subscriptionInternalApi = subscriptionBaseInternalApi;
         this.clock = clock;
-        this.delegate = new DefaultBlockingStateDao(dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
+        this.delegate = new DefaultBlockingStateDao(dbi, roDbi, clock, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, auditDao, internalCallContextFactory);
     }
 
     @Override
     public void create(final BlockingStateModelDao entity, final InternalCallContext context) throws EntitlementApiException {
         delegate.create(entity, context);
-    }
-
-    @Override
-    public Long getRecordId(final UUID id, final InternalTenantContext context) {
-        return delegate.getRecordId(id, context);
     }
 
     @Override
@@ -235,7 +233,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public List<BlockingState> getBlockingAllForAccountRecordId(final Catalog catalog, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingAllForAccountRecordId(final VersionedCatalog catalog, final InternalTenantContext context) {
         final List<BlockingState> statesOnDisk = delegate.getBlockingAllForAccountRecordId(catalog, context);
         return addBlockingStatesNotOnDisk(statesOnDisk, catalog, context);
     }
@@ -250,10 +248,15 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         delegate.unactiveBlockingState(blockableId, context);
     }
 
+    @Override
+    public List<AuditLogWithHistory> getBlockingStateAuditLogsWithHistoryForId(final UUID blockableId, final AuditLevel auditLevel, final InternalTenantContext context) {
+        return delegate.getBlockingStateAuditLogsWithHistoryForId(blockableId, auditLevel, context);
+    }
+
     // Add blocking states for add-ons, which would be impacted by a future cancellation or change of their base plan
     // See DefaultEntitlement#computeAddOnBlockingStates
     private List<BlockingState> addBlockingStatesNotOnDisk(final List<BlockingState> blockingStatesOnDisk,
-                                                           final Catalog catalog,
+                                                           final VersionedCatalog catalog,
                                                            final InternalTenantContext context) {
         final Collection<BlockingState> blockingStatesOnDiskCopy = new LinkedList<BlockingState>(blockingStatesOnDisk);
 

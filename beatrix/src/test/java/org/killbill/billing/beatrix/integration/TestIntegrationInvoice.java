@@ -30,7 +30,9 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -38,9 +40,11 @@ import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -74,7 +78,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
         assertEquals(invoices.size(), 1);
 
         final UUID unpaidInvoiceId = invoices.iterator().next().getId();
@@ -84,8 +88,9 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        invoiceUserApi.insertCredit(account.getId(), new BigDecimal("300"), new LocalDate(clock.getUTCNow(), account.getTimeZone()), account.getCurrency(), true, null, null, null, callContext);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), "some description", new BigDecimal("300"), account.getCurrency(), null);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -217,7 +222,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
@@ -265,4 +270,50 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 4, 1), new LocalDate(2017, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
     }
+
+
+
+
+
+    @Test(groups = "slow")
+    public void testExternalChargeInTheFuture() throws Exception {
+
+        final int billingDay = 1;
+        final DateTime initialCreationDate = new DateTime(2019, 1, 1, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+
+
+        // Create external charge with an effective date a year from now
+        final LocalDate chargeEffectiveDate = clock.getToday(account.getTimeZone()).plusYears(1);
+        final List<InvoiceItem> invoiceItemList = new ArrayList<InvoiceItem>();
+        ExternalChargeInvoiceItem item = new ExternalChargeInvoiceItem(null, account.getId(), null, "", chargeEffectiveDate, chargeEffectiveDate, BigDecimal.TEN, account.getCurrency(), null);
+        invoiceItemList.add(item);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final List<InvoiceItem> chargeItems = invoiceUserApi.insertExternalCharges(account.getId(), chargeEffectiveDate, invoiceItemList, true, null, callContext);
+        assertListenerStatus();
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(chargeEffectiveDate, chargeEffectiveDate, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
+
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+
+
+        DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        DefaultSubscriptionBase subscription = subscriptionDataFromSubscription(baseEntitlement.getSubscriptionBase());
+
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2019, 1, 1), new LocalDate(2019, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+    }
+
+
 }

@@ -23,9 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -43,6 +45,7 @@ import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -51,6 +54,9 @@ import org.testng.annotations.Test;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 
 public class TestPaymentWithControl extends TestIntegrationBase {
 
@@ -164,6 +170,9 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getStateName(), "ABORTED");
     }
 
+
+
+
     @Test(groups = "slow")
     public void testAuthCaptureWithPaymentControl() throws Exception {
 
@@ -237,11 +246,63 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         Assert.assertEquals(testPaymentControlWithControl.getCalls().get(TransactionType.VOID.toString()), new Integer(1));
     }
 
+    @Test(groups = "slow")
+    public void testNotAllowedOverridePaymentMethodId() throws Exception {
+        final AccountData accountData = getAccountData(1);
+        final Account account = accountUserApi.createAccount(accountData, callContext);
+
+        // Add non-default payment method
+        final PaymentMethodPlugin info = createPaymentMethodPlugin();
+        final UUID overridenPaymentMethodId1 = paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, false, info, PLUGIN_PROPERTIES, callContext);
+        final DateTime nextRetryDate = clock.getUTCNow().plusDays(1);
+
+        testPaymentControlWithControl.setAdjustedPaymentMethodId(overridenPaymentMethodId1);
+        testPaymentControlWithControl.setNextRetryDate(nextRetryDate);
+
+        paymentPlugin.makeNextPaymentFailWithError();
+
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT_ERROR);
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, null, null, BigDecimal.ONE, account.getCurrency(), null, null, null,
+                                                                                 properties, paymentOptions, callContext);
+        assertListenerStatus();
+
+        Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Assert.assertEquals(paymentWithAttempts.getPaymentMethodId(), overridenPaymentMethodId1);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().size(), 2);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getPaymentMethodId(), overridenPaymentMethodId1);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(1).getPaymentMethodId(), overridenPaymentMethodId1);
+        Assert.assertEquals(paymentWithAttempts.getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+
+        final UUID overridenPaymentMethodId2 = paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, false, info, PLUGIN_PROPERTIES, callContext);
+        testPaymentControlWithControl.setAdjustedPaymentMethodId(overridenPaymentMethodId2);
+        testPaymentControlWithControl.setNextRetryDate(nextRetryDate);
+
+
+        //
+        // During the retry, system will detect we tried to update the payment method and will throw during the priorCall to avoid the operation
+        // The attempt will show as being ABORTED
+        //
+        clock.addDays(1);
+
+        await().atMost(10, SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+
+                final Payment paymentWithAttempts = paymentApi.getPayment(payment.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+                return paymentWithAttempts.getPaymentAttempts().size() == 2 &&
+                       "ABORTED".equals(paymentWithAttempts.getPaymentAttempts().get(1).getStateName());
+            }
+        });
+    }
+
+
     public class TestPaymentControlPluginApi implements PaymentControlPluginApi {
 
         private final Map<String, Integer> calls;
 
         private UUID adjustedPaymentMethodId = null;
+        private DateTime nextRetryDate = null;
 
         public TestPaymentControlPluginApi() {
             calls = new HashMap<String, Integer>();
@@ -258,6 +319,10 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
         public void setAdjustedPaymentMethodId(final UUID adjustedPaymentMethodId) {
             this.adjustedPaymentMethodId = adjustedPaymentMethodId;
+        }
+
+        public void setNextRetryDate(final DateTime nextRetryDate) {
+            this.nextRetryDate = nextRetryDate;
         }
 
         @Override
@@ -314,7 +379,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
         @Override
         public OnFailurePaymentControlResult onFailureCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
-            return null;
+            return nextRetryDate != null ? new DefaultFailureCallResult(nextRetryDate) : null;
         }
     }
 }

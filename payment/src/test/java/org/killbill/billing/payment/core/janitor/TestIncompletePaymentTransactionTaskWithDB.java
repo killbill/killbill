@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -88,18 +88,18 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                                           callContext);
 
         final UUID transactionId = payment.getTransactions().get(0).getId();
-        final JanitorNotificationKey notificationKey = new JanitorNotificationKey(transactionId, incompletePaymentTransactionTask.getClass().toString(), 1);
+        final JanitorNotificationKey notificationKey = new JanitorNotificationKey(transactionId, incompletePaymentTransactionTask.getClass().toString(), true, 1);
         final UUID userToken = UUID.randomUUID();
 
-        Assert.assertTrue(Iterables.isEmpty(incompletePaymentTransactionTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())));
+        Assert.assertTrue(Iterables.isEmpty(incompletePaymentAttemptTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId())));
 
         GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getId().toString(), paymentConfig.getMaxGlobalLockRetries());
 
-            incompletePaymentTransactionTask.processNotification(notificationKey, userToken, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+            incompletePaymentAttemptTask.processNotification(notificationKey, userToken, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
 
-            final Iterable<NotificationEventWithMetadata<NotificationEvent>> futureNotifications = incompletePaymentTransactionTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+            final Iterable<NotificationEventWithMetadata<NotificationEvent>> futureNotifications = incompletePaymentAttemptTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
             Assert.assertFalse(Iterables.isEmpty(futureNotifications));
             final NotificationEventWithMetadata<NotificationEvent> notificationEventWithMetadata = ImmutableList.<NotificationEventWithMetadata<NotificationEvent>>copyOf(futureNotifications).get(0);
             Assert.assertEquals(notificationEventWithMetadata.getUserToken(), userToken);
@@ -151,6 +151,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                 Currency.EUR,
                 "200",
                 "Ok",
+                true,
                 internalCallContext);
 
         paymentApi.createCapture(account,
@@ -176,11 +177,12 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                 PaymentPluginStatus.PROCESSED,
                 "200",
                 "OK");
-        incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeededWithAccountLock(
-                paymentModel,
-                transactionModel,
-                paymentTransactionInfoPlugin,
-                internalCallContext);
+        incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded(paymentModel.getAccountId(),
+                                                                             transactionModel.getId(),
+                                                                             payment.getTransactions().get(0).getTransactionStatus(),
+                                                                             paymentTransactionInfoPlugin,
+                                                                             true,
+                                                                             internalCallContext);
 
         final PaymentModelDao paymentAfterJanitor = paymentDao.getPayment(payment.getId(), internalCallContext);
         Assert.assertEquals(paymentAfterJanitor.getStateName(), "CAPTURE_SUCCESS");

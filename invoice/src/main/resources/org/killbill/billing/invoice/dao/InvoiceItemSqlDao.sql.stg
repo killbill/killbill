@@ -1,6 +1,7 @@
 import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "invoice_items"
+historyTableName() ::= "invoice_item_history"
 
 tableFields(prefix) ::= <<
   <prefix>type
@@ -14,6 +15,7 @@ tableFields(prefix) ::= <<
 , <prefix>plan_name
 , <prefix>phase_name
 , <prefix>usage_name
+, <prefix>catalog_effective_date
 , <prefix>start_date
 , <prefix>end_date
 , <prefix>amount
@@ -38,6 +40,7 @@ tableValues() ::= <<
 , :planName
 , :phaseName
 , :usageName
+, :catalogEffectiveDate
 , :startDate
 , :endDate
 , :amount
@@ -50,12 +53,12 @@ tableValues() ::= <<
 , :createdDate
 >>
 
-
 getInvoiceItemsByInvoice() ::= <<
   SELECT <allTableFields("")>
   FROM <tableName()>
   WHERE invoice_id = :invoiceId
   <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
   ;
 >>
 
@@ -64,6 +67,7 @@ getInvoiceItemsBySubscription() ::= <<
   FROM <tableName()>
   WHERE subscription_id = :subscriptionId
   <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
   ;
 >>
 
@@ -73,6 +77,7 @@ getAdjustedOrRepairedInvoiceItemsByLinkedId() ::= <<
   WHERE linked_item_id = :linkedItemId
   AND type IN ('ITEM_ADJ', 'REPAIR_ADJ')
   <AND_CHECK_TENANT("")>
+  <defaultOrderBy("")>
   ;
 >>
 

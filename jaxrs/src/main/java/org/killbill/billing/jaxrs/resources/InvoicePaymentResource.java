@@ -48,6 +48,8 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.api.InvoiceUserApi;
+import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
 import org.killbill.billing.jaxrs.json.InvoiceItemJson;
 import org.killbill.billing.jaxrs.json.InvoicePaymentJson;
@@ -65,6 +67,7 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -72,6 +75,7 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.CustomField;
@@ -96,6 +100,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
     private static final String ID_PARAM_NAME = "paymentId";
 
     private final InvoicePaymentApi invoicePaymentApi;
+    private final InvoiceUserApi invoiceApi;
 
     @Inject
     public InvoicePaymentResource(final AccountUserApi accountUserApi,
@@ -105,10 +110,12 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                   final CustomFieldUserApi customFieldUserApi,
                                   final AuditUserApi auditUserApi,
                                   final InvoicePaymentApi invoicePaymentApi,
+                                  final InvoiceUserApi invoiceApi,
                                   final Clock clock,
                                   final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);
         this.invoicePaymentApi = invoicePaymentApi;
+        this.invoiceApi = invoiceApi;
     }
 
     @TimedResource
@@ -142,6 +149,21 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final InvoicePaymentJson result = new InvoicePaymentJson(payment, invoiceId, accountAuditLogs);
         return Response.status(Response.Status.OK).entity(result).build();
     }
+
+    @TimedResource
+    @GET
+    @Path("/{invoicePaymentId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve invoice payment audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 404, message = "Invoice payment not found")})
+    public Response getInvoicePaymentAuditLogsWithHistory(@PathParam("invoicePaymentId") final UUID invoicePaymentId,
+                                                       @javax.ws.rs.core.Context final HttpServletRequest request) {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final List<AuditLogWithHistory> auditLogWithHistory = invoiceApi.getInvoicePaymentAuditLogsWithHistoryForId(invoicePaymentId, AuditLevel.FULL, tenantContext);
+        return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
+    }
+
+
 
     @TimedResource
     @POST

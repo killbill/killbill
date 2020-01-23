@@ -44,7 +44,6 @@ import com.google.common.collect.Ordering;
 public class SubscriptionItemTree {
 
     private final List<Item> items = new LinkedList<Item>();
-    private final List<Item> existingFullyAdjustedItems = new LinkedList<Item>();
     private final List<InvoiceItem> existingIgnoredItems = new LinkedList<InvoiceItem>();
     private final List<InvoiceItem> remainingIgnoredItems = new LinkedList<InvoiceItem>();
     private final List<InvoiceItem> pendingItemAdj = new LinkedList<InvoiceItem>();
@@ -132,15 +131,14 @@ public class SubscriptionItemTree {
                 }
             }).orNull();
             if (ignoredLinkedItem == null) {
-                final Item fullyAdjustedItem = root.addAdjustment(item, targetInvoiceId);
-                if (fullyAdjustedItem != null) {
-                    existingFullyAdjustedItems.add(fullyAdjustedItem);
-                }
+                root.addAdjustment(item);
             }
         }
         pendingItemAdj.clear();
 
         root.buildForExistingItems(items, targetInvoiceId);
+
+
         isBuilt = true;
     }
 
@@ -187,9 +185,9 @@ public class SubscriptionItemTree {
         switch (invoiceItem.getInvoiceItemType()) {
             case RECURRING:
                 // merged means we've either matched the proposed to an existing, or triggered a repair
-                final boolean merged = root.addProposedItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
-                if (!merged) {
-                    items.add(new Item(invoiceItem, targetInvoiceId, ItemAction.ADD));
+                final List<ItemsNodeInterval> newNodes = root.addProposedItem(new ItemsNodeInterval(root, new Item(invoiceItem, targetInvoiceId, ItemAction.ADD)));
+                for (final ItemsNodeInterval cur : newNodes) {
+                    items.addAll(cur.getItems());
                 }
                 break;
 
@@ -226,23 +224,7 @@ public class SubscriptionItemTree {
         tmp.addAll(Collections2.filter(Collections2.transform(items, new Function<Item, InvoiceItem>() {
             @Override
             public InvoiceItem apply(final Item input) {
-                final InvoiceItem resultingCandidate = input.toInvoiceItem();
-
-                // Post merge, the ADD items are the candidates for the resulting RECURRING items (see toInvoiceItem()).
-                // We will ignore any resulting item matching existing items on disk though as these are the result of full item adjustments.
-                // See https://github.com/killbill/killbill/issues/654
-                if (isMerged) {
-                    for (final Item existingAdjustedItem : existingFullyAdjustedItems) {
-                        // Note: we DO keep the item in case of partial matches, e.g. if the new proposed item end date is before
-                        // the existing (adjusted) item. See TestSubscriptionItemTree#testMaxedOutProRation
-                        final InvoiceItem fullyAdjustedInvoiceItem = existingAdjustedItem.toInvoiceItem();
-                        if (resultingCandidate.matches(fullyAdjustedInvoiceItem)) {
-                            return null;
-                        }
-                    }
-                }
-
-                return resultingCandidate;
+                return input.toInvoiceItem();
             }
         }), new Predicate<InvoiceItem>() {
             @Override
@@ -295,7 +277,6 @@ public class SubscriptionItemTree {
         sb.append(", isBuilt=").append(isBuilt);
         sb.append(", isMerged=").append(isMerged);
         sb.append(", items=").append(items);
-        sb.append(", existingFullyAdjustedItems=").append(existingFullyAdjustedItems);
         sb.append(", existingIgnoredItems=").append(existingIgnoredItems);
         sb.append(", remainingIgnoredItems=").append(remainingIgnoredItems);
         sb.append(", pendingItemAdj=").append(pendingItemAdj);

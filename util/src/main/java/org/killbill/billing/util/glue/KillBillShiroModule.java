@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,10 +18,15 @@
 
 package org.killbill.billing.util.glue;
 
+import java.util.Collection;
+import java.util.Set;
+
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.guice.ShiroModule;
+import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.mgt.SubjectDAO;
+import org.apache.shiro.realm.Realm;
 import org.apache.shiro.realm.text.IniRealm;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.session.mgt.SessionManager;
@@ -29,13 +34,15 @@ import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.config.definition.RedisCacheConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.inject.Provider;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
 // For Kill Bill library only.
@@ -59,9 +66,18 @@ public class KillBillShiroModule extends ShiroModule {
     }
 
     private final KillbillConfigSource configSource;
+    private final ConfigSource skifeConfigSource;
+    private final DefaultSecurityManager defaultSecurityManager;
 
     public KillBillShiroModule(final KillbillConfigSource configSource) {
         this.configSource = configSource;
+        this.skifeConfigSource = new ConfigSource() {
+            @Override
+            public String getString(final String propertyName) {
+                return configSource.getString(propertyName);
+            }
+        };
+        this.defaultSecurityManager = RealmsFromShiroIniProvider.get(skifeConfigSource);
     }
 
     protected void configureShiro() {
@@ -73,25 +89,22 @@ public class KillBillShiroModule extends ShiroModule {
         }).build(RbacConfig.class);
         bind(RbacConfig.class).toInstance(config);
 
-        final ConfigSource skifeConfigSource = new ConfigSource() {
-            @Override
-            public String getString(final String propertyName) {
-                return configSource.getString(propertyName);
-            }
-        };
-
         bind(RbacConfig.class).toInstance(config);
 
-        final Provider<IniRealm> iniRealmProvider = RealmsFromShiroIniProvider.getIniRealmProvider(skifeConfigSource);
-        // Hack for Kill Bill library to work around weird Guice ClassCastException when using
-        // bindRealm().toInstance(...) -- this means we don't support custom realms when embedding Kill Bill
-        bindRealm().toProvider(iniRealmProvider).asEagerSingleton();
+        final SecurityConfig securityConfig = new ConfigurationObjectFactory(skifeConfigSource).build(SecurityConfig.class);
+        final Collection<Realm> realms = defaultSecurityManager.getRealms() != null ? defaultSecurityManager.getRealms() :
+                                         ImmutableSet.<Realm>of(new IniRealm(securityConfig.getShiroResourcePath())); // Mainly for testing
+        for (final Realm realm : realms) {
+            bindRealm().toInstance(realm);
+        }
 
         configureJDBCRealm();
 
         configureLDAPRealm();
 
         configureOktaRealm();
+
+        expose(new TypeLiteral<Set<Realm>>() {});
     }
 
     protected void configureJDBCRealm() {
@@ -112,7 +125,8 @@ public class KillBillShiroModule extends ShiroModule {
 
     @Override
     protected void bindSecurityManager(final AnnotatedBindingBuilder<? super SecurityManager> bind) {
-        super.bindSecurityManager(bind);
+        //super.bindSecurityManager(bind);
+        bind.toInstance(defaultSecurityManager);
 
         final RedisCacheConfig redisCacheConfig = new ConfigurationObjectFactory(new ConfigSource() {
             @Override

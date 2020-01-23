@@ -122,6 +122,16 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         return formatters;
     }
 
+    @Override
+    public List<String> getTrackingIds() {
+        return MoreObjects.firstNonNull(invoice.getTrackingIds(), ImmutableList.<String>of());
+    }
+
+    @Override
+    public boolean addTrackingIds(final Collection<String> collection) {
+        return true;
+    }
+
     private InvoiceItem mergeCBAItem(final List<InvoiceItem> invoiceItems, InvoiceItem mergedCBAItem, final InvoiceItem item) {
         if (mergedCBAItem == null) {
             mergedCBAItem = item;

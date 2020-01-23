@@ -35,9 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 
 /**
  * Keeps track of all the items existing on a specified ItemsNodeInterval
@@ -92,10 +90,6 @@ public class ItemsInterval {
                                  }).orNull();
     }
 
-    public NodeInterval getNodeInterval() {
-        return interval;
-    }
-
     public Item findItem(final UUID targetId) {
         final Collection<Item> matchingItems = Collections2.<Item>filter(items,
                                                                          new Predicate<Item>() {
@@ -106,31 +100,6 @@ public class ItemsInterval {
                                                                          });
         Preconditions.checkState(matchingItems.size() < 2, "Too many items matching id='%s' among items='%s'", targetId, items);
         return matchingItems.size() == 1 ? matchingItems.iterator().next() : null;
-    }
-
-    /**
-     * Remove all the cancelling pairs (ADD/CANCEL) for which CANCEL linkedId points to ADD id.
-     *
-     * @return true if there is no more items
-     */
-    public boolean mergeCancellingPairs() {
-        final Multimap<UUID, Item> cancellingPairPerInvoiceItemId = LinkedListMultimap.<UUID, Item>create();
-        for (final Item item : items) {
-            final UUID invoiceItemId = (item.getAction() == ItemAction.ADD) ? item.getId() : item.getLinkedId();
-            cancellingPairPerInvoiceItemId.put(invoiceItemId, item);
-        }
-
-        for (final UUID invoiceItemId : cancellingPairPerInvoiceItemId.keySet()) {
-            final Collection<Item> itemsToRemove = cancellingPairPerInvoiceItemId.get(invoiceItemId);
-            Preconditions.checkState(itemsToRemove.size() <= 2, "Too many repairs for invoiceItemId='%s': %s", invoiceItemId, itemsToRemove);
-            if (itemsToRemove.size() == 2) {
-                for (final Item itemToRemove : itemsToRemove) {
-                    items.remove(itemToRemove);
-                }
-            }
-        }
-
-        return items.isEmpty();
     }
 
     public void add(final Item item) {
@@ -250,6 +219,12 @@ public class ItemsInterval {
         if (parentAddItem != null) {
             Preconditions.checkState(parentAddItem.getId() != null, "Invalid ADD item=%s", parentAddItem);
             addItemsToBeCancelled.add(parentAddItem.getId());
+
+            // Old behavior compatibility for full item adjustment (Temp code should go away as move in time)
+            // discard as double billing potential old full item adj data that looks like REPAIR
+            if (parentAddItem.isFullyAdjusted()) {
+                addItemsCancelled.add(parentAddItem.getId());
+            }
         }
 
         final Item parentCancelItem = parentItemsInterval.getResulting_CANCEL_ItemNoChecks();

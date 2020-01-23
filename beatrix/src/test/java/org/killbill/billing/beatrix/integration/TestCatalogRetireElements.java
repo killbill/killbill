@@ -33,18 +33,25 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
+import org.killbill.billing.entitlement.api.Subscription;
+import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -93,7 +100,6 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-
         // Change back to original plan: The code (subscription) chooses the latest version of the catalog when making the change and therefore the call succeeds
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
         bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec1), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
@@ -103,15 +109,30 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // The code normally goes through the grandfathering logic to find the version but specifies the transitionTime of the latest CHANGE (and not the subscriptionStartDate)
         // and therefore correctly find the latest catalog version, invoicing at the new price 295.95
         //
-        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.RECURRING, new BigDecimal("295.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-500.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("204.05")));
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+        // RECURRING should be set against V2
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+        Assert.assertNull(curInvoice.getInvoiceItems().get(1).getCatalogEffectiveDate());
+        Assert.assertNull(curInvoice.getInvoiceItems().get(2).getCatalogEffectiveDate());
+
+
+
+        final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, callContext);
+        final List<SubscriptionEvent> events = bpSubscription.getSubscriptionEvents();
+        // We are seeing START_ENTITLEMENT, START_BILLING, and the **last CHANGE**
+        // Note that the PHASE and intermediate CHANGE are not being returned (is_active = '0') because all coincided on the same date. This is debatable
+        // whether this is a good semantics. See #1030
+        assertEquals(events.size(), 3);
+        // Verify what we return is the price from the correct catalog version. See #1120
+        assertEquals(events.get(2).getNextPhase().getRecurring().getRecurringPrice().getPrice(account.getCurrency()).compareTo(new BigDecimal("295.95")), 0);
 
     }
 
-
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testRetirePlan() throws Exception {
         // Catalog v1 starts in 2011-01-01
         // Catalog v2 starts in 2015-12-01
@@ -160,9 +181,29 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 4);
 
+        // One more invoice to generate an item whose effectiveDate is past our original V1 version
+        // and verify we still know how to compute the pretty name by finding the right initial
+        // catalog version -- as pistol-monthly was retired on V1
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 5);
+
+        final Invoice fifthInvoice = invoices.get(4);
+        assertEquals(fifthInvoice.getInvoiceItems().size(), 2);
+
+        final InvoiceItem pistolInvoiceItem = Iterables.find(fifthInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return "pistol-monthly".equals(input.getPlanName());
+            }
+        });
+        assertEquals(pistolInvoiceItem.getPrettyPlanName(), "Beretta");
     }
 
     @Test(groups = "slow")

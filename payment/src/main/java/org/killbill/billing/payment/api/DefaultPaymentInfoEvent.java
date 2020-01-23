@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -36,10 +38,11 @@ public class DefaultPaymentInfoEvent extends DefaultPaymentInternalEvent impleme
                                    @JsonProperty("status") final TransactionStatus status,
                                    @JsonProperty("transactionType") final TransactionType transactionType,
                                    @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                   @JsonProperty("apiPayment") final Boolean isApiPayment,
                                    @JsonProperty("searchKey1") final Long searchKey1,
                                    @JsonProperty("searchKey2") final Long searchKey2,
                                    @JsonProperty("userToken") final UUID userToken) {
-        super(accountId, paymentId, paymentTransactionId, amount, currency, status, transactionType, effectiveDate, searchKey1, searchKey2, userToken);
+        super(accountId, paymentId, paymentTransactionId, amount, currency, status, transactionType, effectiveDate, isApiPayment, searchKey1, searchKey2, userToken);
     }
 
     @JsonIgnore
@@ -47,7 +50,6 @@ public class DefaultPaymentInfoEvent extends DefaultPaymentInternalEvent impleme
     public BusInternalEventType getBusEventType() {
         return BusInternalEventType.PAYMENT_INFO;
     }
-
 
     @Override
     protected Class getPaymentInternalEventClass() {

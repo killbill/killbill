@@ -28,6 +28,9 @@ import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.DefaultBlockingState;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -99,5 +102,42 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(history2.size(), 2);
         Assert.assertEquals(history2.get(0).getStateName(), overdueStateName);
         Assert.assertEquals(history2.get(1).getStateName(), overdueStateName2);
+    }
+
+    @Test(groups = "slow")
+    public void testWithAuditAndHistory() throws Exception {
+
+        final UUID uuid = createAccount(getAccountData(1)).getId();
+        final String overdueStateName = "StateBlock";
+        final String service = "auditAndHistory";
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState blockingState = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, false, true, false, clock.getUTCNow());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(blockingState, Optional.<UUID>absent()), internalCallContext);
+        assertListenerStatus();
+
+
+        final List<AuditLogWithHistory> h1 = blockingStateDao.getBlockingStateAuditLogsWithHistoryForId(blockingState.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(h1.size(), 1);
+
+        final AuditLogWithHistory firstHistoryRow = h1.get(0);
+        Assert.assertEquals(firstHistoryRow.getChangeType(), ChangeType.INSERT);
+        final BlockingStateModelDao firstBlockingState = (BlockingStateModelDao) firstHistoryRow.getEntity();
+        Assert.assertFalse(firstBlockingState.getBlockChange());
+        Assert.assertTrue(firstBlockingState.getBlockEntitlement());
+        Assert.assertFalse(firstBlockingState.getBlockBilling());
+        Assert.assertTrue(firstBlockingState.isActive());
+
+        blockingStateDao.unactiveBlockingState(blockingState.getId(), internalCallContext);
+        final List<AuditLogWithHistory> h2 = blockingStateDao.getBlockingStateAuditLogsWithHistoryForId(blockingState.getId(), AuditLevel.FULL, internalCallContext);
+        Assert.assertEquals(h2.size(), 2);
+        final AuditLogWithHistory secondHistoryRow = h2.get(1);
+
+        Assert.assertEquals(secondHistoryRow.getChangeType(), ChangeType.DELETE);
+        final BlockingStateModelDao secondBlockingState = (BlockingStateModelDao) secondHistoryRow.getEntity();
+        Assert.assertFalse(secondBlockingState.getBlockChange());
+        Assert.assertTrue(secondBlockingState.getBlockEntitlement());
+        Assert.assertFalse(secondBlockingState.getBlockBilling());
+        Assert.assertFalse(secondBlockingState.isActive());
     }
 }

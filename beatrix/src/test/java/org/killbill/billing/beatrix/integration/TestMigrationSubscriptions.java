@@ -347,7 +347,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
-        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
         subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
@@ -355,7 +355,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         clock.addDays(1);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -383,7 +383,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
 
         // Unlike the previous scenario, we create the subscription and set the blocking state at the same time
-        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
         subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
@@ -459,7 +459,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
         assertNotNull(account);
 
-        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
         subscriptionApi.addBlockingState(blockingState1, null, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
@@ -467,7 +467,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         clock.addDays(1);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
@@ -476,7 +476,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         // Add an add-on while bundle is already blocked
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("cleaning-monthly", null);
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(spec2), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
@@ -499,7 +499,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
                     return null;
                 }
                 @Override
-                public String getExternalKey() {
+                public String getBundleExternalKey() {
                     return externalKey;
                 }
                 @Override

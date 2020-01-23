@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -53,7 +53,6 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
@@ -65,7 +64,6 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import org.killbill.billing.util.tag.dao.TagSqlDao;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
@@ -94,7 +92,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     @Inject
     public DefaultPaymentDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
                              final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus eventBus, final AuditDao auditDao) {
-        super(new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
+        super(nonEntityDao, cacheControllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
         this.eventBus = eventBus;
         this.clock = clock;
@@ -336,40 +334,82 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     }
 
     @Override
-    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, @Nullable final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
+    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId,
+                                                                                 @Nullable final UUID attemptId,
+                                                                                 final UUID paymentId,
+                                                                                 final TransactionType transactionType,
                                                                                  final String currentPaymentStateName,
-                                                                                 final UUID transactionId, final TransactionStatus transactionStatus,
-                                                                                 final BigDecimal processedAmount, final Currency processedCurrency,
-                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg,
+                                                                                 final UUID transactionId,
+                                                                                 final TransactionStatus transactionStatus,
+                                                                                 final BigDecimal processedAmount,
+                                                                                 final Currency processedCurrency,
+                                                                                 final String gatewayErrorCode,
+                                                                                 final String gatewayErrorMsg,
+                                                                                 final boolean isApiPayment,
                                                                                  final InternalCallContext context) {
-        return updatePaymentAndTransactionOnCompletion(false, accountId, attemptId, paymentId, transactionType,
-                                                       currentPaymentStateName, null,
-                                                       transactionId, transactionStatus,
-                                                       processedAmount, processedCurrency,
-                                                       gatewayErrorCode, gatewayErrorMsg,
+        return updatePaymentAndTransactionOnCompletion(false,
+                                                       accountId,
+                                                       attemptId,
+                                                       paymentId,
+                                                       transactionType,
+                                                       currentPaymentStateName,
+                                                       null,
+                                                       transactionId,
+                                                       transactionStatus,
+                                                       processedAmount,
+                                                       processedCurrency,
+                                                       gatewayErrorCode,
+                                                       gatewayErrorMsg,
+                                                       isApiPayment,
                                                        context);
     }
 
     @Override
-    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId, @Nullable final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
-                                                                                 final String currentPaymentStateName, @Nullable final String lastPaymentSuccessStateName,
-                                                                                 final UUID transactionId, final TransactionStatus transactionStatus,
-                                                                                 final BigDecimal processedAmount, final Currency processedCurrency,
-                                                                                 final String gatewayErrorCode, final String gatewayErrorMsg,
+    public PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final UUID accountId,
+                                                                                 @Nullable final UUID attemptId,
+                                                                                 final UUID paymentId,
+                                                                                 final TransactionType transactionType,
+                                                                                 final String currentPaymentStateName,
+                                                                                 @Nullable final String lastPaymentSuccessStateName,
+                                                                                 final UUID transactionId,
+                                                                                 final TransactionStatus transactionStatus,
+                                                                                 final BigDecimal processedAmount,
+                                                                                 final Currency processedCurrency,
+                                                                                 final String gatewayErrorCode,
+                                                                                 final String gatewayErrorMsg,
+                                                                                 final boolean isApiPayment,
                                                                                  final InternalCallContext context) {
-        return updatePaymentAndTransactionOnCompletion(true, accountId, attemptId, paymentId, transactionType,
-                                                       currentPaymentStateName, lastPaymentSuccessStateName,
-                                                       transactionId, transactionStatus,
-                                                       processedAmount, processedCurrency,
-                                                       gatewayErrorCode, gatewayErrorMsg,
+        return updatePaymentAndTransactionOnCompletion(true,
+                                                       accountId,
+                                                       attemptId,
+                                                       paymentId,
+                                                       transactionType,
+                                                       currentPaymentStateName,
+                                                       lastPaymentSuccessStateName,
+                                                       transactionId,
+                                                       transactionStatus,
+                                                       processedAmount,
+                                                       processedCurrency,
+                                                       gatewayErrorCode,
+                                                       gatewayErrorMsg,
+                                                       isApiPayment,
                                                        context);
     }
 
-    private PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final boolean updateLastPaymentSuccessStateName, final UUID accountId, @Nullable final UUID attemptId, final UUID paymentId, final TransactionType transactionType,
-                                                                                  final String currentPaymentStateName, @Nullable final String lastPaymentSuccessStateName,
-                                                                                  final UUID transactionId, final TransactionStatus transactionStatus,
-                                                                                  final BigDecimal processedAmount, final Currency processedCurrency,
-                                                                                  final String gatewayErrorCode, final String gatewayErrorMsg,
+    private PaymentAndTransactionModelDao updatePaymentAndTransactionOnCompletion(final boolean updateLastPaymentSuccessStateName,
+                                                                                  final UUID accountId,
+                                                                                  @Nullable final UUID attemptId,
+                                                                                  final UUID paymentId,
+                                                                                  final TransactionType transactionType,
+                                                                                  final String currentPaymentStateName,
+                                                                                  @Nullable final String lastPaymentSuccessStateName,
+                                                                                  final UUID transactionId,
+                                                                                  final TransactionStatus transactionStatus,
+                                                                                  final BigDecimal processedAmount,
+                                                                                  final Currency processedCurrency,
+                                                                                  final String gatewayErrorCode,
+                                                                                  final String gatewayErrorMsg,
+                                                                                  final boolean isApiPayment,
                                                                                   final InternalCallContext context) {
         final PaymentAndTransactionModelDao paymentAndTransactionModelDao = new PaymentAndTransactionModelDao();
 
@@ -406,7 +446,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                 }
                 paymentAndTransactionModelDao.setPaymentModelDao(paymentModelDao);
 
-                postPaymentEventFromTransaction(accountId, transactionStatus, transactionType, paymentId, transactionId, processedAmount, processedCurrency, contextWithUpdatedDate.getCreatedDate(), gatewayErrorCode, entitySqlDaoWrapperFactory, context);
+                postPaymentEventFromTransaction(accountId, transactionStatus, transactionType, paymentId, transactionId, processedAmount, processedCurrency, contextWithUpdatedDate.getCreatedDate(), isApiPayment, gatewayErrorCode, entitySqlDaoWrapperFactory, context);
 
                 return paymentAndTransactionModelDao;
             }
@@ -723,6 +763,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                  final BigDecimal processedAmount,
                                                  final Currency processedCurrency,
                                                  final DateTime effectiveDate,
+                                                 final boolean isApiPayment,
                                                  final String gatewayErrorCode,
                                                  final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                  final InternalCallContext context) {
@@ -739,6 +780,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                     transactionStatus,
                                                     transactionType,
                                                     effectiveDate,
+                                                    isApiPayment,
                                                     context.getAccountRecordId(),
                                                     context.getTenantRecordId(),
                                                     context.getUserToken());
@@ -753,6 +795,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                      transactionStatus,
                                                      transactionType,
                                                      effectiveDate,
+                                                     isApiPayment,
                                                      gatewayErrorCode,
                                                      context.getAccountRecordId(),
                                                      context.getTenantRecordId(),
@@ -769,6 +812,7 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
                                                            transactionStatus,
                                                            transactionType,
                                                            effectiveDate,
+                                                           isApiPayment,
                                                            gatewayErrorCode,
                                                            context.getAccountRecordId(),
                                                            context.getTenantRecordId(),

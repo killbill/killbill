@@ -2,7 +2,7 @@ import "org/killbill/billing/util/entity/dao/EntitySqlDao.sql.stg"
 
 tableName() ::= "tag_definitions"
 
-andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active"
+andCheckSoftDeletionWithComma(prefix) ::= "and <prefix>is_active = '1'"
 
 tableFields(prefix) ::= <<
   <prefix>name
@@ -34,7 +34,7 @@ historyTableName() ::= "tag_definition_history"
 
 markTagDefinitionAsDeleted() ::= <<
 update <tableName()>
-set is_active = false
+set is_active = '0'
 where <idField("")> = :id
 <AND_CHECK_TENANT("")>
 ;
@@ -44,7 +44,7 @@ tagDefinitionUsageCount() ::= <<
 select
   count(<idField("t.")>)
 from tags t
-where t.is_active
+where t.is_active = '1'
 and t.tag_definition_id = :id
 <AND_CHECK_TENANT("t.")>
 ;
@@ -55,19 +55,7 @@ select
   <allTableFields("t.")>
 from <tableName()> t
 where t.name = :name
-and t.is_active
+and t.is_active = '1'
 <AND_CHECK_TENANT("t.")>
 ;
 >>
-
-getByIds(ids) ::= <<
-select
-  <allTableFields("t.")>
-from <tableName()> t
-where t.is_active
-and <idField("t.")> in (<ids>)
-<AND_CHECK_TENANT("t.")>
-<defaultOrderBy("t.")>
-;
->>
-

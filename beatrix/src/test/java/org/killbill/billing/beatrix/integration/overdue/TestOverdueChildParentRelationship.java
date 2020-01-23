@@ -168,7 +168,7 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoiceUserApi.getAccountBalance(childAccount.getId(), callContext).compareTo(new BigDecimal("249.95")), 0);
 
-        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(1, 1, childAccount);
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(1, 3, childAccount);
 
         // check invoice generated after clear child account
         invoiceChecker.checkInvoice(childAccount.getId(), 3, callContext,
@@ -262,7 +262,7 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
         checkODState("OD2", childAccount3.getId());
         checkODState(OverdueWrapper.CLEAR_STATE_NAME, childAccountNoPaymentDelegated.getId());
 
-        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(0, 4, childAccount1, childAccount2, childAccount3);
+        allowPaymentsAndResetOverdueToClearByPayingAllUnpaidInvoices(0, 8, childAccount1, childAccount2, childAccount3);
 
     }
 
@@ -305,7 +305,7 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
     }
 
     private List<Invoice> getUnpaidInvoicesOrderFromRecent() {
-        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), clock.getUTCToday(), callContext);
+        final Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext);
         // Sort in reverse order to first pay most recent invoice-- that way overdue state may only flip when we reach the last one.
         final List<Invoice> sortedInvoices = new LinkedList<Invoice>(invoices);
         Collections.sort(sortedInvoices, new Comparator<Invoice>() {

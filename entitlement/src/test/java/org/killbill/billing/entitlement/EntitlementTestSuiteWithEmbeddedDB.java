@@ -18,6 +18,7 @@
 
 package org.killbill.billing.entitlement;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,9 +38,10 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
 import org.killbill.billing.catalog.DefaultCatalogService;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
 import org.killbill.billing.entitlement.dao.BlockingStateDao;
@@ -122,7 +124,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     @Inject
     protected NonEntityDao nonEntityDao;
 
-    protected Catalog catalog;
+    protected VersionedCatalog catalog;
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
@@ -157,7 +159,6 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         securityApi.login(username, "password");
     }
 
-
     protected void configureShiro() {
         final Ini config = new Ini();
         config.addSection("users");
@@ -189,10 +190,10 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         stopTestFramework(testListener, busService, subscriptionBaseService, entitlementService);
     }
 
-    private Catalog initCatalog(final CatalogService catalogService) throws Exception {
+    private VersionedCatalog initCatalog(final CatalogService catalogService) throws Exception {
 
         ((DefaultCatalogService) catalogService).loadCatalog();
-        final Catalog catalog = catalogService.getFullCatalog(true, true, internalCallContext);
+        final VersionedCatalog catalog = catalogService.getFullCatalog(true, true, internalCallContext);
         assertNotNull(catalog);
         return catalog;
     }

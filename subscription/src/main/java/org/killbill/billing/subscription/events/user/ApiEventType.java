@@ -16,47 +16,11 @@
 
 package org.killbill.billing.subscription.events.user;
 
-import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-
-
 public enum ApiEventType {
-    CREATE {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.CREATE;
-        }
-    },
-    TRANSFER {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.TRANSFER;
-        }
-    },
-    CHANGE {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.CHANGE;
-        }
-    },
-    CANCEL {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.CANCEL;
-        }
-    },
-    UNDO_CHANGE {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.UNDO_CHANGE;
-        }
-    },
-    UNCANCEL {
-        @Override
-        public SubscriptionBaseTransitionType getSubscriptionTransitionType() {
-            return SubscriptionBaseTransitionType.UNCANCEL;
-        }
-    };
-
-    // Used to map from internal events to User visible events (both user and phase)
-    public abstract SubscriptionBaseTransitionType getSubscriptionTransitionType();
+    CREATE ,
+    TRANSFER ,
+    CHANGE,
+    CANCEL,
+    UNDO_CHANGE,
+    UNCANCEL;
 }

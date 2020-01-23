@@ -101,7 +101,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final UUID newPaymentMethodId = paymentApi.addPaymentMethod(account, null, MockPaymentProviderPlugin.PLUGIN_NAME, false, paymentMethodInfo, ImmutableList.<PluginProperty>of(), callContext);
         testPaymentControlPluginApi.setNewPaymentMethodId(newPaymentMethodId);
 
-        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, BigDecimal.TEN, Currency.USD, null,null, UUID.randomUUID().toString(),
+        final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, null, null, BigDecimal.TEN, Currency.USD, null,null, UUID.randomUUID().toString(),
                                                                                  ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getPaymentMethodId(), newPaymentMethodId);
 
@@ -961,6 +961,11 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         @Override
         public PriorPaymentControlResult priorCall(final PaymentControlContext context, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+
+            if (context.getPaymentMethodId() != null) {
+                Assert.assertNotNull(context.getPaymentPluginName());
+            }
+
             actualPriorCallPaymentId = context.getPaymentId();
             actualPriorCallPaymentExternalKey = context.getPaymentExternalKey();
             actualPriorCallTransactionId = context.getTransactionId();

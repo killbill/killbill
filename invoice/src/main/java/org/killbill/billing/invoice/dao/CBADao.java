@@ -19,8 +19,11 @@
 package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -35,7 +38,10 @@ import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.tag.Tag;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
@@ -110,52 +116,77 @@ public class CBADao {
 
     // We let the code below rehydrate the invoice before we can add the CBA item
     // PERF: when possible, prefer the method below to avoid re-fetching the invoice
-    public void doCBAComplexityFromTransaction(final UUID invoiceId,
-                                               final List<Tag> invoicesTags,
-                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                               final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+    public Set<UUID> doCBAComplexityFromTransaction(final Set<UUID> invoiceIds,
+                                                                    final List<Tag> invoicesTags,
+                                                                    final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+                                                                    final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
         final InvoiceSqlDao transInvoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-        final InvoiceModelDao invoice = transInvoiceDao.getById(invoiceId.toString(), context);
-        invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
+        final List<InvoiceModelDao> invoices = new ArrayList<>();
+        for (UUID id : invoiceIds) {
+            final InvoiceModelDao invoice = transInvoiceDao.getById(id.toString(), context);
+            invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
+            invoices.add(invoice);
+        }
 
-        doCBAComplexityFromTransaction(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
+        return doCBAComplexityFromTransaction(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
     }
 
-    public void doCBAComplexityFromTransaction(final List<Tag> invoicesTags,
-                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                               final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
-        doCBAComplexityFromTransaction((InvoiceModelDao) null, invoicesTags, entitySqlDaoWrapperFactory, context);
+    public Set<UUID> doCBAComplexityFromTransaction(final List<Tag> invoicesTags,
+                                                                    final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+                                                                    final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+        return doCBAComplexityFromTransaction(ImmutableSet.of(), invoicesTags, entitySqlDaoWrapperFactory, context);
     }
 
     // Note! We expect an *up-to-date* invoice, with all the items and payments except the CBA, that we will compute in that method
-    public void doCBAComplexityFromTransaction(@Nullable final InvoiceModelDao invoice,
-                                               final List<Tag> invoicesTags,
-                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                               final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+    public Set<UUID> doCBAComplexityFromTransaction(final List<InvoiceModelDao> candidateInvoicesForCBAGeneration,
+                                                                    final List<Tag> invoicesTags,
+                                                                    final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+                                                                    final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+
+        final List<InvoiceItemModelDao> result = new ArrayList<>();
+
         // PERF: It is expensive to retrieve and construct all invoice objects. To check if there is effectively something to use, compute the CBA by the database first
         BigDecimal remainingAccountCBA = getAccountCBAFromTransaction(entitySqlDaoWrapperFactory, context);
-
-        if (invoice != null) {
-            // Generate or use CBA for that specific invoice
-            remainingAccountCBA = computeCBAComplexityAndCreateCBAItem(remainingAccountCBA, invoice, entitySqlDaoWrapperFactory, context);
+        if (!candidateInvoicesForCBAGeneration.isEmpty()) {
+            for (final InvoiceModelDao invoice : candidateInvoicesForCBAGeneration) {
+                // Generate or use CBA for that specific invoice
+                final InvoiceItemModelDao cbaItem = computeCBAComplexityAndCreateCBAItem(remainingAccountCBA, invoice, entitySqlDaoWrapperFactory, context);
+                if (cbaItem != null) {
+                    result.add(cbaItem);
+                    remainingAccountCBA = remainingAccountCBA.add(cbaItem.getAmount());
+                }
+            }
         }
+        // Run CBA through all unpaid invoices to use existing credits if nay
+        result.addAll(useExistingCBAFromTransaction(remainingAccountCBA, invoicesTags, entitySqlDaoWrapperFactory, context));
+        return extractUniqueInvoiceIds(result);
+    }
 
-        useExistingCBAFromTransaction(remainingAccountCBA, invoicesTags, entitySqlDaoWrapperFactory, context);
+    private Set<UUID> extractUniqueInvoiceIds(final List<InvoiceItemModelDao> cbaItemsGenerated) {
+        final Iterable<UUID> newCBAInvoiceIds = Iterables.transform(cbaItemsGenerated, new Function<InvoiceItemModelDao, UUID>() {
+            @Override
+            public UUID apply(final InvoiceItemModelDao input) {
+                return input.getInvoiceId();
+            }
+        });
+        return ImmutableSet.copyOf(newCBAInvoiceIds);
     }
 
     // Distribute account CBA across all COMMITTED unpaid invoices
-    private void useExistingCBAFromTransaction(final BigDecimal accountCBA,
-                                               final List<Tag> invoicesTags,
-                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                               final InternalCallContext context) throws InvoiceApiException, EntityPersistenceException {
+    private List<InvoiceItemModelDao> useExistingCBAFromTransaction(final BigDecimal accountCBA,
+                                                                    final List<Tag> invoicesTags,
+                                                                    final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+                                                                    final InternalCallContext context) throws InvoiceApiException, EntityPersistenceException {
         if (accountCBA.compareTo(BigDecimal.ZERO) <= 0) {
-            return;
+            return ImmutableList.of();
         }
+
+        final List<InvoiceItemModelDao> result = new ArrayList<>();
 
         // PERF: Computing the invoice balance is difficult to do in the DB, so we effectively need to retrieve all invoices on the account and filter the unpaid ones in memory.
         // This should be infrequent though because of the account CBA check above.
         final List<InvoiceModelDao> allInvoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, invoicesTags, entitySqlDaoWrapperFactory, context);
-        final List<InvoiceModelDao> unpaidInvoices = invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(allInvoices, null);
+        final List<InvoiceModelDao> unpaidInvoices = invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(allInvoices, null, null);
         // We order the same os BillingStateCalculator-- should really share the comparator
         final List<InvoiceModelDao> orderedUnpaidInvoices = Ordering.from(new Comparator<InvoiceModelDao>() {
             @Override
@@ -166,25 +197,28 @@ public class CBADao {
 
         BigDecimal remainingAccountCBA = accountCBA;
         for (final InvoiceModelDao unpaidInvoice : orderedUnpaidInvoices) {
-            remainingAccountCBA = computeCBAComplexityAndCreateCBAItem(remainingAccountCBA, unpaidInvoice, entitySqlDaoWrapperFactory, context);
+            final InvoiceItemModelDao cbaItem = computeCBAComplexityAndCreateCBAItem(remainingAccountCBA, unpaidInvoice, entitySqlDaoWrapperFactory, context);
+            if (cbaItem != null) {
+                result.add(cbaItem);
+                remainingAccountCBA = remainingAccountCBA.add(cbaItem.getAmount());
+            }
             if (remainingAccountCBA.compareTo(BigDecimal.ZERO) <= 0) {
                 break;
             }
         }
+        return result;
     }
 
     // Return the updated account CBA
-    private BigDecimal computeCBAComplexityAndCreateCBAItem(final BigDecimal accountCBA,
-                                                            final InvoiceModelDao invoice,
-                                                            final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                                            final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
+    private InvoiceItemModelDao computeCBAComplexityAndCreateCBAItem(final BigDecimal accountCBA,
+                                                                     final InvoiceModelDao invoice,
+                                                                     final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+                                                                     final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
         final InvoiceItemModelDao cbaItem = computeCBAComplexity(invoice, accountCBA, entitySqlDaoWrapperFactory, context);
         if (cbaItem != null) {
             createCBAItem(invoice, cbaItem, entitySqlDaoWrapperFactory, context);
-            return accountCBA.add(cbaItem.getAmount());
-        } else {
-            return accountCBA;
         }
+        return cbaItem;
     }
 
     private void createCBAItem(final InvoiceModelDao invoiceModelDao,

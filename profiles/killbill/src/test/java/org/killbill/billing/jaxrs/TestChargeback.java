@@ -64,11 +64,11 @@ public class TestChargeback extends TestJaxrsBase {
         input.setAmount(new BigDecimal("50.00"));
         int count = 4;
         while (count-- > 0) {
-            assertNotNull(invoicePaymentApi.createChargeback(payment.getPaymentId(), input, requestOptions));
+            assertNotNull(invoicePaymentApi.createChargeback(payment.getPaymentId(), input, NULL_PLUGIN_PROPERTIES, requestOptions));
         }
 
         // Last attempt should fail because this is more than the Payment
-        final InvoicePayment foo = invoicePaymentApi.createChargeback(payment.getPaymentId(), input, requestOptions);
+        final InvoicePayment foo = invoicePaymentApi.createChargeback(payment.getPaymentId(), input, NULL_PLUGIN_PROPERTIES, requestOptions);
         final InvoicePayments payments = accountApi.getInvoicePayments(payment.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final List<PaymentTransaction> transactions = getInvoicePaymentTransactions(payments, TransactionType.CHARGEBACK);
         Assert.assertEquals(transactions.size(), 5);
@@ -110,7 +110,7 @@ public class TestChargeback extends TestJaxrsBase {
         input.setPaymentId(input.getPaymentId());
         input.setAmount(BigDecimal.TEN);
         try {
-            invoicePaymentApi.createChargeback(input.getPaymentId(), input, requestOptions);
+            invoicePaymentApi.createChargeback(input.getPaymentId(), input, NULL_PLUGIN_PROPERTIES, requestOptions);
             fail();
         } catch (NullPointerException e) {
         } catch (KillBillClientException e) {
@@ -126,7 +126,7 @@ public class TestChargeback extends TestJaxrsBase {
         input.setPaymentId(payment.getPaymentId());
 
         try {
-            invoicePaymentApi.createChargeback(payment.getPaymentId(), input, requestOptions);
+            invoicePaymentApi.createChargeback(payment.getPaymentId(), input, NULL_PLUGIN_PROPERTIES, requestOptions);
             fail();
         } catch (final KillBillClientException e) {
         }
@@ -140,7 +140,7 @@ public class TestChargeback extends TestJaxrsBase {
     }
 
     private void createAndVerifyChargeback(final InvoicePayment payment) throws KillBillClientException {
-        List<Invoice> invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, requestOptions);
+        List<Invoice> invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, null, requestOptions);
         // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
         Assert.assertEquals(invoices.size(), 2);
         Assert.assertEquals(invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
@@ -150,7 +150,7 @@ public class TestChargeback extends TestJaxrsBase {
         chargeback.setPaymentId(payment.getPaymentId());
         chargeback.setAmount(BigDecimal.TEN);
 
-        final InvoicePayment chargebackJson = invoicePaymentApi.createChargeback(payment.getPaymentId(), chargeback, requestOptions);
+        final InvoicePayment chargebackJson = invoicePaymentApi.createChargeback(payment.getPaymentId(), chargeback, NULL_PLUGIN_PROPERTIES, requestOptions);
         final List<PaymentTransaction> chargebackTransactions = getInvoicePaymentTransactions(ImmutableList.of(chargebackJson), TransactionType.CHARGEBACK);
         assertEquals(chargebackTransactions.size(), 1);
 
@@ -165,7 +165,7 @@ public class TestChargeback extends TestJaxrsBase {
         assertEquals(transactions.get(0).getPaymentId(), chargeback.getPaymentId());
 
         // Verify invoice balance
-        invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, null, requestOptions);
         Assert.assertEquals(invoices.size(), 2);
         Assert.assertEquals(invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 1);
     }
@@ -181,7 +181,7 @@ public class TestChargeback extends TestJaxrsBase {
 
         // Create subscription
         final Subscription subscriptionJson = createSubscription(accountJson.getAccountId(), "6253283", "Shotgun",
-                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY, true);
+                                                                 ProductCategory.BASE, BillingPeriod.MONTHLY);
         assertNotNull(subscriptionJson);
 
         // Move after the trial period to trigger an invoice with a non-zero invoice item
@@ -193,7 +193,7 @@ public class TestChargeback extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // Retrieve the invoice
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
         // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
         assertEquals(invoices.size(), 2);
         assertTrue(invoices.get(1).getAmount().doubleValue() > 0);

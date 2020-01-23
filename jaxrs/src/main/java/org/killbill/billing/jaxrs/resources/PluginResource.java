@@ -319,7 +319,7 @@ public class PluginResource extends JaxRsResourceBase {
 
         @Override
         public String getPathInfo() {
-            return super.getPathInfo().replace(JaxrsResource.PLUGINS_PATH, "");
+            return super.getPathInfo().replaceFirst(JaxrsResource.PLUGINS_PATH, "");
         }
 
         @Override
@@ -329,7 +329,7 @@ public class PluginResource extends JaxRsResourceBase {
 
         @Override
         public String getServletPath() {
-            return super.getServletPath().replace(JaxrsResource.PLUGINS_PATH, "");
+            return super.getServletPath().replaceFirst(JaxrsResource.PLUGINS_PATH, "");
         }
 
         @Override

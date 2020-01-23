@@ -34,15 +34,6 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
 
     private EntitySqlDaoTransactionalJdbiWrapper transactionalSqlDao;
 
-    private Long getTagRecordId(final UUID tagId) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Long>() {
-            @Override
-            public Long inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(TagSqlDao.class).getRecordId(tagId.toString(), internalCallContext);
-            }
-        });
-    }
-
     private int getCacheSize(CacheType cacheType) {
         final CacheController<Object, Object> cache = controlCacheDispatcher.getCacheController(cacheType);
         return cache != null ? cache.size() : 0;
@@ -52,8 +43,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
         final CacheController<Object, Object> cache = controlCacheDispatcher.getCacheController(CacheType.RECORD_ID);
         Object result = null;
         if (cache != null) {
-            // Keys are upper cased by convention
-            result = cache.get(tagId.toString().toUpperCase(), new CacheLoaderArgument(ObjectType.TAG));
+            result = cache.get(tagId.toString(), new CacheLoaderArgument(ObjectType.TAG));
         }
         return (Long) result;
     }
@@ -70,7 +60,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
         // Verify we still have nothing after insert in the cache
         Assert.assertEquals(getCacheSize(CacheType.RECORD_ID), 0);
 
-        final Long tagRecordId = getTagRecordId(tag.getId());
+        final Long tagRecordId = tagDao.getRecordId(tag);
         // Verify we now have something  in the cache
         Assert.assertEquals(getCacheSize(CacheType.RECORD_ID), 1);
 
@@ -112,7 +102,7 @@ public class TestCache extends UtilTestSuiteWithEmbeddedDB {
         final Long tenantRecordId = (Long) controlCacheDispatcher.getCacheController(CacheType.TENANT_RECORD_ID).get(tag.getId().toString(), new CacheLoaderArgument(ObjectType.TAG));
         Assert.assertEquals(tenantRecordId, result.getTenantRecordId());
 
-        final UUID objectId = (UUID) controlCacheDispatcher.getCacheController(CacheType.OBJECT_ID).get(TableName.TAG + CacheControllerDispatcher.CACHE_KEY_SEPARATOR  + recordId, new CacheLoaderArgument(ObjectType.TAG));
+        final UUID objectId = (UUID) controlCacheDispatcher.getCacheController(CacheType.OBJECT_ID).get(TableName.TAG + CacheControllerDispatcher.CACHE_KEY_SEPARATOR + recordId, new CacheLoaderArgument(ObjectType.TAG));
         Assert.assertEquals(objectId, result.getId());
 
         final Long accountRecordId = (Long) controlCacheDispatcher.getCacheController(CacheType.ACCOUNT_RECORD_ID).get(tag.getId().toString(), new CacheLoaderArgument(ObjectType.TAG));

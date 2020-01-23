@@ -150,8 +150,8 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
         validationPlugin.setExpectedProperties(expectedProperties);
 
-        // Set a random UUID to verify the plugin will successfully override it
-        paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, UUID.randomUUID(), ImmutableList.<PluginProperty>of(), initialProperties, paymentOptions, callContext);
+        // Set a null paymentMethodId to verify the plugin will successfully override it
+        paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, null, ImmutableList.<PluginProperty>of(), initialProperties, paymentOptions, callContext);
 
     }
 
@@ -161,7 +161,7 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
         // Set a random UUID to verify the plugin will successfully override it
         try {
-            paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, UUID.randomUUID(), ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of(), paymentOptions, callContext);
+            paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, null, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of(), paymentOptions, callContext);
             Assert.fail();
         } catch (PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode());

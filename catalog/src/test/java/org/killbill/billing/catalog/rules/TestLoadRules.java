@@ -26,7 +26,6 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.xmlloader.XMLLoader;
 
 import com.google.common.io.Resources;
@@ -38,18 +37,18 @@ public class TestLoadRules extends CatalogTestSuiteNoDB {
         final URI uri = new URI(Resources.getResource("WeaponsHireSmall.xml").toExternalForm());
         final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(uri, StandaloneCatalog.class);
         Assert.assertNotNull(catalog);
-        final DefaultPlanRules rules = catalog.getPlanRules();
+        final DefaultPlanRules rules = (DefaultPlanRules) catalog.getPlanRules();
 
         final PlanSpecifier specifier = new PlanSpecifier("Laser-Scope", BillingPeriod.MONTHLY,
                                                           "DEFAULT");
 
-        final PlanAlignmentCreate alignment = rules.getPlanCreateAlignment(specifier, catalog);
+        final PlanAlignmentCreate alignment = rules.getPlanCreateAlignment(specifier);
         Assert.assertEquals(alignment, PlanAlignmentCreate.START_OF_SUBSCRIPTION);
 
         final PlanSpecifier specifier2 = new PlanSpecifier("Extra-Ammo", BillingPeriod.MONTHLY,
                                                            "DEFAULT");
 
-        final PlanAlignmentCreate alignment2 = rules.getPlanCreateAlignment(specifier2, catalog);
+        final PlanAlignmentCreate alignment2 = rules.getPlanCreateAlignment(specifier2);
         Assert.assertEquals(alignment2, PlanAlignmentCreate.START_OF_BUNDLE);
     }
 }

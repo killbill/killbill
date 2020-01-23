@@ -160,6 +160,14 @@ order by t.<orderBy> <ordering>
 ;
 >>
 
+getRecordIdAtOffset(offset) ::= <<
+select <recordIdField("")>
+from <tableName()>
+order by <recordIdField("")> ASC
+limit 1 offset :offset
+;
+>>
+
 getCount() ::= <<
 select
 count(1) as count
@@ -189,12 +197,44 @@ where <recordIdField("t.")> = :recordId
 ;
 >>
 
+getByRecordIds(recordIds) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <recordIdField("t.")> in (<recordIds>)
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+;
+>>
+
+
+getByIds(ids) ::= <<
+select
+  <allTableFields("t.")>
+from <tableName()> t
+where <idField("t.")> in (<ids>)
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+;
+>>
+
+getByIdsIncludedDeleted(ids) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <idField("t.")> in (<ids>)
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+;
+>>
+
 /** Note: account_record_id can be NULL **/
 getByAccountRecordId(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where (<accountRecordIdField("t.")> = :accountRecordId or (<accountRecordIdField("t.")> is null and :accountRecordId is null))
+where <accountRecordIdField("t.")> = :accountRecordId
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
@@ -205,7 +245,7 @@ getByAccountRecordIdIncludedDeleted(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
 from <tableName()> t
-where (<accountRecordIdField("t.")> = :accountRecordId or (<accountRecordIdField("t.")> is null and :accountRecordId is null))
+where <accountRecordIdField("t.")> = :accountRecordId
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
 ;
@@ -347,7 +387,7 @@ order by <recordIdField("t.")> ASC
 ;
 >>
 
-addHistoryFromTransaction() ::= <<
+addHistoriesFromTransaction() ::= <<
 insert into <historyTableName()> (
   <idField("")>
 , <historyTableFields("")>
@@ -364,7 +404,7 @@ values (
 >>
 
 
-insertAuditFromTransaction() ::= <<
+insertAuditsFromTransaction() ::= <<
 insert into <auditTableName()> (
 <auditTableFields("")>
 )

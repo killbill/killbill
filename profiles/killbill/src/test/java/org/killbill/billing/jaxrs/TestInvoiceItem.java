@@ -44,7 +44,7 @@ public class TestInvoiceItem extends TestJaxrsBase {
     @Test(groups = "slow", description = "Add tags to invoice item")
     public void testTags() throws Exception {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
-        final Invoices invoicesJson = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, true, false, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices invoicesJson = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
 
         Assert.assertNotNull(invoicesJson);
         Assert.assertEquals(invoicesJson.size(), 2);
@@ -107,7 +107,7 @@ public class TestInvoiceItem extends TestJaxrsBase {
     @Test(groups = "slow", description = "Add custom fields to invoice item")
     public void testCustomFields() throws Exception {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
-        final Invoices invoicesJson = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, true, false, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices invoicesJson = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
 
         Assert.assertNotNull(invoicesJson);
         Assert.assertEquals(invoicesJson.size(), 2);

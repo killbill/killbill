@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.usage;
 import java.math.BigDecimal;
 import java.util.Collections;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultTier;
@@ -29,7 +30,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.usage.api.RawUsageRecord;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -48,21 +49,21 @@ public class TestContiguousIntervalUsageInArrear extends TestUsageInArrearBase {
         final BillingEvent billingEvent1 = createMockBillingEvent(1,
                                                                   new LocalDate(2019, 1, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC),
                                                                   BillingPeriod.MONTHLY,
-                                                                  Collections.<Usage>emptyList());
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate);
         final BillingEvent billingEvent2 = createMockBillingEvent(1,
                                                                   new LocalDate(2019, 1, 31).toDateTimeAtStartOfDay(DateTimeZone.UTC),
                                                                   BillingPeriod.MONTHLY,
-                                                                  Collections.<Usage>emptyList());
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate);
         final BillingEvent billingEvent3 = createMockBillingEvent(5,
                                                                   new LocalDate(2019, 2, 5).toDateTimeAtStartOfDay(DateTimeZone.UTC),
                                                                   BillingPeriod.MONTHLY,
-                                                                  Collections.<Usage>emptyList());
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate);
         final BillingEvent billingEvent4 = createMockBillingEvent(10,
                                                                   new LocalDate(2019, 3, 10).toDateTimeAtStartOfDay(DateTimeZone.UTC),
                                                                   BillingPeriod.MONTHLY,
-                                                                  Collections.<Usage>emptyList());
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate);
         final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage,
-                                                                                                                                ImmutableList.<RawUsage>of(),
+                                                                                                                                ImmutableList.<RawUsageRecord>of(),
                                                                                                                                 targetDate,
                                                                                                                                 false,
                                                                                                                                 billingEvent1,

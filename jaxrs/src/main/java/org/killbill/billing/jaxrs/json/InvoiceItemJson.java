@@ -17,6 +17,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -66,6 +67,7 @@ public class InvoiceItemJson extends JsonBase {
     private final Currency currency;
     private final Integer quantity;
     private final String itemDetails;
+    private final DateTime catalogEffectiveDate;
     private List<InvoiceItemJson> childItems;
 
     @JsonCreator
@@ -93,6 +95,7 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("currency") final Currency currency,
                            @JsonProperty("quantity") final Integer quantity,
                            @JsonProperty("itemDetails") final String itemDetails,
+                           @JsonProperty("catalogEffectiveDate") final DateTime catalogEffectiveDate,
                            @JsonProperty("childItems") final List<InvoiceItemJson> childItems,
                            @JsonProperty("auditLogs") @Nullable final List<AuditLogJson> auditLogs) {
         super(auditLogs);
@@ -119,6 +122,7 @@ public class InvoiceItemJson extends JsonBase {
         this.rate = rate;
         this.currency = currency;
         this.childItems = childItems;
+        this.catalogEffectiveDate = catalogEffectiveDate;
         this.quantity = quantity;
         this.itemDetails = itemDetails;
     }
@@ -131,7 +135,8 @@ public class InvoiceItemJson extends JsonBase {
              item.getInvoiceItemType(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getRate(), item.getCurrency(),
-             item.getQuantity(), item.getItemDetails(), toInvoiceItemJson(childItems), toAuditLogJson(auditLogs));
+             item.getQuantity(), item.getItemDetails(), item.getCatalogEffectiveDate(),
+             toInvoiceItemJson(childItems), toAuditLogJson(auditLogs));
     }
 
     private static List<InvoiceItemJson> toInvoiceItemJson(final List<InvoiceItem> childItems) {
@@ -260,6 +265,11 @@ public class InvoiceItemJson extends JsonBase {
             public String getItemDetails() { return itemDetails; }
 
             @Override
+            public DateTime getCatalogEffectiveDate() {
+                return catalogEffectiveDate;
+            }
+
+            @Override
             public boolean matches(final Object o) {
                 return false;
             }
@@ -375,6 +385,10 @@ public class InvoiceItemJson extends JsonBase {
         return childItems;
     }
 
+    public DateTime getCatalogEffectiveDate() {
+        return catalogEffectiveDate;
+    }
+
     public Integer getQuantity() { return quantity; }
 
     public String getItemDetails() { return itemDetails; }
@@ -402,6 +416,7 @@ public class InvoiceItemJson extends JsonBase {
         sb.append(", currency=").append(currency);
         sb.append(", quantity=").append(quantity);
         sb.append(", itemDetails=").append(itemDetails);
+        sb.append(", catalogEffectiveDate=").append(catalogEffectiveDate);
         sb.append(", childItems=").append(childItems);
         sb.append('}');
         return sb.toString();
@@ -474,6 +489,9 @@ public class InvoiceItemJson extends JsonBase {
         if (quantity != null ? !quantity.equals(that.quantity) : that.quantity != null) {
             return false;
         }
+        if (catalogEffectiveDate != null ? catalogEffectiveDate.compareTo(that.catalogEffectiveDate) != 0 : that.catalogEffectiveDate != null) {
+            return false;
+        }
         if (itemDetails != null ? !itemDetails.equals(that.itemDetails) : that.itemDetails != null) {
             return false;
         }
@@ -504,6 +522,7 @@ public class InvoiceItemJson extends JsonBase {
         result = 31 * result + (rate != null ? rate.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (quantity != null ? quantity.hashCode() : 0);
+        result = 31 * result + (catalogEffectiveDate != null ? catalogEffectiveDate.hashCode() : 0);
         result = 31 * result + (itemDetails != null ? itemDetails.hashCode() : 0);
         result = 31 * result + (childItems != null ? childItems.hashCode() : 0);
         return result;

@@ -21,15 +21,14 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
+import org.killbill.billing.events.NullInvoiceInternalEvent;
+import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
+import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
-import org.killbill.billing.events.InvoiceCreationInternalEvent;
-import org.killbill.billing.events.NullInvoiceInternalEvent;
-import org.killbill.billing.util.jackson.ObjectMapper;
 
 public class TestEventJson extends InvoiceTestSuiteNoDB {
 
@@ -39,15 +38,14 @@ public class TestEventJson extends InvoiceTestSuiteNoDB {
     public void testInvoiceCreationEvent() throws Exception {
         final InvoiceCreationInternalEvent e = new DefaultInvoiceCreationEvent(UUID.randomUUID(), UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, 1L, 2L, null);
         final String json = mapper.writeValueAsString(e);
-
         final Object obj = mapper.readValue(json, DefaultInvoiceCreationEvent.class);
         Assert.assertEquals(obj, e);
     }
 
-
     @Test(groups = "fast")
     public void testInvoiceNotificationEvent() throws Exception {
-        final InvoiceNotificationInternalEvent e = new DefaultInvoiceNotificationInternalEvent(UUID.randomUUID(),  new BigDecimal(12.0), Currency.USD, new DateTime(), 1L, 2L, null);
+
+        final InvoiceNotificationInternalEvent e = new DefaultInvoiceNotificationInternalEvent(UUID.randomUUID(), new BigDecimal(12.0), Currency.USD, new DateTime(), 1L, 2L, null);
         final String json = mapper.writeValueAsString(e);
 
         final Object obj = mapper.readValue(json, DefaultInvoiceNotificationInternalEvent.class);

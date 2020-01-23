@@ -76,9 +76,3 @@ and pp.tenant_record_id = :tenantRecordId
 order by pp.phase_number asc
 ;
 >>
-
-
-getLastInsertId() ::= <<
-select LAST_INSERT_ID();
->>
-

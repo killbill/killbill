@@ -111,7 +111,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultCaseResult cr = new DefaultCaseResult(
                 product,
@@ -131,7 +131,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultCaseResult cr = new DefaultCaseResult(
                 null,
@@ -152,7 +152,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultCaseResult cr = new DefaultCaseResult(
                 product,
@@ -174,7 +174,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultCaseResult cr = new DefaultCaseResult(
                 product,
@@ -195,7 +195,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultCaseResult cr = new DefaultCaseResult(
                 product,
@@ -216,7 +216,7 @@ public class TestCase extends CatalogTestSuiteNoDB {
         final MockCatalog cat = new MockCatalog();
 
         final DefaultProduct product = cat.getCurrentProduct(0);
-        final DefaultPriceList priceList = cat.findCurrentPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final DefaultPriceList priceList = (DefaultPriceList) cat.findPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
 
         final DefaultCaseResult cr0 = new DefaultCaseResult(
                 product,

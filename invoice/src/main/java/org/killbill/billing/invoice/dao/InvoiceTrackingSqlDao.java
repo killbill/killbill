@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2019 Groupon, Inc
+ * Copyright 2014-2019 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,6 +17,7 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -29,21 +30,17 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.SqlBatch;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceTrackingSqlDao extends EntitySqlDao<InvoiceTrackingModelDao, Entity> {
 
     @SqlUpdate
-    @Audited(ChangeType.UPDATE)
-    public void deactivateForInvoice(@Bind("invoiceId") String invoiceId,
-                                     @SmartBindBean final InternalCallContext context);
-
-    @SqlBatch
-    void create(@SmartBindBean Iterable<InvoiceTrackingModelDao> trackings,
-                @SmartBindBean final InternalCallContext context);
+    @Audited(ChangeType.DELETE)
+    public void deactivateByIds(@BindIn("ids") final Collection<String> ids,
+                                @SmartBindBean final InternalCallContext context);
 
     @SqlQuery
     List<InvoiceTrackingModelDao> getTrackingsByDateRange(@Bind("startDate") final Date startDate,
@@ -51,8 +48,7 @@ public interface InvoiceTrackingSqlDao extends EntitySqlDao<InvoiceTrackingModel
                                                           @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
-    List<InvoiceTrackingModelDao> getTrackingsForInvoice(@Bind("invoiceId") final String invoiceId,
-                                                         @SmartBindBean final InternalTenantContext context);
-
+    List<InvoiceTrackingModelDao> getTrackingsForInvoices(@BindIn("invoiceIds") final Collection<String> invoiceIds,
+                                                          @SmartBindBean final InternalTenantContext context);
 }
 

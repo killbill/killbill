@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,11 +34,12 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Catalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
+import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.junction.BillingEvent;
@@ -48,8 +48,8 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -69,12 +69,17 @@ public class BlockingCalculator {
         this.blockingApi = blockingApi;
     }
 
+    @VisibleForTesting
+    static AtomicLong getGlobalTotalOrder() {
+        return globaltotalOrder;
+    }
+
     /**
      * Given a set of billing events, add corresponding blocking (overdue) billing events.
      *
      * @param billingEvents the original list of billing events to update (without overdue events)
      */
-    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents, final Set<UUID> skippedSubscriptions, final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount, final VersionedCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
         if (billingEvents.size() <= 0) {
             return false;
         }
@@ -179,7 +184,7 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> subscriptionBillingEvents, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    protected SortedSet<BillingEvent> createNewEvents(final List<DisabledDuration> disabledDuration, final SortedSet<BillingEvent> subscriptionBillingEvents, final VersionedCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
 
         Preconditions.checkState(context.getAccountRecordId() != null);
 
@@ -192,18 +197,17 @@ public class BlockingCalculator {
             final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), subscriptionBillingEvents);
 
             if (precedingInitialEvent != null) { // there is a preceding billing event
-                result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent, catalog));
+                result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent));
                 if (duration.getEnd() != null) { // no second event in the pair means they are still disabled (no re-enable)
-                    result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent, catalog, context));
+                    result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent, context));
                 }
             } else if (precedingFinalEvent != null) { // can happen - e.g. phase event
-                result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent, catalog, context));
+                result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent, context));
             }
             // N.B. if there's no precedingInitial and no precedingFinal then there's nothing to do
         }
         return result;
     }
-
 
     protected BillingEvent precedingBillingEventForSubscription(final DateTime disabledDurationStart, final SortedSet<BillingEvent> subscriptionBillingEvents) {
         if (disabledDurationStart == null) {
@@ -222,7 +226,6 @@ public class BlockingCalculator {
         return prev;
     }
 
-
     protected SortedSet<BillingEvent> filter(final SortedSet<BillingEvent> billingEvents, final SubscriptionBase subscription) {
         final SortedSet<BillingEvent> result = new TreeSet<BillingEvent>();
         for (final BillingEvent event : billingEvents) {
@@ -233,7 +236,7 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected BillingEvent createNewDisableEvent(final DateTime disabledDurationStart, final BillingEvent previousEvent, final Catalog catalog) throws CatalogApiException {
+    protected BillingEvent createNewDisableEvent(final DateTime disabledDurationStart, final BillingEvent previousEvent) throws CatalogApiException {
 
         final int billCycleDay = previousEvent.getBillCycleDayLocal();
         final DateTime effectiveDate = disabledDurationStart;
@@ -257,23 +260,26 @@ public class BlockingCalculator {
                                        plan,
                                        planPhase,
                                        fixedPrice,
+                                       recurringPrice,
+                                       ImmutableList.of(),
                                        currency,
                                        billingPeriod,
-                                       previousEvent.getLastChangePlanDate(),
                                        billCycleDay,
                                        description,
                                        totalOrdering,
                                        type,
-                                       true,
-                                       catalog);
+                                       true
+        );
     }
 
-    protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final Catalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    protected BillingEvent createNewReenableEvent(final DateTime odEventTime, final BillingEvent previousEvent, final InternalTenantContext context) throws CatalogApiException {
         // All fields are populated with the event state from before the blocking period, for invoice to resume invoicing
         final int billCycleDay = previousEvent.getBillCycleDayLocal();
         final DateTime effectiveDate = odEventTime;
         final PlanPhase planPhase = previousEvent.getPlanPhase();
         final BigDecimal fixedPrice = previousEvent.getFixedPrice();
+        final BigDecimal recurringPrice = previousEvent.getRecurringPrice();
+        final List<Usage> usages = previousEvent.getUsages();
         final Plan plan = previousEvent.getPlan();
         final Currency currency = previousEvent.getCurrency();
         final String description = "";
@@ -287,15 +293,16 @@ public class BlockingCalculator {
                                        plan,
                                        planPhase,
                                        fixedPrice,
+                                       recurringPrice,
+                                       usages,
                                        currency,
                                        billingPeriod,
-                                       previousEvent.getLastChangePlanDate(),
                                        billCycleDay,
                                        description,
                                        totalOrdering,
                                        type,
-                                       false,
-                                       catalog);
+                                       false
+        );
     }
 
     // In ascending order
@@ -347,10 +354,5 @@ public class BlockingCalculator {
         }
 
         return result;
-    }
-
-    @VisibleForTesting
-    static AtomicLong getGlobalTotalOrder() {
-        return globaltotalOrder;
     }
 }

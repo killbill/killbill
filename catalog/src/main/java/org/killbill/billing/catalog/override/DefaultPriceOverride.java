@@ -124,7 +124,7 @@ public class DefaultPriceOverride implements PriceOverride {
             planName = new StringBuffer(parentPlan.getName()).append("-dryrun-").append(DRY_RUN_PLAN_IDX.incrementAndGet()).toString();
         }
 
-        final DefaultPlan result = new DefaultPlan(standaloneCatalog, planName, (DefaultPlan) parentPlan, resolvedOverride);
+        final DefaultPlan result = new DefaultPlan(planName, (DefaultPlan) parentPlan, resolvedOverride);
         result.initialize(standaloneCatalog);
         if (context == null) {
             overriddenPlanCache.addDryRunPlan(planName, result);

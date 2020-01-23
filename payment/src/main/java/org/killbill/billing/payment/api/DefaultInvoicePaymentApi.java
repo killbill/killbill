@@ -59,6 +59,11 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
     }
 
     @Override
+    public InvoicePayment getInvoicePayment(final UUID invoicePaymentId, final TenantContext tenantContext) {
+       return invoiceInternalApi.getInvoicePayment(invoicePaymentId, tenantContext);
+    }
+
+    @Override
     public InvoicePayment createPurchaseForInvoicePayment(final Account account,
                                                           final UUID invoiceId,
                                                           final UUID paymentMethodId,
