@@ -137,8 +137,7 @@ public class IncompletePaymentTransactionTask {
                 return updatePaymentAndTransactionIfNeeded(accountId,
                                                            paymentTransactionId,
                                                            paymentTransactionInfoPlugin,
-                                                           attemptNumber,
-                                                           userToken,
+                                                           currentTransactionStatus,
                                                            isApiPayment,
                                                            internalTenantContext);
             }
@@ -148,15 +147,14 @@ public class IncompletePaymentTransactionTask {
     private TransactionStatus updatePaymentAndTransactionIfNeeded(final UUID accountId,
                                                                   final UUID paymentTransactionId,
                                                                   @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
-                                                                  @Nullable final Integer attemptNumber,
-                                                                  @Nullable final UUID userToken,
+                                                                  @Nullable final TransactionStatus currentTransactionStatus,
                                                                   final boolean isApiPayment,
                                                                   final InternalTenantContext internalTenantContext) {
         // State may have changed since we originally retrieved with no lock
         final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(paymentTransactionId, internalTenantContext);
         if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
-            // Nothing to do
-            return null;
+            // Nothing to do, so we return the currentTransactionStatus to indicate that nothing has changed
+            return currentTransactionStatus;
         }
 
         // On-the-fly Janitor already has the latest state, avoid a round-trip to the plugin

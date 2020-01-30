@@ -94,29 +94,6 @@ public abstract class BaseRetryService implements RetryService {
         }
     }
 
-    public List<NotificationEventWithMetadata<PaymentRetryNotificationKey>> getRetryAttempts(final UUID attemptId, final InternalCallContext context) {
-
-        try {
-            final NotificationQueue retryQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(), getQueueName());
-
-            final Iterable<NotificationEventWithMetadata<PaymentRetryNotificationKey>> accountPaymentRetries = retryQueue.getFutureNotificationForSearchKeys(context.getAccountRecordId(), context.getTenantRecordId());
-
-
-            final Iterable<NotificationEventWithMetadata<PaymentRetryNotificationKey>> paymentAttemptsRetries = Iterables.filter(accountPaymentRetries, new Predicate<NotificationEventWithMetadata<PaymentRetryNotificationKey>>() {
-                @Override
-                public boolean apply(final NotificationEventWithMetadata<PaymentRetryNotificationKey> input) {
-                    return input.getEvent().getAttemptId().equals(attemptId);
-                }
-            });
-
-            return ImmutableList.copyOf(paymentAttemptsRetries);
-        } catch (final NoSuchNotificationQueue e) {
-            log.error("Failed to retrieve notification queue='{}', service='{}'", getQueueName(), KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName());
-            return ImmutableList.of();
-        }
-    }
-
-
 
     @Override
     public abstract String getQueueName();

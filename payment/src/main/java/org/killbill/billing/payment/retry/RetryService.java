@@ -38,6 +38,4 @@ public interface RetryService {
 
     public void retryPaymentTransaction(final UUID attemptId, List<String> paymentControlPluginNames, final InternalCallContext context);
 
-    public List<NotificationEventWithMetadata<PaymentRetryNotificationKey>> getRetryAttempts(final UUID attemptId, final InternalCallContext context);
-
 }

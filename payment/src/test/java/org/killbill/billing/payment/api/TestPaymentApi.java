@@ -2814,13 +2814,6 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertEquals(attempt.getId(), scheduledAttempt.getId());
         assertEquals(scheduledAttempt.getEffectiveDate().compareTo(nextRetryDate), 0);
 
-        // We also verify that we end up with only 1 retry attempt scheduled with 'nextRetryDate'
-        //
-        // -> So the mockPaymentControlProviderPlugin that would return nextRetryDate2 if Janitor logic had been invoked during the GET has correctly been ignored
-        //
-        final List<NotificationEventWithMetadata<PaymentRetryNotificationKey>> retryAttempts = retryService.getRetryAttempts(attempt.getId(), internalCallContext);
-        assertEquals(retryAttempts.size(), 1);
-        assertEquals(retryAttempts.get(0).getEffectiveDate().compareTo(nextRetryDate), 0);
 
     }
 
