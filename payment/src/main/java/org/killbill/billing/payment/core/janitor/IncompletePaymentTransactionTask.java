@@ -127,8 +127,8 @@ public class IncompletePaymentTransactionTask {
                                                           final InternalTenantContext internalTenantContext) throws LockFailedException {
         // In the GET case, make sure we bail as early as possible (see PaymentRefresher)
         if (currentTransactionStatus != null && !TRANSACTION_STATUSES_TO_CONSIDER.contains(currentTransactionStatus)) {
-            // Nothing to do
-            return null;
+            // Nothing to do, so we return the currentTransactionStatus to indicate that nothing has changed
+            return currentTransactionStatus;
         }
 
         return tryToDoJanitorOperationWithAccountLock(new JanitorIterationCallback() {
