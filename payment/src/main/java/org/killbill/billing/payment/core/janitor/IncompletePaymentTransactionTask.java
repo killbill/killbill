@@ -102,12 +102,10 @@ public class IncompletePaymentTransactionTask {
                                                        final boolean isApiPayment,
                                                        final InternalTenantContext internalTenantContext) {
         try {
-            final TransactionStatus latestTransactionStatus = updatePaymentAndTransactionIfNeeded(accountId,
+            final TransactionStatus latestTransactionStatus = updatePaymentAndTransactionIfNeeded2(accountId,
                                                                                                   paymentTransactionId,
                                                                                                   currentTransactionStatus,
                                                                                                   paymentTransactionInfoPlugin,
-                                                                                                  null,
-                                                                                                  null,
                                                                                                   isApiPayment,
                                                                                                   internalTenantContext);
             return latestTransactionStatus == null;
@@ -117,12 +115,11 @@ public class IncompletePaymentTransactionTask {
         }
     }
 
-    TransactionStatus updatePaymentAndTransactionIfNeeded(final UUID accountId,
+    // By convention, we return null if the update was 'needed' and happened.
+    TransactionStatus updatePaymentAndTransactionIfNeeded2(final UUID accountId,
                                                           final UUID paymentTransactionId,
                                                           @Nullable final TransactionStatus currentTransactionStatus,
                                                           @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
-                                                          @Nullable final Integer attemptNumber,
-                                                          @Nullable final UUID userToken,
                                                           final boolean isApiPayment,
                                                           final InternalTenantContext internalTenantContext) throws LockFailedException {
         // In the GET case, make sure we bail as early as possible (see PaymentRefresher)
@@ -137,7 +134,6 @@ public class IncompletePaymentTransactionTask {
                 return updatePaymentAndTransactionIfNeeded(accountId,
                                                            paymentTransactionId,
                                                            paymentTransactionInfoPlugin,
-                                                           currentTransactionStatus,
                                                            isApiPayment,
                                                            internalTenantContext);
             }
@@ -147,14 +143,13 @@ public class IncompletePaymentTransactionTask {
     private TransactionStatus updatePaymentAndTransactionIfNeeded(final UUID accountId,
                                                                   final UUID paymentTransactionId,
                                                                   @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
-                                                                  @Nullable final TransactionStatus currentTransactionStatus,
                                                                   final boolean isApiPayment,
                                                                   final InternalTenantContext internalTenantContext) {
         // State may have changed since we originally retrieved with no lock
         final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(paymentTransactionId, internalTenantContext);
         if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
             // Nothing to do, so we return the currentTransactionStatus to indicate that nothing has changed
-            return currentTransactionStatus;
+            return paymentTransaction.getTransactionStatus();
         }
 
         // On-the-fly Janitor already has the latest state, avoid a round-trip to the plugin

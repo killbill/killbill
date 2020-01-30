@@ -327,12 +327,10 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                         final boolean isApiPayment,
                                                         final InternalTenantContext internalTenantContext) throws LockFailedException {
         // First, fix the transaction itself
-        final TransactionStatus latestTransactionStatus = incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded(accountId,
+        final TransactionStatus latestTransactionStatus = incompletePaymentTransactionTask.updatePaymentAndTransactionIfNeeded2(accountId,
                                                                                                                                paymentTransactionId,
                                                                                                                                currentTransactionStatus,
                                                                                                                                paymentTransactionInfoPlugin,
-                                                                                                                               attemptNumber,
-                                                                                                                               userToken,
                                                                                                                                isApiPayment,
                                                                                                                                internalTenantContext);
         final boolean hasTransactionChanged = latestTransactionStatus == null;
