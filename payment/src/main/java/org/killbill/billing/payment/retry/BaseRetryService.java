@@ -25,13 +25,13 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
@@ -40,6 +40,9 @@ import org.killbill.notificationq.api.NotificationQueueService.NotificationQueue
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public abstract class BaseRetryService implements RetryService {
@@ -91,6 +94,7 @@ public abstract class BaseRetryService implements RetryService {
         }
     }
 
+
     @Override
     public abstract String getQueueName();
 
@@ -109,6 +113,7 @@ public abstract class BaseRetryService implements RetryService {
         public boolean scheduleRetry(final ObjectType objectType, final UUID objectId, final UUID attemptId, final Long tenantRecordId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry) {
             return scheduleRetryInternal(objectType, objectId, attemptId, tenantRecordId, paymentControlPluginNames, timeOfRetry, null);
         }
+
 
         private boolean scheduleRetryInternal(final ObjectType objectType, final UUID objectId, final UUID attemptId, final Long tenantRecordId, final List<String> paymentControlPluginNames, final DateTime timeOfRetry, final EntitySqlDaoWrapperFactory transactionalDao) {
             final InternalCallContext context = createCallContextFromPaymentId(objectType, objectId, tenantRecordId);
@@ -133,6 +138,7 @@ public abstract class BaseRetryService implements RetryService {
             }
             return true;
         }
+
 
         protected InternalCallContext createCallContextFromPaymentId(final ObjectType objectType, final UUID objectId, final Long tenantRecordId) {
             final String paymentRetryService = KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName() + "-" + getQueueName();

@@ -154,6 +154,8 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
         stateMachineConfigCache.loadDefaultPaymentStateMachineConfig(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML);
 
         paymentExecutors.initialize();
+        retryService.initialize();
+        retryService.start();
         eventBus.start();
         Profiling.resetPerThreadProfilingData();
         clock.resetDeltaFromReality();
@@ -170,6 +172,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
         janitor.stop();
         eventBus.stop();
+        retryService.stop();
         paymentExecutors.stop();
     }
 }

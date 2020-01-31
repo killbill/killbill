@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -47,8 +48,10 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.payment.retry.PaymentRetryNotificationKey;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -2777,4 +2780,41 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(gotPaymentMethods2WithPluginInfo.getMaxNbRecords(), maxNbRecords);
         Assert.assertEquals(gotPaymentMethods2WithPluginInfo.getTotalNbRecords(), maxNbRecords);
     }
+
+    // 1. We verify that control plugin is correctly invoked during createPurchaseWithPaymentControl and sets the nextRetryDate
+    // 2. We verify that control plugin is NOT invoked during the GET
+    //
+    @Test(groups = "slow", description = "See https://github.com/killbill/killbill/issues/1264")
+    public void testJanitorThroughGet() throws Exception {
+
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        final DateTime nextRetryDate = clock.getUTCNow().plusDays(1);
+        mockPaymentControlProviderPlugin.setNextRetryDate(nextRetryDate);
+
+        final BigDecimal requestedAmount = BigDecimal.TEN;
+        final String paymentExternalKey = "pay controle external key";
+
+        final String transactionExternalKey = "txn control external key";
+        paymentApi.createPurchaseWithPaymentControl(
+                account, account.getPaymentMethodId(), null, requestedAmount, Currency.AED, null,
+                paymentExternalKey, transactionExternalKey, ImmutableList.<PluginProperty>of(), CONTROL_PLUGIN_OPTIONS, callContext);
+
+
+        final DateTime nextRetryDate2 = nextRetryDate.plusDays(1);
+        mockPaymentControlProviderPlugin.setNextRetryDate(nextRetryDate2);
+
+
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), true, true, ImmutableList.of(), callContext);
+        assertEquals(payments.size(), 1);
+
+        // The code return the attempt on disk and adds the scheduled retry in the notificationQ as an attempt
+        assertEquals(payments.get(0).getPaymentAttempts().size(), 2);
+        final PaymentAttempt attempt = payments.get(0).getPaymentAttempts().get(0);
+        final PaymentAttempt scheduledAttempt = payments.get(0).getPaymentAttempts().get(1);
+        assertEquals(attempt.getId(), scheduledAttempt.getId());
+        assertEquals(scheduledAttempt.getEffectiveDate().compareTo(nextRetryDate), 0);
+
+
+    }
+
 }
