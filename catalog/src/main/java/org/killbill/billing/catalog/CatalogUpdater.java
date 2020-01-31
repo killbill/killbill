@@ -17,10 +17,14 @@
 
 package org.killbill.billing.catalog;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+
+import javax.xml.bind.JAXBException;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingMode;
@@ -43,6 +47,8 @@ import org.killbill.billing.catalog.rules.DefaultCaseChangePlanPolicy;
 import org.killbill.billing.catalog.rules.DefaultCaseCreateAlignment;
 import org.killbill.billing.catalog.rules.DefaultCasePriceList;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
+import org.killbill.xmlloader.ValidationException;
+import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 
 import com.google.common.collect.ImmutableList;
@@ -84,10 +90,17 @@ public class CatalogUpdater {
         return catalog;
     }
 
-    public String getCatalogXML() {
+    public String getCatalogXML(final InternalTenantContext internalTenantContext) throws CatalogApiException {
         try {
-            return XMLWriter.writeXML(catalog, StandaloneCatalog.class);
-        } catch (final Exception e) {
+            final String newCatalog = XMLWriter.writeXML(catalog, StandaloneCatalog.class);
+            // Verify we can deserialize this catalog prior we commit to disk
+            XMLLoader.getObjectFromStream(new ByteArrayInputStream(newCatalog.getBytes()), StandaloneCatalog.class);
+            return newCatalog;
+        } catch (ValidationException e) {
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+        } catch (JAXBException e) {
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
