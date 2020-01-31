@@ -59,7 +59,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
         final DateTime now = clock.getUTCNow();
 
         final CatalogUpdater catalogUpdater = new CatalogUpdater(now, null);
-        final String catalogXML = catalogUpdater.getCatalogXML();
+        final String catalogXML = catalogUpdater.getCatalogXML(internalCallContext);
         final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(new ByteArrayInputStream(catalogXML.getBytes(Charset.forName("UTF-8"))), StandaloneCatalog.class);
         assertEquals(catalog.getPlans().size(), 0);
     }
@@ -575,8 +575,8 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
                                    "    </priceLists>\n" +
                                    "</catalog>\n";
 
-        assertEquals(catalogUpdater.getCatalogXML(), expectedXML);
-        System.err.println(catalogUpdater.getCatalogXML());
+        assertEquals(catalogUpdater.getCatalogXML(internalCallContext), expectedXML);
+        System.err.println(catalogUpdater.getCatalogXML(internalCallContext));
     }
 
     private StandaloneCatalog enhanceOriginalCatalogForInvalidTestCases(final String catalogName) throws Exception {
