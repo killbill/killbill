@@ -32,6 +32,7 @@ public abstract class DefaultInvoicePaymentInternalEvent extends BusEventBase im
 
     private final UUID accountId;
     private final UUID paymentId;
+    private final UUID paymentAttemptId;
     private final InvoicePaymentType type;
     private final UUID invoiceId;
     private final DateTime paymentDate;
@@ -44,6 +45,7 @@ public abstract class DefaultInvoicePaymentInternalEvent extends BusEventBase im
     @JsonCreator
     public DefaultInvoicePaymentInternalEvent(@JsonProperty("accountId") final UUID accountId,
                                               @JsonProperty("paymentId") final UUID paymentId,
+                                              @JsonProperty("paymentAttemptId") final UUID paymentAttemptId,
                                               @JsonProperty("type") final InvoicePaymentType type,
                                               @JsonProperty("invoiceId") final UUID invoiceId,
                                               @JsonProperty("paymentDate") final DateTime paymentDate,
@@ -58,6 +60,7 @@ public abstract class DefaultInvoicePaymentInternalEvent extends BusEventBase im
         super(searchKey1, searchKey2, userToken);
         this.accountId = accountId;
         this.paymentId = paymentId;
+        this.paymentAttemptId = paymentAttemptId;
         this.type = type;
         this.invoiceId = invoiceId;
         this.paymentDate = paymentDate;
@@ -76,6 +79,11 @@ public abstract class DefaultInvoicePaymentInternalEvent extends BusEventBase im
     @Override
     public UUID getPaymentId() {
         return paymentId;
+    }
+
+    @Override
+    public UUID getPaymentAttemptId() {
+        return paymentAttemptId;
     }
 
     public InvoicePaymentType getType() {

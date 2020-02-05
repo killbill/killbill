@@ -96,6 +96,7 @@ public class TestBeatrixListener {
     private static final String METADATA = "metadata";
 
     private static final UUID PAYMENT_ID = UUID.randomUUID();
+    private static final UUID PAYMENT_ATTEMPT_ID = UUID.randomUUID();
     private static final DateTime PAYMENT_DATE = DateTime.now();
     private static final BigDecimal PAYMENT_AMOUNT = BigDecimal.valueOf(13);
     private static final UUID LINKED_INVOICE_PAYMENT_ID = UUID.randomUUID();
@@ -756,6 +757,7 @@ public class TestBeatrixListener {
 
     private void provideCommonInvoicePaymentInfo(InvoicePaymentInternalEvent event) {
         when(event.getPaymentId()).thenReturn(PAYMENT_ID);
+        when(event.getPaymentAttemptId()).thenReturn(PAYMENT_ATTEMPT_ID);
         when(event.getType()).thenReturn(InvoicePaymentType.ATTEMPT);
         when(event.getPaymentDate()).thenReturn(PAYMENT_DATE);
         when(event.getAmount()).thenReturn(PAYMENT_AMOUNT);
@@ -767,6 +769,7 @@ public class TestBeatrixListener {
 
     private void assertInvoicePaymentMetadataFields(InvoicePaymentMetadata invoicePaymentMetadata) {
         assertEquals(invoicePaymentMetadata.getPaymentId(), PAYMENT_ID);
+        assertEquals(invoicePaymentMetadata.getPaymentAttemptId(), PAYMENT_ATTEMPT_ID);
         assertEquals(invoicePaymentMetadata.getInvoicePaymentType(), InvoicePaymentType.ATTEMPT);
         assertEquals(invoicePaymentMetadata.getPaymentDate(), PAYMENT_DATE);
         assertEquals(invoicePaymentMetadata.getAmount(), PAYMENT_AMOUNT);
