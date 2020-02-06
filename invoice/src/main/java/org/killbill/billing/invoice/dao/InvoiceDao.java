@@ -93,9 +93,9 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     // Include migrated invoices
     List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, InternalTenantContext context);
 
-    InvoicePaymentModelDao postChargeback(UUID paymentId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+    InvoicePaymentModelDao postChargeback(UUID paymentId, final UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
-    InvoicePaymentModelDao postChargebackReversal(UUID paymentId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
+    InvoicePaymentModelDao postChargebackReversal(UUID paymentId, final UUID paymentAttemptId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
     InvoiceItemModelDao doCBAComplexity(InvoiceModelDao invoice, InternalCallContext context) throws InvoiceApiException;
 
@@ -115,7 +115,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @return the created invoice payment object associated with this refund
      * @throws InvoiceApiException
      */
-    InvoicePaymentModelDao createRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
+    InvoicePaymentModelDao createRefund(UUID paymentId, UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
                                         String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
     BigDecimal getRemainingAmountPaid(UUID invoicePaymentId, InternalTenantContext context);
@@ -155,9 +155,9 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      */
     void deleteCBA(UUID accountId, UUID invoiceId, UUID invoiceItemId, InternalCallContext context) throws InvoiceApiException;
 
-    void notifyOfPaymentInit(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
+    void notifyOfPaymentInit(InvoicePaymentModelDao invoicePayment, UUID paymentAttemptId, InternalCallContext context);
 
-    void notifyOfPaymentCompletion(InvoicePaymentModelDao invoicePayment, InternalCallContext context);
+    void notifyOfPaymentCompletion(InvoicePaymentModelDao invoicePayment, UUID paymentAttemptId, InternalCallContext context);
 
     /**
      * @param accountId the account for which we need to rebalance the CBA
