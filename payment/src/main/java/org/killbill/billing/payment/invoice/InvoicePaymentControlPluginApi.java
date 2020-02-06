@@ -322,7 +322,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     private PriorPaymentControlResult getPluginPurchaseResult(final PaymentControlContext paymentControlPluginContext, final Iterable<PluginProperty> pluginProperties, final InternalCallContext internalContext) throws PaymentControlApiException {
         try {
             final UUID invoiceId = getInvoiceId(pluginProperties);
-            final Invoice invoice = getAndSanitizeInvoice(invoiceId, internalContext);
+            final Invoice invoice = getAndSanitizeInvoice(invoiceId, paymentControlPluginContext.getAttemptPaymentId(), internalContext);
 
             if (!InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
                 // abort payment if the invoice status is not COMMITTED
@@ -606,9 +606,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }));
     }
 
-    private Invoice getAndSanitizeInvoice(final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
+    private Invoice getAndSanitizeInvoice(final UUID invoiceId, final UUID paymentAttemptId, final InternalCallContext context) throws InvoiceApiException {
         final Invoice invoice = invoiceApi.getInvoiceById(invoiceId, context);
-        if (checkForIncompleteInvoicePaymentAndRepair(invoice, context)) {
+        if (checkForIncompleteInvoicePaymentAndRepair(invoice, paymentAttemptId, context)) {
             // Fetch new repaired 'invoice'
             return invoiceApi.getInvoiceById(invoiceId, context);
         } else {
@@ -616,7 +616,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
     }
 
-    private boolean checkForIncompleteInvoicePaymentAndRepair(final Invoice invoice, final InternalCallContext internalContext) throws InvoiceApiException {
+    private boolean checkForIncompleteInvoicePaymentAndRepair(final Invoice invoice, final UUID paymentAttemptId, final InternalCallContext internalContext) throws InvoiceApiException {
 
         final List<InvoicePayment> invoicePayments = invoice.getPayments();
 
@@ -652,7 +652,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                           successfulTransaction.getCurrency(),
                                                           successfulTransaction.getProcessedCurrency(),
                                                           successfulTransaction.getPaymentId(),
-                                                          incompleteInvoicePayment.getId(),
+                                                          paymentAttemptId,
                                                           successfulTransaction.getTransactionExternalKey(),
                                                           successfulTransaction.getCreatedDate(),
                                                           true,
