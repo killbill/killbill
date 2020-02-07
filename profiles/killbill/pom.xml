@@ -80,6 +80,8 @@
             <groupId>com.palominolabs.metrics</groupId>
             <artifactId>metrics-guice</artifactId>
             <scope>runtime</scope>
+            <!-- For CircleCI only -->
+            <version>3.2.2</version>
         </dependency>
         <dependency>
             <groupId>com.sun.jersey</groupId>
