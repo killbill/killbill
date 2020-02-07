@@ -42,10 +42,13 @@ public class InvoicePaymentPaymentOptions implements PaymentOptions {
 
     public static List<String> addInvoicePaymentControlPlugin(final Collection<String> controlPluginNamesFromUser) {
         final List<String> paymentControlPluginNames = new LinkedList<String>();
-        paymentControlPluginNames.addAll(controlPluginNamesFromUser);
-        if (!paymentControlPluginNames.contains(InvoicePaymentControlPluginApi.PLUGIN_NAME)) {
-            paymentControlPluginNames.add(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        // Remove InvoicePaymentControlPluginApi.PLUGIN_NAME if already in the list
+        if (paymentControlPluginNames.contains(InvoicePaymentControlPluginApi.PLUGIN_NAME)) {
+            paymentControlPluginNames.remove(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
+        // ... and add it FIRST
+        paymentControlPluginNames.add(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        paymentControlPluginNames.addAll(controlPluginNamesFromUser);
         return paymentControlPluginNames;
     }
 

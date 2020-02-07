@@ -48,10 +48,8 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
-import org.killbill.billing.payment.retry.PaymentRetryNotificationKey;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.bus.api.PersistentBus.EventBusException;
-import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -867,17 +865,22 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                             requestedAmount,
                                                             new BigDecimal("1.0"),
                                                             Currency.USD));
+
         invoicePaymentApi.createPurchaseForInvoicePayment(account,
                                                           invoice.getId(),
                                                           account.getPaymentMethodId(),
                                                           null,
-                                                          requestedAmount,
+                                                          null,
                                                           Currency.USD,
                                                           null,
                                                           paymentExternalKey,
                                                           transactionExternalKey,
                                                           ImmutableList.<PluginProperty>of(),
-                                                          INVOICE_PAYMENT,
+                                                          /*
+                                                           * We explicitly don't pass InvoicePaymentControlPluginApi.PLUGIN_NAME
+                                                             to verify it it automatically added
+                                                          */
+                                                          CONTROL_PLUGIN_OPTIONS,
                                                           callContext);
         final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertEquals(payment.getExternalKey(), paymentExternalKey);
