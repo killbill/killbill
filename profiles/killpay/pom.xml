@@ -52,8 +52,6 @@
             <groupId>com.palominolabs.metrics</groupId>
             <artifactId>metrics-guice</artifactId>
             <scope>runtime</scope>
-            <!-- For CircleCI only -->
-            <version>3.2.2</version>
         </dependency>
         <!-- Will be required when we upgrade metrics-guice to 3.1.3 -->
         <!--<dependency>-->
