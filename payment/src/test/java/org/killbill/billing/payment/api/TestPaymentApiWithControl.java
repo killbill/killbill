@@ -681,8 +681,6 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentExternalKey(), paymentExternalKey);
         Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionId(), paymentTransactionId);
         Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionExternalKey(), paymentTransactionExternalKey);
-        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallProcessedAmount().compareTo(processAmount), 0);
-        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallProcessedCurrency(), processedCurrency);
 
         Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallPaymentId(), paymentId);
         Assert.assertEquals(testPaymentControlPluginApi.getActualOnSuccessCallPaymentExternalKey(), paymentExternalKey);
@@ -771,8 +769,6 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallPaymentExternalKey(), paymentExternalKey);
         Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionId(), paymentTransactionId);
         Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallTransactionExternalKey(), paymentTransactionExternalKey);
-        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallProcessedAmount().compareTo(processAmount), 0);
-        Assert.assertEquals(testPaymentControlPluginApi.getActualPriorCallProcessedCurrency(), processedCurrency);
 
         Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallPaymentId());
         Assert.assertNull(testPaymentControlPluginApi.getActualOnSuccessCallPaymentExternalKey());
