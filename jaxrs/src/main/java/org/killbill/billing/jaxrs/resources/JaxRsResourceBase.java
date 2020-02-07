@@ -81,6 +81,7 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -193,12 +194,13 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
                null;
     }
 
-    protected Response getTags(final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
+    protected Response getTags(@Nullable final UUID accountId, final UUID taggedObjectId, final AuditMode auditMode, final boolean includeDeleted, final TenantContext context) throws TagDefinitionApiException {
         final List<Tag> tags = tagUserApi.getTagsForObject(taggedObjectId, getObjectType(), includeDeleted, context);
         return createTagResponse(accountId, tags, auditMode, context);
     }
 
-    protected Response createTagResponse(final UUID accountId, final List<Tag> tags, final AuditMode auditMode, final TenantContext context) throws TagDefinitionApiException {
+    protected Response createTagResponse(@Nullable final UUID accountId, final List<Tag> tags, final AuditMode auditMode, final TenantContext context) throws TagDefinitionApiException {
+        Preconditions.checkState(accountId != null || AuditLevel.NONE.equals(auditMode.getLevel()), "No accountId specified but auditLevel is " + auditMode.getLevel());
         final AccountAuditLogsForObjectType tagsAuditLogs = auditUserApi.getAccountAuditLogs(accountId, ObjectType.TAG, auditMode.getLevel(), context);
 
         final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
