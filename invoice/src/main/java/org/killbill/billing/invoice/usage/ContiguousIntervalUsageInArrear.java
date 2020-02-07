@@ -527,6 +527,10 @@ public abstract class ContiguousIntervalUsageInArrear {
         return billingEvents.get(0).getCurrency();
     }
 
+    public Set<String> getUnitTypes() {
+        return unitTypes;
+    }
+
     public class UsageInArrearItemsAndNextNotificationDate {
 
         private final List<InvoiceItem> invoiceItems;
