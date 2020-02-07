@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -124,7 +124,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
 
                 final UUID subscriptionId = event.getSubscriptionId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
-                    final SubscriptionUsageInArrear subscriptionUsageInArrear = new SubscriptionUsageInArrear(account.getId(), invoiceId, curEvents, rawUsgRes.getRawUsage(), rawUsgRes.getExistingTrackingIds(), targetDate, rawUsgRes.getRawUsageStartDate(), usageDetailMode, internalCallContext);
+                    final SubscriptionUsageInArrear subscriptionUsageInArrear = new SubscriptionUsageInArrear(account.getId(), invoiceId, curEvents, rawUsgRes.getRawUsage(), rawUsgRes.getExistingTrackingIds(), targetDate, rawUsgRes.getRawUsageStartDate(), usageDetailMode, invoiceConfig, internalCallContext);
                     final List<InvoiceItem> usageInArrearItems = perSubscriptionInArrearUsageItems.get(curSubscriptionId);
 
                     final SubscriptionUsageInArrearItemsAndNextNotificationDate subscriptionResult = subscriptionUsageInArrear.computeMissingUsageInvoiceItems(usageInArrearItems != null ? usageInArrearItems : ImmutableList.<InvoiceItem>of(), invoiceItemGeneratorLogger);
@@ -139,7 +139,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                 curEvents.add(event);
             }
             if (curSubscriptionId != null) {
-                final SubscriptionUsageInArrear subscriptionUsageInArrear = new SubscriptionUsageInArrear(account.getId(), invoiceId, curEvents, rawUsgRes.getRawUsage(), rawUsgRes.getExistingTrackingIds(), targetDate, rawUsgRes.getRawUsageStartDate(), usageDetailMode, internalCallContext);
+                final SubscriptionUsageInArrear subscriptionUsageInArrear = new SubscriptionUsageInArrear(account.getId(), invoiceId, curEvents, rawUsgRes.getRawUsage(), rawUsgRes.getExistingTrackingIds(), targetDate, rawUsgRes.getRawUsageStartDate(), usageDetailMode, invoiceConfig, internalCallContext);
                 final List<InvoiceItem> usageInArrearItems = perSubscriptionInArrearUsageItems.get(curSubscriptionId);
 
                 final SubscriptionUsageInArrearItemsAndNextNotificationDate subscriptionResult = subscriptionUsageInArrear.computeMissingUsageInvoiceItems(usageInArrearItems != null ? usageInArrearItems : ImmutableList.<InvoiceItem>of(), invoiceItemGeneratorLogger);

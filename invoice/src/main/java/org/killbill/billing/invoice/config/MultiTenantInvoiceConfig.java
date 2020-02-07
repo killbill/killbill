@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -186,6 +186,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
         }
 
         return UsageDetailMode.AGGREGATE;
+    }
+
+    @Override
+    public boolean shouldParkAccountsWithUnknownUsage() {
+        return staticConfig.shouldParkAccountsWithUnknownUsage();
+    }
+
+    @Override
+    public boolean shouldParkAccountsWithUnknownUsage(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("shouldParkAccountsWithUnknownUsage", tenantContext);
+        if (result != null) {
+            return Boolean.parseBoolean(result);
+        }
+        return shouldParkAccountsWithUnknownUsage();
     }
 
     @Override

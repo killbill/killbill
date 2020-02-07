@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2014-2020 Groupon, Inc
+  ~ Copyright 2014-2020 The Billing Project, LLC
+  ~
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+    <effectiveDate>2010-02-08T00:00:00+00:00</effectiveDate>
+    <catalogName>Cloud</catalogName>
+    <recurringBillingMode>IN_ARREAR</recurringBillingMode>
+    <currencies>
+        <currency>USD</currency>
+    </currencies>
+    <units>
+        <unit name="server-hourly-type-1"/>
+        <unit name="bandwidth-type-1"/>
+    </units>
+    <products>
+        <product name="Server">
+            <category>BASE</category>
+        </product>
+    </products>
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList>
+            <priceListCase>
+                <toPriceList>DEFAULT</toPriceList>
+            </priceListCase>
+        </priceList>
+    </rules>
+    <plans>
+        <plan name="server-monthly">
+            <product>Server</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>0.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+                <usages>
+                    <usage name="server-monthly-server-hourly-type-1" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>server-hourly-type-1</unit>
+                                        <size>1</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>1.00</value>
+                                            </price>
+                                        </prices>
+                                        <max>100000</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                    <usage name="server-monthly-bandwidth-type-1" billingMode="IN_ARREAR" usageType="CAPACITY">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>bandwidth-type-1</unit>
+                                        <max>100000</max>
+                                    </limit>
+                                </limits>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>USD</currency>
+                                        <value>10.0</value>
+                                    </price>
+                                </recurringPrice>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>server-monthly</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+</catalog>

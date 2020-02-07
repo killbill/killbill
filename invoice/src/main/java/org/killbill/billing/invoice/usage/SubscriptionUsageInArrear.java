@@ -41,12 +41,16 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecord
 import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageInArrearItemsAndNextNotificationDate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.RawUsage;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -55,6 +59,8 @@ import com.google.common.collect.Ordering;
  * There is one such class created for each subscriptionId referenced in the billingEvents.
  */
 public class SubscriptionUsageInArrear {
+
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionUsageInArrear.class);
 
     private static final Comparator<RawUsage> RAW_USAGE_DATE_COMPARATOR = new Comparator<RawUsage>() {
         @Override
@@ -82,6 +88,7 @@ public class SubscriptionUsageInArrear {
     private final LocalDate rawUsageStartDate;
     private final InternalTenantContext internalTenantContext;
     private final UsageDetailMode usageDetailMode;
+    private final InvoiceConfig invoiceConfig;
 
     public SubscriptionUsageInArrear(final UUID accountId,
                                      final UUID invoiceId,
@@ -91,6 +98,7 @@ public class SubscriptionUsageInArrear {
                                      final LocalDate targetDate,
                                      final LocalDate rawUsageStartDate,
                                      final UsageDetailMode usageDetailMode,
+                                     final InvoiceConfig invoiceConfig,
                                      final InternalTenantContext internalTenantContext) {
 
         this.accountId = accountId;
@@ -108,6 +116,7 @@ public class SubscriptionUsageInArrear {
         }));
         this.existingTrackingIds = existingTrackingIds;
         this.usageDetailMode = usageDetailMode;
+        this.invoiceConfig = invoiceConfig;
     }
 
     /**
@@ -132,13 +141,14 @@ public class SubscriptionUsageInArrear {
     }
 
     @VisibleForTesting
-    List<ContiguousIntervalUsageInArrear> computeInArrearUsageInterval() throws CatalogApiException {
+    List<ContiguousIntervalUsageInArrear> computeInArrearUsageInterval() throws CatalogApiException, InvoiceApiException {
         final List<ContiguousIntervalUsageInArrear> usageIntervals = Lists.newLinkedList();
 
         final Map<UsageKey, ContiguousIntervalUsageInArrear> inFlightInArrearUsageIntervals = new HashMap<UsageKey, ContiguousIntervalUsageInArrear>();
 
         final Set<UsageKey> allSeenUsage = new HashSet<UsageKey>();
 
+        Set<String> allSeenUnitTypesForPrevBillingEvent = ImmutableSet.<String>of();
         for (final BillingEvent event : subscriptionBillingEvents) {
             // Extract all in arrear /consumable usage section for that billing event.
             final List<Usage> usages = findUsageInArrearUsages(event);
@@ -152,6 +162,10 @@ public class SubscriptionUsageInArrear {
             // All inflight usage interval are candidates to be closed unless we see that current billing event referencing the same usage section.
             final Set<UsageKey> toBeClosed = new HashSet<UsageKey>(allSeenUsage);
 
+            // Will contain all unit types that each BillingEvent has looked at, as defined in the catalog
+            final List<ContiguousIntervalUsageInArrear> contiguousIntervalsUsageInArrear = new LinkedList<ContiguousIntervalUsageInArrear>();
+            final Set<String> allSeenUnitTypesForBillingEvent = new HashSet<String>();
+
             for (final Usage usage : usages) {
 
                 final UsageKey usageKey = new UsageKey(usage.getName(), event.getCatalogEffectiveDate());
@@ -160,8 +174,8 @@ public class SubscriptionUsageInArrear {
                 ContiguousIntervalUsageInArrear existingInterval = inFlightInArrearUsageIntervals.get(usageKey);
                 if (existingInterval == null) {
                     existingInterval = usage.getUsageType() == UsageType.CAPACITY ?
-                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext) :
-                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext);
+                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext) :
+                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
 
                     inFlightInArrearUsageIntervals.put(usageKey, existingInterval);
                 }
@@ -169,6 +183,14 @@ public class SubscriptionUsageInArrear {
                 existingInterval.addBillingEvent(event);
                 // Remove usage interval for toBeClosed set
                 toBeClosed.remove(usageKey);
+
+                allSeenUnitTypesForBillingEvent.addAll(existingInterval.getUnitTypes());
+                contiguousIntervalsUsageInArrear.add(existingInterval);
+            }
+
+            // Add all seen unit types (across all intervals) for all intervals
+            for (final ContiguousIntervalUsageInArrear contiguousIntervalUsageInArrear : contiguousIntervalsUsageInArrear) {
+                contiguousIntervalUsageInArrear.addAllSeenUnitTypesForBillingEvent(event, allSeenUnitTypesForBillingEvent);
             }
 
             // Build the usage interval that are no longer referenced
@@ -176,10 +198,15 @@ public class SubscriptionUsageInArrear {
                 final ContiguousIntervalUsageInArrear interval = inFlightInArrearUsageIntervals.remove(usageKey);
                 if (interval != null) {
                     interval.addBillingEvent(event);
+                    // No usage section for CANCEL events
+                    interval.addAllSeenUnitTypesForBillingEvent(event, usages.isEmpty() ? allSeenUnitTypesForPrevBillingEvent : allSeenUnitTypesForBillingEvent);
                     usageIntervals.add(interval.build(true));
                 }
             }
+
+            allSeenUnitTypesForPrevBillingEvent = allSeenUnitTypesForBillingEvent;
         }
+
         for (final UsageKey usageKey : inFlightInArrearUsageIntervals.keySet()) {
             usageIntervals.add(inFlightInArrearUsageIntervals.get(usageKey).build(false));
         }
