@@ -30,6 +30,7 @@ import org.killbill.billing.control.plugin.api.PaymentControlApiException;
 import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
+import org.testng.Assert;
 
 public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi {
 
@@ -71,6 +72,9 @@ public class MockPaymentControlProviderPlugin implements PaymentControlPluginApi
 
     @Override
     public PriorPaymentControlResult priorCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+
+        Assert.assertEquals(paymentControlContext.getPaymentPluginName(), PLUGIN_NAME);
+
         priorCallExecuted = true;
         if (exception instanceof PaymentControlApiException) {
             throw (PaymentControlApiException) exception;
