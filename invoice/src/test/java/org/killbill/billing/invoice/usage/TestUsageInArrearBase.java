@@ -108,6 +108,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, new LocalDate(events[0].getEffectiveDate()), detailMode, invoiceConfig, internalCallContext);
         for (final BillingEvent event : events) {
             intervalCapacityInArrear.addBillingEvent(event);
+            intervalCapacityInArrear.addAllSeenUnitTypesForBillingEvent(event, intervalCapacityInArrear.getUnitTypes());
         }
         intervalCapacityInArrear.build(closedInterval);
         return intervalCapacityInArrear;
@@ -121,6 +122,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, new LocalDate(events[0].getEffectiveDate()), detailMode, invoiceConfig, internalCallContext);
         for (final BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
+            intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event, intervalConsumableInArrear.getUnitTypes());
         }
         intervalConsumableInArrear.build(closedInterval);
         return intervalConsumableInArrear;
