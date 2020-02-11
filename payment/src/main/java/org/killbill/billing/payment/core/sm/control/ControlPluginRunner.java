@@ -101,8 +101,8 @@ public class ControlPluginRunner {
                                                                                                       hppType,
                                                                                                       inputAmount,
                                                                                                       inputCurrency,
-                                                                                                      null,
-                                                                                                      null,
+                                                                                                      processedAmount,
+                                                                                                      processedCurrency,
                                                                                                       isApiPayment,
                                                                                                       callContext);
 
