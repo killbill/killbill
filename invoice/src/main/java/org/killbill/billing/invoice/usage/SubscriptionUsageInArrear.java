@@ -176,13 +176,13 @@ public class SubscriptionUsageInArrear {
                                        new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
 
                     inFlightInArrearUsageIntervals.put(usageKey, existingInterval);
-                    allSeenUnitTypesForBillingEvent.addAll(existingInterval.getUnitTypes());
                 }
                 // Add billing event for that usage interval
                 existingInterval.addBillingEvent(event);
                 // Remove usage interval for toBeClosed set
                 toBeClosed.remove(usageKey);
 
+                allSeenUnitTypesForBillingEvent.addAll(existingInterval.getUnitTypes());
                 contiguousIntervalsUsageInArrear.add(existingInterval);
             }
 
@@ -196,6 +196,7 @@ public class SubscriptionUsageInArrear {
                 final ContiguousIntervalUsageInArrear interval = inFlightInArrearUsageIntervals.remove(usageKey);
                 if (interval != null) {
                     interval.addBillingEvent(event);
+                    interval.addAllSeenUnitTypesForBillingEvent(event, allSeenUnitTypesForBillingEvent);
                     usageIntervals.add(interval.build(true));
                 }
             }

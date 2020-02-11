@@ -427,8 +427,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                     final List<RolledUpUnit> rolledUpUnits = new ArrayList<RolledUpUnit>(perRangeUnitToAmount.size());
                     for (final String unitType : perRangeUnitToAmount.keySet()) {
                         // Sanity check: https://github.com/killbill/killbill/issues/1275
-                        if (allSeenUnitTypes.get(curTransition.getTargetBillingEvent()) != null && // e.g. CANCEL
-                            !allSeenUnitTypes.get(curTransition.getTargetBillingEvent()).contains(unitType)) {
+                        if (!allSeenUnitTypes.get(curTransition.getTargetBillingEvent()).contains(unitType)) {
                             // We have found some reported usage with a unit type that hasn't been handled by any ContiguousIntervalUsageInArrear
                             if (invoiceConfig.shouldParkAccountsWithUnknownUsage(internalTenantContext)) {
                                 throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
