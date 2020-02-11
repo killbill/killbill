@@ -50,6 +50,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -147,6 +148,7 @@ public class SubscriptionUsageInArrear {
 
         final Set<UsageKey> allSeenUsage = new HashSet<UsageKey>();
 
+        Set<String> allSeenUnitTypesForPrevBillingEvent = ImmutableSet.<String>of();
         for (final BillingEvent event : subscriptionBillingEvents) {
             // Extract all in arrear /consumable usage section for that billing event.
             final List<Usage> usages = findUsageInArrearUsages(event);
@@ -196,10 +198,13 @@ public class SubscriptionUsageInArrear {
                 final ContiguousIntervalUsageInArrear interval = inFlightInArrearUsageIntervals.remove(usageKey);
                 if (interval != null) {
                     interval.addBillingEvent(event);
-                    interval.addAllSeenUnitTypesForBillingEvent(event, allSeenUnitTypesForBillingEvent);
+                    // No usage section for CANCEL events
+                    interval.addAllSeenUnitTypesForBillingEvent(event, usages.isEmpty() ? allSeenUnitTypesForPrevBillingEvent : allSeenUnitTypesForBillingEvent);
                     usageIntervals.add(interval.build(true));
                 }
             }
+
+            allSeenUnitTypesForPrevBillingEvent = allSeenUnitTypesForBillingEvent;
         }
 
         for (final UsageKey usageKey : inFlightInArrearUsageIntervals.keySet()) {
