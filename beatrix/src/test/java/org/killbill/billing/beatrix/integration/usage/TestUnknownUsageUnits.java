@@ -166,5 +166,23 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
 
         Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
+
+        // Re-enable strict mode
+        invoiceConfig.setShouldParkAccountsWithUnknownUsage(true);
+
+        // Trigger a change plan on the same plan, to force the new catalog version
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE);
+        bpSubscription.changePlanWithDate(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("server-monthly")), new LocalDate("2012-08-01"), null, callContext);
+        assertListenerStatus();
+
+        // Record unknown usage for August (the unit has been retired)
+        recordUsageData(bpSubscription.getId(), "tracking-9", "server-hourly-type-1", new LocalDate(2012, 8, 1), 99L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.TAG);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // Account is parked because of the unknown usage
+        Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
     }
 }

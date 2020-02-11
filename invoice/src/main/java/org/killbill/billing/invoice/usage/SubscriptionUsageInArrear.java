@@ -29,7 +29,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -148,9 +147,6 @@ public class SubscriptionUsageInArrear {
 
         final Set<UsageKey> allSeenUsage = new HashSet<UsageKey>();
 
-        // Will contain all unit types that each ContiguousIntervalUsageInArrear has looked at, as defined in the catalog
-        final Set<String> allSeenUnitTypes = new HashSet<String>();
-
         for (final BillingEvent event : subscriptionBillingEvents) {
             // Extract all in arrear /consumable usage section for that billing event.
             final List<Usage> usages = findUsageInArrearUsages(event);
@@ -164,6 +160,10 @@ public class SubscriptionUsageInArrear {
             // All inflight usage interval are candidates to be closed unless we see that current billing event referencing the same usage section.
             final Set<UsageKey> toBeClosed = new HashSet<UsageKey>(allSeenUsage);
 
+            // Will contain all unit types that each BillingEvent has looked at, as defined in the catalog
+            final List<ContiguousIntervalUsageInArrear> contiguousIntervalsUsageInArrear = new LinkedList<ContiguousIntervalUsageInArrear>();
+            final Set<String> allSeenUnitTypesForBillingEvent = new HashSet<String>();
+
             for (final Usage usage : usages) {
 
                 final UsageKey usageKey = new UsageKey(usage.getName(), event.getCatalogEffectiveDate());
@@ -172,16 +172,23 @@ public class SubscriptionUsageInArrear {
                 ContiguousIntervalUsageInArrear existingInterval = inFlightInArrearUsageIntervals.get(usageKey);
                 if (existingInterval == null) {
                     existingInterval = usage.getUsageType() == UsageType.CAPACITY ?
-                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext) :
-                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, internalTenantContext);
+                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext) :
+                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
 
                     inFlightInArrearUsageIntervals.put(usageKey, existingInterval);
-                    allSeenUnitTypes.addAll(existingInterval.getUnitTypes());
+                    allSeenUnitTypesForBillingEvent.addAll(existingInterval.getUnitTypes());
                 }
                 // Add billing event for that usage interval
                 existingInterval.addBillingEvent(event);
                 // Remove usage interval for toBeClosed set
                 toBeClosed.remove(usageKey);
+
+                contiguousIntervalsUsageInArrear.add(existingInterval);
+            }
+
+            // Add all seen unit types (across all intervals) for all intervals
+            for (final ContiguousIntervalUsageInArrear contiguousIntervalUsageInArrear : contiguousIntervalsUsageInArrear) {
+                contiguousIntervalUsageInArrear.addAllSeenUnitTypesForBillingEvent(event, allSeenUnitTypesForBillingEvent);
             }
 
             // Build the usage interval that are no longer referenced
@@ -190,20 +197,6 @@ public class SubscriptionUsageInArrear {
                 if (interval != null) {
                     interval.addBillingEvent(event);
                     usageIntervals.add(interval.build(true));
-                }
-            }
-        }
-
-        // Sanity check: https://github.com/killbill/killbill/issues/1275
-        for (final RawUsage rawUsage : rawSubscriptionUsage) {
-            if (!allSeenUnitTypes.contains(rawUsage.getUnitType())) {
-                // We have found some reported usage with a unit type that hasn't been handled by any ContiguousIntervalUsageInArrear
-                if (invoiceConfig.shouldParkAccountsWithUnknownUsage(internalTenantContext)) {
-                    throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
-                                                  String.format("ILLEGAL INVOICING STATE: unit type %s is not defined in the catalog",
-                                                                rawUsage.getUnitType()));
-                } else {
-                    log.warn("Ignoring unit type {} (not defined in the catalog)", rawUsage.getUnitType());
                 }
             }
         }

@@ -17,20 +17,19 @@
   -->
 
 <!---
-  Changes compared to Catalog-v2.xml:
-    * Effective date: 2012-06-01
-    * New unit type: server-hourly-type-2
+  Changes compared to Catalog-v3.xml:
+    * Effective date: 2012-07-01
+    * Remove unit type: server-hourly-type-1
 -->
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
-    <effectiveDate>2012-06-01T00:00:00+00:00</effectiveDate>
+    <effectiveDate>2012-07-01T00:00:00+00:00</effectiveDate>
     <catalogName>Cloud</catalogName>
     <recurringBillingMode>IN_ARREAR</recurringBillingMode>
     <currencies>
         <currency>USD</currency>
     </currencies>
     <units>
-        <unit name="server-hourly-type-1"/>
         <unit name="server-hourly-type-2"/>
         <unit name="bandwidth-type-1"/>
         <unit name="bandwidth-type-2"/>
@@ -89,26 +88,6 @@
                     </recurringPrice>
                 </recurring>
                 <usages>
-                    <usage name="server-monthly-server-hourly-type-1" billingMode="IN_ARREAR" usageType="CONSUMABLE">
-                        <billingPeriod>MONTHLY</billingPeriod>
-                        <tiers>
-                            <tier>
-                                <blocks>
-                                    <tieredBlock>
-                                        <unit>server-hourly-type-1</unit>
-                                        <size>1</size>
-                                        <prices>
-                                            <price>
-                                                <currency>USD</currency>
-                                                <value>1.00</value>
-                                            </price>
-                                        </prices>
-                                        <max>100000</max>
-                                    </tieredBlock>
-                                </blocks>
-                            </tier>
-                        </tiers>
-                    </usage>
                     <usage name="server-monthly-server-hourly-type-2" billingMode="IN_ARREAR" usageType="CONSUMABLE">
                         <billingPeriod>MONTHLY</billingPeriod>
                         <tiers>
