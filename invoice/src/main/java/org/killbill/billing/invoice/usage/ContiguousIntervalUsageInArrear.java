@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,7 +82,8 @@ public abstract class ContiguousIntervalUsageInArrear {
 
     protected final List<TransitionTime> transitionTimes;
     protected final List<BillingEvent> billingEvents;
-    protected final Map<BillingEvent, Set<String>> allSeenUnitTypes;
+    // Ordering is important here!
+    protected final LinkedHashMap<BillingEvent, Set<String>> allSeenUnitTypes;
 
     protected final Usage usage;
     protected final Set<String> unitTypes;
@@ -144,7 +146,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         this.invoiceConfig = invoiceConfig;
         this.internalTenantContext = internalTenantContext;
         this.billingEvents = Lists.newLinkedList();
-        this.allSeenUnitTypes = new HashMap<BillingEvent, Set<String>>();
+        this.allSeenUnitTypes = new LinkedHashMap<BillingEvent, Set<String>>();
         this.transitionTimes = Lists.newLinkedList();
         this.isBuilt = new AtomicBoolean(false);
         this.usageDetailMode = usageDetailMode;
@@ -550,6 +552,11 @@ public abstract class ContiguousIntervalUsageInArrear {
             allSeenUnitTypes.put(event, new HashSet<String>());
         }
         allSeenUnitTypes.get(event).addAll(allSeenUnitTypesForBillingEvent);
+    }
+
+    public void addAllSeenUnitTypesFromPrevBillingEvent(final BillingEvent event) {
+        final Set<String> allSeenUnitTypesFromPrevBillingEvent = Iterables.getLast(allSeenUnitTypes.values());
+        addAllSeenUnitTypesForBillingEvent(event, allSeenUnitTypesFromPrevBillingEvent);
     }
 
     public Usage getUsage() {

@@ -34,10 +34,12 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class TestUnknownUsageUnits extends TestIntegrationBase {
@@ -60,6 +62,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
+        // Catalog-v1.xml
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Server", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         // Check bundle after BP got created otherwise we get an error from auditApi.
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
@@ -94,7 +97,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         // Account is parked because of the unknown usage
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
 
-        // Trigger a change plan on the same plan, to force the new catalog version
+        // Trigger a change plan on the same plan, to force the new catalog version (Catalog-v2.xml)
         busHandler.pushExpectedEvents(NextEvent.CHANGE);
         bpSubscription.changePlanWithDate(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("server-monthly")), new LocalDate("2012-05-01"), null, callContext);
         assertListenerStatus();
@@ -125,7 +128,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         // Account is parked because of the unknown usage
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
 
-        // Trigger a change plan on the same plan, to force the new catalog version
+        // Trigger a change plan on the same plan, to force the new catalog version (Catalog-v3.xml)
         busHandler.pushExpectedEvents(NextEvent.CHANGE);
         bpSubscription.changePlanWithDate(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("server-monthly")), new LocalDate("2012-06-01"), null, callContext);
         assertListenerStatus();
@@ -170,7 +173,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         // Re-enable strict mode
         invoiceConfig.setShouldParkAccountsWithUnknownUsage(true);
 
-        // Trigger a change plan on the same plan, to force the new catalog version
+        // Trigger a change plan on the same plan, to force the new catalog version (Catalog-v4.xml)
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE);
         bpSubscription.changePlanWithDate(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("server-monthly")), new LocalDate("2012-08-01"), null, callContext);
         assertListenerStatus();
@@ -184,5 +187,34 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
 
         // Account is parked because of the unknown usage
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
+
+        // Record retroactively additional known usage for August
+        recordUsageData(bpSubscription.getId(), "tracking-10", "server-hourly-type-2", new LocalDate(2012, 8, 1), 99L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-11", "bandwidth-type-2", new LocalDate(2012, 8, 15), 100L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.pause(bpSubscription.getBundleId(), new LocalDate(2012, 8, 1), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK);
+        entitlementApi.resume(bpSubscription.getBundleId(), new LocalDate(2012, 8, 2), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Disable strict mode
+        invoiceConfig.setShouldParkAccountsWithUnknownUsage(false);
+
+        // Trigger an invoice generation
+        busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+        assertListenerStatus();
+
+        Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 9, 1), InvoiceItemType.USAGE, new BigDecimal("12")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 9, 1), InvoiceItemType.USAGE, new BigDecimal("0")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 9, 1), InvoiceItemType.USAGE, new BigDecimal("0")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-11"), internalCallContext);
     }
 }

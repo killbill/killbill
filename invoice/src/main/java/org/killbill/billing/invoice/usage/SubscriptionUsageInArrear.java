@@ -148,7 +148,6 @@ public class SubscriptionUsageInArrear {
 
         final Set<UsageKey> allSeenUsage = new HashSet<UsageKey>();
 
-        Set<String> allSeenUnitTypesForPrevBillingEvent = ImmutableSet.<String>of();
         for (final BillingEvent event : subscriptionBillingEvents) {
             // Extract all in arrear /consumable usage section for that billing event.
             final List<Usage> usages = findUsageInArrearUsages(event);
@@ -193,18 +192,17 @@ public class SubscriptionUsageInArrear {
                 contiguousIntervalUsageInArrear.addAllSeenUnitTypesForBillingEvent(event, allSeenUnitTypesForBillingEvent);
             }
 
-            // Build the usage interval that are no longer referenced
+            // Build the usage interval that are no longer referenced (maybe because the usage section was removed, or
+            // because a new catalog version is effective)
             for (final UsageKey usageKey : toBeClosed) {
                 final ContiguousIntervalUsageInArrear interval = inFlightInArrearUsageIntervals.remove(usageKey);
                 if (interval != null) {
                     interval.addBillingEvent(event);
-                    // No usage section for CANCEL events
-                    interval.addAllSeenUnitTypesForBillingEvent(event, usages.isEmpty() ? allSeenUnitTypesForPrevBillingEvent : allSeenUnitTypesForBillingEvent);
+                    // We look at the unit types defined for the last billing event
+                    interval.addAllSeenUnitTypesFromPrevBillingEvent(event);
                     usageIntervals.add(interval.build(true));
                 }
             }
-
-            allSeenUnitTypesForPrevBillingEvent = allSeenUnitTypesForBillingEvent;
         }
 
         for (final UsageKey usageKey : inFlightInArrearUsageIntervals.keySet()) {
