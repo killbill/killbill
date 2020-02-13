@@ -206,7 +206,7 @@ public class TestCatalog extends TestJaxrsBase {
     @Test(groups = "slow", expectedExceptions = KillBillClientException.class)
     public void testAddBadSimplePlan() throws Exception {
         // Verify passing an invalid planId will throw an exception
-        final String invalidPlanId = UUID.randomUUID().toString();
+        final String invalidPlanId = "43d3cde7-c06c-4713-8d0a-db1adfe163db";
         catalogApi.addSimplePlan(new SimplePlan(invalidPlanId, "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptions);
     }
 

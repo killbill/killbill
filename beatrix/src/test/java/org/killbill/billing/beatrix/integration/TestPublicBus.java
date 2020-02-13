@@ -37,6 +37,7 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.notification.plugin.api.InvoiceNotificationMetadata;
+import org.killbill.billing.notification.plugin.api.InvoicePaymentMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -204,6 +205,9 @@ public class TestPublicBus extends TestIntegrationBase {
                     Assert.assertEquals(obj.getAmountOwed().compareTo(new BigDecimal("249.95")), 0);
                     Assert.assertEquals(obj.getCurrency(), Currency.USD);
                     Assert.assertNotNull(obj.getTargetDate());
+                } else if (event.getEventType() == ExtBusEventType.INVOICE_PAYMENT_SUCCESS) {
+                    final InvoicePaymentMetadata obj = mapper.readValue(event.getMetaData(), InvoicePaymentMetadata.class);
+                    Assert.assertNotNull(obj.getPaymentAttemptId());
                 }
 
             } catch (final JsonParseException e) {

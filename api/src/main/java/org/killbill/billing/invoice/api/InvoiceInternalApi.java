@@ -39,9 +39,9 @@ public interface InvoiceInternalApi {
 
     public BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
 
-    public void recordPaymentAttemptInit(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, String transactionExternalKey, DateTime paymentDate, InternalCallContext context) throws InvoiceApiException;
+    public void recordPaymentAttemptInit(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, UUID paymentAttemptId, String transactionExternalKey, DateTime paymentDate, InternalCallContext context) throws InvoiceApiException;
 
-    public void recordPaymentAttemptCompletion(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, String transactionExternalKey, DateTime paymentDate, boolean success, InternalCallContext context) throws InvoiceApiException;
+    public void recordPaymentAttemptCompletion(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, UUID paymentAttemptId, String transactionExternalKey, DateTime paymentDate, boolean success, InternalCallContext context) throws InvoiceApiException;
 
     public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
 
@@ -61,12 +61,12 @@ public interface InvoiceInternalApi {
      * @return the created invoice payment object associated with this refund
      * @throws InvoiceApiException
      */
-    public InvoicePayment recordRefund(UUID paymentId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
+    public InvoicePayment recordRefund(UUID paymentId, UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
                                        String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
-    public InvoicePayment recordChargeback(UUID paymentId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+    public InvoicePayment recordChargeback(UUID paymentId, UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
-    public InvoicePayment recordChargebackReversal(UUID paymentId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
+    public InvoicePayment recordChargebackReversal(UUID paymentId, UUID paymentAttemptId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
     /**
      * Rebalance CBA for account which have credit and unpaid invoices

@@ -28,6 +28,8 @@ public interface InvoicePaymentInternalEvent extends InvoiceInternalEvent {
 
     public UUID getPaymentId();
 
+    public UUID getPaymentAttemptId();
+
     public InvoicePaymentType getType();
 
     public UUID getInvoiceId();

@@ -188,6 +188,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                                   paymentControlContext.getCurrency(),
                                                                   paymentControlContext.getProcessedCurrency(),
                                                                   paymentControlContext.getPaymentId(),
+                                                                  paymentControlContext.getAttemptPaymentId(),
                                                                   paymentControlContext.getTransactionExternalKey(),
                                                                   paymentControlContext.getCreatedDate(),
                                                                   success,
@@ -199,7 +200,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
                     final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
                     final boolean isAdjusted = prop != null && prop.getValue() != null ? Boolean.valueOf(prop.getValue().toString()) : false;
-                    invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
+                    invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAttemptPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
                     break;
 
                 case CHARGEBACK:
@@ -223,7 +224,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                             currency = linkedInvoicePayment.getCurrency();
                         }
 
-                        invoiceApi.recordChargeback(paymentControlContext.getPaymentId(), paymentControlContext.getTransactionExternalKey(), amount, currency, internalContext);
+                        invoiceApi.recordChargeback(paymentControlContext.getPaymentId(), paymentControlContext.getAttemptPaymentId(), paymentControlContext.getTransactionExternalKey(), amount, currency, internalContext);
                     }
                     break;
 
@@ -235,7 +236,13 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     final PluginProperty legacyPayment = getPluginProperty(pluginProperties, PROP_IPCD_PAYMENT_ID);
                     final UUID paymentId = legacyPayment != null ? (UUID) legacyPayment.getValue() : paymentControlContext.getPaymentId();
 
-                    invoiceApi.recordRefund(paymentId, paymentControlContext.getAmount(), isInvoiceAdjusted, idWithAmountMap, paymentControlContext.getTransactionExternalKey(), internalContext);
+                    invoiceApi.recordRefund(paymentId,
+                                            paymentControlContext.getAttemptPaymentId(),
+                                            paymentControlContext.getAmount(),
+                                            isInvoiceAdjusted,
+                                            idWithAmountMap,
+                                            paymentControlContext.getTransactionExternalKey(),
+                                            internalContext);
                     break;
 
                 default:
@@ -265,6 +272,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                               // processed currency may be null so we use currency; processed currency will be updated if/when payment succeeds
                                                               paymentControlContext.getCurrency(),
                                                               paymentControlContext.getPaymentId(),
+                                                              paymentControlContext.getAttemptPaymentId(),
                                                               paymentControlContext.getTransactionExternalKey(),
                                                               paymentControlContext.getCreatedDate(),
                                                               false,
@@ -281,7 +289,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 break;
             case CHARGEBACK:
                 try {
-                    invoiceApi.recordChargebackReversal(paymentControlContext.getPaymentId(), paymentControlContext.getTransactionExternalKey(), internalContext);
+                    invoiceApi.recordChargebackReversal(paymentControlContext.getPaymentId(), paymentControlContext.getAttemptPaymentId(), paymentControlContext.getTransactionExternalKey(), internalContext);
                 } catch (final InvoiceApiException e) {
                     log.warn("onFailureCall failed for attemptId='{}', transactionType='{}'", paymentControlContext.getAttemptPaymentId(), transactionType, e);
                 }
@@ -314,7 +322,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     private PriorPaymentControlResult getPluginPurchaseResult(final PaymentControlContext paymentControlPluginContext, final Iterable<PluginProperty> pluginProperties, final InternalCallContext internalContext) throws PaymentControlApiException {
         try {
             final UUID invoiceId = getInvoiceId(pluginProperties);
-            final Invoice invoice = getAndSanitizeInvoice(invoiceId, internalContext);
+            final Invoice invoice = getAndSanitizeInvoice(invoiceId, paymentControlPluginContext.getAttemptPaymentId(), internalContext);
 
             if (!InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
                 // abort payment if the invoice status is not COMMITTED
@@ -352,6 +360,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                           paymentControlPluginContext.getCurrency(),
                                                           paymentControlPluginContext.getProcessedCurrency(),
                                                           paymentControlPluginContext.getPaymentId(),
+                                                          paymentControlPluginContext.getAttemptPaymentId(),
                                                           paymentControlPluginContext.getTransactionExternalKey(),
                                                           paymentControlPluginContext.getCreatedDate(),
                                                           false,
@@ -381,6 +390,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                 // Likely to be null, but we don't care as we use the transactionExternalKey
                                                 // to match the operation in the checkForIncompleteInvoicePaymentAndRepair logic below
                                                 paymentControlPluginContext.getPaymentId(),
+                                                paymentControlPluginContext.getAttemptPaymentId(),
                                                 paymentControlPluginContext.getTransactionExternalKey(),
                                                 paymentControlPluginContext.getCreatedDate(),
                                                 internalContext);
@@ -596,9 +606,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }));
     }
 
-    private Invoice getAndSanitizeInvoice(final UUID invoiceId, final InternalCallContext context) throws InvoiceApiException {
+    private Invoice getAndSanitizeInvoice(final UUID invoiceId, final UUID paymentAttemptId, final InternalCallContext context) throws InvoiceApiException {
         final Invoice invoice = invoiceApi.getInvoiceById(invoiceId, context);
-        if (checkForIncompleteInvoicePaymentAndRepair(invoice, context)) {
+        if (checkForIncompleteInvoicePaymentAndRepair(invoice, paymentAttemptId, context)) {
             // Fetch new repaired 'invoice'
             return invoiceApi.getInvoiceById(invoiceId, context);
         } else {
@@ -606,7 +616,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
     }
 
-    private boolean checkForIncompleteInvoicePaymentAndRepair(final Invoice invoice, final InternalCallContext internalContext) throws InvoiceApiException {
+    private boolean checkForIncompleteInvoicePaymentAndRepair(final Invoice invoice, final UUID paymentAttemptId, final InternalCallContext internalContext) throws InvoiceApiException {
 
         final List<InvoicePayment> invoicePayments = invoice.getPayments();
 
@@ -642,6 +652,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                           successfulTransaction.getCurrency(),
                                                           successfulTransaction.getProcessedCurrency(),
                                                           successfulTransaction.getPaymentId(),
+                                                          paymentAttemptId,
                                                           successfulTransaction.getTransactionExternalKey(),
                                                           successfulTransaction.getCreatedDate(),
                                                           true,
