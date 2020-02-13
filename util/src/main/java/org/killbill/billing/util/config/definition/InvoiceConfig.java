@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -132,4 +132,14 @@ public interface InvoiceConfig extends KillbillConfig {
     @Default("AGGREGATE")
     @Description("How the result for an item will be reported (aggregate mode or detail mode). ")
     UsageDetailMode getItemResultBehaviorMode(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.invoice.parkAccountsWithUnknownUsage")
+    @Default("false")
+    @Description("Whether to park accounts when usage data is recorded but not defined in the catalog")
+    boolean shouldParkAccountsWithUnknownUsage();
+
+    @Config("org.killbill.invoice.parkAccountsWithUnknownUsage")
+    @Default("false")
+    @Description("Whether to park accounts when usage data is recorded but not defined in the catalog")
+    boolean shouldParkAccountsWithUnknownUsage(@Param("dummy") final InternalTenantContext tenantContext);
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -33,6 +33,8 @@ import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.InvoiceItems;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
+import org.killbill.billing.client.model.Payments;
+import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AuditLog;
 import org.killbill.billing.client.model.gen.Invoice;
@@ -47,11 +49,13 @@ import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
@@ -867,7 +871,26 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(parentInvoiceWithChildItems.getItems().get(0).getChildItems().size(), 2);
         assertEquals(parentInvoiceWithChildItems.getItems().get(1).getChildItems().size(), 1);
         assertEquals(parentInvoiceWithChildItems.getItems().get(2).getChildItems().size(), 1);
-
     }
 
+    @Test(groups = "slow", description = "Can get tags")
+    public void testGetTags() throws Exception {
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Get the invoices
+        final Invoices originalInvoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        assertEquals(originalInvoices.size(), 2);
+        final UUID invoiceId = originalInvoices.get(0).getInvoiceId();
+
+        invoiceApi.createInvoiceTags(invoiceId, ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), requestOptions);
+
+        final Tags tagsWithAudit = invoiceApi.getInvoiceTags(invoiceId, false, AuditLevel.FULL, requestOptions);
+        Assert.assertEquals(tagsWithAudit.size(), 1);
+        Assert.assertEquals(tagsWithAudit.get(0).getAuditLogs().size(), 1);
+
+        final Tags tagsNoAudit = invoiceApi.getInvoiceTags(invoiceId, false, AuditLevel.NONE, requestOptions);
+        Assert.assertEquals(tagsNoAudit.size(), 1);
+        Assert.assertEquals(tagsNoAudit.get(0).getTagId(), tagsWithAudit.get(0).getTagId());
+        Assert.assertEquals(tagsNoAudit.get(0).getAuditLogs().size(), 0);
+    }
 }

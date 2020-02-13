@@ -1,25 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" defaultCharsetForPropertiesFiles="UTF-8">
+  <component name="Encoding" defaultCharsetForPropertiesFiles="UTF-8">
     <file url="file://$PROJECT_DIR$" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/account" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/account/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/account/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/api" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/api/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/beatrix" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/beatrix/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/beatrix/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/catalog" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/catalog/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/catalog/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/currency" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/currency/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/entitlement" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/entitlement/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/entitlement/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/invoice" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/invoice/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/invoice/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/jaxrs" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jaxrs/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jaxrs/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/junction" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/junction/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/overdue" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/overdue/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/overdue/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/payment" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/payment/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/payment/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/profiles" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/profiles/killbill" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/profiles/killbill/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/profiles/killbill/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/profiles/killpay" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/profiles/killpay/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/profiles/killpay/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/subscription" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/subscription/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/subscription/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/tenant" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/tenant/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/tenant/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/usage" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/usage/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/usage/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/util" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/util/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/util/src/main/resources" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>
