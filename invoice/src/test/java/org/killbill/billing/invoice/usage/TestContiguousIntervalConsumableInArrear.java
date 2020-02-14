@@ -57,6 +57,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -519,11 +520,13 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final BillingEvent event2 = createMockBillingEvent(new LocalDate(2014, 10, 16).toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList());
 
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = usage.getUsageType() == UsageType.CAPACITY ?
-                                                                           new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, rawUsageStartDate, usageDetailMode, internalCallContext) :
-                                                                           new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, rawUsageStartDate, usageDetailMode, internalCallContext);
+                                                                           new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalCallContext) :
+                                                                           new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
+        intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, ImmutableSet.<String>of("unit"));
         intervalConsumableInArrear.addBillingEvent(event2);
+        intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event2, ImmutableSet.<String>of("unit"));
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(true);
         assertEquals(res.getTransitionTimes().size(), 0);

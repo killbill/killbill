@@ -88,6 +88,7 @@ import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.LocaleUtils;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -999,8 +1000,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, InvoiceApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Invoice invoice = invoiceApi.getInvoice(invoiceId, tenantContext);
-        return super.getTags(invoice.getAccountId(), invoiceId, auditMode, includedDeleted, tenantContext);
+        // See https://github.com/killbill/killbill/issues/1273
+        final UUID accountId = AuditLevel.NONE.equals(auditMode.getLevel()) ? null : invoiceApi.getInvoice(invoiceId, tenantContext).getAccountId();
+        return super.getTags(accountId, invoiceId, auditMode, includedDeleted, tenantContext);
     }
 
     @TimedResource
