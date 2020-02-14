@@ -124,8 +124,8 @@ public class IncompletePaymentTransactionTask {
                                                           final InternalTenantContext internalTenantContext) throws LockFailedException {
         // In the GET case, make sure we bail as early as possible (see PaymentRefresher)
         if (currentTransactionStatus != null && !TRANSACTION_STATUSES_TO_CONSIDER.contains(currentTransactionStatus)) {
-            // Nothing to do
-            return null;
+            // Nothing to do, so we return the currentTransactionStatus to indicate that nothing has changed
+            return currentTransactionStatus;
         }
 
         return tryToDoJanitorOperationWithAccountLock(new JanitorIterationCallback() {
@@ -134,8 +134,6 @@ public class IncompletePaymentTransactionTask {
                 return updatePaymentAndTransactionIfNeeded(accountId,
                                                            paymentTransactionId,
                                                            paymentTransactionInfoPlugin,
-                                                           attemptNumber,
-                                                           userToken,
                                                            internalTenantContext);
             }
         }, internalTenantContext);
@@ -144,14 +142,12 @@ public class IncompletePaymentTransactionTask {
     private TransactionStatus updatePaymentAndTransactionIfNeeded(final UUID accountId,
                                                                   final UUID paymentTransactionId,
                                                                   @Nullable final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin,
-                                                                  @Nullable final Integer attemptNumber,
-                                                                  @Nullable final UUID userToken,
                                                                   final InternalTenantContext internalTenantContext) {
         // State may have changed since we originally retrieved with no lock
         final PaymentTransactionModelDao paymentTransaction = paymentDao.getPaymentTransaction(paymentTransactionId, internalTenantContext);
         if (!TRANSACTION_STATUSES_TO_CONSIDER.contains(paymentTransaction.getTransactionStatus())) {
-            // Nothing to do
-            return null;
+            // Nothing to do, so we return the currentTransactionStatus to indicate that nothing has changed
+            return paymentTransaction.getTransactionStatus();
         }
 
         // On-the-fly Janitor already has the latest state, avoid a round-trip to the plugin

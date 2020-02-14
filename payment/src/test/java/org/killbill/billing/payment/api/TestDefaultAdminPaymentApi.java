@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
+import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
@@ -123,6 +124,11 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(paymentTransactionModelDao.getProcessedCurrency(), Currency.EUR);
         Assert.assertEquals(paymentTransactionModelDao.getGatewayErrorCode(), "");
         Assert.assertEquals(paymentTransactionModelDao.getGatewayErrorMsg(), "");
+        final List<PaymentAttemptModelDao> paymentAttemptModelDaos = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey(), internalCallContext);
+        Assert.assertEquals(paymentAttemptModelDaos.size(), 1);
+        Assert.assertEquals(paymentAttemptModelDaos.get(0).getStateName(), "SUCCESS");
+        Assert.assertEquals(paymentAttemptModelDaos.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(paymentAttemptModelDaos.get(0).getCurrency(), Currency.EUR);
 
         adminPaymentApi.fixPaymentTransactionState(payment, payment.getTransactions().get(0), TransactionStatus.PAYMENT_FAILURE, null, "AUTH_ERRORED", ImmutableList.<PluginProperty>of(), callContext);
 
@@ -136,6 +142,11 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getProcessedCurrency(), Currency.EUR);
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorCode(), "");
         Assert.assertEquals(refreshedPaymentTransactionModelDao.getGatewayErrorMsg(), "");
+        final List<PaymentAttemptModelDao> refreshedPaymentAttemptModelDaos = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey(), internalCallContext);
+        Assert.assertEquals(refreshedPaymentAttemptModelDaos.size(), 1);
+        Assert.assertEquals(refreshedPaymentAttemptModelDaos.get(0).getStateName(), "ABORTED");
+        Assert.assertEquals(refreshedPaymentAttemptModelDaos.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(refreshedPaymentAttemptModelDaos.get(0).getCurrency(), Currency.EUR);
 
         // Advance the clock to make sure the effective date of the new transaction is after the first one
         clock.addDays(1);
@@ -155,6 +166,14 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(retriedPaymentTransactionModelDao.getProcessedCurrency(), Currency.EUR);
         Assert.assertEquals(retriedPaymentTransactionModelDao.getGatewayErrorCode(), "");
         Assert.assertEquals(retriedPaymentTransactionModelDao.getGatewayErrorMsg(), "");
+        final List<PaymentAttemptModelDao> retriedPaymentAttemptModelDaos = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey(), internalCallContext);
+        Assert.assertEquals(retriedPaymentAttemptModelDaos.size(), 2);
+        Assert.assertEquals(retriedPaymentAttemptModelDaos.get(0).getStateName(), "ABORTED");
+        Assert.assertEquals(retriedPaymentAttemptModelDaos.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(retriedPaymentAttemptModelDaos.get(0).getCurrency(), Currency.EUR);
+        Assert.assertEquals(retriedPaymentAttemptModelDaos.get(1).getStateName(), "SUCCESS");
+        Assert.assertEquals(retriedPaymentAttemptModelDaos.get(1).getAmount().compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(retriedPaymentAttemptModelDaos.get(1).getCurrency(), Currency.EUR);
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/551")

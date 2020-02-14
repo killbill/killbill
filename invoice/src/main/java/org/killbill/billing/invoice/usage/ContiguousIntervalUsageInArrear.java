@@ -437,6 +437,14 @@ public abstract class ContiguousIntervalUsageInArrear {
                                                                             unitType));
                             } else {
                                 log.warn("Ignoring unit type {} (not defined in the catalog)", unitType);
+                                // Make sure to remove the associated tracking ids
+                                final Iterator<TrackingRecordId> itr = trackingIds.iterator();
+                                while (itr.hasNext()) {
+                                    final TrackingRecordId t = itr.next();
+                                    if (unitType.equals(t.getUnitType())) {
+                                        itr.remove();
+                                    }
+                                }
                             }
                         } else if (unitTypes.contains(unitType)) { // Other usage type not for us -- safely ignore
                             rolledUpUnits.add(new DefaultRolledUpUnit(unitType, perRangeUnitToAmount.get(unitType)));
