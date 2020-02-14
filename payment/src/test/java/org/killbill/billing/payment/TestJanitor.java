@@ -142,9 +142,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         super.beforeMethod();
 
-        retryService.initialize();
-        retryService.start();
-
         eventBus.register(handler);
         testListener.reset();
         eventBus.register(testListener);
@@ -157,8 +154,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         if (hasFailed()) {
             return;
         }
-
-        retryService.stop();
 
         eventBus.unregister(handler);
         eventBus.unregister(testListener);
