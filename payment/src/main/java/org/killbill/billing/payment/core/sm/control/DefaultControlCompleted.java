@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -26,9 +26,8 @@ import org.killbill.automaton.State;
 import org.killbill.automaton.State.EnteringStateCallback;
 import org.killbill.automaton.State.LeavingStateCallback;
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
 import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
@@ -38,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class DefaultControlCompleted implements EnteringStateCallback {
@@ -71,6 +69,10 @@ public class DefaultControlCompleted implements EnteringStateCallback {
                                                                                            paymentStateContext.getPaymentMethodId(),
                                                                                            transactionId,
                                                                                            state.getName(),
+                                                                                           // Use the amount (either specified in the API call or overridden by the priorCall),
+                                                                                           // not the processed amount, as this will drive the retries in case of failure
+                                                                                           paymentStateContext.getAmount(),
+                                                                                           paymentStateContext.getCurrency(),
                                                                                            getSerializedProperties(),
                                                                                            paymentStateContext.getInternalCallContext());
 

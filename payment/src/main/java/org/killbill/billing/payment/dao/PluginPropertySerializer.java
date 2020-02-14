@@ -1,6 +1,6 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.killbill.billing.payment.api.PluginProperty;
@@ -74,8 +75,11 @@ public class PluginPropertySerializer {
     }
 
     public static Iterable<PluginProperty> deserialize(final byte[] input) throws PluginPropertySerializerException {
+        final Collection<PluginProperty> result = new ArrayList<PluginProperty>();
+        if (input == null) {
+            return result;
+        }
 
-        final List<PluginProperty> result = new ArrayList<PluginProperty>();
         try {
             final byte[] uncompressed = LZFDecoder.decode(input);
             final InputStream in = new ByteArrayInputStream(uncompressed);
