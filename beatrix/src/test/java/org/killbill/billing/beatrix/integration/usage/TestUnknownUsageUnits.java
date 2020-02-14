@@ -217,4 +217,115 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 9, 1), InvoiceItemType.USAGE, new BigDecimal("0")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-11"), internalCallContext);
     }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/pull/1279")
+    public void testWithUnknownUsageAndSeveralPeriods() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
+
+        // Enable strict mode
+        invoiceConfig.setShouldParkAccountsWithUnknownUsage(true);
+
+        // Catalog-v1.xml
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Server", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        // Record known usage for April
+        recordUsageData(bpSubscription.getId(), "tracking-1", "server-hourly-type-1", new LocalDate(2012, 4, 1), 99L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-2", "bandwidth-type-1", new LocalDate(2012, 4, 15), 100L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+
+        // Record known usage for May
+        recordUsageData(bpSubscription.getId(), "tracking-3", "server-hourly-type-1", new LocalDate(2012, 5, 1), 99L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-4", "bandwidth-type-1", new LocalDate(2012, 5, 15), 100L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
+
+        // Record known usage for June
+        recordUsageData(bpSubscription.getId(), "tracking-5", "server-hourly-type-1", new LocalDate(2012, 6, 1), 99L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-6", "bandwidth-type-1", new LocalDate(2012, 6, 15), 100L, callContext);
+
+        // Trigger a future change plan on the same plan, to force the new catalog version at the next billing cycle (Catalog-v4.xml)
+        bpSubscription.changePlanWithDate(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("server-monthly")), new LocalDate("2012-07-01"), null, callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.CHANGE, NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // Check that we still invoiced for server-hourly-type-1 for June
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-5", "tracking-6"), internalCallContext);
+
+        // Record known and unknown usage for July (server-hourly-type-1 doesn't exist anymore)
+        recordUsageData(bpSubscription.getId(), "tracking-7", "server-hourly-type-1", new LocalDate(2012, 7, 1), 99L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-8", "bandwidth-type-1", new LocalDate(2012, 7, 15), 100L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.TAG);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        // Account is parked because of the unknown usage
+        Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/pull/1279")
+    public void testTrackingIdsWithUnknownUsage() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Catalog-v1.xml
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Server", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        // Record known and unknown usage for April
+        recordUsageData(bpSubscription.getId(), "tracking-1", "server-hourly-type-1", new LocalDate(2012, 4, 1), 99L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-2", "bandwidth-type-1", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-3", "server-hourly-type-2", new LocalDate(2012, 4, 20), 100L, callContext);
+
+        // Strict mode if off by default
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        final Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
+                                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
+                                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+    }
 }
