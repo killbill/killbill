@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -102,12 +102,7 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
     }
 
     @Override
-    public void updatePaymentAttempt(final UUID paymentAttemptId, final UUID transactionId, final String state, final InternalCallContext context) {
-        updatePaymentAttemptWithProperties(paymentAttemptId, null, transactionId, state, null, context);
-    }
-
-    @Override
-    public void updatePaymentAttemptWithProperties(final UUID paymentAttemptId, @Nullable final UUID paymentMethodId, final UUID transactionId, final String state, final byte[] pluginProperties, final InternalCallContext context) {
+    public void updatePaymentAttemptWithProperties(final UUID paymentAttemptId, @Nullable final UUID paymentMethodId, final UUID transactionId, final String state, final BigDecimal amount, final Currency currency, final byte[] pluginProperties, final InternalCallContext context) {
         boolean success = false;
         synchronized (this) {
             for (PaymentAttemptModelDao cur : attempts.values()) {
@@ -116,6 +111,8 @@ public class MockPaymentDao extends MockEntityDaoBase<PaymentModelDao, Payment, 
                         cur.setPaymentMethodId(paymentMethodId);
                     }
                     cur.setStateName(state);
+                    cur.setAmount(amount);
+                    cur.setCurrency(currency);
                     cur.setTransactionId(transactionId);
                     if (pluginProperties != null) {
                         cur.setPluginProperties(pluginProperties);

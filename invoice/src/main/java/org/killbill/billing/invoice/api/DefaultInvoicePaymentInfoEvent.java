@@ -31,6 +31,7 @@ public class DefaultInvoicePaymentInfoEvent extends DefaultInvoicePaymentInterna
 
     public DefaultInvoicePaymentInfoEvent(@JsonProperty("accountId") final UUID accountId,
                                           @JsonProperty("paymentId") final UUID paymentId,
+                                          @JsonProperty("paymentAttemptId") final UUID paymentAttemptId,
                                           @JsonProperty("type") final InvoicePaymentType type,
                                           @JsonProperty("invoiceId") final UUID invoiceId,
                                           @JsonProperty("paymentDate") final DateTime paymentDate,
@@ -42,7 +43,7 @@ public class DefaultInvoicePaymentInfoEvent extends DefaultInvoicePaymentInterna
                                           @JsonProperty("searchKey1") final Long searchKey1,
                                           @JsonProperty("searchKey2") final Long searchKey2,
                                           @JsonProperty("userToken") final UUID userToken) {
-        super(accountId, paymentId, type, invoiceId, paymentDate, amount, currency, linkedInvoicePaymentId, paymentCookieId, processedCurrency, searchKey1, searchKey2, userToken);
+        super(accountId, paymentId, paymentAttemptId, type, invoiceId, paymentDate, amount, currency, linkedInvoicePaymentId, paymentCookieId, processedCurrency, searchKey1, searchKey2, userToken);
     }
 
     @JsonIgnore

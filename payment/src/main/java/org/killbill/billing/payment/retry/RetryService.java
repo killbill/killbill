@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
 
@@ -37,4 +37,5 @@ public interface RetryService {
     public String getQueueName();
 
     public void retryPaymentTransaction(final UUID attemptId, List<String> paymentControlPluginNames, final InternalCallContext context);
+
 }

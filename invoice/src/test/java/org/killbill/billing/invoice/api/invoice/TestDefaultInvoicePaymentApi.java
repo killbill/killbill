@@ -105,7 +105,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
         Assert.assertEquals(initialInvoiceBalance.compareTo(BigDecimal.ZERO), 0);
 
         // Create a full refund with no adjustment
-        final InvoicePayment refund = invoiceInternalApi.recordRefund(payment.getPaymentId(), refundAmount, adjusted, invoiceItemIdsWithAmounts,
+        final InvoicePayment refund = invoiceInternalApi.recordRefund(payment.getPaymentId(), UUID.randomUUID(), refundAmount, adjusted, invoiceItemIdsWithAmounts,
                                                                       UUID.randomUUID().toString(), internalCallContext);
         Assert.assertEquals(refund.getAmount().compareTo(refundAmount.negate()), 0);
         Assert.assertEquals(refund.getCurrency(), CURRENCY);

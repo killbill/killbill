@@ -319,6 +319,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                                  paymentId,
                                                                  attempt.getPaymentExternalKey(),
                                                                  attempt.getTransactionExternalKey(),
+                                                                 // The amount on the payment attempt drives the amount of the new payment transaction
                                                                  attempt.getAmount(),
                                                                  attempt.getCurrency(),
                                                                  null,

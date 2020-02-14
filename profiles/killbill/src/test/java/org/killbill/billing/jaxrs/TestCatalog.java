@@ -203,6 +203,14 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertEquals(catalogsJson.get(0).getPriceLists().get(0).getPlans().size(), 2);
     }
 
+    @Test(groups = "slow", expectedExceptions = KillBillClientException.class)
+    public void testAddBadSimplePlan() throws Exception {
+        // Verify passing an invalid planId will throw an exception
+        final String invalidPlanId = "43d3cde7-c06c-4713-8d0a-db1adfe163db";
+        catalogApi.addSimplePlan(new SimplePlan(invalidPlanId, "Foo", ProductCategory.BASE, Currency.USD, BigDecimal.TEN, BillingPeriod.MONTHLY, 0, TimeUnit.UNLIMITED, ImmutableList.<String>of()), requestOptions);
+    }
+
+
     @Test(groups = "slow")
     public void testCatalogDeletionInTestMode() throws Exception {
 

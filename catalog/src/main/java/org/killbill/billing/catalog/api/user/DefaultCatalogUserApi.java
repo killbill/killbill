@@ -163,7 +163,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
                                                   new CatalogUpdater(currentCatalog) :
                                                   new CatalogUpdater(getSafeFirstCatalogEffectiveDate(effectiveDate, callContext), null);
 
-            tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
+            tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(internalTenantContext), callContext);
             catalogCache.clearCatalog(internalTenantContext);
         } catch (TenantApiException e) {
             throw new CatalogApiException(e);
@@ -181,7 +181,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
                                                   new CatalogUpdater(getSafeFirstCatalogEffectiveDate(effectiveDate, callContext), descriptor.getCurrency());
             catalogUpdater.addSimplePlanDescriptor(descriptor);
 
-            tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(), callContext);
+            tenantApi.updateTenantKeyValue(TenantKey.CATALOG.toString(), catalogUpdater.getCatalogXML(internalTenantContext), callContext);
             catalogCache.clearCatalog(internalTenantContext);
         } catch (TenantApiException e) {
             throw new CatalogApiException(e);

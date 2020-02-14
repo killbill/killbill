@@ -87,23 +87,13 @@ and created_date \< :createdBeforeDate
 ;
 >>
 
-
-updateAttempt() ::= <<
-update <tableName()>
-set state_name = :stateName
-, transaction_id = :transactionId
-, updated_by = :updatedBy
-, updated_date = :updatedDate
-where id = :id
-<AND_CHECK_TENANT("")>
-;
->>
-
 updateAttemptWithProperties() ::= <<
 update <tableName()>
 set state_name = :stateName
 , payment_method_id = :paymentMethodId
 , transaction_id = :transactionId
+, amount = :amount
+, currency = :currency
 , plugin_properties = :pluginProperties
 , updated_by = :updatedBy
 , updated_date = :updatedDate
