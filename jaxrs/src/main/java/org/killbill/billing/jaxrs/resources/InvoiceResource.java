@@ -956,8 +956,9 @@ public class InvoiceResource extends JaxRsResourceBase {
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, InvoiceApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Invoice invoice = invoiceApi.getInvoice(invoiceId, tenantContext);
-        return super.getTags(invoice.getAccountId(), invoiceId, auditMode, includedDeleted, tenantContext);
+        // See https://github.com/killbill/killbill/issues/1273
+        final UUID accountId = AuditLevel.NONE.equals(auditMode.getLevel()) ? null : invoiceApi.getInvoice(invoiceId, tenantContext).getAccountId();
+        return super.getTags(accountId, invoiceId, auditMode, includedDeleted, tenantContext);
     }
 
     @TimedResource

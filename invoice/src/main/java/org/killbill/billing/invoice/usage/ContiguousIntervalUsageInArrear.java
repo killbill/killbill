@@ -19,10 +19,10 @@ package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -49,7 +50,7 @@ import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
-import org.killbill.billing.usage.api.RolledUpUsage;
+import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.jackson.ObjectMapper;
@@ -79,8 +80,12 @@ public abstract class ContiguousIntervalUsageInArrear {
 
     protected static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(ContiguousIntervalUsageInArrear.class);
+
     protected final List<TransitionTime> transitionTimes;
     protected final List<BillingEvent> billingEvents;
+    // Ordering is important here!
+    protected final LinkedHashMap<BillingEvent, Set<String>> allSeenUnitTypes;
+
     protected final Usage usage;
     protected final Set<String> unitTypes;
     protected final List<RawUsageRecord> rawSubscriptionUsage;
@@ -90,9 +95,9 @@ public abstract class ContiguousIntervalUsageInArrear {
     protected final UUID invoiceId;
     protected final AtomicBoolean isBuilt;
     protected final LocalDate rawUsageStartDate;
+    protected final InvoiceConfig invoiceConfig;
     protected final InternalTenantContext internalTenantContext;
     protected final UsageDetailMode usageDetailMode;
-
 
     private static class TransitionTime {
 
@@ -128,17 +133,20 @@ public abstract class ContiguousIntervalUsageInArrear {
                                            final LocalDate targetDate,
                                            final LocalDate rawUsageStartDate,
                                            final UsageDetailMode usageDetailMode,
+                                           final InvoiceConfig invoiceConfig,
                                            final InternalTenantContext internalTenantContext) {
         this.usage = usage;
         this.accountId = accountId;
         this.invoiceId = invoiceId;
         this.unitTypes = usage.getUsageType() == UsageType.CAPACITY ? getCapacityInArrearUnitTypes(usage) : getConsumableInArrearUnitTypes(usage);
-        this.rawSubscriptionUsage = filterInputRawUsage(rawSubscriptionUsage);
+        this.rawSubscriptionUsage = rawSubscriptionUsage;
         this.allExistingTrackingIds = existingTrackingIds;
         this.targetDate = targetDate;
         this.rawUsageStartDate = rawUsageStartDate;
+        this.invoiceConfig = invoiceConfig;
         this.internalTenantContext = internalTenantContext;
         this.billingEvents = Lists.newLinkedList();
+        this.allSeenUnitTypes = new LinkedHashMap<BillingEvent, Set<String>>();
         this.transitionTimes = Lists.newLinkedList();
         this.isBuilt = new AtomicBoolean(false);
         this.usageDetailMode = usageDetailMode;
@@ -338,7 +346,7 @@ public abstract class ContiguousIntervalUsageInArrear {
     }
 
     @VisibleForTesting
-    RolledUpUnitsWithTracking getRolledUpUsage() {
+    RolledUpUnitsWithTracking getRolledUpUsage() throws InvoiceApiException {
 
         final List<RolledUpUsageWithMetadata> result = new ArrayList<RolledUpUsageWithMetadata>();
         final Set<TrackingRecordId> trackingIds = new HashSet<>();
@@ -419,7 +427,27 @@ public abstract class ContiguousIntervalUsageInArrear {
                 if (!perRangeUnitToAmount.isEmpty()) {
                     final List<RolledUpUnit> rolledUpUnits = new ArrayList<RolledUpUnit>(perRangeUnitToAmount.size());
                     for (final String unitType : perRangeUnitToAmount.keySet()) {
-                        rolledUpUnits.add(new DefaultRolledUpUnit(unitType, perRangeUnitToAmount.get(unitType)));
+                        // Sanity check: https://github.com/killbill/killbill/issues/1275
+                        if (!allSeenUnitTypes.get(curTransition.getTargetBillingEvent()).contains(unitType)) {
+                            // We have found some reported usage with a unit type that hasn't been handled by any ContiguousIntervalUsageInArrear
+                            if (invoiceConfig.shouldParkAccountsWithUnknownUsage(internalTenantContext)) {
+                                throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
+                                                              String.format("ILLEGAL INVOICING STATE: unit type %s is not defined in the catalog",
+                                                                            unitType));
+                            } else {
+                                log.warn("Ignoring unit type {} (not defined in the catalog)", unitType);
+                                // Make sure to remove the associated tracking ids
+                                final Iterator<TrackingRecordId> itr = trackingIds.iterator();
+                                while (itr.hasNext()) {
+                                    final TrackingRecordId t = itr.next();
+                                    if (unitType.equals(t.getUnitType())) {
+                                        itr.remove();
+                                    }
+                                }
+                            }
+                        } else if (unitTypes.contains(unitType)) { // Other usage type not for us -- safely ignore
+                            rolledUpUnits.add(new DefaultRolledUpUnit(unitType, perRangeUnitToAmount.get(unitType)));
+                        }
                     }
                     result.add(new DefaultRolledUpUsageWithMetadata(getSubscriptionId(), prevDate, curDate, rolledUpUnits, prevCatalogEffectiveDate));
                 }
@@ -465,16 +493,6 @@ public abstract class ContiguousIntervalUsageInArrear {
         } else /* UsageType.CONSUMABLE */ {
             return currentAmount + newAmount;
         }
-    }
-
-    private List<RawUsageRecord> filterInputRawUsage(final List<RawUsageRecord> rawSubscriptionUsage) {
-        final Iterable<RawUsageRecord> filteredList = Iterables.filter(rawSubscriptionUsage, new Predicate<RawUsageRecord>() {
-            @Override
-            public boolean apply(final RawUsageRecord input) {
-                return unitTypes.contains(input.getUnitType());
-            }
-        });
-        return ImmutableList.copyOf(filteredList);
     }
 
     private Set<TrackingRecordId> extractTrackingIds(final Set<TrackingRecordId> input) {
@@ -538,6 +556,19 @@ public abstract class ContiguousIntervalUsageInArrear {
         billingEvents.add(event);
     }
 
+    public void addAllSeenUnitTypesForBillingEvent(final BillingEvent event, final Set<String> allSeenUnitTypesForBillingEvent) {
+        Preconditions.checkState(!isBuilt.get());
+        if (allSeenUnitTypes.get(event) == null) {
+            allSeenUnitTypes.put(event, new HashSet<String>());
+        }
+        allSeenUnitTypes.get(event).addAll(allSeenUnitTypesForBillingEvent);
+    }
+
+    public void addAllSeenUnitTypesFromPrevBillingEvent(final BillingEvent event) {
+        final Set<String> allSeenUnitTypesFromPrevBillingEvent = Iterables.getLast(allSeenUnitTypes.values());
+        addAllSeenUnitTypesForBillingEvent(event, allSeenUnitTypesFromPrevBillingEvent);
+    }
+
     public Usage getUsage() {
         return usage;
     }
@@ -574,6 +605,10 @@ public abstract class ContiguousIntervalUsageInArrear {
             Preconditions.checkState(false, e.getMessage());
             return null;
         }
+    }
+
+    public Set<String> getUnitTypes() {
+        return unitTypes;
     }
 
     public static class RolledUpUnitsWithTracking {

@@ -1935,6 +1935,9 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments.get(0).getPaymentAttempts().size(), 1);
         assertEquals(payments.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
         assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "ABORTED");
+        // We store the amount that was set in the prior call (https://github.com/killbill/killbill/issues/1281)
+        assertEquals(payments.get(0).getPaymentAttempts().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments.get(0).getPaymentAttempts().get(0).getCurrency(), Currency.USD);
 
         // Verify account transitions to OD1
         addDaysAndCheckForCompletion(2, NextEvent.BLOCK);
@@ -1974,5 +1977,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(payments2.get(0).getPaymentAttempts().size(), 1);
         assertEquals(payments2.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
         assertEquals(payments2.get(0).getPaymentAttempts().get(0).getStateName(), "SUCCESS");
+        assertEquals(payments2.get(0).getPaymentAttempts().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments2.get(0).getPaymentAttempts().get(0).getCurrency(), Currency.USD);
     }
 }

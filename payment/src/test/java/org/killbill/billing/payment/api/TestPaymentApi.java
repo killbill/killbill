@@ -2816,8 +2816,5 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         final PaymentAttempt scheduledAttempt = payments.get(0).getPaymentAttempts().get(1);
         assertEquals(attempt.getId(), scheduledAttempt.getId());
         assertEquals(scheduledAttempt.getEffectiveDate().compareTo(nextRetryDate), 0);
-
-
     }
-
 }

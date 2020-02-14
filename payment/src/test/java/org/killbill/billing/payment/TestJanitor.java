@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -81,6 +81,7 @@ import com.google.inject.Inject;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.fail;
 
 public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
@@ -141,7 +142,6 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         }
 
         super.beforeMethod();
-
 
         eventBus.register(handler);
         testListener.reset();
@@ -211,11 +211,22 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         final PaymentAttemptModelDao attempt = attempts.get(0);
         assertEquals(attempt.getStateName(), "SUCCESS");
+        assertEquals(attempt.getAmount().compareTo(requestedAmount), 0);
+        assertEquals(attempt.getCurrency(), Currency.USD);
 
         // Ok now the fun part starts... we modify the attempt state to be 'INIT' and wait the the Janitor to do its job.
-        paymentDao.updatePaymentAttempt(attempt.getId(), attempt.getTransactionId(), "INIT", internalCallContext);
+        paymentDao.updatePaymentAttemptWithProperties(attempt.getId(),
+                                                      attempt.getPaymentMethodId(),
+                                                      attempt.getTransactionId(),
+                                                      "INIT",
+                                                      null,
+                                                      null,
+                                                      null,
+                                                      internalCallContext);
         final PaymentAttemptModelDao attempt2 = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
         assertEquals(attempt2.getStateName(), "INIT");
+        assertNull(attempt2.getAmount());
+        assertNull(attempt2.getCurrency());
 
         clock.addDays(1);
         Awaitility.await()
@@ -227,6 +238,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                           return "SUCCESS".equals(attempt3.getStateName());
                       }
                   });
+
+        final PaymentAttemptModelDao attempt3 = paymentDao.getPaymentAttempt(attempt.getId(), internalCallContext);
+        assertEquals(attempt3.getStateName(), "SUCCESS");
+        assertEquals(attempt3.getAmount().compareTo(requestedAmount), 0);
+        assertEquals(attempt3.getCurrency(), Currency.USD);
     }
 
     @Test(groups = "slow")
@@ -291,11 +307,22 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         final PaymentAttemptModelDao refundAttempt = attempts.get(1);
         assertEquals(refundAttempt.getTransactionType(), TransactionType.REFUND);
+        assertEquals(refundAttempt.getAmount().compareTo(BigDecimal.ONE), 0);
+        assertEquals(refundAttempt.getCurrency(), Currency.USD);
 
         // Ok now the fun part starts... we modify the attempt state to be 'INIT' and wait the the Janitor to do its job.
-        paymentDao.updatePaymentAttempt(refundAttempt.getId(), refundAttempt.getTransactionId(), "INIT", internalCallContext);
+        paymentDao.updatePaymentAttemptWithProperties(refundAttempt.getId(),
+                                                      refundAttempt.getPaymentMethodId(),
+                                                      refundAttempt.getTransactionId(),
+                                                      "INIT",
+                                                      null,
+                                                      null,
+                                                      null,
+                                                      internalCallContext);
         final PaymentAttemptModelDao attempt2 = paymentDao.getPaymentAttempt(refundAttempt.getId(), internalCallContext);
         assertEquals(attempt2.getStateName(), "INIT");
+        assertNull(attempt2.getAmount());
+        assertNull(attempt2.getCurrency());
 
         clock.addDays(1);
 
@@ -306,6 +333,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                 return "SUCCESS".equals(attempt3.getStateName());
             }
         });
+
+        final PaymentAttemptModelDao refundAttempt2 = paymentDao.getPaymentAttempt(refundAttempt.getId(), internalCallContext);
+        assertEquals(refundAttempt2.getStateName(), "SUCCESS");
+        assertEquals(refundAttempt2.getAmount().compareTo(BigDecimal.ONE), 0);
+        assertEquals(refundAttempt2.getCurrency(), Currency.USD);
     }
 
     @Test(groups = "slow")

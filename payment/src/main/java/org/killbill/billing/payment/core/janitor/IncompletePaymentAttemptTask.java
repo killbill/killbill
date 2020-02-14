@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.janitor;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -181,7 +182,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
                     // would attempt to fix here. But this is really an edge case.
                     doIteration(item, false);
                 } catch (final Exception e) {
-                    log.warn(e.getMessage());
+                    log.warn("Exception during Janitor loop", e);
                 }
             }
         } finally {
@@ -231,7 +232,15 @@ public class IncompletePaymentAttemptTask implements Runnable {
         final PaymentTransactionModelDao transaction = filteredTransactions.isEmpty() ? null : filteredTransactions.get(0);
         if (transaction == null) {
             log.info("Moving attemptId='{}' to ABORTED", attempt.getId());
-            paymentDao.updatePaymentAttempt(attempt.getId(), attempt.getTransactionId(), "ABORTED", internalCallContext);
+            paymentDao.updatePaymentAttemptWithProperties(attempt.getId(),
+                                                          attempt.getPaymentMethodId(),
+                                                          attempt.getTransactionId(),
+                                                          "ABORTED",
+                                                          // Keep the initial amount, as this will drive the retries
+                                                          attempt.getAmount(),
+                                                          attempt.getCurrency(),
+                                                          attempt.getPluginProperties(),
+                                                          internalCallContext);
             return true;
         }
 

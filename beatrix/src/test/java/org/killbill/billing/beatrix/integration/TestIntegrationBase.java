@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -1094,14 +1094,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
     }
 
-    static class ConfigurableInvoiceConfig implements InvoiceConfig {
+    public static class ConfigurableInvoiceConfig implements InvoiceConfig {
 
         private final InvoiceConfig defaultInvoiceConfig;
         private boolean isInvoicingSystemEnabled;
+        private boolean shouldParkAccountsWithUnknownUsage;
 
         public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
             this.defaultInvoiceConfig = defaultInvoiceConfig;
             isInvoicingSystemEnabled = defaultInvoiceConfig.isInvoicingSystemEnabled();
+            shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
         }
 
         @Override
@@ -1206,6 +1208,20 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         public void setInvoicingSystemEnabled(final boolean invoicingSystemEnabled) {
             isInvoicingSystemEnabled = invoicingSystemEnabled;
+        }
+
+        @Override
+        public boolean shouldParkAccountsWithUnknownUsage() {
+            return shouldParkAccountsWithUnknownUsage;
+        }
+
+        @Override
+        public boolean shouldParkAccountsWithUnknownUsage(final InternalTenantContext tenantContext) {
+            return shouldParkAccountsWithUnknownUsage();
+        }
+
+        public void setShouldParkAccountsWithUnknownUsage(final boolean shouldParkAccountsWithUnknownUsage) {
+            this.shouldParkAccountsWithUnknownUsage = shouldParkAccountsWithUnknownUsage;
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 
 package org.killbill.billing.payment.dao;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -40,17 +41,12 @@ public interface PaymentAttemptSqlDao extends EntitySqlDao<PaymentAttemptModelDa
 
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updateAttempt(@Bind("id") final String attemptId,
-                       @Bind("transactionId") final String transactionId,
-                       @Bind("stateName") final String stateName,
-                       @SmartBindBean final InternalCallContext context);
-
-    @SqlUpdate
-    @Audited(ChangeType.UPDATE)
     void updateAttemptWithProperties(@Bind("id") final String attemptId,
                                      @Bind("paymentMethodId") final String paymentMethodId,
                                      @Bind("transactionId") final String transactionId,
                                      @Bind("stateName") final String stateName,
+                                     @Bind("amount") final BigDecimal amount,
+                                     @Bind("currency") final String currency,
                                      @Bind("pluginProperties") final byte[] pluginProperties,
                                      @SmartBindBean final InternalCallContext context);
 
