@@ -23,6 +23,7 @@ import java.lang.annotation.Annotation;
 
 import javax.inject.Inject;
 
+import org.apache.shiro.aop.MethodInvocation;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.aop.AuthorizingAnnotationHandler;
 
@@ -46,6 +47,7 @@ public class PermissionAnnotationHandler extends AuthorizingAnnotationHandler {
         super(RequiresPermissions.class);
     }
 
+    @Override
     public void assertAuthorized(final Annotation annotation) throws AuthorizationException {
         if (!(annotation instanceof RequiresPermissions)) {
             return;
