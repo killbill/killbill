@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -83,6 +84,7 @@ import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
@@ -110,7 +112,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -617,12 +618,12 @@ public class InvoiceResource extends JaxRsResourceBase {
         final Invoice invoice = invoiceApi.getInvoice(invoiceId, tenantContext);
 
         // Extract unique set of paymentId for this invoice
-        final Set<UUID> invoicePaymentIds = ImmutableSet.copyOf(Iterables.transform(invoice.getPayments(), new Function<InvoicePayment, UUID>() {
-            @Override
-            public UUID apply(final InvoicePayment input) {
-                return input.getPaymentId();
+        final Set<UUID> invoicePaymentIds = new HashSet<UUID>();
+        for (final InvoicePayment invoicePayment : invoice.getPayments()) {
+            if (invoicePayment.getPaymentId() != null) {
+                invoicePaymentIds.add(invoicePayment.getPaymentId());
             }
-        }));
+        }
         if (invoicePaymentIds.isEmpty()) {
             return Response.status(Status.OK).entity(ImmutableList.<InvoicePaymentJson>of()).build();
         }
@@ -655,6 +656,7 @@ public class InvoiceResource extends JaxRsResourceBase {
     public Response createInstantPayment(@PathParam("invoiceId") final UUID invoiceId,
                                          final InvoicePaymentJson payment,
                                          @QueryParam(QUERY_PAYMENT_EXTERNAL) @DefaultValue("false") final Boolean externalPayment,
+                                         @QueryParam(QUERY_PAYMENT_CONTROL_PLUGIN_NAME) final List<String> paymentControlPluginNames,
                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                          @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                          @HeaderParam(HDR_REASON) final String reason,
@@ -672,8 +674,9 @@ public class InvoiceResource extends JaxRsResourceBase {
         final UUID paymentMethodId = externalPayment ? null :
                                      (payment.getPaymentMethodId() != null ? payment.getPaymentMethodId() : account.getPaymentMethodId());
 
-        final InvoicePayment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId, externalPayment,
-                                                               payment.getPaymentExternalKey(), null, pluginProperties, callContext);
+        final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(externalPayment, paymentControlPluginNames);
+        final InvoicePayment result = createPurchaseForInvoice(account, invoiceId, payment.getPurchasedAmount(), paymentMethodId,
+                                                               payment.getPaymentExternalKey(), null, pluginProperties, paymentOptions, callContext);
         return result != null ?
                uriBuilder.buildResponse(uriInfo, InvoicePaymentResource.class, "getInvoicePayment", result.getPaymentId(), request) :
                Response.status(Status.NO_CONTENT).build();
