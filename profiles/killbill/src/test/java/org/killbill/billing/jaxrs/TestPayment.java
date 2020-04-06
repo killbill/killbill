@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,14 +19,12 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.HEAD;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
@@ -38,6 +36,8 @@ import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AuditLog;
 import org.killbill.billing.client.model.gen.ComboPaymentTransaction;
+import org.killbill.billing.client.model.gen.Invoice;
+import org.killbill.billing.client.model.gen.InvoicePayment;
 import org.killbill.billing.client.model.gen.Payment;
 import org.killbill.billing.client.model.gen.PaymentMethod;
 import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
@@ -217,6 +217,50 @@ public class TestPayment extends TestJaxrsBase {
         } catch (KillBillClientException e) {
             assertEquals(504, e.getResponse().getStatusCode());
         }
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1288")
+    public void testWithAbortedInvoicePayment() throws Exception {
+        mockPaymentProviderPlugin.makeNextPaymentFailWithError();
+        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
+        // Getting Invoice #2 (first after Trial period)
+        final Invoice failedInvoice = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, RequestOptions.empty()).get(1);
+
+        // Verify initial state
+        final Payments initialPayments = accountApi.getPaymentsForAccount(account.getAccountId(), true, false, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions);
+        Assert.assertEquals(initialPayments.size(), 1);
+        Assert.assertEquals(initialPayments.get(0).getTransactions().size(), 1);
+        Assert.assertEquals(initialPayments.get(0).getTransactions().get(0).getStatus(), TransactionStatus.PAYMENT_FAILURE);
+        Assert.assertEquals(initialPayments.get(0).getPaymentAttempts().size(), 2);
+        Assert.assertEquals(initialPayments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
+        Assert.assertEquals(initialPayments.get(0).getPaymentAttempts().get(1).getStateName(), "SCHEDULED");
+        final InvoicePayments initialInvoicePayments = invoiceApi.getPaymentsForInvoice(failedInvoice.getInvoiceId(), requestOptions);
+        Assert.assertEquals(initialInvoicePayments.size(), 1);
+        Assert.assertEquals(initialInvoicePayments.get(0).getPaymentId(), initialPayments.get(0).getPaymentId());
+
+        // Trigger manually an invoice payment but make the control plugin abort it
+        mockPaymentControlProviderPlugin.setAborted(true);
+        final HashMultimap<String, String> queryParams = HashMultimap.create();
+        queryParams.putAll("controlPluginName", Arrays.<String>asList(MockPaymentControlProviderPlugin.PLUGIN_NAME));
+        final RequestOptions inputOptions = RequestOptions.builder()
+                                                          .withCreatedBy(createdBy)
+                                                          .withReason(reason)
+                                                          .withComment(comment)
+                                                          .withQueryParams(queryParams).build();
+        final InvoicePayment invoicePayment = new InvoicePayment();
+        invoicePayment.setPurchasedAmount(failedInvoice.getBalance());
+        invoicePayment.setAccountId(failedInvoice.getAccountId());
+        invoicePayment.setTargetInvoiceId(failedInvoice.getInvoiceId());
+        final InvoicePayment invoicePaymentNull = invoiceApi.createInstantPayment(failedInvoice.getInvoiceId(), invoicePayment, true, null, inputOptions);
+        Assert.assertNull(invoicePaymentNull);
+
+        // Verify new state
+        final Payments updatedPayments = accountApi.getPaymentsForAccount(account.getAccountId(), true, false, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions);
+        Assert.assertEquals(updatedPayments.size(), 1);
+        Assert.assertEquals(updatedPayments.get(0).getPaymentId(), initialPayments.get(0).getPaymentId());
+        final InvoicePayments updatedInvoicePayments = invoiceApi.getPaymentsForInvoice(failedInvoice.getInvoiceId(), requestOptions);
+        Assert.assertEquals(updatedInvoicePayments.size(), 1);
+        Assert.assertEquals(updatedInvoicePayments.get(0).getPaymentId(), updatedPayments.get(0).getPaymentId());
     }
 
     @Test(groups = "slow")
