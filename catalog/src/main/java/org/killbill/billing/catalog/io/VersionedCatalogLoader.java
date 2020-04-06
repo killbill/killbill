@@ -147,9 +147,6 @@ public class VersionedCatalogLoader implements CatalogLoader {
         } catch (final SAXException e) {
             logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new IllegalStateException(e);
-        } catch (final InvalidConfigException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
-            throw new IllegalStateException(e);
         }
     }
 
