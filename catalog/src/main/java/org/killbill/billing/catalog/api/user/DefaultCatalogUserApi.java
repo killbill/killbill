@@ -148,8 +148,6 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             throw new IllegalStateException(e);
         } catch (final SAXException e) {
             throw new IllegalStateException(e);
-        } catch (final InvalidConfigException e) {
-            throw new IllegalStateException(e);
         }
     }
 
