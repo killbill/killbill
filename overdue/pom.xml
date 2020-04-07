@@ -19,7 +19,7 @@
     <parent>
         <artifactId>killbill</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.20.17-SNAPSHOT</version>
+        <version>0.20.17</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-overdue</artifactId>
@@ -85,13 +85,13 @@
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
+            <scope>test</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>org.objenesis</groupId>
                     <artifactId>objenesis</artifactId>
+                    <groupId>org.objenesis</groupId>
                 </exclusion>
             </exclusions>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
