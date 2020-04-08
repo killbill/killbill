@@ -259,9 +259,10 @@ public abstract class ContiguousIntervalUsageInArrear {
 
             final InvoiceItem existingOverlappingItem = isContainedIntoExistingUsage(ru.getStart(), ru.getEnd(), existingUsage);
             if (existingOverlappingItem != null) {
-                log.warn("ContiguousIntervalUsageInArrear detected usage {} start={}, end={} already contained in item {}, start = {}, end = {}, skipping... ",
-                         usage.getName(), ru.getStart(), ru.getEnd(),
-                         existingOverlappingItem.getInvoiceItemType(), existingOverlappingItem.getStartDate(), existingOverlappingItem.getEndDate());
+                // In case of blocking situations, when re-running the invoicing code, already billed usage maybe have another start and end date
+                // because of blocking events. We need to skip these to avoid double billing (see gotchas in testWithPartialBlockBilling).
+                log.warn("Ignoring usage {} between start={} and end={} as it has already been invoiced by invoiceItemId={}",
+                          usage.getName(), ru.getStart(), ru.getEnd(), existingOverlappingItem.getId());
                 continue;
             }
             //
