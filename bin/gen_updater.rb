@@ -12,7 +12,7 @@ current_dev_train = nil
 current_stable_version = nil
 current_dev_version = nil
 
-metadata = get_as_json("https://api.github.com/repos/killbill/killbill/tags")
+metadata = get_as_json("https://api.github.com/repos/killbill/killbill/tags?per_page=100")
 releases = []
 metadata.each do |entry|
   parsed = entry['name'].scan(/killbill-([0-9]+\.([0-9]+)\.[0-9]+)/).last
@@ -26,6 +26,7 @@ metadata.each do |entry|
     current_stable_train = train if current_stable_train.to_i < train
     current_stable_version = version if current_stable_version.nil? || (Gem::Version.new(current_stable_version) < Gem::Version.new(version))
   end
+  break if train < 18
 
   releases << {
     :train => train,
