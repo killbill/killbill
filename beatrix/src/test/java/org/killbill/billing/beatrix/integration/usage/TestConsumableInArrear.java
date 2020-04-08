@@ -477,7 +477,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
         recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 18), 100L, callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
@@ -495,8 +495,13 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         subscriptionApi.addBlockingState(blockingState1, new LocalDate(2012, 4, 16), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
+        // Behavior notes:
+        //  - We verify here that we don't double bill the usage for the period 2012-04-01 - 2012-04-16 (https://github.com/killbill/killbill/commit/b87b6ff567190c94b5ae9ad7da7e736cff4e37ef)
+        //  - However, only the recurring portion is repaired, the usage recorded pre blocking is untouched (the data point post blocking from 2012-04-18 is still billed)
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2399.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 21), new LocalDate(2012, 5, 21), InvoiceItemType.CBA_ADJ, new BigDecimal("2399.95")));
     }
-
 
     @Test(groups = "slow")
     public void testWithFullBlockBilling() throws Exception {
@@ -540,6 +545,7 @@ public class TestConsumableInArrear extends TestIntegrationBase {
         subscriptionApi.addBlockingState(blockingState1, new LocalDate(2012, 4, 1), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
+        // Note that the usage is left untouched despite the blocking event
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-2399.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 21), new LocalDate(2012, 5, 21), InvoiceItemType.CBA_ADJ, new BigDecimal("2399.95")));
