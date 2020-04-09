@@ -158,7 +158,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         stateMachineConfigCache.clearPaymentStateMachineConfig(PLUGIN_NAME, internalCallContext);
         stateMachineConfigCache.loadDefaultPaymentStateMachineConfig(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML);
 
-        eventBus.start();
+        eventBus.startQueue();
         paymentExecutors.initialize();
         ((MockPaymentDao) paymentDao).reset();
         Profiling.resetPerThreadProfilingData();
@@ -171,6 +171,6 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         }
 
         paymentExecutors.stop();
-        eventBus.stop();
+        eventBus.stopQueue();
     }
 }

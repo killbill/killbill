@@ -176,7 +176,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
     }
 
     private void startBusAndRegisterListener(final BusService busService, final TestApiListener testListener) throws Exception {
-        busService.getBus().start();
+        busService.getBus().startQueue();
         busService.getBus().register(testListener);
     }
 
@@ -194,7 +194,7 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
 
     private void stopBusAndUnregisterListener(final BusService busService, final TestApiListener testListener) throws Exception {
         busService.getBus().unregister(testListener);
-        busService.getBus().stop();
+        busService.getBus().stopQueue();
     }
 
     private void stopSubscriptionService(final SubscriptionBaseService subscriptionBaseService) throws Exception {

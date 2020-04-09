@@ -129,7 +129,7 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
         eventsListener.reset();
 
-        eventBus.start();
+        eventBus.startQueue();
         eventBus.register(eventsListener);
     }
 
@@ -140,7 +140,7 @@ public abstract class UtilTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         }
 
         eventBus.unregister(eventsListener);
-        eventBus.stop();
+        eventBus.stopQueue();
     }
 
     @Override

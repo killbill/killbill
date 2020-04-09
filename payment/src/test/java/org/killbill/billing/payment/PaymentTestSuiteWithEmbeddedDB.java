@@ -156,7 +156,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
         paymentExecutors.initialize();
         retryService.initialize();
         retryService.start();
-        eventBus.start();
+        eventBus.startQueue();
         Profiling.resetPerThreadProfilingData();
         clock.resetDeltaFromReality();
 
@@ -171,7 +171,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
         }
 
         janitor.stop();
-        eventBus.stop();
+        eventBus.stopQueue();
         retryService.stop();
         paymentExecutors.stop();
     }

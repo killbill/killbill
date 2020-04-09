@@ -280,8 +280,8 @@ public class TestJaxrsBase extends KillbillClient {
         // Because we truncate the tables, the database record_id auto_increment will be reset
         tenantCacheInvalidation.setLatestRecordIdProcessed(0L);
 
-        externalBus.start();
-        internalBus.start();
+        externalBus.startQueue();
+        internalBus.startQueue();
         cacheControllerDispatcher.clearAll();
         busHandler.reset();
         callbackServlet.reset();
@@ -340,8 +340,8 @@ public class TestJaxrsBase extends KillbillClient {
         }
 
         killBillHttpClient.close();
-        externalBus.stop();
-        internalBus.stop();
+        externalBus.stopQueue();
+        internalBus.stopQueue();
     }
 
     @BeforeClass(groups = "slow")

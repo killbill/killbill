@@ -124,7 +124,7 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        bus.start();
+        bus.startQueue();
     }
 
     @AfterMethod(groups = "fast")
@@ -133,6 +133,6 @@ public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        bus.stop();
+        bus.stopQueue();
     }
 }

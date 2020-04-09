@@ -89,7 +89,7 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        eventBus.start();
+        eventBus.startQueue();
     }
 
     @AfterMethod(groups = "fast")
@@ -98,7 +98,7 @@ public class UtilTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        eventBus.stop();
+        eventBus.stopQueue();
         // Reset the security manager
         ThreadContext.unbindSecurityManager();
     }
