@@ -102,17 +102,14 @@
         </dependency>
         <dependency>
             <groupId>io.airlift</groupId>
-            <artifactId>command</artifactId>
+            <artifactId>testing-mysql-server</artifactId>
+            <!-- Technically, test-runtime -->
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>testing-postgresql-server</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.airlift</groupId>
-            <artifactId>units</artifactId>
+            <!-- Technically, test-runtime -->
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -154,17 +151,6 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-mxj</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- Make sure to only include this in tests (it contains mysqld for all platforms and is around 134M) -->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-mxj-db-files</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.shiro</groupId>
