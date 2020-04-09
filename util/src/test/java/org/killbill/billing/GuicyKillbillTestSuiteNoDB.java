@@ -1,7 +1,7 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +18,7 @@
 
 package org.killbill.billing;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
@@ -30,7 +31,8 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.dao.MockNonEntityDao;
-import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
@@ -60,5 +62,16 @@ public class GuicyKillbillTestSuiteNoDB extends GuicyKillbillTestSuite {
         refreshCallContext(account.getId(), clock, internalCallContextFactory, callContext, internalCallContext);
 
         return account;
+    }
+
+    @Override
+    protected KillbillConfigSource getConfigSource(final String file, final Map<String, String> extraProperties) {
+        try {
+            return new TestKillbillConfigSource(file, null, extraProperties);
+        } catch (final Exception e) {
+            final AssertionError assertionError = new AssertionError("Initialization error");
+            assertionError.initCause(e);
+            throw assertionError;
+        }
     }
 }
