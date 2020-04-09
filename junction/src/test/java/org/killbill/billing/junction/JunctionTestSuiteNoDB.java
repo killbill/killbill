@@ -95,7 +95,7 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        bus.start();
+        bus.startQueue();
     }
 
     @AfterMethod(groups = "fast")
@@ -104,7 +104,7 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        bus.stop();
+        bus.stopQueue();
     }
 
 

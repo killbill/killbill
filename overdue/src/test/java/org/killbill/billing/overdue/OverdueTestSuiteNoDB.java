@@ -122,7 +122,7 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
             return;
         }
 
-        bus.start();
+        bus.startQueue();
         service.initialize();
         service.start();
     }
@@ -134,6 +134,6 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         }
 
         service.stop();
-        bus.stop();
+        bus.stopQueue();
     }
 }
