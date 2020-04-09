@@ -134,7 +134,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
         super.beforeMethod();
         controllerDispatcher.clearAll();
-        bus.start();
+        bus.startQueue();
         restartInvoiceService(invoiceService);
         clock.resetDeltaFromReality();
     }
@@ -154,7 +154,7 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
             return;
         }
 
-        bus.stop();
+        bus.stopQueue();
         stopInvoiceService(invoiceService);
     }
 }

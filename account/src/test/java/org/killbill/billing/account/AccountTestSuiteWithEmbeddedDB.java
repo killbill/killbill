@@ -82,12 +82,12 @@ public abstract class AccountTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
 
         super.beforeMethod();
         controllerDispatcher.clearAll();
-        bus.start();
+        bus.startQueue();
     }
 
     @AfterMethod(groups = "slow")
     public void afterMethod() throws Exception {
-        bus.stop();
+        bus.stopQueue();
     }
 
     protected Account createAccount(final AccountData accountData) throws AccountApiException {

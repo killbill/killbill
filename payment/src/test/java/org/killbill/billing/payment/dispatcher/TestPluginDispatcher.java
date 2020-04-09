@@ -47,7 +47,7 @@ public class TestPluginDispatcher extends PaymentTestSuiteNoDB {
             return;
         }
         super.beforeMethod();
-        eventBus.start();
+        eventBus.startQueue();
         voidPluginDispatcher = new PluginDispatcher<Void>(10, paymentExecutors);
         stringPluginDispatcher = new PluginDispatcher<String>(1, paymentExecutors);
     }

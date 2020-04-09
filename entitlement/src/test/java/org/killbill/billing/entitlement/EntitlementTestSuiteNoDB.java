@@ -86,7 +86,7 @@ public abstract class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoD
             return;
         }
 
-        bus.start();
+        bus.startQueue();
     }
 
     @AfterMethod(groups = "fast")
@@ -95,6 +95,6 @@ public abstract class EntitlementTestSuiteNoDB extends GuicyKillbillTestSuiteNoD
             return;
         }
 
-        bus.stop();
+        bus.stopQueue();
     }
 }
