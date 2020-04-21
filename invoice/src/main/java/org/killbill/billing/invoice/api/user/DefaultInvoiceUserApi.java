@@ -40,7 +40,6 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -65,6 +64,7 @@ import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditLevel;
@@ -73,7 +73,6 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 import org.killbill.billing.util.tag.ControlTagType;
@@ -623,6 +622,15 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
+
+        // See https://github.com/killbill/killbill/issues/1296
+        final Invoice invoice = getInvoice(invoiceId, context);
+        try {
+            dispatcher.setChargedThroughDates(invoice, internalCallContext);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new InvoiceApiException(e);
+        }
+
         dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
     }
 

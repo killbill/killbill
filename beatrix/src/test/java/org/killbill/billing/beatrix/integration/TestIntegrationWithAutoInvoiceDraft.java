@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +19,6 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,21 +28,21 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
-import org.killbill.billing.util.api.TagApiException;
-import org.killbill.billing.util.api.TagDefinitionApiException;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.TagUserApi;
-import org.killbill.billing.util.tag.ControlTagType;
-import org.killbill.billing.util.tag.Tag;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -52,6 +51,7 @@ import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
@@ -88,6 +88,8 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
         assertNotNull(bpEntitlement);
 
+        assertNull(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate());
+
         List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
         final Invoice trialInvoice = invoices.get(0);
@@ -97,10 +99,15 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         invoiceApi.commitInvoice(trialInvoice.getId(), callContext);
         assertListenerStatus();
 
+        // Committing the invoice updates the CTD
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+
         // Move out of TRIAL
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
+
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
 
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
@@ -112,6 +119,8 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         invoiceApi.commitInvoice(firstNonTrialInvoice.getId(), callContext);
         assertListenerStatus();
 
+        // Committing the invoice updates the CTD
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate(), new LocalDate(2017, 7, 25));
 
         remove_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
 
@@ -119,18 +128,76 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate(), new LocalDate(2017, 8, 25));
+
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 3);
-
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate(), new LocalDate(2017, 9, 25));
+
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 4);
     }
 
+    @Test(groups = "slow")
+    public void testAutoInvoicingDraftBasicWithCancellation() throws Exception {
+        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
+        assertNotNull(bpEntitlement);
+
+        assertNull(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate());
+
+        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 1);
+        final Invoice trialInvoice = invoices.get(0);
+        assertEquals(trialInvoice.getStatus(), InvoiceStatus.DRAFT);
+
+        busHandler.pushExpectedEvent(NextEvent.INVOICE);
+        invoiceApi.commitInvoice(trialInvoice.getId(), callContext);
+        assertListenerStatus();
+
+        // Committing the invoice updates the CTD
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+
+        // Move out of TRIAL
+        busHandler.pushExpectedEvents(NextEvent.PHASE);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 2);
+
+        final Invoice firstNonTrialInvoice = invoices.get(1);
+        assertEquals(firstNonTrialInvoice.getStatus(), InvoiceStatus.DRAFT);
+
+        // Cancel the subscription END_OF_TERM (see https://github.com/killbill/killbill/issues/1296)
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL);
+        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.END_OF_TERM, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        final Subscription cancelledSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext);
+        assertEquals(cancelledSubscription.getChargedThroughDate(), new LocalDate(2017, 6, 16));
+        // We default to now() when we compute the date if the CTD is in the past
+        assertEquals(cancelledSubscription.getBillingEndDate(), new LocalDate(2017, 7, 16));
+
+        // An additional repair invoice has been generated in DRAFT mode. Both DRAFT invoices should be voided.
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 3);
+
+        invoiceApi.voidInvoice(invoices.get(2).getId(), callContext);
+        invoiceApi.voidInvoice(invoices.get(1).getId(), callContext);
+
+        // No change
+        assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
+    }
 
     @Test(groups = "slow")
     public void testWithExistingDraftInvoice() throws Exception {
