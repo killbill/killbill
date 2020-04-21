@@ -17,23 +17,27 @@ Kill Bill offers a lot out of the box:
 * Your business doesn't need to rely on the uptime or processing speed of a third-party SaaS provider.
 * Kill Bill is not an all-in-one solution. Instead, it is highly modularized, enabling you to disable functionality you don't need or replace functionality with one of your existing systems.
 * On premise or in the cloud, Kill Bill will scale as your subscription business grows. You can also start with Kill Bill in one business area and slowly migrate it to other areas.
-* Kill Bill provides also an unmatched framework for extensibility.
+* Kill Bill provides an unmatched framework for extensibility.
 
-With Kill Bill, you get a SaaS-like subscription management and billing solution experience out of the box, but with the flexibility and peace of mind of running an open-source stack.
+With Kill Bill, you get a SaaS-like subscription management and billing solution out of the box, but with the flexibility and peace of mind of running an open-source stack.
 
 ### Get your own subscription billing platform
 
 * You can get much more information on [killbill.io](http://killbill.io).
-* [docs.killbill.io](http://docs.killbill.io) has all of our technical documentation (sources in the [killbill/killbill-docs](https://github.com/killbill/killbill-docs) repository).
-* Eager to get started? Deploy your own instance on AWS using our [one-click deployer](https://docs.killbill.io/latest/aws.html).
+* All of our technical documentation is available on [docs.killbill.io](http://docs.killbill.io) (sources in the [killbill/killbill-docs](https://github.com/killbill/killbill-docs) repository).
+* Eager to get started? Deploy your own instance of Kill Bill on AWS using our [one-click deployer](https://docs.killbill.io/latest/aws.html).
 * Head over to [cloud.killbill.io](https://cloud.killbill.io) for free hosted sandboxes, developer tools, and more.
 
 ### Open-Source and governance
 
 Kill Bill is free to use and completely open-source under the Apache Licence 2.0 license. 🎉
 
-That being said, we require financial backing to sustain the effort to maintain and develop the project. Companies, individual users, and contributors: join your peers in supporting the work through [GitHub Sponsors](https://github.com/sponsors/killbill). 🍻
+However, we do require financial backing to sustain the effort to maintain and enhance the project. Companies, individual users, and contributors can join their peers in supporting the work through [GitHub Sponsors](https://github.com/sponsors/killbill). 🍻
 
-Looking for statistics? This project does not use a mono-repo, but is instead split across many components. To gather accurate counts on contributors, stars and forks, take a look across our entire [GitHub organization](https://github.com/killbill). 📈
+### Get stats on Kill Bill contributors
+
+Looking for statistics? This project does not use a monolithic repository, but is instead split across many components. To gather accurate counts on contributors, stars, and forks, take a look across our entire [GitHub organization](https://github.com/killbill). 📈
+
+### About Kill Bill
 
 [Martin Westhead](https://www.linkedin.com/pub/martin-westhead/1/75a/248), [Pierre-Alexandre Meyer](https://www.linkedin.com/in/pierrealexandremeyer), and [Stéphane Brossier](https://www.linkedin.com/in/stephanebrossier) founder the project independently in 2010. The Billing Project, LLC owns the Kill Bill codebase and trademarks. Professional services, sponsorships, and commercial support packages are available [upon request](https://killbill.io/contact-us/).
