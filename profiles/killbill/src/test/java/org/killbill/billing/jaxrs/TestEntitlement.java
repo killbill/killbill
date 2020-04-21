@@ -1111,8 +1111,9 @@ public class TestEntitlement extends TestJaxrsBase {
         clock.addDays(1);
         callbackServlet.assertListenerStatus();
 
-        // Cancel subscription (entitlement IMM, billing EOT)
+        // Cancel subscription (entitlement IMM, billing now() since the CTD is NULL)
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.SUBSCRIPTION_CANCEL,
                                            ExtBusEventType.ENTITLEMENT_CANCEL);
         subscriptionApi.cancelSubscriptionPlan(newInput.getSubscriptionId(),
                                                null,
