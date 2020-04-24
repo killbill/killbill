@@ -628,11 +628,14 @@ public class InvoiceDispatcher {
                 commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, billingEvents, trackingIds, futureAccountNotifications, existingInvoiceMetadata, internalCallContext);
                 success = true;
 
-                try {
-                    setChargedThroughDates(invoice, internalCallContext);
-                } catch (final SubscriptionBaseApiException e) {
-                    log.error("Failed handling SubscriptionBase change.", e);
-                    return null;
+                // See https://github.com/killbill/killbill/issues/1296
+                if (invoice.getStatus() == InvoiceStatus.COMMITTED) {
+                    try {
+                        setChargedThroughDates(invoice, internalCallContext);
+                    } catch (final SubscriptionBaseApiException e) {
+                        log.error("Failed handling SubscriptionBase change.", e);
+                        return null;
+                    }
                 }
             }
         } finally {
@@ -855,7 +858,7 @@ public class InvoiceDispatcher {
         return internalCallContextFactory.createCallContext(context);
     }
 
-    private void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws SubscriptionBaseApiException {
         // Don't use invoice.getInvoiceItems(final Class<T> clazz) as some items can come from plugins
         final Collection<InvoiceItem> invoiceItemsToConsider = new LinkedList<InvoiceItem>();
         for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
