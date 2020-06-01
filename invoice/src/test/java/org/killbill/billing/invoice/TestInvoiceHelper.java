@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2020 Equinix, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -92,6 +93,7 @@ import org.testng.Assert;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public class TestInvoiceHelper {
 
@@ -239,7 +241,9 @@ public class TestInvoiceHelper {
                                                                    invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
                                                                    notificationQueueService, invoiceConfig, clock, parkedAccountsManager);
 
-        return dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);
+        final Iterable<Invoice> invoices = dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);
+        Assert.assertTrue(invoices == null || Iterables.<Invoice>size(invoices) == 1);
+        return invoices == null ? null : Iterables.<Invoice>getOnlyElement(invoices);
     }
 
     public SubscriptionBase createSubscription() throws SubscriptionBaseApiException {

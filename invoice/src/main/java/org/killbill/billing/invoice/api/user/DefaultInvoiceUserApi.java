@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2020 Equinix, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -269,11 +270,15 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice triggerDryRunInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
-        final Invoice result = dispatcher.processAccount(true, accountId, targetDate, dryRunArguments, false, internalContext);
-        if (result == null) {
+        final Iterable<Invoice> results = dispatcher.processAccount(true, accountId, targetDate, dryRunArguments, false, internalContext);
+        if (results == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
-            return result;
+            if (Iterables.<Invoice>size(results) != 1) {
+                throw new UnsupportedOperationException("Invoices were generated but this version of Kill Bill doesn't support returning groupped invoices");
+            } else {
+                return Iterables.<Invoice>getOnlyElement(results);
+            }
         }
     }
 
@@ -281,11 +286,15 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
-        final Invoice result = dispatcher.processAccount(true, accountId, targetDate, null, false, internalContext);
-        if (result == null) {
+        final Iterable<Invoice> results = dispatcher.processAccount(true, accountId, targetDate, null, false, internalContext);
+        if (results == null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
-            return result;
+            if (Iterables.<Invoice>size(results) != 1) {
+                throw new UnsupportedOperationException("Invoices were generated but this version of Kill Bill doesn't support returning groupped invoices");
+            } else {
+                return Iterables.<Invoice>getOnlyElement(results);
+            }
         }
     }
 

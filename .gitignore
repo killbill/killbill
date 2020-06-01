@@ -10,6 +10,9 @@
 .idea/**/tasks.xml
 .idea/dictionaries
 
+.idea/jarRepositories.xml
+.idea/artifacts/
+
 # Sensitive or high-churn files:
 .idea/**/dataSources/
 .idea/**/dataSources.ids
