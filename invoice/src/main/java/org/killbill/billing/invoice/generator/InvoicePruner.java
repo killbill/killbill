@@ -32,7 +32,6 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
-import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 
 import com.google.common.base.Function;
@@ -99,9 +98,9 @@ public class InvoicePruner {
 
     private static class AdjustedRecurringItem {
 
-        private RecurringInvoiceItem target;
-        private List<RepairAdjInvoiceItem> repaired;
-        private List<ItemAdjInvoiceItem> adjusted;
+        private InvoiceItem target;
+        private List<InvoiceItem> repaired;
+        private List<InvoiceItem> adjusted;
 
         private Set<UUID> result;
         private boolean isBuilt;
@@ -113,11 +112,11 @@ public class InvoicePruner {
 
         public void addInvoiceItem(final InvoiceItem item) {
             if (item.getInvoiceItemType() == InvoiceItemType.RECURRING) {
-                setRecurringInvoiceItem((RecurringInvoiceItem) item);
+                setTargetItem(item);
             } else if (item.getInvoiceItemType() == InvoiceItemType.REPAIR_ADJ) {
-                addRepairInvoiceItem((RepairAdjInvoiceItem) item);
+                addRepairInvoiceItem(item);
             } else if (item.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ) {
-                addAdjInvoiceItem((ItemAdjInvoiceItem) item);
+                addAdjInvoiceItem(item);
             } else {
                 Preconditions.checkState(false, "Unexpected item type %s", item.getInvoiceItemType());
             }
@@ -129,24 +128,20 @@ public class InvoicePruner {
         }
 
 
-        public RecurringInvoiceItem getTarget() {
-            build();
-            return target;
-        }
 
-        private void setRecurringInvoiceItem(final RecurringInvoiceItem item) {
+        private void setTargetItem(final InvoiceItem item) {
             Preconditions.checkState(target == null, "Unexpected second recurring item with ID %s", item.getId());
             this.target = item;
         }
 
-        private void addRepairInvoiceItem(final RepairAdjInvoiceItem item) {
+        private void addRepairInvoiceItem(final InvoiceItem item) {
             if (repaired == null) {
                 repaired = new ArrayList<>();
             }
             repaired.add(item);
         }
 
-        private void addAdjInvoiceItem(final ItemAdjInvoiceItem item) {
+        private void addAdjInvoiceItem(final InvoiceItem item) {
             if (adjusted == null) {
                 adjusted = new ArrayList<>();
             }
@@ -162,7 +157,7 @@ public class InvoicePruner {
             // Mostly to deal with our unit tests
             if (target == null || target.getAmount() == null) {
                 if (repaired != null) {
-                    for (final RepairAdjInvoiceItem i : repaired) {
+                    for (final InvoiceItem i : repaired) {
                         // Keep previous precondition behavior
                         Preconditions.checkState(false, "Missing cancelledItem for cancelItem=%s", i);
                     }
@@ -178,7 +173,7 @@ public class InvoicePruner {
             final BigDecimal repairedAmount = sumAmounts(repaired).negate();
 
             if (repaired != null) {
-                for (final RepairAdjInvoiceItem i : repaired) {
+                for (final InvoiceItem i : repaired) {
                     // Keep previous precondition behavior
                     Preconditions.checkState(i.getStartDate().compareTo(target.getStartDate()) >= 0 && i.getEndDate().compareTo(target.getEndDate()) <= 0,
                                              "Invalid cancelledItem=%s for cancelItem=%s", i.getId(), target.getId());
