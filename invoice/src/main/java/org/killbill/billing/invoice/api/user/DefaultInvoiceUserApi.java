@@ -89,7 +89,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
@@ -275,7 +274,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
             if (Iterables.<Invoice>size(results) != 1) {
-                throw new UnsupportedOperationException("Invoices were generated but this version of Kill Bill doesn't support returning groupped invoices");
+                throw new UnsupportedOperationException("Invoices were generated but this version of Kill Bill doesn't support returning grouped invoices");
             } else {
                 return Iterables.<Invoice>getOnlyElement(results);
             }
@@ -291,7 +290,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
             if (Iterables.<Invoice>size(results) != 1) {
-                throw new UnsupportedOperationException("Invoices were generated but this version of Kill Bill doesn't support returning groupped invoices");
+                throw new UnsupportedOperationException("Invoices were generated but this version of Kill Bill doesn't support returning grouped invoices");
             } else {
                 return Iterables.<Invoice>getOnlyElement(results);
             }
@@ -472,7 +471,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }));
         migrationInvoice.addInvoiceItems(itemModelDaos);
 
-        dao.createInvoices(ImmutableList.<InvoiceModelDao>of(migrationInvoice), null, ImmutableSet.of(), internalCallContext);
+        dao.createInvoices(ImmutableList.<InvoiceModelDao>of(migrationInvoice), internalCallContext);
         return migrationInvoice.getId();
     }
 

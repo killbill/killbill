@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2020 Equinix, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -314,34 +315,20 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 return null;
             }
         });
-
     }
-
     @Override
-    public void createInvoice(final InvoiceModelDao invoice,
-                              final BillingEventSet billingEvents,
-                              final Set<InvoiceTrackingModelDao> trackingIds,
-                              final FutureAccountNotifications callbackDateTimePerSubscriptions,
-                              final ExistingInvoiceMetadata existingInvoiceMetadata,
-                              final InternalCallContext context) {
-        createInvoices(ImmutableList.<InvoiceModelDao>of(invoice), billingEvents, trackingIds, callbackDateTimePerSubscriptions, existingInvoiceMetadata, false, context);
+    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
+                                                    final InternalCallContext context) {
+        return createInvoices(invoices, null, ImmutableSet.<InvoiceTrackingModelDao>of(), new FutureAccountNotifications(), null, context);
     }
 
     @Override
     public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
-                                                    final BillingEventSet billingEvents,
+                                                    @Nullable final BillingEventSet billingEvents,
                                                     final Set<InvoiceTrackingModelDao> trackingIds,
+                                                    final FutureAccountNotifications callbackDateTimePerSubscriptions,
+                                                    @Nullable final ExistingInvoiceMetadata existingInvoiceMetadataOrNull,
                                                     final InternalCallContext context) {
-        return createInvoices(invoices, billingEvents, trackingIds, new FutureAccountNotifications(), null, true, context);
-    }
-
-    private List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> invoices,
-                                                     @Nullable final BillingEventSet billingEvents,
-                                                     final Set<InvoiceTrackingModelDao> trackingIds,
-                                                     final FutureAccountNotifications callbackDateTimePerSubscriptions,
-                                                     @Nullable final ExistingInvoiceMetadata existingInvoiceMetadataOrNull,
-                                                     final boolean returnCreatedInvoiceItems,
-                                                     final InternalCallContext context) {
         // Track invoices that are being created
         final Set<UUID> createdInvoiceIds = new HashSet<UUID>();
         // Track invoices that already exist but are being committed -- AUTO_INVOICING_REUSE_DRAFT mode
@@ -431,10 +418,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     } else if (wasInvoiceCreatedOrCommitted && invoiceModelDao.isParentInvoice()) {
                         notifyOfParentInvoiceCreation(entitySqlDaoWrapperFactory, invoiceModelDao, context);
                     }
-
-                    // We always add the future notifications when the callbackDateTimePerSubscriptions is not empty (incl. DRAFT invoices containing RECURRING items created using AUTO_INVOICING_DRAFT feature)
-                    notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoiceModelDao.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
+
+                // We always add the future notifications when the callbackDateTimePerSubscriptions is not empty (incl. DRAFT invoices containing RECURRING items created using AUTO_INVOICING_DRAFT feature)
+                notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, accountId, callbackDateTimePerSubscriptions, context);
 
                 // Bulk insert the invoice items
                 createInvoiceItemsFromTransaction(transInvoiceItemSqlDao, invoiceItemsToCreate, context);
@@ -458,20 +445,16 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     trackingIdsSqlDao.create(trackingIds, context);
                 }
 
-                if (returnCreatedInvoiceItems) {
-                    if (invoiceItemsToCreate.isEmpty()) {
-                        return ImmutableList.<InvoiceItemModelDao>of();
-                    } else {
-                        return transInvoiceItemSqlDao.getByIds(Collections2.<InvoiceItemModelDao, String>transform(invoiceItemsToCreate, new Function<InvoiceItemModelDao, String>() {
-                                                                   @Override
-                                                                   public String apply(final InvoiceItemModelDao input) {
-                                                                       return input.getId().toString();
-                                                                   }
-                                                               }),
-                                                               context);
-                    }
+                if (invoiceItemsToCreate.isEmpty()) {
+                    return ImmutableList.<InvoiceItemModelDao>of();
                 } else {
-                    return null;
+                    return transInvoiceItemSqlDao.getByIds(Collections2.<InvoiceItemModelDao, String>transform(invoiceItemsToCreate, new Function<InvoiceItemModelDao, String>() {
+                                                               @Override
+                                                               public String apply(final InvoiceItemModelDao input) {
+                                                                   return input.getId().toString();
+                                                               }
+                                                           }),
+                                                           context);
                 }
             }
         });

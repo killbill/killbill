@@ -1,6 +1,7 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2020 Equinix, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,7 +20,6 @@ package org.killbill.billing.invoice;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,8 +55,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 
 public class InvoicePluginDispatcher {
 
@@ -160,54 +162,75 @@ public class InvoicePluginDispatcher {
         }
     }
 
-    public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice, final boolean isDryRun, final CallContext callContext, final Iterable<PluginProperty> properties, final InternalTenantContext tenantContext) throws InvoiceApiException {
+    public List<DefaultInvoice> updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
+                                                                            final boolean isDryRun,
+                                                                            final CallContext callContext,
+                                                                            final Iterable<PluginProperty> properties,
+                                                                            final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         if (invoicePlugins.isEmpty()) {
-            return false;
+            // Optimization
+            return null;
         }
 
-        boolean invoiceUpdated = false;
+        // Final mapping of invoiceId to invoice items
+        final Multimap<UUID, InvoiceItem> perInvoiceInvoiceItems = HashMultimap.<UUID, InvoiceItem>create();
+        for (final InvoiceItem invoiceItem : originalInvoice.getInvoiceItems()) {
+            perInvoiceInvoiceItems.put(invoiceItem.getInvoiceId(), invoiceItem);
+        }
+
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             // We clone the original invoice so plugins don't remove/add items
             final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
+            // Invoice items returned by the plugin: some can be new items, some can be updated items (on the same or new invoice)
             final List<InvoiceItem> additionalInvoiceItemsForPlugin = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, properties, callContext);
+            if (additionalInvoiceItemsForPlugin == null || additionalInvoiceItemsForPlugin.isEmpty()) {
+                continue;
+            }
 
-            if (additionalInvoiceItemsForPlugin != null && !additionalInvoiceItemsForPlugin.isEmpty()) {
-                final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
-                for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItemsForPlugin) {
-                    final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice, additionalInvoiceItem, invoicePlugin);
-                    additionalInvoiceItems.add(sanitizedInvoiceItem);
-                }
-                invoiceUpdated = updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems) || invoiceUpdated;
+            for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItemsForPlugin) {
+                final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice, additionalInvoiceItem, invoicePlugin);
+                updatePerInvoiceInvoiceItems(perInvoiceInvoiceItems, sanitizedInvoiceItem);
             }
         }
 
-        return invoiceUpdated;
+        final List<DefaultInvoice> updatedInvoices = new LinkedList<DefaultInvoice>();
+        for (final UUID invoiceId : perInvoiceInvoiceItems.keySet()) {
+            final Collection<InvoiceItem> updatedInvoiceItems = perInvoiceInvoiceItems.get(invoiceId);
+            if (updatedInvoiceItems.isEmpty()) {
+                continue;
+            }
+
+            // TODO This is wrong if the plugin insert adjustment on other invoices
+            final DefaultInvoice clonedInvoice = (DefaultInvoice) originalInvoice.clone();
+            // TODO Check other fields - e.g. tracking ids?
+            clonedInvoice.setId(invoiceId);
+            clonedInvoice.getInvoiceItems().clear();
+            clonedInvoice.addInvoiceItems(updatedInvoiceItems);
+            updatedInvoices.add(clonedInvoice);
+        }
+        return updatedInvoices;
     }
 
-    private boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice, final Collection<InvoiceItem> additionalInvoiceItems) {
-        if (additionalInvoiceItems.isEmpty()) {
-            return false;
-        }
-
-        // Add or update items from generated invoice
-        for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItems) {
-            final InvoiceItem existingItem = Iterables.tryFind(originalInvoice.getInvoiceItems(),
-                                                               new Predicate<InvoiceItem>() {
-                                                                   @Override
-                                                                   public boolean apply(final InvoiceItem originalInvoiceItem) {
-                                                                       return originalInvoiceItem.getId().equals(additionalInvoiceItem.getId());
-                                                                   }
-                                                               }).orNull();
-            if (existingItem != null) {
-                originalInvoice.removeInvoiceItem(existingItem);
+    private void updatePerInvoiceInvoiceItems(final Multimap<UUID, InvoiceItem> perInvoiceInvoiceItems,
+                                              final InvoiceItem pluginInvoiceItem) {
+        InvoiceItem foundInvoiceItem = null;
+        for (final UUID invoiceId : perInvoiceInvoiceItems.keys()) {
+            for (final InvoiceItem invoiceItem : perInvoiceInvoiceItems.get(invoiceId)) {
+                if (invoiceItem.getId().equals(pluginInvoiceItem.getId())) {
+                    foundInvoiceItem = invoiceItem;
+                    break;
+                }
             }
-            originalInvoice.addInvoiceItem(additionalInvoiceItem);
         }
 
-        return true;
+        if (foundInvoiceItem != null) {
+            perInvoiceInvoiceItems.remove(foundInvoiceItem.getInvoiceId(), foundInvoiceItem);
+        }
+
+        perInvoiceInvoiceItems.put(pluginInvoiceItem.getInvoiceId(), pluginInvoiceItem);
     }
 
     private InvoiceItem validateAndSanitizeInvoiceItemFromPlugin(final Invoice originalInvoice, final InvoiceItem additionalInvoiceItem, final InvoicePluginApi invoicePlugin) throws InvoiceApiException {

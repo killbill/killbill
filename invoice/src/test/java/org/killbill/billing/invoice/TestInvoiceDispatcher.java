@@ -61,7 +61,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
@@ -202,7 +201,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao1);
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao2);
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), events, ImmutableSet.of(), context);
+        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), context);
 
         try {
             dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
