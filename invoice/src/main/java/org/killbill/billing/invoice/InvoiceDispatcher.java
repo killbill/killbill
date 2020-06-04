@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -633,11 +634,20 @@ public class InvoiceDispatcher {
                 generatedInvoices.addAll(updatedInvoices);
             }
 
-            // Remove the temporary CBA item
+            // Remove the temporary CBA item, unless it has been updated by the plugin
             if (cbaItemPreInvoicePlugins != null) {
                 // We need to go through all invoices, in case the plugin decided to move that item around
+                invoiceDispatcher:
                 for (final DefaultInvoice generatedInvoice : generatedInvoices) {
-                    generatedInvoice.removeInvoiceItem(cbaItemPreInvoicePlugins);
+                    for (final Iterator<InvoiceItem> iterator = generatedInvoice.getInvoiceItems().iterator(); iterator.hasNext(); ) {
+                        final InvoiceItem generatedInvoiceItem = iterator.next();
+                        if (cbaItemPreInvoicePlugins.getId().equals(generatedInvoiceItem.getId()) &&
+                            // The plugin can override the description of the CBA item
+                            cbaItemPreInvoicePlugins.getDescription().equals(generatedInvoiceItem.getDescription())) {
+                            iterator.remove();
+                            break invoiceDispatcher;
+                        }
+                    }
                 }
             }
 
@@ -668,10 +678,18 @@ public class InvoiceDispatcher {
                 if (invoiceModelDaos.isEmpty()) {
                     setFutureNotifications(account, futureAccountNotifications, internalCallContext);
                 } else {
-                    // TODO This is now wrong
-                    final Set<InvoiceTrackingModelDao> trackingIds = new HashSet<>();
+                    // Note: we're demultiplexing the tracking ids here (same tracking ids for all invoices generated), as we don't
+                    // really know how the plugin(s) did the grouping. If multiple invoice items were generated for a a given subscription
+                    // for instance (e.g. catch-up scenario), they might now end up on different invoices.
+                    final Set<InvoiceTrackingModelDao> trackingIds = new HashSet<InvoiceTrackingModelDao>();
                     for (final TrackingRecordId cur : invoiceWithMetadata.getTrackingIds()) {
-                        trackingIds.add(new InvoiceTrackingModelDao(cur.getTrackingId(), cur.getInvoiceId(), cur.getSubscriptionId(), cur.getUnitType(), cur.getRecordDate()));
+                        for (final DefaultInvoice generatedInvoice : generatedInvoices) {
+                            trackingIds.add(new InvoiceTrackingModelDao(cur.getTrackingId(),
+                                                                        generatedInvoice.getId(),
+                                                                        cur.getSubscriptionId(),
+                                                                        cur.getUnitType(),
+                                                                        cur.getRecordDate()));
+                        }
                     }
 
                     // Commit invoice on disk

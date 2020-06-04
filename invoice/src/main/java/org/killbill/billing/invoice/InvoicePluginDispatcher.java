@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -205,9 +206,13 @@ public class InvoicePluginDispatcher {
 
             // TODO This is wrong if the plugin insert adjustment on other invoices
             final DefaultInvoice clonedInvoice = (DefaultInvoice) originalInvoice.clone();
-            // TODO Check other fields - e.g. tracking ids?
+            // Honor the ID set by the plugin (plugin implementors must know what they are doing here!)
             clonedInvoice.setId(invoiceId);
+            // Clear non-shared state (not everything is strictly needed, but be explicit for the sake of completeness)
+            clonedInvoice.getTrackingIds().clear();
+            clonedInvoice.getPayments().clear();
             clonedInvoice.getInvoiceItems().clear();
+            // Add the final invoice items for that invoice
             clonedInvoice.addInvoiceItems(updatedInvoiceItems);
             updatedInvoices.add(clonedInvoice);
         }
@@ -217,11 +222,12 @@ public class InvoicePluginDispatcher {
     private void updatePerInvoiceInvoiceItems(final Multimap<UUID, InvoiceItem> perInvoiceInvoiceItems,
                                               final InvoiceItem pluginInvoiceItem) {
         InvoiceItem foundInvoiceItem = null;
+        invoicePluginDispatcher:
         for (final UUID invoiceId : perInvoiceInvoiceItems.keys()) {
             for (final InvoiceItem invoiceItem : perInvoiceInvoiceItems.get(invoiceId)) {
                 if (invoiceItem.getId().equals(pluginInvoiceItem.getId())) {
                     foundInvoiceItem = invoiceItem;
-                    break;
+                    break invoicePluginDispatcher;
                 }
             }
         }
@@ -230,6 +236,7 @@ public class InvoicePluginDispatcher {
             perInvoiceInvoiceItems.remove(foundInvoiceItem.getInvoiceId(), foundInvoiceItem);
         }
 
+        Preconditions.checkNotNull(pluginInvoiceItem.getInvoiceId(), "Invoice plugin error: missing invoiceId for item %s", pluginInvoiceItem);
         perInvoiceInvoiceItems.put(pluginInvoiceItem.getInvoiceId(), pluginInvoiceItem);
     }
 

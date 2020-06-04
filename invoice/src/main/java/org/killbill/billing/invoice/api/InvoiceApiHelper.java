@@ -81,11 +81,12 @@ public class InvoiceApiHelper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId, final boolean isDryRun, final WithAccountLock withAccountLock, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+    public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId, final WithAccountLock withAccountLock, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
         // Invoked by User API call
         final LocalDate targetDate = null;
         final List<Invoice> existingInvoices = null;
         final boolean isRescheduled = false;
+        final boolean isDryRun = false;
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, properties, internalTenantContext);
@@ -93,7 +94,7 @@ public class InvoiceApiHelper {
             throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, "delayed scheduling is unsupported for API calls");
         }
 
-        final List<DefaultInvoice> generatedInvoices = new LinkedList<DefaultInvoice>();
+        final Collection<DefaultInvoice> generatedInvoices = new LinkedList<DefaultInvoice>();
         boolean success = false;
         GlobalLock lock = null;
         Iterable<DefaultInvoice> invoicesForPlugins = null;
@@ -129,8 +130,6 @@ public class InvoiceApiHelper {
                 }
             }
 
-            // TODO dryRun?
-
             final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, internalCallContext);
             success = true;
 
@@ -145,12 +144,8 @@ public class InvoiceApiHelper {
 
             if (success) {
                 for (final DefaultInvoice generatedInvoice : generatedInvoices) {
-                    if (isDryRun) {
-                        invoicePluginDispatcher.onSuccessCall(targetDate, generatedInvoice, existingInvoices, isDryRun, isRescheduled, context, properties, internalTenantContext);
-                    } else {
-                        final DefaultInvoice refreshedInvoice = new DefaultInvoice(dao.getById(generatedInvoice.getId(), internalTenantContext));
-                        invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, context, properties, internalTenantContext);
-                    }
+                    final DefaultInvoice refreshedInvoice = new DefaultInvoice(dao.getById(generatedInvoice.getId(), internalTenantContext));
+                    invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, context, properties, internalTenantContext);
                 }
             } else {
                 invoicePluginDispatcher.onFailureCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, context, properties, internalTenantContext);
