@@ -204,7 +204,10 @@ public class InvoicePluginDispatcher {
                 continue;
             }
 
-            // TODO This is wrong if the plugin insert adjustment on other invoices
+            // Note that here, the clonedInvoice is just used as a container object, it doesn't actually represent the final invoice.
+            // For instance, the plugin could return an ITEM_ADJ pointing to an existing invoice: the clonedInvoice object would
+            // not include the items from the original invoice. This doesn't matter anyways, as the dao will create the appropriate entries
+            // and we will re-hydrate the objects before returning (at least in the non dry-run path, see comments in processAccountWithLockAndInputTargetDate).
             final DefaultInvoice clonedInvoice = (DefaultInvoice) originalInvoice.clone();
             // Honor the ID set by the plugin (plugin implementors must know what they are doing here!)
             clonedInvoice.setId(invoiceId);

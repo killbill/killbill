@@ -616,6 +616,8 @@ public class InvoiceDispatcher {
         final LocalDate actualTargetDate = originalInvoice.getTargetDate();
         final List<DefaultInvoice> generatedInvoices = new LinkedList<DefaultInvoice>();
         boolean success = false;
+        // Final list to be returned
+        final List<DefaultInvoice> reHydratedInvoices = new LinkedList<DefaultInvoice>();
         try {
             // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin(s)
             final InvoiceItem cbaItemPreInvoicePlugins = computeCBAOnExistingInvoice(originalInvoice, internalCallContext);
@@ -638,13 +640,17 @@ public class InvoiceDispatcher {
             if (cbaItemPreInvoicePlugins != null) {
                 // We need to go through all invoices, in case the plugin decided to move that item around
                 invoiceDispatcher:
-                for (final DefaultInvoice generatedInvoice : generatedInvoices) {
-                    for (final Iterator<InvoiceItem> iterator = generatedInvoice.getInvoiceItems().iterator(); iterator.hasNext(); ) {
-                        final InvoiceItem generatedInvoiceItem = iterator.next();
+                for (final Iterator<DefaultInvoice> invoiceIterator = generatedInvoices.iterator(); invoiceIterator.hasNext(); ) {
+                    final DefaultInvoice generatedInvoice = invoiceIterator.next();
+                    for (final Iterator<InvoiceItem> invoiceItemIterator = generatedInvoice.getInvoiceItems().iterator(); invoiceItemIterator.hasNext(); ) {
+                        final InvoiceItem generatedInvoiceItem = invoiceItemIterator.next();
                         if (cbaItemPreInvoicePlugins.getId().equals(generatedInvoiceItem.getId()) &&
                             // The plugin can override the description of the CBA item
                             cbaItemPreInvoicePlugins.getDescription().equals(generatedInvoiceItem.getDescription())) {
-                            iterator.remove();
+                            invoiceItemIterator.remove();
+                            if (generatedInvoice.getInvoiceItems().isEmpty()) {
+                                invoiceIterator.remove();
+                            }
                             break invoiceDispatcher;
                         }
                     }
@@ -716,13 +722,24 @@ public class InvoiceDispatcher {
                 setFutureNotifications(account, futureAccountNotifications, internalCallContext);
             }
 
-            if (success) {
+            if (isDryRun) {
+                // In dry-run mode, if an invoice plugin item adjusts an existing item, we technically need to pull the full invoice back
+                // and merge it with the generated items. This hasn't been implemented yet as the API above doesn't support returning a list
+                // of invoices. There is one buggy corner case today where a dry-run would generate a unique invoice item adjustment on an existing invoice:
+                // in this case, the API would only return the newly generated item adjustment, and not the full invoice.
+                reHydratedInvoices.addAll(generatedInvoices);
+            } else {
                 for (final DefaultInvoice generatedInvoice : generatedInvoices) {
+                    reHydratedInvoices.add(new DefaultInvoice(invoiceDao.getById(generatedInvoice.getId(), internalCallContext)));
+                }
+            }
+
+            if (success) {
+                for (final DefaultInvoice reHydratedInvoice : reHydratedInvoices) {
                     if (isDryRun) {
-                        invoicePluginDispatcher.onSuccessCall(actualTargetDate, generatedInvoice, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
+                        invoicePluginDispatcher.onSuccessCall(actualTargetDate, reHydratedInvoice, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
                     } else {
-                        final DefaultInvoice refreshedInvoice = new DefaultInvoice(invoiceDao.getById(generatedInvoice.getId(), internalCallContext));
-                        invoicePluginDispatcher.onSuccessCall(actualTargetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
+                        invoicePluginDispatcher.onSuccessCall(actualTargetDate, reHydratedInvoice, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
                     }
                 }
             } else {
@@ -730,7 +747,7 @@ public class InvoiceDispatcher {
             }
         }
 
-        return new InvoicesWithFutureNotifications(generatedInvoices, futureAccountNotifications);
+        return new InvoicesWithFutureNotifications(reHydratedInvoices, futureAccountNotifications);
     }
 
     private InvoiceWithMetadata generateKillBillInvoice(final ImmutableAccountData account,

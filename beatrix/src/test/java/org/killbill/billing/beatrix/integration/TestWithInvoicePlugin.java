@@ -1,6 +1,7 @@
 /*
  * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2020-2020 Equinix, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -42,7 +43,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
-import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -80,6 +81,7 @@ import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.fail;
 
 public class TestWithInvoicePlugin extends TestIntegrationBase {
 
@@ -293,6 +295,15 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                                                                             recurringItem.getId(),
                                                                             itemDetails);
 
+        // Verify dry-run scenario
+        try {
+            invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+            fail();
+        } catch (final UnsupportedOperationException e) {
+            // Expected -- multiple invoices are updated
+        }
+        Assert.assertEquals(testInvoicePluginApi.invocationCount, 3);
+
         // Move one month
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -308,7 +319,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 6, 1), InvoiceItemType.CBA_ADJ, BigDecimal.TEN.negate()));
 
-        Assert.assertEquals(testInvoicePluginApi.invocationCount, 3);
+        Assert.assertEquals(testInvoicePluginApi.invocationCount, 4);
 
         final List<Invoice> refreshedInvoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         final List<InvoiceItem> invoiceItems = refreshedInvoices.get(1).getInvoiceItems();
@@ -530,7 +541,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         try {
             invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
-            Assert.fail();
+            fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
         }
@@ -554,7 +565,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         testInvoicePluginApi.rescheduleDate = clock.getUTCNow().plusMonths(1);
         try {
             invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
-            Assert.fail();
+            fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
         }

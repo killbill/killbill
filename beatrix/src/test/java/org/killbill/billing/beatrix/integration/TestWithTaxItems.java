@@ -1,6 +1,7 @@
 /*
  * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2020-2020 Equinix, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -147,7 +148,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
         final List<InvoiceItem> invoiceItems = invoices.get(1).getInvoiceItems();
-        final InvoiceItem taxItem  = Iterables.tryFind(invoiceItems, new Predicate<InvoiceItem>() {
+        final InvoiceItem taxItem = Iterables.tryFind(invoiceItems, new Predicate<InvoiceItem>() {
             @Override
             public boolean apply(final InvoiceItem input) {
                 return input.getInvoiceItemType() == InvoiceItemType.TAX;
@@ -303,8 +304,6 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), null, InvoiceItemType.TAX, new BigDecimal("-1.00")));
     }
 
-
-
     @Test(groups = "slow")
     public void testTaxRateStartAndEndDate() throws Exception {
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
@@ -337,7 +336,6 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 11, 15), new LocalDate(2017, 11, 15), InvoiceItemType.CBA_ADJ, new BigDecimal("100")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 11, 15), new LocalDate(2017, 11, 15), InvoiceItemType.CREDIT_ADJ, new BigDecimal("-100")));
 
-
         // Make sure TestInvoicePluginApi will return an additional TAX item
         testInvoicePluginApi.addTaxItem(
                 new TaxInvoiceItem(
@@ -364,7 +362,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
                         null,
                         null
                 )
-        );
+                                       );
         testInvoicePluginApi.addTaxItem(
                 new TaxInvoiceItem(
                         UUID.randomUUID(),
@@ -390,7 +388,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
                         null,
                         null
                 )
-        );
+                                       );
 
         // Move to Evergreen PHASE to verify non-dry-run scenario
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);

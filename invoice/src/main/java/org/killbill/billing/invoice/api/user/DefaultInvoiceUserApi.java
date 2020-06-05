@@ -274,6 +274,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
             if (Iterables.<Invoice>size(results) != 1) {
+                // If we change the API one day, we need to fix the implementation (see comments in processAccountWithLockAndInputTargetDate)
                 throw new UnsupportedOperationException("Invoices were generated but this version of Kill Bill doesn't support returning grouped invoices");
             } else {
                 return Iterables.<Invoice>getOnlyElement(results);
