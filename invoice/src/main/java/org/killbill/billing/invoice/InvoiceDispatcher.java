@@ -484,6 +484,14 @@ public class InvoiceDispatcher {
                         pq.add(k);
                     }
                 }
+                //
+                final UUID additionalInvoiceId = additionalInvoice.getId();
+                Iterables.removeIf(augmentedExistingInvoices, new Predicate<Invoice>() {
+                    @Override
+                    public boolean apply(final Invoice input) {
+                        return input.getId().equals(additionalInvoiceId);
+                    }
+                });
                 augmentedExistingInvoices.add(additionalInvoice);
             }
         }
