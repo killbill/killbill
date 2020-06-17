@@ -484,6 +484,16 @@ public class InvoiceDispatcher {
                         pq.add(k);
                     }
                 }
+                // In order to handle AUTO_INVOICING_REUSE_DRAFT where the invoice is being reused
+                // we need to only keep the latest invoice with all the items currently being generated
+                // See https://github.com/killbill/killbill/issues/1313
+                final UUID additionalInvoiceId = additionalInvoice.getId();
+                Iterables.removeIf(augmentedExistingInvoices, new Predicate<Invoice>() {
+                    @Override
+                    public boolean apply(final Invoice input) {
+                        return input.getId().equals(additionalInvoiceId);
+                    }
+                });
                 augmentedExistingInvoices.add(additionalInvoice);
             }
         }
