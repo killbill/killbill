@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="killbill-profiles-killpay:war">
+    <output-path>$PROJECT_DIR$/profiles/killpay/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>killbill-profiles-killpay</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="killbill-profiles-killpay-0.22.9-SNAPSHOT.war">
+      <element id="artifact" artifact-name="killbill-profiles-killpay:war exploded" />
+    </root>
+  </artifact>
+</component>
