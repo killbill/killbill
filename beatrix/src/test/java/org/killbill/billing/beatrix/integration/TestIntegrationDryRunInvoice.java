@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
@@ -42,6 +43,7 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.testng.annotations.Test;
@@ -616,6 +618,47 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 25), new LocalDate(2018, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("56.44")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 25), new LocalDate(2017, 12, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-56.44")));
+
+    }
+
+
+
+    @Test(groups = "slow", description = "See https://github.com/killbill/killbill/issues/1313")
+    public void testDryRunTargetDatesWith_AUTO_INVOICING_REUSE_DRAFT() throws Exception {
+        final DateTime initialCreationDate = new DateTime(2020, 6, 15, 0, 0, 0, 0, testTimeZone);
+        clock.setTime(initialCreationDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        // Create the monthly
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 6, 15), new LocalDate(2020, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        final Invoice draftInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext, expectedInvoices);
+        assertEquals(draftInvoice.getStatus(), InvoiceStatus.DRAFT);
+
+        // The dryRun items will include the item on the existing DRAFT invoice
+        final List<ExpectedInvoiceItemCheck> dryRunExpectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
+        dryRunExpectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 6, 15), new LocalDate(2020, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        dryRunExpectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 7, 15), new LocalDate(2020, 8, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        dryRunExpectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 8, 15), new LocalDate(2020, 9, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        dryRunExpectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 15), new LocalDate(2020, 10, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        dryRunExpectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 10, 15), new LocalDate(2020, 11, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2020, 10, 15), DRY_RUN_TARGET_DATE_ARG, callContext);
+        assertEquals(dryRunInvoice.getInvoiceItems().size(), 5);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, dryRunExpectedInvoices);
+        assertEquals(dryRunInvoice.getId(), draftInvoice.getId());
+
+        // We verify that our original DRAFT invoice was left unchanged
+        final Invoice draftInvoiceAgain = invoiceChecker.checkInvoice(account.getId(), 1, callContext, expectedInvoices);
+        assertEquals(dryRunInvoice.getId(), draftInvoiceAgain.getId());
 
     }
 }

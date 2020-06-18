@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -42,7 +42,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -53,8 +52,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -810,19 +807,4 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             }
         }));
     }
-
-    public static void filterCatalogVersions(final VersionedCatalog fullCatalog, @Nullable final DateTime requestedDate) {
-
-        if (requestedDate == null) {
-            return;
-        }
-
-        final StaticCatalog target = fullCatalog.getVersion(requestedDate.toDate());
-
-        // Since we cannot reconstruct a DefaultVersionedCatalog with all its JAXB annotation
-        // we filter the existing versions list from the original object
-        fullCatalog.getVersions().clear();
-        fullCatalog.getVersions().add(target);
-    }
-
 }

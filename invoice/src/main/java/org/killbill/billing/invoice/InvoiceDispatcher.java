@@ -498,10 +498,12 @@ public class InvoiceDispatcher {
                                                                 final InternalCallContext context) throws InvoiceApiException {
         final PriorityQueue<LocalDate> pq = new PriorityQueue<LocalDate>(allCandidateTargetDates);
 
+         final boolean isAccountAutoInvoiceReuseDraft = billingEvents.isAccountAutoInvoiceDraft() && billingEvents.isAccountAutoInvoiceReuseDraft();
+
         // Keeps track of generated invoices as we go through the list
         // The list is an ordered list of items merged from existing notifications and upcoming notifications, each of these the result of a previous invoice being generated.
         final List<Invoice> augmentedExistingInvoices = new ArrayList<Invoice>(existingInvoices);
-        Iterable<Invoice> additionalInvoices = null;
+        Invoice additionalInvoice = null;
         LocalDate cur;
         while ((cur = pq.poll()) != null) {
             if (cur.compareTo(targetDate) >= 0) {
@@ -509,20 +511,34 @@ public class InvoiceDispatcher {
             }
             // Loop through each boundary date prior to our given targetDate
             final InvoicesWithFutureNotifications result = processAccountWithLockAndInputTargetDate(accountId, cur, billingEvents, augmentedExistingInvoices, true, false, context);
-            additionalInvoices = result != null ? result.getInvoices() : null;
-            if (additionalInvoices != null) {
+            if (result != null) {
+
+                Preconditions.checkState(Iterables.size(result.getInvoices()) == 1, "Invoices were generated but this version of Kill Bill doesn't support returning grouped invoices");
+                additionalInvoice = Iterables.<Invoice>getOnlyElement(result.getInvoices());
+
                 for (final LocalDate k : result.getNotifications().getNotificationsForTrigger().keySet()) {
                     if (k.compareTo(cur) > 0 && k.compareTo(targetDate) < 0) {
                         pq.add(k);
                     }
                 }
-                Iterables.addAll(augmentedExistingInvoices, additionalInvoices);
+
+                // In order to handle AUTO_INVOICING_REUSE_DRAFT where the invoice is being reused
+                // we need to only keep the latest invoice with all the items currently being generated
+                // See https://github.com/killbill/killbill/issues/1313
+                final UUID additionalInvoiceId = additionalInvoice.getId();
+                Iterables.removeIf(augmentedExistingInvoices, new Predicate<Invoice>() {
+                    @Override
+                    public boolean apply(final Invoice input) {
+                        return input.getId().equals(additionalInvoiceId);
+                    }
+                });
+                augmentedExistingInvoices.add(additionalInvoice);
             }
         }
 
         final InvoicesWithFutureNotifications invoicesWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, augmentedExistingInvoices, true, false, context);
         if (invoicesWithFutureNotifications == null || invoicesWithFutureNotifications.getInvoices() == null) {
-            return additionalInvoices;
+            return ImmutableList.of(additionalInvoice);
         } else {
             return invoicesWithFutureNotifications.getInvoices();
         }

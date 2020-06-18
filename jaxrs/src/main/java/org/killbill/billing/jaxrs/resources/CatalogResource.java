@@ -1,7 +1,7 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,8 +18,14 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -137,8 +143,21 @@ public class CatalogResource extends JaxRsResourceBase {
                                             DATE_TIME_FORMATTER.parseDateTime(requestedDate).toDateTime(DateTimeZone.UTC) :
                                             null;
 
-        final VersionedCatalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
-        JaxRsResourceBase.filterCatalogVersions(catalog, catalogDateVersion);
+        final VersionedCatalog versionedcatalog = catalogUserApi.getCatalog(catalogName, tenantContext);
+        final VersionedCatalog catalog;
+        if (catalogDateVersion == null) {
+            catalog = versionedcatalog;
+        } else {
+            // We have no other choice than to deep copy the catalog...
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            final ObjectOutput out = new ObjectOutputStream(bos);
+            out.writeObject(versionedcatalog);
+            final ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+            final ObjectInputStream in = new ObjectInputStream(bis);
+            catalog = (VersionedCatalog) in.readObject();
+            catalog.getVersions().clear();
+            catalog.getVersions().add(versionedcatalog.getVersion(catalogDateVersion.toDate()));
+        }
 
         // This assumes serializableClass has the right JAXB annotations
         final Class serializableClass = catalog.getClass();
@@ -207,11 +226,15 @@ public class CatalogResource extends JaxRsResourceBase {
                                             null;
 
         final VersionedCatalog catalog = catalogUserApi.getCatalog(catalogName, tenantContext);
-        JaxRsResourceBase.filterCatalogVersions(catalog, catalogDateVersion);
 
-        final List<CatalogJson> result = new ArrayList<CatalogJson>();
-        for (final StaticCatalog v : catalog.getVersions()) {
-            result.add(new CatalogJson(v));
+        final Collection<CatalogJson> result = new ArrayList<CatalogJson>();
+        if (catalogDateVersion == null) {
+            for (final StaticCatalog v : catalog.getVersions()) {
+                result.add(new CatalogJson(v));
+            }
+        } else {
+            final StaticCatalog target = catalog.getVersion(catalogDateVersion.toDate());
+            result.add(new CatalogJson(target));
         }
 
         return Response.status(Status.OK).entity(result).build();
