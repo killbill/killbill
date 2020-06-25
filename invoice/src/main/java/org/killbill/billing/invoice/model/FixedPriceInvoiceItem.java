@@ -52,6 +52,36 @@ public class FixedPriceInvoiceItem extends InvoiceItemCatalogBase {
               null, date, null, amount, null, currency, null, quantity, itemDetails, InvoiceItemType.FIXED);
     }
 
+
+    public FixedPriceInvoiceItem(final InvoiceItemCatalogBase i) {
+        super(i.getId(),
+              i.getCreatedDate(),
+              i.getInvoiceId(),
+              i.getAccountId(),
+              i.getBundleId(),
+              i.getSubscriptionId(),
+              i.getDescription(),
+              i.getProductName(),
+              i.getPlanName(),
+              i.getPhaseName(),
+              i.getUsageName(),
+              i.getCatalogEffectiveDate(),
+              i.getPrettyProductName(),
+              i.getPrettyPlanName(),
+              i.getPrettyPhaseName(),
+              i.getPrettyUsageName(),
+              i.getStartDate(),
+              i.getEndDate(),
+              i.getAmount(),
+              i.getRate(),
+              i.getCurrency(),
+              i.getLinkedItemId(),
+              i.getQuantity(),
+              i.getItemDetails(),
+              i.getInvoiceItemType());
+    }
+
+
     @Override
     public String getDescription() {
         if (description != null) {

@@ -40,7 +40,12 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
+import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
+import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemCatalogBase;
+import org.killbill.billing.invoice.model.RecurringInvoiceItem;
+import org.killbill.billing.invoice.model.TaxInvoiceItem;
+import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
@@ -261,7 +266,7 @@ public class InvoicePluginDispatcher {
                                                         originalInvoice.getId());
 
         final UUID additionalInvoiceId = MoreObjects.firstNonNull(additionalInvoiceItem.getId(), UUIDs.randomUUID());
-        return new InvoiceItemCatalogBase(additionalInvoiceId,
+        final InvoiceItemCatalogBase tmp = new InvoiceItemCatalogBase(additionalInvoiceId,
                                           mutableField("createdDate", existingItem != null ? existingItem.getCreatedDate() : null, additionalInvoiceItem.getCreatedDate(), invoicePlugin),
                                           invoiceId,
                                           immutableField("accountId", existingItem, existingItem != null ? existingItem.getAccountId() : null, additionalInvoiceItem.getAccountId(), invoicePlugin),
@@ -286,7 +291,24 @@ public class InvoicePluginDispatcher {
                                           immutableField("quantity", existingItem, existingItem != null ? existingItem.getQuantity() : null, additionalInvoiceItem.getQuantity(), invoicePlugin),
                                           mutableField("itemDetails", existingItem != null ? existingItem.getItemDetails() : null, additionalInvoiceItem.getItemDetails(), invoicePlugin),
                                           immutableField("invoiceItemType", existingItem, existingItem != null ? existingItem.getInvoiceItemType() : null, additionalInvoiceItem.getInvoiceItemType(), invoicePlugin));
+        switch (tmp.getInvoiceItemType()) {
+            case RECURRING:
+                return new RecurringInvoiceItem(tmp);
+            case USAGE:
+                return new UsageInvoiceItem(tmp);
+            case FIXED:
+                return new FixedPriceInvoiceItem(tmp);
+            case TAX:
+                return new TaxInvoiceItem(tmp);
+            case EXTERNAL_CHARGE:
+                return new ExternalChargeInvoiceItem(tmp);
+            default:
+                // None of the other types extend InvoiceItemCatalogBase so we return item as-is
+                // As long as there is no explicit cast to the expected type this works
+                return tmp;
+        }
     }
+
 
     private <T> T mutableField(final String fieldName, @Nullable final T existingValue, @Nullable final T updatedValue, final InvoicePluginApi invoicePlugin) {
         if (updatedValue != null) {
