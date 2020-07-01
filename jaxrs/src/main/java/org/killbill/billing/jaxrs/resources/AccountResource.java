@@ -287,7 +287,7 @@ public class AccountResource extends JaxRsResourceBase {
                                       @QueryParam(QUERY_EXTERNAL_KEY) final String externalKey,
                                       @QueryParam(QUERY_BUNDLES_FILTER) final String bundlesFilter,
                                       @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionApiException {
+                                      @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionApiException, CatalogApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
@@ -298,20 +298,14 @@ public class AccountResource extends JaxRsResourceBase {
 
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
 
-        boolean filter = (null != bundlesFilter && !bundlesFilter.isEmpty());
+        final boolean filter = (null != bundlesFilter && !bundlesFilter.isEmpty());
+        final List<SubscriptionBundle> subscriptionBundles = filter ? filterBundles(bundles, Arrays.asList(bundlesFilter.split(","))) : bundles;
 
-        final Collection<BundleJson> result = Collections2.transform(
-                (filter) ? filterBundles(bundles, Arrays.asList(bundlesFilter.split(","))) : bundles, new Function<SubscriptionBundle, BundleJson>() {
-                    @Override
-                    public BundleJson apply(final SubscriptionBundle input) {
-                        try {
-                            return new BundleJson(input, account.getCurrency(), accountAuditLogs);
-                        } catch (final CatalogApiException e) {
-                            // Not the cleanest thing, but guava Api don't allow throw..
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
+        final Collection<BundleJson> result = new LinkedList<BundleJson>();
+        for (final SubscriptionBundle subscriptionBundle : subscriptionBundles) {
+            result.add(new BundleJson(subscriptionBundle, account.getCurrency(), accountAuditLogs));
+        }
+
         return Response.status(Status.OK).entity(result).build();
     }
 
