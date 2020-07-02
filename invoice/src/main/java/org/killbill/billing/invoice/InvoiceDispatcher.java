@@ -538,7 +538,7 @@ public class InvoiceDispatcher {
 
         final InvoicesWithFutureNotifications invoicesWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, augmentedExistingInvoices, true, false, context);
         if (invoicesWithFutureNotifications == null || invoicesWithFutureNotifications.getInvoices() == null) {
-            return ImmutableList.of(additionalInvoice);
+            return additionalInvoice == null ? null : ImmutableList.of(additionalInvoice);
         } else {
             return invoicesWithFutureNotifications.getInvoices();
         }
