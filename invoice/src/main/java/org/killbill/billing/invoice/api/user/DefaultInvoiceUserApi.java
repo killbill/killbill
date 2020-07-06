@@ -342,7 +342,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                    final boolean autoCommit,
                                                    final Iterable<PluginProperty> originalProperties,
                                                    final CallContext context) throws InvoiceApiException {
-        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>(ImmutableList.<PluginProperty>copyOf(originalProperties));
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
+        if (originalProperties != null) {
+            properties.addAll(ImmutableList.<PluginProperty>copyOf(originalProperties));
+        }
         return insertItems(accountId, effectiveDate, InvoiceItemType.EXTERNAL_CHARGE, charges, autoCommit, properties, context);
     }
 
@@ -353,7 +356,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                             final boolean autoCommit,
                                             final Iterable<PluginProperty> originalProperties,
                                             final CallContext context) throws InvoiceApiException {
-        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>(ImmutableList.<PluginProperty>copyOf(originalProperties));
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
+        if (originalProperties != null) {
+            properties.addAll(ImmutableList.<PluginProperty>copyOf(originalProperties));
+        }
+
         return insertItems(accountId, effectiveDate, InvoiceItemType.TAX, taxItems, autoCommit, properties, context);
     }
 
@@ -373,7 +380,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                            final boolean autoCommit,
                                            final Iterable<PluginProperty> originalProperties,
                                            final CallContext context) throws InvoiceApiException {
-        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>(ImmutableList.<PluginProperty>copyOf(originalProperties));
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
+        if (originalProperties != null) {
+            properties.addAll(ImmutableList.<PluginProperty>copyOf(originalProperties));
+        }
+
         final List<InvoiceItem> items = insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
         return negateCreditItems(items);
     }
@@ -419,7 +430,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>(ImmutableList.<PluginProperty>copyOf(originalProperties));
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
+        if (originalProperties != null) {
+            properties.addAll(ImmutableList.<PluginProperty>copyOf(originalProperties));
+        }
+
         final Collection<InvoiceItem> adjustmentInvoiceItems = Collections2.<InvoiceItem>filter(invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, withAccountLock, properties, context),
                                                                                                 new Predicate<InvoiceItem>() {
                                                                                                     @Override
