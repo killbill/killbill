@@ -1,6 +1,8 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2020 Equinix, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -58,7 +60,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class InvoiceApiHelper {
@@ -80,11 +81,12 @@ public class InvoiceApiHelper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId, final boolean isDryRun, final WithAccountLock withAccountLock, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+    public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId, final WithAccountLock withAccountLock, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
         // Invoked by User API call
         final LocalDate targetDate = null;
         final List<Invoice> existingInvoices = null;
         final boolean isRescheduled = false;
+        final boolean isDryRun = false;
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, properties, internalTenantContext);
@@ -92,6 +94,7 @@ public class InvoiceApiHelper {
             throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, "delayed scheduling is unsupported for API calls");
         }
 
+        final Collection<DefaultInvoice> generatedInvoices = new LinkedList<DefaultInvoice>();
         boolean success = false;
         GlobalLock lock = null;
         Iterable<DefaultInvoice> invoicesForPlugins = null;
@@ -104,19 +107,30 @@ public class InvoiceApiHelper {
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
             for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
                 // Call plugin(s)
-                invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, properties, internalCallContext);
+                final List<DefaultInvoice> updatedInvoices = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, properties, internalCallContext);
+                if (updatedInvoices == null) {
+                    // Optimization
+                    generatedInvoices.add(invoiceForPlugin);
+                } else {
+                    generatedInvoices.addAll(updatedInvoices);
+                }
 
-                // Transformation to InvoiceModelDao
-                final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);
-                final List<InvoiceItem> invoiceItems = invoiceForPlugin.getInvoiceItems();
-                final List<InvoiceItemModelDao> invoiceItemModelDaos = toInvoiceItemModelDao(invoiceItems);
-                invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
+                // TODO No CBA?
 
-                // Keep track of modified invoices
-                invoiceModelDaos.add(invoiceModelDao);
+                for (final DefaultInvoice generatedInvoice : generatedInvoices) {
+                    if (generatedInvoice.getInvoiceItems().isEmpty()) {
+                        continue;
+                    }
+
+                    // Transformation to Invoice -> InvoiceModelDao
+                    final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(generatedInvoice);
+                    final List<InvoiceItemModelDao> invoiceItemModelDaos = toInvoiceItemModelDao(generatedInvoice.getInvoiceItems());
+                    invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
+                    invoiceModelDaos.add(invoiceModelDao);
+                }
             }
 
-            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, ImmutableSet.of(), internalCallContext);
+            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, internalCallContext);
             success = true;
 
             return fromInvoiceItemModelDao(createdInvoiceItems);
@@ -129,8 +143,8 @@ public class InvoiceApiHelper {
             }
 
             if (success) {
-                for (final Invoice invoiceForPlugin : invoicesForPlugins) {
-                    final DefaultInvoice refreshedInvoice = new DefaultInvoice(dao.getById(invoiceForPlugin.getId(), internalTenantContext));
+                for (final DefaultInvoice generatedInvoice : generatedInvoices) {
+                    final DefaultInvoice refreshedInvoice = new DefaultInvoice(dao.getById(generatedInvoice.getId(), internalTenantContext));
                     invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, context, properties, internalTenantContext);
                 }
             } else {

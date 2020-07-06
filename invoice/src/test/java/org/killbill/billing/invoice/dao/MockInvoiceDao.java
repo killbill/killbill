@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2020 Equinix, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -65,41 +66,35 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public void createInvoice(final InvoiceModelDao invoice,
-                              final BillingEventSet billingEvents,
-                              final Set<InvoiceTrackingModelDao> trackingIds,
-                              final FutureAccountNotifications callbackDateTimePerSubscriptions,
-                              final ExistingInvoiceMetadata existingInvoiceMetadata,
-                              final InternalCallContext context) {
-        synchronized (monitor) {
-            storeInvoice(invoice, context);
+    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices, final InternalCallContext context) {
+        return createInvoices(invoices, null, null, null, null, context);
+    }
+
+    @Override
+    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
+                                                    final BillingEventSet billingEvents,
+                                                    final Set<InvoiceTrackingModelDao> trackingIds,
+                                                    final FutureAccountNotifications callbackDateTimePerSubscriptions,
+                                                    final ExistingInvoiceMetadata existingInvoiceMetadata,
+                                                    final InternalCallContext context) {
+        final List<InvoiceItemModelDao> invoiceItemModelDaos = new LinkedList<InvoiceItemModelDao>();
+        for (final InvoiceModelDao invoice : invoices) {
+            synchronized (monitor) {
+                invoiceItemModelDaos.addAll(storeInvoice(invoice, context));
+            }
+            try {
+                eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
+                                                              InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice), invoice.getCurrency(),
+                                                              context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
+            } catch (final PersistentBus.EventBusException ex) {
+                throw new RuntimeException(ex);
+            }
         }
-        try {
-            eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                          InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice), invoice.getCurrency(),
-                                                          context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
-        } catch (final PersistentBus.EventBusException ex) {
-            throw new RuntimeException(ex);
-        }
+        return invoiceItemModelDaos;
     }
 
     @Override
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext context) {
-
-    }
-
-    @Override
-    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoiceModelDaos,
-                                                    final BillingEventSet billingEvents,
-                                                    final Set<InvoiceTrackingModelDao> trackingIds,
-                                                    final InternalCallContext context) {
-        synchronized (monitor) {
-            final List<InvoiceItemModelDao> createdItems = new LinkedList<InvoiceItemModelDao>();
-            for (final InvoiceModelDao invoice : invoiceModelDaos) {
-                createdItems.addAll(storeInvoice(invoice, context));
-            }
-            return createdItems;
-        }
     }
 
     private Collection<InvoiceItemModelDao> storeInvoice(final InvoiceModelDao invoice, final InternalCallContext context) {

@@ -16,23 +16,23 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="killbill-account" />
-        <module name="killbill-beatrix" />
-        <module name="killbill-catalog" />
         <module name="killbill-currency" />
-        <module name="killbill-entitlement" />
-        <module name="killbill-internal-api" />
-        <module name="killbill-invoice" />
-        <module name="killbill-jaxrs" />
-        <module name="killbill-junction" />
-        <module name="killbill-overdue" />
-        <module name="killbill-payment" />
-        <module name="killbill-profiles-killbill" />
         <module name="killbill-profiles-killpay" />
-        <module name="killbill-subscription" />
-        <module name="killbill-tenant" />
-        <module name="killbill-usage" />
+        <module name="killbill-overdue" />
+        <module name="killbill-beatrix" />
         <module name="killbill-util" />
+        <module name="killbill-profiles-killbill" />
+        <module name="killbill-usage" />
+        <module name="killbill-subscription" />
+        <module name="killbill-jaxrs" />
+        <module name="killbill-entitlement" />
+        <module name="killbill-catalog" />
+        <module name="killbill-payment" />
+        <module name="killbill-account" />
+        <module name="killbill-tenant" />
+        <module name="killbill-invoice" />
+        <module name="killbill-internal-api" />
+        <module name="killbill-junction" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

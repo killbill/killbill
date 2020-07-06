@@ -1,6 +1,7 @@
 /*
  * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2020-2020 Equinix, Inc
+ * Copyright 2014-2020 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -31,6 +32,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -42,7 +44,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
-import org.killbill.billing.invoice.api.DefaultInvoiceService;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -80,6 +82,8 @@ import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.fail;
+import static org.testng.Assert.assertNull;
 
 public class TestWithInvoicePlugin extends TestIntegrationBase {
 
@@ -293,6 +297,15 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                                                                             recurringItem.getId(),
                                                                             itemDetails);
 
+        // Verify dry-run scenario
+        try {
+            invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2012, 6, 1), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+            fail();
+        } catch (final UnsupportedOperationException e) {
+            // Expected -- multiple invoices are updated
+        }
+        Assert.assertEquals(testInvoicePluginApi.invocationCount, 3);
+
         // Move one month
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -308,7 +321,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 6, 1), InvoiceItemType.CBA_ADJ, BigDecimal.TEN.negate()));
 
-        Assert.assertEquals(testInvoicePluginApi.invocationCount, 3);
+        Assert.assertEquals(testInvoicePluginApi.invocationCount, 4);
 
         final List<Invoice> refreshedInvoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         final List<InvoiceItem> invoiceItems = refreshedInvoices.get(1).getInvoiceItems();
@@ -437,6 +450,51 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         checkInvoiceDescriptions(thirdInvoice);
     }
 
+
+
+
+
+    @Test(groups = "slow",description = "See https://github.com/killbill/killbill/issues/1316")
+    public void testDryrunWithModifiedUsageItem() throws Exception {
+
+        testInvoicePluginApi.shouldAddTaxItem = false;
+        testInvoicePluginApi.shouldUpdateDescription = true;
+
+        clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK);
+        assertNotNull(bpEntitlement);
+
+        assertNull(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate());
+
+
+        //
+        // ADD ADD_ON ON THE SAME DAY
+        //
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK);
+
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2017, 6, 18), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2017, 7, 25), 100L, callContext);
+
+
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2017, 8, 18), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2017, 9, 25), 100L, callContext);
+
+
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2018, 8, 15), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+        assertEquals(dryRunInvoice.getInvoiceItems().size(), 16);
+
+
+    }
+
+
     private void checkInvoiceDescriptions(final Invoice invoice) {
         for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
             assertEquals(invoiceItem.getDescription(), String.format("[plugin] %s", invoiceItem.getId()));
@@ -530,7 +588,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         try {
             invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
-            Assert.fail();
+            fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
         }
@@ -554,7 +612,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         testInvoicePluginApi.rescheduleDate = clock.getUTCNow().plusMonths(1);
         try {
             invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
-            Assert.fail();
+            fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
         }
