@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -335,12 +336,24 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<InvoiceItem> insertExternalCharges(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> charges, final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+    public List<InvoiceItem> insertExternalCharges(final UUID accountId,
+                                                   final LocalDate effectiveDate,
+                                                   final Iterable<InvoiceItem> charges,
+                                                   final boolean autoCommit,
+                                                   final Iterable<PluginProperty> originalProperties,
+                                                   final CallContext context) throws InvoiceApiException {
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>(ImmutableList.<PluginProperty>copyOf(originalProperties));
         return insertItems(accountId, effectiveDate, InvoiceItemType.EXTERNAL_CHARGE, charges, autoCommit, properties, context);
     }
 
     @Override
-    public List<InvoiceItem> insertTaxItems(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> taxItems, final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+    public List<InvoiceItem> insertTaxItems(final UUID accountId,
+                                            final LocalDate effectiveDate,
+                                            final Iterable<InvoiceItem> taxItems,
+                                            final boolean autoCommit,
+                                            final Iterable<PluginProperty> originalProperties,
+                                            final CallContext context) throws InvoiceApiException {
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>(ImmutableList.<PluginProperty>copyOf(originalProperties));
         return insertItems(accountId, effectiveDate, InvoiceItemType.TAX, taxItems, autoCommit, properties, context);
     }
 
@@ -354,8 +367,13 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<InvoiceItem> insertCredits(final UUID accountId, final LocalDate effectiveDate, final Iterable<InvoiceItem> creditItems,
-                                           final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+    public List<InvoiceItem> insertCredits(final UUID accountId,
+                                           final LocalDate effectiveDate,
+                                           final Iterable<InvoiceItem> creditItems,
+                                           final boolean autoCommit,
+                                           final Iterable<PluginProperty> originalProperties,
+                                           final CallContext context) throws InvoiceApiException {
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>(ImmutableList.<PluginProperty>copyOf(originalProperties));
         final List<InvoiceItem> items = insertItems(accountId, effectiveDate, InvoiceItemType.CREDIT_ADJ, creditItems, autoCommit, properties, context);
         return negateCreditItems(items);
     }
@@ -367,9 +385,16 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId,
-                                                   final LocalDate effectiveDate, @Nullable final BigDecimal amount,
-                                                   @Nullable final Currency currency, final String description, final String itemDetails, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+    public InvoiceItem insertInvoiceItemAdjustment(final UUID accountId,
+                                                   final UUID invoiceId,
+                                                   final UUID invoiceItemId,
+                                                   final LocalDate effectiveDate,
+                                                   @Nullable final BigDecimal amount,
+                                                   @Nullable final Currency currency,
+                                                   final String description,
+                                                   final String itemDetails,
+                                                   final Iterable<PluginProperty> originalProperties,
+                                                   final CallContext context) throws InvoiceApiException {
         if (amount != null && amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_ADJUSTMENT_AMOUNT_SHOULD_BE_POSITIVE, amount);
         }
@@ -394,6 +419,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>(ImmutableList.<PluginProperty>copyOf(originalProperties));
         final Collection<InvoiceItem> adjustmentInvoiceItems = Collections2.<InvoiceItem>filter(invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, withAccountLock, properties, context),
                                                                                                 new Predicate<InvoiceItem>() {
                                                                                                     @Override
@@ -476,8 +502,13 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return migrationInvoice.getId();
     }
 
-    private List<InvoiceItem> insertItems(final UUID accountId, final LocalDate effectiveDate, final InvoiceItemType itemType, final Iterable<InvoiceItem> inputItems, final boolean autoCommit, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
-
+    private List<InvoiceItem> insertItems(final UUID accountId,
+                                          final LocalDate effectiveDate,
+                                          final InvoiceItemType itemType,
+                                          final Iterable<InvoiceItem> inputItems,
+                                          final boolean autoCommit,
+                                          final LinkedList<PluginProperty> properties,
+                                          final CallContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         ImmutableAccountData accountData;
         try {
