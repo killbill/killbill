@@ -30,6 +30,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
+import org.killbill.billing.invoice.model.ParentInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.util.LocaleUtils;
 import org.killbill.billing.util.email.templates.MustacheTemplateEngine;
@@ -107,6 +108,16 @@ public class TestDefaultInvoiceItemFormatter extends InvoiceTestSuiteNoDB {
         checkOutput(recurringItem,
                     "{{#invoiceItem}}<td>{{formattedStartDate}}{{#formattedEndDate}} - {{formattedEndDate}}{{/formattedEndDate}}</td>{{/invoiceItem}}",
                     "<td>Dec 1, 2012 - Dec 31, 2012</td>");
+    }
+    @Test(groups = "fast")
+    public void testNullStartAndEndDate() throws Exception {
+        final LocalDate startDate = new LocalDate(2012, 12, 1);
+        final LocalDate endDate = new LocalDate(2012, 12, 31);
+        final ParentInvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), null, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                                                                         BigDecimal.TEN, Currency.USD, UUID.randomUUID().toString());
+        checkOutput(parentInvoiceItem,
+                    "{{#invoiceItem}}<td>{{formattedStartDate}}{{#formattedEndDate}} - {{formattedEndDate}}{{/formattedEndDate}}</td>{{/invoiceItem}}",
+                    "<td></td>");
     }
 
     private void checkOutput(final InvoiceItem invoiceItem, final String template, final String expected) {
