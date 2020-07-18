@@ -624,7 +624,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
                         Plan nextPlan = catalog.getNextPlanVersion(currentPlan);
                         while (nextPlan != null ) {
-                            if ( nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
+                            if (nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
                                 final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
                                 final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
 
