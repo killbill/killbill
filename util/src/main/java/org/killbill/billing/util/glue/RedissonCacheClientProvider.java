@@ -33,16 +33,18 @@ public class RedissonCacheClientProvider implements Provider<RedissonClient> {
 
     private final String address;
     private final int connectionMinimumIdleSize;
+    private final String password;
 
     @Inject
     public RedissonCacheClientProvider(final RedisCacheConfig cacheConfig) {
-        this(cacheConfig.getUrl(), cacheConfig.getConnectionMinimumIdleSize());
+        this(cacheConfig.getUrl(), cacheConfig.getConnectionMinimumIdleSize(), cacheConfig.getPassword());
     }
 
     @VisibleForTesting
-    public RedissonCacheClientProvider(final String address, final int connectionMinimumIdleSize) {
+    public RedissonCacheClientProvider(final String address, final int connectionMinimumIdleSize, final String password) {
         this.address = address;
         this.connectionMinimumIdleSize = connectionMinimumIdleSize;
+        this.password = password;
     }
 
     @Override
@@ -54,6 +56,7 @@ public class RedissonCacheClientProvider implements Provider<RedissonClient> {
         redissonCfg.setCodec(codec)
                    .useSingleServer()
                    .setAddress(address)
+                   .setPassword(password)
                    .setConnectionMinimumIdleSize(connectionMinimumIdleSize);
         return Redisson.create(redissonCfg);
     }

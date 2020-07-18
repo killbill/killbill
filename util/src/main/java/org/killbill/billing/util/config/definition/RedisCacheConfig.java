@@ -19,6 +19,7 @@ package org.killbill.billing.util.config.definition;
 
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.DefaultNull;
 import org.skife.config.Description;
 
 public interface RedisCacheConfig extends KillbillConfig {
@@ -37,4 +38,9 @@ public interface RedisCacheConfig extends KillbillConfig {
     @Default("1")
     @Description("Minimum number of connections")
     public int getConnectionMinimumIdleSize();
+
+    @Config("org.killbill.cache.config.redis.password")
+    @DefaultNull
+    @Description("Redis Password")
+    public String getPassword();
 }
