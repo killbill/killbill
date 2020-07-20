@@ -223,7 +223,7 @@ public class GuicyKillbillTestSuite implements IHookable {
             redisServer = new RedisServer(56379);
             redisServer.start();
 
-            redissonClient = new RedissonCacheClientProvider("redis://127.0.0.1:56379", 1).get();
+            redissonClient = new RedissonCacheClientProvider("redis://127.0.0.1:56379", 1, null).get();
 
             theRealClock = new DistributedClockMock();
             ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
