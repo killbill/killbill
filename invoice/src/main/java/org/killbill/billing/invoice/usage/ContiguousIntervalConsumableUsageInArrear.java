@@ -155,7 +155,7 @@ import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrea
                 if (targetTierUnitDetail.getTierUnit().equals(unitType)) {
                     // See https://github.com/killbill/killbill/issues/1325
                     final Long quantity = bi.getQuantity().longValue();
-                    tierDetails.add(new UsageConsumableInArrearTierUnitAggregate(targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(), targetTierUnitDetail.getQuantity(), quantity, bi.getAmount()));
+                    tierDetails.add(new UsageConsumableInArrearTierUnitAggregate(targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(), targetTierUnitDetail.getTierBlockSize(), quantity, bi.getAmount()));
                 }
             } else {
                 final UsageConsumableInArrearAggregate usageDetail = fromJson(bi.getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
