@@ -27,10 +27,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierUnitDetail {
 
-    private final int tierBlockSize;
+    private final long tierBlockSize;
     private BigDecimal amount;
 
-    public UsageConsumableInArrearTierUnitAggregate(int tier, String tierUnit, BigDecimal tierPrice, Integer tierBlockSize, Integer quantity) {
+    public UsageConsumableInArrearTierUnitAggregate(int tier, String tierUnit, BigDecimal tierPrice, Long tierBlockSize, Long quantity) {
         this(tier, tierUnit, tierPrice, tierBlockSize, quantity, computeAmount(tierPrice, quantity));
     }
 
@@ -38,8 +38,8 @@ public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierU
     public UsageConsumableInArrearTierUnitAggregate(@JsonProperty("tier") int tier,
                                                     @JsonProperty("tierUnit") String tierUnit,
                                                     @JsonProperty("tierPrice") BigDecimal tierPrice,
-                                                    @JsonProperty("tierBlockSize") Integer tierBlockSize,
-                                                    @JsonProperty("quantity") Integer quantity,
+                                                    @JsonProperty("tierBlockSize") Long tierBlockSize,
+                                                    @JsonProperty("quantity") Long quantity,
                                                     @JsonProperty("amount") BigDecimal amount) {
         super(tier, tierUnit, tierPrice, quantity);
         this.amount = amount;
@@ -58,7 +58,7 @@ public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierU
         return tierPrice;
     }
 
-    public Integer getQuantity() {
+    public Long getQuantity() {
         return quantity;
     }
 
@@ -70,16 +70,16 @@ public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierU
         this.amount = amount;
     }
 
-    public int getTierBlockSize() {
+    public long getTierBlockSize() {
         return tierBlockSize;
     }
 
-    public void updateQuantityAndAmount(final Integer addionalQuantity) {
-        this.quantity = quantity + addionalQuantity;
+    public void updateQuantityAndAmount(final Long additionalQuantity) {
+        this.quantity = quantity + additionalQuantity;
         this.amount = computeAmount(tierPrice, quantity);
     }
 
-    private static BigDecimal computeAmount(final BigDecimal targetTierPrice, final Integer targetQuantity) {
+    private static BigDecimal computeAmount(final BigDecimal targetTierPrice, final Long targetQuantity) {
         return targetTierPrice.multiply(BigDecimal.valueOf(targetQuantity));
     }
 }

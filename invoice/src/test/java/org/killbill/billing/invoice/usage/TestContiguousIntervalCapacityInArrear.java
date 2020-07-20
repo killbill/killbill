@@ -337,8 +337,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
     public void testMultipleItemsAndTiersWithExistingItems() throws Exception {
 
         // let's assume we have some existing usage
-        final UsageInArrearTierUnitDetail existingFooUsageTier1 = new UsageInArrearTierUnitDetail(1, "FOO", BigDecimal.ONE, 9);
-        final UsageInArrearTierUnitDetail existingBarUsageTier2 = new UsageInArrearTierUnitDetail(2, "BAR", BigDecimal.TEN, 200);
+        final UsageInArrearTierUnitDetail existingFooUsageTier1 = new UsageInArrearTierUnitDetail(1, "FOO", BigDecimal.ONE, 9L);
+        final UsageInArrearTierUnitDetail existingBarUsageTier2 = new UsageInArrearTierUnitDetail(2, "BAR", BigDecimal.TEN, 200L);
 
         List<RawUsageRecord> rawUsageRecords = new ArrayList<RawUsageRecord>();
         rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", 60L, "tracking-1")); // tier 3
