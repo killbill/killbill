@@ -623,15 +623,17 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
                         // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
                         Plan nextPlan = catalog.getNextPlanVersion(currentPlan);
-                        while (nextPlan != null && nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
-                            final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
-                            final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
+                        while (nextPlan != null ) {
+                            if (nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
+                                final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
+                                final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
 
-                            // Computed from the nextPlan
-                            final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
-                            final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
+                                // Computed from the nextPlan
+                                final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
+                                final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
                                                                                                                       cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal(), catalogEffectiveDateForNextPlan);
-                            candidatesCatalogChangeEvents.add(newBillingTransition);
+                                candidatesCatalogChangeEvents.add(newBillingTransition);
+                        	}
                             nextPlan = catalog.getNextPlanVersion(nextPlan);
                         }
                     }
