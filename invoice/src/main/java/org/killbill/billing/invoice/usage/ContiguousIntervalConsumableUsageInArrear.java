@@ -61,7 +61,7 @@ import com.google.common.collect.Ordering;
 
 import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearTieredBlocks;
 
-    public class ContiguousIntervalConsumableUsageInArrear extends ContiguousIntervalUsageInArrear {
+public class ContiguousIntervalConsumableUsageInArrear extends ContiguousIntervalUsageInArrear {
 
     private static final Logger log = LoggerFactory.getLogger(ContiguousIntervalConsumableUsageInArrear.class);
 
@@ -210,7 +210,7 @@ import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrea
             final long tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
             long nbUsedTierBlocks;
             if (tieredBlock.getMax() != (double) -1 && tmp > tieredBlock.getMax() ) {
-                nbUsedTierBlocks = tieredBlock.getMax().intValue();
+                nbUsedTierBlocks = tieredBlock.getMax().longValue();
                 remainingUnits -= tieredBlock.getMax() * blockTierSize;
             } else {
                 nbUsedTierBlocks = tmp;
@@ -256,8 +256,8 @@ import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrea
                 break;
             }
         }
-        final int lastBlockTierSize = targetBlock.getSize().intValue();
-        final long nbBlocks = units.intValue() / lastBlockTierSize + (units.intValue() % lastBlockTierSize == 0 ? 0 : 1);
+        final long lastBlockTierSize = targetBlock.getSize().longValue();
+        final long nbBlocks = units / lastBlockTierSize + (units % lastBlockTierSize == 0 ? 0 : 1);
         return new UsageConsumableInArrearTierUnitAggregate(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), targetBlock.getSize().longValue(), nbBlocks);
     }
 
