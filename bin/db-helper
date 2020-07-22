@@ -60,7 +60,7 @@ eval set -- "${ARGS}"
 
 function usage() {
     echo -n "./db_helper"
-    echo -n " -a|--action <create|clean|dump|migrate|dryRunMigrate|repair|info>"
+    echo -n " -a|--action <create|clean|dump|migrate|dryRunMigrate|repair|info|ddl>"
     echo -n " --driver <mysql|postgres> (default = mysql)"
     echo -n " -h|--host host (default = localhost)"
     echo -n " --port port"
@@ -238,6 +238,12 @@ if [ $ACTION == "create" ]; then
         psql -h $HOST -p $PORT -U $USER -d $DATABASE < $DDL_FILE
         clean_pgfile
     fi
+fi
+
+
+if [ $ACTION == "ddl" ]; then
+    DDL_FILE=`create_ddl_file`
+    echo "Saved DDL file to $DDL_FILE"
 fi
 
 
