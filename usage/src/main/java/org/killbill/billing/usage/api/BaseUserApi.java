@@ -30,6 +30,8 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 public class BaseUserApi {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseUserApi.class);
@@ -54,6 +56,7 @@ public class BaseUserApi {
     }
 
     private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+        Preconditions.checkNotNull(tenantContext.getAccountId(), "TenantContext has no accountId");
 
         final Set<String> allServices = pluginRegistry.getAllServices();
         // No plugin registered

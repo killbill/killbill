@@ -89,8 +89,9 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     @Override
-    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
-
+    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContextNoAccountId) {
+        final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContextNoAccountId);
+        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalCallContext);
         final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, startDate, endDate, tenantContext);
         if (rawUsage != null) {
             final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(subscriptionId, unitType, rawUsage);
@@ -103,9 +104,9 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     @Override
-    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final List<LocalDate> transitionTimes, final TenantContext tenantContext) {
-
-        final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContext);
+    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final List<LocalDate> transitionTimes, final TenantContext tenantContextNoAccountId) {
+        final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContextNoAccountId);
+        final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalCallContext);
         List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
         LocalDate prevDate = null;
         for (LocalDate curDate : transitionTimes) {
