@@ -80,7 +80,11 @@ public class InvoiceApiHelper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId, final boolean isDryRun, final WithAccountLock withAccountLock, final Iterable<PluginProperty> properties, final CallContext context) throws InvoiceApiException {
+    public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId,
+                                                                    final boolean isDryRun,
+                                                                    final WithAccountLock withAccountLock,
+                                                                    final LinkedList<PluginProperty> properties,
+                                                                    final CallContext context) throws InvoiceApiException {
         // Invoked by User API call
         final LocalDate targetDate = null;
         final List<Invoice> existingInvoices = null;

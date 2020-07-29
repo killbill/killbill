@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.api.svcs;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -146,7 +147,9 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
                 return ImmutableList.<DefaultInvoice>of(invoice);
             }
         };
-        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, ImmutableList.<PluginProperty>of(), callContext);
+
+        final LinkedList<PluginProperty> pluginProperties = new LinkedList<PluginProperty>();
+        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, pluginProperties, callContext);
         return new DefaultInvoicePayment(refund);
     }
 

@@ -544,16 +544,18 @@ public class InvoiceDispatcher {
                                                                                     final InternalCallContext internalCallContext) throws InvoiceApiException {
         final CallContext callContext = buildCallContext(internalCallContext);
 
+        final LinkedList<PluginProperty> pluginProperties = new LinkedList<PluginProperty>();
+
         final ImmutableAccountData account;
         try {
             account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
         } catch (final AccountApiException e) {
             log.error("Unable to generate invoice for accountId='{}', a future notification has NOT been recorded", accountId, e);
-            invoicePluginDispatcher.onFailureCall(originalTargetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
+            invoicePluginDispatcher.onFailureCall(originalTargetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, pluginProperties, internalCallContext);
             return null;
         }
 
-        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(originalTargetDate, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
+        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(originalTargetDate, existingInvoices, isDryRun, isRescheduled, callContext, pluginProperties, internalCallContext);
         if (rescheduleDate != null) {
             if (isDryRun) {
                 log.warn("Ignoring rescheduleDate='{}', delayed scheduling is unsupported in dry-run", rescheduleDate);
@@ -572,7 +574,7 @@ public class InvoiceDispatcher {
 
         // If invoice comes back null, there is nothing new to generate, we can bail early
         if (invoice == null) {
-            invoicePluginDispatcher.onSuccessCall(originalTargetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
+            invoicePluginDispatcher.onSuccessCall(originalTargetDate, null, existingInvoices, isDryRun, isRescheduled, callContext, pluginProperties, internalCallContext);
 
             if (isDryRun) {
                 log.info("Generated null dryRun invoice for accountId='{}', targetDate='{}'", accountId, originalTargetDate);
@@ -600,7 +602,7 @@ public class InvoiceDispatcher {
             //
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
-            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, isDryRun, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
+            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, isDryRun, callContext, pluginProperties, internalCallContext);
             if (invoiceUpdated) {
                 // Remove the temporary CBA item as we need to re-compute CBA
                 if (cbaItemPreInvoicePlugins != null) {
@@ -656,9 +658,9 @@ public class InvoiceDispatcher {
 
             if (isDryRun || success) {
                 final DefaultInvoice refreshedInvoice = isDryRun ? invoice : new DefaultInvoice(invoiceDao.getById(invoice.getId(), internalCallContext));
-                invoicePluginDispatcher.onSuccessCall(actualTargetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, callContext,  ImmutableList.<PluginProperty>of(),internalCallContext);
+                invoicePluginDispatcher.onSuccessCall(actualTargetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, callContext, pluginProperties,internalCallContext);
             } else {
-                invoicePluginDispatcher.onFailureCall(actualTargetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, ImmutableList.<PluginProperty>of(), internalCallContext);
+                invoicePluginDispatcher.onFailureCall(actualTargetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, pluginProperties, internalCallContext);
             }
         }
 
