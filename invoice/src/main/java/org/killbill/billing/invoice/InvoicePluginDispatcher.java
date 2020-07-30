@@ -174,11 +174,11 @@ public class InvoicePluginDispatcher {
     }
 
     public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
-                                                                            final boolean isDryRun,
-                                                                            final CallContext callContext,
-                                                                            // The pluginProperties list passed to plugins is mutable by the plugins
-                                                                            @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
-                                                                            final InternalTenantContext tenantContext) throws InvoiceApiException {
+                                                               final boolean isDryRun,
+                                                               final CallContext callContext,
+                                                               // The pluginProperties list passed to plugins is mutable by the plugins
+                                                               @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                                               final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
