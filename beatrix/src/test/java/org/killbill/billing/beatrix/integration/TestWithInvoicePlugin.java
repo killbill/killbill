@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.awaitility.Awaitility;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
