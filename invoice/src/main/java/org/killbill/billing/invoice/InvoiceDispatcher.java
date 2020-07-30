@@ -351,7 +351,7 @@ public class InvoiceDispatcher {
                                                                                                         }));
             final Invoice invoice;
             if (!isDryRun) {
-                final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, existingInvoices, false, isRescheduled, context);
+                final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, existingInvoices, false, isRescheduled, Lists.newLinkedList(), context);
                 invoice = invoiceWithFutureNotifications != null ? invoiceWithFutureNotifications.getInvoice() : null;
                 if (parkedAccount) {
                     try {
@@ -442,7 +442,7 @@ public class InvoiceDispatcher {
 
     private Invoice processDryRun_UPCOMING_INVOICE_Invoice(final UUID accountId, final Set<LocalDate> allCandidateTargetDates, final BillingEventSet billingEvents, final List<Invoice> existingInvoices, final InternalCallContext context) throws InvoiceApiException {
         for (final LocalDate curTargetDate : allCandidateTargetDates) {
-            final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, curTargetDate, billingEvents, existingInvoices, true, false, context);
+            final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, curTargetDate, billingEvents, existingInvoices, true, false, Lists.newLinkedList(), context);
             final Invoice invoice = invoiceWithFutureNotifications != null ? invoiceWithFutureNotifications.getInvoice() : null;
             if (invoice != null) {
                 return invoice;
@@ -463,6 +463,9 @@ public class InvoiceDispatcher {
 
     private Invoice processDryRun_TARGET_DATE_Invoice(final UUID accountId, final LocalDate targetDate, final Set<LocalDate> allCandidateTargetDates, final BillingEventSet billingEvents, final List<Invoice> existingInvoices, final InternalCallContext context) throws InvoiceApiException {
 
+        final String DRY_RUN_CUR_DATE_PROP = "DRY_RUN_CUR_DATE";
+        final String DRY_RUN_TARGET_DATE_PROP = "DRY_RUN_TARGET_DATE";
+        LinkedList<PluginProperty> pluginProperties;
 
         final PriorityQueue<LocalDate> pq = new PriorityQueue<LocalDate>(allCandidateTargetDates);
 
@@ -476,7 +479,11 @@ public class InvoiceDispatcher {
                 break;
             }
             // Loop through each boundary date prior to our given targetDate
-            final InvoiceWithFutureNotifications result = processAccountWithLockAndInputTargetDate(accountId, cur, billingEvents, augmentedExistingInvoices, true, false, context);
+            pluginProperties = new LinkedList<PluginProperty>();
+            pluginProperties.add(new PluginProperty(DRY_RUN_CUR_DATE_PROP, cur, false));
+            pluginProperties.add(new PluginProperty(DRY_RUN_TARGET_DATE_PROP, targetDate, false));
+
+            final InvoiceWithFutureNotifications result = processAccountWithLockAndInputTargetDate(accountId, cur, billingEvents, augmentedExistingInvoices, true, false, pluginProperties, context);
             additionalInvoice = result != null ? result.getInvoice() : null;
             if (additionalInvoice != null) {
                 for (LocalDate k : result.getNotifications().getNotificationsForTrigger().keySet()) {
@@ -498,7 +505,10 @@ public class InvoiceDispatcher {
             }
         }
 
-        final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, augmentedExistingInvoices, true, false, context);
+        pluginProperties = new LinkedList<PluginProperty>();
+        pluginProperties.add(new PluginProperty(DRY_RUN_CUR_DATE_PROP, targetDate, false));
+        pluginProperties.add(new PluginProperty(DRY_RUN_TARGET_DATE_PROP, targetDate, false));
+        final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, augmentedExistingInvoices, true, false, pluginProperties, context);
         final Invoice targetInvoice = invoiceWithFutureNotifications != null ? invoiceWithFutureNotifications.getInvoice() : null;
         return targetInvoice != null ? targetInvoice : additionalInvoice;
     }
@@ -541,10 +551,9 @@ public class InvoiceDispatcher {
                                                                                     final List<Invoice> existingInvoices,
                                                                                     final boolean isDryRun,
                                                                                     final boolean isRescheduled,
+                                                                                    final LinkedList<PluginProperty> pluginProperties,
                                                                                     final InternalCallContext internalCallContext) throws InvoiceApiException {
         final CallContext callContext = buildCallContext(internalCallContext);
-
-        final LinkedList<PluginProperty> pluginProperties = new LinkedList<PluginProperty>();
 
         final ImmutableAccountData account;
         try {
