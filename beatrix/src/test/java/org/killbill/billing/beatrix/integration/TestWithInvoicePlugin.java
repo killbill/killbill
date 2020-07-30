@@ -76,6 +76,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -83,6 +84,7 @@ import com.google.common.collect.Iterables;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
 
 public class TestWithInvoicePlugin extends TestIntegrationBase {
 
@@ -828,6 +830,26 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         @Override
         public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+
+            if (isDryRun) {
+                assertEquals(Iterables.size(pluginProperties), 2);
+                final Optional<PluginProperty> p1 = Iterables.tryFind(pluginProperties, new Predicate<PluginProperty>() {
+                    @Override
+                    public boolean apply(final PluginProperty input) {
+                        return input.getKey().equals("DRY_RUN_CUR_DATE");
+                    }
+                });
+                assertTrue(p1.isPresent());
+
+                final Optional<PluginProperty> p2 = Iterables.tryFind(pluginProperties, new Predicate<PluginProperty>() {
+                    @Override
+                    public boolean apply(final PluginProperty input) {
+                        return input.getKey().equals("DRY_RUN_TARGET_DATE");
+                    }
+                });
+                assertTrue(p2.isPresent());
+            }
+
             if (shouldThrowException) {
                 throw new InvoicePluginApiRetryException();
             } else if (additionalInvoiceItem != null) {
