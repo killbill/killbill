@@ -473,11 +473,17 @@ public class InvoiceDispatcher {
         // The list is an ordered list of items merged from existing notifications and upcoming notifications, each of these the result of a previous invoice being generated.
         final List<Invoice> augmentedExistingInvoices = new ArrayList<Invoice>(existingInvoices);
         Invoice additionalInvoice = null;
+        LocalDate prev = null;
         LocalDate cur;
         while ((cur = pq.poll()) != null) {
+            // Eat up duplicate if any
+            if (prev != null && prev.compareTo(cur) == 0) {
+                continue;
+            }
             if (cur.compareTo(targetDate) >= 0) {
                 break;
             }
+
             // Loop through each boundary date prior to our given targetDate
             pluginProperties = new LinkedList<PluginProperty>();
             pluginProperties.add(new PluginProperty(DRY_RUN_CUR_DATE_PROP, cur, false));
@@ -503,6 +509,7 @@ public class InvoiceDispatcher {
                 });
                 augmentedExistingInvoices.add(additionalInvoice);
             }
+            prev = cur;
         }
 
         pluginProperties = new LinkedList<PluginProperty>();
