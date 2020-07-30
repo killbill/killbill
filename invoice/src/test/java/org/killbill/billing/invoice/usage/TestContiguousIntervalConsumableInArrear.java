@@ -86,11 +86,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                                        BillingPeriod.MONTHLY,
                                                                                                                                                        Collections.<Usage>emptyList(), catalogEffectiveDate));
 
-        final UsageConsumableInArrearTierUnitAggregate detail1 = new UsageConsumableInArrearTierUnitAggregate(3, "FOO", new BigDecimal("0.50"), 1, 700);
-        final UsageConsumableInArrearTierUnitAggregate detail2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, 1, 500);
-        final UsageConsumableInArrearTierUnitAggregate detail3 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, 1, 10);
-        final UsageConsumableInArrearTierUnitAggregate detail4 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, 1, 50);
-        final UsageConsumableInArrearTierUnitAggregate detail5 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, 1, 100);
+        final UsageConsumableInArrearTierUnitAggregate detail1 = new UsageConsumableInArrearTierUnitAggregate(3, "FOO", new BigDecimal("0.50"), 1L, 700L);
+        final UsageConsumableInArrearTierUnitAggregate detail2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, 1L, 500L);
+        final UsageConsumableInArrearTierUnitAggregate detail3 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, 1L, 10L);
+        final UsageConsumableInArrearTierUnitAggregate detail4 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, 1L, 50L);
+        final UsageConsumableInArrearTierUnitAggregate detail5 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, 1L, 100L);
 
         final List<UsageConsumableInArrearTierUnitAggregate> existingUsage = ImmutableList.of(detail1, detail2, detail3, detail4, detail5);
 
@@ -851,10 +851,10 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // Let's assume we were already billed on the previous period
         //
         // FOO : 10 (tier 1) + 40 (tier 2) = 50
-        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, 1, 10, new BigDecimal("10.00"));
-        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.TEN, 1, 40, new BigDecimal("400.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, 1L, 10L, new BigDecimal("10.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.TEN, 1L, 40L, new BigDecimal("400.00"));
         // BAR : 10 (tier 1) + 40 (tier 2)
-        final UsageConsumableInArrearTierUnitAggregate existingBarUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "BAR", new BigDecimal("2.00"), 1, 80, new BigDecimal("160.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingBarUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "BAR", new BigDecimal("2.00"), 1L, 80L, new BigDecimal("160.00"));
 
         final List<UsageConsumableInArrearTierUnitAggregate> existingUsage = ImmutableList.of(existingFooUsageTier1, existingFooUsageTier2, existingBarUsageTier1);
 
@@ -932,13 +932,13 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", 80L /* already built */ + 120L, "tracking-1")); // tier 2
 
         // FOO : 10 (tier 1) + 40 (tier 2) = 50
-        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, 1, 10, new BigDecimal("10.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, 1L, 10L, new BigDecimal("10.00"));
         final String usageInArrearDetail1 = objectMapper.writeValueAsString(existingFooUsageTier1);
 
-        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.TEN, 1, 40, new BigDecimal("400.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.TEN, 1L, 40L, new BigDecimal("400.00"));
         final String usageInArrearDetail2 = objectMapper.writeValueAsString(existingFooUsageTier2);
         // BAR : 10 (tier 1) + 40 (tier 2)
-        final UsageConsumableInArrearTierUnitAggregate existingBarUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "BAR", new BigDecimal("2.00"), 1, 80, new BigDecimal("160.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingBarUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "BAR", new BigDecimal("2.00"), 1L, 80L, new BigDecimal("160.00"));
         final String usageInArrearDetail3 = objectMapper.writeValueAsString(existingBarUsageTier1);
 
         // Same as previous example bu instead of creating JSON we create one item per type/tier

@@ -128,7 +128,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                     allUnitAmountToZero = ro.getAmount() > 0 ? false : allUnitAmountToZero;
 
                     if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
-                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), curTierPrice, ro.getAmount().intValue()));
+                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), curTierPrice, ro.getAmount()));
                         perUnitTypeDetailTierLevel.add(ro.getUnitType());
                     }
                 }

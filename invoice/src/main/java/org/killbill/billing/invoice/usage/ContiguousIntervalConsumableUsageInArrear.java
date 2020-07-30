@@ -94,8 +94,11 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
                     for (UsageConsumableInArrearTierUnitAggregate toBeBilledUsageDetail : ((UsageConsumableInArrearAggregate) toBeBilledUsageDetails).getTierDetails()) {
                         final String itemDetails = toJson(toBeBilledUsageDetail);
+                        // See https://github.com/killbill/killbill/issues/1325
+                        // Our current sql schema limits to an int value ...
+                        final Integer quantity = toBeBilledUsageDetail.getQuantity() <= Integer.MAX_VALUE ? toBeBilledUsageDetail.getQuantity().intValue() : -1;
                         final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                                      getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), toBeBilledUsageDetail.getQuantity(), itemDetails);
+                                                                      getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), quantity, itemDetails);
                         result.add(item);
                     }
                 } else {
@@ -150,7 +153,9 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
                 final UsageConsumableInArrearTierUnitAggregate targetTierUnitDetail = fromJson(bi.getItemDetails(), new TypeReference<UsageConsumableInArrearTierUnitAggregate>() {});
                 if (targetTierUnitDetail.getTierUnit().equals(unitType)) {
-                    tierDetails.add(new UsageConsumableInArrearTierUnitAggregate(targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(), targetTierUnitDetail.getQuantity(), bi.getQuantity(), bi.getAmount()));
+                    // See https://github.com/killbill/killbill/issues/1325
+                    final Long quantity = bi.getQuantity().longValue();
+                    tierDetails.add(new UsageConsumableInArrearTierUnitAggregate(targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(), targetTierUnitDetail.getTierBlockSize(), quantity, bi.getAmount()));
                 }
             } else {
                 final UsageConsumableInArrearAggregate usageDetail = fromJson(bi.getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
@@ -192,7 +197,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final Long units) throws CatalogApiException {
 
         List<UsageConsumableInArrearTierUnitAggregate> toBeBilledDetails = Lists.newLinkedList();
-        int remainingUnits = units.intValue();
+        long remainingUnits = units;
         int tierNum = 0;
 
         final int lastPreviousUsageTier = previousUsage.size(); // we count tier from 1, 2, ...
@@ -201,11 +206,11 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         for (final TieredBlock tieredBlock : tieredBlocks) {
 
             tierNum++;
-            final int blockTierSize = tieredBlock.getSize().intValue();
-            final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
-            int nbUsedTierBlocks;
+            final long blockTierSize = tieredBlock.getSize().longValue();
+            final long tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
+            long nbUsedTierBlocks;
             if (tieredBlock.getMax() != (double) -1 && tmp > tieredBlock.getMax() ) {
-                nbUsedTierBlocks = tieredBlock.getMax().intValue();
+                nbUsedTierBlocks = tieredBlock.getMax().longValue();
                 remainingUnits -= tieredBlock.getMax() * blockTierSize;
             } else {
                 nbUsedTierBlocks = tmp;
@@ -213,7 +218,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             }
             // We generate an entry if we consumed anything on this tier or if this is the first tier to also support $0 Usage item
             if (hasPreviousUsage) {
-                final Integer previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : 0;
+                final Long previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : 0;
                 if (tierNum < lastPreviousUsageTier) {
                     Preconditions.checkState(nbUsedTierBlocks == previousUsageQuantity, String.format("Expected usage for tier='%d', unit='%s' to be full, instead found units='[%d/%d]'",
                                                                                                       tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
@@ -232,8 +237,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
     UsageConsumableInArrearTierUnitAggregate computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final Long units) throws CatalogApiException {
 
-        int remainingUnits = units.intValue();
-
+        Long remainingUnits = units;
         // By default last last tierBlock
         TieredBlock targetBlock = tieredBlocks.get(tieredBlocks.size() - 1);
         int targetTierNum = tieredBlocks.size();
@@ -242,20 +246,19 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         for (final TieredBlock tieredBlock : tieredBlocks) {
 
             tierNum++;
-            final int blockTierSize = tieredBlock.getSize().intValue();
-            final int tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
+            final long blockTierSize = tieredBlock.getSize().longValue();
+            final long tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
             if ( tmp > tieredBlock.getMax()) { /* Includes the case where max is unlimited (-1) */
-                remainingUnits -= tieredBlock.getMax() * blockTierSize;
+                remainingUnits -= tieredBlock.getMax().longValue() * blockTierSize;
             } else {
                 targetBlock = tieredBlock;
                 targetTierNum = tierNum;
                 break;
             }
         }
-        final int lastBlockTierSize = targetBlock.getSize().intValue();
-        final int nbBlocks = units.intValue() / lastBlockTierSize + (units.intValue() % lastBlockTierSize == 0 ? 0 : 1);
-
-        return new UsageConsumableInArrearTierUnitAggregate(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), targetBlock.getSize().intValue(), nbBlocks);
+        final long lastBlockTierSize = targetBlock.getSize().longValue();
+        final long nbBlocks = units / lastBlockTierSize + (units % lastBlockTierSize == 0 ? 0 : 1);
+        return new UsageConsumableInArrearTierUnitAggregate(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), targetBlock.getSize().longValue(), nbBlocks);
     }
 
     @Override
