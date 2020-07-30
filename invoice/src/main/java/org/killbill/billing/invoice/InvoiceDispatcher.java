@@ -132,6 +132,10 @@ public class InvoiceDispatcher {
     private static final Joiner JOINER_COMMA = Joiner.on(",");
     private static final TargetDateDryRunArguments TARGET_DATE_DRY_RUN_ARGUMENTS = new TargetDateDryRunArguments();
 
+    private static final String DRY_RUN_CUR_DATE_PROP = "DRY_RUN_CUR_DATE";
+    private static final String DRY_RUN_TARGET_DATE_PROP = "DRY_RUN_TARGET_DATE";
+
+
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
     private final AccountInternalApi accountApi;
@@ -463,8 +467,6 @@ public class InvoiceDispatcher {
 
     private Invoice processDryRun_TARGET_DATE_Invoice(final UUID accountId, final LocalDate targetDate, final Set<LocalDate> allCandidateTargetDates, final BillingEventSet billingEvents, final List<Invoice> existingInvoices, final InternalCallContext context) throws InvoiceApiException {
 
-        final String DRY_RUN_CUR_DATE_PROP = "DRY_RUN_CUR_DATE";
-        final String DRY_RUN_TARGET_DATE_PROP = "DRY_RUN_TARGET_DATE";
         LinkedList<PluginProperty> pluginProperties;
 
         final PriorityQueue<LocalDate> pq = new PriorityQueue<LocalDate>(allCandidateTargetDates);
