@@ -836,8 +836,15 @@ public class InvoiceDispatcher {
             tmp.append(String.format("Adjusting existing invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':\n",
                                      adjustedInvoices, invoice.getNumberOfItems(), account.getId(), targetDate));
         }
+        int n = 0;
         for (final InvoiceItem item : invoice.getInvoiceItems()) {
+            if (n > 50) {
+                // https://github.com/killbill/killbill/issues/1337
+                tmp.append(String.format("\n\t... and %s more ...", invoice.getNumberOfItems() - n));
+                break;
+            }
             tmp.append(String.format("\n\t item = %s", item));
+            n++;
         }
         log.info(tmp.toString());
     }

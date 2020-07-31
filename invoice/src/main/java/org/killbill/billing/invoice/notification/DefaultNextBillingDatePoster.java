@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.notification;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -42,8 +43,6 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultNextBillingDatePoster.class);
 
-    private static Joiner JOINER = Joiner.on(",");
-
     private final NotificationQueueService notificationQueueService;
 
     @Inject
@@ -54,7 +53,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     @Override
     public void insertNextBillingNotificationFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                              final UUID accountId,
-                                                             final Iterable<UUID> subscriptionIds,
+                                                             final Set<UUID> subscriptionIds,
                                                              final DateTime futureNotificationTime,
                                                              final boolean isRescheduled,
                                                              final InternalCallContext internalCallContext) {
@@ -64,7 +63,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     @Override
     public void insertNextBillingDryRunNotificationFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                                    final UUID accountId,
-                                                                   final Iterable<UUID> subscriptionIds,
+                                                                   final Set<UUID> subscriptionIds,
                                                                    final DateTime futureNotificationTime,
                                                                    final DateTime targetDate,
                                                                    final InternalCallContext internalCallContext) {
@@ -72,7 +71,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
     }
 
     private void insertNextBillingFromTransactionInternal(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                                          final Iterable<UUID> subscriptionIds,
+                                                          final Set<UUID> subscriptionIds,
                                                           final Boolean isDryRunForInvoiceNotification,
                                                           final Boolean isRescheduled,
                                                           final DateTime futureNotificationTime,
@@ -110,15 +109,32 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                 }
             }
 
+            int n = 0;
+            final StringBuilder subscriptionIdsAsStringBuilder = new StringBuilder();
+            for (final UUID subscriptionId: subscriptionIds) {
+                if (n > 0) {
+                    subscriptionIdsAsStringBuilder.append(",");
+                }
+
+                if (n > 50) {
+                    // https://github.com/killbill/killbill/issues/1337
+                    subscriptionIdsAsStringBuilder.append(String.format("... and %s more ...", subscriptionIds.size() - n));
+                    break;
+                }
+
+                subscriptionIdsAsStringBuilder.append(subscriptionId);
+                n++;
+            }
+
             if (existingNotificationForEffectiveDate == null) {
-                log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime.toString(), JOINER.join(subscriptionIds));
+                log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime.toString(), subscriptionIdsAsStringBuilder.toString());
 
                 final NextBillingDateNotificationKey newNotificationEvent = new NextBillingDateNotificationKey(null, subscriptionIds, targetDate, isDryRunForInvoiceNotification, isRescheduled);
                 nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), futureNotificationTime,
                                                                          newNotificationEvent, internalCallContext.getUserToken(),
                                                                          internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
             } else {
-                log.info("Updating next billing date notification event at {} for subscriptionId {}", futureNotificationTime.toString(), JOINER.join(subscriptionIds));
+                log.info("Updating next billing date notification event at {} for subscriptionId {}", futureNotificationTime.toString(), subscriptionIdsAsStringBuilder.toString());
                 final NextBillingDateNotificationKey updateNotificationEvent = new NextBillingDateNotificationKey(existingNotificationForEffectiveDate.getEvent(), subscriptionIds);
                 nextBillingQueue.updateFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), existingNotificationForEffectiveDate.getRecordId(), updateNotificationEvent, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
             }

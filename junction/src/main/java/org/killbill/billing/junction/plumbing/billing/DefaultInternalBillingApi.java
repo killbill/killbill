@@ -21,6 +21,7 @@ package org.killbill.billing.junction.plumbing.billing;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -133,8 +134,15 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private void eventsToString(final StringBuilder stringBuilder, final SortedSet<BillingEvent> events) {
+        int n = 0;
         for (final BillingEvent event : events) {
+            if (n > 50) {
+                // https://github.com/killbill/killbill/issues/1337
+                stringBuilder.append("\n").append(String.format("... and %s more ...", events.size() - n));
+                break;
+            }
             stringBuilder.append("\n").append(event.toString());
+            n++;
         }
     }
 
