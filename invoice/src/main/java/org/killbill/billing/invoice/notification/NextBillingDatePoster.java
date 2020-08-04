@@ -18,6 +18,7 @@
 
 package org.killbill.billing.invoice.notification;
 
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -27,8 +28,8 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 public interface NextBillingDatePoster {
 
     void insertNextBillingNotificationFromTransaction(EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, UUID accountId,
-                                                      Iterable<UUID> subscriptionId, DateTime futureNotificationTime, final boolean isRescheduled, InternalCallContext internalCallContext);
+                                                      Set<UUID> subscriptionId, DateTime futureNotificationTime, final boolean isRescheduled, InternalCallContext internalCallContext);
 
     void insertNextBillingDryRunNotificationFromTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID accountId,
-                                                            final Iterable<UUID> subscriptionId, final DateTime futureNotificationTime, final DateTime targetDate, final InternalCallContext internalCallContext);
+                                                            final Set<UUID> subscriptionId, final DateTime futureNotificationTime, final DateTime targetDate, final InternalCallContext internalCallContext);
 }

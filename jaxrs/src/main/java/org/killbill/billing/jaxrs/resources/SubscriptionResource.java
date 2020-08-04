@@ -126,6 +126,9 @@ import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.b
 public class SubscriptionResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
+
+    private static final int MAX_NB_BUNDLES_TO_FOLLOW = 20;
+
     private static final String ID_PARAM_NAME = "subscriptionId";
 
     private final KillbillEventHandler killbillHandler;
@@ -400,7 +403,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 }
 
                 if (responseObject == ObjectType.ACCOUNT) {
-                    return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccountBundles", account.getId(), buildQueryParams(bundleIds), request);
+                    return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getAccountBundles", account.getId(), buildBundlesFilterQueryParam(bundleIds), request);
                 } else if (responseObject == ObjectType.BUNDLE) {
                     return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", Iterables.getFirst(bundleIds, null), request);
                 } else {
@@ -412,11 +415,19 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
-    private Map<String, String> buildQueryParams(final Iterable<String> bundleIdList) {
-        Map<String, String> queryParams = new HashMap<String, String>();
+    private Map<String, String> buildBundlesFilterQueryParam(final Collection<String> bundleIdList) {
+        final Map<String, String> queryParams = new HashMap<String, String>();
+
+        // Workaround for https://github.com/killbill/killbill/issues/1336
+        // While we could tweak the container to support large number of bundles in the filter (e.g. Jetty's RequestBufferSize),
+        // the full list is probably not that useful for the client in practice.
+        if (bundleIdList.size() > MAX_NB_BUNDLES_TO_FOLLOW) {
+            return queryParams;
+        }
+
         String value = "";
-        for (String bundleId : bundleIdList) {
-            if (value.equals("")) {
+        for (final String bundleId : bundleIdList) {
+            if ("".equals(value)) {
                 value += bundleId;
             } else {
                 value += "," + bundleId;
