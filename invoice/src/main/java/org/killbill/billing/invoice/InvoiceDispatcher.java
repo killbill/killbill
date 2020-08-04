@@ -128,13 +128,14 @@ public class InvoiceDispatcher {
 
     private static final Logger log = LoggerFactory.getLogger(InvoiceDispatcher.class);
 
+    public static final int MAX_NB_ITEMS_TO_PRINT = 20;
+
     private static final Ordering<DateTime> UPCOMING_NOTIFICATION_DATE_ORDERING = Ordering.natural();
     private static final Joiner JOINER_COMMA = Joiner.on(",");
     private static final TargetDateDryRunArguments TARGET_DATE_DRY_RUN_ARGUMENTS = new TargetDateDryRunArguments();
 
     private static final String DRY_RUN_CUR_DATE_PROP = "DRY_RUN_CUR_DATE";
     private static final String DRY_RUN_TARGET_DATE_PROP = "DRY_RUN_TARGET_DATE";
-
 
     private final InvoiceGenerator generator;
     private final BillingInternalApi billingApi;
@@ -838,7 +839,7 @@ public class InvoiceDispatcher {
         }
         int n = 0;
         for (final InvoiceItem item : invoice.getInvoiceItems()) {
-            if (n > 50) {
+            if (n > MAX_NB_ITEMS_TO_PRINT) {
                 // https://github.com/killbill/killbill/issues/1337
                 tmp.append(String.format("\n\t... and %s more ...", invoice.getNumberOfItems() - n));
                 break;

@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
+import static org.killbill.billing.invoice.InvoiceDispatcher.MAX_NB_ITEMS_TO_PRINT;
+
 public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultNextBillingDatePoster.class);
@@ -116,7 +118,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                     subscriptionIdsAsStringBuilder.append(",");
                 }
 
-                if (n > 50) {
+                if (n > MAX_NB_ITEMS_TO_PRINT) {
                     // https://github.com/killbill/killbill/issues/1337
                     subscriptionIdsAsStringBuilder.append(String.format("... and %s more ...", subscriptionIds.size() - n));
                     break;

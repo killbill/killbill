@@ -126,6 +126,9 @@ import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.b
 public class SubscriptionResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
+
+    private static final int MAX_NB_BUNDLES_TO_FOLLOW = 20;
+
     private static final String ID_PARAM_NAME = "subscriptionId";
 
     private final KillbillEventHandler killbillHandler;
@@ -418,7 +421,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         // Workaround for https://github.com/killbill/killbill/issues/1336
         // While we could tweak the container to support large number of bundles in the filter (e.g. Jetty's RequestBufferSize),
         // the full list is probably not that useful for the client in practice.
-        if (bundleIdList.size() > 50) {
+        if (bundleIdList.size() > MAX_NB_BUNDLES_TO_FOLLOW) {
             return queryParams;
         }
 
