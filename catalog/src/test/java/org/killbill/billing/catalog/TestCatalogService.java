@@ -31,7 +31,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
             public String getCatalogURI() {
-                return "versionedCatalog";
+                return "org/killbill/billing/catalog/versionedCatalog";
             }
 
         }, tenantInternalApi, catalogCache, cacheInvalidationCallback);
@@ -45,7 +45,7 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
         final DefaultCatalogService service = new DefaultCatalogService(new CatalogConfig() {
             @Override
             public String getCatalogURI() {
-                return "WeaponsHire.xml";
+                return "org/killbill/billing/catalog/WeaponsHire.xml";
             }
 
         },  tenantInternalApi, catalogCache, cacheInvalidationCallback);

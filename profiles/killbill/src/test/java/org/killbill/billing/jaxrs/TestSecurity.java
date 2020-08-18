@@ -54,7 +54,7 @@ public class TestSecurity extends TestJaxrsBase {
             Assert.assertEquals(e.getResponse().getStatusCode(), Status.UNAUTHORIZED.getStatusCode());
         }
 
-        // See src/test/resources/shiro.ini
+        // See src/test/resources/org/killbill/billing/server/shiro.ini
 
         final List<String> pierresPermissions = getPermissions("pierre", "password");
         Assert.assertEquals(pierresPermissions.size(), 2);
@@ -171,7 +171,7 @@ public class TestSecurity extends TestJaxrsBase {
         securityApi.updateUserRoles(username, new UserRoles(username, null, ImmutableList.of(newRoleDefinition)), requestOptions);
         permissions = securityApi.getCurrentUserPermissions(requestOptions);
         // This will only work if correct shiro cache invalidation was performed... requires lots of sweat to get it to work ;-)
-        Assert.assertEquals(permissions.size(), 1);
+        Assert.assertEquals(permissions, ImmutableList.<String>of("user:*"));
 
         securityApi.invalidateUser(username, requestOptions);
         try {
@@ -195,7 +195,7 @@ public class TestSecurity extends TestJaxrsBase {
 
         boolean success = false;
         try {
-            final String catalogPath = Resources.getResource("SpyCarBasic.xml").getPath();
+            final String catalogPath = Resources.getResource("org/killbill/billing/server/SpyCarBasic.xml").getPath();
             final File catalogFile = new File(catalogPath);
             final String body = Files.toString(catalogFile, Charset.forName("UTF-8"));
             catalogApi.uploadCatalogXml(body, requestOptions);

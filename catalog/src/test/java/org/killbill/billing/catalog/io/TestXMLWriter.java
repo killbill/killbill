@@ -20,7 +20,6 @@ package org.killbill.billing.catalog.io;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.DefaultDuration;
@@ -47,8 +46,6 @@ import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 import org.testng.annotations.Test;
 
-import com.google.common.io.Resources;
-
 import static org.testng.Assert.assertEquals;
 
 public class TestXMLWriter extends CatalogTestSuiteNoDB {
@@ -56,7 +53,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
     // Verifies we can generate the XML associated with a VersionedCatalog
     @Test(groups = "fast")
     public void testVersionedCatalog() throws Exception {
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         final DefaultVersionedCatalog versionedCatalog = new DefaultVersionedCatalog();
         versionedCatalog.add(catalog);
         final Class serializableClass = versionedCatalog.getClass();
@@ -67,7 +64,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
     // Verify we can marshall/unmarshall a (fairly complex catalog) catalog and get back the same result (Required to support catalog update)
     @Test(groups = "fast")
     public void testMarshallUnmarshall() throws Exception {
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         final String oldCatalogStr = XMLWriter.writeXML(catalog, StandaloneCatalog.class);
         //System.err.println(oldCatalogStr);
 
@@ -78,7 +75,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAddPlan() throws Exception {
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarBasic.xml");
 
         final MutableStaticCatalog mutableCatalog = new DefaultMutableStaticCatalog(catalog);
 

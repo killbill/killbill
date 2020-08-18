@@ -42,7 +42,7 @@ import org.killbill.billing.util.tag.dao.SystemTags;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.http.util.UTF8UrlEncoder;
+import org.asynchttpclient.util.Utf8UrlEncoder;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -161,7 +161,7 @@ public class TestTag extends TestJaxrsBase {
                 Assert.assertEquals(tagApi.searchTags(controlTagType.toString(), requestOptions).size(), 1);
                 // TODO Hack until we fix client api
 
-                Assert.assertEquals(tagApi.searchTags(UTF8UrlEncoder.encodePath(controlTagType.getDescription()), requestOptions).size(), 1);
+                Assert.assertEquals(tagApi.searchTags(Utf8UrlEncoder.encodePath(controlTagType.getDescription()), requestOptions).size(), 1);
             }
         }
     }

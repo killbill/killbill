@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
+import org.awaitility.Durations;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.RequestOptions;
@@ -53,7 +53,7 @@ public class TestTenantKV extends TestJaxrsBase {
         final String pluginName = "PLUGIN_FOO";
 
         callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
-        final String pluginConfig = getResourceBodyString("plugin.yml");
+        final String pluginConfig = getResourceBodyString("org/killbill/billing/server/plugin.yml");
         final TenantKeyValue tenantKey0 = tenantApi.uploadPluginConfiguration(pluginName, pluginConfig, requestOptions);
         callbackServlet.assertListenerStatus();
         Assert.assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_CONFIG_.toString() + pluginName);
@@ -82,7 +82,7 @@ public class TestTenantKV extends TestJaxrsBase {
         Assert.assertEquals(emptyTenantKeyOtherTenant.getValues().size(), 0);
 
         callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
-        final String stateMachineConfig = getResourceBodyString("SimplePaymentStates.xml");
+        final String stateMachineConfig = getResourceBodyString("org/killbill/billing/server/SimplePaymentStates.xml");
         final TenantKeyValue tenantKey0 = tenantApi.uploadPluginPaymentStateMachineConfig(PLUGIN_NAME, stateMachineConfig, requestOptions);
         callbackServlet.assertListenerStatus();
         Assert.assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_.toString() + PLUGIN_NAME);
@@ -126,7 +126,7 @@ public class TestTenantKV extends TestJaxrsBase {
         final AtomicReference<Payment> voidPaymentOtherTenant2Ref = new AtomicReference<Payment>();
         Awaitility.await()
                   .atMost(8, TimeUnit.SECONDS)
-                  .pollInterval(Duration.TWO_SECONDS)
+                  .pollInterval(Durations.TWO_SECONDS)
                   .until(new Callable<Boolean>() {
                       @Override
                       public Boolean call() throws Exception {

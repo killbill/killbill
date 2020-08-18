@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import org.awaitility.Duration;
+import org.awaitility.Durations;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
@@ -66,7 +66,7 @@ public class TestRetryService extends PaymentTestSuiteNoDB {
 
         super.beforeMethod();
 
-        setDefaultPollInterval(Duration.ONE_HUNDRED_MILLISECONDS);
+        setDefaultPollInterval(Durations.ONE_HUNDRED_MILLISECONDS);
 
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(MockPaymentProviderPlugin.PLUGIN_NAME);
         mockPaymentProviderPlugin.clear();

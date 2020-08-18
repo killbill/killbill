@@ -26,6 +26,8 @@ import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig.Builder;
 import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -48,12 +50,12 @@ import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
-import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.ListenableFuture;
-import com.ning.http.client.Response;
+import org.asynchttpclient.AsyncCompletionHandler;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.BoundRequestBuilder;
+import org.asynchttpclient.AsyncHttpClientConfig;
+import org.asynchttpclient.ListenableFuture;
+import org.asynchttpclient.Response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -86,9 +88,9 @@ public class PushNotificationListener {
     public PushNotificationListener(final ObjectMapper mapper, final TenantUserApi tenantApi, final CallContextFactory contextFactory,
                                     final NotificationQueueService notificationQueueService, final InternalCallContextFactory internalCallContextFactory,
                                     final Clock clock, final NotificationConfig notificationConfig) {
-        this.httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder()
-                                                      .setConnectTimeout(TIMEOUT_NOTIFICATION * 1000)
-                                                      .setRequestTimeout(TIMEOUT_NOTIFICATION * 1000).build());
+        this.httpClient = new DefaultAsyncHttpClient(new Builder()
+                                                             .setConnectTimeout(TIMEOUT_NOTIFICATION * 1000)
+                                                             .setRequestTimeout(TIMEOUT_NOTIFICATION * 1000).build());
         this.tenantApi = tenantApi;
         this.contextFactory = contextFactory;
         this.mapper = mapper;
@@ -116,7 +118,7 @@ public class PushNotificationListener {
         }
     }
 
-    public void shutdown() {
+    public void shutdown() throws IOException {
         httpClient.close();
     }
 

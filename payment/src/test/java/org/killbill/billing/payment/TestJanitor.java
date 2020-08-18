@@ -118,7 +118,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         allExtraProperties.put("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
         allExtraProperties.put("killbill.payment.engine.events.off", "false");
         allExtraProperties.put("org.killbill.payment.janitor.rate", "500ms");
-        return getConfigSource("/payment.properties", allExtraProperties);
+        return getConfigSource(null, allExtraProperties);
     }
 
     @Override

@@ -86,7 +86,7 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
     //
     @Test(groups = "fast")
     public void testDefaultCatalog() throws CatalogApiException {
-        catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
+        catalogCache.loadDefaultCatalog(Resources.getResource("org/killbill/billing/catalog/SpyCarBasic.xml").toExternalForm());
 
         final VersionedCatalog result = catalogCache.getCatalog(true, true, false, internalCallContext);
         Assert.assertNotNull(result);
@@ -122,9 +122,9 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         final Long multiTenantRecordId = multiTenantContext.getTenantRecordId();
         final Long otherMultiTenantRecordId = otherMultiTenantContext.getTenantRecordId();
 
-        final InputStream tenantInputCatalog = UriAccessor.accessUri(new URI(Resources.getResource("SpyCarAdvanced.xml").toExternalForm()));
+        final InputStream tenantInputCatalog = UriAccessor.accessUri(new URI(Resources.getResource("org/killbill/billing/catalog/SpyCarAdvanced.xml").toExternalForm()));
         final String tenantCatalogXML = CharStreams.toString(new InputStreamReader(tenantInputCatalog, "UTF-8"));
-        final InputStream otherTenantInputCatalog = UriAccessor.accessUri(new URI(Resources.getResource("SpyCarBasic.xml").toExternalForm()));
+        final InputStream otherTenantInputCatalog = UriAccessor.accessUri(new URI(Resources.getResource("org/killbill/billing/catalog/SpyCarBasic.xml").toExternalForm()));
         final String otherTenantCatalogXML = CharStreams.toString(new InputStreamReader(otherTenantInputCatalog, "UTF-8"));
         Mockito.when(tenantInternalApi.getTenantCatalogs(Mockito.any(InternalTenantContext.class))).thenAnswer(new Answer<List<String>>() {
             @Override
@@ -158,7 +158,7 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         shouldThrow.set(false);
 
         // Set a default config
-        catalogCache.loadDefaultCatalog(Resources.getResource("SpyCarBasic.xml").toExternalForm());
+        catalogCache.loadDefaultCatalog(Resources.getResource("org/killbill/billing/catalog/SpyCarBasic.xml").toExternalForm());
 
         // Verify the lookup for this tenant
         final VersionedCatalog result = catalogCache.getCatalog(true, true, false, multiTenantContext);

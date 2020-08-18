@@ -35,7 +35,6 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-@Test(groups = "slow")
 public class TestOverdueWithSubscriptionEOTCancellation extends TestOverdueBase {
 
     @Override

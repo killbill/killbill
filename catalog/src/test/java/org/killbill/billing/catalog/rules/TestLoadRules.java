@@ -16,26 +16,19 @@
 
 package org.killbill.billing.catalog.rules;
 
-import java.net.URI;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanAlignmentCreate;
 import org.killbill.billing.catalog.api.PlanSpecifier;
-import org.killbill.xmlloader.XMLLoader;
-
-import com.google.common.io.Resources;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class TestLoadRules extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void test() throws Exception {
-        final URI uri = new URI(Resources.getResource("WeaponsHireSmall.xml").toExternalForm());
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromUri(uri, StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("WeaponsHireSmall.xml");
         Assert.assertNotNull(catalog);
         final DefaultPlanRules rules = (DefaultPlanRules) catalog.getPlanRules();
 

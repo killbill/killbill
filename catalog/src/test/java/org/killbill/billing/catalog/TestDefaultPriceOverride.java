@@ -35,12 +35,10 @@ import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.api.UsageType;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
-import org.killbill.xmlloader.XMLLoader;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -51,7 +49,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testBasic() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         catalog.initialize(catalog);
         final Plan plan = catalog.findPlan("discount-standard-monthly");
 
@@ -105,7 +103,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow", expectedExceptions = CatalogApiException.class)
     public void testWithInvalidPriceOverride() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         catalog.initialize(catalog);
 
         final Plan plan = catalog.findPlan("discount-standard-monthly");
@@ -121,7 +119,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testGetOverriddenPlan() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         catalog.initialize(catalog);
 
         final Plan plan = catalog.findPlan("discount-standard-monthly");
@@ -201,7 +199,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testOverrideOneOutOfTwoTieredBlockPrices() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("UsageExperimental.xml");
         final Plan plan = catalog.findPlan("chocolate-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
@@ -272,7 +270,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testOverrideTwoOutOfTwoTieredBlockPrices() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("UsageExperimental.xml");
         final Plan plan = catalog.findPlan("chocolate-monthly");
 
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();

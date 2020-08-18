@@ -180,14 +180,12 @@ public class TestInvoice extends TestJaxrsBase {
                                   "                <th>invoiceItemServicePeriod</td>\n" +
                                   "                <th>invoiceItemAmount</td>\n" +
                                   "            </tr>\n" +
-                                  "            \n" +
                                   "            <tr>\n" +
                                   "                <td>shotgun-monthly-trial</td>\n" +
                                   "                <td>Monthly shotgun plan</td>\n" +
                                   "                <td>25 avr. 2012</td>\n" +
                                   "                <td>USD 0.00</td>\n" +
                                   "            </tr>\n" +
-                                  "            \n" +
                                   "            <tr>\n" +
                                   "                <td colspan=4 />\n" +
                                   "            </tr>\n" +

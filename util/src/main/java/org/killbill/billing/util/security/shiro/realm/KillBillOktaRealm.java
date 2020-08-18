@@ -40,16 +40,16 @@ import org.apache.shiro.config.Ini;
 import org.apache.shiro.config.Ini.Section;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.asynchttpclient.AsyncCompletionHandler;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.BoundRequestBuilder;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig.Builder;
+import org.asynchttpclient.ListenableFuture;
+import org.asynchttpclient.Response;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
-import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.ListenableFuture;
-import com.ning.http.client.Response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -75,7 +75,7 @@ public class KillBillOktaRealm extends AuthorizingRealm {
     @Inject
     public KillBillOktaRealm(final SecurityConfig securityConfig) {
         this.securityConfig = securityConfig;
-        this.httpClient = new AsyncHttpClient(new AsyncHttpClientConfig.Builder().setRequestTimeout(DEFAULT_TIMEOUT_SECS * 1000).build());
+        this.httpClient = new DefaultAsyncHttpClient(new Builder().setRequestTimeout(DEFAULT_TIMEOUT_SECS * 1000).build());
 
         if (securityConfig.getShiroOktaPermissionsByGroup() != null) {
             final Ini ini = new Ini();

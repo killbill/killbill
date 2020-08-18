@@ -114,9 +114,10 @@ public class DatabaseExportDao {
         TableType tableType = TableType.OTHER;
         final String tableName = columnsForTable.get(0).getTableName();
 
-        if (TableName.ACCOUNT.getTableName().equals(tableName)) {
+        // Ignore casing (for H2)
+        if (TableName.ACCOUNT.getTableName().equalsIgnoreCase(tableName)) {
             tableType = TableType.KB_ACCOUNT;
-        } else if (TableName.ACCOUNT_HISTORY.getTableName().equals(tableName)) {
+        } else if (TableName.ACCOUNT_HISTORY.getTableName().equalsIgnoreCase(tableName)) {
             tableType = TableType.KB_ACCOUNT_HISTORY;
         }
 
@@ -132,9 +133,10 @@ public class DatabaseExportDao {
             queryBuilder.append(column.getColumnName());
 
             if (tableType == TableType.OTHER) {
-                if (column.getColumnName().equals(TableType.KB_PER_ACCOUNT.getAccountRecordIdColumnName())) {
+                // Ignore casing (for H2)
+                if (column.getColumnName().equalsIgnoreCase(TableType.KB_PER_ACCOUNT.getAccountRecordIdColumnName())) {
                     tableType = TableType.KB_PER_ACCOUNT;
-                } else if (column.getColumnName().equals(TableType.NOTIFICATION.getAccountRecordIdColumnName())) {
+                } else if (column.getColumnName().equalsIgnoreCase(TableType.NOTIFICATION.getAccountRecordIdColumnName())) {
                     tableType = TableType.NOTIFICATION;
                 }
             }

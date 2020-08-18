@@ -48,13 +48,15 @@ public class ValidationManager {
         // get schema information and map it to columnInfo
         final List<DefaultColumnInfo> columnInfoList = dao.getColumnInfoList(schemaName);
         for (final DefaultColumnInfo columnInfo : columnInfoList) {
-            final String tableName = columnInfo.getTableName();
+            // Ignore casing (for H2)
+            final String tableName = columnInfo.getTableName().toLowerCase();
 
             if (!columnInfoMap.containsKey(tableName)) {
                 columnInfoMap.put(tableName, new HashMap<String, DefaultColumnInfo>());
             }
 
-            columnInfoMap.get(tableName).put(columnInfo.getColumnName(), columnInfo);
+            // Ignore casing (for H2)
+            columnInfoMap.get(tableName).put(columnInfo.getColumnName().toLowerCase(), columnInfo);
         }
     }
 

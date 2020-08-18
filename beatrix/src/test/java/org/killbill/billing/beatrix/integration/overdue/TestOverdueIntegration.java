@@ -71,7 +71,6 @@ import static org.testng.Assert.assertTrue;
 // - The overdue notifications
 //
 // Flaky, see https://github.com/killbill/killbill/issues/782
-@Test(groups = "slow")
 public class TestOverdueIntegration extends TestOverdueBase {
 
     @Override
@@ -960,7 +959,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
-        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(Resources.getResource("overdueWithNumberOfUnpaidInvoicesCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/beatrix/overdueWithNumberOfUnpaidInvoicesCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
         overdueConfigCache.loadDefaultOverdueConfig(config);
 
         setupAccount();
@@ -1032,7 +1031,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
-        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(Resources.getResource("overdueWithTotalUnpaidInvoiceBalanceCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/beatrix/overdueWithTotalUnpaidInvoiceBalanceCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
         overdueConfigCache.loadDefaultOverdueConfig(config);
 
         setupAccount();

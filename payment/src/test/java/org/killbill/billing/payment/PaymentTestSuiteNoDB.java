@@ -136,7 +136,8 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
         allExtraProperties.put("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
         allExtraProperties.put("killbill.payment.engine.events.off", "false");
-        return getConfigSource("/payment.properties", allExtraProperties);
+        allExtraProperties.put("org.killbill.payment.plugin.timeout", "2s");
+        return getConfigSource(null, allExtraProperties);
     }
 
     @BeforeClass(groups = "fast")

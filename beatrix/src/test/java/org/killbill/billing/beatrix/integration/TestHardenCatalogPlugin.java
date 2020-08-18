@@ -17,7 +17,6 @@
 
 package org.killbill.billing.beatrix.integration;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -125,7 +124,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testCreateWithCatalogPluginRetryableException() throws Exception {
 
-        testCatalogPluginApi.addCatalogVersion("WeaponsHire.xml");
+        testCatalogPluginApi.addCatalogVersion("org/killbill/billing/catalog/WeaponsHire.xml");
 
         // We setup the test to throw ONCE a QueueRetryException upon pulling billing events from invoice and ask for a retry 3 days later
         testCatalogPluginApi.setupExceptionBehavior(NB_CATALOG_ITERATIONS_FOR_PULLING_BILLING_EVENTS, Period.days(1), true);
@@ -150,7 +149,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testCreateWithCatalogPluginSingleRuntimeException() throws Exception {
 
-        testCatalogPluginApi.addCatalogVersion("WeaponsHire.xml");
+        testCatalogPluginApi.addCatalogVersion("org/killbill/billing/catalog/WeaponsHire.xml");
 
         // We set the test to throw ONCE a RuntimeException upon pulling billing events from invoice
         testCatalogPluginApi.setupExceptionBehavior(NB_CATALOG_ITERATIONS_FOR_PULLING_BILLING_EVENTS, null, true);
@@ -173,7 +172,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testCreateWithCatalogPluginNonSingleRuntimeException() throws Exception {
 
-        testCatalogPluginApi.addCatalogVersion("WeaponsHire.xml");
+        testCatalogPluginApi.addCatalogVersion("org/killbill/billing/catalog/WeaponsHire.xml");
 
         // We set the test to keep throwing RuntimeException upon pulling billing events from invoice
         testCatalogPluginApi.setupExceptionBehavior(NB_CATALOG_ITERATIONS_FOR_PULLING_BILLING_EVENTS, null, false);

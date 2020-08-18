@@ -19,12 +19,10 @@ package org.killbill.billing.catalog;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.nio.charset.Charset;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
-import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
@@ -184,7 +182,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testAddPlanOnExistingCatalog() throws Exception {
 
-        final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog originalCatalog = getCatalog("SpyCarBasic.xml");
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);
@@ -217,7 +215,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAddExistingPlanWithNewCurrency() throws Exception {
-        final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog originalCatalog = getCatalog("SpyCarBasic.xml");
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);
@@ -248,7 +246,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testInvalidPlanDescriptors() throws Exception {
-        final StandaloneCatalog originalCatalog = enhanceOriginalCatalogForInvalidTestCases("SpyCarBasic.xml");
+        final StandaloneCatalog originalCatalog = enhanceOriginalCatalogForInvalidTestCases("org/killbill/billing/catalog/SpyCarBasic.xml");
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 5);
@@ -287,7 +285,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testPlanWithNonFinalFixedTermPhase() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarBasic.xml");
 
         final MutableStaticCatalog mutableCatalog = new DefaultMutableStaticCatalog(catalog);
 
@@ -334,7 +332,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testVerifyXML() throws Exception {
 
-        final StandaloneCatalog originalCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog originalCatalog = getCatalog("SpyCarBasic.xml");
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().size(), 1);
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getName(), new PriceListDefault().getName());
         assertEquals(originalCatalog.getPriceLists().getAllPriceLists().get(0).getPlans().size(), 3);

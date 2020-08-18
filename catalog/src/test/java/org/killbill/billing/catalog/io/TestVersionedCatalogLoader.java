@@ -113,7 +113,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoad() throws CatalogApiException {
-        final VersionedCatalog c = loader.loadDefaultCatalog(Resources.getResource("versionedCatalog").toString());
+        final VersionedCatalog c = loader.loadDefaultCatalog(Resources.getResource("org/killbill/billing/catalog/versionedCatalog").toString());
         Assert.assertEquals(c.getVersions().size(), 4);
         DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
         Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
@@ -127,7 +127,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoadCatalogFromClasspathResourceFolder() throws CatalogApiException {
-        final VersionedCatalog c = loader.loadDefaultCatalog("SpyCarBasic.xml");
+        final VersionedCatalog c = loader.loadDefaultCatalog("org/killbill/billing/catalog/SpyCarBasic.xml");
         Assert.assertEquals(c.getVersions().size(), 1);
         final DateTime dt = new DateTime("2013-02-08T00:00:00+00:00");
         Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
@@ -155,7 +155,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoadCatalogFromExternalFile() throws CatalogApiException, IOException, URISyntaxException {
-        final File originFile = new File(Resources.getResource("SpyCarBasic.xml").toURI());
+        final File originFile = new File(Resources.getResource("org/killbill/billing/catalog/SpyCarBasic.xml").toURI());
         final File destinationFile = new File(Files.createTempDir().toString() + "/SpyCarBasicRelocated.xml");
         destinationFile.deleteOnExit();
         Files.copy(originFile, destinationFile);

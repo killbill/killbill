@@ -18,7 +18,6 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -123,7 +122,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testCreateSubscriptionWithCatalogPlugin() throws Exception {
 
-        testCatalogPluginApi.addCatalogVersion("WeaponsHire.xml");
+        testCatalogPluginApi.addCatalogVersion("org/killbill/billing/catalog/WeaponsHire.xml");
 
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
@@ -149,7 +148,7 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testWithMultipleVersions() throws Exception {
 
-        testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-1.xml");
+        testCatalogPluginApi.addCatalogVersion("org/killbill/billing/catalog/versionedCatalog/WeaponsHireSmall-1.xml");
 
         final VersionedCatalog catalog1 = catalogUserApi.getCatalog("whatever", callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 1);
@@ -163,14 +162,14 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 4);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 1);
 
-        testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-2.xml");
+        testCatalogPluginApi.addCatalogVersion("org/killbill/billing/catalog/versionedCatalog/WeaponsHireSmall-2.xml");
 
         final VersionedCatalog catalog2 = catalogUserApi.getCatalog("whatever", callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 5);
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 2);
         Assert.assertEquals(catalog2.getVersions().get(1).getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
 
-        testCatalogPluginApi.addCatalogVersion("versionedCatalog/WeaponsHireSmall-3.xml");
+        testCatalogPluginApi.addCatalogVersion("org/killbill/billing/catalog/versionedCatalog/WeaponsHireSmall-3.xml");
 
         final VersionedCatalog catalog3 = catalogUserApi.getCatalog("whatever", callContext);
         Assert.assertEquals(testCatalogPluginApi.getNbLatestCatalogVersionApiCalls(), 6);
