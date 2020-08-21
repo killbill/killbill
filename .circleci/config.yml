@@ -179,11 +179,11 @@ jobs:
             done
 
             set -e
-            bundle exec rake ci:core
+            bundle exec rake ci:core TESTOPTS="--stop-on-failure"
       - store_test_results:
-          path: test/reports/
+          path: /home/killbill/killbill-integration-tests/test/reports/
       - store_artifacts:
-          path: test/reports/
+          path: /home/killbill/killbill-integration-tests/test/reports/
 
 workflows:
   version: 2

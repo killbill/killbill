@@ -58,8 +58,8 @@
         <url>http://github.com/killbill/killbill</url>
     </issueManagement>
     <properties>
+        <killbill.version>${project.version}</killbill.version>
         <!-- Temporary until upgrade to 2.x -->
         <swagger.version>1.6.2</swagger.version>
-        <killbill.version>${project.version}</killbill.version>
     </properties>
 </project>
