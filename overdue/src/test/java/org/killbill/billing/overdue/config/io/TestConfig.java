@@ -17,7 +17,6 @@
 package org.killbill.billing.overdue.config.io;
 
 import java.io.ByteArrayInputStream;
-import java.net.URI;
 import java.nio.charset.Charset;
 
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
@@ -28,18 +27,16 @@ import org.testng.annotations.Test;
 import org.killbill.billing.overdue.OverdueTestSuiteNoDB;
 import org.killbill.xmlloader.XMLLoader;
 
-import com.google.common.io.Resources;
-
 public class TestConfig extends OverdueTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testConfigLoad() throws Exception {
-        XMLLoader.getObjectFromString(Resources.getResource("OverdueConfig.xml").toExternalForm(), DefaultOverdueConfig.class);
+        getOverdueConfig("OverdueConfig.xml");
     }
 
     @Test(groups = "fast")
     public void testMarshallUnmarshall() throws Exception {
-        final DefaultOverdueConfig overdueConfig = XMLLoader.getObjectFromString(Resources.getResource("OverdueConfig3.xml").toExternalForm(), DefaultOverdueConfig.class);
+        final DefaultOverdueConfig overdueConfig = getOverdueConfig("OverdueConfig3.xml");
         final String overdueConfigStr = XMLWriter.writeXML(overdueConfig, DefaultOverdueConfig.class);
 
         //System.err.println(overdueConfigStr);

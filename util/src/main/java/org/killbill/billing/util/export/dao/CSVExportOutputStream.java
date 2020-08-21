@@ -63,7 +63,8 @@ public class CSVExportOutputStream extends OutputStream implements DatabaseExpor
 
     @Override
     public void newTable(final String tableName, final List<ColumnInfo> columnsForTable) {
-        currentTableName = tableName;
+        // Ignore casing (for H2)
+        currentTableName = tableName.toLowerCase();
 
         final CsvSchema.Builder builder = CsvSchema.builder();
         // Remove quoting of character which applies (somewhat arbitrarily, Tatu???) for string whose length is greater than MAX_QUOTE_CHECK = 24 -- See CVSWriter#_mayNeedQuotes
@@ -72,7 +73,8 @@ public class CSVExportOutputStream extends OutputStream implements DatabaseExpor
         builder.setColumnSeparator('|');
 
         for (final ColumnInfo columnInfo : columnsForTable) {
-            builder.addColumn(columnInfo.getColumnName(), getColumnTypeFromSqlType(columnInfo.getDataType()));
+            // Ignore casing (for H2)
+            builder.addColumn(columnInfo.getColumnName().toLowerCase(), getColumnTypeFromSqlType(columnInfo.getDataType()));
         }
         currentCSVSchema = builder.build();
 

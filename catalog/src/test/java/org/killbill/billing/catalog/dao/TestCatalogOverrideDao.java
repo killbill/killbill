@@ -35,11 +35,8 @@ import org.killbill.billing.catalog.api.TierPriceOverride;
 import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.api.UsageType;
-import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -49,7 +46,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testOverrideLastPhase() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarBasic.xml");;
         final Plan plan = catalog.findPlan("standard-monthly");
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
@@ -63,7 +60,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testOverrideTwoOutOfThreePhases() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         final Plan plan = catalog.findPlan("discount-standard-monthly");
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
@@ -82,7 +79,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testGetOverriddenPlanPhases() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         final Plan plan = catalog.findPlan("discount-standard-monthly");
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
@@ -106,7 +103,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testGetOverriddenPlanPhasesWithUsageOverrides() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         final Plan plan = catalog.findPlan("gas-monthly");
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
@@ -152,14 +149,14 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final CatalogOverrideBlockDefinitionModelDao curTieredBlock =  tierBlocks.get(0);
         assertEquals(curTieredBlock.getParentUnitName(),tieredBlockPriceOverride.getUnitName());
         assertEquals(curTieredBlock.getPrice().compareTo(tieredBlockPriceOverride.getPrice()), 0);
-        assertEquals(curTieredBlock.getSize(),tieredBlockPriceOverride.getSize());
-        assertEquals(curTieredBlock.getMax(),tieredBlockPriceOverride.getMax());
+        assertEquals(curTieredBlock.getSize(), (double) tieredBlockPriceOverride.getSize());
+        assertEquals(curTieredBlock.getMax(), (double) tieredBlockPriceOverride.getMax());
     }
 
     @Test(groups = "slow")
     public void testGetOverrideOneOutOfTwoTieredBlocks() throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("UsageExperimental.xml");
         final Plan plan = catalog.findPlan("chocolate-monthly");
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
@@ -207,8 +204,8 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final CatalogOverrideBlockDefinitionModelDao curTieredBlock =  tierBlocks.get(0);
         assertEquals(curTieredBlock.getParentUnitName(),tieredBlockPriceOverride.getUnitName());
         assertEquals(curTieredBlock.getPrice().compareTo(tieredBlockPriceOverride.getPrice()), 0);
-        assertEquals(curTieredBlock.getSize(),tieredBlockPriceOverride.getSize());
-        assertEquals(curTieredBlock.getMax(),tieredBlockPriceOverride.getMax());
+        assertEquals(curTieredBlock.getSize(), (double) tieredBlockPriceOverride.getSize());
+        assertEquals(curTieredBlock.getMax(), (double) tieredBlockPriceOverride.getMax());
     }
 
 }

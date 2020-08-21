@@ -72,7 +72,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
         allExtraProperties.put("org.killbill.payment.provider.default", MockPaymentProviderPlugin.PLUGIN_NAME);
         allExtraProperties.put("killbill.payment.engine.events.off", "false");
         allExtraProperties.put("org.killbill.payment.globalLock.retries", "1");
-        return getConfigSource("/payment.properties", allExtraProperties);
+        return getConfigSource(null, allExtraProperties);
     }
 
     @BeforeMethod(groups = "fast")

@@ -31,6 +31,7 @@ import org.killbill.billing.overdue.applicator.OverdueStateApplicator;
 import org.killbill.billing.overdue.caching.OverdueCacheInvalidationCallback;
 import org.killbill.billing.overdue.caching.OverdueConfigCache;
 import org.killbill.billing.overdue.calculator.BillingStateCalculator;
+import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.overdue.glue.TestOverdueModuleNoDB;
 import org.killbill.billing.overdue.notification.OverdueNotifier;
@@ -43,10 +44,12 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService;
+import org.killbill.xmlloader.XMLLoader;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
+import com.google.common.io.Resources;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -135,5 +138,9 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
         service.stop();
         bus.stopQueue();
+    }
+
+    protected DefaultOverdueConfig getOverdueConfig(final String name) throws Exception {
+        return XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/overdue/" + name).toExternalForm(), DefaultOverdueConfig.class);
     }
 }

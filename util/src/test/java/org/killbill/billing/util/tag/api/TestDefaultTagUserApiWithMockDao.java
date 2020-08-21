@@ -44,6 +44,10 @@ public class TestDefaultTagUserApiWithMockDao extends UtilTestSuiteNoDB {
 
     @BeforeMethod(groups = "fast")
     public void setUp() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         final TagDao tagDao = Mockito.mock(TagDao.class);
         final InternalCallContextFactory internalCallContextFactory = Mockito.mock(InternalCallContextFactory.class);
         tagDefinitionDao = Mockito.mock(TagDefinitionDao.class);
@@ -72,7 +76,7 @@ public class TestDefaultTagUserApiWithMockDao extends UtilTestSuiteNoDB {
         final TagDefinitionModelDao tagDefinitionModelDao = new TagDefinitionModelDao();
         tagDefinitionModelDao.setName(tagDefinitionName);
         tagDefinitionModelDao.setApplicableObjectTypes(ObjectType.ACCOUNT.name());
-        Mockito.when(tagDefinitionDao.create(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(InternalCallContext.class))).thenReturn(tagDefinitionModelDao);
+        Mockito.when(tagDefinitionDao.create(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any())).thenReturn(tagDefinitionModelDao);
         final TagDefinition tagDefinition = tagUserApi.createTagDefinition(tagDefinitionName, "description", ImmutableSet.<ObjectType>of(ObjectType.ACCOUNT), context);
         assertEquals(tagDefinitionName, tagDefinition.getName());
     }

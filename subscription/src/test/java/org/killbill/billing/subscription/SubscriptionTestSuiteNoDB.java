@@ -18,6 +18,7 @@
 
 package org.killbill.billing.subscription;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -123,8 +124,9 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        return getConfigSource("/subscription.properties", extraProperties);
-    }
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.put("org.killbill.catalog.uri", "org/killbill/billing/catalog/catalogTest.xml");
+        return getConfigSource(null, allExtraProperties);    }
 
     @BeforeClass(groups = "fast")
     public void beforeClass() throws Exception {

@@ -57,7 +57,7 @@ public class TestCatalog extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Upload and retrieve a per tenant catalog")
     public void testMultiTenantCatalog() throws Exception {
-        String catalog = uploadTenantCatalog("SpyCarBasic.xml", true);
+        String catalog = uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.xml", true);
         Assert.assertNotNull(catalog);
         //
         // We can't deserialize the VersionedCatalog using our JAXB models because it contains several
@@ -67,17 +67,17 @@ public class TestCatalog extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testUploadAndFetchUsageCatlog() throws Exception {
-        String catalog = uploadTenantCatalog("UsageExperimental.xml", true);
+        String catalog = uploadTenantCatalog("org/killbill/billing/server/UsageExperimental.xml", true);
         Assert.assertNotNull(catalog);
     }
 
     @Test(groups = "slow")
     public void testUploadWithErrors() throws Exception {
-        uploadTenantCatalog("SpyCarBasic.xml", false);
+        uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.xml", false);
 
         // Retry to upload same version
         try {
-            uploadTenantCatalog("SpyCarBasic.xml", false);
+            uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.xml", false);
             Assert.fail("Uploading same version should fail");
         } catch (KillBillClientException e) {
             Assert.assertTrue(e.getMessage().startsWith("Invalid catalog for tenant : "));
@@ -85,7 +85,7 @@ public class TestCatalog extends TestJaxrsBase {
 
         // Try to upload another version with an invalid name (different than orignal name)
         try {
-            uploadTenantCatalog("SpyCarBasicInvalidName.xml", false);
+            uploadTenantCatalog("org/killbill/billing/server/SpyCarBasicInvalidName.xml", false);
             Assert.fail("Uploading same version should fail");
         } catch (KillBillClientException e) {
             Assert.assertTrue(e.getMessage().startsWith("Invalid catalog for tenant : "));
@@ -235,7 +235,7 @@ public class TestCatalog extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1308")
     public void testGetCatalogVersions() throws Exception {
-        uploadTenantCatalog("SpyCarBasic.xml", false);
+        uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.xml", false);
         List<DateTime> versions = catalogApi.getCatalogVersions(null, requestOptions);
         Assert.assertEquals(versions.size(), 1);
         Assert.assertEquals(versions.get(0).compareTo(DateTime.parse("2013-02-08T00:00:00+00:00")), 0);
@@ -246,7 +246,7 @@ public class TestCatalog extends TestJaxrsBase {
         String catalogsXml = catalogApi.getCatalogXml(null, null, requestOptions);
         Assert.assertEquals(catalogFromXML(catalogsXml).getVersions().size(), 1);
 
-        uploadTenantCatalog("SpyCarBasic.v2.xml", false);
+        uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.v2.xml", false);
         versions = catalogApi.getCatalogVersions(null, requestOptions);
         Assert.assertEquals(versions.size(), 2);
         Assert.assertEquals(versions.get(0).compareTo(DateTime.parse("2013-02-08T00:00:00+00:00")), 0);

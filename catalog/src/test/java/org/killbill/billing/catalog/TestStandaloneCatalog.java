@@ -32,7 +32,7 @@ public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testLoadCatalogWithValidationIssues() throws Exception {
         try {
-            XMLLoader.getObjectFromString(Resources.getResource("CatalogWithValidationErrors.xml").toExternalForm(), StandaloneCatalog.class);
+            getCatalog("CatalogWithValidationErrors.xml");
             Assert.fail();
         } catch (final ValidationException e) {
             Assert.assertEquals(e.getErrors().size(), 13);

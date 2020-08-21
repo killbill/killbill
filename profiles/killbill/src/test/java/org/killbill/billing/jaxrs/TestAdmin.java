@@ -43,7 +43,7 @@ import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.ning.http.client.Response;
+import org.asynchttpclient.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMultimap;

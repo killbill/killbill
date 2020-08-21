@@ -46,6 +46,10 @@ public class TestNonEntityDao extends UtilTestSuiteWithEmbeddedDB {
 
     @BeforeMethod(groups = "slow")
     public void setUp() {
+        if (hasFailed()) {
+            return;
+        }
+
         tenantRecordId = internalCallContext.getTenantRecordId();
     }
 

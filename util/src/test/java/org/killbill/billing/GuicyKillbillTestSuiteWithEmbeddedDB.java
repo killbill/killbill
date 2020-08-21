@@ -85,6 +85,10 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
 
     @BeforeSuite(groups = "slow")
     public void beforeSuite() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
+
         // Hack to configure log4jdbc -- properties used by tests will be properly setup in @BeforeClass
         getConfigSource(ImmutableMap.<String, String>of());
         DBTestingHelper.get().start();
@@ -97,8 +101,12 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         }
 
         cleanupAllTables();
-        callContext.setDelegate(null, internalCallContext);
-        controlCacheDispatcher.clearAll();
+        if (callContext != null) {
+            callContext.setDelegate(null, internalCallContext);
+        }
+        if (controlCacheDispatcher != null) {
+            controlCacheDispatcher.clearAll();
+        }
     }
 
     protected void cleanupAllTables() {

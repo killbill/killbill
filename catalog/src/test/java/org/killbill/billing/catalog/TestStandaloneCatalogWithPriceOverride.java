@@ -31,19 +31,17 @@ import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.override.DefaultPriceOverride;
-import org.killbill.xmlloader.XMLLoader;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 
 public class TestStandaloneCatalogWithPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/842")
     public void testCreateAmbiguousPlan() throws Exception {
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         final StaticCatalog standaloneCatalogWithPriceOverride = new StandaloneCatalogWithPriceOverride(catalog,
                                                                                                         priceOverride,
                                                                                                         internalCallContext.getTenantRecordId(),
@@ -80,7 +78,7 @@ public class TestStandaloneCatalogWithPriceOverride extends CatalogTestSuiteWith
 
     @Test(groups = "slow")
     public void testCreatePlanNoProduct() throws Exception {
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         final StaticCatalog standaloneCatalogWithPriceOverride = new StandaloneCatalogWithPriceOverride(catalog,
                                                                                                         priceOverride,
                                                                                                         internalCallContext.getTenantRecordId(),
@@ -97,7 +95,7 @@ public class TestStandaloneCatalogWithPriceOverride extends CatalogTestSuiteWith
 
     @Test(groups = "slow")
     public void testCreatePlanInvalidProduct() throws Exception {
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         final StaticCatalog standaloneCatalogWithPriceOverride = new StandaloneCatalogWithPriceOverride(catalog,
                                                                                                         priceOverride,
                                                                                                         internalCallContext.getTenantRecordId(),

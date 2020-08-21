@@ -17,16 +17,15 @@
 
 package org.killbill.billing.catalog;
 
-import java.util.Map;
-
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.glue.TestCatalogModuleWithEmbeddedDB;
 import org.killbill.billing.catalog.override.PriceOverride;
-import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.xmlloader.XMLLoader;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
 
+import com.google.common.io.Resources;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -42,11 +41,6 @@ public class CatalogTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEm
     @Inject
     protected PriceOverride priceOverride;
 
-    @Override
-    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        return getConfigSource("/resource.properties", extraProperties);
-    }
-
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
         if (hasFailed()) {
@@ -57,4 +51,7 @@ public class CatalogTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEm
         injector.injectMembers(this);
     }
 
+    protected StandaloneCatalog getCatalog(final String name) throws Exception {
+        return XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/catalog/" + name).toExternalForm(), StandaloneCatalog.class);
+    }
 }

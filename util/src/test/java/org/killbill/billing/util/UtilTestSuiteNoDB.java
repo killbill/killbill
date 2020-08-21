@@ -16,6 +16,9 @@
 
 package org.killbill.billing.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.inject.Inject;
 
 import org.apache.shiro.SecurityUtils;
@@ -28,6 +31,7 @@ import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.security.Permission;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.util.api.AuditUserApi;

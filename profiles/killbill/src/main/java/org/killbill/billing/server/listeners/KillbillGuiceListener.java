@@ -159,6 +159,10 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         super.stopLifecycleStage3();
 
         final PushNotificationListener pushNotificationListener = injector.getInstance(PushNotificationListener.class);
-        pushNotificationListener.shutdown();
+        try {
+            pushNotificationListener.shutdown();
+        } catch (final IOException e) {
+            logger.warn("Failed close the push notifications client", e);
+        }
     }
 }

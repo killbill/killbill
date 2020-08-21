@@ -19,7 +19,6 @@ package org.killbill.billing.catalog.io;
 import java.math.BigDecimal;
 
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
-import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -30,11 +29,8 @@ import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
-import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -44,14 +40,12 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCatalogLoad() {
         try {
-            XMLLoader.getObjectFromString(Resources.getResource("SpyCarBasic.xml").toExternalForm(), StandaloneCatalog.class);
-            XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
-            XMLLoader.getObjectFromString(Resources.getResource("WeaponsHire.xml").toExternalForm(), StandaloneCatalog.class);
-            XMLLoader.getObjectFromString(Resources.getResource("WeaponsHireSmall.xml").toExternalForm(), StandaloneCatalog.class);
-
-            XMLLoader.getObjectFromString(Resources.getResource("catalogTest.xml").toExternalForm(), StandaloneCatalog.class);
-
-            XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
+            getCatalog("SpyCarBasic.xml");
+            getCatalog("SpyCarAdvanced.xml");
+            getCatalog("WeaponsHire.xml");
+            getCatalog("WeaponsHireSmall.xml");
+            getCatalog("catalogTest.xml");
+            getCatalog("UsageExperimental.xml");
         } catch (Exception e) {
             Assert.fail(e.toString());
         }
@@ -62,7 +56,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
     public void testUsageCapacityInAdvance() {
 
         try {
-            final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
+            final StandaloneCatalog catalog = getCatalog("UsageExperimental.xml");
 
             final Usage[] usages = getUsages(catalog, "capacity-in-advance-monthly");
             assertEquals(usages.length, 1);
@@ -93,7 +87,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
     public void testUsageConsumableInAdvancePrepayCredit() {
 
         try {
-            final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
+            final StandaloneCatalog catalog = getCatalog("UsageExperimental.xml");
 
             final Usage[] usages = getUsages(catalog, "consumable-in-advance-prepay-credit-monthly");
             assertEquals(usages.length, 1);
@@ -125,7 +119,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
     public void testUsageConsumableInAdvanceTopUp() {
 
         try {
-            final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
+            final StandaloneCatalog catalog = getCatalog("UsageExperimental.xml");
 
             final Usage[] usages = getUsages(catalog, "consumable-in-advance-topup");
             assertEquals(usages.length, 1);
@@ -160,7 +154,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
     public void testUsageCapacityInArrear() {
 
         try {
-            final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
+            final StandaloneCatalog catalog = getCatalog("UsageExperimental.xml");
 
             final Usage[] usages = getUsages(catalog, "capacity-in-arrear");
             assertEquals(usages.length, 1);
@@ -210,7 +204,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
     public void testUsageConsumableInArrear() {
 
         try {
-            final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource("UsageExperimental.xml").toExternalForm(), StandaloneCatalog.class);
+            final StandaloneCatalog catalog = getCatalog("UsageExperimental.xml");
 
             final Usage[] usages = getUsages(catalog, "consumable-in-arrear");
             assertEquals(usages.length, 1);

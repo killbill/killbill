@@ -108,7 +108,7 @@ public class TestOverdue extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Allow overdue condition by control tag defined in overdue config xml file")
     public void testControlTagOverdueConfig() throws Exception {
-        uploadTenantOverdueConfig("overdueWithControlTag.xml");
+        uploadTenantOverdueConfig("org/killbill/billing/server/overdueWithControlTag.xml");
 
         // Create an account without a payment method and assign a TEST tag
         final Account accountJson = createAccountNoPMBundleAndSubscription();
@@ -155,7 +155,7 @@ public class TestOverdue extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Allow overdue condition by exclusion control tag defined in overdue config xml file")
     public void testExclusionControlTagOverdueConfig() throws Exception {
-        uploadTenantOverdueConfig("overdueWithExclusionControlTag.xml");
+        uploadTenantOverdueConfig("org/killbill/billing/server/overdueWithExclusionControlTag.xml");
 
         // Create an account without a payment method and assign a TEST tag
         final Account accountJson = createAccountNoPMBundleAndSubscription();

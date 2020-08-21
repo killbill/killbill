@@ -81,7 +81,7 @@ public class TestDefaultOverdueConfigCache extends OverdueTestSuiteNoDB {
     //
     @Test(groups = "fast")
     public void testDefaultOverdueConfig() throws OverdueApiException {
-        overdueConfigCache.loadDefaultOverdueConfig(Resources.getResource("OverdueConfig.xml").toExternalForm());
+        overdueConfigCache.loadDefaultOverdueConfig(Resources.getResource("org/killbill/billing/overdue/OverdueConfig.xml").toExternalForm());
 
         final OverdueConfig result = overdueConfigCache.getOverdueConfig(internalCallContext);
         Assert.assertNotNull(result);
@@ -110,9 +110,9 @@ public class TestDefaultOverdueConfigCache extends OverdueTestSuiteNoDB {
         final Long multiTenantRecordId = multiTenantContext.getTenantRecordId();
         final Long otherMultiTenantRecordId = otherMultiTenantContext.getTenantRecordId();
 
-        final InputStream tenantInputOverdueConfig = UriAccessor.accessUri(new URI(Resources.getResource("OverdueConfig2.xml").toExternalForm()));
+        final InputStream tenantInputOverdueConfig = UriAccessor.accessUri(new URI(Resources.getResource("org/killbill/billing/overdue/OverdueConfig2.xml").toExternalForm()));
         final String tenantOverdueConfigXML = CharStreams.toString(new InputStreamReader(tenantInputOverdueConfig, "UTF-8"));
-        final InputStream otherTenantInputOverdueConfig = UriAccessor.accessUri(new URI(Resources.getResource("OverdueConfig.xml").toExternalForm()));
+        final InputStream otherTenantInputOverdueConfig = UriAccessor.accessUri(new URI(Resources.getResource("org/killbill/billing/overdue/OverdueConfig.xml").toExternalForm()));
         final String otherTenantOverdueConfigXML = CharStreams.toString(new InputStreamReader(otherTenantInputOverdueConfig, "UTF-8"));
         Mockito.when(tenantInternalApi.getTenantOverdueConfig(Mockito.any(InternalTenantContext.class))).thenAnswer(new Answer<String>() {
             @Override
@@ -148,7 +148,7 @@ public class TestDefaultOverdueConfigCache extends OverdueTestSuiteNoDB {
         shouldThrow.set(false);
 
         // Set a default config
-        overdueConfigCache.loadDefaultOverdueConfig(Resources.getResource("OverdueConfig.xml").toExternalForm());
+        overdueConfigCache.loadDefaultOverdueConfig(Resources.getResource("org/killbill/billing/overdue/OverdueConfig.xml").toExternalForm());
 
         // Verify the lookup for this tenant
         final OverdueConfig result = overdueConfigCache.getOverdueConfig(multiTenantContext);

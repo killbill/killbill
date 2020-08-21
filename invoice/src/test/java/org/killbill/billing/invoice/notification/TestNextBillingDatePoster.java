@@ -46,7 +46,8 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
         allExtraProperties.put("org.killbill.invoice.dryRunNotificationSchedule", "48h");
-        return getConfigSource("/resource.properties", allExtraProperties);
+        allExtraProperties.put("org.killbill.invoice.maxNumberOfMonthsInFuture", "36");
+        return getConfigSource(null, allExtraProperties);
     }
 
     @Test(groups = "slow")

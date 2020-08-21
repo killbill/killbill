@@ -18,6 +18,7 @@
 
 package org.killbill.billing.junction;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -97,7 +98,9 @@ public abstract class JunctionTestSuiteWithEmbeddedDB extends GuicyKillbillTestS
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        return getConfigSource("/junction.properties", extraProperties);
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.put("org.killbill.catalog.uri", "org/killbill/billing/catalog/catalogTest.xml");
+        return getConfigSource(null, allExtraProperties);
     }
 
     @BeforeClass(groups = "slow")

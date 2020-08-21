@@ -346,13 +346,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         super.beforeMethod();
 
-        log.debug("beforeMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
-        //Thread.currentThread().setContextClassLoader(null);
-
-        log.debug("RESET TEST FRAMEWORK");
-
-        controllerDispatcher.clearAll();
-
         overdueConfigCache.loadDefaultOverdueConfig((OverdueConfig) null);
 
         clock.resetDeltaFromReality();

@@ -17,8 +17,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>killbill</artifactId>
         <groupId>org.kill-bill.billing</groupId>
+        <artifactId>killbill</artifactId>
         <version>0.22.12-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -116,13 +116,7 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
-            <artifactId>killbill-platform-base</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-platform-lifecycle</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
@@ -151,6 +145,10 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-concurrent</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-embeddeddb-h2</artifactId>
             <scope>test</scope>
         </dependency>
@@ -168,6 +166,10 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-jdbi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-queue</artifactId>
         </dependency>
         <dependency>
@@ -178,7 +180,7 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

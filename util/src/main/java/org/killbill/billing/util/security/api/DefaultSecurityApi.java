@@ -227,6 +227,8 @@ public class DefaultSecurityApi implements SecurityApi {
     @Override
     public void invalidateUser(final String username, final CallContext callContext) throws SecurityApiException {
         userDao.invalidateUser(username, callContext.getUserName());
+        // Invalidate the JSESSIONID
+        logout();
     }
 
     @Override

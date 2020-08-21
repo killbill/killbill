@@ -19,6 +19,7 @@
 package org.killbill.billing;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -74,7 +75,7 @@ public class GuicyKillbillTestSuite implements IHookable {
     protected static final Logger log = LoggerFactory.getLogger(KillbillTestSuite.class.getSimpleName());
 
     // Variables set in @BeforeSuite
-    protected static ImmutableMap<String, String> extraPropertiesForTestSuite;
+    protected static Map<String, String> extraPropertiesForTestSuite = new HashMap<String, String>();
     // The clock needs to be setup early, as it is needed when starting the server, but see below
     @VisibleForTesting
     protected static ClockMock theRealClock = new ClockMock();
@@ -219,6 +220,8 @@ public class GuicyKillbillTestSuite implements IHookable {
 
     @BeforeSuite(alwaysRun = true)
     public void globalBeforeSuite() {
+        extraPropertiesForTestSuite.put("org.killbill.security.shiroResourcePath", "classpath:org/killbill/billing/util/shiro.ini");
+
         if (Boolean.valueOf(System.getProperty("killbill.test.redis", "false"))) {
             redisServer = new RedisServer(56379);
             redisServer.start();
@@ -228,12 +231,10 @@ public class GuicyKillbillTestSuite implements IHookable {
             theRealClock = new DistributedClockMock();
             ((DistributedClockMock) theRealClock).setRedissonClient(redissonClient);
 
-            extraPropertiesForTestSuite = ImmutableMap.<String, String>of("org.killbill.cache.config.redis", "true",
-                                                                          "org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379");
+            extraPropertiesForTestSuite.put("org.killbill.cache.config.redis", "true");
+            extraPropertiesForTestSuite.put("org.killbill.cache.config.redis.url", "redis://127.0.0.1:56379");
         } else {
             theRealClock.resetDeltaFromReality();
-
-            extraPropertiesForTestSuite = ImmutableMap.<String, String>of();
         }
 
         // The clock needs to be setup early in @BeforeSuite, as it is needed when starting the server, but see below

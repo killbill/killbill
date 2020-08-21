@@ -32,18 +32,16 @@ import org.killbill.billing.catalog.api.rules.CaseChangePlanPolicy;
 import org.killbill.billing.catalog.api.rules.CaseCreateAlignment;
 import org.killbill.billing.catalog.api.rules.CasePriceList;
 import org.killbill.billing.catalog.plugin.api.StandalonePluginCatalog;
-import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 
 public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testMappingFromExistingCatalog() throws Exception {
-        final StandaloneCatalog inputCatalog = XMLLoader.getObjectFromString(Resources.getResource("SpyCarAdvanced.xml").toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog inputCatalog = getCatalog("SpyCarAdvanced.xml");
         final StandalonePluginCatalog pluginCatalog = buildStandalonePluginCatalog(inputCatalog);
 
         final StandaloneCatalogMapper mapper = new StandaloneCatalogMapper(inputCatalog.getCatalogName());

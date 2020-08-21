@@ -18,8 +18,6 @@
 
 package org.killbill.billing.invoice;
 
-import java.util.Map;
-
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
@@ -35,7 +33,6 @@ import org.killbill.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
-import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -109,11 +106,6 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected InvoiceConfig invoiceConfig;
     @Inject
     protected ParkedAccountsManager parkedAccountsManager;
-
-    @Override
-    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        return getConfigSource("/resource.properties", extraProperties);
-    }
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {

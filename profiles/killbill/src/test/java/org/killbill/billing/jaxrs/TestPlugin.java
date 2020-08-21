@@ -33,7 +33,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.ning.http.client.Response;
+import org.asynchttpclient.Response;
 
 public class TestPlugin extends TestJaxrsBase {
 

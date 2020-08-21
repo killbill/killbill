@@ -162,7 +162,7 @@ public class TestJaxrsBase extends KillbillClient {
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        return getConfigSource("/killbill.properties", extraProperties);
+        return getConfigSource("/org/killbill/billing/server/killbill.properties", extraProperties);
     }
 
     public class TestKillbillGuiceListener extends KillbillGuiceListener {
