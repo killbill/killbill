@@ -18,6 +18,7 @@
 
 package org.killbill.billing.account.api.user;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.UUID;
 
@@ -87,13 +88,8 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
-        // Not transactional, but there is a db constraint on that column
-        if (data.getExternalKey() != null && getIdFromKey(data.getExternalKey(), context) != null) {
-            throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, data.getExternalKey());
-        }
 
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context);
-
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context)
         if (data.getParentAccountId() != null) {
             // verify that parent account exists if parentAccountId is not null
             final ImmutableAccountData immutableAccountData = immutableAccountInternalApi.getImmutableAccountDataById(data.getParentAccountId(), internalContext);
@@ -107,8 +103,13 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
             throw new AccountApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
         }
 
-        accountDao.create(account, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
-
+        try {
+            accountDao.create(account, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
+        } catch (final RuntimeException e) {
+            if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
+                throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, account.getExternalKey());
+            }
+        }
         return new DefaultAccount(account);
     }
 

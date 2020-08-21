@@ -55,6 +55,21 @@ import static org.testng.Assert.assertEquals;
 
 public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
+
+    @Test(groups = "slow")
+    public void testCreateDuplicateAccount() throws Exception {
+        final DefaultAccount data = new DefaultAccount(createTestAccount());
+        final Account account1 = createAccount(data);
+        Assert.assertNotNull(account1);
+
+        try {
+            createAccount(data);
+            Assert.fail("Create account should have have because of duplicate key");
+        } catch (AccountApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.ACCOUNT_ALREADY_EXISTS.getCode());
+        }
+    }
+
     @Test(groups = "slow", description = "Test Account search")
     public void testSearch() throws Exception {
         final MutableAccountData mutableAccountData1 = createAccountData();
