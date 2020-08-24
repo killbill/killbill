@@ -25,6 +25,10 @@
     <artifactId>killbill-currency</artifactId>
     <packaging>jar</packaging>
     <name>killbill-currency</name>
+    <properties>
+        <check.fail-spotbugs>true</check.fail-spotbugs>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>

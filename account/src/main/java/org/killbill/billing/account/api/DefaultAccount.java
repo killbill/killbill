@@ -143,7 +143,7 @@ public class DefaultAccount extends EntityBase implements Account {
         this.currency = currency;
         this.parentAccountId = parentAccountId;
         this.isPaymentDelegatedToParent = isPaymentDelegatedToParent != null ? isPaymentDelegatedToParent : false;
-        this.billCycleDayLocal = billCycleDayLocal == null ? DEFAULT_BILLING_CYCLE_DAY_LOCAL : billCycleDayLocal;
+        this.billCycleDayLocal = billCycleDayLocal == null ? (Integer) DEFAULT_BILLING_CYCLE_DAY_LOCAL : billCycleDayLocal;
         this.paymentMethodId = paymentMethodId;
         this.referenceTime = referenceTime;
         this.timeZone = timeZone;

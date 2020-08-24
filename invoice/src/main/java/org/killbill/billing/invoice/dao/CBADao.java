@@ -38,7 +38,6 @@ import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.tag.Tag;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -95,7 +94,7 @@ public class CBADao {
         if ((parentInvoice != null) && (InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(parentInvoice).compareTo(BigDecimal.ZERO) == 0)) {
             final Iterable<InvoiceItemModelDao> items = Iterables.filter(parentInvoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
                 @Override
-                public boolean apply(@Nullable final InvoiceItemModelDao input) {
+                public boolean apply(final InvoiceItemModelDao input) {
                     return input.getChildAccountId().equals(invoice.getAccountId());
                 }
             });
@@ -162,14 +161,12 @@ public class CBADao {
         return extractUniqueInvoiceIds(result);
     }
 
-    private Set<UUID> extractUniqueInvoiceIds(final List<InvoiceItemModelDao> cbaItemsGenerated) {
-        final Iterable<UUID> newCBAInvoiceIds = Iterables.transform(cbaItemsGenerated, new Function<InvoiceItemModelDao, UUID>() {
-            @Override
-            public UUID apply(final InvoiceItemModelDao input) {
-                return input.getInvoiceId();
-            }
-        });
-        return ImmutableSet.copyOf(newCBAInvoiceIds);
+    private Set<UUID> extractUniqueInvoiceIds(final Iterable<InvoiceItemModelDao> cbaItemsGenerated) {
+        final Set<UUID> uniqueInvoiceIds = new HashSet<UUID>();
+        for (final InvoiceItemModelDao invoiceItemModelDao : cbaItemsGenerated) {
+            uniqueInvoiceIds.add(invoiceItemModelDao.getInvoiceId());
+        }
+        return uniqueInvoiceIds;
     }
 
     // Distribute account CBA across all COMMITTED unpaid invoices

@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -47,10 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -151,12 +149,9 @@ public class SubscriptionUsageInArrear {
         for (final BillingEvent event : subscriptionBillingEvents) {
             // Extract all in arrear /consumable usage section for that billing event.
             final List<Usage> usages = findUsageInArrearUsages(event);
-            allSeenUsage.addAll(Collections2.transform(usages, new Function<Usage, UsageKey>() {
-                @Override
-                public UsageKey apply(final Usage input) {
-                    return new UsageKey(input.getName(), event.getCatalogEffectiveDate());
-                }
-            }));
+            for (final Usage usage : usages) {
+                allSeenUsage.add(new UsageKey(usage.getName(), event.getCatalogEffectiveDate()));
+            }
 
             // All inflight usage interval are candidates to be closed unless we see that current billing event referencing the same usage section.
             final Set<UsageKey> toBeClosed = new HashSet<UsageKey>(allSeenUsage);
@@ -205,8 +200,8 @@ public class SubscriptionUsageInArrear {
             }
         }
 
-        for (final UsageKey usageKey : inFlightInArrearUsageIntervals.keySet()) {
-            usageIntervals.add(inFlightInArrearUsageIntervals.get(usageKey).build(false));
+        for (final Entry<UsageKey, ContiguousIntervalUsageInArrear> entry : inFlightInArrearUsageIntervals.entrySet()) {
+            usageIntervals.add(entry.getValue().build(false));
         }
         inFlightInArrearUsageIntervals.clear();
         return usageIntervals;
@@ -227,7 +222,7 @@ public class SubscriptionUsageInArrear {
         return result;
     }
 
-    public class SubscriptionUsageInArrearItemsAndNextNotificationDate {
+    public static class SubscriptionUsageInArrearItemsAndNextNotificationDate {
 
         private final List<InvoiceItem> invoiceItems;
         private final Map<String, LocalDate> perUsageNotificationDates;

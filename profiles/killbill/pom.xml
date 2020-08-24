@@ -27,6 +27,9 @@
     <artifactId>killbill-profiles-killbill</artifactId>
     <packaging>war</packaging>
     <name>killbill-profiles-killbill</name>
+    <properties>
+        <main.basedir>${project.parent.parent.basedir}</main.basedir>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>aopalliance</groupId>

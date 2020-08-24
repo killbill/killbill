@@ -24,17 +24,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
@@ -221,17 +217,11 @@ public class SubscriptionItemTree {
 
         final List<InvoiceItem> tmp = new LinkedList<InvoiceItem>();
         tmp.addAll(remainingIgnoredItems);
-        tmp.addAll(Collections2.filter(Collections2.transform(items, new Function<Item, InvoiceItem>() {
-            @Override
-            public InvoiceItem apply(final Item input) {
-                return input.toInvoiceItem();
+        for (final Item item: items) {
+            if (item != null) {
+                tmp.add(item.toInvoiceItem());
             }
-        }), new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(@Nullable final InvoiceItem input) {
-                return input != null;
-            }
-        }));
+        };
 
         final List<InvoiceItem> result = Ordering.<InvoiceItem>from(INVOICE_ITEM_COMPARATOR).sortedCopy(tmp);
         checkItemsListState(result);

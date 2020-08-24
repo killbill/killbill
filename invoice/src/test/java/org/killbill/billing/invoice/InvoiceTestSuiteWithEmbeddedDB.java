@@ -36,7 +36,6 @@ import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.bus.api.PersistentBus;
@@ -88,8 +87,6 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected TagUserApi tagUserApi;
     @Inject
     protected GlobalLocker locker;
-    @Inject
-    protected InternalCallContextFactory internalCallContextFactory;
     @Inject
     protected InvoiceInternalApi invoiceInternalApi;
     @Inject

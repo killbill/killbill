@@ -19,7 +19,6 @@ package org.killbill.billing.invoice.provider;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.clock.Clock;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -28,17 +27,14 @@ public class NoOpInvoiceProviderPluginProvider implements Provider<DefaultNoOpIn
 
     private final String instanceName;
 
-    private Clock clock;
     private OSGIServiceRegistration<InvoicePluginApi> registry;
 
     public NoOpInvoiceProviderPluginProvider(final String instanceName) {
         this.instanceName = instanceName;
-
     }
 
     @Inject
-    public void setPaymentProviderPluginRegistry(final OSGIServiceRegistration<InvoicePluginApi> registry, final Clock clock) {
-        this.clock = clock;
+    public void setPaymentProviderPluginRegistry(final OSGIServiceRegistration<InvoicePluginApi> registry) {
         this.registry = registry;
     }
 
