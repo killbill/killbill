@@ -38,7 +38,7 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
 
     private AddNodeCallback CALLBACK = new DummyAddNodeCallback();
 
-    public class DummyNodeInterval extends ItemsNodeInterval {
+    public static class DummyNodeInterval extends ItemsNodeInterval {
 
         private final UUID id;
 
@@ -78,7 +78,7 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         }
     }
 
-    public class DummyAddNodeCallback implements AddNodeCallback {
+    public static class DummyAddNodeCallback implements AddNodeCallback {
 
         @Override
         public boolean onExistingNode(final NodeInterval existingNode, final ItemsNodeInterval updatedNewNode) {
@@ -311,7 +311,7 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         final NodeInterval search1 = root.findNode(new LocalDate("2014-01-04"), new SearchCallback() {
             @Override
             public boolean isMatch(final NodeInterval curNode) {
-                return ((DummyNodeInterval) curNode).getId().equals(secondChildLevel3.getId());
+                return curNode instanceof DummyNodeInterval && ((DummyNodeInterval) curNode).getId().equals(secondChildLevel3.getId());
             }
         });
         checkInterval(search1, secondChildLevel3);
@@ -319,7 +319,7 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         final NodeInterval search2 = root.findNode(new SearchCallback() {
             @Override
             public boolean isMatch(final NodeInterval curNode) {
-                return ((DummyNodeInterval) curNode).getId().equals(thirdChildLevel2.getId());
+                return curNode instanceof DummyNodeInterval && ((DummyNodeInterval) curNode).getId().equals(thirdChildLevel2.getId());
             }
         });
         checkInterval(search2, thirdChildLevel2);
@@ -327,7 +327,7 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         final NodeInterval nullSearch = root.findNode(new SearchCallback() {
             @Override
             public boolean isMatch(final NodeInterval curNode) {
-                return ((DummyNodeInterval) curNode).getId().equals("foo");
+                return curNode instanceof DummyNodeInterval && "foo".equals(((DummyNodeInterval) curNode).getId().toString());
             }
         });
         assertNull(nullSearch);

@@ -17,12 +17,13 @@
 
 package org.killbill.billing.invoice.usage;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
@@ -43,8 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
 public class RawUsageOptimizer {
@@ -77,12 +76,10 @@ public class RawUsageOptimizer {
         final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
 
         final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(targetStartDate, targetDate, internalCallContext);
-        final Set<TrackingRecordId> existingTrackingIds = ImmutableSet.copyOf(Iterables.transform(trackingIds, new Function<InvoiceTrackingModelDao, TrackingRecordId>() {
-            @Override
-            public TrackingRecordId apply(final InvoiceTrackingModelDao input) {
-                return new TrackingRecordId(input.getTrackingId(), input.getInvoiceId(), input.getSubscriptionId(), input.getUnitType(), input.getRecordDate());
-            }
-        }));
+        final Set<TrackingRecordId> existingTrackingIds = new HashSet<TrackingRecordId>();
+        for (final InvoiceTrackingModelDao invoiceTrackingModelDao : trackingIds) {
+            existingTrackingIds.add(new TrackingRecordId(invoiceTrackingModelDao.getTrackingId(), invoiceTrackingModelDao.getInvoiceId(), invoiceTrackingModelDao.getSubscriptionId(), invoiceTrackingModelDao.getUnitType(), invoiceTrackingModelDao.getRecordDate()));
+        }
         return new RawUsageOptimizerResult(targetStartDate, rawUsageData, existingTrackingIds);
     }
 
@@ -93,13 +90,10 @@ public class RawUsageOptimizer {
 
         }
         // Extract all usage billing period known in that catalog
-        final Set<BillingPeriod> knownUsageBillingPeriod = ImmutableSet.copyOf(Iterables.transform(knownUsage.values(), new Function<Usage, BillingPeriod>() {
-            @Nullable
-            @Override
-            public BillingPeriod apply(final Usage input) {
-                return input.getBillingPeriod();
-            }
-        }));
+        final Collection<BillingPeriod> knownUsageBillingPeriod = new HashSet<BillingPeriod>();
+        for (final Usage usage : knownUsage.values()) {
+            knownUsageBillingPeriod.add(usage.getBillingPeriod());
+        }
 
         // Make sure all usage items are sorted by endDate
         final List<InvoiceItem> sortedUsageItems = USAGE_ITEM_ORDERING.sortedCopy(existingUsageItems);
@@ -124,8 +118,8 @@ public class RawUsageOptimizer {
                 // Help to debug https://github.com/killbill/killbill/issues/1095
                 log.warn("RawUsageOptimizer : item id={}, expected to see an UsageInvoiceItem type, got class {}, classloader = {}",
                          item.getId(),
-                         (item != null ? item.getClass() : null),
-                         (item != null ? item.getClass().getClassLoader() : null));
+                         item.getClass(),
+                         item.getClass().getClassLoader());
             }
             final Usage usage = knownUsage.get(item.getUsageName());
 

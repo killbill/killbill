@@ -446,9 +446,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public String getInvoiceAsHTML(final UUID invoiceId, final TenantContext context) throws AccountApiException, IOException, InvoiceApiException {
         final Invoice invoice = getInvoice(invoiceId, context);
-        if (invoice == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
-        }
 
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(invoiceId, ObjectType.INVOICE, context);
         final Account account = accountUserApi.getAccountById(invoice.getAccountId(), internalContext);
@@ -646,14 +643,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
     }
 
-    private List<Invoice> fromInvoiceModelDao(final Collection<InvoiceModelDao> invoiceModelDaos, final VersionedCatalog catalog) {
-        return ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceModelDaos,
-                                                                    new Function<InvoiceModelDao, Invoice>() {
-                                                                        @Override
-                                                                        public Invoice apply(final InvoiceModelDao input) {
-                                                                            return new DefaultInvoice(input, catalog);
-                                                                        }
-                                                                    }));
+    private List<Invoice> fromInvoiceModelDao(final Iterable<InvoiceModelDao> invoiceModelDaos, final VersionedCatalog catalog) {
+        final List<Invoice> invoices = new LinkedList<Invoice>();
+        for (final InvoiceModelDao invoiceModelDao : invoiceModelDaos) {
+            invoices.add(new DefaultInvoice(invoiceModelDao, catalog));
+        }
+        return invoices;
     }
 
     private DefaultInvoice getInvoiceAndCheckCurrency(final UUID invoiceId, @Nullable final Currency currency, final TenantContext context) throws InvoiceApiException {

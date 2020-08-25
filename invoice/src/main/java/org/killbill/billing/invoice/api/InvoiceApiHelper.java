@@ -60,6 +60,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class InvoiceApiHelper {
 
@@ -80,6 +81,7 @@ public class InvoiceApiHelper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+    @SuppressFBWarnings("NP_ALWAYS_NULL_EXCEPTION")
     public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId,
                                                                     final boolean isDryRun,
                                                                     final WithAccountLock withAccountLock,

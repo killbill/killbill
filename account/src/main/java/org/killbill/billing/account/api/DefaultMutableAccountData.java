@@ -187,7 +187,7 @@ public class DefaultMutableAccountData implements MutableAccountData {
 
     @Override
     public void setReferenceTime(final DateTime dateTime) {
-        this.referenceTime = referenceTime;
+        this.referenceTime = dateTime;
     }
 
     @Override

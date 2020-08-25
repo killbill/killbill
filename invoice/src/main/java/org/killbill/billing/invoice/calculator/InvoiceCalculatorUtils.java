@@ -88,10 +88,13 @@ public abstract class InvoiceCalculatorUtils {
 
     public static BigDecimal computeChildInvoiceAmount(final Currency currency,
                                                        @Nullable final Iterable<InvoiceItem> invoiceItems) {
+        if (invoiceItems == null) {
+            return BigDecimal.ZERO;
+        }
 
         final Iterable<InvoiceItem> chargeItems = Iterables.filter(invoiceItems, new Predicate<InvoiceItem>() {
             @Override
-            public boolean apply(@Nullable final InvoiceItem input) {
+            public boolean apply(final InvoiceItem input) {
                 return isCharge(input);
             }
         });

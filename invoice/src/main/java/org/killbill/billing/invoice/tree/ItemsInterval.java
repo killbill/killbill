@@ -153,13 +153,9 @@ public class ItemsInterval {
 
         // Prorate (build phase) or repair (merge phase) this item, as needed
         final InvoiceItem proratedInvoiceItem = item.toProratedInvoiceItem(startDate, endDate);
-        if (proratedInvoiceItem == null) {
-            return null;
-        } else {
-            // Keep track of the repaired amount for this item
-            item.incrementCurrentRepairedAmount(proratedInvoiceItem.getAmount().abs());
-            return new Item(proratedInvoiceItem, targetInvoiceId, item.getAction());
-        }
+        // Keep track of the repaired amount for this item
+        item.incrementCurrentRepairedAmount(proratedInvoiceItem.getAmount().abs());
+        return new Item(proratedInvoiceItem, targetInvoiceId, item.getAction());
     }
 
     private Item getResultingItem(final boolean mergeMode) {

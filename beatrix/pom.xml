@@ -25,6 +25,9 @@
     <artifactId>killbill-beatrix</artifactId>
     <packaging>jar</packaging>
     <name>killbill-beatrix</name>
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>

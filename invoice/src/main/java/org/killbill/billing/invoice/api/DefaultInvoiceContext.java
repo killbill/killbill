@@ -26,11 +26,15 @@ import org.killbill.billing.util.callcontext.CallContext;
 
 public class DefaultInvoiceContext extends DefaultCallContext implements InvoiceContext {
 
-    private final LocalDate targetDate;
-    private final Invoice invoice;
-    private final List<Invoice> existingInvoices;
-    private final boolean isDryRun;
-    private final boolean isRescheduled;
+    private LocalDate targetDate;
+    private Invoice invoice;
+    private List<Invoice> existingInvoices;
+    private boolean isDryRun;
+    private boolean isRescheduled;
+
+    // For deserialization
+    public DefaultInvoiceContext() {
+    }
 
     public DefaultInvoiceContext(final LocalDate targetDate,
                                  final Invoice invoice,

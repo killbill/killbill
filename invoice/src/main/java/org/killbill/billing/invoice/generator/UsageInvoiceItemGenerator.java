@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -110,7 +111,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                 if (rawUsgRes == null &&
                     Iterables.any(event.getUsages(), new Predicate<Usage>() {
                         @Override
-                        public boolean apply(@Nullable final Usage input) {
+                        public boolean apply(final Usage input) {
                             return input.getBillingMode() == BillingMode.IN_ARREAR;
                         }
                     })) {
@@ -176,8 +177,8 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             subscriptionFutureNotificationDates = new SubscriptionFutureNotificationDates(null);
             perSubscriptionFutureNotificationDates.put(subscriptionId, subscriptionFutureNotificationDates);
         }
-        for (final String usageName : nextBillingCycleDates.keySet()) {
-            subscriptionFutureNotificationDates.updateNextUsageDateIfRequired(usageName, usageBillingMode, nextBillingCycleDates.get(usageName));
+        for (final Entry<String, LocalDate> entry : nextBillingCycleDates.entrySet()) {
+            subscriptionFutureNotificationDates.updateNextUsageDateIfRequired(entry.getKey(), usageBillingMode, entry.getValue());
         }
     }
 

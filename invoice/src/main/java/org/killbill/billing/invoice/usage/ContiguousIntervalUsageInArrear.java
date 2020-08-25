@@ -23,8 +23,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,7 +61,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -427,7 +428,8 @@ public abstract class ContiguousIntervalUsageInArrear {
                 // If we did find some usage for that date range, let's populate the result
                 if (!perRangeUnitToAmount.isEmpty()) {
                     final List<RolledUpUnit> rolledUpUnits = new ArrayList<RolledUpUnit>(perRangeUnitToAmount.size());
-                    for (final String unitType : perRangeUnitToAmount.keySet()) {
+                    for (final Entry<String, Long> entry : perRangeUnitToAmount.entrySet()) {
+                        final String unitType = entry.getKey();
                         // Sanity check: https://github.com/killbill/killbill/issues/1275
                         if (!allSeenUnitTypes.get(curTransition.getTargetBillingEvent()).contains(unitType)) {
                             // We have found some reported usage with a unit type that hasn't been handled by any ContiguousIntervalUsageInArrear
@@ -447,7 +449,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                                 }
                             }
                         } else if (unitTypes.contains(unitType)) { // Other usage type not for us -- safely ignore
-                            rolledUpUnits.add(new DefaultRolledUpUnit(unitType, perRangeUnitToAmount.get(unitType)));
+                            rolledUpUnits.add(new DefaultRolledUpUnit(unitType, entry.getValue()));
                         }
                     }
                     result.add(new DefaultRolledUpUsageWithMetadata(getSubscriptionId(), prevDate, curDate, rolledUpUnits, prevCatalogEffectiveDate));
@@ -486,8 +488,8 @@ public abstract class ContiguousIntervalUsageInArrear {
      */
     private Long computeUpdatedAmount(@Nullable Long currentAmount, @Nullable Long newAmount) {
 
-        currentAmount = currentAmount == null ? 0L : currentAmount;
-        newAmount = newAmount == null ? 0L : newAmount;
+        currentAmount = currentAmount == null ? (Long) 0L : currentAmount;
+        newAmount = newAmount == null ? (Long) 0L : newAmount;
 
         if (usage.getUsageType() == UsageType.CAPACITY) {
             return Math.max(currentAmount, newAmount);
@@ -544,12 +546,11 @@ public abstract class ContiguousIntervalUsageInArrear {
 
     @VisibleForTesting
     List<LocalDate> getTransitionTimes() {
-        return ImmutableList.<LocalDate>copyOf(Iterables.transform(transitionTimes, new Function<TransitionTime, LocalDate>() {
-            @Override
-            public LocalDate apply(final TransitionTime input) {
-                return input.getDate();
-            }
-        }));
+        final List<LocalDate> transitionDates = new LinkedList<LocalDate>();
+        for (final TransitionTime transitionTime : transitionTimes) {
+            transitionDates.add(transitionTime.getDate());
+        }
+        return transitionDates;
     }
 
     public void addBillingEvent(final BillingEvent event) {
@@ -631,7 +632,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
     }
 
-    public class UsageInArrearItemsAndNextNotificationDate {
+    public static class UsageInArrearItemsAndNextNotificationDate {
 
         private final List<InvoiceItem> invoiceItems;
         private final LocalDate nextNotificationDate;

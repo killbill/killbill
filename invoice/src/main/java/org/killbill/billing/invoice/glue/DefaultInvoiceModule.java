@@ -61,8 +61,6 @@ import com.google.inject.name.Names;
 
 public class DefaultInvoiceModule extends KillBillModule implements InvoiceModule {
 
-    InvoiceConfig staticInvoiceConfig;
-
     public DefaultInvoiceModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
@@ -88,7 +86,6 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
     }
 
     protected void installConfig(final InvoiceConfig staticInvoiceConfig) {
-        this.staticInvoiceConfig = staticInvoiceConfig;
         bind(InvoiceConfig.class).annotatedWith(Names.named(STATIC_CONFIG)).toInstance(staticInvoiceConfig);
         bind(InvoiceConfig.class).to(MultiTenantInvoiceConfig.class).asEagerSingleton();
     }

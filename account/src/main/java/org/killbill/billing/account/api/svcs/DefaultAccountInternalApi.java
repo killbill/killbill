@@ -18,6 +18,7 @@
 
 package org.killbill.billing.account.api.svcs;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,10 +49,7 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.dao.NonEntityDao;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
 
 public class DefaultAccountInternalApi extends DefaultAccountApiBase implements AccountInternalApi {
 
@@ -89,9 +87,6 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
     public void updateBCD(final String externalKey, final int bcd,
                           final InternalCallContext context) throws AccountApiException {
         final Account currentAccount = getAccountByKey(externalKey, context);
-        if (currentAccount == null) {
-            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
-        }
         if (currentAccount.getBillCycleDayLocal() != DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL) {
             throw new AccountApiException(ErrorCode.ACCOUNT_UPDATE_FAILED);
         }
@@ -100,7 +95,7 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
         mutableAccountData.setBillCycleDayLocal(bcd);
         final AccountModelDao accountToUpdate = new AccountModelDao(currentAccount.getId(), mutableAccountData);
         bcdCacheController.remove(currentAccount.getId());
-        bcdCacheController.putIfAbsent(currentAccount.getId(), new Integer(bcd));
+        bcdCacheController.putIfAbsent(currentAccount.getId(), bcd);
         accountDao.update(accountToUpdate, true, context);
     }
 
@@ -116,13 +111,12 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId,
                                         final InternalTenantContext context) {
-        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountDao.getEmailsByAccountId(accountId, context),
-                                                                         new Function<AccountEmailModelDao, AccountEmail>() {
-                                                                             @Override
-                                                                             public AccountEmail apply(final AccountEmailModelDao input) {
-                                                                                 return new DefaultAccountEmail(input);
-                                                                             }
-                                                                         }));
+        final List<AccountEmailModelDao> childrenAccountsModelDao = accountDao.getEmailsByAccountId(accountId, context);
+        final List<AccountEmail> emails = new LinkedList<AccountEmail>();
+        for (final AccountEmailModelDao emailsModelDao : childrenAccountsModelDao) {
+            emails.add(new DefaultAccountEmail(emailsModelDao));
+        }
+        return emails;
     }
 
     @Override
@@ -180,12 +174,11 @@ public class DefaultAccountInternalApi extends DefaultAccountApiBase implements 
 
     @Override
     public List<Account> getChildrenAccounts(final UUID parentAccountId, final InternalCallContext context) throws AccountApiException {
-        return ImmutableList.<Account>copyOf(Collections2.transform(accountDao.getAccountsByParentId(parentAccountId, context),
-                                                                    new Function<AccountModelDao, Account>() {
-                                                                        @Override
-                                                                        public Account apply(final AccountModelDao input) {
-                                                                            return new DefaultAccount(input);
-                                                                        }
-                                                                    }));
+        final List<AccountModelDao> childrenAccountsModelDao = accountDao.getAccountsByParentId(parentAccountId, context);
+        final List<Account> childrenAccounts = new LinkedList<Account>();
+        for (final AccountModelDao accountModelDao : childrenAccountsModelDao) {
+            childrenAccounts.add(new DefaultAccount(accountModelDao));
+        }
+        return childrenAccounts;
     }
 }

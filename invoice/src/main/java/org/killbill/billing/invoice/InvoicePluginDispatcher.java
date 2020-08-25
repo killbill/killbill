@@ -19,11 +19,11 @@ package org.killbill.billing.invoice;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -98,8 +98,9 @@ public class InvoicePluginDispatcher {
 
         DateTime earliestRescheduleDate = null;
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext);
-        for (final String invoicePluginName : invoicePlugins.keySet()) {
-            final PriorInvoiceResult priorInvoiceResult = invoicePlugins.get(invoicePluginName).priorCall(invoiceContext, properties);
+        for (final Entry<String, InvoicePluginApi> entry : invoicePlugins.entrySet()) {
+            final String invoicePluginName = entry.getKey();
+            final PriorInvoiceResult priorInvoiceResult = entry.getValue().priorCall(invoiceContext, properties);
             log.debug("Invoice plugin {} returned priorInvoiceResult='{}'", invoicePluginName, priorInvoiceResult);
             if (priorInvoiceResult == null) {
                 // Naughty plugin...

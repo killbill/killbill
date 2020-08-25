@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,9 +57,9 @@ public class TreePrinter {
         }
 
         builder.append("\n");
-        for (final String key : legend.keySet()) {
-            builder.append(key).append(": ");
-            appendNodeDetails(legend.get(key), builder);
+        for (final Entry<String, ItemsNodeInterval> entry : legend.entrySet()) {
+            builder.append(entry.getKey()).append(": ");
+            appendNodeDetails(entry.getValue(), builder);
             builder.append("\n");
         }
         return builder.toString();
@@ -79,7 +80,8 @@ public class TreePrinter {
 
         int posX = 0;
         boolean sibling;
-        for (final XY levelXY : tree.keySet()) {
+        for (final Entry<XY, ItemsNodeInterval> entry : tree.entrySet()) {
+            final XY levelXY = entry.getKey();
             if (levelXY.Y > level) {
                 // Sorted - we haven't reached that level yet
                 continue;
@@ -115,7 +117,7 @@ public class TreePrinter {
                 if (sibling && level != 0) {
                     node = node.toLowerCase();
                 }
-                legend.put(node, tree.get(levelXY));
+                legend.put(node, entry.getValue());
                 builder.append(node);
             }
             posX++;

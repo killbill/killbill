@@ -25,6 +25,9 @@
     <artifactId>killbill-payment</artifactId>
     <packaging>jar</packaging>
     <name>killbill-payment</name>
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
