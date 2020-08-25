@@ -44,7 +44,7 @@ public class CleanupListener implements ServletContextListener {
         // See http://docs.oracle.com/cd/E17952_01/connector-j-relnotes-en/news-5-1-23.html
         try {
             Class.forName("com.mysql.jdbc.AbandonedConnectionCleanupThread");
-            com.mysql.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
+            com.mysql.cj.jdbc.AbandonedConnectionCleanupThread.checkedShutdown();
         } catch (final ClassNotFoundException ignored) {
             // MySQL driver not used
         }
