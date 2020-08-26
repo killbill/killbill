@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -507,7 +508,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                               new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
                                                   @Override
                                                   public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
-                                                      return invoiceNumber != null ? 1L : invoiceSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
+                                                      return invoiceNumber != null ? (Long) 1L : invoiceSqlDao.getSearchCount(searchKey, String.format("%%%s%%", searchKey), context);
                                                   }
 
                                                   @Override
@@ -708,9 +709,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 final Set<UUID> initSet = new HashSet<>();
                 if (isInvoiceAdjusted) {
                     // Invoice item adjustment
-                    for (final UUID invoiceItemId : invoiceItemIdsWithAmounts.keySet()) {
-                        final BigDecimal adjAmount = invoiceItemIdsWithAmounts.get(invoiceItemId);
-                        final InvoiceItemModelDao item = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoice.getId(), invoiceItemId, adjAmount,
+                    for (final Entry<UUID, BigDecimal> entry : invoiceItemIdsWithAmounts.entrySet()) {
+                        final BigDecimal adjAmount = entry.getValue();
+                        final InvoiceItemModelDao item = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoice.getId(), entry.getKey(), adjAmount,
                                                                                                invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
                                                                                                context);
 
@@ -1155,7 +1156,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private void notifyBusOfInvoicePayment(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InvoicePaymentModelDao invoicePaymentModelDao,
                                            final UUID accountId, final UUID paymentAttemptId, final UUID userToken, final InternalCallContext context) {
         final BusEvent busEvent;
-        if (invoicePaymentModelDao.getSuccess() == Boolean.TRUE) {
+        if (Boolean.TRUE.equals(invoicePaymentModelDao.getSuccess())) {
             busEvent = new DefaultInvoicePaymentInfoEvent(accountId,
                                                           invoicePaymentModelDao.getPaymentId(),
                                                           paymentAttemptId,

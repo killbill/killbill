@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.generator;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -62,9 +63,9 @@ public class InvoiceWithMetadata {
         // nextRecurringDate are computed based on *proposed* items, and not missing items (= proposed - existing). So
         // we need to filter out the dates for which there is no item left otherwsie we may end up in creating too many notification dates
         // and in particular that could lead to an infinite loop.
-        for (final UUID subscriptionId : perSubscriptionFutureNotificationDates.keySet()) {
-            final SubscriptionFutureNotificationDates tmp = perSubscriptionFutureNotificationDates.get(subscriptionId);
-            if (tmp.getRecurringBillingMode() == BillingMode.IN_ADVANCE && !hasItemsForSubscription(subscriptionId, InvoiceItemType.RECURRING)) {
+        for (final Entry<UUID, SubscriptionFutureNotificationDates> entry : perSubscriptionFutureNotificationDates.entrySet()) {
+            final SubscriptionFutureNotificationDates tmp = entry.getValue();
+            if (tmp.getRecurringBillingMode() == BillingMode.IN_ADVANCE && !hasItemsForSubscription(entry.getKey(), InvoiceItemType.RECURRING)) {
                 tmp.resetNextRecurringDate();
             }
         }

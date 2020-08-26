@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.dao;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -190,7 +191,7 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                                                                 final EntityHistoryModelDao history = Iterables.find(entityHistoryModelDaos, new Predicate<EntityHistoryModelDao>() {
                                                                                                                     @Override
                                                                                                                     public boolean apply(final EntityHistoryModelDao input) {
-                                                                                                                        return input.getHistoryRecordId() == auditLogsPostCreate.get(curIdx).getTargetRecordId();
+                                                                                                                        return Objects.equals(input.getHistoryRecordId(), auditLogsPostCreate.get(curIdx).getTargetRecordId());
                                                                                                                     }
                                                                                                                 });
                                                                                                                 Assert.assertEquals(auditLogsPostCreate.get(i).getTargetRecordId(), history.getHistoryRecordId());

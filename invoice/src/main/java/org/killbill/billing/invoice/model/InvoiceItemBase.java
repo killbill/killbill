@@ -206,7 +206,12 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
 
     @Override
     public boolean equals(final Object o) {
-
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         if (!matches(o)) {
             return false;
         }

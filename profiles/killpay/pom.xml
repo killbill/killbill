@@ -26,6 +26,9 @@
     <artifactId>killbill-profiles-killpay</artifactId>
     <packaging>war</packaging>
     <name>killbill-profiles-killpay</name>
+    <properties>
+        <main.basedir>${project.parent.parent.basedir}</main.basedir>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>

@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -480,9 +481,9 @@ public class InvoiceDaoHelper {
         }
 
         // DAO: populate the parent invoices in bulk
-        for (final UUID parentAccountId : parentInvoicesGroupedByParentAccountId.keySet()) {
-            final List<InvoiceModelDao> parentInvoicesForOneParentAccountId = parentInvoicesGroupedByParentAccountId.get(parentAccountId);
-            final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(parentAccountId, ObjectType.ACCOUNT, internalCallContextFactory.createTenantContext(childContext));
+        for (final Entry<UUID, List<InvoiceModelDao>> entry : parentInvoicesGroupedByParentAccountId.entrySet()) {
+            final List<InvoiceModelDao> parentInvoicesForOneParentAccountId = entry.getValue();
+            final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(entry.getKey(), ObjectType.ACCOUNT, internalCallContextFactory.createTenantContext(childContext));
             final InternalTenantContext parentContext = internalCallContextFactory.createInternalTenantContext(childContext.getTenantRecordId(), parentAccountRecordId);
             // Note the misnomer here, populateChildren simply populates the content of these invoices (unrelated to HA)
             populateChildren(parentInvoicesForOneParentAccountId, invoicesTags, entitySqlDaoWrapperFactory, parentContext);

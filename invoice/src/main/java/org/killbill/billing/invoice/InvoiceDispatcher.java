@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -251,7 +252,7 @@ public class InvoiceDispatcher {
                                                                                                        context.toUTCDateTime(targetDate), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
             try {
                 eventBus.post(event);
-            } catch (EventBusException e) {
+            } catch (final EventBusException e) {
                 log.warn("Failed to post event {}", event, e);
             }
         }
@@ -343,17 +344,15 @@ public class InvoiceDispatcher {
                 return null;
             }
 
+            final List<Invoice> existingInvoices = new LinkedList<Invoice>();
             // Avoid pulling all invoices when AUTO_INVOICING_OFF is set since we will disable invoicing later
             // (Note that we can't return right away as we send a NullInvoice event)
-            final List<Invoice> existingInvoices = billingEvents.isAccountAutoInvoiceOff() ?
-                                                   ImmutableList.<Invoice>of() :
-                                                   ImmutableList.<Invoice>copyOf(Collections2.transform(invoiceDao.getInvoicesByAccount(false, context),
-                                                                                                        new Function<InvoiceModelDao, Invoice>() {
-                                                                                                            @Override
-                                                                                                            public Invoice apply(final InvoiceModelDao input) {
-                                                                                                                return new DefaultInvoice(input);
-                                                                                                            }
-                                                                                                        }));
+            if (!billingEvents.isAccountAutoInvoiceOff()) {
+                final List<InvoiceModelDao> invoicesByAccount = invoiceDao.getInvoicesByAccount(false, context);
+                for (final InvoiceModelDao invoiceModelDao : invoicesByAccount) {
+                    existingInvoices.add(new DefaultInvoice(invoiceModelDao));
+                }
+            }
             final Invoice invoice;
             if (!isDryRun) {
                 final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, existingInvoices, false, isRescheduled, Lists.newLinkedList(), context);
@@ -417,11 +416,6 @@ public class InvoiceDispatcher {
             }
             throw e;
         } catch (final NoSuchNotificationQueue e) {
-            // Should not happen, notificationQ is only used for dry run mode
-            if (!isDryRun) {
-                log.warn("Missing notification queue, accountId='{}', dryRunArguments='{}', parking account", accountId, dryRunArguments, e);
-                parkAccount(accountId, context);
-            }
             throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, "Failed to retrieve future notifications from notificationQ");
         }
     }
@@ -495,7 +489,7 @@ public class InvoiceDispatcher {
             final InvoiceWithFutureNotifications result = processAccountWithLockAndInputTargetDate(accountId, cur, billingEvents, augmentedExistingInvoices, true, false, pluginProperties, context);
             additionalInvoice = result != null ? result.getInvoice() : null;
             if (additionalInvoice != null) {
-                for (LocalDate k : result.getNotifications().getNotificationsForTrigger().keySet()) {
+                for (final LocalDate k : result.getNotifications().getNotificationsForTrigger().keySet()) {
                     if (k.compareTo(cur) > 0 && k.compareTo(targetDate) < 0) {
                         pq.add(k);
                     }
@@ -650,7 +644,7 @@ public class InvoiceDispatcher {
 
 
                 final Set<InvoiceTrackingModelDao> trackingIds = new HashSet<>();
-                for (TrackingRecordId cur : invoiceWithMetadata.getTrackingIds()) {
+                for (final TrackingRecordId cur : invoiceWithMetadata.getTrackingIds()) {
                     trackingIds.add(new InvoiceTrackingModelDao(cur.getTrackingId(), cur.getInvoiceId(), cur.getSubscriptionId(), cur.getUnitType(), cur.getRecordDate()));
                 }
 
@@ -777,28 +771,27 @@ public class InvoiceDispatcher {
 
         final Map<LocalDate, Set<UUID>> notificationListForDryRun = isInvoiceNotificationEnabled ? new HashMap<LocalDate, Set<UUID>>() : ImmutableMap.<LocalDate, Set<UUID>>of();
         if (isInvoiceNotificationEnabled) {
-            for (final LocalDate curDate : notificationListForTrigger.keySet()) {
+            for (final Entry<LocalDate, Set<UUID>> entry : notificationListForTrigger.entrySet()) {
+                final LocalDate curDate = entry.getKey();
                 final LocalDate curDryRunDate = context.toLocalDate(context.toUTCDateTime(curDate).minus(dryRunNotificationTime));
                 Set<UUID> subscriptionsForDryRunDates = notificationListForDryRun.get(curDryRunDate);
                 if (subscriptionsForDryRunDates == null) {
                     subscriptionsForDryRunDates = new HashSet<UUID>();
                     notificationListForDryRun.put(curDryRunDate, subscriptionsForDryRunDates);
                 }
-                subscriptionsForDryRunDates.addAll(notificationListForTrigger.get(curDate));
+                subscriptionsForDryRunDates.addAll(entry.getValue());
             }
 
-            final Map<UUID, DateTime> upcomingTransitionsForSubscriptions = isInvoiceNotificationEnabled ?
-                                                                       getNextTransitionsForSubscriptions(billingEvents) :
-                                                                       ImmutableMap.<UUID, DateTime>of();
+            final Map<UUID, DateTime> upcomingTransitionsForSubscriptions = getNextTransitionsForSubscriptions(billingEvents);
 
-            for (UUID curId : upcomingTransitionsForSubscriptions.keySet()) {
-                final LocalDate curDryRunDate = context.toLocalDate(upcomingTransitionsForSubscriptions.get(curId).minus(dryRunNotificationTime));
+            for (final Entry<UUID, DateTime> entry : upcomingTransitionsForSubscriptions.entrySet()) {
+                final LocalDate curDryRunDate = context.toLocalDate(entry.getValue().minus(dryRunNotificationTime));
                 Set<UUID> subscriptionsForDryRunDates = notificationListForDryRun.get(curDryRunDate);
                 if (subscriptionsForDryRunDates == null) {
                     subscriptionsForDryRunDates = new HashSet<UUID>();
                     notificationListForDryRun.put(curDryRunDate, subscriptionsForDryRunDates);
                 }
-                subscriptionsForDryRunDates.add(curId);
+                subscriptionsForDryRunDates.add(entry.getKey());
             }
         }
         notificationsBuilder.setNotificationListForDryRun(notificationListForDryRun);
@@ -818,13 +811,9 @@ public class InvoiceDispatcher {
 
     private Set<UUID> getUniqueInvoiceIds(final Invoice invoice) {
         final Set<UUID> uniqueInvoiceIds = new TreeSet<UUID>();
-        uniqueInvoiceIds.addAll(Collections2.transform(invoice.getInvoiceItems(), new Function<InvoiceItem, UUID>() {
-            @Nullable
-            @Override
-            public UUID apply(@Nullable final InvoiceItem input) {
-                return input.getInvoiceId();
-            }
-        }));
+        for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+            uniqueInvoiceIds.add(invoiceItem.getInvoiceId());
+        }
         return uniqueInvoiceIds;
     }
 
@@ -834,17 +823,17 @@ public class InvoiceDispatcher {
             tmp.append(String.format("Generated invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':", invoice.getId(), invoice.getNumberOfItems(), account.getId(), targetDate));
         } else {
             final String adjustedInvoices = JOINER_COMMA.join(adjustedUniqueOtherInvoiceId.toArray(new UUID[adjustedUniqueOtherInvoiceId.size()]));
-            tmp.append(String.format("Adjusting existing invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':\n",
+            tmp.append(String.format("Adjusting existing invoiceId='%s', numberOfItems='%d', accountId='%s', targetDate='%s':%n",
                                      adjustedInvoices, invoice.getNumberOfItems(), account.getId(), targetDate));
         }
         int n = 0;
         for (final InvoiceItem item : invoice.getInvoiceItems()) {
             if (n > MAX_NB_ITEMS_TO_PRINT) {
                 // https://github.com/killbill/killbill/issues/1337
-                tmp.append(String.format("\n\t... and %s more ...", invoice.getNumberOfItems() - n));
+                tmp.append(String.format("%n\t... and %s more ...", invoice.getNumberOfItems() - n));
                 break;
             }
-            tmp.append(String.format("\n\t item = %s", item));
+            tmp.append(String.format("%n\t item = %s", item));
             n++;
         }
         log.info(tmp.toString());
@@ -914,10 +903,10 @@ public class InvoiceDispatcher {
         final Map<UUID, DateTime> chargeThroughDates = new HashMap<UUID, DateTime>();
         addInvoiceItemsToChargeThroughDates(chargeThroughDates, invoiceItemsToConsider, context);
 
-        for (final UUID subscriptionId : chargeThroughDates.keySet()) {
-            if (subscriptionId != null) {
-                final DateTime chargeThroughDate = chargeThroughDates.get(subscriptionId);
-                subscriptionApi.setChargedThroughDate(subscriptionId, chargeThroughDate, context);
+        for (final Entry<UUID, DateTime> entry : chargeThroughDates.entrySet()) {
+            if (entry.getKey() != null) {
+                final DateTime chargeThroughDate = entry.getValue();
+                subscriptionApi.setChargedThroughDate(entry.getKey(), chargeThroughDate, context);
             }
         }
     }
@@ -1028,10 +1017,10 @@ public class InvoiceDispatcher {
 
         final Iterable<DateTime> nextScheduledSubscriptionsEvents;
         if (!Iterables.isEmpty(filteredSubscriptionIds)) {
-            List<DateTime> tmp = new ArrayList<DateTime>();
-            for (final UUID curSubscriptionId : nextScheduledSubscriptionsEventMap.keySet()) {
-                if (Iterables.contains(filteredSubscriptionIds, curSubscriptionId)) {
-                    tmp.add(nextScheduledSubscriptionsEventMap.get(curSubscriptionId));
+            final List<DateTime> tmp = new ArrayList<DateTime>();
+            for (final Entry<UUID, DateTime> entry : nextScheduledSubscriptionsEventMap.entrySet()) {
+                if (Iterables.contains(filteredSubscriptionIds, entry.getKey())) {
+                    tmp.add(entry.getValue());
                 }
             }
             nextScheduledSubscriptionsEvents = tmp;
@@ -1144,15 +1133,15 @@ public class InvoiceDispatcher {
         final Long parentAccountRecordId = internalCallContextFactory.getRecordIdFromObject(childAccount.getParentAccountId(), ObjectType.ACCOUNT, buildTenantContext(context));
         final InternalCallContext parentContext = internalCallContextFactory.createInternalCallContext(parentAccountRecordId, context);
 
-        BigDecimal childInvoiceAmount = InvoiceCalculatorUtils.computeChildInvoiceAmount(childInvoice.getCurrency(), childInvoice.getInvoiceItems());
+        final BigDecimal childInvoiceAmount = InvoiceCalculatorUtils.computeChildInvoiceAmount(childInvoice.getCurrency(), childInvoice.getInvoiceItems());
         InvoiceModelDao draftParentInvoice = invoiceDao.getParentDraftInvoice(childAccount.getParentAccountId(), parentContext);
 
         final String description = childAccount.getExternalKey().concat(" summary");
         if (draftParentInvoice != null) {
-            for (InvoiceItemModelDao item : draftParentInvoice.getInvoiceItems()) {
+            for (final InvoiceItemModelDao item : draftParentInvoice.getInvoiceItems()) {
                 if ((item.getChildAccountId() != null) && item.getChildAccountId().equals(childInvoice.getAccountId())) {
                     // update child item amount for existing parent invoice item
-                    BigDecimal newChildInvoiceAmount = childInvoiceAmount.add(item.getAmount());
+                    final BigDecimal newChildInvoiceAmount = childInvoiceAmount.add(item.getAmount());
                     log.info("Updating existing itemId='{}', oldAmount='{}', newAmount='{}' on existing DRAFT invoiceId='{}'", item.getId(), item.getAmount(), newChildInvoiceAmount, draftParentInvoice.getId());
                     invoiceDao.updateInvoiceItemAmount(item.getId(), newChildInvoiceAmount, parentContext);
                     return;
@@ -1164,7 +1153,7 @@ public class InvoiceDispatcher {
             final InvoiceItemModelDao parentInvoiceItem = new InvoiceItemModelDao(newParentInvoiceItem);
             draftParentInvoice.addInvoiceItem(parentInvoiceItem);
 
-            List<InvoiceModelDao> invoices = new ArrayList<InvoiceModelDao>();
+            final List<InvoiceModelDao> invoices = new ArrayList<InvoiceModelDao>();
             invoices.add(draftParentInvoice);
             log.info("Adding new itemId='{}', amount='{}' on existing DRAFT invoiceId='{}'", parentInvoiceItem.getId(), childInvoiceAmount, draftParentInvoice.getId());
             invoiceDao.createInvoices(invoices, null, ImmutableSet.of(), parentContext);
@@ -1197,7 +1186,7 @@ public class InvoiceDispatcher {
                 return false;
             case 0:
                 // only ignore if amount == 0 and any item is not FIXED or RECURRING
-                for (InvoiceItem item : childInvoice.getInvoiceItems()) {
+                for (final InvoiceItem item : childInvoice.getInvoiceItems()) {
                     if (item.getInvoiceItemType().equals(InvoiceItemType.FIXED) || item.getInvoiceItemType().equals(InvoiceItemType.RECURRING)) {
                         return false;
                     }
@@ -1240,7 +1229,7 @@ public class InvoiceDispatcher {
         // find PARENT_SUMMARY invoice item for this child account
         final InvoiceItemModelDao parentSummaryInvoiceItem = Iterables.find(parentInvoiceModelDao.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
             @Override
-            public boolean apply(@Nullable final InvoiceItemModelDao input) {
+            public boolean apply(final InvoiceItemModelDao input) {
                 return input.getType().equals(InvoiceItemType.PARENT_SUMMARY)
                        && input.getChildAccountId().equals(childInvoiceModelDao.getAccountId());
             }
@@ -1248,7 +1237,7 @@ public class InvoiceDispatcher {
 
         final Iterable<InvoiceItemModelDao> childAdjustments = Iterables.filter(childInvoiceModelDao.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
             @Override
-            public boolean apply(@Nullable final InvoiceItemModelDao input) {
+            public boolean apply(final InvoiceItemModelDao input) {
                 return input.getType().equals(InvoiceItemType.ITEM_ADJ);
             }
         });
@@ -1262,7 +1251,7 @@ public class InvoiceDispatcher {
         // find last ITEM_ADJ invoice added in child invoice
         final InvoiceItemModelDao lastChildInvoiceItemAdjustment = Collections.max(Lists.newArrayList(childAdjustments), new Comparator<InvoiceItemModelDao>() {
             @Override
-            public int compare(InvoiceItemModelDao o1, InvoiceItemModelDao o2) {
+            public int compare(final InvoiceItemModelDao o1, final InvoiceItemModelDao o2) {
                 return o1.getCreatedDate().compareTo(o2.getCreatedDate());
             }
         });
@@ -1270,16 +1259,16 @@ public class InvoiceDispatcher {
         final BigDecimal childInvoiceAdjustmentAmount = lastChildInvoiceItemAdjustment.getAmount();
 
         if (parentInvoiceModelDao.getStatus().equals(InvoiceStatus.COMMITTED)) {
-            ItemAdjInvoiceItem adj = new ItemAdjInvoiceItem(UUIDs.randomUUID(),
-                                                            lastChildInvoiceItemAdjustment.getCreatedDate(),
-                                                            parentSummaryInvoiceItem.getInvoiceId(),
-                                                            parentSummaryInvoiceItem.getAccountId(),
-                                                            lastChildInvoiceItemAdjustment.getStartDate(),
-                                                            description,
-                                                            childInvoiceAdjustmentAmount,
-                                                            parentInvoiceModelDao.getCurrency(),
-                                                            parentSummaryInvoiceItem.getId(),
-                                                            null);
+            final ItemAdjInvoiceItem adj = new ItemAdjInvoiceItem(UUIDs.randomUUID(),
+                                                                  lastChildInvoiceItemAdjustment.getCreatedDate(),
+                                                                  parentSummaryInvoiceItem.getInvoiceId(),
+                                                                  parentSummaryInvoiceItem.getAccountId(),
+                                                                  lastChildInvoiceItemAdjustment.getStartDate(),
+                                                                  description,
+                                                                  childInvoiceAdjustmentAmount,
+                                                                  parentInvoiceModelDao.getCurrency(),
+                                                                  parentSummaryInvoiceItem.getId(),
+                                                                  null);
             parentInvoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(adj));
             invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(parentInvoiceModelDao), null, ImmutableSet.of(), parentContext);
             return;

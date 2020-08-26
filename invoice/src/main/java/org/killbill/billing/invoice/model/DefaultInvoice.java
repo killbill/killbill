@@ -29,7 +29,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.invoice.api.Invoice;
@@ -45,6 +44,7 @@ import org.killbill.billing.util.UUIDs;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
@@ -135,6 +135,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
 
     // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
     @Override
+    @SuppressFBWarnings("CN_IDIOM_NO_SUPER_CALL")
     public Object clone() {
         InvoiceModelDao parentInvoiceModelDao = (parentInvoice != null) ? new InvoiceModelDao(parentInvoice) : null;
         final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff(), getStatus(), isParentInvoice(), parentInvoiceModelDao);

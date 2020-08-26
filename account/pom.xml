@@ -25,6 +25,10 @@
     <artifactId>killbill-account</artifactId>
     <packaging>jar</packaging>
     <name>killbill-account</name>
+    <properties>
+        <check.fail-spotbugs>true</check.fail-spotbugs>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

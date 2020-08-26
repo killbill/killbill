@@ -206,7 +206,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
             // Check if billing is off for the bundle
             final List<Tag> bundleTags = getTagsForObjectType(ObjectType.BUNDLE, tagsForAccount, bundle.getId());
-            boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(bundleTags);
+            final boolean found_AUTO_INVOICING_OFF = is_AUTO_INVOICING_OFF(bundleTags);
             if (found_AUTO_INVOICING_OFF) {
                 for (final SubscriptionBase subscription : subscriptions) { // billing is off so list sub ids in set to be excluded
                     result.getSubscriptionIdsWithAutoInvoiceOff().add(subscription.getId());
@@ -273,13 +273,17 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private void addBillingEventsForSubscription(final ImmutableAccountData account,
-                                                 final List<SubscriptionBase> subscriptions,
+                                                 @Nullable final List<SubscriptionBase> subscriptions,
                                                  final SubscriptionBase baseSubscription,
                                                  final int currentAccountBCD,
                                                  final InternalCallContext context,
                                                  final DefaultBillingEventSet result,
                                                  final Set<UUID> skipSubscriptionsSet,
                                                  final VersionedCatalog catalog) throws SubscriptionBaseApiException, CatalogApiException {
+        if (subscriptions == null) {
+            return;
+        }
+
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
 
         for (final SubscriptionBase subscription : subscriptions) {

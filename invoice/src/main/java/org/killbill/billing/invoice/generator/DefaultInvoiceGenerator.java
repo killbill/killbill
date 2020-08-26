@@ -45,7 +45,6 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -103,13 +102,12 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         invoice.addInvoiceItems(usageItemsWithTrackingIds.getItems());
 
         if (targetInvoiceId != null) {
-            final Invoice originalInvoice = Iterables.tryFind(existingInvoices, new Predicate<Invoice>() {
+            final Invoice originalInvoice = Iterables.find(existingInvoices, new Predicate<Invoice>() {
                 @Override
                 public boolean apply(final Invoice input) {
                     return input.getId().equals(targetInvoiceId);
                 }
-            }).orNull();
-            Preconditions.checkNotNull(originalInvoice, "Expecting to find an existing invoice matching the targetInvoiceId");
+            });
             invoice.addInvoiceItems(originalInvoice.getInvoiceItems());
         }
 

@@ -19,6 +19,7 @@
 package org.killbill.billing.account.api.user;
 
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,8 +49,6 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
@@ -72,7 +71,6 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
         this.accountDao = accountDao;
     }
 
-
     @Override
     public Account getAccountByKey(final String key, final TenantContext context) throws AccountApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
@@ -85,11 +83,10 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
         return getAccountById(id, internalTenantContext);
     }
 
-
     @Override
     public Account createAccount(final AccountData data, final CallContext context) throws AccountApiException {
 
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context)
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context);
         if (data.getParentAccountId() != null) {
             // verify that parent account exists if parentAccountId is not null
             final ImmutableAccountData immutableAccountData = immutableAccountInternalApi.getImmutableAccountDataById(data.getParentAccountId(), internalContext);
@@ -112,7 +109,6 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
         }
         return new DefaultAccount(account);
     }
-
 
     @Override
     public Pagination<Account> searchAccounts(final String searchKey, final Long offset, final Long limit, final TenantContext context) {
@@ -168,10 +164,6 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
     @Override
     public void updateAccount(final String externalKey, final AccountData accountData, final CallContext context) throws AccountApiException {
         final Account currentAccount = getAccountByKey(externalKey, context);
-        if (currentAccount == null) {
-            throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_KEY, externalKey);
-        }
-
         updateAccount(currentAccount.getId(), accountData, false, context);
     }
 
@@ -186,13 +178,12 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public List<AccountEmail> getEmails(final UUID accountId, final TenantContext context) {
-        return ImmutableList.<AccountEmail>copyOf(Collections2.transform(accountDao.getEmailsByAccountId(accountId, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
-                                                                         new Function<AccountEmailModelDao, AccountEmail>() {
-                                                                             @Override
-                                                                             public AccountEmail apply(final AccountEmailModelDao input) {
-                                                                                 return new DefaultAccountEmail(input);
-                                                                             }
-                                                                         }));
+        final List<AccountEmailModelDao> childrenAccountsModelDao = accountDao.getEmailsByAccountId(accountId, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+        final List<AccountEmail> emails = new LinkedList<AccountEmail>();
+        for (final AccountEmailModelDao emailsModelDao : childrenAccountsModelDao) {
+            emails.add(new DefaultAccountEmail(emailsModelDao));
+        }
+        return emails;
     }
 
     @Override
@@ -207,13 +198,12 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
 
     @Override
     public List<Account> getChildrenAccounts(final UUID parentAccountId, final TenantContext context) throws AccountApiException {
-        return ImmutableList.<Account>copyOf(Collections2.transform(accountDao.getAccountsByParentId(parentAccountId, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
-                                                                         new Function<AccountModelDao, Account>() {
-                                                                             @Override
-                                                                             public Account apply(final AccountModelDao input) {
-                                                                                 return new DefaultAccount(input);
-                                                                             }
-                                                                         }));
+        final List<AccountModelDao> childrenAccountsModelDao = accountDao.getAccountsByParentId(parentAccountId, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+        final List<Account> childrenAccounts = new LinkedList<Account>();
+        for (final AccountModelDao accountModelDao : childrenAccountsModelDao) {
+            childrenAccounts.add(new DefaultAccount(accountModelDao));
+        }
+        return childrenAccounts;
     }
 
     @Override

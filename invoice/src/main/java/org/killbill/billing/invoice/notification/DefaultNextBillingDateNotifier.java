@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.invoice.InvoiceListener;
-import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -87,7 +86,7 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
                     key.isDryRunForInvoiceNotification()) {
                     processEventForInvoiceNotification(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
                 } else {
-                    final boolean isRescheduled = key.isRescheduled() == Boolean.TRUE; // Handle null value (old versions < 0.19.7)
+                    final boolean isRescheduled = Boolean.TRUE.equals(key.isRescheduled()); // Handle null value (old versions < 0.19.7)
                     processEventForInvoiceGeneration(firstSubscriptionId, targetDate, isRescheduled, userToken, accountRecordId, tenantRecordId);
                 }
             }

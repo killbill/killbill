@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -99,11 +100,12 @@ public class BlockingCalculator {
         final Map<UUID, List<BlockingState>> perBundleBlockingEvents = getPerTypeBlockingEvents(BlockingStateType.SUBSCRIPTION_BUNDLE, blockingEvents);
         final Map<UUID, List<BlockingState>> perSubscriptionBlockingEvents = getPerTypeBlockingEvents(BlockingStateType.SUBSCRIPTION, blockingEvents);
 
-        for (final UUID bundleId : subscriptionsForAccount.keySet()) {
+        for (final Entry<UUID, List<SubscriptionBase>> entry : subscriptionsForAccount.entrySet()) {
+            final UUID bundleId = entry.getKey();
 
             final List<BlockingState> bundleBlockingEvents = perBundleBlockingEvents.get(bundleId) != null ? perBundleBlockingEvents.get(bundleId) : ImmutableList.<BlockingState>of();
 
-            for (final SubscriptionBase subscription : subscriptionsForAccount.get(bundleId)) {
+            for (final SubscriptionBase subscription : entry.getValue()) {
                 // Avoid inserting additional events for subscriptions that don't even have a START event
                 if (skippedSubscriptions.contains(subscription.getId())) {
                     continue;

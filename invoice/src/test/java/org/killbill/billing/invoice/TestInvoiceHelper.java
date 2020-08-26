@@ -71,6 +71,7 @@ import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
+import org.killbill.billing.junction.plumbing.billing.DefaultBillingEvent;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.mock.MockAccountBuilder;
 import org.killbill.billing.subscription.api.SubscriptionBase;
@@ -445,6 +446,57 @@ public class TestInvoiceHelper {
                         return getTotalOrdering().compareTo(e1.getTotalOrdering());
                     }
                 }
+            }
+
+            @Override
+            public boolean equals(final Object o) {
+                if (this == o) {
+                    return true;
+                }
+                if (o == null || getClass() != o.getClass()) {
+                    return false;
+                }
+
+                final DefaultBillingEvent that = (DefaultBillingEvent) o;
+
+                if (getSubscriptionId() != null ? !getSubscriptionId().equals(that.getSubscriptionId()) : that.getSubscriptionId() != null) {
+                    return false;
+                }
+                if (getBundleId() != null ? !getBundleId().equals(that.getBundleId()) : that.getBundleId() != null) {
+                    return false;
+                }
+                if (billCycleDayLocal != that.getBillCycleDayLocal()) {
+                    return false;
+                }
+                if (billingPeriod != that.getBillingPeriod()) {
+                    return false;
+                }
+                if (currency != that.getCurrency()) {
+                    return false;
+                }
+                if (fixedPrice != null ? !fixedPrice.equals(that.getFixedPrice()) : that.getFixedPrice() != null) {
+                    return false;
+                }
+                if (description != null ? !description.equals(that.getDescription()) : that.getDescription() != null) {
+                    return false;
+                }
+                if (effectiveDate != null ? !effectiveDate.equals(that.getEffectiveDate()) : that.getEffectiveDate() != null) {
+                    return false;
+                }
+                if (plan != null ? !plan.equals(that.getPlan()) : that.getPlan() != null) {
+                    return false;
+                }
+                if (planPhase != null ? !planPhase.equals(that.getPlanPhase()) : that.getPlanPhase() != null) {
+                    return false;
+                }
+                if (getTotalOrdering() != null ? !getTotalOrdering().equals(that.getTotalOrdering()) : that.getTotalOrdering() != null) {
+                    return false;
+                }
+                if (type != that.getTransitionType()) {
+                    return false;
+                }
+
+                return true;
             }
         };
     }
