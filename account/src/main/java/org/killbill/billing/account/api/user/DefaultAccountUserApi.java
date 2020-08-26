@@ -103,7 +103,8 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
         try {
             accountDao.create(account, internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
         } catch (final RuntimeException e) {
-            if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
+            if (e.getCause() instanceof SQLIntegrityConstraintViolationException ||
+                (e.getCause() instanceof org.postgresql.util.PSQLException && e.getMessage().contains("duplicate key"))) {
                 throw new AccountApiException(ErrorCode.ACCOUNT_ALREADY_EXISTS, account.getExternalKey());
             }
         }
