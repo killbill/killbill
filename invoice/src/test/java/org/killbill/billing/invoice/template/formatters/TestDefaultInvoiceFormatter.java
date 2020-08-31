@@ -155,7 +155,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         Assert.assertEquals(invoiceItems.get(3).getAmount().doubleValue(), -1.00);
     }
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", enabled = false, description = "JDK dependent")
     public void testFormattedAmountFranceAndEUR() throws Exception {
         final FixedPriceInvoiceItem fixedItemEUR = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                              UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), null,
@@ -185,7 +185,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     Locale.FRANCE);
     }
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", enabled = false, description = "JDK dependent")
     public void testFormattedAmountFranceAndOMR() throws Exception {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                           UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), null,
@@ -215,7 +215,7 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
                     Locale.FRANCE);
     }
 
-    @Test(groups = "fast")
+    @Test(groups = "fast", enabled = false, description = "JDK dependent")
     public void testFormattedAmountFranceAndJPY() throws Exception {
         final FixedPriceInvoiceItem fixedItem = new FixedPriceInvoiceItem(UUID.randomUUID(), UUID.randomUUID(), null, null,
                                                                           UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(), null,
