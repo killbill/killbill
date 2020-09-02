@@ -1305,7 +1305,10 @@ public class TestEntitlement extends TestJaxrsBase {
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(1));
         clock.addDeltaFromReality(it.toDurationMillis());
 
+        // We get 2 SUBSCRIPTION_CHANGE events, one for requested and one or effective, which are the same.
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CHANGE, ExtBusEventType.SUBSCRIPTION_CHANGE);
         subscriptionApi.undoChangeSubscriptionPlan(refreshedSubscription.getSubscriptionId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         // MOVE AFTER TRIAL
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,

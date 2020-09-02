@@ -157,9 +157,10 @@ public class BeatrixListener {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_CANCEL;
                 } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.PHASE) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_PHASE;
-                } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CHANGE ||
-                           // We map UNDO_CHANGE as a SUBSCRIPTION_CHANGE as we don't have such ext event
-                           realEventST.getTransitionType() == SubscriptionBaseTransitionType.UNDO_CHANGE) {
+                } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.CHANGE) {
+                    eventBusType = ExtBusEventType.SUBSCRIPTION_CHANGE;
+                } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.UNDO_CHANGE) {
+                    // We map UNDO_CHANGE as a SUBSCRIPTION_CHANGE as we don't have such ext event
                     eventBusType = ExtBusEventType.SUBSCRIPTION_CHANGE;
                 } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.UNCANCEL) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_UNCANCEL;
