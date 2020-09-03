@@ -23,8 +23,6 @@ import java.util.EnumSet;
 import java.util.EventListener;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.management.MBeanServer;
 import javax.servlet.DispatcherType;
 
@@ -122,13 +120,11 @@ public class HttpServer {
         server.setHandler(rootHandlers);
     }
 
-    @PostConstruct
     public void start() throws Exception {
         server.start();
         Preconditions.checkState(server.isRunning(), "server is not running");
     }
 
-    @PreDestroy
     public void stop() throws Exception {
         server.stop();
     }
