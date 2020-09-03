@@ -105,7 +105,7 @@
         <!--</dependency>-->
         <dependency>
             <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP-java6</artifactId>
+            <artifactId>HikariCP</artifactId>
         </dependency>
         <dependency>
             <groupId>io.airlift</groupId>
