@@ -40,6 +40,7 @@ import org.killbill.xmlloader.ValidationErrors;
 public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements Price, Externalizable {
 
     private static final Map<String, BigDecimal> frequentValues = new ConcurrentHashMap<String, BigDecimal>();
+    private static final int FREQUENT_VALUES_CACHE_SIZE = Integer.parseInt(System.getProperty("org.killbill.catalog.frequentValuesCacheSize", "1000"));
 
     @XmlElement(required = true)
     private Currency currency;
@@ -76,9 +77,14 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     public DefaultPrice setValue(final BigDecimal value) {
+        if (value == null) {
+            this.value = value;
+            return this;
+        }
+
         final String valueAsString = value.toString();
 
-        if (!frequentValues.containsKey(valueAsString) && frequentValues.size() < 1000) {
+        if (!frequentValues.containsKey(valueAsString) && frequentValues.size() < FREQUENT_VALUES_CACHE_SIZE) {
             frequentValues.put(valueAsString, value);
         }
 

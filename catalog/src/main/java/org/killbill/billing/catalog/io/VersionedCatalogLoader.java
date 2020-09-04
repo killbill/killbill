@@ -28,10 +28,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.Future;
 
 import javax.xml.bind.JAXBException;
 
@@ -124,26 +124,28 @@ public class VersionedCatalogLoader implements CatalogLoader, Closeable {
 
     public VersionedCatalog load(final Collection<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
         try {
-            final BlockingQueue<StandaloneCatalog> catalogs = new LinkedBlockingDeque<StandaloneCatalog>(catalogXMLs.size());
+            final Collection<Future<StandaloneCatalog>> catalogs = new ArrayList<Future<StandaloneCatalog>>(catalogXMLs.size());
             for (final String cur : catalogXMLs) {
-                executorService.submit(new Callable<StandaloneCatalog>() {
+                catalogs.add(executorService.submit(new Callable<StandaloneCatalog>() {
 
                     @Override
                     public StandaloneCatalog call() throws Exception {
                         final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
                         final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(curCatalogStream, StandaloneCatalog.class);
                         if (!filterTemplateCatalog || !catalog.isTemplateCatalog()) {
-                            catalogs.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory));
+                            return new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory);
                         }
                         return null;
                     }
-                });
+                }));
             }
 
             final DefaultVersionedCatalog result = new DefaultVersionedCatalog();
-            for (int i = 0; i < catalogXMLs.size(); i++) {
-                final StandaloneCatalog catalog = catalogs.take();
-                result.add(catalog);
+            for (final Future<StandaloneCatalog> standaloneCatalogFuture : catalogs) {
+                final StandaloneCatalog catalog = standaloneCatalogFuture.get();
+                if (catalog != null) {
+                    result.add(catalog);
+                }
             }
 
             XMLLoader.initializeAndValidate(result);
@@ -155,6 +157,9 @@ public class VersionedCatalogLoader implements CatalogLoader, Closeable {
             }
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         } catch (final InterruptedException e) {
+            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
+        } catch (final ExecutionException e) {
             logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         }
