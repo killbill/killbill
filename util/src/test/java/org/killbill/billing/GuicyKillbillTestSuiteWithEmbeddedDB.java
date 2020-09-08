@@ -110,10 +110,16 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     }
 
     protected void cleanupAllTables() {
-        try {
-            DBTestingHelper.get().getInstance().cleanupAllTables();
-        } catch (final Exception e) {
-            Assert.fail("Unable to clean database", e);
+        // Work around tests flakiness (see also RetryableDataSource)
+        for (int i = 0; i < 5; i++) {
+            try {
+                DBTestingHelper.get().getInstance().cleanupAllTables();
+                break;
+            } catch (final Exception e) {
+                if (i == 4) {
+                    Assert.fail("Unable to clean database", e);
+                }
+            }
         }
     }
 
