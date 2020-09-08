@@ -67,7 +67,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultVersionedCatalog versionedCatalog = new DefaultVersionedCatalog();
         final MockCatalog mockCatalog = new MockCatalog();
         versionedCatalog.add(mockCatalog);
-        final CatalogService catalogService = new MockCatalogService(versionedCatalog, cacheControllerDispatcher);
+        final CatalogService catalogService = new MockCatalogService(versionedCatalog);
         final CatalogInternalApi catalogInternalApiWithMockCatalogService = new DefaultCatalogInternalApi(catalogService);
         final SubscriptionCatalogApi subscriptionCatalogInternalApiWithMockCatalogService = new DefaultSubscriptionCatalogApi(catalogInternalApiWithMockCatalogService, clock);
         final SubscriptionBaseApiService apiService = Mockito.mock(SubscriptionBaseApiService.class);

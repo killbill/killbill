@@ -27,4 +27,9 @@ public interface CatalogConfig extends KillbillConfig {
     @Default("SpyCarAdvanced.xml")
     @Description("Default Catalog location, either in the classpath or in the filesystem. For multi-tenancy, one should use APIs to load per-tenant catalog")
     String getCatalogURI();
+
+    @Config("org.killbill.catalog.loader.threads.pool.nb")
+    @Default("1")
+    @Description("Number of threads for the XML loader")
+    Integer getCatalogThreadNb();
 }

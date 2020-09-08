@@ -72,7 +72,13 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
         V value;
         try {
             if (!isKeyInCache(key)) {
-                value = computeAndCacheValue(key, cacheLoaderArgument);
+                synchronized (this) {
+                    if (!isKeyInCache(key)) {
+                        value = computeAndCacheValue(key, cacheLoaderArgument);
+                    } else {
+                        value = cache.get(key);
+                    }
+                }
             } else {
                 value = cache.get(key);
             }
@@ -135,8 +141,7 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
             return null;
         }
 
-        // Race condition, we may compute it for nothing
-        putIfAbsent(key, value);
+        cache.put(key, value);
 
         return value;
     }
