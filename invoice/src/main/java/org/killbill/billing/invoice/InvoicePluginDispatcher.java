@@ -19,6 +19,7 @@ package org.killbill.billing.invoice;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -175,16 +176,22 @@ public class InvoicePluginDispatcher {
     }
 
     public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
-                                                                            final boolean isDryRun,
-                                                                            final CallContext callContext,
-                                                                            // The pluginProperties list passed to plugins is mutable by the plugins
-                                                                            @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
-                                                                            final InternalTenantContext tenantContext) throws InvoiceApiException {
+                                                               final boolean isDryRun,
+                                                               final CallContext callContext,
+                                                               // The pluginProperties list passed to plugins is mutable by the plugins
+                                                               @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                                               final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         if (invoicePlugins.isEmpty()) {
             return false;
+        }
+
+        // Look-up map for performance
+        final Map<UUID, InvoiceItem> invoiceItemsByItemId = new HashMap<UUID, InvoiceItem>();
+        for (final InvoiceItem invoiceItem : originalInvoice.getInvoiceItems()) {
+            invoiceItemsByItemId.put(invoiceItem.getId(), invoiceItem);
         }
 
         boolean invoiceUpdated = false;
@@ -196,7 +203,10 @@ public class InvoicePluginDispatcher {
             if (additionalInvoiceItemsForPlugin != null && !additionalInvoiceItemsForPlugin.isEmpty()) {
                 final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
                 for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItemsForPlugin) {
-                    final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice, additionalInvoiceItem, invoicePlugin);
+                    final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice.getId(),
+                                                                                                      invoiceItemsByItemId,
+                                                                                                      additionalInvoiceItem,
+                                                                                                      invoicePlugin);
                     additionalInvoiceItems.add(sanitizedInvoiceItem);
                 }
                 invoiceUpdated = updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems) || invoiceUpdated;
@@ -229,14 +239,8 @@ public class InvoicePluginDispatcher {
         return true;
     }
 
-    private InvoiceItem validateAndSanitizeInvoiceItemFromPlugin(final Invoice originalInvoice, final InvoiceItem additionalInvoiceItem, final InvoicePluginApi invoicePlugin) throws InvoiceApiException {
-        final InvoiceItem existingItem = Iterables.<InvoiceItem>tryFind(originalInvoice.getInvoiceItems(),
-                                                                      new Predicate<InvoiceItem>() {
-                                                                          @Override
-                                                                          public boolean apply(final InvoiceItem originalInvoiceItem) {
-                                                                              return originalInvoiceItem.getId().equals(additionalInvoiceItem.getId());
-                                                                          }
-                                                                      }).orNull();
+    private InvoiceItem validateAndSanitizeInvoiceItemFromPlugin(final UUID originalInvoiceId, final Map<UUID, InvoiceItem> invoiceItemsByItemId, final InvoiceItem additionalInvoiceItem, final InvoicePluginApi invoicePlugin) throws InvoiceApiException {
+        final InvoiceItem existingItem = invoiceItemsByItemId.get(additionalInvoiceItem.getId());
 
         if (!ALLOWED_INVOICE_ITEM_TYPES.contains(additionalInvoiceItem.getInvoiceItemType()) && existingItem == null) {
             log.warn("Ignoring invoice item of type {} from InvoicePlugin {}: {}", additionalInvoiceItem.getInvoiceItemType(), invoicePlugin, additionalInvoiceItem);
@@ -244,7 +248,7 @@ public class InvoicePluginDispatcher {
         }
 
         final UUID invoiceId = MoreObjects.firstNonNull(mutableField("invoiceId", existingItem != null ? existingItem.getInvoiceId() : null, additionalInvoiceItem.getInvoiceId(), invoicePlugin),
-                                                        originalInvoice.getId());
+                                                        originalInvoiceId);
 
         final UUID additionalInvoiceId = MoreObjects.firstNonNull(additionalInvoiceItem.getId(), UUIDs.randomUUID());
         final InvoiceItemCatalogBase tmp = new InvoiceItemCatalogBase(additionalInvoiceId,

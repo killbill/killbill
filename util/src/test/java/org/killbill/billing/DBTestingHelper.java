@@ -24,6 +24,7 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLInvalidAuthorizationSpecException;
 import java.sql.SQLNonTransientConnectionException;
 import java.util.Enumeration;
 
@@ -128,8 +129,8 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         public Connection getConnection() throws SQLException {
             try {
                 return delegate.getConnection();
-            } catch (final SQLNonTransientConnectionException e) {
-                logger.warn("Unable to retrieve connection, attempting to retry", e);
+            } catch (final SQLNonTransientConnectionException| SQLInvalidAuthorizationSpecException e) { // For some reason, we now get transient SQLInvalidAuthorizationSpecException errors
+                logger.debug("Unable to retrieve connection, attempting to retry", e);
                 return delegate.getConnection();
             }
         }
@@ -138,8 +139,8 @@ public class DBTestingHelper extends PlatformDBTestingHelper {
         public Connection getConnection(final String username, final String password) throws SQLException {
             try {
                 return delegate.getConnection(username, password);
-            } catch (final SQLNonTransientConnectionException e) {
-                logger.warn("Unable to retrieve connection, attempting to retry", e);
+            } catch (final SQLNonTransientConnectionException| SQLInvalidAuthorizationSpecException e) { // For some reason, we now get transient SQLInvalidAuthorizationSpecException errors
+                logger.debug("Unable to retrieve connection, attempting to retry", e);
                 return delegate.getConnection(username, password);
             }
         }
