@@ -265,7 +265,7 @@ CREATE TABLE users (
     updated_by varchar(50) DEFAULT NULL,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-CREATE INDEX users_username ON users(username);
+CREATE UNIQUE INDEX users_username ON users(username);
 
 
 DROP TABLE IF EXISTS user_roles;
