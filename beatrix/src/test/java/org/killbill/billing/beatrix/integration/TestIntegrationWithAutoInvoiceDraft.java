@@ -31,8 +31,10 @@ import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.invoice.api.Invoice;
@@ -79,6 +81,61 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         term = BillingPeriod.MONTHLY;
     }
 
+    @Test(groups = "slow", description = "See https://github.com/killbill/killbill/issues/1357")
+    public void testWithSubscriptionsInThePast() throws Exception {
+
+        final DateTime initialDate = new DateTime(2020, 9, 16, 0, 0, 0, 0, testTimeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(21));
+        assertNotNull(account);
+
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        // Subscriptions start date (in the past)
+        final LocalDate startDate = new LocalDate(2020, 8, 7);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 1, null, null), null, startDate, startDate, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        checkAllNotificationProcessed(internalCallContext.getTenantRecordId());
+
+        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 1);
+        Invoice firstInvoice = invoices.get(0);
+        assertEquals(firstInvoice.getStatus(), InvoiceStatus.DRAFT);
+
+        ImmutableList<ExpectedInvoiceItemCheck> toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2020, 8, 7), new LocalDate(2020, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("16.09")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 1), new LocalDate(2020, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 1, null, null), null, startDate, startDate, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        checkAllNotificationProcessed(internalCallContext.getTenantRecordId());
+
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 1);
+        firstInvoice = invoices.get(0);
+        assertEquals(firstInvoice.getStatus(), InvoiceStatus.DRAFT);
+
+        toBeChecked = ImmutableList.<ExpectedInvoiceItemCheck>of(
+                new ExpectedInvoiceItemCheck(new LocalDate(2020, 8, 7), new LocalDate(2020, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("16.09")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 1), new LocalDate(2020, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2020, 8, 7), new LocalDate(2020, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("16.09")),
+                new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 1), new LocalDate(2020, 10, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceApi.commitInvoice(firstInvoice.getId(), callContext);
+        assertListenerStatus();
+    }
 
     @Test(groups = "slow")
     public void testAutoInvoicingDraftBasic() throws Exception {
@@ -229,7 +286,6 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertEquals(firstNonTrialInvoice.getStatus(), InvoiceStatus.DRAFT);
         assertEquals(firstNonTrialInvoice.getInvoiceDate(), new LocalDate(2017, 07, 16));
 
-
         final List<ExpectedInvoiceItemCheck> toBeChecked = new ArrayList<ExpectedInvoiceItemCheck>();
         toBeChecked.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 7, 16), new LocalDate(2017, 7, 25), InvoiceItemType.RECURRING, new BigDecimal("74.99")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, toBeChecked);
@@ -269,7 +325,6 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
     }
 
-
     @Test(groups = "slow")
     public void testAutoInvoicingReuseDraftBasic() throws Exception {
         clock.setTime(new DateTime(2017, 6, 16, 18, 24, 42, 0));
@@ -302,7 +357,6 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertEquals(invoices.get(0).getInvoiceItems().size(), 2);
         assertEquals(invoices.get(0).getStatus(), InvoiceStatus.DRAFT);
 
-
         // Move out of TRIAL
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30);
@@ -329,7 +383,6 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertEquals(invoices.get(0).getInvoiceItems().size(), 4);
         assertEquals(invoices.get(0).getStatus(), InvoiceStatus.COMMITTED);
 
-
         // Verify we see a new invoice
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
@@ -340,6 +393,5 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         assertEquals(invoices.get(1).getInvoiceItems().size(), 1);
         assertEquals(invoices.get(1).getStatus(), InvoiceStatus.COMMITTED);
     }
-
 
 }

@@ -20,15 +20,18 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -131,6 +134,10 @@ import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationEventWithMetadata;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
 import org.skife.jdbi.v2.Handle;
@@ -318,6 +325,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     @Inject
     protected PaymentDao paymentDao;
+
+    @Inject
+    protected NotificationQueueService notificationQueueService;
 
     protected ConfigurableInvoiceConfig invoiceConfig;
 
@@ -999,6 +1009,43 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             }
         });
     }
+
+
+    protected boolean areAllNotificationsProcessed(final Long tenantRecordId) {
+        int nbNotifications = 0;
+        for (final NotificationQueue notificationQueue : notificationQueueService.getNotificationQueues()) {
+            final Iterator<NotificationEventWithMetadata<NotificationEvent>> iterator = notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(null, tenantRecordId).iterator();
+            try {
+                while (iterator.hasNext()) {
+                    final NotificationEventWithMetadata<NotificationEvent> notificationEvent = iterator.next();
+                    if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                        nbNotifications += 1;
+                    }
+                }
+            } finally {
+                // Go through all results to close the connection
+                while (iterator.hasNext()) {
+                    iterator.next();
+                }
+            }
+        }
+        if (nbNotifications != 0) {
+            log.info(": {} queue(s) with more notification(s) to process", nbNotifications);
+        }
+        return nbNotifications == 0;
+    }
+
+    protected void checkAllNotificationProcessed(final Long tenantRecordId) {
+        // Verify notification(s) moved to the retry queue
+        Awaitility.await().atMost(15, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return areAllNotificationsProcessed(tenantRecordId);
+            }
+        });
+    }
+
+
 
     protected static class TestDryRunArguments implements DryRunArguments {
 

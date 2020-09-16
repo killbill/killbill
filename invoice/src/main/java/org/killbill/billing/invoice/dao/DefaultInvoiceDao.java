@@ -395,8 +395,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                 billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), BillingEventSerializer.serialize(billingEvents), context.getCreatedDate()), context);
                             }
                             createdInvoiceIds.add(invoiceModelDao.getId());
-                        } else if (invoiceOnDisk.getStatus() == InvoiceStatus.DRAFT && invoiceModelDao.getStatus() == InvoiceStatus.COMMITTED) {
-                            invoiceSqlDao.updateStatus(invoiceModelDao.getId().toString(), InvoiceStatus.COMMITTED.toString(), context);
+                        } else if (invoiceOnDisk.getStatus() != invoiceModelDao.getStatus() || invoiceOnDisk.getTargetDate().compareTo(invoiceModelDao.getTargetDate()) != 0) {
+                            invoiceSqlDao.updateStatusAndTargetDate(invoiceModelDao.getId().toString(), invoiceModelDao.getStatus().toString(), invoiceModelDao.getTargetDate(), context);
                             committedReusedInvoiceId.add(invoiceModelDao.getId());
                         }
                     }
@@ -1252,7 +1252,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_STATUS, newStatus, invoiceId, invoice.getStatus());
                 }
 
-                transactional.updateStatus(invoiceId.toString(), newStatus.toString(), context);
+                transactional.updateStatusAndTargetDate(invoiceId.toString(), newStatus.toString(), invoice.getTargetDate(), context);
 
                 // Run through all invoices
                 // Current invoice could be a credit item that needs to be rebalanced
