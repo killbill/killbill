@@ -395,7 +395,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                 billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), BillingEventSerializer.serialize(billingEvents), context.getCreatedDate()), context);
                             }
                             createdInvoiceIds.add(invoiceModelDao.getId());
-                        } else if (invoiceOnDisk.getStatus() != invoiceModelDao.getStatus() || invoiceOnDisk.getTargetDate().compareTo(invoiceModelDao.getTargetDate()) != 0) {
+                        } else if (invoiceOnDisk.getStatus() != invoiceModelDao.getStatus() || /* Update if status is different */
+                                   (invoiceModelDao.getTargetDate() != null && /* Update if target date is specified and prev was either null or different */
+                                    (invoiceOnDisk.getTargetDate() == null || invoiceOnDisk.getTargetDate().compareTo(invoiceModelDao.getTargetDate()) != 0))) {
                             invoiceSqlDao.updateStatusAndTargetDate(invoiceModelDao.getId().toString(), invoiceModelDao.getStatus().toString(), invoiceModelDao.getTargetDate(), context);
                             committedReusedInvoiceId.add(invoiceModelDao.getId());
                         }
