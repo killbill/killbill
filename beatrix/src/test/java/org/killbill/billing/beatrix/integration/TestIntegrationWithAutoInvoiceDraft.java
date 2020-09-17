@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -38,6 +39,7 @@ import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
@@ -45,6 +47,7 @@ import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.TagUserApi;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -135,6 +138,16 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceApi.commitInvoice(firstInvoice.getId(), callContext);
         assertListenerStatus();
+
+
+        try {
+            busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), startDate, callContext);
+            Assert.fail();
+        } catch (final InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
+            assertListenerStatus();
+        }
     }
 
     @Test(groups = "slow")

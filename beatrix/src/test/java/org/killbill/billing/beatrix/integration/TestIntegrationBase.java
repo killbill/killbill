@@ -1030,7 +1030,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             }
         }
         if (nbNotifications != 0) {
-            log.info(": {} queue(s) with more notification(s) to process", nbNotifications);
+            log.info("Remaining {} notifications to process", nbNotifications);
         }
         return nbNotifications == 0;
     }
