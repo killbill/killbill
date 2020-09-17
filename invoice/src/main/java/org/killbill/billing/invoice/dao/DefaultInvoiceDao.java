@@ -397,18 +397,25 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                             }
                             createdInvoiceIds.add(invoiceModelDao.getId());
                         } else {
-                            // Transition to COMMITTED or keep current status
-                            final InvoiceStatus newStatus = (InvoiceStatus.COMMITTED == invoiceModelDao.getStatus() && InvoiceStatus.COMMITTED != invoiceOnDisk.getStatus()) ? InvoiceStatus.COMMITTED : invoiceOnDisk.getStatus();
+
+                            // Allow transition from DRAFT to COMMITTED or keep current status
+                            InvoiceStatus newStatus = invoiceOnDisk.getStatus();
+                            boolean statusUpdated = false;
+                            if (InvoiceStatus.COMMITTED == invoiceModelDao.getStatus() && InvoiceStatus.DRAFT == invoiceOnDisk.getStatus()) {
+                                statusUpdated = true;
+                                newStatus = InvoiceStatus.COMMITTED;
+                            }
 
                             // Update if target date is specified and prev targetDate was either null or prior to new date
-                            final LocalDate newTargetDate = (invoiceModelDao.getTargetDate() != null &&
-                                                             (invoiceOnDisk.getTargetDate() == null ||
-                                                              invoiceOnDisk.getTargetDate().compareTo(invoiceModelDao.getTargetDate()) < 0)) ?
-                                                            invoiceModelDao.getTargetDate() :
-                                                            invoiceOnDisk.getTargetDate();
+                            LocalDate newTargetDate = invoiceOnDisk.getTargetDate();
+                            boolean targetDateUpdated = false;
+                            if (invoiceModelDao.getTargetDate() != null &&
+                                (invoiceOnDisk.getTargetDate() == null || invoiceOnDisk.getTargetDate().compareTo(invoiceModelDao.getTargetDate()) < 0)) {
+                                targetDateUpdated = true;
+                                newTargetDate = invoiceModelDao.getTargetDate();
+                            }
 
-                            // If either newStatus or newTargetDate was updated perform the update
-                            if (newStatus != invoiceOnDisk.getStatus() || !Objects.equals(newTargetDate, invoiceOnDisk.getTargetDate())) {
+                            if (statusUpdated || targetDateUpdated) {
                                 invoiceSqlDao.updateStatusAndTargetDate(invoiceModelDao.getId().toString(), newStatus.toString(), newTargetDate, context);
                                 committedReusedInvoiceId.add(invoiceModelDao.getId());
                             }
