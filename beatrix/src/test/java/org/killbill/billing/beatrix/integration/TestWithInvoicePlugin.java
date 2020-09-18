@@ -43,7 +43,6 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
-import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -90,9 +89,6 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     @Inject
     private OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
-
-    @Inject
-    private NotificationQueueService notificationQueueService;
 
     private TestInvoicePluginApi testInvoicePluginApi;
 

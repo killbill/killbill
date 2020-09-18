@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -395,9 +396,29 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                 billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), BillingEventSerializer.serialize(billingEvents), context.getCreatedDate()), context);
                             }
                             createdInvoiceIds.add(invoiceModelDao.getId());
-                        } else if (invoiceOnDisk.getStatus() == InvoiceStatus.DRAFT && invoiceModelDao.getStatus() == InvoiceStatus.COMMITTED) {
-                            invoiceSqlDao.updateStatus(invoiceModelDao.getId().toString(), InvoiceStatus.COMMITTED.toString(), context);
-                            committedReusedInvoiceId.add(invoiceModelDao.getId());
+                        } else {
+
+                            // Allow transition from DRAFT to COMMITTED or keep current status
+                            InvoiceStatus newStatus = invoiceOnDisk.getStatus();
+                            boolean statusUpdated = false;
+                            if (InvoiceStatus.COMMITTED == invoiceModelDao.getStatus() && InvoiceStatus.DRAFT == invoiceOnDisk.getStatus()) {
+                                statusUpdated = true;
+                                newStatus = InvoiceStatus.COMMITTED;
+                            }
+
+                            // Update if target date is specified and prev targetDate was either null or prior to new date
+                            LocalDate newTargetDate = invoiceOnDisk.getTargetDate();
+                            boolean targetDateUpdated = false;
+                            if (invoiceModelDao.getTargetDate() != null &&
+                                (invoiceOnDisk.getTargetDate() == null || invoiceOnDisk.getTargetDate().compareTo(invoiceModelDao.getTargetDate()) < 0)) {
+                                targetDateUpdated = true;
+                                newTargetDate = invoiceModelDao.getTargetDate();
+                            }
+
+                            if (statusUpdated || targetDateUpdated) {
+                                invoiceSqlDao.updateStatusAndTargetDate(invoiceModelDao.getId().toString(), newStatus.toString(), newTargetDate, context);
+                                committedReusedInvoiceId.add(invoiceModelDao.getId());
+                            }
                         }
                     }
 
@@ -1252,7 +1273,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_STATUS, newStatus, invoiceId, invoice.getStatus());
                 }
 
-                transactional.updateStatus(invoiceId.toString(), newStatus.toString(), context);
+                transactional.updateStatusAndTargetDate(invoiceId.toString(), newStatus.toString(), invoice.getTargetDate(), context);
 
                 // Run through all invoices
                 // Current invoice could be a credit item that needs to be rebalanced
