@@ -21,6 +21,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.UUID;
 import java.util.regex.Matcher;
 
 import org.killbill.billing.ErrorCode;
@@ -92,10 +93,21 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         return priceOverride.getOrCreateOverriddenPlan(this, defaultPlan, CatalogDateHelper.toUTCDateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
     }
 
+    private boolean isOverridenPlan(final String planName) {
+        try {
+            // See https://github.com/killbill/killbill/issues/1364
+            // If this is a UUID, this is not an overriden plan
+            UUID.fromString(planName);
+            return false;
+        } catch (final IllegalArgumentException e) {
+            final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
+            return m.matches();
+        }
+    }
+
     @Override
     public DefaultPlan findPlan(final String planName) throws CatalogApiException {
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
-        if (m.matches()) {
+        if (isOverridenPlan(planName)) {
             final DefaultPlan plan = maybeGetOverriddenPlan(planName);
             if (plan != null) {
                 return plan;
@@ -112,8 +124,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     @Override
     public PlanPhase findPhase(final String phaseName) throws CatalogApiException {
         final String planName = DefaultPlanPhase.planName(phaseName);
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
-        if (m.matches()) {
+        if (isOverridenPlan(planName)) {
             final DefaultPlan plan = maybeGetOverriddenPlan(planName);
             if (plan != null) {
                 return plan.findPhase(phaseName);
