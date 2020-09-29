@@ -20,6 +20,7 @@ package org.killbill.billing.catalog.override;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -47,6 +48,7 @@ import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.caching.OverriddenPlanCache;
+import org.killbill.billing.catalog.caching.PriceOverridePattern;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.dao.CatalogOverridePlanDefinitionModelDao;
 
@@ -58,15 +60,21 @@ public class DefaultPriceOverride implements PriceOverride {
 
     private static final AtomicLong DRY_RUN_PLAN_IDX = new AtomicLong(0);
 
-    public static final Pattern CUSTOM_PLAN_NAME_PATTERN = Pattern.compile("(.*)-(\\d+)$");
-
     private final CatalogOverrideDao overrideDao;
     private final OverriddenPlanCache overriddenPlanCache;
 
+    private final PriceOverridePattern priceOverridePattern;
+
     @Inject
-    public DefaultPriceOverride(final CatalogOverrideDao overrideDao, final OverriddenPlanCache overriddenPlanCache) {
+    public DefaultPriceOverride(final CatalogOverrideDao overrideDao, final OverriddenPlanCache overriddenPlanCache, final PriceOverridePattern priceOverridePattern) {
         this.overrideDao = overrideDao;
         this.overriddenPlanCache = overriddenPlanCache;
+        this.priceOverridePattern = priceOverridePattern;
+    }
+
+    @Override
+    public boolean isOverriddenPlan(final String planName) {
+        return priceOverridePattern.isOverriddenPlan(planName);
     }
 
     @Override

@@ -30,6 +30,8 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 
 public interface PriceOverride {
 
+    boolean isOverriddenPlan(final String planName);
+
     DefaultPlan getOrCreateOverriddenPlan(final StandaloneCatalog catalog, final Plan parentPlan, final DateTime catalogEffectiveDate, final List<PlanPhasePriceOverride> overrides, final InternalCallContext context) throws CatalogApiException;
 
     DefaultPlan getOverriddenPlan(final String planName, final StandaloneCatalog catalog, final InternalTenantContext context) throws CatalogApiException;

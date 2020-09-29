@@ -20,6 +20,7 @@ package org.killbill.billing.catalog.caching;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
@@ -61,14 +62,17 @@ import com.google.common.collect.Iterables;
 
 public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
 
+
     private final CacheController<String, Plan> cacheController;
     private final LoaderCallback loaderCallback;
     private final CatalogOverrideDao overrideDao;
+    private final PriceOverridePattern priceOverridePattern;
 
     @Inject
-    public DefaultOverriddenPlanCache(final CatalogOverrideDao overrideDao, final CacheControllerDispatcher cacheControllerDispatcher) {
+    public DefaultOverriddenPlanCache(final CatalogOverrideDao overrideDao, final CacheControllerDispatcher cacheControllerDispatcher, final PriceOverridePattern priceOverridePattern) {
         this.overrideDao = overrideDao;
         this.cacheController = cacheControllerDispatcher.getCacheController(CacheType.OVERRIDDEN_PLAN);
+        this.priceOverridePattern = priceOverridePattern;
         this.loaderCallback = new LoaderCallback() {
             @Override
             public Plan loadPlan(final String planName, final StaticCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
@@ -96,12 +100,9 @@ public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
     }
 
     private DefaultPlan loadOverriddenPlan(final String planName, final StandaloneCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
-        if (!m.matches()) {
-            throw new CatalogApiException(ErrorCode.CAT_NO_SUCH_PLAN, planName);
-        }
-        final String parentPlanName = m.group(1);
-        final Long planDefRecordId = Long.parseLong(m.group(2));
+        final String[] parts = priceOverridePattern.getPlanParts(planName);
+        final String parentPlanName = parts[0];
+        final Long planDefRecordId = Long.parseLong(parts[1]);
 
         final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs = overrideDao.getOverriddenPlanPhases(planDefRecordId, context);
         final DefaultPlan defaultPlan = catalog.findPlan(parentPlanName);

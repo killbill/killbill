@@ -47,7 +47,7 @@ import static org.testng.Assert.assertTrue;
 public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
-    public void testBasic() throws Exception {
+    public void testBasicWithLegacyNamePattern() throws Exception {
 
         final StandaloneCatalog catalog = getCatalog("SpyCarAdvanced.xml");
         catalog.initialize(catalog);
@@ -61,9 +61,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
 
         final DefaultPlan overriddenPlan = priceOverride.getOrCreateOverriddenPlan(catalog, plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
 
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(overriddenPlan.getName());
-        assertTrue(m.matches());
-        assertEquals(m.group(1), plan.getName());
+        final String[] parts = priceOverridePattern.getPlanParts(overriddenPlan.getName());
+        assertEquals(parts[0], plan.getName());
 
         assertEquals(overriddenPlan.getProduct().getName(), plan.getProduct().getName());
         assertEquals(overriddenPlan.getRecurringBillingPeriod(), plan.getRecurringBillingPeriod());
@@ -219,10 +218,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         //Overriding only the tieredblockprice for unit - 'chocolate-videos' with size = 1 and max = 10000 from $1 to $0.75
         final DefaultPlan overriddenPlan = priceOverride.getOrCreateOverriddenPlan(catalog, plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
 
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(overriddenPlan.getName());
-
-        assertTrue(m.matches());
-        assertEquals(m.group(1), plan.getName());
+        final String[] parts = priceOverridePattern.getPlanParts(overriddenPlan.getName());
+        assertEquals(parts[0], plan.getName());
         assertEquals(overriddenPlan.getProduct().getName(), plan.getProduct().getName());
         assertEquals(overriddenPlan.getRecurringBillingPeriod(), plan.getRecurringBillingPeriod());
         if (plan.getEffectiveDateForExistingSubscriptions() != null) {
@@ -295,10 +292,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
          also overriding tieredblockprice from $1 to $0.75 for unit - 'chocolate-videos' with size = 1 and max = 10000 */
         final DefaultPlan overriddenPlan = priceOverride.getOrCreateOverriddenPlan(catalog, plan, new DateTime(catalog.getEffectiveDate()), overrides, internalCallContext);
 
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(overriddenPlan.getName());
-
-        assertTrue(m.matches());
-        assertEquals(m.group(1), plan.getName());
+        final String[] parts = priceOverridePattern.getPlanParts(overriddenPlan.getName());
+        assertEquals(parts[0], plan.getName());
         assertEquals(overriddenPlan.getProduct().getName(), plan.getProduct().getName());
         assertEquals(overriddenPlan.getRecurringBillingPeriod(), plan.getRecurringBillingPeriod());
         if (plan.getEffectiveDateForExistingSubscriptions() != null) {

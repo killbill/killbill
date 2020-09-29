@@ -95,7 +95,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
 
     @Override
     public DefaultPlan findPlan(final String planName) throws CatalogApiException {
-        if (isOverriddenPlan(planName)) {
+        if (priceOverride.isOverriddenPlan(planName)) {
             final DefaultPlan plan = maybeGetOverriddenPlan(planName);
             if (plan != null) {
                 return plan;
@@ -112,18 +112,13 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     @Override
     public PlanPhase findPhase(final String phaseName) throws CatalogApiException {
         final String planName = DefaultPlanPhase.planName(phaseName);
-        if (isOverriddenPlan(planName)) {
+        if (priceOverride.isOverriddenPlan(planName)) {
             final DefaultPlan plan = maybeGetOverriddenPlan(planName);
             if (plan != null) {
                 return plan.findPhase(phaseName);
             }
         }
         return super.findPhase(phaseName);
-    }
-
-    private static boolean isOverriddenPlan(final String planName) {
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
-        return m.matches();
     }
 
     private DefaultPlan maybeGetOverriddenPlan(final String planName) throws CatalogApiException {
