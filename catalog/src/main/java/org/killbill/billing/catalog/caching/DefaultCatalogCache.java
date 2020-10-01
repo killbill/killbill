@@ -178,7 +178,7 @@ public class DefaultCatalogCache implements CatalogCache {
                     logger.info("Returning catalog from plugin {} on tenant {} ", service, internalTenantContext.getTenantRecordId());
                 }
 
-                final DefaultVersionedCatalog resolvedPluginCatalog = versionedCatalogMapper.toVersionedCatalog(pluginCatalog, internalTenantContext);
+                final DefaultVersionedCatalog resolvedPluginCatalog = versionedCatalogMapper.toVersionedCatalog(pluginCatalog);
 
                 // Always clear the cache for safety
                 cacheController.remove(internalTenantContext.getTenantRecordId());

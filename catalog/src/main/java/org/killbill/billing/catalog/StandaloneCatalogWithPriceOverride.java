@@ -92,10 +92,10 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
         return priceOverride.getOrCreateOverriddenPlan(this, defaultPlan, CatalogDateHelper.toUTCDateTime(getEffectiveDate()), overrides.getOverrides(), internalCallContext);
     }
 
+
     @Override
     public DefaultPlan findPlan(final String planName) throws CatalogApiException {
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
-        if (m.matches()) {
+        if (priceOverride.isOverriddenPlan(planName)) {
             final DefaultPlan plan = maybeGetOverriddenPlan(planName);
             if (plan != null) {
                 return plan;
@@ -112,8 +112,7 @@ public class StandaloneCatalogWithPriceOverride extends StandaloneCatalog implem
     @Override
     public PlanPhase findPhase(final String phaseName) throws CatalogApiException {
         final String planName = DefaultPlanPhase.planName(phaseName);
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(planName);
-        if (m.matches()) {
+        if (priceOverride.isOverriddenPlan(planName)) {
             final DefaultPlan plan = maybeGetOverriddenPlan(planName);
             if (plan != null) {
                 return plan.findPhase(phaseName);

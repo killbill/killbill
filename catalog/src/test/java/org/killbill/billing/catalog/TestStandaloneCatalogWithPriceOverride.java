@@ -55,8 +55,7 @@ public class TestStandaloneCatalogWithPriceOverride extends CatalogTestSuiteWith
         Mockito.when(overrides.getOverrides()).thenReturn(ImmutableList.of(override));
         final Plan plan = standaloneCatalogWithPriceOverride.createOrFindPlan(spec, overrides);
         Assert.assertTrue(plan.getName().startsWith("standard-monthly-67890-"));
-        final Matcher m = DefaultPriceOverride.CUSTOM_PLAN_NAME_PATTERN.matcher(plan.getName());
-        Assert.assertTrue(m.matches());
+        Assert.assertTrue(priceOverridePattern.isOverriddenPlan(plan.getName()));
 
         // From the catalog
         Assert.assertNotNull(catalog.findPlan("standard-monthly"));
