@@ -17,7 +17,11 @@
 
 package org.killbill.billing.usage.api;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -63,7 +67,6 @@ public class BaseUserApi {
         if (allServices.isEmpty()) {
             return null;
         }
-
         for (final String service : allServices) {
             final UsagePluginApi plugin = pluginRegistry.getServiceForName(service);
 
@@ -73,12 +76,15 @@ public class BaseUserApi {
             // First plugin registered, returns result -- could be empty List if no usage was recorded.
             if (result != null) {
 
+                final DebugMap debugMap = new DebugMap(startDate, endDate, logger);
                 for (final RawUsageRecord cur : result) {
                     if (cur.getDate().compareTo(startDate) < 0 || cur.getDate().compareTo(endDate) >= 0) {
                         logger.warn("Usage plugin returned usage data with date {}, not in the specified range [{} -> {}[",
                                     cur.getDate(), startDate, endDate);
                     }
+                    debugMap.add(cur);
                 }
+                debugMap.logDebug();
                 return result;
             }
         }
@@ -86,5 +92,59 @@ public class BaseUserApi {
         return null;
     }
 
+    private static class DebugMap {
+
+        private final Map<UUID, List<RawUsageRecord>> perSubscriptionRecords;
+        private final Logger logger;
+        private final LocalDate startDate;
+        private final LocalDate endDate;
+
+        public DebugMap(final LocalDate startDate, final LocalDate endDate, final Logger logger) {
+            this.logger = logger;
+            this.startDate = startDate;
+            this.endDate = endDate;
+            if (logger.isDebugEnabled()) {
+                this.perSubscriptionRecords = new HashMap<>();
+            } else {
+                this.perSubscriptionRecords = Collections.emptyMap();
+            }
+        }
+
+        public void add(final RawUsageRecord record) {
+            if (!logger.isDebugEnabled()) {
+                return;
+            }
+            List<RawUsageRecord> perSubscriptionList = perSubscriptionRecords.get(record.getSubscriptionId());
+            if (perSubscriptionList == null) {
+                perSubscriptionList = new ArrayList<RawUsageRecord>();
+                perSubscriptionRecords.put(record.getSubscriptionId(), perSubscriptionList);
+            }
+            perSubscriptionList.add(record);
+        }
+
+        public void logDebug() {
+            if (!logger.isDebugEnabled()) {
+                return;
+            }
+
+            for (UUID k : perSubscriptionRecords.keySet()) {
+                final List<RawUsageRecord> val = perSubscriptionRecords.get(k);
+                for (RawUsageRecord r : val) {
+                    StringBuffer tmp = new StringBuffer();
+                    tmp.append("UserApi (plugin) subId=");
+                    tmp.append(k);
+                    tmp.append(", startDate=");
+                    tmp.append(startDate);
+                    tmp.append(", endDate=");
+                    tmp.append(endDate);
+                    tmp.append(", recordDt=");
+                    tmp.append(r.getDate());
+                    tmp.append(", amount=");
+                    tmp.append(r.getAmount());
+                    logger.debug(tmp.toString());
+                }
+            }
+        }
+    }
 
 }
