@@ -70,17 +70,18 @@ public class RawUsageOptimizer {
     }
 
     public RawUsageOptimizerResult getInArrearUsage(final LocalDate firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, final InternalCallContext internalCallContext) {
-        final LocalDate targetStartDate = config.getMaxRawUsagePreviousPeriod(internalCallContext) >= 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage, internalCallContext) : firstEventStartDate;
-        log.debug("ConsumableInArrear accountRecordId='{}', rawUsageStartDate='{}', firstEventStartDate='{}'",
-                  internalCallContext.getAccountRecordId(), targetStartDate, firstEventStartDate);
-        final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(targetStartDate, targetDate, internalCallContext);
+        final int configRawUsagePreviousPeriod = config.getMaxRawUsagePreviousPeriod(internalCallContext);
+        final LocalDate optimizedStartDate = configRawUsagePreviousPeriod >= 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage, internalCallContext) : firstEventStartDate;
+        log.debug("RawUsageOptimizerResult accountRecordId='{}', configRawUsagePreviousPeriod='{}', firstEventStartDate='{}', optimizedStartDate='{}',  targetDate='{}'",
+                  internalCallContext.getAccountRecordId(), configRawUsagePreviousPeriod, firstEventStartDate, optimizedStartDate, targetDate);
+        final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(optimizedStartDate, targetDate, internalCallContext);
 
-        final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(targetStartDate, targetDate, internalCallContext);
+        final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(optimizedStartDate, targetDate, internalCallContext);
         final Set<TrackingRecordId> existingTrackingIds = new HashSet<TrackingRecordId>();
         for (final InvoiceTrackingModelDao invoiceTrackingModelDao : trackingIds) {
             existingTrackingIds.add(new TrackingRecordId(invoiceTrackingModelDao.getTrackingId(), invoiceTrackingModelDao.getInvoiceId(), invoiceTrackingModelDao.getSubscriptionId(), invoiceTrackingModelDao.getUnitType(), invoiceTrackingModelDao.getRecordDate()));
         }
-        return new RawUsageOptimizerResult(targetStartDate, rawUsageData, existingTrackingIds);
+        return new RawUsageOptimizerResult(optimizedStartDate, rawUsageData, existingTrackingIds);
     }
 
     @VisibleForTesting
