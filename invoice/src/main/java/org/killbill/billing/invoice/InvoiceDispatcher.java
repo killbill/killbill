@@ -887,20 +887,6 @@ public class InvoiceDispatcher {
     }
 
     public void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws SubscriptionBaseApiException {
-        // Don't use invoice.getInvoiceItems(final Class<T> clazz) as some items can come from plugins
-        final Collection<InvoiceItem> invoiceItemsToConsider = new LinkedList<InvoiceItem>();
-        for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
-            switch (invoiceItem.getInvoiceItemType()) {
-                case FIXED:
-                case RECURRING:
-                case USAGE:
-                    invoiceItemsToConsider.add(invoiceItem);
-                    break;
-                default:
-                    break;
-            }
-        }
-
         final Map<UUID, DateTime> chargeThroughDates = InvoiceWithMetadata.computeChargedThroughDates(invoice,context);
         setChargedThroughDates(chargeThroughDates, context);
     }
@@ -922,25 +908,6 @@ public class InvoiceDispatcher {
         }
     }
 
-    // TODO Dups
-    private void addInvoiceItemsToChargeThroughDates(final Map<UUID, DateTime> chargeThroughDates,
-                                                     final Collection<InvoiceItem> items,
-                                                     final InternalTenantContext internalTenantContext) {
-
-        for (final InvoiceItem item : items) {
-            final UUID subscriptionId = item.getSubscriptionId();
-            final LocalDate endDate = (item.getEndDate() != null) ? item.getEndDate() : item.getStartDate();
-
-            final DateTime proposedChargedThroughDate = internalTenantContext.toUTCDateTime(endDate);
-            if (chargeThroughDates.containsKey(subscriptionId)) {
-                if (chargeThroughDates.get(subscriptionId).isBefore(proposedChargedThroughDate)) {
-                    chargeThroughDates.put(subscriptionId, proposedChargedThroughDate);
-                }
-            } else {
-                chargeThroughDates.put(subscriptionId, proposedChargedThroughDate);
-            }
-        }
-    }
 
     public static class FutureAccountNotifications {
 
