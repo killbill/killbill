@@ -59,11 +59,11 @@ public class InvoiceWithMetadata {
                                final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
                                final boolean filterZeroUsageItems,
                                final InternalCallContext context) {
+        this.filterZeroUsageItems = filterZeroUsageItems;
         this.invoice = originalInvoice;
+        this.chargedThroughDates = computeChargedThroughDates(originalInvoice, context);
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
         this.trackingIds = trackingIds;
-        this.chargedThroughDates = computeChargedThroughDates(originalInvoice, context);
-        this.filterZeroUsageItems = filterZeroUsageItems;
         build();
     }
 
@@ -89,6 +89,7 @@ public class InvoiceWithMetadata {
 
 
         if (invoice != null ) {
+            // Filter $0 USAGE items if specified by config
             if (filterZeroUsageItems) {
                 final Iterable<InvoiceItem> resultingItems = Iterables.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
                     @Override
@@ -103,7 +104,7 @@ public class InvoiceWithMetadata {
                 invoice.addInvoiceItems(filteredItems);
             }
 
-            // If not resulting items, result a null invoice
+            // If no resulting items -> result a null invoice
             // (but we already computed all the stuff we care about: chargedThroughDates, trackingIds,..
             if (Iterables.isEmpty(invoice.getInvoiceItems())) {
                 invoice = null;

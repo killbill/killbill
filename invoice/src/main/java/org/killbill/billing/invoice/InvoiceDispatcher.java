@@ -597,13 +597,9 @@ public class InvoiceDispatcher {
                 final BusInternalEvent event = new DefaultNullInvoiceEvent(accountId, clock.getUTCToday(),
                                                                            internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), internalCallContext.getUserToken());
 
-                try {
-                    setChargedThroughDates(invoiceWithMetadata.getChargeThroughDates(), internalCallContext);
-                } catch (final SubscriptionBaseApiException e) {
-                    log.error("Failed handling SubscriptionBase change.", e);
-                    return null;
-                }
-
+                // Although we have a null invoice, it could be as a result of removing $0 USAGE (config#isUsageZeroAmountDisabled)
+                // and so we may still need to set the CTD for such subscriptions.
+                setChargedThroughDatesNoExceptions(invoiceWithMetadata.getChargeThroughDates(), internalCallContext);
                 commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
                 postEvent(event);
             }
@@ -657,17 +653,8 @@ public class InvoiceDispatcher {
                 // Commit invoice on disk
                 final ExistingInvoiceMetadata existingInvoiceMetadata = new ExistingInvoiceMetadata(existingInvoices);
                 commitInvoiceAndSetFutureNotifications(account, invoiceModelDao, billingEvents, trackingIds, futureAccountNotifications, existingInvoiceMetadata, internalCallContext);
+                setChargedThroughDatesNoExceptions(invoiceWithMetadata.getChargeThroughDates(), internalCallContext);
                 success = true;
-
-                // See https://github.com/killbill/killbill/issues/1296
-                if (invoice.getStatus() == InvoiceStatus.COMMITTED) {
-                    try {
-                        setChargedThroughDates(invoice, internalCallContext);
-                    } catch (final SubscriptionBaseApiException e) {
-                        log.error("Failed handling SubscriptionBase change.", e);
-                        return null;
-                    }
-                }
             }
         } finally {
             // Make sure we always set future notifications in case of errors
@@ -886,17 +873,29 @@ public class InvoiceDispatcher {
         return internalCallContextFactory.createCallContext(context);
     }
 
-    public void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws SubscriptionBaseApiException {
+    public void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws InvoiceApiException {
         final Map<UUID, DateTime> chargeThroughDates = InvoiceWithMetadata.computeChargedThroughDates(invoice,context);
         setChargedThroughDates(chargeThroughDates, context);
     }
 
-    public void setChargedThroughDates(final Map<UUID, DateTime> chargeThroughDates, final InternalCallContext context) throws SubscriptionBaseApiException {
-        for (final Entry<UUID, DateTime> entry : chargeThroughDates.entrySet()) {
-            if (entry.getKey() != null) {
-                final DateTime chargeThroughDate = entry.getValue();
-                subscriptionApi.setChargedThroughDate(entry.getKey(), chargeThroughDate, context);
+    private void setChargedThroughDatesNoExceptions(final Map<UUID, DateTime> chargeThroughDates, final InternalCallContext context) {
+        try {
+            setChargedThroughDates(chargeThroughDates, context);
+        } catch (final InvoiceApiException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    private void setChargedThroughDates(final Map<UUID, DateTime> chargeThroughDates, final InternalCallContext context) throws InvoiceApiException {
+        try {
+            for (final Entry<UUID, DateTime> entry : chargeThroughDates.entrySet()) {
+                if (entry.getKey() != null) {
+                    final DateTime chargeThroughDate = entry.getValue();
+                    subscriptionApi.setChargedThroughDate(entry.getKey(), chargeThroughDate, context);
+                }
             }
+        } catch (final SubscriptionBaseApiException e) {
+            throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, "Failed to set chargedThroughDates", e);
         }
     }
 
