@@ -53,6 +53,18 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("Whether internal sanity checks to prevent mis- and double-billing are enabled")
     boolean isSanitySafetyBoundEnabled(@Param("dummy") final InternalTenantContext tenantContext);
 
+
+    @Config("org.killbill.invoice.disable.usage.zero.amount")
+    @Default("false")
+    @Description("Whether we disable writing $0 usage amounts")
+    boolean isUsageZeroAmountDisabled();
+
+    @Config("org.killbill.invoice.disable.usage.zero.amount")
+    @Default("false")
+    @Description("Whether we disable writing $0 usage amounts")
+    boolean isUsageZeroAmountDisabled(@Param("dummy") final InternalTenantContext tenantContext);
+
+
     @Config("org.killbill.invoice.maxDailyNumberOfItemsSafetyBound")
     @Default("15")
     @Description("Maximum daily number of invoice items to generate for a subscription id")
