@@ -878,6 +878,7 @@ public class InvoiceDispatcher {
         setChargedThroughDates(chargeThroughDates, context);
     }
 
+    // TODO we should revisit this logic of swallowing the exception here -- especially in a use case where we use a catalog plugin
     private void setChargedThroughDatesNoExceptions(final Map<UUID, DateTime> chargeThroughDates, final InternalCallContext context) {
         try {
             setChargedThroughDates(chargeThroughDates, context);

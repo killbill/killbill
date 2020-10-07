@@ -118,6 +118,7 @@ public class InvoiceWithMetadata {
         if (invoice != null &&
             invoice.getStatus() == InvoiceStatus.COMMITTED) /* See https://github.com/killbill/killbill/issues/1296 */ {
             chargedThroughDates = new HashMap<>();
+                // Don't use invoice.getInvoiceItems(final Class<T> clazz) as some items can come from plugins
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
                 if (item.getInvoiceItemType() != InvoiceItemType.FIXED &&
                     item.getInvoiceItemType() != InvoiceItemType.RECURRING &&

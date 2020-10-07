@@ -17,7 +17,6 @@
 
 package org.killbill.billing.invoice.generator;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -38,20 +37,15 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecord
 import org.killbill.billing.junction.BillingEventSet;
 import org.slf4j.Logger;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 public abstract class InvoiceItemGenerator {
-
 
     public abstract InvoiceGeneratorResult generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
                                                          @Nullable final Iterable<Invoice> existingInvoices, final LocalDate targetDate,
                                                          final Currency targetCurrency, Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                          final InternalCallContext context) throws InvoiceApiException;
 
-
     public static class InvoiceGeneratorResult {
+
         private final List<InvoiceItem> items;
         private final Set<TrackingRecordId> trackingIds;
 
@@ -68,8 +62,6 @@ public abstract class InvoiceItemGenerator {
             return trackingIds;
         }
     }
-
-
 
     public static class InvoiceItemGeneratorLogger {
 
