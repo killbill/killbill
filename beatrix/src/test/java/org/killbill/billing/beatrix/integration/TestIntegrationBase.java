@@ -1139,11 +1139,13 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private final InvoiceConfig defaultInvoiceConfig;
         private boolean isInvoicingSystemEnabled;
         private boolean shouldParkAccountsWithUnknownUsage;
+        private boolean isZeroAmountUsageDisabled;
 
         public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
             this.defaultInvoiceConfig = defaultInvoiceConfig;
             isInvoicingSystemEnabled = defaultInvoiceConfig.isInvoicingSystemEnabled();
             shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
+            isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
         }
 
         @Override
@@ -1164,6 +1166,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         @Override
         public boolean isSanitySafetyBoundEnabled(final InternalTenantContext tenantContext) {
             return defaultInvoiceConfig.isSanitySafetyBoundEnabled();
+        }
+
+        @Override
+        public boolean isUsageZeroAmountDisabled() {
+            return isZeroAmountUsageDisabled;
+        }
+
+        @Override
+        public boolean isUsageZeroAmountDisabled(final InternalTenantContext tenantContext) {
+            return isUsageZeroAmountDisabled();
         }
 
         @Override
@@ -1262,6 +1274,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         public void setShouldParkAccountsWithUnknownUsage(final boolean shouldParkAccountsWithUnknownUsage) {
             this.shouldParkAccountsWithUnknownUsage = shouldParkAccountsWithUnknownUsage;
+        }
+
+        public void setZeroAmountUsageDisabled(final boolean isZeroAmountUsageDisabled) {
+            this.isZeroAmountUsageDisabled = isZeroAmountUsageDisabled;
         }
     }
 }

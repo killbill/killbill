@@ -17,7 +17,10 @@
 
 package org.killbill.billing.invoice.generator;
 
+import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -25,14 +28,21 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class InvoiceWithMetadata {
@@ -40,11 +50,18 @@ public class InvoiceWithMetadata {
     private final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates;
 
     private DefaultInvoice invoice;
-
     private final Set<TrackingRecordId> trackingIds;
+    private final Map<UUID, DateTime> chargedThroughDates;
+    private final boolean filterZeroUsageItems;
 
-    public InvoiceWithMetadata(final DefaultInvoice originalInvoice, final Set<TrackingRecordId> trackingIds, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {
+    public InvoiceWithMetadata(final DefaultInvoice originalInvoice,
+                               final Set<TrackingRecordId> trackingIds,
+                               final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
+                               final boolean filterZeroUsageItems,
+                               final InternalCallContext context) {
+        this.filterZeroUsageItems = filterZeroUsageItems;
         this.invoice = originalInvoice;
+        this.chargedThroughDates = computeChargedThroughDates(originalInvoice, context);
         this.perSubscriptionFutureNotificationDates = perSubscriptionFutureNotificationDates;
         this.trackingIds = trackingIds;
         build();
@@ -69,10 +86,63 @@ public class InvoiceWithMetadata {
                 tmp.resetNextRecurringDate();
             }
         }
-        if (invoice != null && invoice.getInvoiceItems().isEmpty()) {
-            invoice = null;
+
+
+        if (invoice != null ) {
+            // Filter $0 USAGE items if specified by config
+            if (filterZeroUsageItems) {
+                final Iterable<InvoiceItem> resultingItems = Iterables.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+                    @Override
+                    public boolean apply(final InvoiceItem invoiceItem) {
+                        return invoiceItem.getInvoiceItemType() != InvoiceItemType.USAGE ||
+                               invoiceItem.getAmount().compareTo(BigDecimal.ZERO) != 0;
+                    }
+                });
+                final ImmutableList<InvoiceItem> filteredItems = ImmutableList.copyOf(resultingItems);
+                // Reset invoice items with filtered list
+                invoice.getInvoiceItems().clear();
+                invoice.addInvoiceItems(filteredItems);
+            }
+
+            // If no resulting items -> result a null invoice
+            // (but we already computed all the stuff we care about: chargedThroughDates, trackingIds,..
+            if (Iterables.isEmpty(invoice.getInvoiceItems())) {
+                invoice = null;
+            }
         }
     }
+
+
+    public static  final Map<UUID, DateTime> computeChargedThroughDates(final Invoice invoice, final InternalCallContext context)  {
+        final Map<UUID, DateTime> chargedThroughDates;
+        if (invoice != null &&
+            invoice.getStatus() == InvoiceStatus.COMMITTED) /* See https://github.com/killbill/killbill/issues/1296 */ {
+            chargedThroughDates = new HashMap<>();
+                // Don't use invoice.getInvoiceItems(final Class<T> clazz) as some items can come from plugins
+                for (final InvoiceItem item : invoice.getInvoiceItems()) {
+                if (item.getInvoiceItemType() != InvoiceItemType.FIXED &&
+                    item.getInvoiceItemType() != InvoiceItemType.RECURRING &&
+                    item.getInvoiceItemType() != InvoiceItemType.USAGE) {
+                    continue;
+                }
+                final UUID subscriptionId = item.getSubscriptionId();
+                final LocalDate endDate = (item.getEndDate() != null) ? item.getEndDate() : item.getStartDate();
+
+                final DateTime proposedChargedThroughDate = context.toUTCDateTime(endDate);
+                if (chargedThroughDates.containsKey(subscriptionId)) {
+                    if (chargedThroughDates.get(subscriptionId).isBefore(proposedChargedThroughDate)) {
+                        chargedThroughDates.put(subscriptionId, proposedChargedThroughDate);
+                    }
+                } else {
+                    chargedThroughDates.put(subscriptionId, proposedChargedThroughDate);
+                }
+            }
+        } else {
+            chargedThroughDates = ImmutableMap.of();
+        }
+        return chargedThroughDates;
+    }
+
 
     private boolean hasItemsForSubscription(final UUID subscriptionId, final InvoiceItemType invoiceItemType) {
         return invoice != null && Iterables.any(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
@@ -86,6 +156,10 @@ public class InvoiceWithMetadata {
 
     public Set<TrackingRecordId> getTrackingIds() {
         return trackingIds;
+    }
+
+    public Map<UUID, DateTime>  getChargeThroughDates() {
+        return chargedThroughDates;
     }
 
     public static class TrackingRecordId {

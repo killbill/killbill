@@ -18,12 +18,16 @@
 
 package org.killbill.billing.invoice.generator;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.killbill.billing.ErrorCode;
@@ -40,6 +44,7 @@ import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceGenera
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
@@ -81,7 +86,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                final Currency targetCurrency,
                                                final InternalCallContext context) throws InvoiceApiException {
         if ((events == null)  || events.isAccountAutoInvoiceOff()) {
-            return new InvoiceWithMetadata(null, ImmutableSet.of(), ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of());
+            return new InvoiceWithMetadata(null, ImmutableSet.of(), ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of(), false, context);
         }
 
         validateTargetDate(targetDate, context);
@@ -111,10 +116,15 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
             invoice.addInvoiceItems(originalInvoice.getInvoiceItems());
         }
 
-        return new InvoiceWithMetadata(invoice.getInvoiceItems().isEmpty() ? null : invoice,
+        return new InvoiceWithMetadata(invoice,
                                        usageItemsWithTrackingIds.getTrackingIds(),
-                                       perSubscriptionFutureNotificationDates);
+                                       perSubscriptionFutureNotificationDates,
+                                       config.isUsageZeroAmountDisabled(),
+                                       context);
     }
+
+
+
 
     private void validateTargetDate(final LocalDate targetDate, final InternalTenantContext context) throws InvoiceApiException {
         final int maximumNumberOfMonths = config.getNumberOfMonthsInFuture(context);

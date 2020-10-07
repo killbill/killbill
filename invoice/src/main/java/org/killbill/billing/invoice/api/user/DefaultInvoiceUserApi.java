@@ -663,16 +663,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     @Override
     public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
-
-        // See https://github.com/killbill/killbill/issues/1296
-        final Invoice invoice = getInvoice(invoiceId, context);
-        try {
-            dispatcher.setChargedThroughDates(invoice, internalCallContext);
-        } catch (final SubscriptionBaseApiException e) {
-            throw new InvoiceApiException(e);
-        }
-
+        // Update invoice status first prior we update CTD as we typically don't update CTD for non committed invoices.
         dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
+        final Invoice invoice = getInvoice(invoiceId, context);
+        dispatcher.setChargedThroughDates(invoice, internalCallContext);
     }
 
     @Override

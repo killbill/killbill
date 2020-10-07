@@ -70,6 +70,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
+    public boolean isUsageZeroAmountDisabled() {
+        return staticConfig.isUsageZeroAmountDisabled();
+    }
+
+    @Override
+    public boolean isUsageZeroAmountDisabled(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("isUsageZeroAmountDisabled", tenantContext);
+        if (result != null) {
+            return Boolean.parseBoolean(result);
+        }
+        return isUsageZeroAmountDisabled();
+    }
+
+    @Override
     public int getMaxDailyNumberOfItemsSafetyBound() {
         return staticConfig.getMaxDailyNumberOfItemsSafetyBound();
     }
