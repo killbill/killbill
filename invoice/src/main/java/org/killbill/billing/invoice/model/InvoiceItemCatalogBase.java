@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.Seconds;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -127,7 +128,11 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
             return false;
         }
         final InvoiceItemCatalogBase that = (InvoiceItemCatalogBase) o;
-        if (catalogEffectiveDate != null && that.catalogEffectiveDate != null && catalogEffectiveDate.compareTo(that.catalogEffectiveDate) != 0) {
+        if (catalogEffectiveDate != null &&
+            that.catalogEffectiveDate != null &&
+            catalogEffectiveDate.compareTo(that.catalogEffectiveDate) != 0 &&
+            // https://github.com/killbill/killbill/issues/1370
+            Math.abs(Seconds.secondsBetween(catalogEffectiveDate, that.catalogEffectiveDate).getSeconds()) != 0) {
             return false;
         } else if (catalogEffectiveDate == null || that.catalogEffectiveDate == null) {
             /* At least one such item has a 'null' catalogEffectiveDate, reflecting a prior 0.22 release item
