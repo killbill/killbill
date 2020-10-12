@@ -74,7 +74,6 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
     @Inject
     private CatalogUserApi catalogUserApi;
 
-    private Tenant tenant;
     private CallContext testCallContext;
     private Account account;
 
@@ -93,10 +92,10 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         init = clock.getUTCNow();
 
         // Setup tenant
-        setupTenant();
+        testCallContext = setupTenant();
 
         // Setup account in right tenant
-        setupAccount();
+        account = setupAccount(testCallContext);
     }
 
     @Test(groups = "slow")
@@ -420,27 +419,4 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         assertListenerStatus();
         return entitlementApi.getEntitlementForId(entitlementId, testCallContext);
     }
-
-    private void setupTenant() throws TenantApiException {
-        final UUID uuid = UUID.randomUUID();
-        final String externalKey = uuid.toString();
-        final String apiKey = externalKey + "-Key";
-        final String apiSecret = externalKey + "-$3cr3t";
-        // Only place where we use callContext
-        tenant = tenantUserApi.createTenant(new DefaultTenant(uuid, init, init, externalKey, apiKey, apiSecret), callContext);
-
-        testCallContext = new DefaultCallContext(null, tenant.getId(), "tester", CallOrigin.EXTERNAL, UserType.TEST,
-                                                 "good reason", "trust me", uuid, clock);
-    }
-
-    private void setupAccount() throws Exception {
-
-        final AccountData accountData = getAccountData(0);
-        account = accountUserApi.createAccount(accountData, testCallContext);
-        assertNotNull(account);
-
-        final PaymentMethodPlugin info = createPaymentMethodPlugin();
-        paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, info, PLUGIN_PROPERTIES, testCallContext);
-    }
-
 }

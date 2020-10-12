@@ -50,6 +50,7 @@ import org.killbill.billing.beatrix.util.InvoiceChecker;
 import org.killbill.billing.beatrix.util.PaymentChecker;
 import org.killbill.billing.beatrix.util.RefundChecker;
 import org.killbill.billing.beatrix.util.SubscriptionChecker;
+import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -114,6 +115,9 @@ import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.killbill.billing.tenant.api.DefaultTenant;
+import org.killbill.billing.tenant.api.Tenant;
+import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UnitUsageRecord;
@@ -127,6 +131,8 @@ import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -393,6 +399,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected void checkNoMoreInvoiceToGenerate(final UUID accountId) {
+        checkNoMoreInvoiceToGenerate(accountId, callContext);
+    }
+
+    protected void checkNoMoreInvoiceToGenerate(final UUID accountId, final CallContext callContext) {
         busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         try {
             invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), callContext);
@@ -443,6 +453,36 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     protected DefaultSubscriptionBase subscriptionDataFromSubscription(final SubscriptionBase sub) {
         return (DefaultSubscriptionBase) sub;
+    }
+
+    protected DefaultCallContext setupTenant() throws TenantApiException {
+        final UUID uuid = UUID.randomUUID();
+        final String externalKey = uuid.toString();
+        final String apiKey = externalKey + "-Key";
+        final String apiSecret = externalKey + "-$3cr3t";
+        final DateTime init = new DateTime(DateTimeZone.UTC);
+        final Tenant tenant = tenantUserApi.createTenant(new DefaultTenant(uuid, init, init, externalKey, apiKey, apiSecret), callContext);
+
+        return new DefaultCallContext(null,
+                                      tenant.getId(),
+                                      "tester",
+                                      CallOrigin.EXTERNAL,
+                                      UserType.TEST,
+                                      "good reason",
+                                      "trust me",
+                                      uuid,
+                                      clock);
+    }
+
+    protected Account setupAccount(final CallContext testCallContext) throws Exception {
+        final AccountData accountData = getAccountData(0);
+        final Account account = accountUserApi.createAccount(accountData, testCallContext);
+        assertNotNull(account);
+
+        final PaymentMethodPlugin info = createPaymentMethodPlugin();
+        paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, info, PLUGIN_PROPERTIES, testCallContext);
+
+        return account;
     }
 
     protected Account createAccount(final AccountData accountData) throws Exception {
