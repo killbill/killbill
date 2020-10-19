@@ -41,6 +41,7 @@ import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -62,6 +63,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         }
         super.beforeClass();
         invoiceConfig.setZeroAmountUsageDisabled(true);
+        invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
     }
 
     @Test(groups = "slow")
@@ -170,8 +172,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         invoiceForPreviousBehavior.addInvoiceItem(new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.USAGE, invoiceForPreviousBehavior.getId(), account.getId(), null, aoSubscription.getBundleId(), aoSubscription.getId(), "",
                                                                           "Bullets", "bullets-usage-in-arrear", "bullets-usage-in-arrear-evergreen", "bullets-usage-in-arrear-usage", catalogEffectiveDate,
                                                                           new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1),
-                                                                          BigDecimal.ZERO, BigDecimal.ZERO, Currency.USD, null, 0,
-                                                                          "{\"tierDetails\":[{\"tier\":1,\"tierUnit\":\"bullets\",\"tierPrice\":2.95,\"tierBlockSize\":100,\"quantity\":0,\"amount\":0.00}],\"amount\":0.00}"));
+                                                                          BigDecimal.ZERO, BigDecimal.ZERO, Currency.USD, null, 0, "{\"tier\":1,\"tierUnit\":\"bullets\",\"tierPrice\":2.95,\"tierBlockSize\":100,\"quantity\":0,\"amount\":5.90}"));
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         insertInvoiceItems(invoiceForPreviousBehavior);
         assertListenerStatus();

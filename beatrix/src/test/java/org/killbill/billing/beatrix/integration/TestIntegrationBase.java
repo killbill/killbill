@@ -1180,12 +1180,14 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private boolean isInvoicingSystemEnabled;
         private boolean shouldParkAccountsWithUnknownUsage;
         private boolean isZeroAmountUsageDisabled;
+        private UsageDetailMode detailMode;
 
         public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
             this.defaultInvoiceConfig = defaultInvoiceConfig;
             isInvoicingSystemEnabled = defaultInvoiceConfig.isInvoicingSystemEnabled();
             shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
             isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
+            detailMode = defaultInvoiceConfig.getItemResultBehaviorMode();
         }
 
         @Override
@@ -1290,12 +1292,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         @Override
         public UsageDetailMode getItemResultBehaviorMode() {
-            return defaultInvoiceConfig.getItemResultBehaviorMode();
+            return detailMode;
         }
 
         @Override
         public UsageDetailMode getItemResultBehaviorMode(final InternalTenantContext tenantContext) {
             return getItemResultBehaviorMode();
+        }
+
+        public void setItemResultBehaviorMode(final UsageDetailMode detailMode) {
+            this.detailMode = detailMode;
         }
 
         public void setInvoicingSystemEnabled(final boolean invoicingSystemEnabled) {
