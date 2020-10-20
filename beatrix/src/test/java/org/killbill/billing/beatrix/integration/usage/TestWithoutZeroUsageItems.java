@@ -18,6 +18,8 @@
 package org.killbill.billing.beatrix.integration.usage;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -41,6 +43,8 @@ import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
+import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -55,6 +59,15 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
     @Inject
     protected InvoiceDao invoiceDao;
 
+    @Override
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES);
+        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testWithoutZeroUsageItems");
+        return getConfigSource(null, allExtraProperties);
+    }
+
+
     @BeforeClass(groups = "slow")
     public void beforeClass() throws Exception {
         if (hasFailed()) {
@@ -62,6 +75,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         }
         super.beforeClass();
         invoiceConfig.setZeroAmountUsageDisabled(true);
+        invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
     }
 
     @Test(groups = "slow")
@@ -170,8 +184,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         invoiceForPreviousBehavior.addInvoiceItem(new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.USAGE, invoiceForPreviousBehavior.getId(), account.getId(), null, aoSubscription.getBundleId(), aoSubscription.getId(), "",
                                                                           "Bullets", "bullets-usage-in-arrear", "bullets-usage-in-arrear-evergreen", "bullets-usage-in-arrear-usage", catalogEffectiveDate,
                                                                           new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1),
-                                                                          BigDecimal.ZERO, BigDecimal.ZERO, Currency.USD, null, 0,
-                                                                          "{\"tierDetails\":[{\"tier\":1,\"tierUnit\":\"bullets\",\"tierPrice\":2.95,\"tierBlockSize\":100,\"quantity\":0,\"amount\":0.00}],\"amount\":0.00}"));
+                                                                          BigDecimal.ZERO, BigDecimal.ZERO, Currency.USD, null, 0, "{\"tier\":1,\"tierUnit\":\"bullets\",\"tierPrice\":2.95,\"tierBlockSize\":100,\"quantity\":0,\"amount\":5.90}"));
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         insertInvoiceItems(invoiceForPreviousBehavior);
         assertListenerStatus();
@@ -214,7 +227,47 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
     }
 
 
-    private void insertInvoiceItems(final InvoiceModelDao invoice) {
+
+    @Test(groups = "slow")
+    public void testConsumableInArrearWithNonNullQuantity() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+
+        //
+        // ADD ADD_ON ON THE SAME DAY
+        //
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Pellets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+
+        recordUsageData(aoSubscription.getId(), "tracking-1", "pellets", new LocalDate(2012, 4, 1), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-2", "pellets", new LocalDate(2012, 4, 15), 100L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        // Code will generate a $0 USAGE with a non null quantity
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("0.00")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+
+
+    }
+
+        private void insertInvoiceItems(final InvoiceModelDao invoice) {
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
         invoiceDao.createInvoice(invoice, null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
     }

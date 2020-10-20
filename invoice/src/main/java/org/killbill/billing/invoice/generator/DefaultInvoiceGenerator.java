@@ -119,7 +119,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         return new InvoiceWithMetadata(invoice,
                                        usageItemsWithTrackingIds.getTrackingIds(),
                                        perSubscriptionFutureNotificationDates,
-                                       config.isUsageZeroAmountDisabled(),
+                                       config.isUsageZeroAmountDisabled(context),
                                        context);
     }
 
