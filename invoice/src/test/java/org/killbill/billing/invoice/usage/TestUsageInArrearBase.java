@@ -79,6 +79,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     protected String usageName;
     protected ObjectMapper objectMapper;
     protected DateTime catalogEffectiveDate;
+
     @BeforeClass(groups = "fast")
     protected void beforeClass() throws Exception {
         if (hasFailed()) {
