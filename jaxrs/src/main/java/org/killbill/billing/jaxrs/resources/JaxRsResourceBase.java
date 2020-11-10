@@ -204,8 +204,8 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected Response createTagResponse(@Nullable final UUID accountId, final List<Tag> tags, final AuditMode auditMode, final TenantContext context) throws TagDefinitionApiException {
         Preconditions.checkState(accountId != null || AuditLevel.NONE.equals(auditMode.getLevel()), "No accountId specified but auditLevel is " + auditMode.getLevel());
-        final AccountAuditLogsForObjectType tagsAuditLogs = auditUserApi.getAccountAuditLogs(accountId, ObjectType.TAG, auditMode.getLevel(), context);
 
+        final AccountAuditLogsForObjectType tagsAuditLogs = tags.isEmpty() ? null : auditUserApi.getAccountAuditLogs(accountId, ObjectType.TAG, auditMode.getLevel(), context);
         final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
         final Collection<TagJson> result = new LinkedList<TagJson>();
         for (final Tag tag : tags) {
