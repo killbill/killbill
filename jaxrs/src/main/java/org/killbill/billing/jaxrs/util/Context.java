@@ -20,6 +20,8 @@ package org.killbill.billing.jaxrs.util;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.ServletRequest;
 
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
@@ -34,8 +36,8 @@ import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.commons.request.Request;
 
 import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
 
+@Singleton
 public class Context {
 
     private final CallOrigin origin;

@@ -21,6 +21,7 @@ package org.killbill.billing.jaxrs.resources;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -56,10 +57,6 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
-import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;

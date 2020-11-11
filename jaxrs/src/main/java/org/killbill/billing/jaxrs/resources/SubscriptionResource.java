@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -110,7 +112,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -121,6 +122,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildBaseEntitlementWithAddOnsSpecifier;
 import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildEntitlementSpecifier;
 
+@Singleton
 @Path(JaxrsResource.SUBSCRIPTIONS_PATH)
 @Api(value = JaxrsResource.SUBSCRIPTIONS_PATH, description = "Operations on subscriptions", tags = "Subscription")
 public class SubscriptionResource extends JaxRsResourceBase {

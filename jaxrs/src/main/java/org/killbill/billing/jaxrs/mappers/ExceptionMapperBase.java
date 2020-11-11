@@ -112,39 +112,39 @@ public abstract class ExceptionMapperBase {
     protected Response buildConflictingRequestResponse(final Exception e, final UriInfo uriInfo) {
         final Response.ResponseBuilder responseBuilder = Response.status(Status.CONFLICT);
         serializeException(e, uriInfo, responseBuilder);
-        return new LoggingResponse(e, responseBuilder.build());
+        return responseBuilder.build();
     }
 
     protected Response buildNotFoundResponse(final Exception e, final UriInfo uriInfo) {
         final Response.ResponseBuilder responseBuilder = Response.status(Status.NOT_FOUND);
         serializeException(e, uriInfo, responseBuilder);
-        return new LoggingResponse(e, responseBuilder.build());
+        return responseBuilder.build();
     }
 
     protected Response buildBadRequestResponse(final Exception e, final UriInfo uriInfo) {
         final Response.ResponseBuilder responseBuilder = Response.status(Status.BAD_REQUEST);
         serializeException(e, uriInfo, responseBuilder);
-        return new LoggingResponse(e, responseBuilder.build());
+        return responseBuilder.build();
     }
 
     protected Response buildAuthorizationErrorResponse(final Exception e, final UriInfo uriInfo) {
         // TODO Forbidden?
         final Response.ResponseBuilder responseBuilder = Response.status(Status.UNAUTHORIZED);
         serializeException(e, uriInfo, responseBuilder);
-        return new LoggingResponse(e, responseBuilder.build());
+        return responseBuilder.build();
     }
 
     protected Response buildInternalErrorResponse(final Exception e, final UriInfo uriInfo) {
         final Response.ResponseBuilder responseBuilder = Response.status(Status.INTERNAL_SERVER_ERROR);
         serializeException(e, uriInfo, responseBuilder);
-        return new LoggingResponse(e, responseBuilder.build());
+        return responseBuilder.build();
     }
 
     protected Response buildPluginTimeoutResponse(final Exception e, final UriInfo uriInfo) {
         // 504 - Gateway Timeout
         final Response.ResponseBuilder responseBuilder = Response.status(504);
         serializeException(e, uriInfo, responseBuilder);
-        return new LoggingResponse(e, responseBuilder.build());
+        return responseBuilder.build();
     }
 
     protected void serializeException(final Exception e, final UriInfo uriInfo, final Response.ResponseBuilder responseBuilder) {

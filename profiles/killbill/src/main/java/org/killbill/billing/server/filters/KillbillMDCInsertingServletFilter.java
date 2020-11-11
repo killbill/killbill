@@ -17,19 +17,23 @@
 
 package org.killbill.billing.server.filters;
 
-import java.io.IOException;
 import java.io.OutputStream;
+import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+
+import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
 import org.slf4j.MDC;
 
 import com.google.inject.Singleton;
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
-import com.sun.jersey.spi.container.ContainerResponse;
-import com.sun.jersey.spi.container.ContainerResponseFilter;
-import com.sun.jersey.spi.container.ContainerResponseWriter;
 
 import static org.killbill.billing.util.callcontext.InternalCallContextFactory.MDC_KB_ACCOUNT_RECORD_ID;
 import static org.killbill.billing.util.callcontext.InternalCallContextFactory.MDC_KB_TENANT_RECORD_ID;
@@ -41,19 +45,17 @@ public class KillbillMDCInsertingServletFilter implements ContainerRequestFilter
     private static final String MDC_REQUEST_ID = "req.requestId";
 
     @Override
-    public ContainerRequest filter(final ContainerRequest request) {
+    public void filter(final ContainerRequestContext requestContext) {
         final RequestData perThreadRequestData = Request.getPerThreadRequestData();
         if (perThreadRequestData != null) {
             MDC.put(MDC_REQUEST_ID, perThreadRequestData.getRequestId());
         }
-
-        return request;
     }
 
     @Override
-    public ContainerResponse filter(final ContainerRequest request, final ContainerResponse response) {
-        response.setContainerResponseWriter(new Adapter(response.getContainerResponseWriter()));
-        return response;
+    public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) {
+        final ContainerRequest containerRequest = (ContainerRequest) requestContext;
+        containerRequest.setWriter(new Adapter(containerRequest.getResponseWriter()));
     }
 
     private static final class Adapter implements ContainerResponseWriter {
@@ -65,13 +67,23 @@ public class KillbillMDCInsertingServletFilter implements ContainerRequestFilter
         }
 
         @Override
-        public OutputStream writeStatusAndHeaders(final long contentLength, final ContainerResponse response) throws IOException {
-            return crw.writeStatusAndHeaders(contentLength, response);
+        public OutputStream writeResponseStatusAndHeaders(final long contentLength, final ContainerResponse responseContext) throws ContainerException {
+            return crw.writeResponseStatusAndHeaders(contentLength, responseContext);
         }
 
         @Override
-        public void finish() throws IOException {
-            crw.finish();
+        public boolean suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) {
+            return crw.suspend(timeOut, timeUnit, timeoutHandler);
+        }
+
+        @Override
+        public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException {
+            crw.setSuspendTimeout(timeOut, timeUnit);
+        }
+
+        @Override
+        public void commit() {
+            crw.commit();
 
             // Removing possibly inexistent item is OK
             MDC.remove(MDC_REQUEST_ID);
@@ -80,6 +92,16 @@ public class KillbillMDCInsertingServletFilter implements ContainerRequestFilter
             MDC.remove(MDC_KB_ACCOUNT_RECORD_ID);
             MDC.remove(MDC_KB_TENANT_RECORD_ID);
             MDC.remove(MDC_KB_USER_TOKEN);
+        }
+
+        @Override
+        public void failure(final Throwable error) {
+            crw.failure(error);
+        }
+
+        @Override
+        public boolean enableResponseBuffering() {
+            return crw.enableResponseBuffering();
         }
     }
 }

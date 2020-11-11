@@ -27,13 +27,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.asynchttpclient.Response;
+import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.osgi.http.DefaultServletRouter;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import org.asynchttpclient.Response;
 
 public class TestPlugin extends TestJaxrsBase {
 
@@ -82,7 +82,8 @@ public class TestPlugin extends TestJaxrsBase {
         response = pluginHEAD(uri, requestOptions);
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
-        response = pluginPOST(uri, null, requestOptions);
+        // Need to pass a content-type header here: https://github.com/eclipse-ee4j/jersey/issues/2908#issuecomment-382995110
+        response = pluginPOST(uri, null, requestOptions.extend().withHeader(KillBillHttpClient.HTTP_HEADER_CONTENT_TYPE, "application/json").build());
         testAndResetAllMarkers(response, 404, null, false, false, false, false, false, false);
 
         response = pluginPUT(uri, null, requestOptions);
@@ -106,7 +107,8 @@ public class TestPlugin extends TestJaxrsBase {
         response = pluginHEAD(uri, requestOptions);
         testAndResetAllMarkers(response, 204, new byte[]{}, false, false, false, false, false, false);
 
-        response = pluginPOST(uri, null, requestOptions);
+        // Need to pass a content-type header here: https://github.com/eclipse-ee4j/jersey/issues/2908#issuecomment-382995110
+        response = pluginPOST(uri, null, requestOptions.extend().withHeader(KillBillHttpClient.HTTP_HEADER_CONTENT_TYPE, "application/json").build());
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
 
         response = pluginPUT(uri, null, requestOptions);
@@ -129,7 +131,7 @@ public class TestPlugin extends TestJaxrsBase {
         response = pluginHEAD(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_HEAD_PATH, requestOptions);
         testAndResetAllMarkers(response, 204, new byte[]{}, false, true, false, false, false, false);
 
-        response = pluginPOST(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_POST_PATH, null, requestOptions);
+        response = pluginPOST(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_POST_PATH, null, requestOptions.extend().withHeader(KillBillHttpClient.HTTP_HEADER_CONTENT_TYPE, "application/json").build());
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, true, false, false, false);
 
         response = pluginPUT(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_PUT_PATH, null, requestOptions);

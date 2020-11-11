@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -65,8 +67,6 @@ import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.TimedResource;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;

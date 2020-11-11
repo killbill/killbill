@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -85,7 +87,6 @@ import org.killbill.commons.metrics.TimedResource;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -93,6 +94,7 @@ import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+@Singleton
 @Path(JaxrsResource.INVOICE_PAYMENTS_PATH)
 @Api(value = JaxrsResource.INVOICE_PAYMENTS_PATH, description = "Operations on invoice payments", tags = "InvoicePayment")
 public class InvoicePaymentResource extends JaxRsResourceBase {

@@ -30,6 +30,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import javax.servlet.ReadListener;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -70,10 +74,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.io.ByteStreams;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.sun.jersey.api.representation.Form;
 import io.swagger.annotations.Api;
 
 @Singleton
@@ -173,7 +173,7 @@ public class PluginResource extends JaxRsResourceBase {
     private Response serviceViaOSGIPlugin(final HttpServletRequest request, final HttpServletResponse response,
                                           final ServletContext servletContext, final ServletConfig servletConfig,
                                           final UriInfo uriInfo) throws ServletException, IOException {
-        return serviceViaOSGIPlugin(request, request.getInputStream(), new Form(), response, servletContext, servletConfig, uriInfo);
+        return serviceViaOSGIPlugin(request, request.getInputStream(), null, response, servletContext, servletConfig, uriInfo);
     }
 
     private Response serviceViaOSGIPlugin(final MultivaluedMap<String, String> form,
@@ -185,7 +185,7 @@ public class PluginResource extends JaxRsResourceBase {
         return serviceViaOSGIPlugin(request, createInputStream(request, form), form, response, servletContext, servletConfig, uriInfo);
     }
 
-    private Response serviceViaOSGIPlugin(final HttpServletRequest request, final InputStream inputStream, final MultivaluedMap<String, String> formData,
+    private Response serviceViaOSGIPlugin(final HttpServletRequest request, final InputStream inputStream, @Nullable final MultivaluedMap<String, String> formData,
                                           final HttpServletResponse response, final ServletContext servletContext,
                                           final ServletConfig servletConfig, final UriInfo uriInfo) throws ServletException, IOException {
         prepareOSGIRequest(request, servletContext, servletConfig);
@@ -271,15 +271,17 @@ public class PluginResource extends JaxRsResourceBase {
         private final InputStream inputStream;
         private final Map<String, String[]> parameterMap;
 
-        public OSGIServletRequestWrapper(final HttpServletRequest request, final InputStream inputStream, final MultivaluedMap<String, String> formData, final MultivaluedMap<String, String> queryParameters) {
+        public OSGIServletRequestWrapper(final HttpServletRequest request, final InputStream inputStream, @Nullable final MultivaluedMap<String, String> formData, final MultivaluedMap<String, String> queryParameters) {
             super(request);
             this.inputStream = inputStream;
             this.parameterMap = new HashMap<String, String[]>();
 
             // Query string parameters and posted form data must appear in the parameters
             final LinkedHashMultimap<String, String> tmpParameterMap = LinkedHashMultimap.<String, String>create();
-            for (final String formDataKey : formData.keySet()) {
-                tmpParameterMap.putAll(formDataKey, formData.get(formDataKey));
+            if (formData != null) {
+                for (final String formDataKey : formData.keySet()) {
+                    tmpParameterMap.putAll(formDataKey, formData.get(formDataKey));
+                }
             }
             for (final String queryParameterKey : queryParameters.keySet()) {
                 tmpParameterMap.putAll(queryParameterKey, queryParameters.get(queryParameterKey));
