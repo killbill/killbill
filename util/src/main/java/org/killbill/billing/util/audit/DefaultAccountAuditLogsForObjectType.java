@@ -55,62 +55,27 @@ public class DefaultAccountAuditLogsForObjectType implements AccountAuditLogsFor
         }
     }
 
-    public void close() {
-        // Make sure to go through the results to close the connection
-        while (allAuditLogsForObjectType.hasNext()) {
-            allAuditLogsForObjectType.next();
-        }
-    }
-
     @Override
     public List<AuditLog> getAuditLogs(final UUID objectId) {
-        switch (auditLevel) {
-            case FULL:
-                // We need to go through the whole list
-                cacheAllAuditLogs();
 
-                // We went through the whole list, mark we don't have any entry for it if needed
-                initializeIfNeeded(objectId);
+        // Loop through the whole list to make sure we don't leak any connections
+        // and cache AuditLog based on AuditLevel
+        cacheAllAuditLogs();
 
-                // Should never be null
-                return auditLogsCache.get(objectId);
-            case MINIMAL:
-                if (auditLogsCache.get(objectId) == null) {
-                    // We just want the first INSERT audit log
-                    final AuditLog candidate = Iterators.<AuditLog>tryFind(allAuditLogsForObjectType,
-                                                                           new Predicate<AuditLog>() {
-                                                                               @Override
-                                                                               public boolean apply(final AuditLog auditLog) {
-                                                                                   // As we consume the data source, cache the entries
-                                                                                   cacheAuditLog(auditLog);
+        // We went through the whole list, mark we don't have any entry for it if needed
+        initializeIfNeeded(objectId);
 
-                                                                                   return objectId.equals(auditLog.getAuditedEntityId()) &&
-                                                                                          // Given our ordering, this should always be true for the first entry
-                                                                                          ChangeType.INSERT.equals(auditLog.getChangeType());
-                                                                               }
-                                                                           }).orNull();
-
-                    if (candidate == null) {
-                        // We went through the whole list, mark we don't have any entry for it
-                        initializeIfNeeded(objectId);
-                    }
-                }
-
-                // Should never be null
-                return auditLogsCache.get(objectId);
-            case NONE:
-                // Close the connection ASAP since we won't need it
-                close();
-                return ImmutableList.<AuditLog>of();
-            default:
-                throw new ShouldntHappenException("AuditLevel " + auditLevel + " unsupported");
-        }
+        // Should never be null
+        return auditLogsCache.get(objectId);
     }
 
     private void cacheAllAuditLogs() {
         while (allAuditLogsForObjectType.hasNext()) {
             final AuditLog auditLog = allAuditLogsForObjectType.next();
-            cacheAuditLog(auditLog);
+            if ((auditLevel == AuditLevel.MINIMAL && auditLog.getChangeType() == ChangeType.INSERT) || /* Keep only INSERT for MINIMAL */
+                auditLevel == AuditLevel.FULL)  /* Keep ALL for FULL */ {
+                cacheAuditLog(auditLog);
+            }
         }
     }
 
