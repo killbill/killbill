@@ -83,9 +83,8 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         // Jersey 1 backward compatibility
         builder.addJerseyResourceClass(Jersey1BackwardCompatibleFilter.class.getName());
 
-        // Disable WADL - it generates noisy log messages, such as:
-        // c.s.j.s.w.g.AbstractWadlGeneratorGrammarGenerator - Couldn't find grammar element for class javax.ws.rs.core.Response
-        builder.addJerseyParam("com.sun.jersey.config.feature.DisableWADL", "true");
+        // Disable WADL
+        builder.addJerseyParam("jersey.config.server.wadl.disableWadl", "true");
 
         // In order to use the GZIPContentEncodingFilter, the jersey param "com.sun.jersey.config.feature.logging.DisableEntitylogging"
         // must not be set to false.
