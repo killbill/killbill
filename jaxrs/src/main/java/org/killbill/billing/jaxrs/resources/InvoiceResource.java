@@ -111,6 +111,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -869,7 +870,7 @@ public class InvoiceResource extends JaxRsResourceBase {
             }
         }
         tenantApi.addTenantKeyValue(tenantKeyStr, templateResource, callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, localeStr, request);
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, MoreObjects.firstNonNull(localeStr, defaultLocale.toString()), request);
     }
 
     private Response getTemplateResource(@Nullable final String localeStr,
