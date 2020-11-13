@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import javax.servlet.ServletContext;
 
 import org.glassfish.jersey.message.GZipEncoder;
+import org.glassfish.jersey.server.filter.EncodingFilter;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -86,10 +87,9 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         // Disable WADL
         builder.addJerseyParam("jersey.config.server.wadl.disableWadl", "true");
 
-        // In order to use the GZIPContentEncodingFilter, the jersey param "com.sun.jersey.config.feature.logging.DisableEntitylogging"
-        // must not be set to false.
         if (config.isConfiguredToReturnGZIPResponses()) {
             logger.info("Enable http gzip responses");
+            builder.addJerseyResourceClass(EncodingFilter.class.getName());
             builder.addJerseyResourceClass(GZipEncoder.class.getName());
         }
         builder.addJerseyResourceClass(ProfilingContainerResponseFilter.class.getName());
