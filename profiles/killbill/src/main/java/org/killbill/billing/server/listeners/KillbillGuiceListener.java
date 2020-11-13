@@ -36,6 +36,7 @@ import org.killbill.billing.server.filters.RequestDataFilter;
 import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.notifications.PushNotificationListener;
+import org.killbill.billing.server.providers.KillbillExceptionListener;
 import org.killbill.billing.server.security.TenantFilter;
 import org.killbill.billing.util.nodes.KillbillVersions;
 import org.killbill.bus.api.PersistentBus;
@@ -103,8 +104,8 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
             builder.addFilter("/*", TenantFilter.class);
         }
 
-        // Finally, just before the request starts, enable the LoggingFilter
-        builder.addJerseyResourceClass("com.sun.jersey.api.container.filter.LoggingFilter");
+        // We use Jersey's LoggingFeature -- this adds additional logging
+        builder.addJerseyResourceClass(KillbillExceptionListener.class.getName());
 
         return builder.build();
     }
