@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -72,6 +73,7 @@ import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+@Singleton
 @Path(JaxrsResource.NODES_INFO_PATH)
 @Api(value = JaxrsResource.NODES_INFO_PATH, description = "Operations to retrieve nodes info", tags="NodesInfo")
 public class NodesInfoResource extends JaxRsResourceBase {

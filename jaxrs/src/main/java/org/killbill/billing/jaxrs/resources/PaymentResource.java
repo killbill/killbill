@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -92,6 +93,7 @@ import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+@Singleton
 @Path(JaxrsResource.PAYMENTS_PATH)
 @Api(value = JaxrsResource.PAYMENTS_PATH, description = "Operations on payments", tags="Payment")
 public class PaymentResource extends ComboPaymentResource {

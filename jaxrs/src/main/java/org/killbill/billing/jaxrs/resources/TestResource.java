@@ -21,6 +21,7 @@ package org.killbill.billing.jaxrs.resources;
 import java.util.Iterator;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
@@ -81,6 +82,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 // so to be used with great caution.
 //
 //
+@Singleton
 @Path(JaxrsResource.TEST_PATH)
 @Api(value = JaxrsResource.TEST_PATH, description = "Operations for testing", hidden=true)
 public class TestResource extends JaxRsResourceBase {

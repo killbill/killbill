@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -79,6 +80,7 @@ import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+@Singleton
 @Path(JaxrsResource.PAYMENT_TRANSACTIONS_PATH)
 @Api(value = JaxrsResource.PAYMENT_TRANSACTIONS_PATH, description = "Operations on payment transactions", tags="PaymentTransaction")
 public class TransactionResource extends JaxRsResourceBase {

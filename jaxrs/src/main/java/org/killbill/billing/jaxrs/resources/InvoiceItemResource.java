@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -71,6 +72,7 @@ import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+@Singleton
 @Path(JaxrsResource.INVOICES_ITEMS_PATH)
 @Api(value = JaxrsResource.INVOICES_ITEMS_PATH, description = "Operations on invoice items", tags="InvoiceItem")
 public class InvoiceItemResource extends JaxRsResourceBase {
