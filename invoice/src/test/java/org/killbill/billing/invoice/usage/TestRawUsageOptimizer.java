@@ -36,6 +36,8 @@ import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 public class TestRawUsageOptimizer extends TestUsageInArrearBase {
 
     @Test(groups = "fast")
@@ -51,7 +53,7 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
         final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
         knownUsage.put(usageName, usage);
 
-        final LocalDate result = rawUsageOptimizer.getOptimizedRawUsageStartDate(firstEventStartDate, firstEventStartDate.plusDays(1), invoiceItems, knownUsage, internalCallContext);
+        final LocalDate result = rawUsageOptimizer.getOptimizedRawUsageStartDate(firstEventStartDate, null, invoiceItems, knownUsage, internalCallContext);
         Assert.assertEquals(result.compareTo(firstEventStartDate), 0);
     }
 
@@ -124,6 +126,23 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
         // The same reasoning applies as previously because there is no usage items against the annual and
         // so, the largest endDate for ii is 2014-08-15, and by default org.killbill.invoice.readMaxRawUsagePreviousPeriod == 2 => targetDate =>  2014-06-15
         Assert.assertEquals(result.compareTo(new LocalDate(2014, 06, 15)), 0, "142 got " + result);
+    }
+
+    @Test(groups = "fast")
+    public void testGetBillingPeriodMinDate2() {
+
+        // Normal scenario where we are up to date when billing in-arrear
+        final LocalDate today = clock.getUTCToday();
+        final LocalDate targetDate = today;
+
+        final Map<BillingPeriod, LocalDate> res = rawUsageOptimizer.getBillingPeriodMinDate2(ImmutableList.of(BillingPeriod.MONTHLY), targetDate);
+        Assert.assertEquals(res.size(), 1);
+        //
+        // We expect to return 1 BP back in time from where we are.
+        // Note that if there a org.killbill.invoice.readMaxRawUsagePreviousPeriod > 0 this is taken into account in the caller
+        // of the getBillingPeriodMinDate2 so we don't see it.
+        //
+        Assert.assertEquals(res.get(BillingPeriod.MONTHLY).compareTo(today.minusMonths(1)), 0);
     }
 
     private InvoiceItem createUsageItem(final LocalDate startDate) {
