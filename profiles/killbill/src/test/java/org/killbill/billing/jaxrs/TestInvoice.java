@@ -236,12 +236,19 @@ public class TestInvoice extends TestJaxrsBase {
 
         // "Assault-Rifle", BillingPeriod.ANNUAL, "rescue", BillingActionPolicy.IMMEDIATE,
         final Account accountJson = createAccountWithDefaultPaymentMethod();
+        final LocalDate effDt = new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone()));
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(DryRunType.SUBSCRIPTION_ACTION, SubscriptionEventType.START_BILLING,
-                                                          null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, null, null, null);
+                                                          null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, effDt, null, null);
 
-        final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone())), requestOptions);
-        assertEquals(dryRunInvoice.getItems().size(), 1);
+        final LocalDate targetDt1 = effDt;
+        final Invoice dryRunInvoice1 = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), targetDt1, requestOptions);
+        // One item for the FIXED price
+        assertEquals(dryRunInvoice1.getItems().size(), 1);
 
+        final LocalDate targetDt2 = effDt.plusDays(30);
+        final Invoice dryRunInvoice2 = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), targetDt2, requestOptions);
+        // Two items for the FIXED & RECURRING price validating the future targetDate
+        assertEquals(dryRunInvoice2.getItems().size(), 2);
     }
 
     @Test(groups = "slow", description = "Can retrieve invoice payments")
