@@ -392,18 +392,8 @@ public class InvoiceResource extends JaxRsResourceBase {
                                           @javax.ws.rs.core.Context final HttpServletRequest request,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
-        final LocalDate inputDate;
-        if (dryRunSubscriptionSpec != null) {
-            if (DryRunType.UPCOMING_INVOICE.equals(dryRunSubscriptionSpec.getDryRunType())) {
-                inputDate = null;
-            } else if (DryRunType.SUBSCRIPTION_ACTION.equals(dryRunSubscriptionSpec.getDryRunType()) && dryRunSubscriptionSpec.getEffectiveDate() != null) {
-                inputDate = dryRunSubscriptionSpec.getEffectiveDate();
-            } else {
-                inputDate = toLocalDate(targetDate);
-            }
-        } else {
-            inputDate = toLocalDate(targetDate);
-        }
+        final LocalDate inputDate = (dryRunSubscriptionSpec != null && DryRunType.UPCOMING_INVOICE.equals(dryRunSubscriptionSpec.getDryRunType())) ?
+                                     null : toLocalDate(targetDate);
 
         // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate
         // On the other hand if body is not null, we are attempting a dryRun subscription operation
