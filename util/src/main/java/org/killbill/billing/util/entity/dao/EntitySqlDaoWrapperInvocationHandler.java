@@ -363,7 +363,12 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                                                 final TableName tableName,
                                                 final ChangeType changeType,
                                                 final InternalCallContext context) throws Throwable {
+        // Arbitrary large batch size resulting in not too many round trips but also avoiding
+        // too large of a set causing failures -- https://github.com/killbill/killbill/issues/1390
+        int MAX_BATCH_SIZE = 10000;
+
         final Object reHydratedEntitiesOrNull = prof.executeWithProfiling(ProfilingFeatureType.DAO_DETAILS, getProfilingId("history/audit", null), new WithProfilingCallback<Object, Throwable>() {
+
             @Override
             public Collection<M> execute() {
                 if (tableName.getHistoryTableName() == null) {
@@ -373,8 +378,17 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                     // Make sure to re-hydrate the objects first (especially needed for create calls)
                     final Collection<M> reHydratedEntities = new ArrayList<>(entityRecordIds.size());
                     if (deletedAndUpdatedEntities.isEmpty()) {
-                        reHydratedEntities.addAll((List<M>) sqlDao.getByRecordIds(entityRecordIds, context));
-                        printSQLWarnings();
+                        int nbBatch = entityRecordIds.size() / MAX_BATCH_SIZE;
+                        if (entityRecordIds.size() % MAX_BATCH_SIZE != 0) {
+                            nbBatch +=1;
+                        }
+                        for (int i = 0; i < nbBatch; i++) {
+                            final int start = i * MAX_BATCH_SIZE;
+                            final int end = i == (nbBatch - 1) ? entityRecordIds.size() : start + MAX_BATCH_SIZE;
+                            final List<Long> entityBatchRecordIds = entityRecordIds.subList(start, end);
+                            reHydratedEntities.addAll(sqlDao.getByRecordIds(entityBatchRecordIds, context));
+                            printSQLWarnings();
+                        }
                     } else {
                         reHydratedEntities.addAll(deletedAndUpdatedEntities.values());
                     }

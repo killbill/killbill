@@ -256,4 +256,42 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                         }
                                     });
     }
+
+
+    @Test(groups = "slow", description="https://github.com/killbill/killbill/issues/1390")
+    public void testWithBatch() {
+        LocalDate startRange = new LocalDate(2018, 8, 1);
+        LocalDate endRange = new LocalDate(2018, 11, 23);
+
+        final UUID invoiceId1 = UUID.randomUUID();
+        final UUID subscriptionId = UUID.randomUUID();
+
+        final List<InvoiceTrackingModelDao> inputs = new ArrayList<>();
+        // The batch size is defined as 10000 -- See EntitySqlDaoWrapperInvocationHandler#BATCH_SIZE
+        // so we chose a number right above this.
+        // Local tests with postgres showed that limitation arose over 33K
+        int NB_TRACKING_IDS = 10001;
+        for (int i = 0; i < NB_TRACKING_IDS; i++) {
+
+            final String trackingId = "tracking-" + i;
+            final InvoiceTrackingModelDao input = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), trackingId, invoiceId1, subscriptionId, "unit", startRange);
+            inputs.add(input);
+        }
+
+        transactionalSqlDao.execute(false,
+                                    new EntitySqlDaoTransactionWrapper<Void>() {
+                                        @Override
+                                        public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                                            final InvoiceTrackingSqlDao dao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
+
+                                            dao.create(inputs, internalCallContext);
+
+                                            final List<InvoiceTrackingModelDao> result = dao.getTrackingsByDateRange(startRange.toDate(), endRange.toDate(), internalCallContext);
+                                            Assert.assertEquals(result.size(), NB_TRACKING_IDS);
+                                            final String expTrackingId = "tracking-" + (NB_TRACKING_IDS - 1);
+                                            Assert.assertEquals(result.get(NB_TRACKING_IDS - 1).getTrackingId(), expTrackingId);
+                                            return null;
+                                        }
+                                    });
+    }
 }
