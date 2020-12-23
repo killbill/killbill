@@ -186,9 +186,6 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
 
         final DefaultTier that = (DefaultTier) o;
 
-        if (billingMode != that.billingMode) {
-            return false;
-        }
         if (!Arrays.equals(blocks, that.blocks)) {
             return false;
         }
@@ -198,16 +195,9 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
         if (!Arrays.equals(limits, that.limits)) {
             return false;
         }
-        if (phase != null ? !phase.equals(that.phase) : that.phase != null) {
-            return false;
-        }
         if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null) {
             return false;
         }
-        if (usageType != that.usageType) {
-            return false;
-        }
-
         return true;
     }
 

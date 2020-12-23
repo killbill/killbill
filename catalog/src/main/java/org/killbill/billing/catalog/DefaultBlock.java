@@ -176,7 +176,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         if (minTopUpCredit != null ? !minTopUpCredit.equals(that.minTopUpCredit) : that.minTopUpCredit != null) {
             return false;
         }
-        return phase != null ? phase.equals(that.phase) : that.phase == null;
+        return true;
     }
 
     @Override
@@ -189,7 +189,6 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (prices != null ? prices.hashCode() : 0);
         result = 31 * result + (minTopUpCredit != null ? minTopUpCredit.hashCode() : 0);
-        result = 31 * result + (phase != null ? phase.hashCode() : 0);
         return result;
     }
 
