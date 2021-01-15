@@ -33,21 +33,19 @@ import org.killbill.billing.util.callcontext.TenantContext;
 
 public interface InvoiceInternalApi {
 
-    public Invoice getInvoiceById(UUID invoiceId, InternalTenantContext context) throws InvoiceApiException;
+    Invoice getInvoiceById(UUID invoiceId, InternalTenantContext context) throws InvoiceApiException;
 
-    public Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, LocalDate upToDate, InternalTenantContext context);
+    Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, LocalDate upToDate, InternalTenantContext context);
 
-    public BigDecimal getAccountBalance(UUID accountId, InternalTenantContext context);
+    void recordPaymentAttemptInit(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, UUID paymentAttemptId, String transactionExternalKey, DateTime paymentDate, InternalCallContext context) throws InvoiceApiException;
 
-    public void recordPaymentAttemptInit(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, UUID paymentAttemptId, String transactionExternalKey, DateTime paymentDate, InternalCallContext context) throws InvoiceApiException;
+    void recordPaymentAttemptCompletion(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, UUID paymentAttemptId, String transactionExternalKey, DateTime paymentDate, boolean success, InternalCallContext context) throws InvoiceApiException;
 
-    public void recordPaymentAttemptCompletion(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, UUID paymentAttemptId, String transactionExternalKey, DateTime paymentDate, boolean success, InternalCallContext context) throws InvoiceApiException;
+    InvoicePayment getInvoicePaymentForAttempt(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
 
-    public InvoicePayment getInvoicePaymentForAttempt(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
+    InvoicePayment getInvoicePaymentForChargeback(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
 
-    public InvoicePayment getInvoicePaymentForChargeback(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
-
-    public Invoice getInvoiceForPaymentId(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
+    Invoice getInvoiceForPaymentId(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
 
     /**
      * Create a refund.
@@ -61,32 +59,25 @@ public interface InvoiceInternalApi {
      * @return the created invoice payment object associated with this refund
      * @throws InvoiceApiException
      */
-    public InvoicePayment recordRefund(UUID paymentId, UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
-                                       String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
+    InvoicePayment recordRefund(UUID paymentId, UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
+                                String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
-    public InvoicePayment recordChargeback(UUID paymentId, UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
+    InvoicePayment recordChargeback(UUID paymentId, UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
-    public InvoicePayment recordChargebackReversal(UUID paymentId, UUID paymentAttemptId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
+    InvoicePayment recordChargebackReversal(UUID paymentId, UUID paymentAttemptId, String chargebackTransactionExternalKey, InternalCallContext context) throws InvoiceApiException;
 
-    /**
-     * Rebalance CBA for account which have credit and unpaid invoices
-     *
-     * @param accountId account id
-     * @param context   the callcontext
-     */
-    public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException;
 
-    public Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException;
+    Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException;
 
-    public void commitInvoice(UUID invoiceId, InternalCallContext context) throws InvoiceApiException;
+    void commitInvoice(UUID invoiceId, InternalCallContext context) throws InvoiceApiException;
 
-    public InvoicePayment getInvoicePayment(UUID invoicePaymentId, TenantContext context);
+    InvoicePayment getInvoicePayment(UUID invoicePaymentId, TenantContext context);
 
-    public List<InvoicePayment> getInvoicePayments(UUID paymentId, TenantContext context);
+    List<InvoicePayment> getInvoicePayments(UUID paymentId, TenantContext context);
 
-    public List<InvoicePayment> getInvoicePaymentsByAccount(UUID accountId, TenantContext context);
+    List<InvoicePayment> getInvoicePaymentsByAccount(UUID accountId, TenantContext context);
 
-    public List<InvoicePayment> getInvoicePaymentsByInvoice(UUID invoiceId, InternalTenantContext context);
+    List<InvoicePayment> getInvoicePaymentsByInvoice(UUID invoiceId, InternalTenantContext context);
 
-    public InvoicePayment getInvoicePaymentByCookieId(String cookieId, TenantContext context);
+    InvoicePayment getInvoicePaymentByCookieId(String cookieId, TenantContext context);
 }
