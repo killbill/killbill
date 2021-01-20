@@ -168,13 +168,14 @@ public class TestInvoiceHelper {
     private final InvoicePaymentSqlDao invoicePaymentSqlDao;
     private final InvoiceItemSqlDao invoiceItemSqlDao;
     private final InvoiceSqlDao invoiceSqlDao;
+    private final InvoiceOptimizer invoiceOptimizer;
 
 
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
                              final BillingInternalApi billingApi, final AccountInternalApi accountApi, final ImmutableAccountInternalApi immutableAccountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final NotificationQueueService notificationQueueService, final MutableInternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
-                             final ParkedAccountsManager parkedAccountsManager, final InternalCallContextFactory internalCallContextFactory) {
+                             final ParkedAccountsManager parkedAccountsManager, final InvoiceOptimizer invoiceOptimizer, final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
         this.billingApi = billingApi;
         this.accountApi = accountApi;
@@ -189,6 +190,7 @@ public class TestInvoiceHelper {
         this.nonEntityDao = nonEntityDao;
         this.notificationQueueService = notificationQueueService;
         this.parkedAccountsManager = parkedAccountsManager;
+        this.invoiceOptimizer = invoiceOptimizer;
         this.internalCallContext = internalCallContext;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
@@ -238,7 +240,7 @@ public class TestInvoiceHelper {
     public Invoice generateInvoice(final UUID accountId, @Nullable final LocalDate targetDate, @Nullable final DryRunArguments dryRunArguments, final InternalCallContext internalCallContext) throws InvoiceApiException {
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
                                                                    invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
-                                                                   notificationQueueService, invoiceConfig, clock, parkedAccountsManager);
+                                                                   notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
 
         return dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);
     }

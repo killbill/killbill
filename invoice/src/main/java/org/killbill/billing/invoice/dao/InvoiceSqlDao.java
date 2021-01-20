@@ -42,19 +42,23 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
                                                     @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
+    List<InvoiceModelDao> getInvoiceByAccountRecordIdAfter(@Bind("targetDate") LocalDate targetDate,
+                                                           @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
     UUID getInvoiceIdByPaymentId(@Bind("paymentId") final String paymentId,
                                  @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     InvoiceModelDao getInvoiceByInvoiceItemId(@Bind("invoiceItemId") final String invoiceItemId,
                                               @SmartBindBean final InternalTenantContext context);
+
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
     void updateStatusAndTargetDate(@Bind("id") String invoiceId,
                                    @Bind("status") String status,
                                    @Bind("targetDate") LocalDate targetDate,
                                    @SmartBindBean final InternalCallContext context);
-
 
     @SqlQuery
     InvoiceModelDao getParentDraftInvoice(@Bind("accountId") final String parentAccountId,

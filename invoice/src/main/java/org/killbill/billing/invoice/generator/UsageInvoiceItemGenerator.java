@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
+import org.killbill.billing.invoice.InvoiceOptimizer.AccountInvoices;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -80,12 +81,12 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
     public InvoiceGeneratorResult generateItems(final ImmutableAccountData account,
                                                 final UUID invoiceId,
                                                 final BillingEventSet eventSet,
-                                                @Nullable final Iterable<Invoice> existingInvoices,
+                                                final AccountInvoices existingInvoices,
                                                 final LocalDate targetDate,
                                                 final Currency targetCurrency,
                                                 final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
-        final Map<UUID, List<InvoiceItem>> perSubscriptionInArrearUsageItems = extractPerSubscriptionExistingInArrearUsageItems(eventSet.getUsages(), existingInvoices);
+        final Map<UUID, List<InvoiceItem>> perSubscriptionInArrearUsageItems = extractPerSubscriptionExistingInArrearUsageItems(eventSet.getUsages(), existingInvoices.getInvoices());
         try {
             // Pretty-print the generated invoice items from the junction events
             final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "usage", log);

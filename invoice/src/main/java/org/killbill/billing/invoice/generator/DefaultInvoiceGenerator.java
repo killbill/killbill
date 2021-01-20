@@ -18,16 +18,12 @@
 
 package org.killbill.billing.invoice.generator;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
 import org.killbill.billing.ErrorCode;
@@ -35,6 +31,7 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.invoice.InvoiceOptimizer.AccountInvoices;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -44,7 +41,6 @@ import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceGenera
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
@@ -80,7 +76,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
     @Override
     public InvoiceWithMetadata generateInvoice(final ImmutableAccountData account,
                                                @Nullable final BillingEventSet events,
-                                               @Nullable final Iterable<Invoice> existingInvoices,
+                                               final AccountInvoices existingInvoices,
                                                @Nullable final UUID targetInvoiceId,
                                                final LocalDate targetDate,
                                                final Currency targetCurrency,
@@ -90,7 +86,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         validateTargetDate(targetDate, context);
-        final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices, targetDate);
+        final LocalDate adjustedTargetDate = adjustTargetDate(existingInvoices.getInvoices(), targetDate);
 
         final LocalDate invoiceDate = context.toLocalDate(context.getCreatedDate());
         final InvoiceStatus invoiceStatus = events.isAccountAutoInvoiceDraft() ? InvoiceStatus.DRAFT : InvoiceStatus.COMMITTED;
@@ -107,7 +103,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         invoice.addInvoiceItems(usageItemsWithTrackingIds.getItems());
 
         if (targetInvoiceId != null) {
-            final Invoice originalInvoice = Iterables.find(existingInvoices, new Predicate<Invoice>() {
+            final Invoice originalInvoice = Iterables.find(existingInvoices.getInvoices(), new Predicate<Invoice>() {
                 @Override
                 public boolean apply(final Invoice input) {
                     return input.getId().equals(targetInvoiceId);

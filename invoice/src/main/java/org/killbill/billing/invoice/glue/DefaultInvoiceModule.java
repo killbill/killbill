@@ -21,6 +21,7 @@ package org.killbill.billing.invoice.glue;
 import org.killbill.billing.glue.InvoiceModule;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.InvoiceListener;
+import org.killbill.billing.invoice.InvoiceOptimizer;
 import org.killbill.billing.invoice.InvoiceTagHandler;
 import org.killbill.billing.invoice.ParkedAccountsManager;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
@@ -146,6 +147,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoiceInternalApi();
         installResourceBundleFactory();
         bind(RawUsageOptimizer.class).asEagerSingleton();
+        bind(InvoiceOptimizer.class).asEagerSingleton();
         bind(InvoiceApiHelper.class).asEagerSingleton();
         bind(ParkedAccountsManager.class).asEagerSingleton();
     }

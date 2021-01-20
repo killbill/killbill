@@ -40,6 +40,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.invoice.InvoiceOptimizer.AccountInvoices;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -88,16 +89,16 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     }
 
     public InvoiceGeneratorResult generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
-                                                @Nullable final Iterable<Invoice> existingInvoices, final LocalDate targetDate,
+                                                final AccountInvoices existingInvoices, final LocalDate targetDate,
                                                 final Currency targetCurrency, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
 
-        final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices);
+        final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices.getInvoices());
         final Set<UUID> toBeIgnored = invoicePruner.getFullyRepairedItemsClosure();
         final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId);
         if (existingInvoices != null) {
-            for (final Invoice invoice : existingInvoices) {
+            for (final Invoice invoice : existingInvoices.getInvoices()) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
                     if (toBeIgnored.contains(item.getId())) {
                        continue;

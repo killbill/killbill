@@ -35,6 +35,7 @@ import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -1238,6 +1239,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         @Override
         public TimeSpan getDryRunNotificationSchedule(final InternalTenantContext tenantContext) {
             return defaultInvoiceConfig.getDryRunNotificationSchedule();
+        }
+
+        @Override
+        public Period getMaxInvoiceLimit() {
+            return defaultInvoiceConfig.getMaxInvoiceLimit();
+        }
+
+        @Override
+        public Period getMaxInvoiceLimit(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getMaxInvoiceLimit(tenantContext);
         }
 
         @Override

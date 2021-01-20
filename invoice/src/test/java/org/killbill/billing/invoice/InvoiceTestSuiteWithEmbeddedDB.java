@@ -103,6 +103,8 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected InvoiceConfig invoiceConfig;
     @Inject
     protected ParkedAccountsManager parkedAccountsManager;
+    @Inject
+    protected InvoiceOptimizer invoiceOptimizer;
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {
