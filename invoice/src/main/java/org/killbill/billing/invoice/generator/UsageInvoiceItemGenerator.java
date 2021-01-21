@@ -117,12 +117,25 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                         }
                     })) {
                     rawUsgRes = rawUsageOptimizer.getInArrearUsage(minBillingEventDate, targetDate, Iterables.concat(perSubscriptionInArrearUsageItems.values()), eventSet.getUsages(), internalCallContext);
+
+                    // Check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate + 1 P, where P = max{all Periods available} (e.g MONTHLY)
+                    // To make it simpler we check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate, and warn if this is not the case
+                    // (this mean we push folks to configure their system in such a way that we read (existing invoices) a bit too much as
+                    // opposed to not enough, leading to double invoicing.
+                    //
+                    // Ask Kill Bill team for an optimal configuration based on your use case ;-)
+                    if (existingInvoices.getCutoffDate() != null && existingInvoices.getCutoffDate().compareTo(rawUsgRes.getRawUsageStartDate()) > 0) {
+                        log.warn("Detected an invoice cuttOff date={}, and usage optimized start date= {} that could lead to some issues", existingInvoices.getCutoffDate(), rawUsgRes.getRawUsageStartDate());
+                    }
+
                 }
 
                 // None of the billing events report any usage IN_ARREAR sections
                 if (rawUsgRes == null) {
                     continue;
                 }
+
+
 
                 final UUID subscriptionId = event.getSubscriptionId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {
