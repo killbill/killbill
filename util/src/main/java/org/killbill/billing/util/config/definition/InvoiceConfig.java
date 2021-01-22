@@ -23,14 +23,12 @@ import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.skife.config.Config;
 import org.skife.config.Default;
+import org.skife.config.DefaultNull;
 import org.skife.config.Description;
 import org.skife.config.Param;
 import org.skife.config.TimeSpan;
 
 public interface InvoiceConfig extends KillbillConfig {
-
-    // An arbitrary ridiculously large value to express we are looking at the begining of time
-    public static final String INVOICE_CUTOFF_DATE = "P200y";
 
     public enum UsageDetailMode {
         AGGREGATE,
@@ -90,13 +88,13 @@ public interface InvoiceConfig extends KillbillConfig {
     TimeSpan getDryRunNotificationSchedule(@Param("dummy") final InternalTenantContext tenantContext);
 
 
-    @Config("org.killbill.invoice.readInvoicesBackFrom")
-    @Default(INVOICE_CUTOFF_DATE)
+    @Config("org.killbill.invoice.maxInvoiceLimit")
+    @DefaultNull
     @Description("How far back in time should invoice generation look at")
     Period getMaxInvoiceLimit();
 
-    @Config("org.killbill.invoice.readInvoicesBackFrom")
-    @Default(INVOICE_CUTOFF_DATE)
+    @Config("org.killbill.invoice.maxInvoiceLimit")
+    @DefaultNull
     @Description("How far back in time should invoice generation look at")
     Period getMaxInvoiceLimit(@Param("dummy") final InternalTenantContext tenantContext);
 

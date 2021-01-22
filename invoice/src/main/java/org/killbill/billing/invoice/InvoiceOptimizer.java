@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 
 public class InvoiceOptimizer {
 
-    private static final Period DEFAULT_INVOICE_CUTOFF_DATE = new Period(InvoiceConfig.INVOICE_CUTOFF_DATE);
     private final Clock clock;
     private final InvoiceDao invoiceDao;
     private final InvoiceConfig invoiceConfig;
@@ -54,9 +53,9 @@ public class InvoiceOptimizer {
     public AccountInvoices getInvoices(final InternalCallContext callContext) {
 
         final Period maxInvoiceLimit = invoiceConfig.getMaxInvoiceLimit(callContext);
-        final LocalDate fromDate = maxInvoiceLimit.equals(DEFAULT_INVOICE_CUTOFF_DATE)  ?
-                                   null :
-                                   callContext.toLocalDate(clock.getUTCNow()).minus(maxInvoiceLimit);
+        final LocalDate fromDate = maxInvoiceLimit != null ?
+                                   callContext.toLocalDate(clock.getUTCNow()).minus(maxInvoiceLimit) :
+                                   null;
 
         final List<Invoice> existingInvoices = new LinkedList<Invoice>();
         final List<InvoiceModelDao> invoicesByAccount = fromDate != null ?
