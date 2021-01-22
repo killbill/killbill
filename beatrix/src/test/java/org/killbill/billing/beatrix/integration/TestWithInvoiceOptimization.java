@@ -18,12 +18,11 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -37,7 +36,6 @@ import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -47,17 +45,11 @@ import static org.testng.Assert.assertNotNull;
 
 public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
-    @Override
-    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
-        allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES);
-        allExtraProperties.put("org.killbill.invoice.readMaxRawUsagePreviousPeriod", "2");
-        allExtraProperties.put("org.killbill.invoice.readInvoicesBackFrom", "P1m");
-        return super.getConfigSource(null, allExtraProperties);
-    }
 
     @Test(groups = "slow")
     public void testRecurringInAdvance() throws Exception {
+
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
 
         clock.setTime(new DateTime("2020-01-01T3:56:02"));
 
@@ -107,8 +99,58 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 3, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("20.00")));
     }
 
+
+    // Used to demonstrate what happens when maxInvoiceLimit = 0 and we do billing IN_ADVANCE
     @Test(groups = "slow")
+    public void testRecurringInAdvance2() throws Exception {
+
+        // Never fetch any existing invoices from disk during invoicing process
+        invoiceConfig.setMaxInvoiceLimit(new Period("P0m"));
+
+        clock.setTime(new DateTime("2020-01-01T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        assertNotNull(account);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly-notrial");
+
+        // 2020-01-16
+        clock.addDays(15);
+
+        // Do a change one day in the past => Nothing will be generated
+        // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose targetDt >= cutoffDt
+        // - Proposed items correctly generate the 2 expected items but both are filtered because their startDt < cutoffDt
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday().minusDays(1), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Do a change today => Only new item 2020-01-16 - 2020-02-01 gets generated
+        // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose tragetDt >= cutoffDt
+        // - Proposed items correctly generate the 2 expected items but the first one is filtered because its start date  2020-01-15 < cutoffDt
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Double invoicing due to bad config! (no REPAIR)
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 16), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("10.30")));
+
+    }
+
+        @Test(groups = "slow")
     public void testRecurringInArrear() throws Exception {
+
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
 
         clock.setTime(new DateTime("2020-01-01T3:56:02"));
 
@@ -163,6 +205,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testUsageInArrear() throws Exception {
+
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
 
         clock.setDay(new LocalDate(2021, 4, 1));
 

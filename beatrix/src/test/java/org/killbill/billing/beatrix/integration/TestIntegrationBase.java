@@ -1182,6 +1182,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private boolean shouldParkAccountsWithUnknownUsage;
         private boolean isZeroAmountUsageDisabled;
         private UsageDetailMode detailMode;
+        private Period maxInvoiceLimit;
 
         public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
             this.defaultInvoiceConfig = defaultInvoiceConfig;
@@ -1189,6 +1190,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
             isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
             detailMode = defaultInvoiceConfig.getItemResultBehaviorMode();
+            maxInvoiceLimit = defaultInvoiceConfig.getMaxInvoiceLimit();
         }
 
         @Override
@@ -1243,12 +1245,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         @Override
         public Period getMaxInvoiceLimit() {
-            return defaultInvoiceConfig.getMaxInvoiceLimit();
+            return maxInvoiceLimit;
         }
 
         @Override
         public Period getMaxInvoiceLimit(final InternalTenantContext tenantContext) {
             return defaultInvoiceConfig.getMaxInvoiceLimit(tenantContext);
+        }
+
+        public void setMaxInvoiceLimit(final Period value) {
+            this.maxInvoiceLimit = value;
         }
 
         @Override
