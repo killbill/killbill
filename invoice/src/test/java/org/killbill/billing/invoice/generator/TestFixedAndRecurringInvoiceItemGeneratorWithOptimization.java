@@ -50,7 +50,6 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -64,7 +63,6 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
     private Account account;
     private SubscriptionBase subscription;
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(TestFixedAndRecurringInvoiceItemGeneratorWithOptimization.class);
 
     @Override
     @BeforeMethod(groups = "fast")

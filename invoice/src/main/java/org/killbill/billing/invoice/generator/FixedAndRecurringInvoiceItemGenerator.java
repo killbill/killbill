@@ -133,7 +133,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                     if (invoiceItem.getInvoiceItemType() == InvoiceItemType.FIXED) {
                         return invoiceItem.getStartDate().compareTo(existingInvoices.getCutoffDate()) >= 0;
                     }
-                    Preconditions.checkState(invoiceItem.getInvoiceItemType() == InvoiceItemType.RECURRING, "Expected item id=%s to be a RECURRING invoice item", invoiceItem.getId());
+                    Preconditions.checkState(invoiceItem.getInvoiceItemType() == InvoiceItemType.RECURRING, "Expected (proposed) item %s to be a RECURRING invoice item", invoiceItem);
 
 
                     // Extract Plan info associated with item by correlating with list of billing events
