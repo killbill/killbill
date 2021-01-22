@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -134,21 +135,35 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                     }
                     Preconditions.checkState(invoiceItem.getInvoiceItemType() == InvoiceItemType.RECURRING, "Expected item id=%s to be a RECURRING invoice item", invoiceItem.getId());
 
+
                     // Extract Plan info associated with item by correlating with list of billing events
                     // From plan info, retrieve billing mode.
                     BillingMode billingMode = billingModes.get(invoiceItem.getPlanName());
                     if (billingMode == null) {
-                        final BillingEvent be = Iterables.find(eventSet, new Predicate<BillingEvent>() {
-                            @Override
-                            public boolean apply(final BillingEvent billingEvent) {
-                                return billingEvent.getPlan().getName().equals(invoiceItem.getPlanName());
+
+                        // Best effort logic to find the correct billing event ('be'):
+                        // We could simplify and look for any 'be' whose Plan matches the one from the invoiceItem,
+                        // but in unlikely scenarios where there are multiple Plans across catalog versions with different BillingMode,
+                        // we could end up with the wrong billing event (and therefore billing mode). Therefore, the complexity.
+                        // (all this because catalog is not available in this layer)
+                        //
+                        final Iterator<BillingEvent> it = ((NavigableSet<BillingEvent>)eventSet).descendingIterator();
+                        while (it.hasNext()) {
+                            final BillingEvent be  = it.next();
+                            if (!be.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) /* wrong subscription ID */ ||
+                                /* Not the correct plan */
+                                !be.getPlan().getName().equals(invoiceItem.getPlanName()) ||
+                                /* Whether in-advance or in-arrear (what we are trying to find out), the 'be' we want is the one where ii.endDate >= be.effDt */
+                                invoiceItem.getEndDate().compareTo(internalCallContext.toLocalDate(be.getEffectiveDate())) < 0) {
+                                continue;
                             }
-                        });
-                        billingMode = be.getPlan().getRecurringBillingMode();
-                        billingModes.put(invoiceItem.getPlanName(), billingMode);
+                            billingMode = be.getPlan().getRecurringBillingMode();
+                            billingModes.put(invoiceItem.getPlanName(), billingMode);
+                            break;
+                        }
                     }
 
-                    // Any cutoff date t will return invoices with all items where:
+                    // Any cutoff date 't' will return invoices with all items where:
                     // - If IN_ADVANCE, all items where startDate >= t
                     // - If IN_ARREAR, all items where endDate >= t
                     final LocalDate startOrEndDate = (billingMode == BillingMode.IN_ADVANCE) ? invoiceItem.getStartDate() : invoiceItem.getEndDate();
