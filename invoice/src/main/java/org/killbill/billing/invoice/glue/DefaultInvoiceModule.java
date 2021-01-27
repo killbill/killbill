@@ -21,7 +21,6 @@ package org.killbill.billing.invoice.glue;
 import org.killbill.billing.glue.InvoiceModule;
 import org.killbill.billing.invoice.InvoiceDispatcher;
 import org.killbill.billing.invoice.InvoiceListener;
-import org.killbill.billing.invoice.InvoiceOptimizer;
 import org.killbill.billing.invoice.InvoiceTagHandler;
 import org.killbill.billing.invoice.ParkedAccountsManager;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
@@ -47,6 +46,9 @@ import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDatePoster;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizer;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerExp;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerNoop;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.template.bundles.DefaultResourceBundleFactory;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
@@ -57,13 +59,19 @@ import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.google.common.base.MoreObjects;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 public class DefaultInvoiceModule extends KillBillModule implements InvoiceModule {
 
+    public static final String PROP_FEATURE_INVOICE_OPTIMIZATION = "org.killbill.invoice.feature.optimization.enabled";
+
+    private final boolean FEATURE_INVOICE_OPTIMIZATION;
+
     public DefaultInvoiceModule(final KillbillConfigSource configSource) {
         super(configSource);
+        FEATURE_INVOICE_OPTIMIZATION = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString(PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
     }
 
     protected void installInvoiceDao() {
@@ -147,7 +155,11 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoiceInternalApi();
         installResourceBundleFactory();
         bind(RawUsageOptimizer.class).asEagerSingleton();
-        bind(InvoiceOptimizer.class).asEagerSingleton();
+        if (FEATURE_INVOICE_OPTIMIZATION) {
+            bind(InvoiceOptimizer.class).to(InvoiceOptimizerExp.class).asEagerSingleton();
+        } else {
+            bind(InvoiceOptimizer.class).to(InvoiceOptimizerNoop.class).asEagerSingleton();
+        }
         bind(InvoiceApiHelper.class).asEagerSingleton();
         bind(ParkedAccountsManager.class).asEagerSingleton();
     }

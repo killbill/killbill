@@ -15,62 +15,43 @@
  * under the License.
  */
 
-package org.killbill.billing.invoice;
+package org.killbill.billing.invoice.optimizer;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
-import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.dao.InvoiceDao;
-import org.killbill.billing.invoice.dao.InvoiceModelDao;
-import org.killbill.billing.invoice.model.DefaultInvoice;
+import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 
 import com.google.common.collect.ImmutableList;
 
-public class InvoiceOptimizer {
+public abstract class InvoiceOptimizerBase implements InvoiceOptimizer {
 
-    private final Clock clock;
-    private final InvoiceDao invoiceDao;
-    private final InvoiceConfig invoiceConfig;
+    protected final Clock clock;
+    protected final InvoiceDao invoiceDao;
+    protected final InvoiceConfig invoiceConfig;
 
     @Inject
-    public InvoiceOptimizer(final InvoiceDao invoiceDao,
-                            final Clock clock,
-                            final InvoiceConfig invoiceConfig) {
+    public InvoiceOptimizerBase(final InvoiceDao invoiceDao,
+                                final Clock clock,
+                                final InvoiceConfig invoiceConfig) {
 
         this.invoiceDao = invoiceDao;
         this.clock = clock;
         this.invoiceConfig = invoiceConfig;
     }
 
-    public AccountInvoices getInvoices(final InternalCallContext callContext) {
-
-        final Period maxInvoiceLimit = invoiceConfig.getMaxInvoiceLimit(callContext);
-        final LocalDate fromDate = maxInvoiceLimit != null ?
-                                   callContext.toLocalDate(clock.getUTCNow()).minus(maxInvoiceLimit) :
-                                   null;
-
-        final List<Invoice> existingInvoices = new LinkedList<Invoice>();
-        final List<InvoiceModelDao> invoicesByAccount = fromDate != null ?
-                                                        invoiceDao.getInvoicesByAccount(false, fromDate, null, callContext) :
-                                                        invoiceDao.getInvoicesByAccount(false, callContext);
-        for (final InvoiceModelDao invoiceModelDao : invoicesByAccount) {
-            existingInvoices.add(new DefaultInvoice(invoiceModelDao));
-        }
-        return new AccountInvoices(fromDate, existingInvoices);
-    }
-
     public static class AccountInvoices {
 
-        private final LocalDate cutoffDate;
-        private final List<Invoice> invoices;
+        protected final LocalDate cutoffDate;
+        protected final List<Invoice> invoices;
 
         public AccountInvoices(final LocalDate cutoffDate, final List<Invoice> invoices) {
             this.cutoffDate = cutoffDate;
@@ -81,16 +62,16 @@ public class InvoiceOptimizer {
             this(null, ImmutableList.of());
         }
 
-        public boolean hasAllInvoices() {
-            return cutoffDate == null;
-        }
-
         public LocalDate getCutoffDate() {
             return cutoffDate;
         }
 
         public List<Invoice> getInvoices() {
             return invoices;
+        }
+
+        // Default noop
+        public void filterProposedItems(final List<InvoiceItem> proposedItems, final BillingEventSet eventSet, final InternalCallContext internalCallContext) {
         }
     }
 }

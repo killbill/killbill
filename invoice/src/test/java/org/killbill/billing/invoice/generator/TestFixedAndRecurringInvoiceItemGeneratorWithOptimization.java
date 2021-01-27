@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -35,7 +36,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.invoice.InvoiceOptimizer.AccountInvoices;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.MockBillingEventSet;
 import org.killbill.billing.invoice.api.Invoice;
@@ -43,11 +43,15 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceGeneratorResult;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
+import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerExp.AccountInvoicesExp;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.testng.annotations.BeforeMethod;
@@ -62,6 +66,13 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
 
     private Account account;
     private SubscriptionBase subscription;
+
+    @Override
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.put(DefaultInvoiceModule.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
+        return getConfigSource(null, allExtraProperties);
+    }
 
 
     @Override
@@ -106,7 +117,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
         // => Should generate the item
         final LocalDate targetDate1 = startDate.toLocalDate(); // 2020-01-01
         final LocalDate cuttoffDate1 = targetDate1.minus(maxInvoiceLimit);
-        final AccountInvoices existingInvoices1 = new AccountInvoices(cuttoffDate1, ImmutableList.of());
+        final AccountInvoices existingInvoices1 = new AccountInvoicesExp(cuttoffDate1, ImmutableList.of());
         final InvoiceGeneratorResult result1 = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                    UUID.randomUUID(),
                                                                                                    events,
@@ -140,7 +151,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                          startDate.toLocalDate(),
                                                          fixedPriceAmount,
                                                          account.getCurrency()));
-        final AccountInvoices existingInvoices2 = new AccountInvoices(cuttoffDate2, ImmutableList.of(invoice));
+        final AccountInvoices existingInvoices2 = new AccountInvoicesExp(cuttoffDate2, ImmutableList.of(invoice));
 
         final InvoiceGeneratorResult result2 = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                    UUID.randomUUID(),
@@ -157,7 +168,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
         // => Should not regenerate the item
         final LocalDate targetDate3 = startDate.toLocalDate().plusMonths(2); // 2020-03-01;
         final LocalDate cuttoffDate3 = targetDate3.minus(maxInvoiceLimit);
-        final AccountInvoices existingInvoices3 = new AccountInvoices(cuttoffDate3, ImmutableList.of());
+        final AccountInvoices existingInvoices3 = new AccountInvoicesExp(cuttoffDate3, ImmutableList.of());
         final InvoiceGeneratorResult result3 = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                    UUID.randomUUID(),
                                                                                                    events,
@@ -202,7 +213,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
         // => Should generate the item
         final LocalDate targetDate1 = startDate.toLocalDate(); // 2020-01-01
         final LocalDate cuttoffDate1 = targetDate1.minus(maxInvoiceLimit);
-        final AccountInvoices existingInvoices1 = new AccountInvoices(cuttoffDate1, ImmutableList.of());
+        final AccountInvoices existingInvoices1 = new AccountInvoicesExp(cuttoffDate1, ImmutableList.of());
         final InvoiceGeneratorResult result1 = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                    UUID.randomUUID(),
                                                                                                    events,
@@ -238,7 +249,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                          amount,
                                                          amount,
                                                          account.getCurrency()));
-        final AccountInvoices existingInvoices2 = new AccountInvoices(cuttoffDate2, ImmutableList.of(invoice2));
+        final AccountInvoices existingInvoices2 = new AccountInvoicesExp(cuttoffDate2, ImmutableList.of(invoice2));
         final InvoiceGeneratorResult result2 = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                    UUID.randomUUID(),
                                                                                                    events,
@@ -274,7 +285,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                          amount,
                                                          amount,
                                                          account.getCurrency()));
-        final AccountInvoices existingInvoices3 = new AccountInvoices(cuttoffDate3, ImmutableList.of(invoice3));
+        final AccountInvoices existingInvoices3 = new AccountInvoicesExp(cuttoffDate3, ImmutableList.of(invoice3));
         final InvoiceGeneratorResult result3 = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                    UUID.randomUUID(),
                                                                                                    events,
@@ -323,7 +334,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
         // There is nothing to invoice// => Should generate the item
         final LocalDate targetDate1 = startDate.toLocalDate(); // 2020-01-01
         final LocalDate cuttoffDate1 = targetDate1.minus(maxInvoiceLimit);
-        final AccountInvoices existingInvoices1 = new AccountInvoices(cuttoffDate1, ImmutableList.of());
+        final AccountInvoices existingInvoices1 = new AccountInvoicesExp(cuttoffDate1, ImmutableList.of());
         final InvoiceGeneratorResult result1 = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                    UUID.randomUUID(),
                                                                                                    events,
@@ -339,7 +350,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
         // => Should generate the item
         final LocalDate targetDate2 = startDate.plusMonths(1).toLocalDate(); // 2020-02-01
         final LocalDate cuttoffDate2 = targetDate2.minus(maxInvoiceLimit);
-        final AccountInvoices existingInvoices2 = new AccountInvoices(cuttoffDate2, ImmutableList.of());
+        final AccountInvoices existingInvoices2 = new AccountInvoicesExp(cuttoffDate2, ImmutableList.of());
 
         final InvoiceGeneratorResult result2 = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                    UUID.randomUUID(),
@@ -372,7 +383,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                          amount,
                                                          amount,
                                                          account.getCurrency()));
-        final AccountInvoices existingInvoices3 = new AccountInvoices(cuttoffDate3, ImmutableList.of(invoice3));
+        final AccountInvoices existingInvoices3 = new AccountInvoicesExp(cuttoffDate3, ImmutableList.of(invoice3));
 
         final InvoiceGeneratorResult result3 = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                    UUID.randomUUID(),

@@ -55,7 +55,6 @@ import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.killbill.billing.events.RequestedSubscriptionInternalEvent;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.FutureAccountNotificationsBuilder;
-import org.killbill.billing.invoice.InvoiceOptimizer.AccountInvoices;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
@@ -84,6 +83,8 @@ import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ParentInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDateNotificationKey;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizer;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
@@ -351,7 +352,7 @@ public class InvoiceDispatcher {
             // Avoid pulling all invoices when AUTO_INVOICING_OFF is set since we will disable invoicing later
             // (Note that we can't return right away as we send a NullInvoice event)
             final AccountInvoices accountInvoices = billingEvents.isAccountAutoInvoiceOff() ?
-                                                   new AccountInvoices() : invoiceOptimizer.getInvoices(context);
+                                                    new AccountInvoices() : invoiceOptimizer.getInvoices(context);
 
             final Invoice invoice;
             if (!isDryRun) {
@@ -874,7 +875,7 @@ public class InvoiceDispatcher {
     }
 
     public void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws InvoiceApiException {
-        final Map<UUID, DateTime> chargeThroughDates = InvoiceWithMetadata.computeChargedThroughDates(invoice,context);
+        final Map<UUID, DateTime> chargeThroughDates = InvoiceWithMetadata.computeChargedThroughDates(invoice, context);
         setChargedThroughDates(chargeThroughDates, context);
     }
 
@@ -907,7 +908,6 @@ public class InvoiceDispatcher {
             log.warn("Failed to post event {}", event, e);
         }
     }
-
 
     public static class FutureAccountNotifications {
 

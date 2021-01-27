@@ -31,6 +31,7 @@ import org.killbill.billing.invoice.dao.InvoiceDaoHelper;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizer;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;

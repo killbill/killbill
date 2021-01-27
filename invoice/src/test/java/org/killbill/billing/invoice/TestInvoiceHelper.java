@@ -68,6 +68,7 @@ import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentSqlDao;
 import org.killbill.billing.invoice.dao.InvoiceSqlDao;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizer;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.BillingInternalApi;
@@ -169,7 +170,6 @@ public class TestInvoiceHelper {
     private final InvoiceItemSqlDao invoiceItemSqlDao;
     private final InvoiceSqlDao invoiceSqlDao;
     private final InvoiceOptimizer invoiceOptimizer;
-
 
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
@@ -375,7 +375,6 @@ public class TestInvoiceHelper {
             public BillingAlignment getBillingAlignment() {
                 return null;
             }
-
 
             @Override
             public DateTime getEffectiveDate() {

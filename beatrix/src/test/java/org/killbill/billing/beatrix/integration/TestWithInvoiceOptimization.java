@@ -18,6 +18,8 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -35,7 +37,9 @@ import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -44,6 +48,15 @@ import com.google.common.collect.ImmutableSet;
 import static org.testng.Assert.assertNotNull;
 
 public class TestWithInvoiceOptimization extends TestIntegrationBase {
+
+
+    @Override
+    protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
+        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES);
+        allExtraProperties.put(DefaultInvoiceModule.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
+        return getConfigSource(null, allExtraProperties);
+    }
 
 
     @Test(groups = "slow")
