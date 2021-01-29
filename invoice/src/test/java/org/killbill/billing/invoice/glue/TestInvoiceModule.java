@@ -40,11 +40,11 @@ import com.google.common.base.MoreObjects;
 
 public class TestInvoiceModule extends DefaultInvoiceModule {
 
-    private final boolean TEST_FEATURE_INVOICE_OPTIMIZATION;
+    private final boolean testFeatureInvoiceOptimization;
 
     public TestInvoiceModule(final KillbillConfigSource configSource) {
         super(configSource);
-        TEST_FEATURE_INVOICE_OPTIMIZATION = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
+        testFeatureInvoiceOptimization = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
     }
 
     private void installExternalApis() {
@@ -53,7 +53,7 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
     }
 
     protected void installInvoiceOptimizer() {
-        if (TEST_FEATURE_INVOICE_OPTIMIZATION) {
+        if (testFeatureInvoiceOptimization) {
             bind(InvoiceOptimizer.class).to(InvoiceOptimizerExp.class).asEagerSingleton();
         } else {
             bind(InvoiceOptimizer.class).to(InvoiceOptimizerNoop.class).asEagerSingleton();

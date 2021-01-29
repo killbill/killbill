@@ -135,15 +135,15 @@ public class BeatrixIntegrationModule extends KillBillModule {
 
     private final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {
 
-        private final boolean TEST_FEATURE_INVOICE_OPTIMIZATION;
+        private final boolean testFeatureInvoiceOptimization;
 
         private DefaultInvoiceModuleWithSwitchRepairLogic(final KillbillConfigSource configSource) {
             super(configSource);
-            TEST_FEATURE_INVOICE_OPTIMIZATION = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
+            testFeatureInvoiceOptimization = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
         }
 
         protected void installInvoiceOptimizer() {
-            if (TEST_FEATURE_INVOICE_OPTIMIZATION) {
+            if (testFeatureInvoiceOptimization) {
                 bind(InvoiceOptimizer.class).to(InvoiceOptimizerExp.class).asEagerSingleton();
             } else {
                 bind(InvoiceOptimizer.class).to(InvoiceOptimizerNoop.class).asEagerSingleton();
