@@ -26,9 +26,9 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -36,7 +36,9 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.invoice.InvoiceDispatcher.MAX_NB_ITEMS_TO_PRINT;
@@ -84,6 +86,8 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
             nextBillingQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                              DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
 
+            final LocalDate notificationEffectiveLocaleDate = internalCallContext.toLocalDate(futureNotificationTime);
+
             // If we see existing notification for the same date (and isDryRunForInvoiceNotification mode), we don't insert a new notification
             final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationFromTransactionForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId(), entitySqlDaoWrapperFactory.getHandle().getConnection());
 
@@ -95,7 +99,6 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                     final boolean isEventDryRunForNotifications = input.getEvent().isDryRunForInvoiceNotification() != null ?
                                                                   input.getEvent().isDryRunForInvoiceNotification() : false;
 
-                    final LocalDate notificationEffectiveLocaleDate = internalCallContext.toLocalDate(futureNotificationTime);
                     final LocalDate eventEffectiveLocaleDate = internalCallContext.toLocalDate(input.getEffectiveDate());
 
                     if (notificationEffectiveLocaleDate.compareTo(eventEffectiveLocaleDate) == 0 &&
@@ -129,16 +132,21 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
             }
 
             if (existingNotificationForEffectiveDate == null) {
-                log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime.toString(), subscriptionIdsAsStringBuilder.toString());
+                log.info("Queuing next billing date notification at {} for subscriptionId {}", futureNotificationTime, subscriptionIdsAsStringBuilder);
 
-                final NextBillingDateNotificationKey newNotificationEvent = new NextBillingDateNotificationKey(null, subscriptionIds, targetDate, isDryRunForInvoiceNotification, isRescheduled);
+                final NotificationEvent newNotificationEvent = new NextBillingDateNotificationKey(null, subscriptionIds, targetDate, isDryRunForInvoiceNotification, isRescheduled);
                 nextBillingQueue.recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), futureNotificationTime,
                                                                          newNotificationEvent, internalCallContext.getUserToken(),
                                                                          internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
             } else {
-                log.info("Updating next billing date notification event at {} for subscriptionId {}", futureNotificationTime.toString(), subscriptionIdsAsStringBuilder.toString());
-                final NextBillingDateNotificationKey updateNotificationEvent = new NextBillingDateNotificationKey(existingNotificationForEffectiveDate.getEvent(), subscriptionIds);
-                nextBillingQueue.updateFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), existingNotificationForEffectiveDate.getRecordId(), updateNotificationEvent, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+                final SetView<UUID> difference = Sets.difference(subscriptionIds, ImmutableSet.copyOf(existingNotificationForEffectiveDate.getEvent().getUuidKeys()));
+                if (difference.isEmpty()) {
+                    log.debug("Ignoring duplicate next billing date notification event at {} for subscriptionId {}", futureNotificationTime, subscriptionIdsAsStringBuilder);
+                } else {
+                    log.info("Updating next billing date notification event at {} for subscriptionId {}", futureNotificationTime, subscriptionIdsAsStringBuilder);
+                    final NotificationEvent updateNotificationEvent = new NextBillingDateNotificationKey(existingNotificationForEffectiveDate.getEvent(), subscriptionIds);
+                    nextBillingQueue.updateFutureNotificationFromTransaction(entitySqlDaoWrapperFactory.getHandle().getConnection(), existingNotificationForEffectiveDate.getRecordId(), updateNotificationEvent, internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
+                }
             }
 
         } catch (final NoSuchNotificationQueue e) {

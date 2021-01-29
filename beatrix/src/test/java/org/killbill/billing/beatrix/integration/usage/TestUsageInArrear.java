@@ -52,7 +52,7 @@ import com.google.common.collect.ImmutableSet;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
-public class TestConsumableInArrear extends TestIntegrationBase {
+public class TestUsageInArrear extends TestIntegrationBase {
 
     @Test(groups = "slow")
     public void testWithNoUsageInPeriodAndOldUsage() throws Exception {

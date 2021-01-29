@@ -34,7 +34,11 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
                 return "org/killbill/billing/catalog/versionedCatalog";
             }
 
-        }, tenantInternalApi, catalogCache, cacheInvalidationCallback);
+            @Override
+            public Integer getCatalogThreadNb() {
+                return null;
+            }
+        }, tenantInternalApi, catalogCache, cacheInvalidationCallback, null);
         service.loadCatalog();
         Assert.assertNotNull(service.getFullCatalog(true, true, internalCallContext));
         Assert.assertEquals(service.getFullCatalog(true, true, internalCallContext).getCatalogName(), "WeaponsHireSmall");
@@ -48,7 +52,11 @@ public class TestCatalogService extends CatalogTestSuiteNoDB {
                 return "org/killbill/billing/catalog/WeaponsHire.xml";
             }
 
-        },  tenantInternalApi, catalogCache, cacheInvalidationCallback);
+            @Override
+            public Integer getCatalogThreadNb() {
+                return null;
+            }
+        }, tenantInternalApi, catalogCache, cacheInvalidationCallback, null);
         service.loadCatalog();
         Assert.assertNotNull(service.getFullCatalog(true, true, internalCallContext));
         Assert.assertEquals(service.getFullCatalog(true, true, internalCallContext).getCatalogName(), "Firearms");

@@ -68,8 +68,6 @@ import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
-    @Inject
-    private NotificationQueueService notificationQueueService;
 
     @Test(groups = "slow")
     public void testParentInvoiceGeneration() throws Exception {

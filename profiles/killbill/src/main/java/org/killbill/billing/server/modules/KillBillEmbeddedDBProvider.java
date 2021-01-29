@@ -41,8 +41,7 @@ public class KillBillEmbeddedDBProvider extends EmbeddedDBProvider {
                                                 "subscription",
                                                 "tenant",
                                                 "usage",
-                                                "util",
-                                                "server"}) {
+                                                "util"}) {
             ddlFiles.add("org/killbill/billing/" + module + "/ddl.sql");
         }
         return ddlFiles;

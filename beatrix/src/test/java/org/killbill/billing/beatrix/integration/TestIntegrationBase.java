@@ -20,15 +20,18 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -47,6 +50,7 @@ import org.killbill.billing.beatrix.util.InvoiceChecker;
 import org.killbill.billing.beatrix.util.PaymentChecker;
 import org.killbill.billing.beatrix.util.RefundChecker;
 import org.killbill.billing.beatrix.util.SubscriptionChecker;
+import org.killbill.billing.callcontext.DefaultCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -111,6 +115,9 @@ import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.killbill.billing.tenant.api.DefaultTenant;
+import org.killbill.billing.tenant.api.Tenant;
+import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UnitUsageRecord;
@@ -124,6 +131,8 @@ import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -131,6 +140,10 @@ import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.notificationq.api.NotificationEvent;
+import org.killbill.notificationq.api.NotificationEventWithMetadata;
+import org.killbill.notificationq.api.NotificationQueue;
+import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.config.ConfigurationObjectFactory;
 import org.skife.config.TimeSpan;
 import org.skife.jdbi.v2.Handle;
@@ -319,6 +332,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     @Inject
     protected PaymentDao paymentDao;
 
+    @Inject
+    protected NotificationQueueService notificationQueueService;
+
     protected ConfigurableInvoiceConfig invoiceConfig;
 
     @Override
@@ -383,6 +399,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected void checkNoMoreInvoiceToGenerate(final UUID accountId) {
+        checkNoMoreInvoiceToGenerate(accountId, callContext);
+    }
+
+    protected void checkNoMoreInvoiceToGenerate(final UUID accountId, final CallContext callContext) {
         busHandler.pushExpectedEvent(NextEvent.NULL_INVOICE);
         try {
             invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), callContext);
@@ -433,6 +453,36 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     protected DefaultSubscriptionBase subscriptionDataFromSubscription(final SubscriptionBase sub) {
         return (DefaultSubscriptionBase) sub;
+    }
+
+    protected DefaultCallContext setupTenant() throws TenantApiException {
+        final UUID uuid = UUID.randomUUID();
+        final String externalKey = uuid.toString();
+        final String apiKey = externalKey + "-Key";
+        final String apiSecret = externalKey + "-$3cr3t";
+        final DateTime init = new DateTime(DateTimeZone.UTC);
+        final Tenant tenant = tenantUserApi.createTenant(new DefaultTenant(uuid, init, init, externalKey, apiKey, apiSecret), callContext);
+
+        return new DefaultCallContext(null,
+                                      tenant.getId(),
+                                      "tester",
+                                      CallOrigin.EXTERNAL,
+                                      UserType.TEST,
+                                      "good reason",
+                                      "trust me",
+                                      uuid,
+                                      clock);
+    }
+
+    protected Account setupAccount(final CallContext testCallContext) throws Exception {
+        final AccountData accountData = getAccountData(0);
+        final Account account = accountUserApi.createAccount(accountData, testCallContext);
+        assertNotNull(account);
+
+        final PaymentMethodPlugin info = createPaymentMethodPlugin();
+        paymentApi.addPaymentMethod(account, UUID.randomUUID().toString(), BeatrixIntegrationModule.NON_OSGI_PLUGIN_NAME, true, info, PLUGIN_PROPERTIES, testCallContext);
+
+        return account;
     }
 
     protected Account createAccount(final AccountData accountData) throws Exception {
@@ -1000,6 +1050,43 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         });
     }
 
+
+    protected boolean areAllNotificationsProcessed(final Long tenantRecordId) {
+        int nbNotifications = 0;
+        for (final NotificationQueue notificationQueue : notificationQueueService.getNotificationQueues()) {
+            final Iterator<NotificationEventWithMetadata<NotificationEvent>> iterator = notificationQueue.getFutureOrInProcessingNotificationForSearchKey2(null, tenantRecordId).iterator();
+            try {
+                while (iterator.hasNext()) {
+                    final NotificationEventWithMetadata<NotificationEvent> notificationEvent = iterator.next();
+                    if (!notificationEvent.getEffectiveDate().isAfter(clock.getUTCNow())) {
+                        nbNotifications += 1;
+                    }
+                }
+            } finally {
+                // Go through all results to close the connection
+                while (iterator.hasNext()) {
+                    iterator.next();
+                }
+            }
+        }
+        if (nbNotifications != 0) {
+            log.info("Remaining {} notifications to process", nbNotifications);
+        }
+        return nbNotifications == 0;
+    }
+
+    protected void checkAllNotificationProcessed(final Long tenantRecordId) {
+        // Verify notification(s) moved to the retry queue
+        Awaitility.await().atMost(15, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return areAllNotificationsProcessed(tenantRecordId);
+            }
+        });
+    }
+
+
+
     protected static class TestDryRunArguments implements DryRunArguments {
 
         private final DryRunType dryRunType;
@@ -1092,11 +1179,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private final InvoiceConfig defaultInvoiceConfig;
         private boolean isInvoicingSystemEnabled;
         private boolean shouldParkAccountsWithUnknownUsage;
+        private boolean isZeroAmountUsageDisabled;
+        private UsageDetailMode detailMode;
 
         public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
             this.defaultInvoiceConfig = defaultInvoiceConfig;
             isInvoicingSystemEnabled = defaultInvoiceConfig.isInvoicingSystemEnabled();
             shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
+            isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
+            detailMode = defaultInvoiceConfig.getItemResultBehaviorMode();
         }
 
         @Override
@@ -1117,6 +1208,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         @Override
         public boolean isSanitySafetyBoundEnabled(final InternalTenantContext tenantContext) {
             return defaultInvoiceConfig.isSanitySafetyBoundEnabled();
+        }
+
+        @Override
+        public boolean isUsageZeroAmountDisabled() {
+            return isZeroAmountUsageDisabled;
+        }
+
+        @Override
+        public boolean isUsageZeroAmountDisabled(final InternalTenantContext tenantContext) {
+            return isUsageZeroAmountDisabled();
         }
 
         @Override
@@ -1191,12 +1292,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         @Override
         public UsageDetailMode getItemResultBehaviorMode() {
-            return defaultInvoiceConfig.getItemResultBehaviorMode();
+            return detailMode;
         }
 
         @Override
         public UsageDetailMode getItemResultBehaviorMode(final InternalTenantContext tenantContext) {
             return getItemResultBehaviorMode();
+        }
+
+        public void setItemResultBehaviorMode(final UsageDetailMode detailMode) {
+            this.detailMode = detailMode;
         }
 
         public void setInvoicingSystemEnabled(final boolean invoicingSystemEnabled) {
@@ -1215,6 +1320,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         public void setShouldParkAccountsWithUnknownUsage(final boolean shouldParkAccountsWithUnknownUsage) {
             this.shouldParkAccountsWithUnknownUsage = shouldParkAccountsWithUnknownUsage;
+        }
+
+        public void setZeroAmountUsageDisabled(final boolean isZeroAmountUsageDisabled) {
+            this.isZeroAmountUsageDisabled = isZeroAmountUsageDisabled;
         }
     }
 }

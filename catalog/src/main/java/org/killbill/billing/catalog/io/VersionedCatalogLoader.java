@@ -19,53 +19,59 @@
 package org.killbill.billing.catalog.io;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.Closeable;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.clock.Clock;
+import org.killbill.billing.util.config.definition.CatalogConfig;
+import org.killbill.commons.concurrent.Executors;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
-public class VersionedCatalogLoader implements CatalogLoader {
+public class VersionedCatalogLoader implements CatalogLoader, Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(VersionedCatalogLoader.class);
 
     private static final Object PROTOCOL_FOR_FILE = "file";
     private static final String XML_EXTENSION = ".xml";
 
-    private final Clock clock;
     private final PriceOverride priceOverride;
+    private final ExecutorService executorService;
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public VersionedCatalogLoader(final Clock clock, final PriceOverride priceOverride, final InternalCallContextFactory internalCallContextFactory) {
-        this.clock = clock;
+    public VersionedCatalogLoader(final CatalogConfig config,
+                                  final PriceOverride priceOverride,
+                                  final InternalCallContextFactory internalCallContextFactory) {
+        this.executorService = Executors.newFixedThreadPool(MoreObjects.firstNonNull(config.getCatalogThreadNb(), 1), VersionedCatalogLoader.class.getName());
         this.priceOverride = priceOverride;
         this.internalCallContextFactory = internalCallContextFactory;
     }
@@ -116,36 +122,46 @@ public class VersionedCatalogLoader implements CatalogLoader {
         return Resources.getResource(urlString);
     }
 
-    public VersionedCatalog load(final Iterable<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
+    public VersionedCatalog load(final Collection<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {
         try {
-            final DefaultVersionedCatalog result = new DefaultVersionedCatalog();
+            final Collection<Future<StandaloneCatalog>> catalogs = new ArrayList<Future<StandaloneCatalog>>(catalogXMLs.size());
             for (final String cur : catalogXMLs) {
-                final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
-                final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(curCatalogStream, StandaloneCatalog.class);
-                if (!filterTemplateCatalog || !catalog.isTemplateCatalog()) {
-                    result.add(new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory));
+                catalogs.add(executorService.submit(new Callable<StandaloneCatalog>() {
+
+                    @Override
+                    public StandaloneCatalog call() throws Exception {
+                        final InputStream curCatalogStream = new ByteArrayInputStream(cur.getBytes());
+                        final StandaloneCatalog catalog = XMLLoader.getObjectFromStream(curCatalogStream, StandaloneCatalog.class);
+                        if (!filterTemplateCatalog || !catalog.isTemplateCatalog()) {
+                            return new StandaloneCatalogWithPriceOverride(catalog, priceOverride, tenantRecordId, internalCallContextFactory);
+                        }
+                        return null;
+                    }
+                }));
+            }
+
+            final DefaultVersionedCatalog result = new DefaultVersionedCatalog();
+            for (final Future<StandaloneCatalog> standaloneCatalogFuture : catalogs) {
+                final StandaloneCatalog catalog = standaloneCatalogFuture.get();
+                if (catalog != null) {
+                    result.add(catalog);
                 }
             }
+
             XMLLoader.initializeAndValidate(result);
             return result;
         } catch (final ValidationException e) {
             logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
-            for (ValidationError ve : e.getErrors()) {
+            for (final ValidationError ve : e.getErrors()) {
                 logger.warn(ve.toString());
             }
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
-        } catch (final JAXBException e) {
+        } catch (final InterruptedException e) {
             logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
-        } catch (final IOException e) {
+        } catch (final ExecutionException e) {
             logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
-            throw new IllegalStateException(e);
-        } catch (final TransformerException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
-            throw new IllegalStateException(e);
-        } catch (final SAXException e) {
-            logger.warn("Failed to load catalog for tenantRecordId='{}'", tenantRecordId, e);
-            throw new IllegalStateException(e);
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, tenantRecordId);
         }
     }
 
@@ -225,5 +241,10 @@ public class VersionedCatalogLoader implements CatalogLoader {
             f = "/" + filename;
         }
         return new URI(url.toString() + f);
+    }
+
+    @Override
+    public void close() {
+        executorService.shutdown();
     }
 }

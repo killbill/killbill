@@ -35,25 +35,27 @@ import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Externalizable {
 
     @XmlElement(required = true)
-    private Double max;
+    private double max;
 
     @Override
     public Double getMax() {
         return max;
     }
 
-    public DefaultTieredBlock setMax(final Double max) {
+    public DefaultTieredBlock setMax(final double max) {
         this.max = max;
         return this;
     }
 
     // Required for deserialization
     public DefaultTieredBlock() {
+        setType(BlockType.TIERED);
     }
 
     public DefaultTieredBlock(TieredBlock in, TieredBlockPriceOverride override, Currency currency) {
         super((DefaultUnit) in.getUnit(), in.getSize(), (DefaultInternationalPrice) in.getPrice(), override.getPrice(), currency);
         this.max = in.getMax();
+        setType(BlockType.TIERED);
     }
 
     @Override
@@ -72,7 +74,7 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Ext
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DefaultTieredBlock)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
         if (!super.equals(o)) {
@@ -81,17 +83,15 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Ext
 
         final DefaultTieredBlock that = (DefaultTieredBlock) o;
 
-        if (max != null ? !max.equals(that.max) : that.max != null) {
-            return false;
-        }
-
-        return true;
+        return Double.compare(that.max, max) == 0;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (max != null ? max.hashCode() : 0);
+        final long temp;
+        temp = Double.doubleToLongBits(max);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
     }
 

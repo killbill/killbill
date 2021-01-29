@@ -32,12 +32,16 @@ import org.killbill.billing.usage.dao.RolledUpUsageModelDao;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 public class DefaultInternalUserApi extends BaseUserApi implements InternalUserApi {
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultInternalUserApi.class);
 
     private final RolledUpUsageDao rolledUpUsageDao;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -53,6 +57,8 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
 
     @Override
     public List<RawUsageRecord> getRawUsageForAccount(final LocalDate startDate, final LocalDate endDate, final InternalTenantContext internalTenantContext) {
+
+        log.info("GetRawUsageForAccount startDate='{}', endDate='{}'", startDate, endDate);
 
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
 

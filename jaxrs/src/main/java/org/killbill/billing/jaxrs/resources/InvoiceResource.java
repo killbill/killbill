@@ -389,18 +389,8 @@ public class InvoiceResource extends JaxRsResourceBase {
                                           @javax.ws.rs.core.Context final HttpServletRequest request,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
-        final LocalDate inputDate;
-        if (dryRunSubscriptionSpec != null) {
-            if (DryRunType.UPCOMING_INVOICE.equals(dryRunSubscriptionSpec.getDryRunType())) {
-                inputDate = null;
-            } else if (DryRunType.SUBSCRIPTION_ACTION.equals(dryRunSubscriptionSpec.getDryRunType()) && dryRunSubscriptionSpec.getEffectiveDate() != null) {
-                inputDate = dryRunSubscriptionSpec.getEffectiveDate();
-            } else {
-                inputDate = toLocalDate(targetDate);
-            }
-        } else {
-            inputDate = toLocalDate(targetDate);
-        }
+        final LocalDate inputDate = (dryRunSubscriptionSpec != null && DryRunType.UPCOMING_INVOICE.equals(dryRunSubscriptionSpec.getDryRunType())) ?
+                                     null : toLocalDate(targetDate);
 
         // Passing a null or empty body means we are trying to generate an invoice with a (future) targetDate
         // On the other hand if body is not null, we are attempting a dryRun subscription operation
@@ -410,14 +400,16 @@ public class InvoiceResource extends JaxRsResourceBase {
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified");
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductCategory(), "DryRun subscription product category should be specified");
                 if (dryRunSubscriptionSpec.getProductCategory().equals(ProductCategory.ADD_ON)) {
-                    verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundle ID should be specified");
+                    verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundleID should be specified");
                 }
             } else if (SubscriptionEventType.CHANGE.equals(dryRunSubscriptionSpec.getDryRunAction())) {
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified");
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified");
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getSubscriptionId(), "DryRun subscriptionID should be specified");
+                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundleID should be specified");
             } else if (SubscriptionEventType.STOP_BILLING.equals(dryRunSubscriptionSpec.getDryRunAction())) {
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getSubscriptionId(), "DryRun subscriptionID should be specified");
+                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundleID should be specified");
             }
         }
 

@@ -20,14 +20,15 @@ package org.killbill.billing.catalog;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.VersionedCatalog;
-import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.catalog.io.VersionedCatalogLoader;
+import org.mockito.Mockito;
 
 public class MockCatalogService extends DefaultCatalogService {
 
     private final VersionedCatalog catalog;
 
-    public MockCatalogService(final VersionedCatalog catalog, final CacheControllerDispatcher cacheControllerDispatcher) {
-        super(null, null, null, null);
+    public MockCatalogService(final VersionedCatalog catalog) {
+        super(null, null, null, null, Mockito.mock(VersionedCatalogLoader.class));
         this.catalog = catalog;
     }
 

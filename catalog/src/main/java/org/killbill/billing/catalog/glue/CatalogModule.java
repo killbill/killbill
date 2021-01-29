@@ -29,6 +29,7 @@ import org.killbill.billing.catalog.caching.CatalogCacheInvalidationCallback;
 import org.killbill.billing.catalog.caching.DefaultCatalogCache;
 import org.killbill.billing.catalog.caching.DefaultOverriddenPlanCache;
 import org.killbill.billing.catalog.caching.OverriddenPlanCache;
+import org.killbill.billing.catalog.caching.PriceOverridePattern;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.dao.DefaultCatalogOverrideDao;
 import org.killbill.billing.catalog.io.CatalogLoader;
@@ -44,6 +45,8 @@ import org.killbill.billing.util.config.definition.CatalogConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Strings;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
@@ -51,8 +54,13 @@ public class CatalogModule extends KillBillModule {
 
     public static final String CATALOG_INVALIDATION_CALLBACK = "CatalogInvalidationCallback";
 
+    private final PriceOverridePattern priceOverridePattern;
+
     public CatalogModule(final KillbillConfigSource configSource) {
         super(configSource);
+        // Unless explicitly specified we keep current "-" delimiter for backward compatibility
+        final boolean useRECXMLNamesCompliant = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString("org.killbill.catalog.price.override.delimiter.REC-xml-names-19990114.compliant"), "false"));
+        this.priceOverridePattern = new PriceOverridePattern(useRECXMLNamesCompliant);
     }
 
     protected void installConfig() {
@@ -61,6 +69,7 @@ public class CatalogModule extends KillBillModule {
     }
 
     protected void installCatalog() {
+        bind(PriceOverridePattern.class).toInstance(priceOverridePattern);
         bind(CatalogService.class).to(DefaultCatalogService.class).asEagerSingleton();
         bind(CatalogLoader.class).to(VersionedCatalogLoader.class).asEagerSingleton();
         bind(PriceOverride.class).to(DefaultPriceOverride.class).asEagerSingleton();

@@ -26,6 +26,7 @@ import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.catalog.glue.CatalogModule;
+import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.platform.api.KillbillService;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
@@ -46,17 +47,20 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
     private final TenantInternalApi tenantInternalApi;
     private final CatalogCache catalogCache;
     private final CacheInvalidationCallback cacheInvalidationCallback;
+    private final VersionedCatalogLoader versionedCatalogLoader;
     private boolean isInitialized;
 
     @Inject
     public DefaultCatalogService(final CatalogConfig config,
                                  final TenantInternalApi tenantInternalApi,
                                  final CatalogCache catalogCache,
-                                 @Named(CatalogModule.CATALOG_INVALIDATION_CALLBACK) final CacheInvalidationCallback cacheInvalidationCallback) {
+                                 @Named(CatalogModule.CATALOG_INVALIDATION_CALLBACK) final CacheInvalidationCallback cacheInvalidationCallback,
+                                 final VersionedCatalogLoader versionedCatalogLoader) {
         this.config = config;
         this.catalogCache = catalogCache;
         this.cacheInvalidationCallback = cacheInvalidationCallback;
         this.tenantInternalApi = tenantInternalApi;
+        this.versionedCatalogLoader = versionedCatalogLoader;
         this.isInitialized = false;
     }
 
@@ -79,6 +83,11 @@ public class DefaultCatalogService implements KillbillService, CatalogService {
     @LifecycleHandlerType(LifecycleLevel.INIT_SERVICE)
     public synchronized void initialize() throws ServiceException {
         tenantInternalApi.initializeCacheInvalidationCallback(TenantKey.CATALOG, cacheInvalidationCallback);
+    }
+
+    @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
+    public void stop() {
+        versionedCatalogLoader.close();
     }
 
     @Override

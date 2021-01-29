@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill</artifactId>
-        <version>0.22.12-SNAPSHOT</version>
+        <version>0.22.20-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-payment</artifactId>
@@ -81,6 +81,11 @@
             <groupId>it.ozimov</groupId>
             <artifactId>embedded-redis</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>

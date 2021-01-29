@@ -182,7 +182,7 @@ public class TestDateInvestigation /* extends UtilTestSuiteWithEmbeddedDB */ {
     }
 
     private DataSource getRawMysqlDataSource(final String dbName, final String user, final String pwd) {
-        final com.mysql.jdbc.jdbc2.optional.MysqlDataSource rawSource = new com.mysql.jdbc.jdbc2.optional.MysqlDataSource();
+        final com.mysql.cj.jdbc.MysqlDataSource rawSource = new com.mysql.cj.jdbc.MysqlDataSource();
         rawSource.setDatabaseName(dbName);
         rawSource.setUser(user);
         rawSource.setPassword(pwd);
@@ -193,7 +193,7 @@ public class TestDateInvestigation /* extends UtilTestSuiteWithEmbeddedDB */ {
 
     private DataSource getRawMariaDBDataSource(final String dbName, final String user, final String pwd) throws SQLException {
         final org.mariadb.jdbc.MariaDbDataSource rawSource = new org.mariadb.jdbc.MariaDbDataSource();
-        rawSource.setURL("jdbc:mysql://localhost:3306/killbill?createDatabaseIfNotExist=true&allowMultiQueries=true");
+        rawSource.setUrl("jdbc:mysql://localhost:3306/killbill?createDatabaseIfNotExist=true&allowMultiQueries=true");
         rawSource.setDatabaseName(dbName);
         rawSource.setUser(user);
         rawSource.setPassword(pwd);

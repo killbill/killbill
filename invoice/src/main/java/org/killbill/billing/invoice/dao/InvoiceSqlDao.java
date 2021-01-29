@@ -21,6 +21,7 @@ package org.killbill.billing.invoice.dao;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.Invoice;
@@ -49,9 +50,10 @@ public interface InvoiceSqlDao extends EntitySqlDao<InvoiceModelDao, Invoice> {
                                               @SmartBindBean final InternalTenantContext context);
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    void updateStatus(@Bind("id") String invoiceId,
-                      @Bind("status") String status,
-                      @SmartBindBean final InternalCallContext context);
+    void updateStatusAndTargetDate(@Bind("id") String invoiceId,
+                                   @Bind("status") String status,
+                                   @Bind("targetDate") LocalDate targetDate,
+                                   @SmartBindBean final InternalCallContext context);
 
 
     @SqlQuery

@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-profiles</artifactId>
-        <version>0.22.12-SNAPSHOT</version>
+        <version>0.22.20-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-profiles-killbill</artifactId>
@@ -105,7 +105,7 @@
         <!--</dependency>-->
         <dependency>
             <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP-java6</artifactId>
+            <artifactId>HikariCP</artifactId>
         </dependency>
         <dependency>
             <groupId>io.airlift</groupId>

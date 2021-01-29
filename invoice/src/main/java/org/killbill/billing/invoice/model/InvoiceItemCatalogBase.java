@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.Seconds;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -122,18 +123,14 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
 
     @Override
     public boolean matches(final Object o) {
-
         if (!super.matches(o)) {
             return false;
         }
         final InvoiceItemCatalogBase that = (InvoiceItemCatalogBase) o;
-        if (catalogEffectiveDate != null && that.catalogEffectiveDate != null && catalogEffectiveDate.compareTo(that.catalogEffectiveDate) != 0) {
-            return false;
-        } else if (catalogEffectiveDate == null || that.catalogEffectiveDate == null) {
-            /* At least one such item has a 'null' catalogEffectiveDate, reflecting a prior 0.22 release item
-             * => we default to true to avoid re-generating existing items (See https://github.com/killbill/killbill/issues/1251)
-             */
-        }
+
+        // Note: we don't check the catalogEffectiveDate here as a mismatch shouldn't trigger a repair (https://github.com/killbill/killbill/issues/1373).
+        // Changes to the catalog should be handled via the catalog feature EffectiveDateForExistingSubscriptions exclusively and explicitly.
+        // As a side effect, catalogEffectiveDate is also ignored for equals() (which relies on this method).
 
         if (phaseName != null ? !phaseName.equals(that.phaseName) : that.phaseName != null) {
             return false;

@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.testng.Assert;
@@ -241,6 +242,29 @@ public class TestInvoiceItemDao extends InvoiceTestSuiteWithEmbeddedDB {
         createAndVerifyExternalCharge(new BigDecimal("10.00000001"), Currency.BTC);
         // Malagasy ariary is subdivided into 5 iraimbilanja
         createAndVerifyExternalCharge(new BigDecimal("10.2"), Currency.MGA);
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1370")
+    public void testFixedPriceWithSubMillisecondCatalogEffectiveDateInvoiceSqlDao() throws EntityPersistenceException {
+        final UUID invoiceId = UUID.randomUUID();
+        final UUID accountId = account.getId();
+        final LocalDate startDate = new LocalDate(2012, 4, 1);
+
+        final InvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(invoiceId,
+                                                                            accountId,
+                                                                            UUID.randomUUID(),
+                                                                            UUID.randomUUID(),
+                                                                            "test product",
+                                                                            "test plan",
+                                                                            "test phase",
+                                                                            new DateTime("2020-09-16T10:34:25.348646Z"),
+                                                                            startDate,
+                                                                            TEN,
+                                                                            Currency.USD);
+        invoiceUtil.createInvoiceItem(fixedPriceInvoiceItem, context);
+
+        final InvoiceItemModelDao savedItem = invoiceUtil.getInvoiceItemById(fixedPriceInvoiceItem.getId(), context);
+        assertSameInvoiceItem(fixedPriceInvoiceItem, savedItem);
     }
 
     private void createAndVerifyExternalCharge(final BigDecimal amount, final Currency currency) throws EntityPersistenceException {

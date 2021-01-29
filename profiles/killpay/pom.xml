@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-profiles</artifactId>
-        <version>0.22.12-SNAPSHOT</version>
+        <version>0.22.20-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-profiles-killpay</artifactId>
@@ -181,6 +181,20 @@
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <excludes>
+                                <!-- TODO This is outdated -->
+                                <exclude>src/main/webapp/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>

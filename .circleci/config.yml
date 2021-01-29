@@ -15,7 +15,7 @@ jobs:
           name: Setup dependencies
           command: |
             if [ "${CIRCLE_BRANCH}" != "master" ]; then
-              for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-platform killbill-client-java; do
+              for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-plugin-framework-java killbill-platform killbill-client-java; do
                 if [ -n "$(git ls-remote --heads https://github.com/killbill/$i.git ${CIRCLE_BRANCH})" ]; then
                   echo "*** Setting up $i"
                   mkdir -p /home/killbill/$i

@@ -127,12 +127,8 @@ public class DefaultCatalogCache implements CatalogCache {
                     final StandaloneCatalogWithPriceOverride curWithOverride = new StandaloneCatalogWithPriceOverride(cur, priceOverride, tenantContext.getTenantRecordId(), internalCallContextFactory);
                     tenantCatalog.add(curWithOverride);
                 }
-
-                cacheController.putIfAbsent(tenantContext.getTenantRecordId(), tenantCatalog);
-            }
-
-            if (tenantCatalog != null) {
                 initializeCatalog(tenantCatalog);
+                cacheController.putIfAbsent(tenantContext.getTenantRecordId(), tenantCatalog);
             }
 
             return tenantCatalog;
@@ -167,7 +163,6 @@ public class DefaultCatalogCache implements CatalogCache {
             if (cacheable) {
                 final DefaultVersionedCatalog versionedCatalog = cacheController.get(internalTenantContext.getTenantRecordId(), cacheLoaderArgument);
                 if (versionedCatalog != null) {
-                    initializeCatalog(versionedCatalog);
                     if (versionedCatalog.getCurrentVersion().getEffectiveDate().compareTo(latestCatalogUpdatedDate.toDate()) == 0) {
                         // Current cached version matches the one from the plugin
                         return versionedCatalog;
@@ -183,7 +178,7 @@ public class DefaultCatalogCache implements CatalogCache {
                     logger.info("Returning catalog from plugin {} on tenant {} ", service, internalTenantContext.getTenantRecordId());
                 }
 
-                final DefaultVersionedCatalog resolvedPluginCatalog = versionedCatalogMapper.toVersionedCatalog(pluginCatalog, internalTenantContext);
+                final DefaultVersionedCatalog resolvedPluginCatalog = versionedCatalogMapper.toVersionedCatalog(pluginCatalog);
 
                 // Always clear the cache for safety
                 cacheController.remove(internalTenantContext.getTenantRecordId());
@@ -215,7 +210,11 @@ public class DefaultCatalogCache implements CatalogCache {
         final LoaderCallback loaderCallback = new LoaderCallback() {
             @Override
             public VersionedCatalog loadCatalog(final List<String> catalogXMLs, final Long tenantRecordId) throws CatalogApiException {
-                return loader.load(catalogXMLs, filterTemplateCatalog, tenantRecordId);
+                final VersionedCatalog versionedCatalog = loader.load(catalogXMLs, filterTemplateCatalog, tenantRecordId);
+                if (versionedCatalog != null) {
+                    initializeCatalog(versionedCatalog);
+                }
+                return versionedCatalog;
             }
         };
         final Object[] args = new Object[1];

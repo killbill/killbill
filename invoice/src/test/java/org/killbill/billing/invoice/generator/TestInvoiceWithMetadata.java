@@ -124,7 +124,7 @@ public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
 
         perSubscriptionFutureNotificationDates.put(subscription.getId(), subscriptionFutureNotificationDates);
 
-        final InvoiceWithMetadata invoiceWithMetadata = new InvoiceWithMetadata(originalInvoice, ImmutableSet.of(), perSubscriptionFutureNotificationDates);
+        final InvoiceWithMetadata invoiceWithMetadata = new InvoiceWithMetadata(originalInvoice, ImmutableSet.of(), perSubscriptionFutureNotificationDates, false, internalCallContext);
 
         // We generate an invoice with one item, invoicing for $0
         final Invoice resultingInvoice = invoiceWithMetadata.getInvoice();

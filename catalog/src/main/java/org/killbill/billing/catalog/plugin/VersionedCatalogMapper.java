@@ -19,42 +19,28 @@ package org.killbill.billing.catalog.plugin;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
-import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.api.StandalonePluginCatalog;
 import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.clock.Clock;
 
 public class VersionedCatalogMapper {
 
-    private final Clock clock;
-
-    private final PriceOverride priceOverride;
-    private final InternalCallContextFactory internalCallContextFactory;
-
     @Inject
-    public VersionedCatalogMapper(final Clock clock, final PriceOverride priceOverride, final InternalCallContextFactory internalCallContextFactory) {
-        this.clock = clock;
-        this.priceOverride = priceOverride;
-        this.internalCallContextFactory = internalCallContextFactory;
+    public VersionedCatalogMapper() {
     }
 
-    public DefaultVersionedCatalog toVersionedCatalog(final VersionedPluginCatalog pluginCatalog, final InternalTenantContext internalTenantContext) {
+    public DefaultVersionedCatalog toVersionedCatalog(final VersionedPluginCatalog pluginCatalog) {
         final DefaultVersionedCatalog result = new DefaultVersionedCatalog();
         for (final StandalonePluginCatalog cur : pluginCatalog.getStandalonePluginCatalogs()) {
-            result.add(toStandaloneCatalogWithPriceOverride(pluginCatalog, cur, internalTenantContext));
+            result.add(toStandaloneCatalog(pluginCatalog, cur));
         }
         return result;
     }
 
-    private StandaloneCatalogWithPriceOverride toStandaloneCatalogWithPriceOverride(final VersionedPluginCatalog pluginCatalog, final StandalonePluginCatalog input, final InternalTenantContext internalTenantContext) {
+    private StandaloneCatalog toStandaloneCatalog(final VersionedPluginCatalog pluginCatalog, final StandalonePluginCatalog input) {
         final StandaloneCatalogMapper mapper = new StandaloneCatalogMapper(pluginCatalog.getCatalogName());
         final StandaloneCatalog catalog = mapper.toStandaloneCatalog(input);
-        final StandaloneCatalogWithPriceOverride result = new StandaloneCatalogWithPriceOverride(catalog, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
-        return result;
+        return catalog;
     }
 }

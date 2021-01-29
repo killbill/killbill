@@ -23,7 +23,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.math.BigDecimal;
-import java.net.URI;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -38,10 +39,12 @@ import org.killbill.xmlloader.ValidationErrors;
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements Price, Externalizable {
 
+    private static final Map<String, BigDecimal> frequentValues = new ConcurrentHashMap<String, BigDecimal>();
+    private static final int FREQUENT_VALUES_CACHE_SIZE = Integer.parseInt(System.getProperty("org.killbill.catalog.frequentValuesCacheSize", "1000"));
+
     @XmlElement(required = true)
     private Currency currency;
 
-    @XmlElement(required = true, nillable = true)
     private BigDecimal value;
 
     public DefaultPrice() {
@@ -59,6 +62,7 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
         return currency;
     }
 
+    @XmlElement(required = true, nillable = true)
     @Override
     public BigDecimal getValue() throws CurrencyValueNull {
         if (value == null) {
@@ -73,7 +77,22 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     public DefaultPrice setValue(final BigDecimal value) {
-        this.value = value;
+        if (value == null) {
+            this.value = value;
+            return this;
+        }
+
+        final String valueAsString = value.toString();
+
+        if (!frequentValues.containsKey(valueAsString) && frequentValues.size() < FREQUENT_VALUES_CACHE_SIZE) {
+            frequentValues.put(valueAsString, value);
+        }
+
+        if (frequentValues.containsKey(valueAsString)) {
+            this.value = frequentValues.get(valueAsString);
+        } else {
+            this.value = value;
+        }
         return this;
     }
 

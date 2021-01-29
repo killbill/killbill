@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<!--
+  ~ Copyright 2020-2020 Equinix, Inc
+  ~ Copyright 2014-2020 The Billing Project, LLC
+  ~
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
+
+    <effectiveDate>2011-01-01T00:00:00+00:00</effectiveDate>
+    <catalogName>Firearms</catalogName>
+
+    <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+
+    <currencies>
+        <currency>USD</currency>
+        <currency>EUR</currency>
+        <currency>GBP</currency>
+    </currencies>
+
+    <units>
+        <unit name="bullets"/>
+        <unit name="pellets"/>
+        <unit name="slugs"/>
+        <unit name="stones"/>
+    </units>
+
+    <products>
+        <product name="Shotgun">
+            <category>BASE</category>
+            <included>
+            </included>
+            <available>
+                <addonProduct>Bullets</addonProduct>
+                <addonProduct>Pellets</addonProduct>
+            </available>
+        </product>
+        <product name="Trebuchet">
+            <category>BASE</category>
+        </product>
+        <product name="Bullets">
+            <category>ADD_ON</category>
+        </product>
+        <product name="Pellets">
+            <category>ADD_ON</category>
+        </product>
+    </products>
+
+    <rules>
+        <changePolicy>
+            <changePolicyCase>
+                <phaseType>TRIAL</phaseType>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromBillingPeriod>MONTHLY</fromBillingPeriod>
+                <toBillingPeriod>ANNUAL</toBillingPeriod>
+                <policy>IMMEDIATE</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <fromBillingPeriod>ANNUAL</fromBillingPeriod>
+                <toBillingPeriod>MONTHLY</toBillingPeriod>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+            <changePolicyCase>
+                <policy>END_OF_TERM</policy>
+            </changePolicyCase>
+        </changePolicy>
+        <changeAlignment>
+            <changeAlignmentCase>
+                <alignment>START_OF_SUBSCRIPTION</alignment>
+            </changeAlignmentCase>
+        </changeAlignment>
+        <cancelPolicy>
+            <cancelPolicyCase>
+                <phaseType>TRIAL</phaseType>
+                <policy>IMMEDIATE</policy>
+            </cancelPolicyCase>
+            <cancelPolicyCase>
+                <policy>END_OF_TERM</policy>
+            </cancelPolicyCase>
+        </cancelPolicy>
+        <createAlignment>
+            <createAlignmentCase>
+                <alignment>START_OF_BUNDLE</alignment>
+            </createAlignmentCase>
+        </createAlignment>
+        <billingAlignment>
+            <billingAlignmentCase>
+                <productCategory>ADD_ON</productCategory>
+                <alignment>BUNDLE</alignment>
+            </billingAlignmentCase>
+            <billingAlignmentCase>
+                <billingPeriod>ANNUAL</billingPeriod>
+                <alignment>SUBSCRIPTION</alignment>
+            </billingAlignmentCase>
+            <billingAlignmentCase>
+                <alignment>ACCOUNT</alignment>
+            </billingAlignmentCase>
+        </billingAlignment>
+        <priceList>
+        </priceList>
+    </rules>
+
+    <plans>
+        <plan name="shotgun-monthly" prettyName="Shotgun Monthly">
+            <product>Shotgun</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                    <number>-1</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>249.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>149.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>169.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+
+        <plan name="shotgun-annual">
+            <product>Shotgun</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+            </initialPhases>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>ANNUAL</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>2399.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>1499.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>1699.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+
+        <plan name="bullets-usage-in-arrear" prettyName="Bullet Monthly Plan">
+            <product>Bullets</product>
+            <finalPhase type="EVERGREEN" prettyName="Bullet Monthly Plan Evergreen">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="bullets-usage-in-arrear-usage" prettyName="Bullet Usage In Arrear" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>bullets</unit>
+                                        <size>100</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>2.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>1.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>0.95</value>
+                                            </price>
+                                        </prices>
+                                        <max>10</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>bullets</unit>
+                                        <size>1000</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>5.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>4.95</value>
+                                            </price>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>3.95</value>
+                                            </price>
+                                        </prices>
+                                        <max>100</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+            <plansAllowedInBundle>-1</plansAllowedInBundle>
+            <!-- arbitrary number of these (multipack) -->
+        </plan>
+
+
+        <plan name="pellets-usage-in-arrear" prettyName="Pellet Monthly Plan">
+            <product>Pellets</product>
+            <finalPhase type="EVERGREEN" prettyName="Pellet Monthly Plan Evergreen">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="pellets-usage-in-arrear-usage" prettyName="Pellet Usage In Arrear" billingMode="IN_ARREAR" usageType="CONSUMABLE">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <blocks>
+                                    <tieredBlock>
+                                        <unit>pellets</unit>
+                                        <size>100</size>
+                                        <prices>
+                                            <price>
+                                                <currency>USD</currency>
+                                                <value>0</value>
+                                            </price>
+                                            <price>
+                                                <currency>EUR</currency>
+                                                <value>0</value>
+                                            </price>
+                                            <price>
+                                                <currency>GBP</currency>
+                                                <value>0</value>
+                                            </price>
+                                        </prices>
+                                        <max>-1</max>
+                                    </tieredBlock>
+                                </blocks>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+            <plansAllowedInBundle>-1</plansAllowedInBundle>
+            <!-- arbitrary number of these (multipack) -->
+        </plan>
+
+        <plan name="trebuchet-usage-in-arrear" prettyName="Trebuchet Monthly Plan">
+            <product>Trebuchet</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <usages>
+                    <usage name="trebuchet-in-arrear-usage" billingMode="IN_ARREAR" usageType="CAPACITY">
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <tiers>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>stones</unit>
+                                        <max>100</max>
+                                    </limit>
+                                </limits>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>USD</currency>
+                                        <value>100</value>
+                                    </price>
+                                </recurringPrice>
+                            </tier>
+                            <tier>
+                                <limits>
+                                    <limit>
+                                        <unit>stones</unit>
+                                        <max>-1</max>
+                                    </limit>
+                                </limits>
+                                <recurringPrice>
+                                    <price>
+                                        <currency>USD</currency>
+                                        <value>1000</value>
+                                    </price>
+                                </recurringPrice>
+                            </tier>
+                        </tiers>
+                    </usage>
+                </usages>
+            </finalPhase>
+        </plan>
+    </plans>
+    <priceLists>
+        <defaultPriceList name="DEFAULT">
+            <plans>
+                <plan>shotgun-monthly</plan>
+                <plan>shotgun-annual</plan>
+                <plan>trebuchet-usage-in-arrear</plan>
+                <plan>bullets-usage-in-arrear</plan>
+                <plan>pellets-usage-in-arrear</plan>
+            </plans>
+        </defaultPriceList>
+    </priceLists>
+
+</catalog>
