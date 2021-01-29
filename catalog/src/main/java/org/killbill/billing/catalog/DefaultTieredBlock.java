@@ -49,11 +49,13 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Ext
 
     // Required for deserialization
     public DefaultTieredBlock() {
+        setType(BlockType.TIERED);
     }
 
     public DefaultTieredBlock(TieredBlock in, TieredBlockPriceOverride override, Currency currency) {
         super((DefaultUnit) in.getUnit(), in.getSize(), (DefaultInternationalPrice) in.getPrice(), override.getPrice(), currency);
         this.max = in.getMax();
+        setType(BlockType.TIERED);
     }
 
     @Override
