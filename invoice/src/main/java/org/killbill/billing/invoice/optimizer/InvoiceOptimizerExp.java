@@ -40,6 +40,8 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -48,11 +50,14 @@ import com.google.common.collect.Iterables;
 
 public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
 
+    private static Logger logger = LoggerFactory.getLogger(InvoiceOptimizerExp.class);
+
     @Inject
     public InvoiceOptimizerExp(final InvoiceDao invoiceDao,
                                final Clock clock,
                                final InvoiceConfig invoiceConfig) {
         super(invoiceDao, clock, invoiceConfig);
+        logger.info("Feature InvoiceOptimizer is ON");
     }
 
     @Override

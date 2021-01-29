@@ -43,7 +43,6 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.InvoiceItemGenerator.InvoiceGeneratorResult;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
-import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
@@ -54,6 +53,7 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -70,7 +70,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
-        allExtraProperties.put(DefaultInvoiceModule.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
+        allExtraProperties.put(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
         return getConfigSource(null, allExtraProperties);
     }
 

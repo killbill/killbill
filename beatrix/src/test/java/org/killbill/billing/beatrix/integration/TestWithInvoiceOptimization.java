@@ -37,9 +37,9 @@ import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -54,7 +54,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
         allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES);
-        allExtraProperties.put(DefaultInvoiceModule.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
+        allExtraProperties.put(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
         return getConfigSource(null, allExtraProperties);
     }
 
