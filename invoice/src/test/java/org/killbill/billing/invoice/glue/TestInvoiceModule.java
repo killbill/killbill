@@ -20,27 +20,44 @@ package org.killbill.billing.invoice.glue;
 
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.invoice.TestInvoiceHelper;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizer;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerExp;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerNoop;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.email.templates.TemplateModule;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.mockito.Mockito;
 
+import com.google.common.base.MoreObjects;
+
 public class TestInvoiceModule extends DefaultInvoiceModule {
+
+    private final boolean testFeatureInvoiceOptimization;
 
     public TestInvoiceModule(final KillbillConfigSource configSource) {
         super(configSource);
+        testFeatureInvoiceOptimization = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
     }
 
     private void installExternalApis() {
         bind(SubscriptionBaseInternalApi.class).toInstance(Mockito.mock(SubscriptionBaseInternalApi.class));
         bind(BillingInternalApi.class).toInstance(Mockito.mock(BillingInternalApi.class));
+    }
+
+    protected void installInvoiceOptimizer() {
+        if (testFeatureInvoiceOptimization) {
+            bind(InvoiceOptimizer.class).to(InvoiceOptimizerExp.class).asEagerSingleton();
+        } else {
+            bind(InvoiceOptimizer.class).to(InvoiceOptimizerNoop.class).asEagerSingleton();
+        }
     }
 
     @Override

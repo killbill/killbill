@@ -50,6 +50,7 @@ import org.killbill.billing.invoice.model.InvalidDateSequenceException;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItemData;
 import org.killbill.billing.invoice.model.RecurringInvoiceItemDataWithNextBillingCycleDate;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
@@ -79,38 +80,32 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
     private final InvoiceConfig config;
 
-    private final Clock clock;
-
     @Inject
     public FixedAndRecurringInvoiceItemGenerator(final InvoiceConfig config, final Clock clock) {
         this.config = config;
-        this.clock = clock;
     }
 
     public InvoiceGeneratorResult generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
-                                                @Nullable final Iterable<Invoice> existingInvoices, final LocalDate targetDate,
+                                                final AccountInvoices existingInvoices, final LocalDate targetDate,
                                                 final Currency targetCurrency, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
 
-        final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices);
+        final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices.getInvoices());
         final Set<UUID> toBeIgnored = invoicePruner.getFullyRepairedItemsClosure();
         final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId);
-        if (existingInvoices != null) {
-            for (final Invoice invoice : existingInvoices) {
-                for (final InvoiceItem item : invoice.getInvoiceItems()) {
-                    if (toBeIgnored.contains(item.getId())) {
-                       continue;
-                    }
+        for (final Invoice invoice : existingInvoices.getInvoices()) {
+            for (final InvoiceItem item : invoice.getInvoiceItems()) {
+                if (toBeIgnored.contains(item.getId())) {
+                    continue;
+                }
 
-                    if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charges etc.
-                        !eventSet.getSubscriptionIdsWithAutoInvoiceOff()
-                                 .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
+                if (item.getSubscriptionId() == null || // Always include migration invoices, credits, external charges etc.
+                    !eventSet.getSubscriptionIdsWithAutoInvoiceOff()
+                             .contains(item.getSubscriptionId())) { //don't add items with auto_invoice_off tag
 
-                        accountItemTree.addExistingItem(item);
-
-                        trackInvoiceItemCreatedDay(item, createdItemsPerDayPerSubscription, internalCallContext);
-                    }
+                    accountItemTree.addExistingItem(item);
+                    trackInvoiceItemCreatedDay(item, createdItemsPerDayPerSubscription, internalCallContext);
                 }
             }
         }
@@ -119,6 +114,8 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
         processRecurringBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, perSubscriptionFutureNotificationDate, internalCallContext);
         processFixedBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, internalCallContext);
+
+        existingInvoices.filterProposedItems(proposedItems, eventSet, internalCallContext);
 
         try {
             accountItemTree.mergeWithProposedItems(proposedItems);
@@ -212,10 +209,10 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     // Turn a set of events into a list of invoice items. Note that the dates on the invoice items will be rounded (granularity of a day)
     @VisibleForTesting
     List<InvoiceItem> processRecurringEvent(final UUID invoiceId, final UUID accountId, final BillingEvent thisEvent, @Nullable final BillingEvent nextEvent,
-                                                    final LocalDate targetDate, final Currency currency,
-                                                    final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger,
-                                                    final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
-                                                    final InternalCallContext internalCallContext) throws InvoiceApiException {
+                                            final LocalDate targetDate, final Currency currency,
+                                            final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger,
+                                            final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
+                                            final InternalCallContext internalCallContext) throws InvoiceApiException {
 
         try {
             final List<InvoiceItem> items = new ArrayList<InvoiceItem>();
@@ -285,7 +282,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                 }
             }
 
-                // For debugging purposes
+            // For debugging purposes
             invoiceItemGeneratorLogger.append(thisEvent, items);
 
             return items;

@@ -53,14 +53,13 @@ import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.plumbing.billing.DefaultBillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -70,7 +69,6 @@ import com.google.common.collect.Multimap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
@@ -372,7 +370,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         assertEquals(fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                          UUID.randomUUID(),
                                                                          events,
-                                                                         existingInvoices,
+                                                                         new AccountInvoices(null, existingInvoices),
                                                                          startDate.plusMonths(threshold),
                                                                          account.getCurrency(),
                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -403,7 +401,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                          UUID.randomUUID(),
                                                                                                          events,
-                                                                                                         existingInvoices,
+                                                                                                         new AccountInvoices(null, existingInvoices),
                                                                                                          startDate.plusMonths(2 * threshold),
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -463,7 +461,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                      UUID.randomUUID(),
                                                                                                      events,
-                                                                                                     existingInvoices,
+                                                                                                     new AccountInvoices(null, existingInvoices),
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -525,7 +523,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                          UUID.randomUUID(),
                                                                                                          events,
-                                                                                                         existingInvoices,
+                                                                                                         new AccountInvoices(null, existingInvoices),
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -586,7 +584,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                      UUID.randomUUID(),
                                                                                                      events,
-                                                                                                     existingInvoices,
+                                                                                                     new AccountInvoices(null, existingInvoices),
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -667,7 +665,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                          UUID.randomUUID(),
                                                                                                          events,
-                                                                                                         existingInvoices,
+                                                                                                         new AccountInvoices(null, existingInvoices),
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -746,7 +744,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                      UUID.randomUUID(),
                                                                                                      events,
-                                                                                                     existingInvoices,
+                                                                                                     new AccountInvoices(null, existingInvoices),
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -828,7 +826,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                 UUID.randomUUID(),
                                                                 events,
-                                                                existingInvoices,
+                                                                new AccountInvoices(null, existingInvoices),
                                                                 startDate,
                                                                 account.getCurrency(),
                                                                 new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -899,7 +897,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                          UUID.randomUUID(),
                                                                                                          events,
-                                                                                                         existingInvoices,
+                                                                                                         new AccountInvoices(null, existingInvoices),
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -935,7 +933,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                          UUID.randomUUID(),
                                                                                                          events,
-                                                                                                         existingInvoices,
+                                                                                                         new AccountInvoices(null, existingInvoices),
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -972,7 +970,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                          UUID.randomUUID(),
                                                                                                          events,
-                                                                                                         existingInvoices,
+                                                                                                         new AccountInvoices(null, existingInvoices),
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -1029,7 +1027,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                 UUID.randomUUID(),
                                                                 events,
-                                                                existingInvoices,
+                                                                new AccountInvoices(null, existingInvoices),
                                                                 startDate,
                                                                 account.getCurrency(),
                                                                 new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -1119,7 +1117,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                      UUID.randomUUID(),
                                                                                                      events,
-                                                                                                     existingInvoices,
+                                                                                                     new AccountInvoices(null, existingInvoices),
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -1205,7 +1203,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         final List<InvoiceItem> generatedItems = fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                                                      UUID.randomUUID(),
                                                                                                      events,
-                                                                                                     existingInvoices,
+                                                                                                     new AccountInvoices(null, existingInvoices),
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
@@ -1292,7 +1290,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
             fixedAndRecurringInvoiceItemGenerator.generateItems(account,
                                                                 UUID.randomUUID(),
                                                                 events,
-                                                                existingInvoices,
+                                                                new AccountInvoices(null, existingInvoices),
                                                                 startDate,
                                                                 account.getCurrency(),
                                                                 new HashMap<UUID, SubscriptionFutureNotificationDates>(),

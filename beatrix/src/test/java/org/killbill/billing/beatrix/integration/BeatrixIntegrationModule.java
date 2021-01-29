@@ -38,6 +38,9 @@ import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.invoice.generator.DefaultInvoiceGenerator;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizer;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerExp;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerNoop;
 import org.killbill.billing.junction.glue.DefaultJunctionModule;
 import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.payment.provider.MockPaymentProviderPluginModule;
@@ -48,6 +51,7 @@ import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.email.templates.TemplateModule;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.BroadcastModule;
 import org.killbill.billing.util.glue.CacheModule;
@@ -65,6 +69,8 @@ import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
+
+import com.google.common.base.MoreObjects;
 
 public class BeatrixIntegrationModule extends KillBillModule {
 
@@ -129,10 +135,20 @@ public class BeatrixIntegrationModule extends KillBillModule {
 
     private final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {
 
+        private final boolean testFeatureInvoiceOptimization;
+
         private DefaultInvoiceModuleWithSwitchRepairLogic(final KillbillConfigSource configSource) {
             super(configSource);
+            testFeatureInvoiceOptimization = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
         }
 
+        protected void installInvoiceOptimizer() {
+            if (testFeatureInvoiceOptimization) {
+                bind(InvoiceOptimizer.class).to(InvoiceOptimizerExp.class).asEagerSingleton();
+            } else {
+                bind(InvoiceOptimizer.class).to(InvoiceOptimizerNoop.class).asEagerSingleton();
+            }
+        }
         protected void installInvoiceGenerator() {
             bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
         }

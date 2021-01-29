@@ -83,3 +83,12 @@ getParentDraftInvoice() ::= <<
    <defaultOrderBy("")>
 >>
 
+getInvoiceByAccountRecordIdAfter() ::= <<
+  SELECT <allTableFields("")>
+    FROM <tableName()>
+   where <accountRecordIdField("")> = :accountRecordId
+     AND target_date >= :targetDate
+     <andCheckSoftDeletionWithComma("")>
+   <AND_CHECK_TENANT("")>
+   <defaultOrderBy("")>
+>>

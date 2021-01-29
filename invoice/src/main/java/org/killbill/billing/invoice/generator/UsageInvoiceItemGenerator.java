@@ -43,6 +43,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer.RawUsageOptimizerResult;
 import org.killbill.billing.invoice.usage.SubscriptionUsageInArrear;
@@ -80,12 +81,12 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
     public InvoiceGeneratorResult generateItems(final ImmutableAccountData account,
                                                 final UUID invoiceId,
                                                 final BillingEventSet eventSet,
-                                                @Nullable final Iterable<Invoice> existingInvoices,
+                                                final AccountInvoices existingInvoices,
                                                 final LocalDate targetDate,
                                                 final Currency targetCurrency,
                                                 final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
-        final Map<UUID, List<InvoiceItem>> perSubscriptionInArrearUsageItems = extractPerSubscriptionExistingInArrearUsageItems(eventSet.getUsages(), existingInvoices);
+        final Map<UUID, List<InvoiceItem>> perSubscriptionInArrearUsageItems = extractPerSubscriptionExistingInArrearUsageItems(eventSet.getUsages(), existingInvoices.getInvoices());
         try {
             // Pretty-print the generated invoice items from the junction events
             final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "usage", log);
@@ -116,12 +117,25 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                         }
                     })) {
                     rawUsgRes = rawUsageOptimizer.getInArrearUsage(minBillingEventDate, targetDate, Iterables.concat(perSubscriptionInArrearUsageItems.values()), eventSet.getUsages(), internalCallContext);
+
+                    // Check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate + 1 P, where P = max{all Periods available} (e.g MONTHLY)
+                    // To make it simpler we check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate, and warn if this is not the case
+                    // (this mean we push folks to configure their system in such a way that we read (existing invoices) a bit too much as
+                    // opposed to not enough, leading to double invoicing.
+                    //
+                    // Ask Kill Bill team for an optimal configuration based on your use case ;-)
+                    if (existingInvoices.getCutoffDate() != null && existingInvoices.getCutoffDate().compareTo(rawUsgRes.getRawUsageStartDate()) > 0) {
+                        log.warn("Detected an invoice cuttOff date={}, and usage optimized start date= {} that could lead to some issues", existingInvoices.getCutoffDate(), rawUsgRes.getRawUsageStartDate());
+                    }
+
                 }
 
                 // None of the billing events report any usage IN_ARREAR sections
                 if (rawUsgRes == null) {
                     continue;
                 }
+
+
 
                 final UUID subscriptionId = event.getSubscriptionId();
                 if (curSubscriptionId != null && !curSubscriptionId.equals(subscriptionId)) {

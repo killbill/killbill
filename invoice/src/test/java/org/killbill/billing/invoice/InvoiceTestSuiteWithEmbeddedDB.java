@@ -31,6 +31,7 @@ import org.killbill.billing.invoice.dao.InvoiceDaoHelper;
 import org.killbill.billing.invoice.generator.InvoiceGenerator;
 import org.killbill.billing.invoice.glue.TestInvoiceModuleWithEmbeddedDb;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizer;
 import org.killbill.billing.junction.BillingInternalApi;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
@@ -103,6 +104,8 @@ public abstract class InvoiceTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     protected InvoiceConfig invoiceConfig;
     @Inject
     protected ParkedAccountsManager parkedAccountsManager;
+    @Inject
+    protected InvoiceOptimizer invoiceOptimizer;
 
     @BeforeClass(groups = "slow")
     protected void beforeClass() throws Exception {

@@ -46,6 +46,9 @@ import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDatePoster;
 import org.killbill.billing.invoice.notification.NextBillingDateNotifier;
 import org.killbill.billing.invoice.notification.NextBillingDatePoster;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizer;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerExp;
+import org.killbill.billing.invoice.optimizer.InvoiceOptimizerNoop;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.template.bundles.DefaultResourceBundleFactory;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
@@ -60,6 +63,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 public class DefaultInvoiceModule extends KillBillModule implements InvoiceModule {
+
 
     public DefaultInvoiceModule(final KillbillConfigSource configSource) {
         super(configSource);
@@ -130,10 +134,17 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         bind(new TypeLiteral<OSGIServiceRegistration<InvoicePluginApi>>() {}).toProvider(DefaultInvoiceProviderPluginRegistryProvider.class).asEagerSingleton();
     }
 
+    protected void installInvoiceOptimizer() {
+        if (killbillFeatures.isInvoiceOptimizationOn()) {
+            bind(InvoiceOptimizer.class).to(InvoiceOptimizerExp.class).asEagerSingleton();
+        } else {
+            bind(InvoiceOptimizer.class).to(InvoiceOptimizerNoop.class).asEagerSingleton();
+        }
+    }
+
     @Override
     protected void configure() {
         installConfig();
-
         installInvoicePluginApi();
         installInvoiceServices();
         installNotifiers();
@@ -145,6 +156,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
         installInvoiceUserApi();
         installInvoiceInternalApi();
         installResourceBundleFactory();
+        installInvoiceOptimizer();
         bind(RawUsageOptimizer.class).asEagerSingleton();
         bind(InvoiceApiHelper.class).asEagerSingleton();
         bind(ParkedAccountsManager.class).asEagerSingleton();

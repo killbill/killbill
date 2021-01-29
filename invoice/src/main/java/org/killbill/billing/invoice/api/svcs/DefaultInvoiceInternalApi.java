@@ -97,11 +97,6 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public BigDecimal getAccountBalance(final UUID accountId, final InternalTenantContext context) {
-        return dao.getAccountBalance(accountId, context);
-    }
-
-    @Override
     public void recordPaymentAttemptInit(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final UUID paymentAttemptId, final String transactionExternalKey, final DateTime paymentDate, final InternalCallContext context) throws InvoiceApiException {
         final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, transactionExternalKey, false);
         dao.notifyOfPaymentInit(new InvoicePaymentModelDao(invoicePayment), paymentAttemptId, context);
@@ -163,10 +158,6 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         return new DefaultInvoicePayment(dao.postChargebackReversal(paymentId, paymentAttemptId, chargebackTransactionExternalKey, context));
     }
 
-    @Override
-    public void consumeExistingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context) throws InvoiceApiException {
-        dao.consumeExstingCBAOnAccountWithUnpaidInvoices(accountId, context);
-    }
 
     @Override
     public Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException {

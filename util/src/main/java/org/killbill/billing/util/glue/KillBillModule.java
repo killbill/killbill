@@ -18,6 +18,7 @@
 package org.killbill.billing.util.glue;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.skife.config.ConfigSource;
 
 import com.google.inject.AbstractModule;
@@ -26,10 +27,12 @@ public abstract class KillBillModule extends AbstractModule {
 
     protected final KillbillConfigSource configSource;
     protected final ConfigSource skifeConfigSource;
+    protected final KillbillFeatures killbillFeatures;
 
     public KillBillModule(final KillbillConfigSource configSource) {
         this.configSource = configSource;
         this.skifeConfigSource = new KillbillSkifeConfigSource(configSource);
+        this.killbillFeatures = new KillbillFeatures();
     }
 
     private static final class KillbillSkifeConfigSource implements ConfigSource {

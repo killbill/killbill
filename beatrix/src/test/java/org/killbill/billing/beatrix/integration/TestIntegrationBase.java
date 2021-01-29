@@ -35,6 +35,7 @@ import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -1181,6 +1182,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private boolean shouldParkAccountsWithUnknownUsage;
         private boolean isZeroAmountUsageDisabled;
         private UsageDetailMode detailMode;
+        private Period maxInvoiceLimit;
 
         public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
             this.defaultInvoiceConfig = defaultInvoiceConfig;
@@ -1188,6 +1190,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
             isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
             detailMode = defaultInvoiceConfig.getItemResultBehaviorMode();
+            maxInvoiceLimit = defaultInvoiceConfig.getMaxInvoiceLimit();
         }
 
         @Override
@@ -1238,6 +1241,20 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         @Override
         public TimeSpan getDryRunNotificationSchedule(final InternalTenantContext tenantContext) {
             return defaultInvoiceConfig.getDryRunNotificationSchedule();
+        }
+
+        @Override
+        public Period getMaxInvoiceLimit() {
+            return maxInvoiceLimit;
+        }
+
+        @Override
+        public Period getMaxInvoiceLimit(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.getMaxInvoiceLimit(tenantContext);
+        }
+
+        public void setMaxInvoiceLimit(final Period value) {
+            this.maxInvoiceLimit = value;
         }
 
         @Override

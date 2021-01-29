@@ -28,7 +28,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -180,7 +179,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             @Override
             public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
-
                 final List<InvoiceModelDao> invoices = ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(invoiceSqlDao.getByAccountRecordId(context),
                                                                                                                                                                      new Predicate<InvoiceModelDao>() {
                                                                                                                                                                          @Override
@@ -225,16 +223,18 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     private List<InvoiceModelDao> getAllNonMigratedInvoicesByAccountAfterDate(final Boolean includeVoidedInvoices, final InvoiceSqlDao invoiceSqlDao, final LocalDate fromDate, final LocalDate upToDate, final InternalTenantContext context) {
-        return ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(invoiceSqlDao.getByAccountRecordId(context),
-                                                                                                                             new Predicate<InvoiceModelDao>() {
-                                                                                                                                 @Override
-                                                                                                                                 public boolean apply(final InvoiceModelDao invoice) {
-                                                                                                                                     return !invoice.isMigrated() &&
-                                                                                                                                            (fromDate == null || invoice.getTargetDate().compareTo(fromDate) >= 0) &&
-                                                                                                                                            (upToDate == null || invoice.getTargetDate().compareTo(upToDate) <= 0) &&
-                                                                                                                                            (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()));
-                                                                                                                                 }
-                                                                                                                             })));
+        final List<InvoiceModelDao> candidates = fromDate != null ?
+                                                 invoiceSqlDao.getInvoiceByAccountRecordIdAfter(fromDate, context) :
+                                                 invoiceSqlDao.getByAccountRecordId(context);
+
+        return ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(candidates, new Predicate<InvoiceModelDao>() {
+            @Override
+            public boolean apply(final InvoiceModelDao invoice) {
+                return !invoice.isMigrated() &&
+                       (upToDate == null || invoice.getTargetDate().compareTo(upToDate) <= 0) &&
+                       (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()));
+            }
+        })));
     }
 
     @Override
@@ -594,7 +594,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable LocalDate startDate,  @Nullable final LocalDate upToDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, @Nullable LocalDate startDate, @Nullable final LocalDate upToDate, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
