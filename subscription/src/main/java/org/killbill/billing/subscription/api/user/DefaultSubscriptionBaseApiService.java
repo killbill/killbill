@@ -1,7 +1,8 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -79,6 +80,8 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.clock.DefaultClock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
@@ -88,6 +91,8 @@ import com.google.common.collect.ListMultimap;
 import com.google.inject.Inject;
 
 public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiService {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultSubscriptionBaseApiService.class);
 
     private final Clock clock;
     private final SubscriptionDao dao;
@@ -341,6 +346,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             policyMaybeNull = planChangeResult.getPolicy();
         }
 
+        logger.debug("dryRunChangePlan: requestedPolicy='{}', actualPolicy='{}', requestedDateWithMs='{}'", requestedPolicy, policyMaybeNull, requestedDateWithMs);
         if (policyMaybeNull != null) {
             return subscription.getEffectiveDateForPolicy(policyMaybeNull, null, -1, null);
         } else if (requestedDateWithMs != null) {
@@ -358,6 +364,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, null, planChangeResult.getPolicy(), context);
         validateEffectiveDate(subscription, effectiveDate);
 
+        logger.debug("changePlan: effectiveDate='{}'", effectiveDate);
         try {
             doChangePlan(subscription, spec, effectiveDate, context);
         } catch (final CatalogApiException e) {
@@ -374,6 +381,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         validateEffectiveDate(subscription, effectiveDate);
         validateSubscriptionStateForChangePlan(subscription, requestedDateWithMs);
 
+        logger.debug("changePlan: requestedDate='{}', effectiveDate='{}'", requestedDateWithMs, effectiveDate);
         try {
             doChangePlan(subscription, spec, effectiveDate, context);
         } catch (final CatalogApiException e) {
@@ -385,10 +393,10 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public DateTime changePlanWithPolicy(final DefaultSubscriptionBase subscription, final EntitlementSpecifier spec, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
-
         final DateTime effectiveDate = dryRunChangePlan(subscription, spec, null, policy, context);
-
         validateSubscriptionStateForChangePlan(subscription, effectiveDate);
+
+        logger.debug("changePlan: policy='{}', effectiveDate='{}'", policy, effectiveDate);
         try {
             doChangePlan(subscription, spec, effectiveDate, context);
         } catch (final CatalogApiException e) {
