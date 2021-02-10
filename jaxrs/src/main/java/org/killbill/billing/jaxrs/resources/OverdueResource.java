@@ -21,6 +21,8 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -51,8 +53,6 @@ import org.killbill.commons.metrics.TimedResource;
 import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;

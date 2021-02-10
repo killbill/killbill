@@ -83,6 +83,6 @@ public class PaymentApiExceptionMapper extends ExceptionMapperBase implements Ex
     private Response buildPaymentAbortedResponse(final PaymentApiException exception, final UriInfo uriInfo) {
         final Response.ResponseBuilder responseBuilder = Response.status(422);
         serializeException(exception, uriInfo, responseBuilder);
-        return new LoggingResponse(exception, responseBuilder.build());
+        return responseBuilder.build();
     }
 }

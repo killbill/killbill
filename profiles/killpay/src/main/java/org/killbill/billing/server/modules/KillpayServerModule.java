@@ -26,24 +26,6 @@ import org.killbill.billing.currency.glue.CurrencyModule;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.jaxrs.glue.DefaultJaxrsModule;
-import org.killbill.billing.jaxrs.resources.AccountResource;
-import org.killbill.billing.jaxrs.resources.AdminResource;
-import org.killbill.billing.jaxrs.resources.CreditResource;
-import org.killbill.billing.jaxrs.resources.CustomFieldResource;
-import org.killbill.billing.jaxrs.resources.ExportResource;
-import org.killbill.billing.jaxrs.resources.NodesInfoResource;
-import org.killbill.billing.jaxrs.resources.PaymentGatewayResource;
-import org.killbill.billing.jaxrs.resources.PaymentMethodResource;
-import org.killbill.billing.jaxrs.resources.PaymentResource;
-import org.killbill.billing.jaxrs.resources.PluginInfoResource;
-import org.killbill.billing.jaxrs.resources.PluginResource;
-import org.killbill.billing.jaxrs.resources.SecurityResource;
-import org.killbill.billing.jaxrs.resources.TagDefinitionResource;
-import org.killbill.billing.jaxrs.resources.TagResource;
-import org.killbill.billing.jaxrs.resources.TenantResource;
-import org.killbill.billing.jaxrs.resources.TestResource;
-import org.killbill.billing.jaxrs.resources.TransactionResource;
-import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.junction.glue.DefaultJunctionModule;
 import org.killbill.billing.overdue.glue.DefaultOverdueModule;
 import org.killbill.billing.payment.glue.PaymentModule;
@@ -112,29 +94,5 @@ public class KillpayServerModule extends KillbillServerModule {
         install(new DefaultJaxrsModule(configSource));
         // TODO Dependencies for AccountResource
         install(new DefaultOverdueModule(configSource));
-    }
-
-    @Override
-    protected void configureResources() {
-        bind(AccountResource.class).asEagerSingleton();
-        bind(AdminResource.class).asEagerSingleton();
-        bind(CreditResource.class).asEagerSingleton();
-        bind(CustomFieldResource.class).asEagerSingleton();
-        bind(ExportResource.class).asEagerSingleton();
-        bind(NodesInfoResource.class).asEagerSingleton();
-        bind(KillbillEventHandler.class).asEagerSingleton();
-        bind(PaymentGatewayResource.class).asEagerSingleton();
-        bind(PaymentMethodResource.class).asEagerSingleton();
-        bind(PaymentResource.class).asEagerSingleton();
-        bind(PluginResource.class).asEagerSingleton();
-        bind(PluginInfoResource.class).asEagerSingleton();
-        bind(SecurityResource.class).asEagerSingleton();
-        bind(TagDefinitionResource.class).asEagerSingleton();
-        bind(TagResource.class).asEagerSingleton();
-        bind(TenantResource.class).asEagerSingleton();
-        bind(TestResource.class).asEagerSingleton();
-        bind(TransactionResource.class).asEagerSingleton();
-
-        bind(KillbillEventHandler.class).asEagerSingleton();
     }
 }

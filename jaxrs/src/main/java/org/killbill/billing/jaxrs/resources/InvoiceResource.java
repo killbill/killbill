@@ -35,6 +35,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -109,13 +111,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -127,6 +129,7 @@ import static javax.ws.rs.core.MediaType.TEXT_HTML;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.killbill.billing.jaxrs.resources.SubscriptionResourceHelpers.buildPlanPhasePriceOverrides;
 
+@Singleton
 @Path(JaxrsResource.INVOICES_PATH)
 @Api(value = JaxrsResource.INVOICES_PATH, description = "Operations on invoices", tags="Invoice")
 public class InvoiceResource extends JaxRsResourceBase {
@@ -857,7 +860,7 @@ public class InvoiceResource extends JaxRsResourceBase {
             }
         }
         tenantApi.addTenantKeyValue(tenantKeyStr, templateResource, callContext);
-        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, localeStr, request);
+        return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, getMethodStr, MoreObjects.firstNonNull(localeStr, defaultLocale.toString()), request);
     }
 
     private Response getTemplateResource(@Nullable final String localeStr,

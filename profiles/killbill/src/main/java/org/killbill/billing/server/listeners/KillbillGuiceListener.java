@@ -23,16 +23,20 @@ import java.net.URISyntaxException;
 
 import javax.servlet.ServletContext;
 
+import org.glassfish.jersey.message.GZipEncoder;
+import org.glassfish.jersey.server.filter.EncodingFilter;
 import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.config.DefaultKillbillConfigSource;
+import org.killbill.billing.server.filters.Jersey1BackwardCompatibleFilter;
 import org.killbill.billing.server.filters.KillbillMDCInsertingServletFilter;
 import org.killbill.billing.server.filters.ProfilingContainerResponseFilter;
 import org.killbill.billing.server.filters.RequestDataFilter;
 import org.killbill.billing.server.filters.ResponseCorsFilter;
 import org.killbill.billing.server.modules.KillbillServerModule;
 import org.killbill.billing.server.notifications.PushNotificationListener;
+import org.killbill.billing.server.providers.KillbillExceptionListener;
 import org.killbill.billing.server.security.TenantFilter;
 import org.killbill.billing.util.nodes.KillbillVersions;
 import org.killbill.bus.api.PersistentBus;
@@ -41,10 +45,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.helpers.MDCInsertingServletFilter;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
-import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
 import io.swagger.jaxrs.config.BeanConfig;
 
 public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
@@ -61,32 +65,35 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
         // Don't filter all requests through Jersey, only the JAX-RS APIs (otherwise,
         // things like static resources, favicon, etc. are 404'ed)
         final BaseServerModuleBuilder builder = new BaseServerModuleBuilder().setJaxrsUriPattern("/" + SWAGGER_PATH + "|((/" + SWAGGER_PATH + "|" + JaxRsResourceBase.PREFIX + "|" + JaxRsResourceBase.PLUGINS_PATH + ")" + "/.*)")
-                                                                             .addJaxrsResource("org.killbill.billing.jaxrs.mappers")
-                                                                             // Dont' provide resources and instead add them automatically to control which one should be seen (e.g TestResource ony in testMode)
-                                                                             //.addJaxrsResource("org.killbill.billing.jaxrs.resources")
+                                                                             .addJerseyResourcePackage("org.killbill.billing.jaxrs.mappers")
+                                                                             .addJerseyResourcePackage("org.killbill.billing.jaxrs.resources")
                                                                              // Swagger integration
-                                                                             .addJaxrsResource("io.swagger.jaxrs.listing");
+                                                                             .addJerseyResourcePackage("io.swagger.jaxrs.listing");
+
+        // Jackson integration
+        builder.addJerseyResourceClass(JacksonJsonProvider.class.getName());
 
         // Set the per-thread RequestData first
-        builder.addJerseyFilter(RequestDataFilter.class.getName());
+        builder.addJerseyResourceClass(RequestDataFilter.class.getName());
 
         // Logback default MDC
         builder.addFilter("/*", MDCInsertingServletFilter.class);
 
         // Kill Bill specific MDC
-        builder.addJerseyFilter(KillbillMDCInsertingServletFilter.class.getName());
+        builder.addJerseyResourceClass(KillbillMDCInsertingServletFilter.class.getName());
 
-        // Disable WADL - it generates noisy log messages, such as:
-        // c.s.j.s.w.g.AbstractWadlGeneratorGrammarGenerator - Couldn't find grammar element for class javax.ws.rs.core.Response
-        builder.addJerseyParam("com.sun.jersey.config.feature.DisableWADL", "true");
+        // Jersey 1 backward compatibility
+        builder.addJerseyResourceClass(Jersey1BackwardCompatibleFilter.class.getName());
 
-        // In order to use the GZIPContentEncodingFilter, the jersey param "com.sun.jersey.config.feature.logging.DisableEntitylogging"
-        // must not be set to false.
+        // Disable WADL
+        builder.addJerseyParam("jersey.config.server.wadl.disableWadl", "true");
+
         if (config.isConfiguredToReturnGZIPResponses()) {
             logger.info("Enable http gzip responses");
-            builder.addJerseyFilter(GZIPContentEncodingFilter.class.getName());
+            builder.addJerseyResourceClass(EncodingFilter.class.getName());
+            builder.addJerseyResourceClass(GZipEncoder.class.getName());
         }
-        builder.addJerseyFilter(ProfilingContainerResponseFilter.class.getName());
+        builder.addJerseyResourceClass(ProfilingContainerResponseFilter.class.getName());
 
         // Broader, to support the "Try it out!" feature
         //builder.addFilter("/" + SWAGGER_PATH + "*", ResponseCorsFilter.class);
@@ -97,8 +104,8 @@ public class KillbillGuiceListener extends KillbillPlatformGuiceListener {
             builder.addFilter("/*", TenantFilter.class);
         }
 
-        // Finally, just before the request starts, enable the LoggingFilter
-        builder.addJerseyFilter("com.sun.jersey.api.container.filter.LoggingFilter");
+        // We use Jersey's LoggingFeature -- this adds additional logging
+        builder.addJerseyResourceClass(KillbillExceptionListener.class.getName());
 
         return builder.build();
     }

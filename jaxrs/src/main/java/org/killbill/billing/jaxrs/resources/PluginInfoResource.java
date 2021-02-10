@@ -18,6 +18,7 @@
 package org.killbill.billing.jaxrs.resources;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -48,6 +49,7 @@ import io.swagger.annotations.ApiOperation;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+@Singleton
 @Path(JaxrsResource.PLUGINS_INFO_PATH)
 @Api(value = JaxrsResource.PLUGINS_INFO_PATH, description = "Operations on plugins", tags="PluginInfo")
 public class PluginInfoResource extends JaxRsResourceBase {

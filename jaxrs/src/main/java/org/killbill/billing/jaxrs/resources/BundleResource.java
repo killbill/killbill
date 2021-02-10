@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -84,7 +86,6 @@ import org.killbill.commons.metrics.TimedResource;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -93,6 +94,7 @@ import io.swagger.annotations.ApiResponses;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+@Singleton
 @Path(JaxrsResource.BUNDLES_PATH)
 @Api(value = JaxrsResource.BUNDLES_PATH, description = "Operations on bundles", tags="Bundle")
 public class BundleResource extends JaxRsResourceBase {
