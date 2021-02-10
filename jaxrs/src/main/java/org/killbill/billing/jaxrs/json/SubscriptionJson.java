@@ -413,7 +413,10 @@ public class SubscriptionJson extends JsonBase {
                 }
 
                 final PlanPhase curPlanPhase = subscriptionEvent.getNextPhase();
-                if (curPlanPhase == null || curPlanPhase.getName().equals(currentPhaseName)) {
+                if (curPlanPhase == null /* No phase -> no price */ ||
+                    /* Same phase ? */
+                    (curPlanPhase.getName().equals(currentPhaseName) /* same phase name */ &&
+                     (subscriptionEvent.getPrevPhase() == null || subscriptionEvent.getPrevPhase().getCatalog().getEffectiveDate().compareTo(curPlanPhase.getCatalog().getEffectiveDate()) == 0)) /* same catalog version */)  {
                     continue;
                 }
                 currentPhaseName = curPlanPhase.getName();

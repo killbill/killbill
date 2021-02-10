@@ -274,11 +274,9 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         if (type != that.type) {
             return false;
         }
-        /*
         if (!Arrays.equals(usages, that.usages)) {
             return false;
         }
-        */
 
         return true;
     }

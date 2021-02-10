@@ -18,6 +18,10 @@ package org.killbill.billing.catalog;
 
 import java.math.BigDecimal;
 
+import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.TimeUnit;
+import org.killbill.billing.catalog.api.UsageType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -71,5 +75,33 @@ public class TestPlanPhase extends CatalogTestSuiteNoDB {
         Assert.assertEquals(DefaultPlanPhase.planName(ppnTrial), planName);
         Assert.assertEquals(DefaultPlanPhase.planName(ppnEvergreen), planName);
         Assert.assertEquals(DefaultPlanPhase.planName(ppnFixedTerm), planName);
+    }
+
+
+    @Test(groups = "fast")
+    public void testEqualsWithDifferentUsageSection() {
+        final DefaultPlanPhase trialPhase = new DefaultPlanPhase();
+        trialPhase.setPhaseType(PhaseType.TRIAL);
+        trialPhase.setDuration(new DefaultDuration().setUnit(TimeUnit.DAYS).setNumber(14));
+        trialPhase.setFixed(new DefaultFixed().setFixedPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.ZERO)})));
+        final DefaultUsage usage = new DefaultUsage();
+        usage.setName("usage");
+        usage.setBillingMode(BillingMode.IN_ARREAR);
+        usage.setUsageType(UsageType.CONSUMABLE);
+        final DefaultTieredBlock block = new DefaultTieredBlock();
+        block.setUnit(new DefaultUnit().setName("unit"));
+        block.setSize(12.0);
+        final DefaultTier tier = new DefaultTier();
+        tier.setBlocks(new DefaultTieredBlock[]{block});
+        usage.setTiers(new DefaultTier[]{tier});
+        trialPhase.setUsages(new DefaultUsage[]{usage});
+
+        final DefaultPlanPhase trialPhase2 = new DefaultPlanPhase();
+        trialPhase2.setPhaseType(trialPhase.getPhaseType());
+        trialPhase2.setDuration((DefaultDuration) trialPhase.getDuration());
+        trialPhase2.setFixed((DefaultFixed) trialPhase.getFixed());
+        trialPhase2.setUsages(null);
+
+        Assert.assertNotEquals(trialPhase, trialPhase2, "Phases should be different as their usage section differs");
     }
 }

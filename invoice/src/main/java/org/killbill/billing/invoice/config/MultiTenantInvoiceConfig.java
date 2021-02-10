@@ -22,6 +22,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.glue.InvoiceModule;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
@@ -109,6 +110,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
             return new TimeSpan(result);
         }
         return getDryRunNotificationSchedule();
+    }
+
+    @Override
+    public Period getMaxInvoiceLimit() {
+        return staticConfig.getMaxInvoiceLimit();
+    }
+
+    @Override
+    public Period getMaxInvoiceLimit(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("getMaxInvoiceLimit", tenantContext);
+        if (result != null) {
+            return new Period(result);
+        }
+        return getMaxInvoiceLimit();
     }
 
     @Override

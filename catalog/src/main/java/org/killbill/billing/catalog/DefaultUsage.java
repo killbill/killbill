@@ -339,9 +339,6 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         if (billingPeriod != that.billingPeriod) {
             return false;
         }
-        if (!Arrays.equals(blocks, that.blocks)) {
-            return false;
-        }
         if (fixedPrice != null ? !fixedPrice.equals(that.fixedPrice) : that.fixedPrice != null) {
             return false;
         }
@@ -351,10 +348,13 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
         if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
-        if (phase != null ? !phase.equals(that.phase) : that.phase != null) {
+        if (prettyName != null ? !prettyName.equals(that.prettyName) : that.prettyName != null) {
             return false;
         }
         if (recurringPrice != null ? !recurringPrice.equals(that.recurringPrice) : that.recurringPrice != null) {
+            return false;
+        }
+        if (!Arrays.equals(blocks, that.blocks)) {
             return false;
         }
         if (!Arrays.equals(tiers, that.tiers)) {
@@ -373,6 +373,7 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (prettyName != null ? prettyName.hashCode() : 0);
         result = 31 * result + (billingMode != null ? billingMode.hashCode() : 0);
         result = 31 * result + (usageType != null ? usageType.hashCode() : 0);
         result = 31 * result + (tierBlockPolicy != null ? tierBlockPolicy.hashCode() : 0);

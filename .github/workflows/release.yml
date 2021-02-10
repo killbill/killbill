@@ -1,0 +1,95 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      parent_version:
+        description: 'New killbill-oss-parent version'
+        required: false
+        default: ''
+      perform_version:
+        description: 'tag to (re-)perform (in case of release:perform failure)'
+        required: false
+        default: ''
+
+env:
+  MAVEN_FLAGS: "-B --no-transfer-progress"
+  MAVEN_OPTS: "-Xmx2G -XX:+ExitOnOutOfMemoryError -Dmaven.wagon.rto=60000 -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        if: github.event.inputs.perform_version == ''
+        uses: actions/checkout@v2
+      - name: Checkout full repository
+        # Required when performing an existing release.
+        if: github.event.inputs.perform_version != ''
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+      - name: Setup git user
+        env:
+          BUILD_USER: ${{ secrets.BUILD_USER }}
+          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+        run: |
+          git config --global user.email "contact@killbill.io"
+          git config --global user.name "Kill Bill core team"
+          git config --global url."https://${BUILD_USER}:${BUILD_TOKEN}@github.com/".insteadOf "git@github.com:"
+      - name: Configure Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Configure Sonatype mirror
+        uses: s4u/maven-settings-action@v2.3.0
+        # Go to Sonatype directly to avoid delay syncs (could get rid of this if actions/setup-java were to support mirrors).
+        with:
+          mirrors: '[{"id": "oss-releases", "name": "Sonatype releases", "mirrorOf": "*", "url": "https://oss.sonatype.org/content/repositories/releases/"}]'
+      - name: Download Java dependencies
+        # We do as much as we can, but it may not be enough (https://issues.apache.org/jira/browse/MDEP-82)
+        run: |
+          mvn ${MAVEN_FLAGS} clean install dependency:resolve dependency:resolve-plugins -DskipTests=true -Dgpg.skip=true -Psonatype-oss-release
+      - name: Update killbill-oss-parent
+        if: github.event.inputs.parent_version != ''
+        run: |
+          echo "Updating killbill-oss-parent pom.xml to ${{ github.event.inputs.parent_version }}:"
+          mvn ${MAVEN_FLAGS} versions:update-parent -DgenerateBackupPoms=false -DparentVersion="[${{ github.event.inputs.parent_version }}]"
+          echo "killbill-oss-parent pom.xml changes:"
+          git --no-pager diff
+          echo "Downloading new dependencies:"
+          mvn ${MAVEN_FLAGS} -U clean install -DskipTests=true
+
+          git add pom.xml
+          # Will be pushed as part of the release process, only if the release is successful
+          git commit -m "pom.xml: update killbill-oss-parent to ${{ github.event.inputs.parent_version }}"
+      - name: Configure settings.xml for release
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+          server-id: ossrh-releases
+          server-username: OSSRH_USER
+          server-password: OSSRH_PASS
+          gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+      - name: Release artifacts
+        if: github.event.inputs.perform_version == ''
+        env:
+          OSSRH_USER: ${{ secrets.OSSRH_USER }}
+          OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
+        run: |
+          mvn ${MAVEN_FLAGS} release:clean release:prepare release:perform
+      - name: Perform release
+        if: github.event.inputs.perform_version != ''
+        env:
+          OSSRH_USER: ${{ secrets.OSSRH_USER }}
+          OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        # It will still check the remote but hopefully not download much (0 B at 0 B/s). -o isn't safe because of MDEP-82 (see above).
+        # See https://issues.apache.org/jira/browse/SCM-729 for why the release.properties file is required.
+        run: |
+          echo "scm.url=scm\:git\:git@github.com\:${GITHUB_REPOSITORY}.git" > release.properties
+          echo "scm.tag=${{ github.event.inputs.perform_version }}" >> release.properties
+          mvn ${MAVEN_FLAGS} release:perform
