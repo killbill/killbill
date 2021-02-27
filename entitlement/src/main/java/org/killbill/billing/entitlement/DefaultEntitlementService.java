@@ -43,8 +43,8 @@ import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.BusEvent;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -66,7 +66,7 @@ public class DefaultEntitlementService implements EntitlementService {
 
     private final EntitlementInternalApi entitlementInternalApi;
     private final BlockingStateDao blockingStateDao;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final NotificationQueueService notificationQueueService;
     private final EntitlementUtils entitlementUtils;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -76,7 +76,7 @@ public class DefaultEntitlementService implements EntitlementService {
     @Inject
     public DefaultEntitlementService(final EntitlementInternalApi entitlementInternalApi,
                                      final BlockingStateDao blockingStateDao,
-                                     final PersistentBus eventBus,
+                                     final BusOptimizer eventBus,
                                      final NotificationQueueService notificationQueueService,
                                      final EntitlementUtils entitlementUtils,
                                      final InternalCallContextFactory internalCallContextFactory) {

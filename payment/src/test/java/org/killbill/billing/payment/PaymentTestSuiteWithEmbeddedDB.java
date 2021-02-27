@@ -52,7 +52,7 @@ import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.profiling.Profiling;
 import org.testng.annotations.AfterMethod;
@@ -88,7 +88,7 @@ public abstract class PaymentTestSuiteWithEmbeddedDB extends GuicyKillbillTestSu
     @Inject
     protected OSGIServiceRegistration<PaymentControlPluginApi> controlPluginRegistry;
     @Inject
-    protected PersistentBus eventBus;
+    protected BusOptimizer eventBus;
     @Inject
     protected PaymentApi paymentApi;
     @Inject

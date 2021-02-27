@@ -38,6 +38,7 @@ import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.tenant.dao.TenantKVModelDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.util.config.definition.TenantConfig;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.commons.concurrent.Executors;
@@ -69,7 +70,7 @@ public class TenantCacheInvalidation {
     private final Multimap<TenantKey, CacheInvalidationCallback> cache;
     private final TenantBroadcastDao broadcastDao;
     private final TenantConfig tenantConfig;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final TenantDao tenantDao;
     private AtomicLong latestRecordIdProcessed;
     private volatile boolean isStopped;
@@ -79,7 +80,7 @@ public class TenantCacheInvalidation {
     @Inject
     public TenantCacheInvalidation(@Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantBroadcastDao broadcastDao,
                                    @Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao,
-                                   final PersistentBus eventBus,
+                                   final BusOptimizer eventBus,
                                    final TenantConfig tenantConfig) {
         this.cache = HashMultimap.<TenantKey, CacheInvalidationCallback>create();
         this.broadcastDao = broadcastDao;

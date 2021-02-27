@@ -24,16 +24,17 @@ import org.killbill.billing.beatrix.bus.api.BeatrixService;
 import org.killbill.billing.beatrix.extbus.BeatrixListener;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 
 public class DefaultBeatrixService implements BeatrixService {
 
 
     private final BeatrixListener beatrixListener;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
 
     @Inject
-    public DefaultBeatrixService(final PersistentBus eventBus, final BeatrixListener beatrixListener) {
+    public DefaultBeatrixService(final BusOptimizer eventBus, final BeatrixListener beatrixListener) {
         this.eventBus = eventBus;
         this.beatrixListener = beatrixListener;
     }

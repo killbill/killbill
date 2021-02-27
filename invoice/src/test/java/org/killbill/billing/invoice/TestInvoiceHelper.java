@@ -84,6 +84,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -155,7 +156,7 @@ public class TestInvoiceHelper {
     private final InvoicePluginDispatcher invoicePluginDispatcher;
     private final AccountUserApi accountUserApi;
     private final SubscriptionBaseInternalApi subscriptionApi;
-    private final BusService busService;
+    private final BusOptimizer eventBus;
     private final InvoiceDao invoiceDao;
     private final GlobalLocker locker;
     private final Clock clock;
@@ -173,7 +174,7 @@ public class TestInvoiceHelper {
 
     @Inject
     public TestInvoiceHelper(final InvoiceGenerator generator, final IDBI dbi,
-                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final ImmutableAccountInternalApi immutableAccountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusService busService,
+                             final BillingInternalApi billingApi, final AccountInternalApi accountApi, final ImmutableAccountInternalApi immutableAccountApi, final InvoicePluginDispatcher invoicePluginDispatcher, final AccountUserApi accountUserApi, final SubscriptionBaseInternalApi subscriptionApi, final BusOptimizer eventBus,
                              final InvoiceDao invoiceDao, final GlobalLocker locker, final Clock clock, final NonEntityDao nonEntityDao, final NotificationQueueService notificationQueueService, final MutableInternalCallContext internalCallContext, final InvoiceConfig invoiceConfig,
                              final ParkedAccountsManager parkedAccountsManager, final InvoiceOptimizer invoiceOptimizer, final InternalCallContextFactory internalCallContextFactory) {
         this.generator = generator;
@@ -183,7 +184,7 @@ public class TestInvoiceHelper {
         this.invoicePluginDispatcher = invoicePluginDispatcher;
         this.accountUserApi = accountUserApi;
         this.subscriptionApi = subscriptionApi;
-        this.busService = busService;
+        this.eventBus = eventBus;
         this.invoiceDao = invoiceDao;
         this.locker = locker;
         this.clock = clock;
@@ -239,7 +240,7 @@ public class TestInvoiceHelper {
 
     public Invoice generateInvoice(final UUID accountId, @Nullable final LocalDate targetDate, @Nullable final DryRunArguments dryRunArguments, final InternalCallContext internalCallContext) throws InvoiceApiException {
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi,
-                                                                   invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
+                                                                   invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, eventBus,
                                                                    notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
 
         return dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);

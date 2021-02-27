@@ -54,7 +54,7 @@ import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.definition.PaymentConfig;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.commons.profiling.Profiling;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -80,7 +80,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     @Inject
     protected OSGIServiceRegistration<PaymentPluginApi> registry;
     @Inject
-    protected PersistentBus eventBus;
+    protected BusOptimizer eventBus;
     @Inject
     protected PaymentApi paymentApi;
     @Inject

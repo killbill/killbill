@@ -64,6 +64,8 @@ import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
+import org.killbill.billing.util.optimizer.BusOptimizer;
+import org.killbill.billing.util.optimizer.BusOptimizerNoop;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
@@ -95,6 +97,12 @@ public class KillbillServerModule extends KillbillPlatformModule {
         configurePushNotification();
 
         bind(new TypeLiteral<OSGIServiceRegistration<Healthcheck>>() {}).to(DefaultHealthcheckPluginRegistry.class).asEagerSingleton();
+    }
+
+    @Override
+    protected void configureBuses() {
+        super.configureBuses();
+        this.bind(BusOptimizer.class).to(BusOptimizerNoop.class).asEagerSingleton();
     }
 
     @Override

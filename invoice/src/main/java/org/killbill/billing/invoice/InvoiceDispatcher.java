@@ -99,7 +99,7 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
@@ -148,7 +148,7 @@ public class InvoiceDispatcher {
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoicePluginDispatcher invoicePluginDispatcher;
     private final GlobalLocker locker;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
     private final InvoiceConfig invoiceConfig;
@@ -164,7 +164,7 @@ public class InvoiceDispatcher {
                              final InternalCallContextFactory internalCallContextFactory,
                              final InvoicePluginDispatcher invoicePluginDispatcher,
                              final GlobalLocker locker,
-                             final PersistentBus eventBus,
+                             final BusOptimizer eventBus,
                              final NotificationQueueService notificationQueueService,
                              final InvoiceConfig invoiceConfig,
                              final Clock clock,

@@ -24,6 +24,8 @@ import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleWithEmbeddedDB;
 import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.IDBISetup;
+import org.killbill.billing.util.optimizer.BusOptimizer;
+import org.killbill.billing.util.optimizer.BusOptimizerNoop;
 import org.killbill.clock.ClockMock;
 import org.skife.jdbi.v2.IDBI;
 
@@ -63,6 +65,12 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
         @Named(IDBISetup.MAIN_RO_IDBI_NAMED)
         protected IDBI provideRoIDBIInAComplicatedWayBecauseOf627(final IDBI idbi) {
             return idbi;
+        }
+
+        @Override
+        protected void configureBus() {
+            super.configureBus();
+            this.bind(BusOptimizer.class).to(BusOptimizerNoop.class).asEagerSingleton();
         }
 
         @Override

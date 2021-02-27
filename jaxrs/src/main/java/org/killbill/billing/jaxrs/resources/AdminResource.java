@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -49,7 +48,6 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
@@ -79,11 +77,11 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.tenant.PerTenantConfig;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.dao.SystemTags;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.BusEventWithMetadata;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
@@ -108,7 +106,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
 @Singleton
 @Path(JaxrsResource.ADMIN_PATH)
-@Api(value = JaxrsResource.ADMIN_PATH, description = "Admin operations (will require special privileges)", tags="Admin")
+@Api(value = JaxrsResource.ADMIN_PATH, description = "Admin operations (will require special privileges)", tags = "Admin")
 public class AdminResource extends JaxRsResourceBase {
 
     private static final String OK = "OK";
@@ -118,7 +116,7 @@ public class AdminResource extends JaxRsResourceBase {
     private final TenantUserApi tenantApi;
     private final CacheControllerDispatcher cacheControllerDispatcher;
     private final RecordIdApi recordIdApi;
-    private final PersistentBus persistentBus;
+    private final BusOptimizer persistentBus;
     private final NotificationQueueService notificationQueueService;
     private final KillbillHealthcheck killbillHealthcheck;
 
@@ -135,7 +133,7 @@ public class AdminResource extends JaxRsResourceBase {
                          final CacheControllerDispatcher cacheControllerDispatcher,
                          final TenantUserApi tenantApi,
                          final RecordIdApi recordIdApi,
-                         final PersistentBus persistentBus,
+                         final BusOptimizer persistentBus,
                          final NotificationQueueService notificationQueueService,
                          final KillbillHealthcheck killbillHealthcheck,
                          final Clock clock,

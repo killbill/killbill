@@ -38,6 +38,7 @@ import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public class PaymentAutomatonDAOHelper {
     protected final PaymentDao paymentDao;
 
     private final PaymentPluginServiceRegistration paymentPluginServiceRegistration;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
 
     // Cached
     private String pluginName = null;
@@ -74,7 +75,7 @@ public class PaymentAutomatonDAOHelper {
                                      final DateTime utcNow, final PaymentDao paymentDao,
                                      final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                                      final InternalCallContext internalCallContext,
-                                     final PersistentBus eventBus,
+                                     final BusOptimizer eventBus,
                                      final PaymentStateMachineHelper paymentSMHelper) {
         this.paymentStateContext = paymentStateContext;
         this.utcNow = utcNow;

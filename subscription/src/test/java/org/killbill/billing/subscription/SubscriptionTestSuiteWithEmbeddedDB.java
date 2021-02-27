@@ -47,7 +47,7 @@ import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.config.definition.SubscriptionConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +74,7 @@ public class SubscriptionTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteW
     @Inject
     protected SubscriptionBaseTransferApi transferApi;
     @Inject
-    protected PersistentBus bus;
+    protected BusOptimizer bus;
     @Inject
     protected SubscriptionBaseTimelineApi repairApi;
     @Inject

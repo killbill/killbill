@@ -73,7 +73,7 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 
@@ -88,7 +88,7 @@ public class PaymentAutomatonRunner {
     protected final PaymentPluginServiceRegistration paymentPluginServiceRegistration;
     protected final Clock clock;
 
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final PaymentConfig paymentConfig;
 
     @Inject
@@ -98,7 +98,7 @@ public class PaymentAutomatonRunner {
                                   final PaymentPluginServiceRegistration paymentPluginServiceRegistration,
                                   final Clock clock,
                                   final PaymentExecutors executors,
-                                  final PersistentBus eventBus,
+                                  final BusOptimizer eventBus,
                                   final PaymentStateMachineHelper paymentSMHelper) {
         this.paymentSMHelper = paymentSMHelper;
         this.paymentDao = paymentDao;

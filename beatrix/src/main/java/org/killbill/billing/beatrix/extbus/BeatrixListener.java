@@ -86,6 +86,7 @@ public class BeatrixListener {
 
     private static final Logger log = LoggerFactory.getLogger(BeatrixListener.class);
 
+    // External bus: Do not use BusOptimizer
     private final PersistentBus externalBus;
     private final InternalCallContextFactory internalCallContextFactory;
 

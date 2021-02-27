@@ -82,7 +82,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         context = internalCallContextFactory.createInternalCallContext(account.getId(), callContext);
 
         dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                           internalCallContextFactory,  invoicePluginDispatcher, locker, busService.getBus(),
+                                           internalCallContextFactory,  invoicePluginDispatcher, locker, bus,
                                            notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
 
     }
@@ -106,7 +106,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final LocalDate target = internalCallContext.toLocalDate(effectiveDate);
 
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                                                   internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
+                                                                   internalCallContextFactory, invoicePluginDispatcher, locker, bus,
                                                                    notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
 
         Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
@@ -149,7 +149,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final LocalDate target = internalCallContext.toLocalDate(effectiveDate);
 
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                                                   internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
+                                                                   internalCallContextFactory, invoicePluginDispatcher, locker, bus,
                                                                    notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
 
         // Verify initial tags state for account
@@ -300,7 +300,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         Mockito.when(billingApi.getBillingEventsForAccountAndUpdateAccountBCD(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalCallContext>any())).thenReturn(events);
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
-                                                                   internalCallContextFactory, invoicePluginDispatcher, locker, busService.getBus(),
+                                                                   internalCallContextFactory, invoicePluginDispatcher, locker, bus,
                                                                    notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
         final Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), new LocalDate("2012-07-30"), null, false, context);
         Assert.assertNotNull(invoice);
