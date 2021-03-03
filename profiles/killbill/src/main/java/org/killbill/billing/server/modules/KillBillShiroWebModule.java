@@ -64,8 +64,9 @@ import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
-import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.matcher.Matchers;
+import com.google.inject.name.Names;
+
+import static org.killbill.billing.util.glue.KillBillShiroModule.SHIRO_CACHE_MANAGER;
 
 // For Kill Bill server only.
 // See org.killbill.billing.util.glue.KillBillShiroModule for Kill Bill library.
@@ -91,9 +92,9 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
         // Magic provider to configure the cache manager
         if (redisCacheConfig.isRedisCachingEnabled()) {
-            bind(CacheManager.class).toProvider(RedisShiroManagerProvider.class).asEagerSingleton();
+            bind(CacheManager.class).annotatedWith(Names.named(SHIRO_CACHE_MANAGER)).toProvider(RedisShiroManagerProvider.class).asEagerSingleton();
         } else {
-            bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
+            bind(CacheManager.class).annotatedWith(Names.named(SHIRO_CACHE_MANAGER)).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
         }
 
         final SecurityConfig securityConfig = new ConfigurationObjectFactory(configSource).build(SecurityConfig.class);
