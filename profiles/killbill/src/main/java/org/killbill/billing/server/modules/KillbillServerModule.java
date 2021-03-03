@@ -108,9 +108,6 @@ public class KillbillServerModule extends KillbillPlatformModule {
     @Override
     protected void configureBuses() {
         super.configureBuses();
-        final EventConfig eventConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
-        bind(EventConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(eventConfig);
-        bind(EventConfig.class).to(MultiTenantEventConfig.class);
         if (killbillFeatures.isBusOptimizationOn()) {
             this.bind(BusOptimizer.class).to(BusOptimizerOn.class).asEagerSingleton();
         } else {
