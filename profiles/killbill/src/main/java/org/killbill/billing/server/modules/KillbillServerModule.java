@@ -45,8 +45,11 @@ import org.killbill.billing.server.notifications.PushNotificationRetryService;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
+import org.killbill.billing.util.config.definition.EventConfig;
 import org.killbill.billing.util.config.definition.NotificationConfig;
+import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.email.templates.TemplateModule;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.BroadcastModule;
 import org.killbill.billing.util.glue.CacheModule;
@@ -66,6 +69,7 @@ import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.optimizer.BusOptimizerNoop;
+import org.killbill.billing.util.optimizer.BusOptimizerOn;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
@@ -82,8 +86,11 @@ public class KillbillServerModule extends KillbillPlatformModule {
 
     public static final String STATIC_CONFIG = "StaticConfig";
 
+    private final KillbillFeatures killbillFeatures;
+
     public KillbillServerModule(final ServletContext servletContext, final KillbillServerConfig serverConfig, final KillbillConfigSource configSource) {
         super(servletContext, serverConfig, configSource);
+        this.killbillFeatures = new KillbillFeatures();
     }
 
     @Override
@@ -102,7 +109,14 @@ public class KillbillServerModule extends KillbillPlatformModule {
     @Override
     protected void configureBuses() {
         super.configureBuses();
-        this.bind(BusOptimizer.class).to(BusOptimizerNoop.class).asEagerSingleton();
+        final EventConfig eventConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
+        bind(EventConfig.class).toInstance(eventConfig);
+
+        if (killbillFeatures.isBusOptimizationOn()) {
+            this.bind(BusOptimizer.class).to(BusOptimizerOn.class).asEagerSingleton();
+        } else {
+            this.bind(BusOptimizer.class).to(BusOptimizerNoop.class).asEagerSingleton();
+        }
     }
 
     @Override

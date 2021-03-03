@@ -26,6 +26,7 @@ import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.IDBISetup;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.optimizer.BusOptimizerNoop;
+import org.killbill.billing.util.optimizer.BusOptimizerOn;
 import org.killbill.clock.ClockMock;
 import org.skife.jdbi.v2.IDBI;
 
@@ -70,7 +71,11 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
         @Override
         protected void configureBus() {
             super.configureBus();
-            this.bind(BusOptimizer.class).to(BusOptimizerNoop.class).asEagerSingleton();
+            if (killbillFeatures.isBusOptimizationOn()) {
+                this.bind(BusOptimizer.class).to(BusOptimizerOn.class).asEagerSingleton();
+            } else {
+                this.bind(BusOptimizer.class).to(BusOptimizerNoop.class).asEagerSingleton();
+            }
         }
 
         @Override
