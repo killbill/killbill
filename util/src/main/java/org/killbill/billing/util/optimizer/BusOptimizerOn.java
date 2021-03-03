@@ -22,7 +22,11 @@ import java.sql.Connection;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BusInternalEvent;
+import org.killbill.billing.util.callcontext.CallOrigin;
+import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.EventConfig;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.BusEventWithMetadata;
@@ -37,12 +41,14 @@ public class BusOptimizerOn implements BusOptimizer {
     private static final Logger logger = LoggerFactory.getLogger(BusOptimizerOn.class);
 
     private final PersistentBus delegate;
+    private final InternalCallContextFactory internalCallContextFactory;
     private final EventConfig eventConfig;
 
     @Inject
-    public BusOptimizerOn(final PersistentBus eventBus, final EventConfig eventConfig) {
+    public BusOptimizerOn(final PersistentBus eventBus, final EventConfig eventConfig, final InternalCallContextFactory internalCallContextFactory) {
         this.delegate = eventBus;
         this.eventConfig = eventConfig;
+        this.internalCallContextFactory = internalCallContextFactory;
         logger.info("Feature BusOptimizerOn is ON");
     }
 
@@ -59,9 +65,9 @@ public class BusOptimizerOn implements BusOptimizer {
     private boolean shouldSkip(final BusEvent event) {
         Preconditions.checkState(event instanceof BusInternalEvent, "Unexpected external bus event %s, skip...", event);
         final BusInternalEvent internalEvent = (BusInternalEvent) event;
-
-        if (eventConfig.getSkipPostBusEventTypeList().contains(internalEvent.getBusEventType())) {
-            logger.info("BusOptimizerOn: Skip sending event {}", internalEvent.getBusEventType());
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+        if (eventConfig.getSkipPostBusEventTypeList(context).contains(internalEvent.getBusEventType())) {
+            logger.debug("BusOptimizerOn: Skip sending event {}", internalEvent.getBusEventType());
             return true;
         }
         return false;
@@ -161,5 +167,18 @@ public class BusOptimizerOn implements BusOptimizer {
     @Override
     public boolean isStarted() {
         return delegate.isStarted();
+    }
+
+    @Override
+    public boolean shouldDispatch(final BusEvent event) {
+        Preconditions.checkState(event instanceof BusInternalEvent, "Unexpected external bus event %s, skip...", event);
+        final BusInternalEvent internalEvent = (BusInternalEvent) event;
+
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+        if (eventConfig.getSkipDispatchBusEventTypeList(context).contains(internalEvent.getBusEventType())) {
+            logger.debug("BusOptimizerOn: Skip dispatching event {}", internalEvent.getBusEventType());
+            return true;
+        }
+        return false;
     }
 }

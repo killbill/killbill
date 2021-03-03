@@ -23,11 +23,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.killbill.billing.util.config.definition.NotificationConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
+import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.Param;
 import org.skife.config.TimeSpan;
 
@@ -40,7 +40,7 @@ public class MultiTenantNotificationConfig extends MultiTenantConfigBase impleme
     private final NotificationConfig staticConfig;
 
     @Inject
-    public MultiTenantNotificationConfig(@Named(PaymentModule.STATIC_CONFIG) final NotificationConfig staticConfig, final CacheConfig cacheConfig) {
+    public MultiTenantNotificationConfig(@Named(KillBillModule.STATIC_CONFIG) final NotificationConfig staticConfig, final CacheConfig cacheConfig) {
         super(cacheConfig);
         this.staticConfig = staticConfig;
     }

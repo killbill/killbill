@@ -77,8 +77,6 @@ import com.google.inject.name.Names;
 
 public class PaymentModule extends KillBillModule {
 
-    public static final String STATIC_CONFIG = "StaticConfig";
-
     public static final String RETRYABLE_NAMED = "Retryable";
 
     public static final String STATE_MACHINE_RETRY = "RetryStateMachine";
@@ -146,7 +144,7 @@ public class PaymentModule extends KillBillModule {
     protected void configure() {
         final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
         final PaymentConfig paymentConfig = factory.build(PaymentConfig.class);
-        bind(PaymentConfig.class).annotatedWith(Names.named(STATIC_CONFIG)).toInstance(paymentConfig);
+        bind(PaymentConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(paymentConfig);
         bind(PaymentConfig.class).to(MultiTenantPaymentConfig.class).asEagerSingleton();
 
         bind(new TypeLiteral<OSGIServiceRegistration<PaymentPluginApi>>() {}).toProvider(DefaultPaymentProviderPluginRegistryProvider.class).asEagerSingleton();

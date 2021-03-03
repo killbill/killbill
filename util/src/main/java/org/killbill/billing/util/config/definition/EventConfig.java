@@ -25,14 +25,27 @@ import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.Description;
 import org.skife.config.Param;
-import org.skife.config.TimeSpan;
 
 public interface EventConfig extends KillbillConfig {
 
     @Config("org.killbill.billing.server.event.post.type.skip")
     @Default("")
-    @Description("Delay before which unresolved push notifications should be retried")
+    @Description("List of event types to be skipped (not posted)")
     List<BusInternalEventType> getSkipPostBusEventTypeList();
 
+    @Config("org.killbill.billing.server.event.post.type.skip")
+    @Default("")
+    @Description("List of event types to be skipped (not posted)")
+    List<BusInternalEventType> getSkipPostBusEventTypeList(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.billing.server.event.dispatch.type.skip")
+    @Default("")
+    @Description("List of event types to be skipped (not dispatched internally)")
+    List<BusInternalEventType> getSkipDispatchBusEventTypeList();
+
+    @Config("org.killbill.billing.server.event.dispatch.type.skip")
+    @Default("")
+    @Description("List of event types to be skipped (not dispatched internally)")
+    List<BusInternalEventType> getSkipDispatchBusEventTypeList(@Param("dummy") final InternalTenantContext tenantContext);
 
 }

@@ -134,4 +134,9 @@ public class BusOptimizerNoop implements BusOptimizer {
     public boolean isStarted() {
         return delegate.isStarted();
     }
+
+    @Override
+    public boolean shouldDispatch(final BusEvent event) {
+        return true;
+    }
 }

@@ -46,8 +46,8 @@ import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.config.definition.EventConfig;
+import org.killbill.billing.util.config.definition.MultiTenantEventConfig;
 import org.killbill.billing.util.config.definition.NotificationConfig;
-import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.glue.AuditModule;
@@ -60,6 +60,7 @@ import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.IDBISetup;
+import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
 import org.killbill.billing.util.glue.KillbillApiAopModule;
 import org.killbill.billing.util.glue.NodesModule;
@@ -83,8 +84,6 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class KillbillServerModule extends KillbillPlatformModule {
-
-    public static final String STATIC_CONFIG = "StaticConfig";
 
     private final KillbillFeatures killbillFeatures;
 
@@ -110,8 +109,8 @@ public class KillbillServerModule extends KillbillPlatformModule {
     protected void configureBuses() {
         super.configureBuses();
         final EventConfig eventConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
-        bind(EventConfig.class).toInstance(eventConfig);
-
+        bind(EventConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(eventConfig);
+        bind(EventConfig.class).to(MultiTenantEventConfig.class);
         if (killbillFeatures.isBusOptimizationOn()) {
             this.bind(BusOptimizer.class).to(BusOptimizerOn.class).asEagerSingleton();
         } else {
@@ -207,7 +206,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
     protected void configurePushNotification() {
         final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
         final NotificationConfig notificationConfig = factory.build(NotificationConfig.class);
-        bind(NotificationConfig.class).annotatedWith(Names.named(STATIC_CONFIG)).toInstance(notificationConfig);
+        bind(NotificationConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(notificationConfig);
         bind(NotificationConfig.class).to(MultiTenantNotificationConfig.class).asEagerSingleton();
         bind(PushNotificationListener.class).asEagerSingleton();
         bind(PushNotificationRetryService.class).asEagerSingleton();

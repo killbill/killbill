@@ -25,6 +25,8 @@ import com.google.inject.AbstractModule;
 
 public abstract class KillBillModule extends AbstractModule {
 
+    public static final String STATIC_CONFIG = "StaticConfig";
+
     protected final KillbillConfigSource configSource;
     protected final ConfigSource skifeConfigSource;
     protected final KillbillFeatures killbillFeatures;
