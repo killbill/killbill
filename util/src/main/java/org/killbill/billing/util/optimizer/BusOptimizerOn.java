@@ -65,7 +65,7 @@ public class BusOptimizerOn implements BusOptimizer {
     private boolean shouldSkip(final BusEvent event) {
         Preconditions.checkState(event instanceof BusInternalEvent, "Unexpected external bus event %s, skip...", event);
         final BusInternalEvent internalEvent = (BusInternalEvent) event;
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), null, "BusOptimizerOn", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
         if (eventConfig.getSkipPostBusEventTypeList(context).contains(internalEvent.getBusEventType())) {
             logger.debug("BusOptimizerOn: Skip sending event {}", internalEvent.getBusEventType());
             return true;
@@ -174,7 +174,7 @@ public class BusOptimizerOn implements BusOptimizer {
         Preconditions.checkState(event instanceof BusInternalEvent, "Unexpected external bus event %s, skip...", event);
         final BusInternalEvent internalEvent = (BusInternalEvent) event;
 
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), null, "BusOptimizerOn", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
         if (eventConfig.getSkipDispatchBusEventTypeList(context).contains(internalEvent.getBusEventType())) {
             logger.debug("BusOptimizerOn: Skip dispatching event {}", internalEvent.getBusEventType());
             return true;
