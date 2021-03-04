@@ -54,6 +54,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.BusEventWithMetadata;
+import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -90,7 +91,7 @@ public class TestResource extends JaxRsResourceBase {
     private static final Logger log = LoggerFactory.getLogger(TestResource.class);
     private static final int MILLIS_IN_SEC = 1000;
 
-    private final BusOptimizer persistentBus;
+    private final PersistentBus persistentBus;
     private final NotificationQueueService notificationQueueService;
     private final RecordIdApi recordIdApi;
     private final TenantUserApi tenantApi;
@@ -100,7 +101,7 @@ public class TestResource extends JaxRsResourceBase {
     @Inject
     public TestResource(final JaxrsUriBuilder uriBuilder, final TagUserApi tagUserApi, final CustomFieldUserApi customFieldUserApi,
                         final AuditUserApi auditUserApi, final AccountUserApi accountUserApi, final RecordIdApi recordIdApi,
-                        final BusOptimizer persistentBus, final NotificationQueueService notificationQueueService, final PaymentApi paymentApi,
+                        final PersistentBus persistentBus, final NotificationQueueService notificationQueueService, final PaymentApi paymentApi,
                         final InvoicePaymentApi invoicePaymentApi, final TenantUserApi tenantApi, final CatalogUserApi catalogUserApi,
                         final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher, final Context context) {
         super(uriBuilder, tagUserApi, customFieldUserApi, auditUserApi, accountUserApi, paymentApi, invoicePaymentApi, null, clock, context);

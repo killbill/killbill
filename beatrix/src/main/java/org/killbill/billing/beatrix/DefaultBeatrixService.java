@@ -31,10 +31,10 @@ public class DefaultBeatrixService implements BeatrixService {
 
 
     private final BeatrixListener beatrixListener;
-    private final BusOptimizer eventBus;
+    private final PersistentBus eventBus;
 
     @Inject
-    public DefaultBeatrixService(final BusOptimizer eventBus, final BeatrixListener beatrixListener) {
+    public DefaultBeatrixService(final PersistentBus eventBus, final BeatrixListener beatrixListener) {
         this.eventBus = eventBus;
         this.beatrixListener = beatrixListener;
     }

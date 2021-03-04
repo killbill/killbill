@@ -31,6 +31,7 @@ import org.killbill.billing.util.broadcast.dao.BroadcastDao;
 import org.killbill.billing.util.broadcast.dao.BroadcastModelDao;
 import org.killbill.billing.util.config.definition.BroadcastConfig;
 import org.killbill.billing.util.optimizer.BusOptimizer;
+import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.commons.concurrent.Executors;
 import org.slf4j.Logger;
@@ -45,14 +46,14 @@ public class DefaultBroadcastService implements BroadcastService {
 
     private final BroadcastConfig broadcastConfig;
     private final BroadcastDao broadcastDao;
-    private final BusOptimizer eventBus;
+    private final PersistentBus eventBus;
 
     private AtomicLong latestRecordIdProcessed;
     private ScheduledExecutorService broadcastExecutor;
     private volatile boolean isStopped;
 
     @Inject
-    public DefaultBroadcastService(final BroadcastDao broadcastDao, final BroadcastConfig broadcastConfig, final BusOptimizer eventBus) {
+    public DefaultBroadcastService(final BroadcastDao broadcastDao, final BroadcastConfig broadcastConfig, final PersistentBus eventBus) {
         this.broadcastDao = broadcastDao;
         this.broadcastConfig = broadcastConfig;
         this.eventBus = eventBus;
@@ -121,9 +122,9 @@ public class DefaultBroadcastService implements BroadcastService {
 
         private final DefaultBroadcastService parent;
         private final BroadcastDao broadcastDao;
-        private final BusOptimizer eventBus;
+        private final PersistentBus eventBus;
 
-        public BroadcastServiceRunnable(final DefaultBroadcastService defaultBroadcastService, final BroadcastDao broadcastDao, final BusOptimizer eventBus) {
+        public BroadcastServiceRunnable(final DefaultBroadcastService defaultBroadcastService, final BroadcastDao broadcastDao, final PersistentBus eventBus) {
             this.parent = defaultBroadcastService;
             this.broadcastDao = broadcastDao;
             this.eventBus = eventBus;

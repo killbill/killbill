@@ -25,6 +25,7 @@ import org.killbill.billing.events.BroadcastInternalEvent;
 import org.killbill.billing.util.broadcast.dao.BroadcastDao;
 import org.killbill.billing.util.broadcast.dao.BroadcastModelDao;
 import org.killbill.billing.util.optimizer.BusOptimizer;
+import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +35,10 @@ public class DefaultBroadcastApi implements BroadcastApi {
     private final Logger logger = LoggerFactory.getLogger(DefaultBroadcastApi.class);
 
     private final BroadcastDao dao;
-    private final BusOptimizer eventBus;
+    private final PersistentBus eventBus;
 
     @Inject
-    public DefaultBroadcastApi(final BroadcastDao dao, final BusOptimizer eventBus) {
+    public DefaultBroadcastApi(final BroadcastDao dao, final PersistentBus eventBus) {
         this.dao = dao;
         this.eventBus = eventBus;
     }

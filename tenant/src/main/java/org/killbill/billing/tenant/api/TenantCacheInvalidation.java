@@ -70,7 +70,7 @@ public class TenantCacheInvalidation {
     private final Multimap<TenantKey, CacheInvalidationCallback> cache;
     private final TenantBroadcastDao broadcastDao;
     private final TenantConfig tenantConfig;
-    private final BusOptimizer eventBus;
+    private final PersistentBus eventBus;
     private final TenantDao tenantDao;
     private AtomicLong latestRecordIdProcessed;
     private volatile boolean isStopped;
@@ -80,7 +80,7 @@ public class TenantCacheInvalidation {
     @Inject
     public TenantCacheInvalidation(@Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantBroadcastDao broadcastDao,
                                    @Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao,
-                                   final BusOptimizer eventBus,
+                                   final PersistentBus eventBus,
                                    final TenantConfig tenantConfig) {
         this.cache = HashMultimap.<TenantKey, CacheInvalidationCallback>create();
         this.broadcastDao = broadcastDao;
