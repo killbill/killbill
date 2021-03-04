@@ -68,6 +68,9 @@ import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.billing.util.glue.RecordIdModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizerNoop;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizerOn;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.optimizer.BusOptimizerNoop;
 import org.killbill.billing.util.optimizer.BusOptimizerOn;
@@ -110,8 +113,10 @@ public class KillbillServerModule extends KillbillPlatformModule {
         super.configureBuses();
         if (killbillFeatures.isBusOptimizationOn()) {
             this.bind(BusOptimizer.class).to(BusOptimizerOn.class).asEagerSingleton();
+            this.bind(BusDispatcherOptimizer.class).to(BusDispatcherOptimizerOn.class).asEagerSingleton();
         } else {
             this.bind(BusOptimizer.class).to(BusOptimizerNoop.class).asEagerSingleton();
+            this.bind(BusDispatcherOptimizer.class).to(BusDispatcherOptimizerNoop.class).asEagerSingleton();
         }
     }
 

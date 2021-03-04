@@ -17,8 +17,9 @@
 
 package org.killbill.billing.util.optimizer;
 
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.bus.api.BusEvent;
 
-public interface BusOptimizer extends PersistentBus {
+public interface BusDispatcherOptimizer {
+    boolean shouldDispatch(final BusEvent event);
 
 }

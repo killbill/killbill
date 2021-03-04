@@ -24,6 +24,9 @@ import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleWithEmbeddedDB;
 import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.IDBISetup;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizerNoop;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizerOn;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.optimizer.BusOptimizerNoop;
 import org.killbill.billing.util.optimizer.BusOptimizerOn;
@@ -73,8 +76,10 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
             super.configureBus();
             if (killbillFeatures.isBusOptimizationOn()) {
                 this.bind(BusOptimizer.class).to(BusOptimizerOn.class).asEagerSingleton();
+                this.bind(BusDispatcherOptimizer.class).to(BusDispatcherOptimizerOn.class).asEagerSingleton();
             } else {
                 this.bind(BusOptimizer.class).to(BusOptimizerNoop.class).asEagerSingleton();
+                this.bind(BusDispatcherOptimizer.class).to(BusDispatcherOptimizerNoop.class).asEagerSingleton();
             }
         }
 

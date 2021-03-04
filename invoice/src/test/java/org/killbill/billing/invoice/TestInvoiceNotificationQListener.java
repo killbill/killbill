@@ -26,7 +26,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.optimizer.BusOptimizer;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 
@@ -41,7 +41,7 @@ public class TestInvoiceNotificationQListener extends InvoiceListener {
                                             final InternalCallContextFactory internalCallContextFactory,
                                             final InvoiceDispatcher dispatcher,
                                             final InvoiceInternalApi invoiceApi,
-                                            final BusOptimizer busOptimizer,
+                                            final BusDispatcherOptimizer busOptimizer,
                                             final NotificationQueueService notificationQueueService) {
         super(accountApi, internalCallContextFactory, dispatcher, invoiceApi, notificationQueueService, busOptimizer, clock);
     }

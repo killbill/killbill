@@ -169,16 +169,4 @@ public class BusOptimizerOn implements BusOptimizer {
         return delegate.isStarted();
     }
 
-    @Override
-    public boolean shouldDispatch(final BusEvent event) {
-        Preconditions.checkState(event instanceof BusInternalEvent, "Unexpected external bus event %s, skip...", event);
-        final BusInternalEvent internalEvent = (BusInternalEvent) event;
-
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), null, "BusOptimizerOn", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-        if (eventConfig.getSkipDispatchBusEventTypeList(context).contains(internalEvent.getBusEventType())) {
-            logger.debug("BusOptimizerOn: Skip dispatching event {}", internalEvent.getBusEventType());
-            return true;
-        }
-        return false;
-    }
 }

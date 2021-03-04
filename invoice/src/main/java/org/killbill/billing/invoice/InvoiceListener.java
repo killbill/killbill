@@ -42,6 +42,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -68,7 +69,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceInternalApi invoiceApi;
     private final RetryableSubscriber retryableSubscriber;
-    private final BusOptimizer busOptimizer;
+    private final BusDispatcherOptimizer busDispatcherOptimizer;
     private final SubscriberQueueHandler subscriberQueueHandler = new SubscriberQueueHandler();
 
     @Inject
@@ -77,13 +78,13 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                            final InvoiceDispatcher dispatcher,
                            final InvoiceInternalApi invoiceApi,
                            final NotificationQueueService notificationQueueService,
-                           final BusOptimizer busOptimizer,
+                           final BusDispatcherOptimizer busDispatcherOptimizer,
                            final Clock clock) {
         super(notificationQueueService);
         this.dispatcher = dispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceApi = invoiceApi;
-        this.busOptimizer = busOptimizer;
+        this.busDispatcherOptimizer = busDispatcherOptimizer;
 
         subscriberQueueHandler.subscribe(EffectiveSubscriptionInternalEvent.class,
                                          new SubscriberAction<EffectiveSubscriptionInternalEvent>() {
@@ -202,7 +203,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
 
 
     private void handleEvent(final BusInternalEvent event) {
-        if (busOptimizer.shouldDispatch(event)) {
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
             retryableSubscriber.handleEvent(event);
         }
     }
