@@ -28,7 +28,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import static org.killbill.billing.platform.glue.KillBillPlatformModuleBase.SHIRO_DATA_SOURCE_ID;
-import static org.killbill.billing.util.glue.KillBillShiroModule.SHIRO_CACHE_MANAGER;
 
 public class KillbillJdbcTenantRealmProvider implements Provider<KillbillJdbcTenantRealm> {
 
@@ -37,7 +36,7 @@ public class KillbillJdbcTenantRealmProvider implements Provider<KillbillJdbcTen
     private final DataSource dataSource;
 
     @Inject
-    public KillbillJdbcTenantRealmProvider(final SecurityConfig securityConfig, @Named(SHIRO_CACHE_MANAGER) final CacheManager cacheManager, @Named(SHIRO_DATA_SOURCE_ID) final DataSource dataSource) {
+    public KillbillJdbcTenantRealmProvider(final SecurityConfig securityConfig, final CacheManager cacheManager, @Named(SHIRO_DATA_SOURCE_ID) final DataSource dataSource) {
         this.securityConfig = securityConfig;
         this.cacheManager = cacheManager;
         this.dataSource = dataSource;

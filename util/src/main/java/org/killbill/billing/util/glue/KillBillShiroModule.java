@@ -50,7 +50,6 @@ import com.google.inject.name.Names;
 // See org.killbill.billing.server.modules.KillBillShiroWebModule for Kill Bill server.
 public class KillBillShiroModule extends ShiroModule {
 
-    public static final String SHIRO_CACHE_MANAGER = "shiro";
 
     public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
     public static final String KILLBILL_OKTA_PROPERTY = "killbill.server.okta";
@@ -140,9 +139,9 @@ public class KillBillShiroModule extends ShiroModule {
 
         // Magic provider to configure the cache manager
         if (redisCacheConfig.isRedisCachingEnabled()) {
-            bind(CacheManager.class).annotatedWith(Names.named(SHIRO_CACHE_MANAGER)).toProvider(RedisShiroManagerProvider.class).asEagerSingleton();
+            bind(CacheManager.class).toProvider(RedisShiroManagerProvider.class).asEagerSingleton();
         } else {
-            bind(CacheManager.class).annotatedWith(Names.named(SHIRO_CACHE_MANAGER)).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
+            bind(CacheManager.class).toProvider(EhcacheShiroManagerProvider.class).asEagerSingleton();
         }
     }
 
