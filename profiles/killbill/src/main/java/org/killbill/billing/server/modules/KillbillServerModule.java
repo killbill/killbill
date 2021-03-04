@@ -45,8 +45,6 @@ import org.killbill.billing.server.notifications.PushNotificationRetryService;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
-import org.killbill.billing.util.config.definition.EventConfig;
-import org.killbill.billing.util.config.definition.MultiTenantEventConfig;
 import org.killbill.billing.util.config.definition.NotificationConfig;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.features.KillbillFeatures;

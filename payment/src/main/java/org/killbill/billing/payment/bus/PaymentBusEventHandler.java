@@ -38,6 +38,7 @@ import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.PaymentConfig;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,69 +56,77 @@ public class PaymentBusEventHandler {
     private final InternalCallContextFactory internalCallContextFactory;
     private final PaymentConfig paymentConfig;
     private final Janitor janitor;
+    private final BusDispatcherOptimizer busDispatcherOptimizer;
 
     @Inject
     public PaymentBusEventHandler(final PaymentConfig paymentConfig,
                                   final AccountInternalApi accountApi,
                                   final InvoicePaymentInternalApi invoicePaymentInternalApi,
                                   final Janitor janitor,
+                                  final BusDispatcherOptimizer busDispatcherOptimizer,
                                   final InternalCallContextFactory internalCallContextFactory) {
         this.paymentConfig = paymentConfig;
         this.accountApi = accountApi;
         this.invoicePaymentInternalApi = invoicePaymentInternalApi;
         this.janitor = janitor;
+        this.busDispatcherOptimizer = busDispatcherOptimizer;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void processPaymentEvent(final PaymentInternalEvent event) {
-        janitor.processPaymentEvent(event);
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            janitor.processPaymentEvent(event);
+        }
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void processInvoiceEvent(final InvoiceCreationInternalEvent event) {
-        log.info("Received invoice creation notification for accountId='{}', invoiceId='{}'", event.getAccountId(), event.getInvoiceId());
 
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            log.info("Received invoice creation notification for accountId='{}', invoiceId='{}'", event.getAccountId(), event.getInvoiceId());
 
-        final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
-        final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames(internalContext) != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames(internalContext)) : new LinkedList<String>();
+            final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "PaymentRequestProcessor", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
 
-        final Account account;
-        try {
-            account = accountApi.getAccountById(event.getAccountId(), internalContext);
+            final BigDecimal amountToBePaid = null; // We let the plugin compute how much should be paid
+            final List<String> paymentControlPluginNames = paymentConfig.getPaymentControlPluginNames(internalContext) != null ? new LinkedList<String>(paymentConfig.getPaymentControlPluginNames(internalContext)) : new LinkedList<String>();
 
-            invoicePaymentInternalApi.createPurchaseForInvoicePayment(false,
-                                                                      account,
-                                                                      event.getInvoiceId(),
-                                                                      account.getPaymentMethodId(),
-                                                                      null,
-                                                                      amountToBePaid,
-                                                                      account.getCurrency(),
-                                                                      null,
-                                                                      null,
-                                                                      null,
-                                                                      ImmutableList.<PluginProperty>of(),
-                                                                      new PaymentOptions() {
-                                                                   @Override
-                                                                   public boolean isExternalPayment() {
-                                                                       return false;
-                                                                   }
+            final Account account;
+            try {
+                account = accountApi.getAccountById(event.getAccountId(), internalContext);
 
-                                                                   @Override
-                                                                   public List<String> getPaymentControlPluginNames() {
-                                                                       return paymentControlPluginNames;
-                                                                   }
-                                                               },
-                                                                      internalContext);
-        } catch (final AccountApiException e) {
-            log.warn("Failed to process invoice payment", e);
-        } catch (final PaymentApiException e) {
-            // Log as warn unless nothing left to be paid
-            if (e.getCode() != ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) {
+                invoicePaymentInternalApi.createPurchaseForInvoicePayment(false,
+                                                                          account,
+                                                                          event.getInvoiceId(),
+                                                                          account.getPaymentMethodId(),
+                                                                          null,
+                                                                          amountToBePaid,
+                                                                          account.getCurrency(),
+                                                                          null,
+                                                                          null,
+                                                                          null,
+                                                                          ImmutableList.<PluginProperty>of(),
+                                                                          new PaymentOptions() {
+                                                                              @Override
+                                                                              public boolean isExternalPayment() {
+                                                                                  return false;
+                                                                              }
+
+                                                                              @Override
+                                                                              public List<String> getPaymentControlPluginNames() {
+                                                                                  return paymentControlPluginNames;
+                                                                              }
+                                                                          },
+                                                                          internalContext);
+            } catch (final AccountApiException e) {
                 log.warn("Failed to process invoice payment", e);
+            } catch (final PaymentApiException e) {
+                // Log as warn unless nothing left to be paid
+                if (e.getCode() != ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode()) {
+                    log.warn("Failed to process invoice payment", e);
+                }
             }
         }
     }

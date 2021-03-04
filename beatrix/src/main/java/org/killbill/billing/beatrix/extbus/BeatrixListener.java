@@ -105,6 +105,7 @@ public class BeatrixListener {
     @AllowConcurrentEvents
     @Subscribe
     public void handleAllInternalKillbillEvents(final BusInternalEvent event) {
+        // No BusDispatcherOptimizer logic on purpose
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
         try {
             final BusEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);
