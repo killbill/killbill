@@ -22,11 +22,8 @@ import java.sql.Connection;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BusInternalEvent;
-import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.EventConfig;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.BusEventWithMetadata;
