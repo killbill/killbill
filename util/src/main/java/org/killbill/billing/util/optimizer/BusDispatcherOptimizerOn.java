@@ -51,9 +51,9 @@ public class BusDispatcherOptimizerOn implements BusDispatcherOptimizer{
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), null, "BusOptimizerOn", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
         if (eventConfig.getSkipDispatchBusEventTypeList(context).contains(internalEvent.getBusEventType())) {
             logger.debug("BusDispatcherOptimizerOn: Skip dispatching event {}", internalEvent.getBusEventType());
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
 }

@@ -65,8 +65,13 @@ public class BusOptimizerOn implements BusOptimizer {
     private boolean shouldSkip(final BusEvent event) {
         Preconditions.checkState(event instanceof BusInternalEvent, "Unexpected external bus event %s, skip...", event);
         final BusInternalEvent internalEvent = (BusInternalEvent) event;
-        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), null, "BusOptimizerOn", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-        if (eventConfig.getSkipPostBusEventTypeList(context).contains(internalEvent.getBusEventType())) {
+        //
+        // TODO haha... Unfortunately for 'postFromTransaction' this may break as we enter with an open transaction:
+        // If we need to to read the per-context multi-tenant config, this requires another call to the DB which then breaks...
+        //
+
+        //final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), null, "BusOptimizerOn", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+        if (eventConfig.getSkipPostBusEventTypeList(/*context*/).contains(internalEvent.getBusEventType())) {
             logger.debug("BusOptimizerOn: Skip sending event {}", internalEvent.getBusEventType());
             return true;
         }
