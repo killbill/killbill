@@ -24,6 +24,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.AuditModule;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.ConfigModule;
+import org.killbill.billing.util.glue.EventModule;
 import org.killbill.billing.util.glue.NonEntityDaoModule;
 import org.killbill.clock.ClockMock;
 
@@ -43,6 +44,7 @@ public class TestUsageModuleWithEmbeddedDB extends TestUsageModule {
         install(new GuicyKillbillTestWithEmbeddedDBModule(configSource, clock));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
+        install(new EventModule(configSource));
         install(new NonEntityDaoModule(configSource));
         install(new DefaultAccountModule(configSource));
         install(new AuditModule(configSource));

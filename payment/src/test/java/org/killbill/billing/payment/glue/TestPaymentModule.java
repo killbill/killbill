@@ -35,6 +35,7 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
+import org.killbill.billing.util.glue.EventModule;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
 import org.mockito.Mockito;
@@ -74,6 +75,7 @@ public class TestPaymentModule extends PaymentModule {
         install(new MockTenantModule(configSource));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
+        install(new EventModule(configSource));
         install(new CallContextModule(configSource));
 
         installExternalApis();

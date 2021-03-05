@@ -55,6 +55,7 @@ import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ClockModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
+import org.killbill.billing.util.glue.EventModule;
 import org.killbill.billing.util.glue.ExportModule;
 import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.IDBISetup;
@@ -167,6 +168,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new BeatrixModule(configSource));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
+        install(new EventModule(configSource));
         install(new CallContextModule(configSource));
         install(new CatalogModule(configSource));
         install(new CurrencyModule(configSource));

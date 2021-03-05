@@ -26,6 +26,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.ConfigModule;
+import org.killbill.billing.util.glue.EventModule;
 import org.killbill.clock.ClockMock;
 import org.mockito.Mockito;
 
@@ -47,6 +48,7 @@ public class TestJaxrsModuleNoDB extends TestJaxrsModule {
         install(new MockAccountModule(configSource));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
+        install(new EventModule(configSource));
         bind(TenantInternalApi.class).toInstance(Mockito.mock(TenantInternalApi.class));
         bind(SecurityManager.class).toInstance(Mockito.mock(SecurityManager.class));
     }

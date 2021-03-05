@@ -29,18 +29,18 @@ import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
 
-public class ConfigModule extends KillBillModule {
+public class EventModule extends KillBillModule {
 
-    public static final String CONFIG_INVALIDATION_CALLBACK = "ConfigInvalidationCallback";
 
-    public ConfigModule(final KillbillConfigSource configSource) {
+    public EventModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
     @Override
     protected void configure() {
-        bind(CacheConfig.class).asEagerSingleton();
-        bind(CacheInvalidationCallback.class).annotatedWith(Names.named(CONFIG_INVALIDATION_CALLBACK)).to(PerTenantConfigInvalidationCallback.class).asEagerSingleton();
-        bind(ConfigKillbillService.class).to(DefaultConfigKillbillService.class).asEagerSingleton();
+        final EventConfig eventConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
+        bind(EventConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(eventConfig);
+        bind(EventConfig.class).to(MultiTenantEventConfig.class).asEagerSingleton();
+
     }
 }
