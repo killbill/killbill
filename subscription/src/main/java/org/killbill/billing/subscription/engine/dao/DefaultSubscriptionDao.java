@@ -591,6 +591,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 final SubscriptionSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
                 final SubscriptionEventSqlDao eventsDaoFromSameTransaction = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
 
+
+                int busSeqId = 0;
                 final List<SubscriptionEventModelDao> createdEvents = new LinkedList<SubscriptionEventModelDao>();
                 for (final SubscriptionBaseWithAddOns subscription : subscriptions) {
                     for (final SubscriptionBase subscriptionBase : subscription.getSubscriptionBaseList()) {
@@ -599,11 +601,13 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         createAndRefresh(transactional, new SubscriptionModelDao(defaultSubscriptionBase), context);
 
                         final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(defaultSubscriptionBase.getId());
+
                         for (final SubscriptionBaseEvent cur : initialEvents) {
                             createdEvents.add(createAndRefresh(eventsDaoFromSameTransaction, new SubscriptionEventModelDao(cur), context));
 
                             final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER);
-                            recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
+                            final int seqId = isBusEvent ? busSeqId++ : 0;
+                            recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, seqId, catalog, context);
                         }
 
                         // Notify the Bus of the latest requested change, if needed
