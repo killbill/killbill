@@ -22,6 +22,7 @@ import java.sql.Connection;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.EventConfig;
@@ -64,7 +65,7 @@ public class BusOptimizerOn implements BusOptimizer {
         final BusInternalEvent internalEvent = (BusInternalEvent) event;
         //
         // TODO haha... Unfortunately for 'postFromTransaction' this may break as we enter with an open transaction:
-        // If we need to to read the per-context multi-tenant config, this requires another call to the DB which then breaks...
+        // If we need to read the per-context multi-tenant config, this requires another call to the DB which then breaks...
         //
 
         //final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), null, "BusOptimizerOn", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
@@ -171,4 +172,8 @@ public class BusOptimizerOn implements BusOptimizer {
         return delegate.isStarted();
     }
 
+    @Override
+    public boolean shouldAggregateSubscriptionEvents(final InternalCallContext context) {
+        return eventConfig.isAggregateBulkSubscriptionEvents(context);
+    }
 }

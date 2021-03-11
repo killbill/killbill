@@ -33,6 +33,7 @@ public interface EventConfig extends KillbillConfig {
     @Description("List of event types to be skipped (not posted)")
     List<BusInternalEventType> getSkipPostBusEventTypeList();
 
+    // Not fully implemented
     @Config("org.killbill.billing.server.event.post.type.skip")
     @Default("")
     @Description("List of event types to be skipped (not posted)")
@@ -47,5 +48,16 @@ public interface EventConfig extends KillbillConfig {
     @Default("")
     @Description("List of event types to be skipped (not dispatched internally)")
     List<BusInternalEventType> getSkipDispatchBusEventTypeList(@Param("dummy") final InternalTenantContext tenantContext);
+
+
+    @Config("org.killbill.billing.server.event.bulk.subscription.aggregate")
+    @Default("false")
+    @Description("List of event types to be skipped (not dispatched internally)")
+    boolean isAggregateBulkSubscriptionEvents();
+
+    @Config("org.killbill.billing.server.event.bulk.subscription.aggregate")
+    @Default("false")
+    @Description("List of event types to be skipped (not dispatched internally)")
+    boolean isAggregateBulkSubscriptionEvents(@Param("dummy") final InternalTenantContext tenantContext);
 
 }

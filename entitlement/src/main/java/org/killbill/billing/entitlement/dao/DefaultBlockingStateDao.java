@@ -205,11 +205,15 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     @Override
     public void setBlockingStatesAndPostBlockingTransitionEvent(final Map<BlockingState, Optional<UUID>> states, final InternalCallContext context) {
+
+        final boolean groupBusEvents = eventBus.shouldAggregateSubscriptionEvents(context);
+
         transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
 
+                int seqId = 0;
                 for (final BlockingState state : states.keySet()) {
                     final DateTime upToDate = state.getEffectiveDate();
                     final UUID bundleId = states.get(state).orNull();
@@ -258,17 +262,21 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
                     final BlockingAggregator currentState = getBlockedStatus(sqlDao, entitySqlDaoWrapperFactory.getHandle(), state.getBlockedId(), state.getType(), bundleId, upToDate, context);
                     if (previousState != null && currentState != null) {
-                        recordBusOrFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                                     state.getId(),
-                                                                     state.getEffectiveDate(),
-                                                                     state.getBlockedId(),
-                                                                     state.getType(),
-                                                                     state.getStateName(),
-                                                                     state.getService(),
-                                                                     inserted,
-                                                                     previousState,
-                                                                     currentState,
-                                                                     context);
+                        final boolean isBusEvent = state.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
+                        if (!isBusEvent || !groupBusEvents || seqId == 0) {
+                            recordBusOrFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
+                                                                         state.getId(),
+                                                                         state.getEffectiveDate(),
+                                                                         state.getBlockedId(),
+                                                                         state.getType(),
+                                                                         state.getStateName(),
+                                                                         state.getService(),
+                                                                         inserted,
+                                                                         previousState,
+                                                                         currentState,
+                                                                         context);
+                        }
+                        seqId = isBusEvent ? seqId+1 : seqId;
                     }
                 }
 

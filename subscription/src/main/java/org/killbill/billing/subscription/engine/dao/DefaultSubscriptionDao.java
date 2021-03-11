@@ -585,12 +585,17 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
     @Override
     public List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(final List<SubscriptionBaseWithAddOns> subscriptions, final Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final SubscriptionCatalog catalog, final InternalCallContext context) {
+
+        final boolean groupBusEvents = eventBus.shouldAggregateSubscriptionEvents(context);
         return transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<List<SubscriptionBaseEvent>>() {
             @Override
             public List<SubscriptionBaseEvent> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
                 final SubscriptionEventSqlDao eventsDaoFromSameTransaction = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
 
+
+                int busEffSeqId = 0;
+                int busReqSeqId = 0;
                 final List<SubscriptionEventModelDao> createdEvents = new LinkedList<SubscriptionEventModelDao>();
                 for (final SubscriptionBaseWithAddOns subscription : subscriptions) {
                     for (final SubscriptionBase subscriptionBase : subscription.getSubscriptionBaseList()) {
@@ -602,13 +607,19 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         for (final SubscriptionBaseEvent cur : initialEvents) {
                             createdEvents.add(createAndRefresh(eventsDaoFromSameTransaction, new SubscriptionEventModelDao(cur), context));
 
-                            final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER);
-                            recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
+                            final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER || cur.getType() == EventType.BCD_UPDATE);
+                            final int seqId = isBusEvent ? busEffSeqId++ : 0;
+
+                            if (!isBusEvent || !groupBusEvents || seqId == 0) {
+                                recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
+                            }
                         }
 
                         // Notify the Bus of the latest requested change, if needed
                         if (!initialEvents.isEmpty()) {
-                            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, defaultSubscriptionBase, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, context);
+                            if (!groupBusEvents || busReqSeqId == 0) {
+                                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, defaultSubscriptionBase, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, context);
+                            }
                         }
                     }
                 }
