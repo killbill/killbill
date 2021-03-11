@@ -17,8 +17,11 @@
 
 package org.killbill.billing.util.optimizer;
 
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.bus.api.PersistentBus;
 
 public interface BusOptimizer extends PersistentBus {
+
+    boolean shouldAggregateSubscriptionEvents(final InternalCallContext context);
 
 }

@@ -22,6 +22,7 @@ import java.sql.Connection;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.BusEventWithMetadata;
 import org.killbill.bus.api.PersistentBus;
@@ -135,4 +136,8 @@ public class BusOptimizerNoop implements BusOptimizer {
         return delegate.isStarted();
     }
 
+    @Override
+    public boolean shouldAggregateSubscriptionEvents(final InternalCallContext context) {
+        return false;
+    }
 }

@@ -67,6 +67,20 @@ public class MultiTenantEventConfig extends MultiTenantConfigBase implements Eve
     }
 
     @Override
+    public boolean isAggregateBulkSubscriptionEvents() {
+        return staticConfig.isAggregateBulkSubscriptionEvents();
+    }
+
+    @Override
+    public boolean isAggregateBulkSubscriptionEvents(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("isAggregateBulkSubscriptionEvents", tenantContext);
+        if (result != null) {
+            return Boolean.parseBoolean(result);
+        }
+        return isAggregateBulkSubscriptionEvents();
+    }
+
+    @Override
     protected Class<? extends KillbillConfig> getConfigClass() {
         return EventConfig.class;
     }
