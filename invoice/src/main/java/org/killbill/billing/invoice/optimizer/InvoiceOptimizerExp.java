@@ -52,6 +52,7 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
 
     private static Logger logger = LoggerFactory.getLogger(InvoiceOptimizerExp.class);
 
+    private static Period UNSPECIFIED_PERIOD = new Period(InvoiceConfig.DEFAULT_NULL_PERIOD);
     @Inject
     public InvoiceOptimizerExp(final InvoiceDao invoiceDao,
                                final Clock clock,
@@ -63,7 +64,10 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
     @Override
     public AccountInvoices getInvoices(final InternalCallContext callContext) {
         final Period maxInvoiceLimit = invoiceConfig.getMaxInvoiceLimit(callContext);
-        final LocalDate fromDate = maxInvoiceLimit != null ? callContext.toLocalDate(clock.getUTCNow()).minus(maxInvoiceLimit) : null;
+
+        boolean isMaxInvoiceLimitSet = maxInvoiceLimit != null && !maxInvoiceLimit.equals(UNSPECIFIED_PERIOD);
+
+        final LocalDate fromDate = isMaxInvoiceLimitSet ? callContext.toLocalDate(clock.getUTCNow()).minus(maxInvoiceLimit) : null;
         final List<Invoice> existingInvoices = new LinkedList<Invoice>();
         final List<InvoiceModelDao> invoicesByAccount = invoiceDao.getInvoicesByAccount(false, fromDate, null, callContext);
         for (final InvoiceModelDao invoiceModelDao : invoicesByAccount) {

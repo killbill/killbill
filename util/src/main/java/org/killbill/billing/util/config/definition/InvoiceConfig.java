@@ -23,12 +23,18 @@ import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.skife.config.Config;
 import org.skife.config.Default;
-import org.skife.config.DefaultNull;
 import org.skife.config.Description;
 import org.skife.config.Param;
 import org.skife.config.TimeSpan;
 
 public interface InvoiceConfig extends KillbillConfig {
+
+
+    // Default period value for when nothing is specified
+    // This is needed because the default Period value coming from config-magic calling Period(null) -> Period("PT0S")
+    // and any Zero Period is a valid value.
+    //
+    String DEFAULT_NULL_PERIOD = "P200Y";
 
     public enum UsageDetailMode {
         AGGREGATE,
@@ -89,12 +95,12 @@ public interface InvoiceConfig extends KillbillConfig {
 
 
     @Config("org.killbill.invoice.maxInvoiceLimit")
-    @DefaultNull
+    @Default(DEFAULT_NULL_PERIOD)
     @Description("How far back in time should invoice generation look at")
     Period getMaxInvoiceLimit();
 
     @Config("org.killbill.invoice.maxInvoiceLimit")
-    @DefaultNull
+    @Default(DEFAULT_NULL_PERIOD)
     @Description("How far back in time should invoice generation look at")
     Period getMaxInvoiceLimit(@Param("dummy") final InternalTenantContext tenantContext);
 
