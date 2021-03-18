@@ -33,6 +33,20 @@ import org.slf4j.Logger;
 
 public abstract class EntitlementLoggingHelper {
 
+    private static final int MAX_LENGTH = 1024;
+
+    private static void logWithLimit(final Logger log, final String line) {
+        final String logLine;
+        if (line.length() >  MAX_LENGTH) {
+            final StringBuilder tmp = new StringBuilder(line.substring(0, MAX_LENGTH));
+            tmp.append("...");
+            logLine = tmp.toString();
+        } else {
+            logLine = line;
+        }
+        log.info(logLine);
+    }
+
     public static void logCreateEntitlementsWithAOs(final Logger log, final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementSpecifiersWithAddOns) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Create Entitlements with AddOns: ");
@@ -46,7 +60,7 @@ public abstract class EntitlementLoggingHelper {
                                                 cur.getBillingEffectiveDate());
                 }
             }
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 
@@ -102,7 +116,7 @@ public abstract class EntitlementLoggingHelper {
                        .append(effectiveDate)
                        .append("'");
             }
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 
@@ -140,7 +154,7 @@ public abstract class EntitlementLoggingHelper {
                        .append(billingPolicy)
                        .append("'");
             }
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 
@@ -170,7 +184,7 @@ public abstract class EntitlementLoggingHelper {
                        .append(billingPolicy)
                        .append("'");
             }
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 
@@ -180,7 +194,7 @@ public abstract class EntitlementLoggingHelper {
                     .append(" id = '")
                     .append(entitlement.getId())
                     .append("'");
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 
@@ -190,7 +204,7 @@ public abstract class EntitlementLoggingHelper {
                     .append(" id = '")
                     .append(entitlement.getId())
                     .append("'");
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 
@@ -235,7 +249,7 @@ public abstract class EntitlementLoggingHelper {
                            .append("'");
                 }
             }
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 
@@ -254,7 +268,7 @@ public abstract class EntitlementLoggingHelper {
                        .append(effectiveFromDate)
                        .append("'");
             }
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 
@@ -271,7 +285,7 @@ public abstract class EntitlementLoggingHelper {
                        .append(newExternalKey)
                        .append("'");
             }
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 
@@ -284,7 +298,7 @@ public abstract class EntitlementLoggingHelper {
                        .append(inputEffectiveDate)
                        .append("'");
             }
-            log.info(logLine.toString());
+            logWithLimit(log, logLine.toString());
         }
     }
 

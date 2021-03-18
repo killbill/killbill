@@ -129,7 +129,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
 
-    private static final int MAX_NB_BUNDLES_TO_FOLLOW = 20;
+    private static final int MAX_NB_SUBSCRIPTIONS_TO_FOLLOW = 20;
 
     private static final String ID_PARAM_NAME = "subscriptionId";
 
@@ -393,15 +393,20 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     return uriBuilder.buildResponse(uriInfo, SubscriptionResource.class, "getSubscription", Iterables.getFirst(entitlementIds, null), request);
                 }
 
+                // Workaround for https://github.com/killbill/killbill/issues/1336
+                // While we could tweak the container to support large number of bundles in the filter (e.g. Jetty's RequestBufferSize),
+                // the full list is probably not that useful for the client in practice.
                 final Collection<String> bundleIds = new LinkedHashSet<String>();
-                try {
-                    for (final Entitlement entitlement : entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext)) {
-                        if (entitlementIds.contains(entitlement.getId())) {
-                            bundleIds.add(entitlement.getBundleId().toString());
+                if (entitlementIds.size() < MAX_NB_SUBSCRIPTIONS_TO_FOLLOW) {
+                    try {
+                        for (final Entitlement entitlement : entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext)) {
+                            if (entitlementIds.contains(entitlement.getId())) {
+                                bundleIds.add(entitlement.getBundleId().toString());
+                            }
                         }
+                    } catch (final EntitlementApiException e) {
+                        return Response.status(Status.INTERNAL_SERVER_ERROR).build();
                     }
-                } catch (final EntitlementApiException e) {
-                    return Response.status(Status.INTERNAL_SERVER_ERROR).build();
                 }
 
                 if (responseObject == ObjectType.ACCOUNT) {
@@ -419,13 +424,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
     private Map<String, String> buildBundlesFilterQueryParam(final Collection<String> bundleIdList) {
         final Map<String, String> queryParams = new HashMap<String, String>();
-
-        // Workaround for https://github.com/killbill/killbill/issues/1336
-        // While we could tweak the container to support large number of bundles in the filter (e.g. Jetty's RequestBufferSize),
-        // the full list is probably not that useful for the client in practice.
-        if (bundleIdList.size() > MAX_NB_BUNDLES_TO_FOLLOW) {
-            return queryParams;
-        }
 
         String value = "";
         for (final String bundleId : bundleIdList) {

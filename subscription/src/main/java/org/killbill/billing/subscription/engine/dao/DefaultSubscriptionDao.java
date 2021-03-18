@@ -541,7 +541,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                         new SubscriptionNotificationKey(nextPhaseEvent.getId()), context);
 
                 // Notify the Bus
-                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseEvent, SubscriptionBaseTransitionType.PHASE, context);
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseEvent, SubscriptionBaseTransitionType.PHASE, 0, context);
                 notifyBusOfEffectiveImmediateChange(entitySqlDaoWrapperFactory, subscription, readyPhaseEvent, 0, context);
 
                 return null;
@@ -604,21 +604,21 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         createAndRefresh(transactional, new SubscriptionModelDao(defaultSubscriptionBase), context);
 
                         final List<SubscriptionBaseEvent> initialEvents = initialEventsMap.get(defaultSubscriptionBase.getId());
+
                         for (final SubscriptionBaseEvent cur : initialEvents) {
                             createdEvents.add(createAndRefresh(eventsDaoFromSameTransaction, new SubscriptionEventModelDao(cur), context));
 
                             final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER || cur.getType() == EventType.BCD_UPDATE);
                             final int seqId = isBusEvent ? busEffSeqId++ : 0;
-
                             if (!isBusEvent || !groupBusEvents || seqId == 0) {
-                                recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
+                                recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, seqId, catalog, context);
                             }
                         }
 
                         // Notify the Bus of the latest requested change, if needed
                         if (!initialEvents.isEmpty()) {
                             if (!groupBusEvents || busReqSeqId == 0) {
-                                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, defaultSubscriptionBase, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, context);
+                                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, defaultSubscriptionBase, initialEvents.get(initialEvents.size() - 1), SubscriptionBaseTransitionType.CREATE, busReqSeqId++, context);
                             }
                         }
                     }
@@ -717,7 +717,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     }
 
                     // Notify the Bus of the latest requested change
-                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, inputEvents.get(inputEvents.size() - 1), transitionType, contextWithUpdatedDate);
+                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, inputEvents.get(inputEvents.size() - 1), transitionType, 0, contextWithUpdatedDate);
                 }
 
                 return null;
@@ -785,7 +785,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
                 // Notify the Bus of the latest requested change
                 final SubscriptionBaseEvent finalEvent = inputChangeEvents.get(inputChangeEvents.size() - 1);
-                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, finalEvent, SubscriptionBaseTransitionType.CHANGE, context);
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, finalEvent, SubscriptionBaseTransitionType.CHANGE, 0, context);
 
                 // Cancel associated add-ons
                 cancelSubscriptionsFromTransaction(entitySqlDaoWrapperFactory, subscriptionsToBeCancelled, cancelEvents, catalog, context);
@@ -836,7 +836,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         recordBusOrFutureNotificationFromTransaction(subscription, refreshedSubscriptionEvent, entitySqlDaoWrapperFactory, isBusEvent, seqId, catalog, context);
 
         // Notify the Bus of the requested change
-        notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, refreshedSubscriptionEvent, SubscriptionBaseTransitionType.CANCEL, context);
+        notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, refreshedSubscriptionEvent, SubscriptionBaseTransitionType.CANCEL, 0, context);
     }
 
     private void cancelNextPhaseEventFromTransaction(final UUID subscriptionId, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
@@ -1102,7 +1102,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 createAndRefresh(transactional, new SubscriptionEventModelDao(bcdEvent), context);
 
                 // Notify the Bus
-                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, bcdEvent, SubscriptionBaseTransitionType.BCD_CHANGE, context);
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, bcdEvent, SubscriptionBaseTransitionType.BCD_CHANGE, 0, context);
                 final boolean isBusEvent = bcdEvent.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
                 recordBusOrFutureNotificationFromTransaction(subscription, bcdEvent, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
 
@@ -1216,9 +1216,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     private void notifyBusOfRequestedChange(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final DefaultSubscriptionBase subscription,
-                                            final SubscriptionBaseEvent nextEvent, final SubscriptionBaseTransitionType transitionType, final InternalCallContext context) {
+                                            final SubscriptionBaseEvent nextEvent, final SubscriptionBaseTransitionType transitionType, final int seqId, final InternalCallContext context) {
         try {
-            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, transitionType, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()), entitySqlDaoWrapperFactory.getHandle().getConnection());
+            eventBus.postFromTransaction(new DefaultRequestedSubscriptionEvent(subscription, nextEvent, transitionType, seqId, context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()), entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
             log.warn("Failed to post requested change event for subscriptionId='{}'", subscription.getId(), e);
         }
@@ -1264,7 +1264,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
             // Notify the Bus of the latest requested change
             final SubscriptionBaseEvent finalEvent = curSubscription.getInitialEvents().get(curSubscription.getInitialEvents().size() - 1);
-            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subData, finalEvent, SubscriptionBaseTransitionType.TRANSFER, context);
+            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subData, finalEvent, SubscriptionBaseTransitionType.TRANSFER, 0, context);
         }
 
         createAndRefresh(transBundleDao, new SubscriptionBundleModelDao(bundleData), context);

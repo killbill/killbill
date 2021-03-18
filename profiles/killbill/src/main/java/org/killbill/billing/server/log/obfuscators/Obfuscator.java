@@ -30,7 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 public abstract class Obfuscator {
 
     @VisibleForTesting
-    static final String LOGGING_FILTER_NAME = "com.sun.jersey.api.container.filter.LoggingFilter";
+    static final String LOGGING_FILTER_NAME = "org.glassfish.jersey.logging.LoggingFeature";
 
     protected static final int DEFAULT_PATTERN_FLAGS = Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL;
 
