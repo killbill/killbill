@@ -166,6 +166,12 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                          new SubscriberAction<RequestedSubscriptionInternalEvent>() {
                                              @Override
                                              public void run(final RequestedSubscriptionInternalEvent event) {
+
+                                                 if (event.getRemainingEventsForUserOperation() > 0) {
+                                                     return;
+                                                 }
+
+
                                                  final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
                                                  dispatcher.processSubscriptionStartRequestedDate(event, context);
                                              }
