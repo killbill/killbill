@@ -22,6 +22,12 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleNoDB;
 import org.killbill.billing.util.glue.IDBISetup;
 import org.killbill.billing.util.glue.MemoryGlobalLockerModule;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizerNoop;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizerOn;
+import org.killbill.billing.util.optimizer.BusOptimizer;
+import org.killbill.billing.util.optimizer.BusOptimizerNoop;
+import org.killbill.billing.util.optimizer.BusOptimizerOn;
 import org.killbill.clock.ClockMock;
 import org.skife.jdbi.v2.IDBI;
 
@@ -35,11 +41,30 @@ public class GuicyKillbillTestNoDBModule extends GuicyKillbillTestModule {
         super(configSource, clock);
     }
 
+    public class KillbillTestPlatformModuleNoDB extends TestPlatformModuleNoDB {
+
+        public KillbillTestPlatformModuleNoDB(final KillbillConfigSource configSource) {
+            super(configSource);
+        }
+
+        @Override
+        protected void configureBus() {
+            super.configureBus();
+            if (killbillFeatures.isBusOptimizationOn()) {
+                this.bind(BusOptimizer.class).to(BusOptimizerOn.class).asEagerSingleton();
+                this.bind(BusDispatcherOptimizer.class).to(BusDispatcherOptimizerOn.class).asEagerSingleton();
+            } else {
+                this.bind(BusOptimizer.class).to(BusOptimizerNoop.class).asEagerSingleton();
+                this.bind(BusDispatcherOptimizer.class).to(BusDispatcherOptimizerNoop.class).asEagerSingleton();
+            }
+        }
+    }
+
     @Override
     protected void configure() {
         super.configure();
 
-        install(new TestPlatformModuleNoDB(configSource));
+        install(new KillbillTestPlatformModuleNoDB(configSource));
         install(new MemoryGlobalLockerModule(configSource));
     }
 

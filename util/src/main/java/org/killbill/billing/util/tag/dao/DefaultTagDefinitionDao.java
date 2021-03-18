@@ -44,6 +44,7 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.billing.util.tag.api.user.TagEventBuilder;
 import org.killbill.bus.api.PersistentBus;
@@ -65,11 +66,11 @@ public class DefaultTagDefinitionDao extends EntityDaoBase<TagDefinitionModelDao
     private static final Logger log = LoggerFactory.getLogger(DefaultTagDefinitionDao.class);
 
     private final TagEventBuilder tagEventBuilder;
-    private final PersistentBus bus;
+    private final BusOptimizer bus;
     private final AuditDao auditDao;
 
     @Inject
-    public DefaultTagDefinitionDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final TagEventBuilder tagEventBuilder, final PersistentBus bus, final Clock clock,
+    public DefaultTagDefinitionDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final TagEventBuilder tagEventBuilder, final BusOptimizer bus, final Clock clock,
                                    final CacheControllerDispatcher controllerDispatcher, final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final AuditDao auditDao) {
         super(nonEntityDao, controllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), TagDefinitionSqlDao.class);
         this.tagEventBuilder = tagEventBuilder;

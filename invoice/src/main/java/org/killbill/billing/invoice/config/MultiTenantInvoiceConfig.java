@@ -24,11 +24,11 @@ import javax.inject.Named;
 
 import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.glue.InvoiceModule;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
+import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.TimeSpan;
 
 public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements InvoiceConfig {
@@ -37,7 +37,7 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     private final InvoiceConfig staticConfig;
 
     @Inject
-    public MultiTenantInvoiceConfig(@Named(InvoiceModule.STATIC_CONFIG) final InvoiceConfig staticConfig, final CacheConfig cacheConfig) {
+    public MultiTenantInvoiceConfig(@Named(KillBillModule.STATIC_CONFIG) final InvoiceConfig staticConfig, final CacheConfig cacheConfig) {
         super(cacheConfig);
         this.staticConfig = staticConfig;
     }

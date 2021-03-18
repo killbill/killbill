@@ -41,7 +41,6 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
@@ -69,7 +68,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 
@@ -85,7 +84,6 @@ import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logTransferEntitlement;
 
 public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements EntitlementApi {
-
 
     public static final String ENT_STATE_START = "ENT_STARTED";
     public static final String ENT_STATE_BLOCKED = "ENT_BLOCKED";
@@ -107,7 +105,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     private final CatalogInternalApi catalogInternalApi;
 
     @Inject
-    public DefaultEntitlementApi(final PersistentBus eventBus, final InternalCallContextFactory internalCallContextFactory,
+    public DefaultEntitlementApi(final BusOptimizer eventBus, final InternalCallContextFactory internalCallContextFactory,
                                  final SubscriptionBaseTransferApi subscriptionTransferApi, final SubscriptionBaseInternalApi subscriptionInternalApi,
                                  final AccountInternalApi accountApi, final BlockingStateDao blockingStateDao, final Clock clock,
                                  final BlockingChecker checker, final NotificationQueueService notificationQueueService,

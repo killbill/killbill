@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.events.BusInternalEvent.BusInternalEventType;
 import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.skife.config.Config;
 import org.skife.config.Separator;
@@ -51,6 +52,14 @@ public abstract class MultiTenantConfigBase {
         }
     };
 
+    private final static Function<String, BusInternalEventType> BUS_EVENT_TYPE_CONVERTER = new Function<String, BusInternalEventType>() {
+        @Override
+        public BusInternalEventType apply(final String input) {
+            return BusInternalEventType.valueOf(input);
+        }
+    };
+
+
     public MultiTenantConfigBase(final CacheConfig cacheConfig) {
         this.cacheConfig = cacheConfig;
     }
@@ -70,6 +79,12 @@ public abstract class MultiTenantConfigBase {
         final Method method = getConfigStaticMethodWithChecking(methodName);
         final Iterable<String> tokens = getTokens(method, value);
         return ImmutableList.copyOf(Iterables.transform(tokens, TIME_SPAN_CONVERTER));
+    }
+
+    protected List<BusInternalEventType> convertToListBusInternalEventType(final String value, final String methodName) {
+        final Method method = getConfigStaticMethodWithChecking(methodName);
+        final Iterable<String> tokens = getTokens(method, value);
+        return ImmutableList.copyOf(Iterables.transform(tokens, BUS_EVENT_TYPE_CONVERTER));
     }
 
     protected List<Integer> convertToListInteger(final String value, final String methodName) {

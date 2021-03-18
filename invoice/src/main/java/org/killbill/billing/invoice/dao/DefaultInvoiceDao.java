@@ -82,9 +82,9 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.bus.api.BusEvent;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
@@ -124,7 +124,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                                                        InvoiceItemType.PARENT_SUMMARY);
 
     private final NextBillingDatePoster nextBillingDatePoster;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceDaoHelper invoiceDaoHelper;
     private final CBADao cbaDao;
@@ -141,7 +141,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              final IDBI dbi,
                              @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi,
                              final NextBillingDatePoster nextBillingDatePoster,
-                             final PersistentBus eventBus,
+                             final BusOptimizer eventBus,
                              final Clock clock,
                              final CacheControllerDispatcher cacheControllerDispatcher,
                              final NonEntityDao nonEntityDao,

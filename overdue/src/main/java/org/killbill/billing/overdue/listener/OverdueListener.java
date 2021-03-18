@@ -51,6 +51,7 @@ import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.clock.Clock;
@@ -72,6 +73,7 @@ public class OverdueListener {
     private final OverdueConfigCache overdueConfigCache;
     private final NonEntityDao nonEntityDao;
     private final AccountInternalApi accountApi;
+    private final BusDispatcherOptimizer busDispatcherOptimizer;
 
     @Inject
     public OverdueListener(final NonEntityDao nonEntityDao,
@@ -79,12 +81,14 @@ public class OverdueListener {
                            final Clock clock,
                            @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_ASYNC_BUS_NAMED)  final OverduePoster asyncPoster,
                            final OverdueConfigCache overdueConfigCache,
+                           final BusDispatcherOptimizer busDispatcherOptimizer,
                            final InternalCallContextFactory internalCallContextFactory,
                            final AccountInternalApi accountApi) {
         this.nonEntityDao = nonEntityDao;
         this.clock = clock;
         this.asyncPoster = asyncPoster;
         this.overdueConfigCache = overdueConfigCache;
+        this.busDispatcherOptimizer= busDispatcherOptimizer;
         this.objectIdCacheController = cacheControllerDispatcher.getCacheController(CacheType.OBJECT_ID);
         this.internalCallContextFactory = internalCallContextFactory;
         this.accountApi = accountApi;
@@ -93,52 +97,64 @@ public class OverdueListener {
     @AllowConcurrentEvents
     @Subscribe
     public void handleTagInsert(final ControlTagCreationInternalEvent event) {
-        if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
-            final InternalCallContext internalCallContext = createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
-            insertBusEventIntoNotificationQueue(event.getObjectId(), OverdueAsyncBusNotificationAction.CLEAR, internalCallContext);
-        } else if (event.getTagDefinition().getName().equals(ControlTagType.WRITTEN_OFF.toString()) && event.getObjectType() == ObjectType.INVOICE) {
-            final UUID accountId = nonEntityDao.retrieveIdFromObject(event.getSearchKey1(), ObjectType.ACCOUNT, objectIdCacheController);
-            insertBusEventIntoNotificationQueue(accountId, event);
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
+                final InternalCallContext internalCallContext = createCallContext(event.getUserToken(), event.getSearchKey1(), event.getSearchKey2());
+                insertBusEventIntoNotificationQueue(event.getObjectId(), OverdueAsyncBusNotificationAction.CLEAR, internalCallContext);
+            } else if (event.getTagDefinition().getName().equals(ControlTagType.WRITTEN_OFF.toString()) && event.getObjectType() == ObjectType.INVOICE) {
+                final UUID accountId = nonEntityDao.retrieveIdFromObject(event.getSearchKey1(), ObjectType.ACCOUNT, objectIdCacheController);
+                insertBusEventIntoNotificationQueue(accountId, event);
+            }
         }
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void handleTagRemoval(final ControlTagDeletionInternalEvent event) {
-        if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
-            insertBusEventIntoNotificationQueue(event.getObjectId(), event);
-        } else if (event.getTagDefinition().getName().equals(ControlTagType.WRITTEN_OFF.toString()) && event.getObjectType() == ObjectType.INVOICE) {
-            final UUID accountId = nonEntityDao.retrieveIdFromObject(event.getSearchKey1(), ObjectType.ACCOUNT, objectIdCacheController);
-            insertBusEventIntoNotificationQueue(accountId, event);
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            if (event.getTagDefinition().getName().equals(ControlTagType.OVERDUE_ENFORCEMENT_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
+                insertBusEventIntoNotificationQueue(event.getObjectId(), event);
+            } else if (event.getTagDefinition().getName().equals(ControlTagType.WRITTEN_OFF.toString()) && event.getObjectType() == ObjectType.INVOICE) {
+                final UUID accountId = nonEntityDao.retrieveIdFromObject(event.getSearchKey1(), ObjectType.ACCOUNT, objectIdCacheController);
+                insertBusEventIntoNotificationQueue(accountId, event);
+            }
         }
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void handlePaymentInfoEvent(final InvoicePaymentInfoInternalEvent event) {
-        log.debug("Received InvoicePaymentInfo event {}", event);
-        insertBusEventIntoNotificationQueue(event.getAccountId(), event);
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            log.debug("Received InvoicePaymentInfo event {}", event);
+            insertBusEventIntoNotificationQueue(event.getAccountId(), event);
+        }
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void handlePaymentErrorEvent(final InvoicePaymentErrorInternalEvent event) {
-        log.debug("Received InvoicePaymentError event {}", event);
-        insertBusEventIntoNotificationQueue(event.getAccountId(), event);
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            log.debug("Received InvoicePaymentError event {}", event);
+            insertBusEventIntoNotificationQueue(event.getAccountId(), event);
+        }
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void handleInvoiceAdjustmentEvent(final InvoiceAdjustmentInternalEvent event) {
-        log.debug("Received InvoiceAdjustment event {}", event);
-        insertBusEventIntoNotificationQueue(event.getAccountId(), event);
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            log.debug("Received InvoiceAdjustment event {}", event);
+            insertBusEventIntoNotificationQueue(event.getAccountId(), event);
+        }
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void handleInvoiceCreation(final InvoiceCreationInternalEvent event) {
-        log.debug("Received InvoiceCreation event {}", event);
-        insertBusEventIntoNotificationQueue(event.getAccountId(), event);
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            log.debug("Received InvoiceCreation event {}", event);
+            insertBusEventIntoNotificationQueue(event.getAccountId(), event);
+        }
     }
 
     private void insertBusEventIntoNotificationQueue(final UUID accountId, final BusEvent event) {

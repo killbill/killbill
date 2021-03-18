@@ -27,6 +27,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
+import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.RequestedSubscriptionInternalEvent;
@@ -40,6 +41,8 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
@@ -65,6 +68,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
     private final InternalCallContextFactory internalCallContextFactory;
     private final InvoiceInternalApi invoiceApi;
     private final RetryableSubscriber retryableSubscriber;
+    private final BusDispatcherOptimizer busDispatcherOptimizer;
     private final SubscriberQueueHandler subscriberQueueHandler = new SubscriberQueueHandler();
 
     @Inject
@@ -73,11 +77,13 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                            final InvoiceDispatcher dispatcher,
                            final InvoiceInternalApi invoiceApi,
                            final NotificationQueueService notificationQueueService,
+                           final BusDispatcherOptimizer busDispatcherOptimizer,
                            final Clock clock) {
         super(notificationQueueService);
         this.dispatcher = dispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceApi = invoiceApi;
+        this.busDispatcherOptimizer = busDispatcherOptimizer;
 
         subscriberQueueHandler.subscribe(EffectiveSubscriptionInternalEvent.class,
                                          new SubscriberAction<EffectiveSubscriptionInternalEvent>() {
@@ -160,6 +166,12 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                          new SubscriberAction<RequestedSubscriptionInternalEvent>() {
                                              @Override
                                              public void run(final RequestedSubscriptionInternalEvent event) {
+
+                                                 if (event.getRemainingEventsForUserOperation() > 0) {
+                                                     return;
+                                                 }
+
+
                                                  final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "SubscriptionBaseTransition", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
                                                  dispatcher.processSubscriptionStartRequestedDate(event, context);
                                              }
@@ -194,22 +206,29 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
         super.stop();
     }
 
+
+    private void handleEvent(final BusInternalEvent event) {
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            retryableSubscriber.handleEvent(event);
+        }
+    }
+
     @AllowConcurrentEvents
     @Subscribe
     public void handleSubscriptionTransition(final EffectiveSubscriptionInternalEvent event) {
-        retryableSubscriber.handleEvent(event);
+        handleEvent(event);
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void handleBlockingStateTransition(final BlockingTransitionInternalEvent event) {
-        retryableSubscriber.handleEvent(event);
+        handleEvent(event);
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void handleSubscriptionTransition(final RequestedSubscriptionInternalEvent event) {
-        retryableSubscriber.handleEvent(event);
+        handleEvent(event);
     }
 
     public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
@@ -233,7 +252,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
     @AllowConcurrentEvents
     @Subscribe
     public void handleChildrenInvoiceCreationEvent(final InvoiceCreationInternalEvent event) {
-        retryableSubscriber.handleEvent(event);
+        handleEvent(event);
     }
 
     private boolean isChildrenAccountAndPaymentDelegated(final Account account) {
@@ -255,6 +274,6 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
     @AllowConcurrentEvents
     @Subscribe
     public void handleChildrenInvoiceAdjustmentEvent(final DefaultInvoiceAdjustmentEvent event) {
-        retryableSubscriber.handleEvent(event);
+        handleEvent(event);
     }
 }

@@ -66,7 +66,7 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
@@ -99,7 +99,7 @@ public class EventsStreamBuilder {
                                @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi,
                                final Clock clock,
                                final NotificationQueueService notificationQueueService,
-                               final PersistentBus eventBus,
+                               final BusOptimizer eventBus,
                                final CacheControllerDispatcher cacheControllerDispatcher,
                                final NonEntityDao nonEntityDao,
                                final AuditDao auditDao,

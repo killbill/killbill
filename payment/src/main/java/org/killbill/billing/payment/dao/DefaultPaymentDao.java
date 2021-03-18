@@ -64,7 +64,7 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
@@ -85,13 +85,13 @@ public class DefaultPaymentDao extends EntityDaoBase<PaymentModelDao, Payment, P
     private static final Logger log = LoggerFactory.getLogger(DefaultPaymentDao.class);
 
     private final DefaultPaginationSqlDaoHelper paginationHelper;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final Clock clock;
     private final AuditDao auditDao;
 
     @Inject
     public DefaultPaymentDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
-                             final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus eventBus, final AuditDao auditDao) {
+                             final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final BusOptimizer eventBus, final AuditDao auditDao) {
         super(nonEntityDao, cacheControllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), PaymentSqlDao.class);
         this.paginationHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao);
         this.eventBus = eventBus;

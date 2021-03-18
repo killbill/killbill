@@ -60,8 +60,8 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.BusEvent;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -115,14 +115,14 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final CacheController<String, UUID> objectIdCacheController;
     private final NonEntityDao nonEntityDao;
     private final AuditDao auditDao;
 
     private final StatelessBlockingChecker statelessBlockingChecker = new StatelessBlockingChecker();
 
-    public DefaultBlockingStateDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final PersistentBus eventBus,
+    public DefaultBlockingStateDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final NotificationQueueService notificationQueueService, final BusOptimizer eventBus,
                                    final CacheControllerDispatcher cacheControllerDispatcher, final NonEntityDao nonEntityDao, final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
         super(nonEntityDao, cacheControllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), BlockingStateSqlDao.class);
         this.clock = clock;
@@ -205,11 +205,15 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
     @Override
     public void setBlockingStatesAndPostBlockingTransitionEvent(final Map<BlockingState, Optional<UUID>> states, final InternalCallContext context) {
+
+        final boolean groupBusEvents = eventBus.shouldAggregateSubscriptionEvents(context);
+
         transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
 
+                int seqId = 0;
                 for (final BlockingState state : states.keySet()) {
                     final DateTime upToDate = state.getEffectiveDate();
                     final UUID bundleId = states.get(state).orNull();
@@ -258,17 +262,21 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
 
                     final BlockingAggregator currentState = getBlockedStatus(sqlDao, entitySqlDaoWrapperFactory.getHandle(), state.getBlockedId(), state.getType(), bundleId, upToDate, context);
                     if (previousState != null && currentState != null) {
-                        recordBusOrFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                                     state.getId(),
-                                                                     state.getEffectiveDate(),
-                                                                     state.getBlockedId(),
-                                                                     state.getType(),
-                                                                     state.getStateName(),
-                                                                     state.getService(),
-                                                                     inserted,
-                                                                     previousState,
-                                                                     currentState,
-                                                                     context);
+                        final boolean isBusEvent = state.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
+                        if (!isBusEvent || !groupBusEvents || seqId == 0) {
+                            recordBusOrFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
+                                                                         state.getId(),
+                                                                         state.getEffectiveDate(),
+                                                                         state.getBlockedId(),
+                                                                         state.getType(),
+                                                                         state.getStateName(),
+                                                                         state.getService(),
+                                                                         inserted,
+                                                                         previousState,
+                                                                         currentState,
+                                                                         context);
+                        }
+                        seqId = isBusEvent ? seqId+1 : seqId;
                     }
                 }
 

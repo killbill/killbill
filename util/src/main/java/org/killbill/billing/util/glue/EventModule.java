@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,18 +29,18 @@ import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
 
-public class ConfigModule extends KillBillModule {
+public class EventModule extends KillBillModule {
 
-    public static final String CONFIG_INVALIDATION_CALLBACK = "ConfigInvalidationCallback";
 
-    public ConfigModule(final KillbillConfigSource configSource) {
+    public EventModule(final KillbillConfigSource configSource) {
         super(configSource);
     }
 
     @Override
     protected void configure() {
-        bind(CacheConfig.class).asEagerSingleton();
-        bind(CacheInvalidationCallback.class).annotatedWith(Names.named(CONFIG_INVALIDATION_CALLBACK)).to(PerTenantConfigInvalidationCallback.class).asEagerSingleton();
-        bind(ConfigKillbillService.class).to(DefaultConfigKillbillService.class).asEagerSingleton();
+        final EventConfig eventConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EventConfig.class);
+        bind(EventConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(eventConfig);
+        bind(EventConfig.class).to(MultiTenantEventConfig.class).asEagerSingleton();
+
     }
 }

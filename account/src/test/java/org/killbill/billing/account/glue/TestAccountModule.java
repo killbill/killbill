@@ -26,6 +26,7 @@ import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
+import org.killbill.billing.util.glue.EventModule;
 import org.killbill.billing.util.glue.TagStoreModule;
 
 public class TestAccountModule extends DefaultAccountModule {
@@ -41,6 +42,7 @@ public class TestAccountModule extends DefaultAccountModule {
         install(new AuditModule(configSource));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
+        install(new EventModule(configSource));
         install(new CallContextModule(configSource));
         install(new CustomFieldModule(configSource));
         install(new MockTenantModule(configSource));

@@ -230,9 +230,6 @@ public class TestSubscription extends TestIntegrationBase {
                                       NextEvent.CREATE, NextEvent.BLOCK,
                                       NextEvent.CREATE, NextEvent.BLOCK,
                                       NextEvent.CREATE, NextEvent.BLOCK,
-                                      NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE,
-                                      NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE,
-                                      NextEvent.NULL_INVOICE,
                                       NextEvent.INVOICE,
                                       NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT
                                      );
@@ -314,8 +311,6 @@ public class TestSubscription extends TestIntegrationBase {
                                       NextEvent.CREATE, NextEvent.BLOCK,
                                       NextEvent.CREATE, NextEvent.BLOCK,
                                       NextEvent.CREATE, NextEvent.BLOCK,
-                                      NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE,
-                                      NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE,
                                       NextEvent.INVOICE,
                                       NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT
                                      );

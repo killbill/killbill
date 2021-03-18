@@ -64,8 +64,6 @@ import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
-import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.matcher.Matchers;
 
 // For Kill Bill server only.
 // See org.killbill.billing.util.glue.KillBillShiroModule for Kill Bill library.

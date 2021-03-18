@@ -51,6 +51,7 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
@@ -69,12 +70,12 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
     private static final Logger log = LoggerFactory.getLogger(DefaultCustomFieldDao.class);
 
-    private final PersistentBus bus;
+    private final BusOptimizer bus;
     private final AuditDao auditDao;
 
     @Inject
     public DefaultCustomFieldDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final CacheControllerDispatcher controllerDispatcher,
-                                 final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final PersistentBus bus, final AuditDao auditDao) {
+                                 final NonEntityDao nonEntityDao, final InternalCallContextFactory internalCallContextFactory, final BusOptimizer bus, final AuditDao auditDao) {
         super(nonEntityDao, controllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, controllerDispatcher, nonEntityDao, internalCallContextFactory), CustomFieldSqlDao.class);
         this.bus = bus;
         this.auditDao = auditDao;

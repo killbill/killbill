@@ -37,6 +37,7 @@ public class DefaultServerService implements ServerService {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultServerService.class);
 
+    // External bus: Do not use BusOptimizer
     private final PersistentBus bus;
     private final PushNotificationListener pushNotificationListener;
     private final PushNotificationRetryService pushNotificationRetryService;

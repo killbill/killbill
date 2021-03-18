@@ -59,6 +59,7 @@ public class KillbillEventHandler {
     @AllowConcurrentEvents
     @Subscribe
     public void handleSubscriptionEvents(final BusInternalEvent event) {
+        // No BusDispatcherOptimizer logic on purpose
         final List<CompletionUserRequestNotifier> runningWaiters = new ArrayList<CompletionUserRequestNotifier>();
         synchronized (activeWaiters) {
             runningWaiters.addAll(activeWaiters);

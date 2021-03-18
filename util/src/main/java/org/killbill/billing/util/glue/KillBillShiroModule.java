@@ -44,10 +44,12 @@ import org.skife.config.ConfigurationObjectFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
+import com.google.inject.name.Names;
 
 // For Kill Bill library only.
 // See org.killbill.billing.server.modules.KillBillShiroWebModule for Kill Bill server.
 public class KillBillShiroModule extends ShiroModule {
+
 
     public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
     public static final String KILLBILL_OKTA_PROPERTY = "killbill.server.okta";

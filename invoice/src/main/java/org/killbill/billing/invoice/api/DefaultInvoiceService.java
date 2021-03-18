@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.api;
 
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentNotifier;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.InvoiceTagHandler;
@@ -35,11 +36,11 @@ public class DefaultInvoiceService implements InvoiceService {
     private final NextBillingDateNotifier dateNotifier;
     private final InvoiceListener invoiceListener;
     private final InvoiceTagHandler tagHandler;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final ParentInvoiceCommitmentNotifier parentInvoiceNotifier;
 
     @Inject
-    public DefaultInvoiceService(final InvoiceListener invoiceListener, final InvoiceTagHandler tagHandler, final PersistentBus eventBus,
+    public DefaultInvoiceService(final InvoiceListener invoiceListener, final InvoiceTagHandler tagHandler, final BusOptimizer eventBus,
                                  final NextBillingDateNotifier dateNotifier, final ParentInvoiceCommitmentNotifier parentInvoiceNotifier) {
         this.invoiceListener = invoiceListener;
         this.tagHandler = tagHandler;
