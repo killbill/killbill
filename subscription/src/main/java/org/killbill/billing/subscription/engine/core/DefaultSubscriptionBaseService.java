@@ -45,8 +45,8 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.BusEvent;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -69,7 +69,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     private final Clock clock;
     private final SubscriptionDao dao;
     private final PlanAligner planAligner;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
     private final SubscriptionBaseApiService apiService;
@@ -81,7 +81,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     public DefaultSubscriptionBaseService(final Clock clock,
                                           final SubscriptionDao dao,
                                           final PlanAligner planAligner,
-                                          final PersistentBus eventBus,
+                                          final BusOptimizer eventBus,
                                           final NotificationQueueService notificationQueueService,
                                           final InternalCallContextFactory internalCallContextFactory,
                                           final SubscriptionBaseApiService apiService,

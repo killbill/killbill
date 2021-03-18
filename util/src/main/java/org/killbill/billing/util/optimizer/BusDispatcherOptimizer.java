@@ -1,7 +1,6 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -16,11 +15,11 @@
  * under the License.
  */
 
-package org.killbill.billing.glue;
+package org.killbill.billing.util.optimizer;
 
-public interface InvoiceModule {
+import org.killbill.bus.api.BusEvent;
 
-    public void installInvoiceUserApi();
+public interface BusDispatcherOptimizer {
+    boolean shouldDispatch(final BusEvent event);
 
-    public void installInvoiceInternalApi();
 }

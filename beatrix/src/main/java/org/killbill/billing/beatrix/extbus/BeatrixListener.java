@@ -86,6 +86,7 @@ public class BeatrixListener {
 
     private static final Logger log = LoggerFactory.getLogger(BeatrixListener.class);
 
+    // External bus: Do not use BusOptimizer
     private final PersistentBus externalBus;
     private final InternalCallContextFactory internalCallContextFactory;
 
@@ -104,6 +105,7 @@ public class BeatrixListener {
     @AllowConcurrentEvents
     @Subscribe
     public void handleAllInternalKillbillEvents(final BusInternalEvent event) {
+        // No BusDispatcherOptimizer logic on purpose
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "BeatrixListener", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
         try {
             final BusEvent externalEvent = computeExtBusEventEntryFromBusInternalEvent(event, internalContext);

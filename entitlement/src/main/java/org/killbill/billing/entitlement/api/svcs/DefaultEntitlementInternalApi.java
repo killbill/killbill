@@ -35,7 +35,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
@@ -67,7 +66,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -82,7 +81,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
     private final BlockingStateDao blockingStateDao;
 
     @Inject
-    public DefaultEntitlementInternalApi(final PersistentBus eventBus,
+    public DefaultEntitlementInternalApi(final BusOptimizer eventBus,
                                          final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution,
                                          final InternalCallContextFactory internalCallContextFactory,
                                          final SubscriptionBaseInternalApi subscriptionInternalApi,
@@ -92,7 +91,6 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
         super(eventBus, entitlementApi, pluginExecution, internalCallContextFactory, subscriptionInternalApi, accountApi, blockingStateDao, clock, checker, notificationQueueService, eventsStreamBuilder, entitlementUtils, securityApi);
         this.blockingStateDao = blockingStateDao;
     }
-
 
     @Override
     public void cancel(final Iterable<Entitlement> entitlements, @Nullable final LocalDate effectiveDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {

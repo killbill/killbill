@@ -60,9 +60,9 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
-import org.killbill.bus.api.PersistentBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +77,7 @@ public class OverdueStateApplicator {
 
     private final BlockingInternalApi blockingApi;
     private final OverduePoster checkPoster;
-    private final PersistentBus bus;
+    private final BusOptimizer bus;
     private final AccountInternalApi accountApi;
     private final EntitlementApi entitlementApi;
     private final EntitlementInternalApi entitlementInternalApi;
@@ -90,7 +90,7 @@ public class OverdueStateApplicator {
                                   final EntitlementApi entitlementApi,
                                   final EntitlementInternalApi entitlementInternalApi,
                                   @Named(DefaultOverdueModule.OVERDUE_NOTIFIER_CHECK_NAMED) final OverduePoster checkPoster,
-                                  final PersistentBus bus,
+                                  final BusOptimizer bus,
                                   final TagInternalApi tagApi,
                                   final InternalCallContextFactory internalCallContextFactory) {
 

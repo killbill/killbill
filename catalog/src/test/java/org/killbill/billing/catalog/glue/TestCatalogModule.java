@@ -25,6 +25,7 @@ import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.ConfigModule;
+import org.killbill.billing.util.glue.EventModule;
 
 public class TestCatalogModule extends CatalogModule {
 
@@ -38,6 +39,7 @@ public class TestCatalogModule extends CatalogModule {
         install(new MockNonEntityDaoModule(configSource));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
+        install(new EventModule(configSource));
         install(new MockTenantModule(configSource));
         install(new MockAccountModule(configSource));
     }

@@ -29,6 +29,7 @@ import org.killbill.billing.payment.invoice.PaymentTagHandler;
 import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
@@ -43,7 +44,7 @@ public class DefaultPaymentService implements PaymentService {
 
     private final PaymentBusEventHandler paymentBusEventHandler;
     private final PaymentTagHandler tagHandler;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
     private final PaymentApi api;
     private final DefaultRetryService retryService;
     private final Janitor janitor;
@@ -55,7 +56,7 @@ public class DefaultPaymentService implements PaymentService {
                                  final PaymentTagHandler tagHandler,
                                  final PaymentApi api,
                                  final DefaultRetryService retryService,
-                                 final PersistentBus eventBus,
+                                 final BusOptimizer eventBus,
                                  final Janitor janitor,
                                  final PaymentExecutors paymentExecutors,
                                  final StateMachineConfigCache stateMachineConfigCache) {

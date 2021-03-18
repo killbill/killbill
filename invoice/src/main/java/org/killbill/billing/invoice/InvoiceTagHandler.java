@@ -30,6 +30,8 @@ import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -54,6 +56,7 @@ public class InvoiceTagHandler extends RetryableService implements KillbillServi
 
     private final InvoiceDispatcher dispatcher;
     private final RetryableSubscriber retryableSubscriber;
+    private final BusDispatcherOptimizer busDispatcherOptimizer;
 
     private final SubscriberQueueHandler subscriberQueueHandler = new SubscriberQueueHandler();
 
@@ -61,9 +64,11 @@ public class InvoiceTagHandler extends RetryableService implements KillbillServi
     public InvoiceTagHandler(final Clock clock,
                              final InvoiceDispatcher dispatcher,
                              final NotificationQueueService notificationQueueService,
+                             final BusDispatcherOptimizer busDispatcherOptimizer,
                              final InternalCallContextFactory internalCallContextFactory) {
         super(notificationQueueService);
         this.dispatcher = dispatcher;
+        this.busDispatcherOptimizer = busDispatcherOptimizer;
 
         final SubscriberAction<ControlTagDeletionInternalEvent> action = new SubscriberAction<ControlTagDeletionInternalEvent>() {
             @Override
@@ -97,7 +102,9 @@ public class InvoiceTagHandler extends RetryableService implements KillbillServi
     @AllowConcurrentEvents
     @Subscribe
     public void process_AUTO_INVOICING_OFF_removal(final ControlTagDeletionInternalEvent event) {
-        retryableSubscriber.handleEvent(event);
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            retryableSubscriber.handleEvent(event);
+        }
     }
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)

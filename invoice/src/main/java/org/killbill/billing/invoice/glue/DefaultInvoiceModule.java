@@ -90,7 +90,7 @@ public class DefaultInvoiceModule extends KillBillModule implements InvoiceModul
     }
 
     protected void installConfig(final InvoiceConfig staticInvoiceConfig) {
-        bind(InvoiceConfig.class).annotatedWith(Names.named(STATIC_CONFIG)).toInstance(staticInvoiceConfig);
+        bind(InvoiceConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(staticInvoiceConfig);
         bind(InvoiceConfig.class).to(MultiTenantInvoiceConfig.class).asEagerSingleton();
     }
 

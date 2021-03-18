@@ -65,7 +65,6 @@ import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.template.HtmlInvoice;
 import org.killbill.billing.invoice.template.HtmlInvoiceGenerator;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditLevel;
@@ -76,9 +75,9 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
-import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +105,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     private final InvoiceApiHelper invoiceApiHelper;
     private final HtmlInvoiceGenerator generator;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final PersistentBus eventBus;
+    private final BusOptimizer eventBus;
 
     private final CatalogInternalApi catalogInternalApi;
 
@@ -114,7 +113,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public DefaultInvoiceUserApi(final InvoiceDao dao,
                                  final InvoiceDispatcher dispatcher,
                                  final AccountInternalApi accountUserApi,
-                                 final PersistentBus eventBus,
+                                 final BusOptimizer eventBus,
                                  final TagInternalApi tagApi,
                                  final InvoiceApiHelper invoiceApiHelper,
                                  final HtmlInvoiceGenerator generator,

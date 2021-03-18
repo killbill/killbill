@@ -23,11 +23,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.payment.glue.PaymentModule;
 import org.killbill.billing.util.config.definition.KillbillConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.MultiTenantConfigBase;
+import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.Param;
 import org.skife.config.TimeSpan;
 
@@ -36,7 +36,7 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
     private final PaymentConfig staticConfig;
 
     @Inject
-    public MultiTenantPaymentConfig(@Named(PaymentModule.STATIC_CONFIG) final PaymentConfig staticConfig, final CacheConfig cacheConfig) {
+    public MultiTenantPaymentConfig(@Named(KillBillModule.STATIC_CONFIG) final PaymentConfig staticConfig, final CacheConfig cacheConfig) {
         super(cacheConfig);
         this.staticConfig = staticConfig;
     }

@@ -25,7 +25,7 @@ import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
@@ -38,7 +38,7 @@ public class MockSubscriptionDaoSql extends DefaultSubscriptionDao {
 
     @Inject
     public MockSubscriptionDaoSql(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final Clock clock, final AddonUtils addonUtils, final NotificationQueueService notificationQueueService,
-                                  final PersistentBus eventBus, final CacheControllerDispatcher cacheControllerDispatcher,
+                                  final BusOptimizer eventBus, final CacheControllerDispatcher cacheControllerDispatcher,
                                   final NonEntityDao nonEntityDao, final AuditDao auditDao, final InternalCallContextFactory internalCallContextFactory) {
         super(dbi, roDbi, clock, addonUtils, notificationQueueService, eventBus, cacheControllerDispatcher, nonEntityDao, auditDao, internalCallContextFactory);
     }

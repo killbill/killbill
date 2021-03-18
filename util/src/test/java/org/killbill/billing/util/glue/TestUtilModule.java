@@ -43,6 +43,7 @@ public class TestUtilModule extends KillBillModule {
         //install(new CallContextModule());
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
+        install(new EventModule(configSource));
         install(new MockTenantModule(configSource));
         installHacks();
     }

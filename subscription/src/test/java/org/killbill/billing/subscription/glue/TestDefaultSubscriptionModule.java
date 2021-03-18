@@ -28,6 +28,7 @@ import org.killbill.billing.subscription.api.user.TestSubscriptionHelper;
 import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
+import org.killbill.billing.util.glue.EventModule;
 
 public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
 
@@ -42,6 +43,7 @@ public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
         install(new CallContextModule(configSource));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
+        install(new EventModule(configSource));
         install(new MockTenantModule(configSource));
 
         bind(TestSubscriptionHelper.class).asEagerSingleton();

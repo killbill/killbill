@@ -34,7 +34,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entitlement.AccountEntitlements;
 import org.killbill.billing.entitlement.AccountEventsStreams;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -63,7 +62,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.bus.api.PersistentBus;
+import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.slf4j.Logger;
@@ -89,9 +88,9 @@ public class DefaultEntitlementApiBase {
     protected final NotificationQueueService notificationQueueService;
     protected final EntitlementPluginExecution pluginExecution;
     protected final SecurityApi securityApi;
-    protected final PersistentBus eventBus;
+    protected final BusOptimizer eventBus;
 
-    protected DefaultEntitlementApiBase(final PersistentBus eventBus,
+    protected DefaultEntitlementApiBase(final BusOptimizer eventBus,
                                         @Nullable final EntitlementApi entitlementApi, final EntitlementPluginExecution pluginExecution,
                                         final InternalCallContextFactory internalCallContextFactory,
                                         final SubscriptionBaseInternalApi subscriptionInternalApi,
@@ -147,7 +146,6 @@ public class DefaultEntitlementApiBase {
                                       blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
                                       entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);
     }
-
 
     public void pause(final UUID bundleId, @Nullable final LocalDate localEffectiveDate, final Iterable<PluginProperty> properties, final InternalCallContext internalCallContext) throws EntitlementApiException {
 

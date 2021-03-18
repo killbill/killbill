@@ -29,6 +29,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,22 +45,27 @@ public class PaymentTagHandler {
     private final AccountInternalApi accountApi;
     private final InternalCallContextFactory internalCallContextFactory;
     private final PaymentControlPluginApi invoicePaymentControlPlugin;
+    private final BusDispatcherOptimizer busDispatcherOptimizer;
 
     @Inject
     public PaymentTagHandler(final AccountInternalApi accountApi,
                              final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry,
+                             final BusDispatcherOptimizer busDispatcherOptimizer,
                              final InternalCallContextFactory internalCallContextFactory) {
         this.accountApi = accountApi;
         this.invoicePaymentControlPlugin = paymentControlPluginRegistry.getServiceForName(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        this.busDispatcherOptimizer = busDispatcherOptimizer;
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @AllowConcurrentEvents
     @Subscribe
     public void process_AUTO_PAY_OFF_removal(final ControlTagDeletionInternalEvent event) {
-        if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_PAY_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
-            final UUID accountId = event.getObjectId();
-            processUnpaid_AUTO_PAY_OFF_payments(accountId, event.getSearchKey1(), event.getSearchKey2(), event.getUserToken());
+        if (busDispatcherOptimizer.shouldDispatch(event)) {
+            if (event.getTagDefinition().getName().equals(ControlTagType.AUTO_PAY_OFF.toString()) && event.getObjectType() == ObjectType.ACCOUNT) {
+                final UUID accountId = event.getObjectId();
+                processUnpaid_AUTO_PAY_OFF_payments(accountId, event.getSearchKey1(), event.getSearchKey2(), event.getUserToken());
+            }
         }
     }
 
