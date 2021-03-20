@@ -30,6 +30,7 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 public abstract class InvoiceOptimizerBase implements InvoiceOptimizer {
@@ -53,7 +54,7 @@ public abstract class InvoiceOptimizerBase implements InvoiceOptimizer {
         protected final LocalDate cutoffDate;
         protected final List<Invoice> invoices;
 
-        // Test only
+        @VisibleForTesting
         public AccountInvoices(final LocalDate cutoffDate, final List<Invoice> invoices) {
             this.cutoffDate = cutoffDate;
             this.invoices = invoices;

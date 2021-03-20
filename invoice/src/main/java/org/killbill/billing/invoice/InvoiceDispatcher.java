@@ -469,6 +469,8 @@ public class InvoiceDispatcher {
 
         // Keeps track of generated invoices as we go through the list
         // The list is an ordered list of items merged from existing notifications and upcoming notifications, each of these the result of a previous invoice being generated.
+        // Note: we reuse the underlying list from  the AccountInvoices to avoid recreating such object (which is feature dependent)
+        //
         final List<Invoice> augmentedExistingInvoices = accountInvoices.getInvoices();
         Invoice additionalInvoice = null;
         LocalDate prev = null;
