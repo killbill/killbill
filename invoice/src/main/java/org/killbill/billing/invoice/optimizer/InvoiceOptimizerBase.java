@@ -53,6 +53,7 @@ public abstract class InvoiceOptimizerBase implements InvoiceOptimizer {
         protected final LocalDate cutoffDate;
         protected final List<Invoice> invoices;
 
+        // Test only
         public AccountInvoices(final LocalDate cutoffDate, final List<Invoice> invoices) {
             this.cutoffDate = cutoffDate;
             this.invoices = invoices;
