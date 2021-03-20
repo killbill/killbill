@@ -33,6 +33,34 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ .Revision }}
 
+  build-features:
+    <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.7.0
+    steps:
+      - checkout
+      - run:
+          name: Setup dependencies
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              for i in killbill-oss-parent killbill-api killbill-plugin-api killbill-commons killbill-plugin-framework-java killbill-platform killbill-client-java; do
+                if [ -n "$(git ls-remote --heads https://github.com/killbill/$i.git ${CIRCLE_BRANCH})" ]; then
+                  echo "*** Setting up $i"
+                  mkdir -p /home/killbill/$i
+                  git clone https://github.com/killbill/$i.git /home/killbill/$i
+                  pushd /home/killbill/$i
+                  git checkout -b ${CIRCLE_BRANCH} origin/${CIRCLE_BRANCH}
+                  mvn clean install -DskipTests=true
+                  popd
+                fi
+              done
+            fi
+      - run: mvn -Dkillbill.features.invoice.optimization=true -Dkillbill.features.bus.optimization=true -DskipTests=true clean install
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ .Revision }}
+
   test-h2:
     <<: *defaults
     docker:
@@ -81,6 +109,45 @@ jobs:
             set -e
             ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
       - run: mvn -Djava.security.egd=file:/dev/./urandom clean install -Plocaltest-mysql
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+  test-mysql-features:
+    <<: *defaults
+    docker:
+      - image: killbill/kbbuild:0.7.0
+      - image: killbill/mariadb:0.22
+        environment:
+          - MYSQL_ROOT_PASSWORD=root
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-dependencies-{{ .Revision }}
+      - run:
+          name: Setup latest DDL
+          command: |
+            set +e
+            count=0
+            until mysqladmin ping -h 127.0.0.1 -u root --password=root --silent; do
+              if [[ "$count" == "25" ]]; then
+                exit 1
+              fi
+              (( count++ ))
+
+              printf '.'
+              sleep 5
+            done
+
+            set -e
+            ./bin/db-helper -a create --driver mysql -u root -p root -t yes -h 127.0.0.1
+      - run: mvn -Dkillbill.features.invoice.optimization=true -Dkillbill.features.bus.optimization=true -Djava.security.egd=file:/dev/./urandom clean install -Plocaltest-mysql
       - run:
           name: Save test results
           command: |
@@ -190,12 +257,16 @@ workflows:
   build-and-test:
     jobs:
       - build
+      - build-features
       - test-h2:
           requires:
             - build
       - test-mysql:
           requires:
             - build
+      - test-mysql-features:
+          requires:
+            - build-features
       - test-postgresql:
           requires:
             - build
