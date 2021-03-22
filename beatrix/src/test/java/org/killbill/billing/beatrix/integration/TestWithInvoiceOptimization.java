@@ -35,20 +35,28 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.invoice.api.DryRunArguments;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
+import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.features.KillbillFeatures;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
+import static org.killbill.billing.ErrorCode.INVOICE_NOTHING_TO_DO;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public class TestWithInvoiceOptimization extends TestIntegrationBase {
-
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
@@ -57,7 +65,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         allExtraProperties.put(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
         return getConfigSource(null, allExtraProperties);
     }
-
 
     @Test(groups = "slow")
     public void testRecurringInAdvance() throws Exception {
@@ -110,8 +117,36 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-29.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 3, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("20.00")));
-    }
 
+        DryRunArguments dryRun = new TestDryRunArguments(DryRunType.TARGET_DATE);
+
+        // Issue a first dry-run on 2020-03-02
+        // We should not see the items that were repaired a month prior now because of the cutoff date
+        final DateTime nextDate1 = clock.getUTCNow().plusDays(1);
+        try {
+            invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate1, testTimeZone), dryRun, callContext);
+            Assert.fail("Dry run invoice should not generate any invoice");
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
+        }
+
+        // Issue a series of dry-run starting on 2020-04-01
+        DateTime nextDate = clock.getUTCNow().plusMonths(1);
+        for (int i = 0; i < 5; i++) {
+            Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
+            // Filter to eliminate CBA
+            int actualRecurring = Iterables.size(Iterables.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+                @Override
+                public boolean apply(final InvoiceItem invoiceItem) {
+                    return invoiceItem.getInvoiceItemType() == InvoiceItemType.RECURRING;
+                }
+            }));
+            //
+            assertEquals(actualRecurring, 1);
+            nextDate = nextDate.plusMonths(1);
+        }
+
+    }
 
     // Used to demonstrate what happens when maxInvoiceLimit = 0 and we do billing IN_ADVANCE
     @Test(groups = "slow")
@@ -132,7 +167,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
-
 
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly-notrial");
@@ -160,7 +194,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
     }
 
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testRecurringInArrear() throws Exception {
 
         invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));

@@ -469,7 +469,9 @@ public class InvoiceDispatcher {
 
         // Keeps track of generated invoices as we go through the list
         // The list is an ordered list of items merged from existing notifications and upcoming notifications, each of these the result of a previous invoice being generated.
-        final List<Invoice> augmentedExistingInvoices = new ArrayList<Invoice>(accountInvoices.getInvoices());
+        // Note: we reuse the underlying list from  the AccountInvoices to avoid recreating such object (which is feature dependent)
+        //
+        final List<Invoice> augmentedExistingInvoices = accountInvoices.getInvoices();
         Invoice additionalInvoice = null;
         LocalDate prev = null;
         LocalDate cur;
@@ -487,7 +489,7 @@ public class InvoiceDispatcher {
             pluginProperties.add(new PluginProperty(DRY_RUN_CUR_DATE_PROP, cur, false));
             pluginProperties.add(new PluginProperty(DRY_RUN_TARGET_DATE_PROP, targetDate, false));
 
-            final InvoiceWithFutureNotifications result = processAccountWithLockAndInputTargetDate(accountId, cur, billingEvents, new AccountInvoices(accountInvoices.getCutoffDate(), augmentedExistingInvoices), true, false, pluginProperties, context);
+            final InvoiceWithFutureNotifications result = processAccountWithLockAndInputTargetDate(accountId, cur, billingEvents, accountInvoices, true, false, pluginProperties, context);
             additionalInvoice = result != null ? result.getInvoice() : null;
             if (additionalInvoice != null) {
                 for (final LocalDate k : result.getNotifications().getNotificationsForTrigger().keySet()) {
@@ -513,7 +515,7 @@ public class InvoiceDispatcher {
         pluginProperties = new LinkedList<PluginProperty>();
         pluginProperties.add(new PluginProperty(DRY_RUN_CUR_DATE_PROP, targetDate, false));
         pluginProperties.add(new PluginProperty(DRY_RUN_TARGET_DATE_PROP, targetDate, false));
-        final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, new AccountInvoices(accountInvoices.getCutoffDate(), augmentedExistingInvoices), true, false, pluginProperties, context);
+        final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, accountInvoices,  true, false, pluginProperties, context);
         final Invoice targetInvoice = invoiceWithFutureNotifications != null ? invoiceWithFutureNotifications.getInvoice() : null;
         return targetInvoice != null ? targetInvoice : additionalInvoice;
     }
