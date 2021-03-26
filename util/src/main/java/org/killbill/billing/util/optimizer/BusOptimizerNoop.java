@@ -26,14 +26,19 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.BusEventWithMetadata;
 import org.killbill.bus.api.PersistentBus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BusOptimizerNoop implements BusOptimizer {
+
+    private static final Logger logger = LoggerFactory.getLogger(BusOptimizerNoop.class);
 
     private final PersistentBus delegate;
 
     @Inject
     public BusOptimizerNoop(final PersistentBus eventBus) {
         this.delegate = eventBus;
+        logger.info("Feature BusOptimizer is OFF");
     }
 
     @Override

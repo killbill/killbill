@@ -47,7 +47,7 @@ public class BusOptimizerOn implements BusOptimizer {
         this.delegate = eventBus;
         this.eventConfig = eventConfig;
         this.internalCallContextFactory = internalCallContextFactory;
-        logger.info("Feature BusOptimizerOn is ON");
+        logger.info("Feature BusOptimizer is ON");
     }
 
     @Override
