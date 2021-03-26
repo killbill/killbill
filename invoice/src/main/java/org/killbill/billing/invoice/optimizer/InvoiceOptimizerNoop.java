@@ -44,6 +44,7 @@ public class InvoiceOptimizerNoop extends InvoiceOptimizerBase {
                                final Clock clock,
                                final InvoiceConfig invoiceConfig) {
         super(invoiceDao, clock, invoiceConfig);
+        logger.info("Feature InvoiceOptimizer is OFF");
     }
 
     @Override
