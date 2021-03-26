@@ -76,6 +76,11 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
         return new AccountInvoicesExp(fromDate, existingInvoices);
     }
 
+    @Override
+    public boolean isOn() {
+        return true;
+    }
+
     public static class AccountInvoicesExp extends AccountInvoices {
         public AccountInvoicesExp(final LocalDate cutoffDate, final List<Invoice> invoices) {
             super(cutoffDate, invoices);

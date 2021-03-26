@@ -33,6 +33,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -109,6 +110,7 @@ import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
+import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -222,7 +224,6 @@ public class InvoiceDispatcher {
             if (billingEvents.isEmpty()) {
                 return;
             }
-
             final FutureAccountNotificationsBuilder notificationsBuilder = new FutureAccountNotificationsBuilder();
             populateNextFutureDryRunNotificationDate(billingEvents, notificationsBuilder, context);
 
@@ -298,6 +299,24 @@ public class InvoiceDispatcher {
             }
         } catch (final TagApiException e) {
             log.warn("Unable to determine parking state for accountId='{}'", accountId);
+        }
+
+        if (invoiceOptimizer.isOn()) {
+            final TimeSpan timeSpan = invoiceConfig.getRescheduleIntervalOnLock(context);
+            // Anything below 1sec, we would ignore
+            final int delaySec = (int) TimeUnit.SECONDS.convert(timeSpan.getMillis(), TimeUnit.MILLISECONDS);
+            if (!isApiCall &&
+                !locker.isFree(LockerType.ACCNT_INV_PAY.toString(), accountId.toString()) &&
+                delaySec > 0) {
+                final DateTime nextRescheduleDt = clock.getUTCNow().plusSeconds(delaySec);
+                log.info("Reschedule invoice call at time {}", nextRescheduleDt);
+                // TODO discuss
+                // Note that an alternative would be to use the existing mechanism we have in place to reschedule
+                // invoice run from plugin -- see createNextFutureNotificationDate.
+                // In both cases we will have `isReschedule` set to true
+                invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
+                return null;
+            }
         }
 
         GlobalLock lock = null;
@@ -504,7 +523,7 @@ public class InvoiceDispatcher {
         pluginProperties = new LinkedList<PluginProperty>();
         pluginProperties.add(new PluginProperty(DRY_RUN_CUR_DATE_PROP, targetDate, false));
         pluginProperties.add(new PluginProperty(DRY_RUN_TARGET_DATE_PROP, targetDate, false));
-        final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, accountInvoices,  true, false, pluginProperties, context);
+        final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, accountInvoices, true, false, pluginProperties, context);
         final Invoice targetInvoice = invoiceWithFutureNotifications != null ? invoiceWithFutureNotifications.getInvoice() : null;
         return targetInvoice != null ? targetInvoice : additionalInvoice;
     }

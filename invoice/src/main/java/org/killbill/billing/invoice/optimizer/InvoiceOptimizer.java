@@ -23,4 +23,6 @@ import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoic
 public interface InvoiceOptimizer {
 
     AccountInvoices getInvoices(final InternalCallContext callContext);
+
+    boolean isOn();
 }

@@ -58,6 +58,11 @@ public class InvoiceOptimizerNoop extends InvoiceOptimizerBase {
         return new AccountInvoices(null, existingInvoices);
     }
 
+    @Override
+    public boolean isOn() {
+        return false;
+    }
+
     private void logDisabledFeatureIfNeeded(final InternalCallContext callContext) {
 
         final Period maxInvoiceLimit = invoiceConfig.getMaxInvoiceLimit(callContext);
