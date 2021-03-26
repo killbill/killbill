@@ -17,6 +17,8 @@
 
 package org.killbill.billing.invoice.notification;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -25,11 +27,32 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 public class TestNextBillingDateNotificationKey {
 
     private static final ObjectMapper mapper = new ObjectMapper();
+
+
+    @Test(groups = "fast")
+    public void testWithNoKey() throws Exception {
+
+        final UUID uuidKey = null;
+        final DateTime targetDate = new DateTime();
+        final Boolean isDryRunForInvoiceNotification = Boolean.FALSE;
+
+        final Iterable<UUID> uuidKeys = Collections.emptyList();
+        final NextBillingDateNotificationKey key = new NextBillingDateNotificationKey(uuidKey, uuidKeys, targetDate, isDryRunForInvoiceNotification, false);
+        final String json = mapper.writeValueAsString(key);
+
+        final NextBillingDateNotificationKey result = mapper.readValue(json, NextBillingDateNotificationKey.class);
+        Assert.assertEquals(result.getUuidKey(), uuidKey);
+        Assert.assertEquals(result.getUuidKeys(), uuidKeys);
+        Assert.assertEquals(result.getTargetDate().compareTo(targetDate), 0);
+        Assert.assertEquals(result.isDryRunForInvoiceNotification(), isDryRunForInvoiceNotification);
+        Assert.assertFalse(key.isRescheduled());
+    }
 
     @Test(groups = "fast")
     public void testBasicWithUUIDKey() throws Exception {

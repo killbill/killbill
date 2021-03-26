@@ -105,6 +105,7 @@ public class DefaultNextBillingDatePoster implements NextBillingDatePoster {
                         ((isDryRunForInvoiceNotification && isEventDryRunForNotifications) ||
                          (!isDryRunForInvoiceNotification && !isEventDryRunForNotifications))) {
                         existingNotificationForEffectiveDate = input;
+                        break;
                     }
                 }
             } finally {

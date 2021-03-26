@@ -42,7 +42,6 @@ import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
-import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
@@ -69,7 +68,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
     private final InvoiceInternalApi invoiceApi;
     private final RetryableSubscriber retryableSubscriber;
     private final BusDispatcherOptimizer busDispatcherOptimizer;
-    private final SubscriberQueueHandler subscriberQueueHandler = new SubscriberQueueHandler();
+    private final SubscriberQueueHandler subscriberQueueHandler;
 
     @Inject
     public InvoiceListener(final AccountInternalApi accountApi,
@@ -84,6 +83,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
         this.internalCallContextFactory = internalCallContextFactory;
         this.invoiceApi = invoiceApi;
         this.busDispatcherOptimizer = busDispatcherOptimizer;
+        this.subscriberQueueHandler = new SubscriberQueueHandler();
 
         subscriberQueueHandler.subscribe(EffectiveSubscriptionInternalEvent.class,
                                          new SubscriberAction<EffectiveSubscriptionInternalEvent>() {
@@ -231,21 +231,21 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
         handleEvent(event);
     }
 
-    public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+    public void handleNextBillingDateEvent(final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
         try {
-            dispatcher.processSubscriptionForInvoiceGeneration(subscriptionId, context.toLocalDate(eventDateTime), isRescheduled, context);
+            dispatcher.processSubscriptionForInvoiceGeneration(context.toLocalDate(eventDateTime), isRescheduled, context);
         } catch (final InvoiceApiException e) {
-            log.warn("Unable to process subscriptionId='{}', eventDateTime='{}'", subscriptionId, eventDateTime, e);
+            log.warn("Unable to process next billing date event, eventDateTime='{}'", eventDateTime, e);
         }
     }
 
-    public void handleEventForInvoiceNotification(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+    public void handleEventForInvoiceNotification(final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(tenantRecordId, accountRecordId, "Next Billing Date", CallOrigin.INTERNAL, UserType.SYSTEM, userToken);
         try {
-            dispatcher.processSubscriptionForInvoiceNotification(subscriptionId, context.toLocalDate(eventDateTime), context);
+            dispatcher.processSubscriptionForInvoiceNotification(context.toLocalDate(eventDateTime), context);
         } catch (final InvoiceApiException e) {
-            log.warn("Unable to process subscriptionId='{}', eventDateTime='{}'", subscriptionId, eventDateTime, e);
+            log.warn("Unable to process event for invoice notification eventDateTime='{}'", eventDateTime, e);
         }
     }
 

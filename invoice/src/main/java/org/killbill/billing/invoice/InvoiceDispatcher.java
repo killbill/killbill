@@ -241,17 +241,16 @@ public class InvoiceDispatcher {
 
     public void processSubscriptionForInvoiceGeneration(final EffectiveSubscriptionInternalEvent transition,
                                                         final InternalCallContext context) throws InvoiceApiException {
-        final UUID subscriptionId = transition.getSubscriptionId();
         final LocalDate targetDate = context.toLocalDate(transition.getEffectiveTransitionTime());
-        processSubscriptionForInvoiceGeneration(subscriptionId, targetDate, false, context);
+        processSubscriptionForInvoiceGeneration(targetDate, false, context);
     }
 
-    public void processSubscriptionForInvoiceGeneration(final UUID subscriptionId, final LocalDate targetDate, final boolean isRescheduled, final InternalCallContext context) throws InvoiceApiException {
-        processSubscriptionInternal(subscriptionId, targetDate, false, isRescheduled, context);
+    public void processSubscriptionForInvoiceGeneration(final LocalDate targetDate, final boolean isRescheduled, final InternalCallContext context) throws InvoiceApiException {
+        processSubscriptionInternal(targetDate, false, isRescheduled, context);
     }
 
-    public void processSubscriptionForInvoiceNotification(final UUID subscriptionId, final LocalDate targetDate, final InternalCallContext context) throws InvoiceApiException {
-        final Invoice dryRunInvoice = processSubscriptionInternal(subscriptionId, targetDate, true, false, context);
+    public void processSubscriptionForInvoiceNotification(final LocalDate targetDate, final InternalCallContext context) throws InvoiceApiException {
+        final Invoice dryRunInvoice = processSubscriptionInternal(targetDate, true, false, context);
         if (dryRunInvoice != null && dryRunInvoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
             final InvoiceNotificationInternalEvent event = new DefaultInvoiceNotificationInternalEvent(dryRunInvoice.getAccountId(), dryRunInvoice.getBalance(), dryRunInvoice.getCurrency(),
                                                                                                        context.toUTCDateTime(targetDate), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
@@ -263,21 +262,11 @@ public class InvoiceDispatcher {
         }
     }
 
-    private Invoice processSubscriptionInternal(final UUID subscriptionId, final LocalDate targetDate, final boolean dryRunForNotification, final boolean isRescheduled, final InternalCallContext context) throws InvoiceApiException {
-        try {
-            if (subscriptionId == null) {
-                log.warn("Failed handling SubscriptionBase change.", new InvoiceApiException(ErrorCode.INVOICE_INVALID_TRANSITION));
-                return null;
-            }
-            final UUID accountId = subscriptionApi.getAccountIdFromSubscriptionId(subscriptionId, context);
-            final DryRunArguments dryRunArguments = dryRunForNotification ? TARGET_DATE_DRY_RUN_ARGUMENTS : null;
-
-            return processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, isRescheduled, context);
-        } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed handling SubscriptionBase change.",
-                     new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, subscriptionId.toString()));
-            return null;
-        }
+    private Invoice processSubscriptionInternal(final LocalDate targetDate, final boolean dryRunForNotification, final boolean isRescheduled, final InternalCallContext context) throws InvoiceApiException {
+        final CallContext callContext = internalCallContextFactory.createCallContext(context);
+        final UUID accountId = callContext.getAccountId();
+        final DryRunArguments dryRunArguments = dryRunForNotification ? TARGET_DATE_DRY_RUN_ARGUMENTS : null;
+        return processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, isRescheduled, context);
     }
 
     public Invoice processAccountFromNotificationOrBusEvent(final UUID accountId,

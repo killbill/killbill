@@ -63,6 +63,5 @@ public class TestNextBillingDateNotifier extends InvoiceTestSuiteWithEmbeddedDB 
         });
 
         Assert.assertEquals(testInvoiceNotificationQListener.getEventCount(), 1);
-        Assert.assertEquals(testInvoiceNotificationQListener.getLatestSubscriptionId(), subscriptionId);
     }
 }

@@ -23,8 +23,6 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
-import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
-import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
@@ -47,24 +45,18 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
 
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
-    private final SubscriptionBaseInternalApi subscriptionApi;
     private final InvoiceListener listener;
-    private final InternalCallContextFactory internalCallContextFactory;
 
     private NotificationQueue nextBillingQueue;
 
     @Inject
     public DefaultNextBillingDateNotifier(final Clock clock,
                                           final NotificationQueueService notificationQueueService,
-                                          final SubscriptionBaseInternalApi subscriptionApi,
-                                          final InvoiceListener listener,
-                                          final InternalCallContextFactory internalCallContextFactory) {
+                                          final InvoiceListener listener) {
         super(notificationQueueService);
         this.clock = clock;
         this.notificationQueueService = notificationQueueService;
-        this.subscriptionApi = subscriptionApi;
         this.listener = listener;
-        this.internalCallContextFactory = internalCallContextFactory;
     }
 
     @Override
@@ -79,15 +71,12 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
 
                 final NextBillingDateNotificationKey key = (NextBillingDateNotificationKey) notificationKey;
 
-                // Just to ensure compatibility with json that might not have that targetDate field (old versions < 0.13.6)
-                final DateTime targetDate = key.getTargetDate() != null ? key.getTargetDate() : eventDate;
-                final UUID firstSubscriptionId = key.getUuidKeys().iterator().next();
-                if (key.isDryRunForInvoiceNotification() != null && // Just to ensure compatibility with json that might not have that field (old versions < 0.13.6)
-                    key.isDryRunForInvoiceNotification()) {
-                    processEventForInvoiceNotification(firstSubscriptionId, targetDate, userToken, accountRecordId, tenantRecordId);
+                final DateTime targetDate = key.getTargetDate();
+                if (key.isDryRunForInvoiceNotification() != null && key.isDryRunForInvoiceNotification()) {
+                    processEventForInvoiceNotification(targetDate, userToken, accountRecordId, tenantRecordId);
                 } else {
                     final boolean isRescheduled = Boolean.TRUE.equals(key.isRescheduled()); // Handle null value (old versions < 0.19.7)
-                    processEventForInvoiceGeneration(firstSubscriptionId, targetDate, isRescheduled, userToken, accountRecordId, tenantRecordId);
+                    processEventForInvoiceGeneration(targetDate, isRescheduled, userToken, accountRecordId, tenantRecordId);
                 }
             }
         };
@@ -103,7 +92,6 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
     @Override
     public void start() {
         super.start();
-
         nextBillingQueue.startQueue();
     }
 
@@ -117,11 +105,11 @@ public class DefaultNextBillingDateNotifier extends RetryableService implements 
         super.stop();
     }
 
-    private void processEventForInvoiceGeneration(final UUID subscriptionId, final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        listener.handleNextBillingDateEvent(subscriptionId, eventDateTime, isRescheduled, userToken, accountRecordId, tenantRecordId);
+    private void processEventForInvoiceGeneration(final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        listener.handleNextBillingDateEvent(eventDateTime, isRescheduled, userToken, accountRecordId, tenantRecordId);
     }
 
-    private void processEventForInvoiceNotification(final UUID subscriptionId, final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
-        listener.handleEventForInvoiceNotification(subscriptionId, eventDateTime, userToken, accountRecordId, tenantRecordId);
+    private void processEventForInvoiceNotification(final DateTime eventDateTime, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+        listener.handleEventForInvoiceNotification(eventDateTime, userToken, accountRecordId, tenantRecordId);
     }
 }
