@@ -284,6 +284,7 @@ public class InvoiceDispatcher {
         return processAccount(false, accountId, targetDate, dryRunArguments, isRescheduled, context);
     }
 
+
     public Invoice processAccount(final boolean isApiCall,
                                   final UUID accountId,
                                   @Nullable final LocalDate targetDate,
@@ -301,20 +302,10 @@ public class InvoiceDispatcher {
             log.warn("Unable to determine parking state for accountId='{}'", accountId);
         }
 
-        if (invoiceOptimizer.isOn()) {
-            final TimeSpan timeSpan = invoiceConfig.getRescheduleIntervalOnLock(context);
-            // Anything below 1sec, we would ignore
-            final int delaySec = (int) TimeUnit.SECONDS.convert(timeSpan.getMillis(), TimeUnit.MILLISECONDS);
-            if (!isApiCall &&
-                !locker.isFree(LockerType.ACCNT_INV_PAY.toString(), accountId.toString()) &&
-                delaySec > 0) {
-                final DateTime nextRescheduleDt = clock.getUTCNow().plusSeconds(delaySec);
-                log.info("Reschedule invoice call at time {}", nextRescheduleDt);
-                // TODO discuss
-                // Note that an alternative would be to use the existing mechanism we have in place to reschedule
-                // invoice run from plugin -- see createNextFutureNotificationDate.
-                // In both cases we will have `isReschedule` set to true
-                invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
+
+        if (!isApiCall &&
+            !locker.isFree(LockerType.ACCNT_INV_PAY.toString(), accountId.toString())) {
+            if (invoiceOptimizer.rescheduleProcessAccount(accountId, context)) {
                 return null;
             }
         }
@@ -322,10 +313,12 @@ public class InvoiceDispatcher {
         GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
-
             return processAccountWithLock(parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, context);
         } catch (final LockFailedException e) {
-            log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId.toString(), targetDate, e);
+            final boolean rescheduled = !isApiCall && invoiceOptimizer.rescheduleProcessAccount(accountId, context);
+            if (!rescheduled) {
+                log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId.toString(), targetDate, e);
+            }
         } finally {
             if (lock != null) {
                 lock.release();

@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.optimizer;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -60,7 +61,7 @@ public class InvoiceOptimizerNoop extends InvoiceOptimizerBase {
     }
 
     @Override
-    public boolean isOn() {
+    public boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context) {
         return false;
     }
 

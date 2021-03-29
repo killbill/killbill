@@ -17,6 +17,8 @@
 
 package org.killbill.billing.invoice.optimizer;
 
+import java.util.UUID;
+
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 
@@ -24,5 +26,5 @@ public interface InvoiceOptimizer {
 
     AccountInvoices getInvoices(final InternalCallContext callContext);
 
-    boolean isOn();
+    boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context);
 }
