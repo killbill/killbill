@@ -315,8 +315,10 @@ public class InvoiceDispatcher {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
             return processAccountWithLock(parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, context);
         } catch (final LockFailedException e) {
-            final boolean rescheduled = !isApiCall && invoiceOptimizer.rescheduleProcessAccount(accountId, context);
-            if (!rescheduled) {
+            if (isApiCall) {
+                throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR);
+            }
+            if (!invoiceOptimizer.rescheduleProcessAccount(accountId, context)) {
                 log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId.toString(), targetDate, e);
             }
         } finally {
