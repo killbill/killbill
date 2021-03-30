@@ -1335,6 +1335,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             return shouldParkAccountsWithUnknownUsage();
         }
 
+        @Override
+        public TimeSpan getRescheduleIntervalOnLock() {
+            return defaultInvoiceConfig.getRescheduleIntervalOnLock();
+        }
+
+        @Override
+        public TimeSpan getRescheduleIntervalOnLock(final InternalTenantContext tenantContext) {
+            return getRescheduleIntervalOnLock();
+        }
+
         public void setShouldParkAccountsWithUnknownUsage(final boolean shouldParkAccountsWithUnknownUsage) {
             this.shouldParkAccountsWithUnknownUsage = shouldParkAccountsWithUnknownUsage;
         }

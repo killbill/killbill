@@ -23,9 +23,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -40,6 +43,7 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
+import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +78,20 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
             existingInvoices.add(new DefaultInvoice(invoiceModelDao));
         }
         return new AccountInvoicesExp(fromDate, existingInvoices);
+    }
+
+    @Override
+    public boolean rescheduleProcessAccount(final UUID accountId, final InternalCallContext context) {
+        // Anything below 1sec, we would ignore
+        final TimeSpan timeSpan = invoiceConfig.getRescheduleIntervalOnLock(context);
+        final int delaySec = (int) TimeUnit.SECONDS.convert(timeSpan.getMillis(), TimeUnit.MILLISECONDS);
+        if (delaySec <= 0) {
+            return false;
+        }
+        final DateTime nextRescheduleDt = clock.getUTCNow().plusSeconds(delaySec);
+        logger.info("Rescheduling invoice call at time {}", nextRescheduleDt);
+        invoiceDao.rescheduleInvoiceNotification(accountId, nextRescheduleDt, context);
+        return true;
     }
 
     public static class AccountInvoicesExp extends AccountInvoices {

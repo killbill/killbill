@@ -47,16 +47,12 @@ public class TestInvoiceNotificationQListener extends InvoiceListener {
     }
 
     @Override
-    public void handleNextBillingDateEvent(final UUID subscriptionId, final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
+    public void handleNextBillingDateEvent(final DateTime eventDateTime, final boolean isRescheduled, final UUID userToken, final Long accountRecordId, final Long tenantRecordId) {
         eventCount++;
-        latestSubscriptionId = subscriptionId;
     }
 
     public int getEventCount() {
         return eventCount;
     }
 
-    public UUID getLatestSubscriptionId() {
-        return latestSubscriptionId;
-    }
 }

@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -57,8 +58,10 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
                                              final Set<InvoiceTrackingModelDao> trackingIds,
                                              final InternalCallContext context);
 
-    public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions,
-                                                             final InternalCallContext context);
+    void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions,
+                                                      final InternalCallContext context);
+
+    void rescheduleInvoiceNotification(final UUID accountId, final DateTime nextRescheduleDt, final InternalCallContext context);
 
     InvoiceModelDao getByNumber(Integer number, InternalTenantContext context) throws InvoiceApiException;
 
@@ -163,7 +166,7 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
      * @param accountId the account for which we need to rebalance the CBA
      * @param context   the callcontext
      */
-    public void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context);
+    void consumeExstingCBAOnAccountWithUnpaidInvoices(final UUID accountId, final InternalCallContext context);
 
     /**
      * Update invoice status
@@ -235,10 +238,10 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     List<InvoiceTrackingModelDao> getTrackingsByDateRange(LocalDate startDate, LocalDate endDate, InternalCallContext context);
 
-    public List<AuditLogWithHistory> getInvoiceAuditLogsWithHistoryForId(final UUID invoiceId, final AuditLevel auditLevel, final InternalTenantContext context);
+    List<AuditLogWithHistory> getInvoiceAuditLogsWithHistoryForId(final UUID invoiceId, final AuditLevel auditLevel, final InternalTenantContext context);
 
-    public List<AuditLogWithHistory> getInvoiceItemAuditLogsWithHistoryForId(final UUID invoiceItemId, final AuditLevel auditLevel, final InternalTenantContext context);
+    List<AuditLogWithHistory> getInvoiceItemAuditLogsWithHistoryForId(final UUID invoiceItemId, final AuditLevel auditLevel, final InternalTenantContext context);
 
-    public List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final InternalTenantContext context);
+    List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final InternalTenantContext context);
 
 }

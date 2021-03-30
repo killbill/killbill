@@ -74,11 +74,10 @@ public class NextBillingDateNotificationKey extends DefaultUUIDNotificationKey {
 
     public final Iterable<UUID> getUuidKeys() {
         // Deprecated mode
-        if (uuidKeys == null || !uuidKeys.iterator().hasNext()) {
+        if (getUuidKey() != null) {
             return ImmutableList.of(getUuidKey());
-        } else {
-            return uuidKeys;
         }
+        return uuidKeys;
     }
 
     @Override

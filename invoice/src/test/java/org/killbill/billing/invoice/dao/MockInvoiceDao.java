@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -85,6 +86,11 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext context) {
+
+    }
+
+    @Override
+    public void rescheduleInvoiceNotification(final UUID accountId, final DateTime nextRescheduleDt, final InternalCallContext context) {
 
     }
 

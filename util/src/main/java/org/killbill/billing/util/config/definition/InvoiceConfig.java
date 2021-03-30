@@ -72,7 +72,6 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("Whether we disable writing $0 usage amounts")
     boolean isUsageZeroAmountDisabled(@Param("dummy") final InternalTenantContext tenantContext);
 
-
     @Config("org.killbill.invoice.maxDailyNumberOfItemsSafetyBound")
     @Default("15")
     @Description("Maximum daily number of invoice items to generate for a subscription id")
@@ -92,17 +91,6 @@ public interface InvoiceConfig extends KillbillConfig {
     @Default("0s")
     @Description("DryRun invoice notification time before targetDate (ignored if set to 0s)")
     TimeSpan getDryRunNotificationSchedule(@Param("dummy") final InternalTenantContext tenantContext);
-
-
-    @Config("org.killbill.invoice.maxInvoiceLimit")
-    @Default(DEFAULT_NULL_PERIOD)
-    @Description("How far back in time should invoice generation look at")
-    Period getMaxInvoiceLimit();
-
-    @Config("org.killbill.invoice.maxInvoiceLimit")
-    @Default(DEFAULT_NULL_PERIOD)
-    @Description("How far back in time should invoice generation look at")
-    Period getMaxInvoiceLimit(@Param("dummy") final InternalTenantContext tenantContext);
 
     @Config("org.killbill.invoice.readMaxRawUsagePreviousPeriod")
     @Default("2")
@@ -173,4 +161,26 @@ public interface InvoiceConfig extends KillbillConfig {
     @Default("false")
     @Description("Whether to park accounts when usage data is recorded but not defined in the catalog")
     boolean shouldParkAccountsWithUnknownUsage(@Param("dummy") final InternalTenantContext tenantContext);
+
+    // Disabled by default
+    @Config("org.killbill.invoice.rescheduleIntervalOnLock")
+    @Default("0s")
+    @Description("Tme delay to reschedule an invoice run when lock is held")
+    TimeSpan getRescheduleIntervalOnLock();
+
+    @Config("org.killbill.invoice.rescheduleIntervalOnLock")
+    @Default("0s")
+    @Description("Tme delay to reschedule an invoice run when lock is held")
+    TimeSpan getRescheduleIntervalOnLock(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.invoice.maxInvoiceLimit")
+    @Default(DEFAULT_NULL_PERIOD)
+    @Description("How far back in time should invoice generation look at")
+    Period getMaxInvoiceLimit();
+
+    @Config("org.killbill.invoice.maxInvoiceLimit")
+    @Default(DEFAULT_NULL_PERIOD)
+    @Description("How far back in time should invoice generation look at")
+    Period getMaxInvoiceLimit(@Param("dummy") final InternalTenantContext tenantContext);
+
 }
