@@ -250,7 +250,45 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 4, 1), new LocalDate(2020, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("200.00")));
     }
 
+
     @Test(groups = "slow")
+    public void testRecurringInArrear2() throws Exception {
+
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+
+        clock.setTime(new DateTime("2020-01-01T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        assertNotNull(account);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2020-02-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+
+        // Cancel in the past (previous period)
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
+        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 28), true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Verify the system does not generate anything (subscription was canceled)
+        // 2020-03-01
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+    }
+
+        @Test(groups = "slow")
     public void testUsageInArrear() throws Exception {
 
         invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));

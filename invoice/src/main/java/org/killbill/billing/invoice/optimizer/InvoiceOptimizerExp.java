@@ -33,6 +33,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -107,8 +108,13 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
         public void filterProposedItems(final List<InvoiceItem> proposedItems, final BillingEventSet eventSet, final InternalCallContext internalCallContext) {
             if (cutoffDate != null) {
 
-                final Map<String, BillingMode> billingModes = new HashMap<>();
+                // Assumption: A given Plan#BillingMode and PlanPhase#BillingPeriod remains constant across catalog version
+                // TODO Catalog validation to ensure this
 
+                // Comes from the Plan
+                final Map<String, BillingMode> billingModes = new HashMap<>();
+                // Comes from the PlanPhase
+                final Map<String, BillingPeriod> billingPeriods = new HashMap<>();
                 final Iterable<InvoiceItem> filtered = Iterables.filter(proposedItems, new Predicate<InvoiceItem>() {
                     @Override
                     public boolean apply(final InvoiceItem invoiceItem) {
@@ -120,8 +126,8 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
                         // Extract Plan info associated with item by correlating with list of billing events
                         // From plan info, retrieve billing mode.
                         BillingMode billingMode = billingModes.get(invoiceItem.getPlanName());
-                        if (billingMode == null) {
-
+                        BillingPeriod billingPeriod = billingPeriods.get(invoiceItem.getPhaseName());
+                        if (billingMode == null || billingPeriod == null) {
                             // Best effort logic to find the correct billing event ('be'):
                             // We could simplify and look for any 'be' whose Plan matches the one from the invoiceItem,
                             // but in unlikely scenarios where there are multiple Plans across catalog versions with different BillingMode,
@@ -140,14 +146,22 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
                                 }
                                 billingMode = be.getPlan().getRecurringBillingMode();
                                 billingModes.put(invoiceItem.getPlanName(), billingMode);
+
+                                billingPeriod = be.getPlanPhase().getRecurring().getBillingPeriod();
+                                billingPeriods.put(invoiceItem.getPhaseName(), billingPeriod);
                                 break;
                             }
                         }
 
                         // Any cutoff date 't' will return invoices with all items where:
                         // - If IN_ADVANCE, all items where startDate >= t
-                        // - If IN_ARREAR, all items where endDate >= t
-                        final LocalDate startOrEndDate = (billingMode == BillingMode.IN_ADVANCE) ? invoiceItem.getStartDate() : invoiceItem.getEndDate();
+                        // - If IN_ARREAR, all items where endDate >= t; however, if item was pro-rated, we recompute the endDt based on the startDt + billingPeriod
+                        final LocalDate startOrEndDate;
+                        if (billingMode == BillingMode.IN_ADVANCE) {
+                            startOrEndDate = invoiceItem.getStartDate();
+                        } else {
+                            startOrEndDate = invoiceItem.getStartDate().plus(billingPeriod.getPeriod());
+                        }
                         return startOrEndDate.compareTo(cutoffDate) >= 0;
                     }
                 });
