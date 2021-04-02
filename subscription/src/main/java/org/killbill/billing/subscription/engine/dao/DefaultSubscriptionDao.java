@@ -448,27 +448,17 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
     @Override
     public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
-        final Map<UUID, List<DefaultSubscriptionBase>> subscriptionsFromAccountId = getSubscriptionsFromAccountId(context);
 
+        final Map<UUID, List<DefaultSubscriptionBase>> subscriptionsFromAccountId = getSubscriptionsFromAccountId(context);
         final List<SubscriptionBaseEvent> eventsForAccount = getEventsForAccountId(context);
 
         final Map<UUID, List<DefaultSubscriptionBase>> result = new HashMap<UUID, List<DefaultSubscriptionBase>>();
+        final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscriptions = ArrayListMultimap.create();
+        for (final SubscriptionBaseEvent evt : eventsForAccount) {
+            eventsForSubscriptions.put(evt.getSubscriptionId(), evt);
+        }
         for (final UUID bundleId : subscriptionsFromAccountId.keySet()) {
-
             final List<DefaultSubscriptionBase> subscriptionsForBundle = subscriptionsFromAccountId.get(bundleId);
-            final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscriptions = ArrayListMultimap.create();
-
-            for (final SubscriptionBase cur : subscriptionsForBundle) {
-                final Collection<SubscriptionBaseEvent> events = Collections2.filter(eventsForAccount, new Predicate<SubscriptionBaseEvent>() {
-                    @Override
-                    public boolean apply(final SubscriptionBaseEvent input) {
-                        return input.getSubscriptionId().equals(cur.getId());
-
-                    }
-                });
-                eventsForSubscriptions.putAll(cur.getId(), ImmutableList.copyOf(events));
-            }
-
             result.put(bundleId, buildBundleSubscriptions(subscriptionsForBundle, eventsForSubscriptions, null, catalog, context));
         }
         return result;
