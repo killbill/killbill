@@ -228,6 +228,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
                                        @QueryParam(QUERY_BUNDLES_RENAME_KEY_IF_EXIST_UNUSED) @DefaultValue("true") final Boolean renameKeyIfExistsAndUnused,
                                        @QueryParam(QUERY_MIGRATED) @DefaultValue("false") final Boolean isMigrated,
+                                       @QueryParam(QUERY_SKIP_RESPONSE) @DefaultValue("false") final Boolean skipResponse,
                                        @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                        @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
                                        @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -237,7 +238,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
         final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns = ImmutableList.of(new BulkSubscriptionsBundleJson(ImmutableList.<SubscriptionJson>of(subscription)));
-        return createSubscriptionsWithAddOnsInternal(entitlementsWithAddOns, entitlementDate, billingDate, isMigrated, renameKeyIfExistsAndUnused, callCompletion, timeoutSec, pluginPropertiesString, createdBy, reason, comment, request, uriInfo, ObjectType.SUBSCRIPTION);
+        return createSubscriptionsWithAddOnsInternal(entitlementsWithAddOns, entitlementDate, billingDate, isMigrated, skipResponse, renameKeyIfExistsAndUnused, callCompletion, timeoutSec, pluginPropertiesString, createdBy, reason, comment, request, uriInfo, ObjectType.SUBSCRIPTION);
     }
 
     @TimedResource
@@ -251,6 +252,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                  @QueryParam(QUERY_ENTITLEMENT_REQUESTED_DT) final String entitlementDate,
                                                  @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
                                                  @QueryParam(QUERY_MIGRATED) @DefaultValue("false") final Boolean isMigrated,
+                                                 @QueryParam(QUERY_SKIP_RESPONSE) @DefaultValue("false") final Boolean skipResponse,
                                                  @QueryParam(QUERY_BUNDLES_RENAME_KEY_IF_EXIST_UNUSED) @DefaultValue("true") final Boolean renameKeyIfExistsAndUnused,
                                                  @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                                  @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
@@ -261,7 +263,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
         final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns = ImmutableList.of(new BulkSubscriptionsBundleJson(entitlements));
-        return createSubscriptionsWithAddOnsInternal(entitlementsWithAddOns, entitlementDate, billingDate, isMigrated, renameKeyIfExistsAndUnused, callCompletion, timeoutSec, pluginPropertiesString, createdBy, reason, comment, request, uriInfo, ObjectType.BUNDLE);
+        return createSubscriptionsWithAddOnsInternal(entitlementsWithAddOns, entitlementDate, billingDate, isMigrated, skipResponse, renameKeyIfExistsAndUnused, callCompletion, timeoutSec, pluginPropertiesString, createdBy, reason, comment, request, uriInfo, ObjectType.BUNDLE);
     }
 
     @TimedResource
@@ -276,6 +278,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                   @QueryParam(QUERY_BILLING_REQUESTED_DT) final String billingDate,
                                                   @QueryParam(QUERY_BUNDLES_RENAME_KEY_IF_EXIST_UNUSED) @DefaultValue("true") final Boolean renameKeyIfExistsAndUnused,
                                                   @QueryParam(QUERY_MIGRATED) @DefaultValue("false") final Boolean isMigrated,
+                                                  @QueryParam(QUERY_SKIP_RESPONSE) @DefaultValue("false") final Boolean skipResponse,
                                                   @QueryParam(QUERY_CALL_COMPLETION) @DefaultValue("false") final Boolean callCompletion,
                                                   @QueryParam(QUERY_CALL_TIMEOUT) @DefaultValue("3") final long timeoutSec,
                                                   @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
@@ -284,13 +287,14 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                   @HeaderParam(HDR_COMMENT) final String comment,
                                                   @javax.ws.rs.core.Context final HttpServletRequest request,
                                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
-        return createSubscriptionsWithAddOnsInternal(entitlementsWithAddOns, entitlementDate, billingDate, isMigrated, renameKeyIfExistsAndUnused, callCompletion, timeoutSec, pluginPropertiesString, createdBy, reason, comment, request, uriInfo, ObjectType.ACCOUNT);
+        return createSubscriptionsWithAddOnsInternal(entitlementsWithAddOns, entitlementDate, billingDate, isMigrated, skipResponse, renameKeyIfExistsAndUnused, callCompletion, timeoutSec, pluginPropertiesString, createdBy, reason, comment, request, uriInfo, ObjectType.ACCOUNT);
     }
 
     public Response createSubscriptionsWithAddOnsInternal(final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns,
                                                           final String entitlementDate,
                                                           final String billingDate,
                                                           final Boolean isMigrated,
+                                                          final Boolean skipResponse,
                                                           final Boolean renameKeyIfExistsAndUnused,
                                                           final Boolean callCompletion,
                                                           final long timeoutSec,
@@ -397,7 +401,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 // While we could tweak the container to support large number of bundles in the filter (e.g. Jetty's RequestBufferSize),
                 // the full list is probably not that useful for the client in practice.
                 final Collection<String> bundleIds = new LinkedHashSet<String>();
-                if (entitlementIds.size() < MAX_NB_SUBSCRIPTIONS_TO_FOLLOW) {
+                if (!skipResponse && entitlementIds.size() < MAX_NB_SUBSCRIPTIONS_TO_FOLLOW) {
                     try {
                         for (final Entitlement entitlement : entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext)) {
                             if (entitlementIds.contains(entitlement.getId())) {
