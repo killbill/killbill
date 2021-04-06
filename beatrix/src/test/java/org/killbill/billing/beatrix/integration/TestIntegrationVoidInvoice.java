@@ -113,5 +113,15 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
             Assert.assertEquals(e.getCode(), ErrorCode.CAN_NOT_VOID_INVOICE_THAT_IS_PAID.getCode());
         }
 
+        // Refund the payment
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), clock.getUTCNow(), null, PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
+        assertListenerStatus();
+
+        invoiceUserApi.voidInvoice(invoices.get(2).getId(), callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, callContext);
+        assertEquals(invoices.size(), 3);
+        assertEquals(invoices.get(1).getStatus(), InvoiceStatus.VOID);
+        assertEquals(invoices.get(2).getStatus(), InvoiceStatus.VOID);
     }
 }
