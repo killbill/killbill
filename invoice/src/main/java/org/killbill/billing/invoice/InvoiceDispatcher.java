@@ -316,7 +316,7 @@ public class InvoiceDispatcher {
             return processAccountWithLock(parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, context);
         } catch (final LockFailedException e) {
             if (isApiCall) {
-                throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR);
+                throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
             }
             if (!invoiceOptimizer.rescheduleProcessAccount(accountId, context)) {
                 log.warn("Failed to process invoice for accountId='{}', targetDate='{}'", accountId.toString(), targetDate, e);

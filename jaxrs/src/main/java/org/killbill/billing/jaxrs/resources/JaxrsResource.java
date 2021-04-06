@@ -84,6 +84,7 @@ public interface JaxrsResource {
     String QUERY_SEARCH_LIMIT = "limit";
     String QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT = "effectiveFromDate";
     String QUERY_FORCE_NEW_BCD_WITH_PAST_EFFECTIVE_DATE = "forceNewBcdWithPastEffectiveDate";
+    String QUERY_SKIP_RESPONSE = "skipResponse";
 
     String QUERY_ACCOUNT_WITH_BALANCE = "accountWithBalance";
     String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";

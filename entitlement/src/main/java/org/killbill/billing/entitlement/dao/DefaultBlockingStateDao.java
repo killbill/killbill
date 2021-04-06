@@ -217,7 +217,13 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                 for (final BlockingState state : states.keySet()) {
                     final DateTime upToDate = state.getEffectiveDate();
                     final UUID bundleId = states.get(state).orNull();
-                    final BlockingAggregator previousState = getBlockedStatus(sqlDao, entitySqlDaoWrapperFactory.getHandle(), state.getBlockedId(), state.getType(), bundleId, upToDate, context);
+
+                    final boolean isBusEvent = state.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
+                    final boolean shouldRecordNotification = (!isBusEvent || !groupBusEvents || seqId == 0);
+
+                    final BlockingAggregator previousState = shouldRecordNotification ?
+                                                             getBlockedStatus(sqlDao, entitySqlDaoWrapperFactory.getHandle(), state.getBlockedId(), state.getType(), bundleId, upToDate, context) :
+                                                             null;
 
                     final BlockingStateModelDao newBlockingStateModelDao = new BlockingStateModelDao(state, context);
 
@@ -260,23 +266,24 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
                         inserted = true;
                     }
 
-                    final BlockingAggregator currentState = getBlockedStatus(sqlDao, entitySqlDaoWrapperFactory.getHandle(), state.getBlockedId(), state.getType(), bundleId, upToDate, context);
-                    if (previousState != null && currentState != null) {
-                        final boolean isBusEvent = state.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
-                        if (!isBusEvent || !groupBusEvents || seqId == 0) {
-                            recordBusOrFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                                         state.getId(),
-                                                                         state.getEffectiveDate(),
-                                                                         state.getBlockedId(),
-                                                                         state.getType(),
-                                                                         state.getStateName(),
-                                                                         state.getService(),
-                                                                         inserted,
-                                                                         previousState,
-                                                                         currentState,
-                                                                         context);
-                        }
-                        seqId = isBusEvent ? seqId+1 : seqId;
+                    final BlockingAggregator currentState = shouldRecordNotification ?
+                                                            getBlockedStatus(sqlDao, entitySqlDaoWrapperFactory.getHandle(), state.getBlockedId(), state.getType(), bundleId, upToDate, context) :
+                                                            null;
+                    if (shouldRecordNotification &&
+                        previousState != null &&
+                        currentState != null) {
+                        recordBusOrFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
+                                                                     state.getId(),
+                                                                     state.getEffectiveDate(),
+                                                                     state.getBlockedId(),
+                                                                     state.getType(),
+                                                                     state.getStateName(),
+                                                                     state.getService(),
+                                                                     inserted,
+                                                                     previousState,
+                                                                     currentState,
+                                                                     context);
+                        seqId = isBusEvent ? seqId + 1 : seqId;
                     }
                 }
 
