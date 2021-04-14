@@ -158,11 +158,7 @@ public class PlanAligner extends BaseAligner {
                                                                                pendingOrLastPlanTransition.getNextPlan(),
                                                                                pendingOrLastPlanTransition.getNextPhase().getPhaseType(),
                                                                                catalog,
-                                                                               // Use the catalog version at subscription creation time: this allows
-                                                                               // for PHASE events and uncancel operations for plans/products/pricelists already retired
-                                                                               // This is not 100% correct in a scenario where the catalog was updated and the alignment rules changed since
-                                                                               // See https://github.com/killbill/killbill/issues/784
-                                                                               subscription.getAlignStartDate(),
+                                                                               pendingOrLastPlanTransition.getEffectiveTransitionTime(),
                                                                                context);
                     return getTimedPhase(timedPhases, effectiveDate, WhichPhase.NEXT);
                 case CHANGE:
@@ -172,8 +168,7 @@ public class PlanAligner extends BaseAligner {
                                                  pendingOrLastPlanTransition.getPreviousPlan(),
                                                  pendingOrLastPlanTransition.getNextPlan(),
                                                  effectiveDate,
-                                                 // Same remark as above
-                                                 subscription.getAlignStartDate(),
+                                                 pendingOrLastPlanTransition.getEffectiveTransitionTime(),
                                                  pendingOrLastPlanTransition.getEffectiveTransitionTime(),
                                                  subscription.getAllTransitions().get(0).getNextPhase().getPhaseType(),
                                                  null,
