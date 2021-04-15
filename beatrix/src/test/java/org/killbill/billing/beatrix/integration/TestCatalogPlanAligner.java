@@ -96,6 +96,10 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 18), null, InvoiceItemType.FIXED, new BigDecimal("0.00")));
 
 
+        // Catalog effDt = 2020-09-19T11:19:01 (we remove the plan pistol-discount-monthly)
+        uploadCatalog("WeaponsHireSmall-v3.xml");
+        assertListenerStatus();
+
         // 2020-09-19T12:56:02
         clock.addDays(1);
 
