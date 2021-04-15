@@ -127,8 +127,7 @@ public class InvoiceApiHelper {
 
             return fromInvoiceItemModelDao(createdInvoiceItems);
         } catch (final LockFailedException e) {
-            log.warn("Failed to process invoice items for accountId='{}'", accountId.toString(), e);
-            return ImmutableList.<InvoiceItem>of();
+            throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to process invoice items: failed to acquire lock");
         } finally {
             if (lock != null) {
                 lock.release();
