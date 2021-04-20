@@ -117,7 +117,12 @@ public class JaxrsUriBuilder {
         return objectId != null ? uriBuilder.build(objectId) : uriBuilder.build();
     }
 
-    public URI nextPage(final Class<? extends JaxrsResource> theClass, final String getMethodName, final Long nextOffset, final Long limit, final Map<String, String> params) {
+    public URI nextPage(final Class<? extends JaxrsResource> theClass,
+                        final String getMethodName,
+                        final Long nextOffset,
+                        final Long limit,
+                        final Map<String, String> queryParams,
+                        final Map<String, String> pathParams) {
         if (nextOffset == null || limit == null) {
             // End of pagination?
             return null;
@@ -125,8 +130,11 @@ public class JaxrsUriBuilder {
 
         final UriBuilder uriBuilder = getUriBuilder(theClass, getMethodName).queryParam(JaxRsResourceBase.QUERY_SEARCH_OFFSET, nextOffset)
                                                                             .queryParam(JaxRsResourceBase.QUERY_SEARCH_LIMIT, limit);
-        for (final String key : params.keySet()) {
-            uriBuilder.queryParam(key, params.get(key));
+        for (final String key : queryParams.keySet()) {
+            uriBuilder.queryParam(key, queryParams.get(key));
+        }
+        for (final String key : pathParams.keySet()) {
+            uriBuilder.resolveTemplate(key, pathParams.get(key));
         }
         return uriBuilder.build();
     }

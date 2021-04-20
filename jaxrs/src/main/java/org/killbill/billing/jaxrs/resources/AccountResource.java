@@ -230,9 +230,14 @@ public class AccountResource extends JaxRsResourceBase {
                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<Account> accounts = accountUserApi.getAccounts(offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "getAccounts", accounts.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
-                                                                                                                                                           QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
-                                                                                                                                                           QUERY_AUDIT, auditMode.getLevel().toString()));
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class,
+                                                    "getAccounts",
+                                                    accounts.getNextOffset(),
+                                                    limit,
+                                                    ImmutableMap.<String, String>of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
+                                                                                    QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
+                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    ImmutableMap.<String, String>of());
         return buildStreamingPaginationResponse(accounts,
                                                 new Function<Account, AccountJson>() {
                                                     @Override
@@ -260,10 +265,14 @@ public class AccountResource extends JaxRsResourceBase {
                                    @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<Account> accounts = accountUserApi.searchAccounts(searchKey, offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class, "searchAccounts", accounts.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
-                                                                                                                                                              QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
-                                                                                                                                                              QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
-                                                                                                                                                              QUERY_AUDIT, auditMode.getLevel().toString()));
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class,
+                                                    "searchAccounts",
+                                                    accounts.getNextOffset(),
+                                                    limit,
+                                                    ImmutableMap.<String, String>of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
+                                                                                    QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
+                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    ImmutableMap.<String, String>of("searchKey", searchKey));
         return buildStreamingPaginationResponse(accounts,
                                                 new Function<Account, AccountJson>() {
                                                     @Override

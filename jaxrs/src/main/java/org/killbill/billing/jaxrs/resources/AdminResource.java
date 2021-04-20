@@ -313,6 +313,7 @@ public class AdminResource extends JaxRsResourceBase {
                                                     "triggerInvoiceGenerationForParkedAccounts",
                                                     tags.getNextOffset(),
                                                     limit,
+                                                    ImmutableMap.<String, String>of(),
                                                     ImmutableMap.<String, String>of());
         return Response.status(Status.OK)
                        .entity(json)

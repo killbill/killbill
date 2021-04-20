@@ -118,12 +118,26 @@ public class TestAccount extends TestJaxrsBase {
     public void testAccountOk() throws Exception {
         final Account input = createAccount();
 
+        // Create a second account (https://github.com/killbill/killbill/issues/1422 regression testing)
+        final Account secondAccount = createAccount();
+        final Account retrievedSecondAccount = accountApi.getAccountByKey(secondAccount.getExternalKey(), requestOptions);
+        Assert.assertEquals(secondAccount, retrievedSecondAccount);
+
         // Retrieves by external key
         final Account retrievedAccount = accountApi.getAccountByKey(input.getExternalKey(), requestOptions);
-        Assert.assertTrue(retrievedAccount.equals(input));
+        Assert.assertEquals(input, retrievedAccount);
 
         // Try search endpoint
         searchAccount(input, retrievedAccount);
+
+        // Force limit=1 (https://github.com/killbill/killbill/issues/1422 regression testing)
+        final Accounts allAccounts = accountApi.searchAccounts(input.getCompany(), 0L, 1L, false, false, AuditLevel.NONE, requestOptions);
+        // Company name is the same for both accounts
+        Assert.assertEquals(allAccounts.size(), 1);
+        Assert.assertEquals(allAccounts.get(0).getExternalKey(), retrievedAccount.getExternalKey());
+        final Accounts secondPage = allAccounts.getNext();
+        Assert.assertEquals(secondPage.size(), 1);
+        Assert.assertEquals(secondPage.get(0).getExternalKey(), retrievedSecondAccount.getExternalKey());
 
         // Update Account
         final Account newInput = new Account(input.getAccountId(),
@@ -444,9 +458,6 @@ public class TestAccount extends TestJaxrsBase {
 
         // Search by email
         doSearchAccount(input.getEmail(), output);
-
-        // Search by company name
-        doSearchAccount(input.getCompany(), output);
 
         // Search by external key.
         // Note: we will always find a match since we don't update it
