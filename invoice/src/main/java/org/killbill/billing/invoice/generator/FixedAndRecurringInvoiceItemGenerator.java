@@ -115,6 +115,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         processRecurringBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, perSubscriptionFutureNotificationDate, internalCallContext);
         processFixedBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, internalCallContext);
 
+
         existingInvoices.filterProposedItems(proposedItems, eventSet, internalCallContext);
 
         try {
