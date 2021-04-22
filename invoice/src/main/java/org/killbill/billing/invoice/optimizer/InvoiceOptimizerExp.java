@@ -58,6 +58,7 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
     private static Logger logger = LoggerFactory.getLogger(InvoiceOptimizerExp.class);
 
     private static Period UNSPECIFIED_PERIOD = new Period(InvoiceConfig.DEFAULT_NULL_PERIOD);
+
     @Inject
     public InvoiceOptimizerExp(final InvoiceDao invoiceDao,
                                final Clock clock,
@@ -96,6 +97,7 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
     }
 
     public static class AccountInvoicesExp extends AccountInvoices {
+
         public AccountInvoicesExp(final LocalDate cutoffDate, final List<Invoice> invoices) {
             super(cutoffDate, invoices);
         }
@@ -155,14 +157,39 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
 
                         // Any cutoff date 't' will return invoices with all items where:
                         // - If IN_ADVANCE, all items where startDate >= t
-                        // - If IN_ARREAR, all items where endDate >= t; however, if item was pro-rated, we recompute the endDt based on the startDt + billingPeriod
+                        // - If IN_ARREAR, all items where endDate >= t; however, in more complex use cases
+                        //  (e.g cancellation in past leading to trailing pro-ration), we want to return the item
+                        // so we compare with an exiting item and check for meaningful changes (end date, plan,...)
+                        //
                         final LocalDate startOrEndDate;
                         if (billingMode == BillingMode.IN_ADVANCE) {
-                            startOrEndDate = invoiceItem.getStartDate();
-                        } else {
-                            startOrEndDate = invoiceItem.getStartDate().plus(billingPeriod.getPeriod());
+                            return invoiceItem.getStartDate().compareTo(cutoffDate) >= 0;
+                        } else /*  BillingMode.IN_ARREAR */ {
+                            if (invoiceItem.getEndDate().compareTo(cutoffDate) >= 0) {
+                                return true;
+                            }
+
+                            for (final Invoice inv : invoices) {
+                                final InvoiceItem existingItem = Iterables.tryFind(inv.getInvoiceItems(), new Predicate<InvoiceItem>() {
+                                    @Override
+                                    public boolean apply(final InvoiceItem item) {
+                                        return (item.getInvoiceItemType() == InvoiceItemType.RECURRING &&
+                                                item.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
+                                                item.getStartDate().compareTo(invoiceItem.getStartDate()) == 0);
+                                    }
+                                }).orNull();
+                                if (existingItem != null) {
+                                    if (existingItem.getEndDate().compareTo(invoiceItem.getEndDate()) != 0 ||
+                                        !existingItem.getPlanName().equals(invoiceItem.getPlanName()) ||
+                                        existingItem.getCatalogEffectiveDate().compareTo(invoiceItem.getCatalogEffectiveDate()) != 0) {
+                                        return true;
+                                    } else {
+                                        return false;
+                                    }
+                                }
+                            }
+                            return false;
                         }
-                        return startOrEndDate.compareTo(cutoffDate) >= 0;
                     }
                 });
                 final List<InvoiceItem> filteredProposed = ImmutableList.copyOf(filtered);
@@ -170,7 +197,5 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
                 proposedItems.addAll(filteredProposed);
             }
         }
-
     }
-
 }
