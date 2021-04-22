@@ -178,8 +178,13 @@ public class PaymentResource extends ComboPaymentResource {
             payments = paymentApi.getPayments(offset, limit, pluginName, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         }
 
-        final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class, "getPayments", payments.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                                                                                           QUERY_AUDIT, auditMode.getLevel().toString()));
+        final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class,
+                                                    "getPayments",
+                                                    payments.getNextOffset(),
+                                                    limit,
+                                                    ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    ImmutableMap.<String, String>of());
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
 
         return buildStreamingPaginationResponse(payments,
@@ -224,9 +229,13 @@ public class PaymentResource extends ComboPaymentResource {
             payments = paymentApi.searchPayments(searchKey, offset, limit, pluginName, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         }
 
-        final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class, "searchPayments", payments.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
-                                                                                                                                                              QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                                                                                              QUERY_AUDIT, auditMode.getLevel().toString()));
+        final URI nextPageUri = uriBuilder.nextPage(PaymentResource.class,
+                                                    "searchPayments",
+                                                    payments.getNextOffset(),
+                                                    limit,
+                                                    ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    ImmutableMap.<String, String>of("searchKey", searchKey));
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
 
         return buildStreamingPaginationResponse(payments,

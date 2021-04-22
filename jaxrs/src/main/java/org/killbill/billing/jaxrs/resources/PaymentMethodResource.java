@@ -168,8 +168,13 @@ public class PaymentMethodResource extends JaxRsResourceBase {
             paymentMethods = paymentApi.getPaymentMethods(offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
         }
 
-        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "getPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                                                                                                             QUERY_AUDIT, auditMode.getLevel().toString()));
+        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class,
+                                                    "getPaymentMethods",
+                                                    paymentMethods.getNextOffset(),
+                                                    limit,
+                                                    ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    ImmutableMap.<String, String>of());
 
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
@@ -226,9 +231,13 @@ public class PaymentMethodResource extends JaxRsResourceBase {
             paymentMethods = paymentApi.searchPaymentMethods(searchKey, offset, limit, pluginName, withPluginInfo, pluginProperties, tenantContext);
         }
 
-        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class, "searchPaymentMethods", paymentMethods.getNextOffset(), limit, ImmutableMap.<String, String>of("searchKey", searchKey,
-                                                                                                                                                                                QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
-                                                                                                                                                                                QUERY_AUDIT, auditMode.getLevel().toString()));
+        final URI nextPageUri = uriBuilder.nextPage(PaymentMethodResource.class,
+                                                    "searchPaymentMethods",
+                                                    paymentMethods.getNextOffset(),
+                                                    limit,
+                                                    ImmutableMap.<String, String>of(QUERY_PAYMENT_METHOD_PLUGIN_NAME, Strings.nullToEmpty(pluginName),
+                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    ImmutableMap.<String, String>of("searchKey", searchKey));
 
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<Map<UUID, AccountAuditLogs>>(new HashMap<UUID, AccountAuditLogs>());
         final Map<UUID, Account> accounts = new HashMap<UUID, Account>();
