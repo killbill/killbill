@@ -39,6 +39,8 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -54,7 +56,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         final Payments paymentsForAccount = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment payment = paymentsForAccount.get(paymentsForAccount.size() - 1);
 
-        Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, AuditLevel.NONE, requestOptions);
+        Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, null, AuditLevel.NONE, requestOptions);
 
         // regular refund
         final InvoicePaymentTransaction invoicePaymentTransactionRequest = new InvoicePaymentTransaction();
@@ -78,7 +80,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         final Payments paymentsForAccount = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment payment = paymentsForAccount.get(paymentsForAccount.size() - 1);
 
-        Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, AuditLevel.NONE, requestOptions);
+        Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, null, AuditLevel.NONE, requestOptions);
         final List<InvoiceItem> itemsToBeAdjusted = invoices.get(1).getItems();
 
         // regular refund
@@ -104,7 +106,7 @@ public class TestExternalRefund extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithExternalPMBundleAndSubscriptionAndManualPayTagAndWaitForFirstInvoice();
 
-        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         final Invoice unpaidInvoice = invoicesForAccount.get(1);
         assertEquals(unpaidInvoice.getBalance().compareTo(BigDecimal.valueOf(249.95)), 0);
 
@@ -116,7 +118,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentRequest.setAccountId(accountJson.getAccountId());
         invoicePaymentRequest.setCurrency(unpaidInvoice.getCurrency());
         invoicePaymentRequest.setPurchasedAmount(unpaidInvoice.getAmount());
-        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayment.getPurchasedAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(invoicePayment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
 
@@ -138,7 +140,7 @@ public class TestExternalRefund extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithExternalPMBundleAndSubscriptionAndManualPayTagAndWaitForFirstInvoice();
 
-        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         final Invoice unpaidInvoice = invoicesForAccount.get(1);
         assertEquals(unpaidInvoice.getBalance().compareTo(BigDecimal.valueOf(249.95)), 0);
 
@@ -150,7 +152,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentRequest.setAccountId(accountJson.getAccountId());
         invoicePaymentRequest.setCurrency(unpaidInvoice.getCurrency());
         invoicePaymentRequest.setPurchasedAmount(unpaidInvoice.getAmount());
-        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayment.getPurchasedAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(invoicePayment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
 
@@ -204,7 +206,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         final Payments paymentsForAccount = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment payment = paymentsForAccount.get(paymentsForAccount.size() - 1);
 
-        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, null, AuditLevel.NONE, requestOptions);
         final List<InvoiceItem> itemsToBeAdjusted = invoices.get(1).getItems();
 
         // external refund
@@ -241,7 +243,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         final Payments paymentsForAccount = accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         final Payment payment = paymentsForAccount.get(paymentsForAccount.size() - 1);
 
-        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, null, AuditLevel.NONE, requestOptions);
         final List<InvoiceItem> itemsToBeAdjusted = invoices.get(1).getItems();
 
         // external refund
@@ -263,7 +265,7 @@ public class TestExternalRefund extends TestJaxrsBase {
 
     private void assertRefundInvoiceAdjustments(final UUID accountId) throws KillBillClientException {
         final Invoices invoices;
-        invoices = accountApi.getInvoicesForAccount(accountId, null, null, true, false, false, AuditLevel.NONE, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountId, null, null, true, false, false, null, AuditLevel.NONE, requestOptions);
         final Invoice invoiceWithRefund = invoices.get(1);
         assertEquals(invoiceWithRefund.getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceWithRefund.getRefundAdj().compareTo(BigDecimal.valueOf(249.95).negate()), 0);
@@ -275,7 +277,7 @@ public class TestExternalRefund extends TestJaxrsBase {
     }
 
     private void assertRefundInvoiceNoAdjustments(final UUID accountId) throws KillBillClientException {
-        final Invoices invoices = accountApi.getInvoicesForAccount(accountId, null, null, true, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountId, null, null, true, false, false, null, AuditLevel.NONE, requestOptions);
         final Invoice invoiceWithRefund = invoices.get(1);
         assertEquals(invoiceWithRefund.getAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(invoiceWithRefund.getRefundAdj().compareTo(BigDecimal.valueOf(249.95).negate()), 0);

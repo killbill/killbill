@@ -40,6 +40,8 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -56,7 +58,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(noPaymentsFromJson.size(), 0);
 
         // Get the invoices
-        List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         // verify account balance
@@ -67,12 +69,12 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         invoiceApi.voidInvoice(invoices.get(1).getInvoiceId(), requestOptions);
 
         // Get the invoices excluding voided
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         // the voided invoice should not be returned
         assertEquals(invoices.size(), 1);
 
         // Get the invoices including voided
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, true, AuditLevel.NONE, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, true, null, AuditLevel.NONE, requestOptions);
         assertEquals(invoices.size(), 2);
         assertEquals(invoices.get(1).getStatus(), InvoiceStatus.VOID);
         assertEquals(invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
@@ -86,7 +88,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         invoiceApi.createFutureInvoice(accountJson.getAccountId(), clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), requestOptions);
 
         // Get the invoices excluding voided
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         // the voided invoice should not be returned
         assertEquals(invoices.size(), 2);
 
@@ -127,7 +129,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(noPaymentsFromJson.size(), 0);
 
         // Get the invoices
-        List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         // verify account balance
@@ -164,14 +166,14 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_CREATION);
         invoiceApi.createFutureInvoice(childAccount1.getAccountId(), triggeredDate, requestOptions);
         callbackServlet.assertListenerStatus();
-        List<Invoice> child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, true, AuditLevel.NONE, requestOptions);
+        List<Invoice> child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, true, null, AuditLevel.NONE, requestOptions);
         assertEquals(child1Invoices.size(), 2);
 
         // move one day so that the parent invoice is committed
         callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_FAILED);
         clock.addDays(1);
         callbackServlet.assertListenerStatus();
-        List<Invoice> parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        List<Invoice> parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(parentInvoices.size(), 1);
 
         // try to void child invoice
@@ -189,11 +191,11 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // The parent added another invoice, now it has two (duplicate)
-        parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(parentInvoices.size(), 2);
 
         // the child added one invoice as expected
-        child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(child1Invoices.size(), 2);
     }
 
@@ -214,14 +216,14 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION);
         invoiceApi.createFutureInvoice(childAccount1.getAccountId(), triggeredDate, requestOptions);
         callbackServlet.assertListenerStatus();
-        List<Invoice> child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, true, AuditLevel.NONE, requestOptions);
+        List<Invoice> child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, true, null, AuditLevel.NONE, requestOptions);
         assertEquals(child1Invoices.size(), 2);
 
         // move one day so that the parent invoice is committed
         callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_FAILED);
         clock.addDays(1);
         callbackServlet.assertListenerStatus();
-        List<Invoice> parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        List<Invoice> parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(parentInvoices.size(), 1);
 
         // try to void parent invoice
@@ -234,11 +236,11 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
         // since the child did not have any change, the parent does not have an invoice
         // after the void.
-        parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(parentInvoices.size(), 0);
 
         // the child does not have any change
-        child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, true, AuditLevel.NONE, requestOptions);
+        child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, true, null, AuditLevel.NONE, requestOptions);
         assertEquals(child1Invoices.size(), 2);
     }
 
@@ -250,7 +252,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         invoicePayment.setAccountId(accountJson.getAccountId());
         invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
 
-        final InvoicePayment result = invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment result = invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(result.getTransactions().size(), 1);
         assertTrue(result.getTransactions().get(0).getAmount().compareTo(payAmount) == 0);
 

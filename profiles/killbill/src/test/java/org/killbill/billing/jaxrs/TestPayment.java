@@ -224,7 +224,7 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
         // Getting Invoice #2 (first after Trial period)
-        final Invoice failedInvoice = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, RequestOptions.empty()).get(1);
+        final Invoice failedInvoice = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, null, RequestOptions.empty()).get(1);
 
         // Verify initial state
         final Payments initialPayments = accountApi.getPaymentsForAccount(account.getAccountId(), true, false, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions);
@@ -251,7 +251,7 @@ public class TestPayment extends TestJaxrsBase {
         invoicePayment.setPurchasedAmount(failedInvoice.getBalance());
         invoicePayment.setAccountId(failedInvoice.getAccountId());
         invoicePayment.setTargetInvoiceId(failedInvoice.getInvoiceId());
-        final InvoicePayment invoicePaymentNull = invoiceApi.createInstantPayment(failedInvoice.getInvoiceId(), invoicePayment, true, null, inputOptions);
+        final InvoicePayment invoicePaymentNull = invoiceApi.createInstantPayment(failedInvoice.getInvoiceId(), invoicePayment, ImmutableList.of(), null, inputOptions);
         Assert.assertNull(invoicePaymentNull);
 
         // Verify new state
@@ -268,7 +268,7 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
         // Getting Invoice #2 (first after Trial period)
-        UUID failedInvoiceId = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, RequestOptions.empty()).get(1).getInvoiceId();
+        UUID failedInvoiceId = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, null, RequestOptions.empty()).get(1).getInvoiceId();
 
         HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
