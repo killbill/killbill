@@ -185,6 +185,8 @@ public interface JaxrsResource {
     String INVOICE_ITEMS = "invoiceItems";
     String INVOICES_ITEMS_PATH = PREFIX + "/" + INVOICE_ITEMS;
 
+    String QUERY_INVOICES_FILTER = "invoicesFilter";
+
     String CHARGES = "charges";
     String CHARGES_PATH = PREFIX + "/" + INVOICES + "/" + CHARGES;
 

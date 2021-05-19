@@ -51,6 +51,7 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.testng.util.Strings;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
@@ -65,7 +66,7 @@ import static org.testng.Assert.assertTrue;
 public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can search and retrieve invoices with and without items")
-        public void testInvoiceOk() throws Exception {
+    public void testInvoiceOk() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
@@ -97,7 +98,6 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Check item is correctly returned with catalog effective date
         assertEquals(invoiceItem.getCatalogEffectiveDate().compareTo(ISODateTimeFormat.dateTimeParser().parseDateTime("2011-01-01T00:00:00+00:00")), 0);
-
 
         assertEquals(invoiceApi.getInvoice(invoiceJson.getInvoiceId(), Boolean.TRUE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
         assertEquals(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
@@ -228,6 +228,60 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(newInvoiceList.size(), 3);
     }
 
+    @Test(groups = "slow")
+    public void testGetInvoicesWithFilters() throws Exception {
+        final DateTime initialDate = new DateTime(2021, 4, 18, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 2);
+
+        final String invoiceId1 = invoices.get(0).getInvoiceId().toString();
+        final String invoiceId2 = invoices.get(1).getInvoiceId().toString();
+
+        // Filter on dates only
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 18), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 2);
+
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 19), new LocalDate(2021, 5, 18), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 19), new LocalDate(2021, 5, 17), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 0);
+
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 19), new LocalDate(2021, 5, 17), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 0);
+
+        // Filter on invoiceIds only
+        String idFilter = Strings.join(",", new String[]{invoiceId1, invoiceId2});
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 2);
+
+        idFilter = invoiceId1;
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        // Dates and id filter
+        idFilter = Strings.join(",", new String[]{invoiceId1, invoiceId2});
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        idFilter = invoiceId1;
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        idFilter = invoiceId2;
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 0);
+
+
+    }
+
     @Test(groups = "slow", description = "Can create a subscription in dryRun mode and get an invoice back")
     public void testDryRunSubscriptionCreate() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
@@ -289,7 +343,9 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceToPay.getBalance().compareTo(BigDecimal.ZERO), 1);
 
         // Pay all invoices
-        accountApi.payAllInvoices(accountJson.getAccountId(), null, true, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Invoices paidInvoices = accountApi.payAllInvoices(accountJson.getAccountId(), null, true, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(paidInvoices.size(), 1);
+
         for (final Invoice invoice : accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions)) {
             assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         }
