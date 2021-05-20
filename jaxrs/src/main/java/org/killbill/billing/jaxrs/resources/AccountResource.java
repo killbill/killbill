@@ -750,6 +750,7 @@ public class AccountResource extends JaxRsResourceBase {
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
     @ApiOperation(value = "Trigger a payment for all unpaid invoices", response = InvoiceJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 201, message = "Successful operation"),
+                           @ApiResponse(code = 204, message = "Nothing to pay"),
                            @ApiResponse(code = 404, message = "Invalid account id supplied")})
     public Response payAllInvoices(@PathParam("accountId") final UUID accountId,
                                    @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
@@ -827,7 +828,11 @@ public class AccountResource extends JaxRsResourceBase {
         if (filterInvoiceIds != null) {
             queryParams.put(QUERY_INVOICES_FILTER, filterInvoiceIds.toString());
         }
-        return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getInvoicesForAccount", account.getId(), queryParams, request);
+        if (queryParams.size() > 0) {
+            return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getInvoicesForAccount", account.getId(), queryParams, request);
+        } else {
+            return Response.status(Status.NO_CONTENT).build();
+        }
     }
 
 

@@ -75,6 +75,42 @@ public class TestInvoicePayment extends TestJaxrsBase {
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
+    @Test(groups = "slow", description = "Trigger payments for account with no unpaid invoices")
+    public void testPayZeroInvoice() throws Exception {
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        // No payment method
+        final Account accountJson = createAccountWithExternalPaymentMethod();
+        // Pay all invoices - nothing to pay
+        final Invoices paidInvoices = accountApi.payAllInvoices(accountJson.getAccountId(), null, true, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(paidInvoices.size(), 0);
+    }
+
+    @Test(groups = "slow", description = "Can pay invoices")
+    public void testPayAllInvoices() throws Exception {
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+
+        // No payment method
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Check there was no payment made
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
+
+        // Get the invoices
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
+        assertEquals(invoices.size(), 2);
+        final Invoice invoiceToPay = invoices.get(1);
+        assertEquals(invoiceToPay.getBalance().compareTo(BigDecimal.ZERO), 1);
+
+        // Pay all invoices
+        final Invoices paidInvoices = accountApi.payAllInvoices(accountJson.getAccountId(), null, true, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(paidInvoices.size(), 1);
+
+        for (final Invoice invoice : accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions)) {
+            assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        }
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), null, requestOptions).size(), 1);
+    }
+
 
     @Test(groups = "slow")
     public void testRetrievePayment() throws Exception {
