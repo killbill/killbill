@@ -33,7 +33,6 @@ import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.InvoiceItems;
 import org.killbill.billing.client.model.InvoicePayments;
 import org.killbill.billing.client.model.Invoices;
-import org.killbill.billing.client.model.Payments;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AuditLog;
@@ -52,6 +51,7 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import org.testng.util.Strings;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
@@ -66,13 +66,13 @@ import static org.testng.Assert.assertTrue;
 public class TestInvoice extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Can search and retrieve invoices with and without items")
-        public void testInvoiceOk() throws Exception {
+    public void testInvoiceOk() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
         clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.FULL, requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 2);
         for (final Invoice invoiceJson : invoices) {
             Assert.assertEquals(invoiceJson.getAuditLogs().size(), 1);
@@ -98,7 +98,6 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Check item is correctly returned with catalog effective date
         assertEquals(invoiceItem.getCatalogEffectiveDate().compareTo(ISODateTimeFormat.dateTimeParser().parseDateTime("2011-01-01T00:00:00+00:00")), 0);
-
 
         assertEquals(invoiceApi.getInvoice(invoiceJson.getInvoiceId(), Boolean.TRUE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
         assertEquals(invoiceApi.getInvoiceByNumber(Integer.valueOf(invoiceJson.getInvoiceNumber()), Boolean.FALSE, AuditLevel.NONE, requestOptions).getItems().size(), invoiceJson.getItems().size());
@@ -225,8 +224,62 @@ public class TestInvoice extends TestJaxrsBase {
         invoiceApi.createFutureInvoice(accountJson.getAccountId(), futureDate, requestOptions);
 
         // Check again # invoices, should be 3 this time
-        final List<Invoice> newInvoiceList = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        final List<Invoice> newInvoiceList = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         assertEquals(newInvoiceList.size(), 3);
+    }
+
+    @Test(groups = "slow")
+    public void testGetInvoicesWithFilters() throws Exception {
+        final DateTime initialDate = new DateTime(2021, 4, 18, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 2);
+
+        final String invoiceId1 = invoices.get(0).getInvoiceId().toString();
+        final String invoiceId2 = invoices.get(1).getInvoiceId().toString();
+
+        // Filter on dates only
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 18), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 2);
+
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 19), new LocalDate(2021, 5, 18), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 19), new LocalDate(2021, 5, 17), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 0);
+
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 19), new LocalDate(2021, 5, 17), false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 0);
+
+        // Filter on invoiceIds only
+        String idFilter = Strings.join(",", new String[]{invoiceId1, invoiceId2});
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 2);
+
+        idFilter = invoiceId1;
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        // Dates and id filter
+        idFilter = Strings.join(",", new String[]{invoiceId1, invoiceId2});
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        idFilter = invoiceId1;
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 1);
+
+        idFilter = invoiceId2;
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), new LocalDate(2021, 4, 18), new LocalDate(2021, 5, 17), false, false, false, idFilter, AuditLevel.FULL, requestOptions);
+        assertEquals(invoices.size(), 0);
+
+
     }
 
     @Test(groups = "slow", description = "Can create a subscription in dryRun mode and get an invoice back")
@@ -257,7 +310,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         assertEquals(invoices.size(), 2);
 
         final Invoice invoiceWithPositiveAmount = Iterables.tryFind(invoices, new Predicate<Invoice>() {
@@ -273,30 +326,6 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceWithPositiveAmount.getAmount().compareTo(objFromJson.get(0).getPurchasedAmount()), 0);
     }
 
-    @Test(groups = "slow", description = "Can pay invoices")
-    public void testPayAllInvoices() throws Exception {
-        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
-
-        // No payment method
-        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
-
-        // Check there was no payment made
-        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
-
-        // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
-        assertEquals(invoices.size(), 2);
-        final Invoice invoiceToPay = invoices.get(1);
-        assertEquals(invoiceToPay.getBalance().compareTo(BigDecimal.ZERO), 1);
-
-        // Pay all invoices
-        accountApi.payAllInvoices(accountJson.getAccountId(), null, true, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
-        for (final Invoice invoice : accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions)) {
-            assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
-        }
-        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), null, requestOptions).size(), 1);
-    }
-
     @Test(groups = "slow", description = "Can create an insta-payment")
     public void testInvoiceCreatePayment() throws Exception {
         clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
@@ -305,7 +334,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         assertEquals(invoices.size(), 2);
 
         for (final Invoice cur : invoices) {
@@ -318,7 +347,7 @@ public class TestInvoice extends TestJaxrsBase {
             invoicePayment.setPurchasedAmount(cur.getBalance());
             invoicePayment.setAccountId(accountJson.getAccountId());
             invoicePayment.setTargetInvoiceId(cur.getInvoiceId());
-            final InvoicePayment objFromJson = invoiceApi.createInstantPayment(cur.getInvoiceId(), invoicePayment, true, null, requestOptions);
+            final InvoicePayment objFromJson = invoiceApi.createInstantPayment(cur.getInvoiceId(), invoicePayment, true, ImmutableList.of(), null, requestOptions);
             assertEquals(cur.getBalance().compareTo(objFromJson.getPurchasedAmount()), 0);
         }
     }
@@ -332,7 +361,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(noPaymentsFromJson.size(), 0);
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final UUID invoiceId = invoices.get(1).getInvoiceId();
@@ -342,7 +371,7 @@ public class TestInvoice extends TestJaxrsBase {
         invoicePayment.setPurchasedAmount(BigDecimal.TEN);
         invoicePayment.setAccountId(accountJson.getAccountId());
         invoicePayment.setTargetInvoiceId(invoiceId);
-        invoiceApi.createInstantPayment(invoiceId, invoicePayment, true, null, requestOptions);
+        invoiceApi.createInstantPayment(invoiceId, invoicePayment, true, ImmutableList.of(), null, requestOptions);
 
         // Verify we indeed got the invoicePayment
         final List<InvoicePayment> paymentsFromJson = accountApi.getInvoicePayments(accountJson.getAccountId(), null, requestOptions);
@@ -364,7 +393,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
@@ -438,7 +467,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
@@ -469,7 +498,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final Invoices originalInvoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices originalInvoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(originalInvoices.size(), 2);
 
         final UUID firstInvoiceItemId = originalInvoices.get(0).getItems().get(0).getInvoiceItemId();
@@ -509,7 +538,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceWithItems.getItems().get(0).getProductName().compareTo("SomeProduct"), 0);
 
         // Verify the total number of invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 3);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).size(), 3);
     }
 
     @Test(groups = "slow", description = "Can create multiple external charges")
@@ -517,7 +546,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions).size(), 2);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions).size(), 2);
 
         // Post an external charge
         final BigDecimal chargeAmount = BigDecimal.TEN;
@@ -544,7 +573,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(createdExternalCharges.get(1).getCurrency(), accountJson.getCurrency());
 
         // Verify the total number of invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 3);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).size(), 3);
     }
 
     @Test(groups = "slow", description = "Can create multiple external charges with same invoice and external keys"/* , invocationCount = 10*/)
@@ -552,7 +581,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions).size(), 2);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions).size(), 2);
 
         // Post an external charge
         final BigDecimal chargeAmount = BigDecimal.TEN;
@@ -584,7 +613,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions).size(), 2);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions).size(), 2);
 
         // Post an external charge
         final BigDecimal chargeAmount = BigDecimal.TEN;
@@ -604,7 +633,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceWithItems.getItems().get(0).getBundleId(), bundleId);
 
         // Verify the total number of invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 3);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).size(), 3);
     }
 
     @Test(groups = "slow", description = "Can create tax items for a bundle")
@@ -612,7 +641,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions).size(), 2);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions).size(), 2);
 
         // Post an external charge
         final BigDecimal taxAmount = BigDecimal.TEN;
@@ -633,7 +662,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(invoiceWithItems.getItems().get(0).getItemType(), InvoiceItemType.TAX);
 
         // Verify the total number of invoices
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 3);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).size(), 3);
     }
 
     @Test(groups = "slow", description = "Can paginate and search through all invoices")
@@ -696,7 +725,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(invoices.size(), 2);
 
         // Migrate an invoice with one external charge
@@ -720,7 +749,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(migrationInvoice.getItems().get(0).getAmount().compareTo(chargeAmount), 0);
         assertEquals(migrationInvoice.getItems().get(0).getCurrency(), accountJson.getCurrency());
 
-        final List<Invoice> invoicesWithMigration = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoicesWithMigration = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, true, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(invoicesWithMigration.size(), 3);
 
         final Account accountWithBalanceAfterMigration = accountApi.getAccount(accountJson.getAccountId(), true, true, AuditLevel.NONE, requestOptions);
@@ -744,21 +773,21 @@ public class TestInvoice extends TestJaxrsBase {
         final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, true, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(creditJsons.size(), 1);
 
-        Invoices childInvoices = accountApi.getInvoicesForAccount(childAccount.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        Invoices childInvoices = accountApi.getInvoicesForAccount(childAccount.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(childInvoices.size(), 1);
         Assert.assertEquals(childInvoices.get(0).getCreditAdj().compareTo(BigDecimal.TEN), 0);
 
-        Invoices parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        Invoices parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(parentInvoices.size(), 0);
 
         // transfer credit to parent account
         accountApi.transferChildCreditToParent(childAccount.getAccountId(), requestOptions);
 
-        childInvoices = accountApi.getInvoicesForAccount(childAccount.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        childInvoices = accountApi.getInvoicesForAccount(childAccount.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(childInvoices.size(), 2);
         Assert.assertEquals(childInvoices.get(1).getCreditAdj().compareTo(BigDecimal.TEN.negate()), 0);
 
-        parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(parentInvoices.size(), 1);
         Assert.assertEquals(parentInvoices.get(0).getCreditAdj().compareTo(BigDecimal.TEN), 0);
     }
@@ -812,9 +841,9 @@ public class TestInvoice extends TestJaxrsBase {
         clock.addDays(32);
         callbackServlet.assertListenerStatus();
 
-        final List<Invoice> child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
-        final List<Invoice> child2Invoices = accountApi.getInvoicesForAccount(childAccount2.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
-        final List<Invoice> child3Invoices = accountApi.getInvoicesForAccount(childAccount3.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
+        final List<Invoice> child2Invoices = accountApi.getInvoicesForAccount(childAccount2.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
+        final List<Invoice> child3Invoices = accountApi.getInvoicesForAccount(childAccount3.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
 
         assertEquals(child1Invoices.size(), 2);
         final Invoice child1RecurringInvoice = child1Invoices.get(1);
@@ -822,7 +851,7 @@ public class TestInvoice extends TestJaxrsBase {
         final InvoiceItem child2RecurringInvoiceItem = child2Invoices.get(1).getItems().get(0);
         final InvoiceItem child3RecurringInvoiceItem = child3Invoices.get(1).getItems().get(0);
 
-        final List<Invoice> parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> parentInvoices = accountApi.getInvoicesForAccount(parentAccount.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(parentInvoices.size(), 2);
 
         // check parent invoice with child invoice items and no adjustments
@@ -883,7 +912,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
 
         // Get the invoices
-        final Invoices originalInvoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final Invoices originalInvoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(originalInvoices.size(), 2);
         final UUID invoiceId = originalInvoices.get(0).getInvoiceId();
 

@@ -24,9 +24,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -145,6 +147,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -670,6 +673,7 @@ public class AccountResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_WITH_MIGRATION_INVOICES) @DefaultValue("false") final boolean withMigrationInvoices,
                                           @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                           @QueryParam(QUERY_INCLUDE_VOIDED_INVOICES) @DefaultValue("false") final boolean includeVoidedInvoices,
+                                          @QueryParam(QUERY_INVOICES_FILTER) final String invoicesFilter,
                                           @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
 
@@ -693,11 +697,15 @@ public class AccountResource extends JaxRsResourceBase {
                        invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, tenantContext);
         }
 
-        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
+        // The filter, if any comes in addition to other param to limit the response
+        final Set<String> filterInvoiceIds = (null != invoicesFilter && !invoicesFilter.isEmpty()) ? Sets.newHashSet(invoicesFilter.split(",")) : Collections.emptySet();
         final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
         for (final Invoice invoice : invoices) {
-            result.add(new InvoiceJson(invoice, null, accountAuditLogs));
+            if (filterInvoiceIds.isEmpty() || filterInvoiceIds.contains(invoice.getId().toString())) {
+                result.add(new InvoiceJson(invoice, null, accountAuditLogs));
+            }
         }
 
         return Response.status(Status.OK).entity(result).build();
@@ -740,8 +748,9 @@ public class AccountResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @Consumes(APPLICATION_JSON)
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICE_PAYMENTS)
-    @ApiOperation(value = "Trigger a payment for all unpaid invoices")
-    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+    @ApiOperation(value = "Trigger a payment for all unpaid invoices", response = InvoiceJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Successful operation"),
+                           @ApiResponse(code = 204, message = "Nothing to pay"),
                            @ApiResponse(code = 404, message = "Invalid account id supplied")})
     public Response payAllInvoices(@PathParam("accountId") final UUID accountId,
                                    @QueryParam(QUERY_PAYMENT_METHOD_ID) final UUID inputPaymentMethodId,
@@ -752,7 +761,8 @@ public class AccountResource extends JaxRsResourceBase {
                                    @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                    @HeaderParam(HDR_REASON) final String reason,
                                    @HeaderParam(HDR_COMMENT) final String comment,
-                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, InvoiceApiException {
+                                   @javax.ws.rs.core.Context final HttpServletRequest request,
+                                   @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, PaymentApiException, InvoiceApiException {
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
@@ -762,7 +772,6 @@ public class AccountResource extends JaxRsResourceBase {
         final LocalDate inputDate = targetDate == null ? clock.getUTCToday() : toLocalDate(targetDate);
 
         final Collection<Invoice> unpaidInvoices = invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), null, inputDate, callContext);
-
         BigDecimal remainingRequestPayment = paymentAmount;
         if (remainingRequestPayment == null) {
             remainingRequestPayment = BigDecimal.ZERO;
@@ -771,6 +780,9 @@ public class AccountResource extends JaxRsResourceBase {
             }
         }
 
+        LocalDate filterMinDate = null;
+        LocalDate filterMaxDate = null;
+        StringBuilder filterInvoiceIds = null;
         for (final Invoice invoice : unpaidInvoices) {
             final BigDecimal amountToPay = (remainingRequestPayment.compareTo(invoice.getBalance()) >= 0) ?
                                            invoice.getBalance() : remainingRequestPayment;
@@ -779,6 +791,19 @@ public class AccountResource extends JaxRsResourceBase {
                                              null :
                                              (inputPaymentMethodId != null ? inputPaymentMethodId : account.getPaymentMethodId());
                 createPurchaseForInvoice(account, invoice.getId(), amountToPay, paymentMethodId, externalPayment, null, null, pluginProperties, callContext);
+
+                if (filterMinDate == null || filterMinDate.isAfter(invoice.getTargetDate())) {
+                    filterMinDate = invoice.getTargetDate();
+                }
+                if (filterMaxDate == null || filterMaxDate.isBefore(invoice.getTargetDate())) {
+                    filterMaxDate = invoice.getTargetDate();
+                }
+                if (filterInvoiceIds == null) {
+                    filterInvoiceIds = new StringBuilder();
+                } else {
+                    filterInvoiceIds.append(",");
+                }
+                filterInvoiceIds.append(invoice.getId());
             }
             remainingRequestPayment = remainingRequestPayment.subtract(amountToPay);
             if (remainingRequestPayment.compareTo(BigDecimal.ZERO) == 0) {
@@ -793,7 +818,21 @@ public class AccountResource extends JaxRsResourceBase {
         if (externalPayment && remainingRequestPayment.compareTo(BigDecimal.ZERO) > 0) {
             invoiceApi.insertCredits(account.getId(), clock.getUTCToday(), ImmutableList.of(createCreditItem(account.getId(), creditAmount, account.getCurrency())), true, pluginProperties, callContext);
         }
-        return Response.status(Status.NO_CONTENT).build();
+        final Map<String, String> queryParams = new HashMap<>();
+        if (filterMinDate != null) {
+            queryParams.put(QUERY_START_DATE, filterMinDate.toString());
+        }
+        if (filterMaxDate != null) {
+            queryParams.put(QUERY_END_DATE, filterMaxDate.toString());
+        }
+        if (filterInvoiceIds != null) {
+            queryParams.put(QUERY_INVOICES_FILTER, filterInvoiceIds.toString());
+        }
+        if (queryParams.size() > 0) {
+            return uriBuilder.buildResponse(uriInfo, AccountResource.class, "getInvoicesForAccount", account.getId(), queryParams, request);
+        } else {
+            return Response.status(Status.NO_CONTENT).build();
+        }
     }
 
 

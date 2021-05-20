@@ -296,7 +296,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                            ExtBusEventType.INVOICE_CREATION,
                                            ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
                                            ExtBusEventType.PAYMENT_SUCCESS);
-        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, false, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
         Assert.assertEquals(subscription.getPrices().size(), 2);
 
@@ -319,7 +319,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getEvents().get(2).getPriceList(), PriceListSet.DEFAULT_PRICELIST_NAME);
         Assert.assertEquals(subscription.getEvents().get(2).getProduct(), "Shotgun");
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.FULL, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.FULL, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
 
@@ -413,7 +413,7 @@ public class TestEntitlement extends TestJaxrsBase {
         subscriptions.add(addOn1);
         subscriptions.add(addOn2);
 
-        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(subscriptions, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(subscriptions, null, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(bundle);
         assertEquals(bundle.getExternalKey(), bundleExternalKey);
         assertEquals(bundle.getSubscriptions().size(), 3);
@@ -434,7 +434,7 @@ public class TestEntitlement extends TestJaxrsBase {
         }
         assertEquals(found, 3);
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 1);
         assertEquals(invoiceApi.getInvoiceTags(invoices.get(0).getInvoiceId(), requestOptions).size(), 0);
@@ -453,7 +453,7 @@ public class TestEntitlement extends TestJaxrsBase {
             assertEquals(subscription.getState(), EntitlementState.CANCELLED);
         }
 
-        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         assertEquals(invoicesAfterClose.size(), 1);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 1);
@@ -520,14 +520,14 @@ public class TestEntitlement extends TestJaxrsBase {
                                            ExtBusEventType.SUBSCRIPTION_CREATION,
                                            ExtBusEventType.INVOICE_CREATION,
                                            ExtBusEventType.INVOICE_PAYMENT_FAILED);
-        final Bundles bundles = subscriptionApi.createSubscriptionsWithAddOns(input, null, null, false, false, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Bundles bundles = subscriptionApi.createSubscriptionsWithAddOns(input, null, null, false, false, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
 
         assertNotNull(bundles);
         assertEquals(bundles.size(), 2);
         assertFalse(bundles.get(0).getExternalKey().equals(bundles.get(1).getExternalKey()));
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getBalance().compareTo(BigDecimal.ZERO), 1);
         assertEquals(invoiceApi.getInvoiceTags(invoices.get(0).getInvoiceId(), requestOptions).size(), 0);
@@ -578,7 +578,7 @@ public class TestEntitlement extends TestJaxrsBase {
             }
         }
 
-        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoicesAfterClose = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(invoicesAfterClose.size(), 1);
         assertEquals(invoicesAfterClose.get(0).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoiceApi.getInvoiceTags(invoicesAfterClose.get(0).getInvoiceId(), requestOptions).size(), 0);
@@ -652,7 +652,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setProductCategory(ProductCategory.BASE);
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final Subscription addOn1 = new Subscription();
         addOn1.setAccountId(accountJson.getAccountId());
@@ -680,12 +680,12 @@ public class TestEntitlement extends TestJaxrsBase {
         bulkSubscriptionsBundle.setBaseEntitlementAndAddOns(subscriptions);
         bulkSubscriptionsBundles.add(bulkSubscriptionsBundle);
 
-        final Bundles bundles = subscriptionApi.createSubscriptionsWithAddOns(bulkSubscriptionsBundles, null, null, false, false, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Bundles bundles = subscriptionApi.createSubscriptionsWithAddOns(bulkSubscriptionsBundles, null, null, false, false, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(bundles);
         assertEquals(bundles.size(), 1);
         assertEquals(bundles.get(0).getSubscriptions().size(), 3);
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, AuditLevel.NONE, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.NONE, requestOptions);
         assertEquals(invoices.size(), 2);
     }
 
@@ -706,6 +706,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription entitlementJson = subscriptionApi.createSubscription(input,
                                                                                 initialDate.toLocalDate().plusMonths(1),
                                                                                 null,
+                                                                                false,
                                                                                 false,
                                                                                 false,
                                                                                 true,
@@ -751,6 +752,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription entitlementJson = subscriptionApi.createSubscription(input,
                                                                                 null,
                                                                                 initialDate.toLocalDate().plusMonths(1),
+                                                                                false,
                                                                                 false,
                                                                                 false,
                                                                                 true,
@@ -802,6 +804,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 new LocalDate(2012, 4, 25),
                                                                                 false,
                                                                                 false,
+                                                                                false,
                                                                                 true,
                                                                                 DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
                                                                                 NULL_PLUGIN_PROPERTIES,
@@ -847,6 +850,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 initialDate.toLocalDate().minusMonths(1),
                                                                                 false,
                                                                                 false,
+                                                                                false,
                                                                                 true,
                                                                                 DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
                                                                                 NULL_PLUGIN_PROPERTIES,
@@ -885,7 +889,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).size(), 0);
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
         // create a subscription with no trial plan
@@ -901,12 +905,12 @@ public class TestEntitlement extends TestJaxrsBase {
                                            ExtBusEventType.ENTITLEMENT_CREATION,
                                            ExtBusEventType.ACCOUNT_CHANGE,
                                            ExtBusEventType.INVOICE_CREATION); // The BCD is updated in that case
-        final Subscription subscriptionJson = subscriptionApi.createSubscription(input, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscriptionJson = subscriptionApi.createSubscription(input, null, null, null, null, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNotNull(subscriptionJson);
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices is now 1
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 1);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).size(), 1);
 
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
@@ -963,7 +967,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).size(), 0);
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
         // create a subscription with no trial plan
@@ -982,6 +986,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                  null,
                                                                                  false,
                                                                                  false,
+                                                                                 false,
                                                                                  true,
                                                                                  DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
                                                                                  NULL_PLUGIN_PROPERTIES,
@@ -990,7 +995,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices is still 0
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).size(), 0);
 
         // verify that number of payments is still 0 (no attempts)
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
@@ -1047,7 +1052,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // verify that number of invoices and payments for account is still 0
-        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions).size(), 0);
+        assertEquals(accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions).size(), 0);
         assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions).size(), 0);
 
         // create a subscription with no trial plan
@@ -1067,6 +1072,7 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                  null,
                                                                                  false,
                                                                                  false,
+                                                                                 false,
                                                                                  true,
                                                                                  DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
                                                                                  NULL_PLUGIN_PROPERTIES,
@@ -1079,7 +1085,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Awaitility.await().atMost(10, TimeUnit.SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+                final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
                 return invoicesForAccount.size() == 1 && invoicesForAccount.get(0).getStatus() == InvoiceStatus.DRAFT;
             }
         });
@@ -1139,7 +1145,7 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setAccountId(accountJson.getAccountId());
         input.setPlanName("shotgun-monthly");
         input.setBillCycleDayLocal(28);
-        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, null, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(subscription.getBillCycleDayLocal().intValue(), 28);
         callbackServlet.assertListenerStatus();
 
@@ -1249,6 +1255,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription entitlementJson = subscriptionApi.createSubscription(input,
                                                                                 null,
                                                                                 null,
+                                                                                false,
                                                                                 false,
                                                                                 false,
                                                                                 true,
@@ -1364,6 +1371,7 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription entitlementJson = subscriptionApi.createSubscription(input,
                                                                                 null,
                                                                                 null,
+                                                                                false,
                                                                                 false,
                                                                                 false,
                                                                                 true,

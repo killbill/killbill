@@ -75,6 +75,42 @@ public class TestInvoicePayment extends TestJaxrsBase {
         super.beforeMethod();
         mockPaymentProviderPlugin = (MockPaymentProviderPlugin) registry.getServiceForName(PLUGIN_NAME);
     }
+    @Test(groups = "slow", description = "Trigger payments for account with no unpaid invoices")
+    public void testPayZeroInvoice() throws Exception {
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+        // No payment method
+        final Account accountJson = createAccountWithExternalPaymentMethod();
+        // Pay all invoices - nothing to pay
+        final Invoices paidInvoices = accountApi.payAllInvoices(accountJson.getAccountId(), null, true, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(paidInvoices.size(), 0);
+    }
+
+    @Test(groups = "slow", description = "Can pay invoices")
+    public void testPayAllInvoices() throws Exception {
+        clock.setTime(new DateTime(2012, 4, 25, 0, 3, 42, 0));
+
+        // No payment method
+        final Account accountJson = createAccountNoPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        // Check there was no payment made
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), null, requestOptions).size(), 0);
+
+        // Get the invoices
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
+        assertEquals(invoices.size(), 2);
+        final Invoice invoiceToPay = invoices.get(1);
+        assertEquals(invoiceToPay.getBalance().compareTo(BigDecimal.ZERO), 1);
+
+        // Pay all invoices
+        final Invoices paidInvoices = accountApi.payAllInvoices(accountJson.getAccountId(), null, true, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(paidInvoices.size(), 1);
+
+        for (final Invoice invoice : accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions)) {
+            assertEquals(invoice.getBalance().compareTo(BigDecimal.ZERO), 0);
+        }
+        assertEquals(accountApi.getPaymentsForAccount(accountJson.getAccountId(), null, requestOptions).size(), 1);
+    }
+
 
     @Test(groups = "slow")
     public void testRetrievePayment() throws Exception {
@@ -257,7 +293,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
             invoicePayment.setPurchasedAmount(lastPayment.getPurchasedAmount());
             invoicePayment.setAccountId(lastPayment.getAccountId());
             invoicePayment.setTargetInvoiceId(lastPayment.getTargetInvoiceId());
-            final InvoicePayment payment = invoiceApi.createInstantPayment(lastPayment.getTargetInvoiceId(), invoicePayment, NULL_PLUGIN_PROPERTIES, requestOptions);
+            final InvoicePayment payment = invoiceApi.createInstantPayment(lastPayment.getTargetInvoiceId(), invoicePayment, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
             lastPayment = payment;
         }
 
@@ -297,14 +333,16 @@ public class TestInvoicePayment extends TestJaxrsBase {
         // Verify targetInvoiceId is not null. See #1014
         assertEquals(invoicePaymentApi.getInvoicePayment(invoicePayment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptions).getTargetInvoiceId(), invoicePayment.getTargetInvoiceId());
 
-        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         assertEquals(invoices.size(), 2);
         final Invoice invoice = invoices.get(1);
         // Verify this is the correct value
         assertEquals(invoicePayment.getTargetInvoiceId(), invoice.getInvoiceId());
 
         // Make a payment and verify both invoice payment point to the same targetInvoiceId
-        accountApi.payAllInvoices(accountJson.getAccountId(), null, false, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Invoices paidInvoices = accountApi.payAllInvoices(accountJson.getAccountId(), null, false, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        assertEquals(paidInvoices.size(), 1);
+
         invoicePayments = accountApi.getInvoicePayments(accountJson.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayments.size(), 2);
         for (final InvoicePayment cur : invoicePayments) {
@@ -332,7 +370,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
         clock.addDays(32);
         callbackServlet.assertListenerStatus();
 
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         assertEquals(invoices.size(), 2);
 
         final InvoicePayment invoicePayment1 = new InvoicePayment();
@@ -342,7 +380,7 @@ public class TestInvoicePayment extends TestJaxrsBase {
 
         // Pay too too much => 400
         try {
-            invoiceApi.createInstantPayment(invoicePayment1.getTargetInvoiceId(), invoicePayment1, NULL_PLUGIN_PROPERTIES, requestOptions);
+            invoiceApi.createInstantPayment(invoicePayment1.getTargetInvoiceId(), invoicePayment1, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
             Assert.fail("InvoicePayment call should fail with 400");
         } catch (final KillBillClientException e) {
             assertTrue(true);
@@ -354,12 +392,12 @@ public class TestInvoicePayment extends TestJaxrsBase {
         invoicePayment2.setTargetInvoiceId(invoices.get(1).getInvoiceId());
 
         // Just right, Yah! => 201
-        final InvoicePayment result2 = invoiceApi.createInstantPayment(invoicePayment2.getTargetInvoiceId(), invoicePayment2, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment result2 = invoiceApi.createInstantPayment(invoicePayment2.getTargetInvoiceId(), invoicePayment2, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(result2.getTransactions().size(), 1);
         assertTrue(result2.getTransactions().get(0).getAmount().compareTo(invoices.get(1).getBalance()) == 0);
 
         // Already paid -> 204
-        final InvoicePayment result3 = invoiceApi.createInstantPayment(invoicePayment2.getTargetInvoiceId(), invoicePayment2, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment result3 = invoiceApi.createInstantPayment(invoicePayment2.getTargetInvoiceId(), invoicePayment2, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertNull(result3);
     }
 
