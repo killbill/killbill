@@ -91,7 +91,7 @@ BEGIN
     -- Uses tenant ID (instead of record id)
     DELETE FROM stripe_payment_methods WHERE kb_tenant_id = v_tenant_id;
     DELETE FROM stripe_responses WHERE kb_tenant_id = v_tenant_id;
-    DELETE FROM stripe_transactions WHERE kb_tenant_id = v_tenant_id;
+    DELETE FROM stripe_hpp_requests WHERE kb_tenant_id = v_tenant_id;
 
     END;
 //
