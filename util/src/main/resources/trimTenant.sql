@@ -57,7 +57,9 @@ BEGIN
     DELETE FROM account_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM accounts WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM audit_log WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM blocking_state_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM blocking_states WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM bundle_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM bundles WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM bus_events WHERE search_key2 = v_tenant_record_id;
     DELETE FROM bus_events_history WHERE search_key2 = v_tenant_record_id;
@@ -65,10 +67,16 @@ BEGIN
     DELETE FROM bus_ext_events_history WHERE search_key2 = v_tenant_record_id;
     DELETE FROM custom_field_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM custom_fields WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM invoice_item_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM invoice_items WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM invoice_parent_children WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM invoice_payment_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM invoice_payments WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM invoice_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM invoices WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM invoice_tracking_id_history WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM invoice_tracking_ids WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM invoice_billing_events WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM notifications WHERE search_key2 = v_tenant_record_id;
     DELETE FROM notifications_history WHERE search_key2 = v_tenant_record_id;
     DELETE FROM payment_attempt_history WHERE tenant_record_id = v_tenant_record_id;
@@ -80,7 +88,9 @@ BEGIN
     DELETE FROM payment_transactions WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM payments WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM rolled_up_usage WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM subscription_event_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM subscription_events WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM subscription_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM subscriptions WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM tag_definition_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM tag_definitions WHERE tenant_record_id = v_tenant_record_id;
