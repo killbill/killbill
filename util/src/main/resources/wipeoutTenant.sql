@@ -21,10 +21,6 @@ BEGIN
     select record_id from tenants WHERE api_key = p_api_key into v_tenant_record_id;
     select id from tenants WHERE api_key = p_api_key into v_tenant_id;
 
-    DELETE FROM invoice_payment_control_plugin_auto_pay_off
-        WHERE account_id in (
-            SELECT id from accounts where tenant_record_id = v_tenant_record_id);
-
     DELETE FROM catalog_override_block_definition WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM catalog_override_phase_definition WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM catalog_override_phase_usage WHERE tenant_record_id = v_tenant_record_id;

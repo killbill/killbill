@@ -31,6 +31,7 @@ BEGIN
     DELETE FROM invoices WHERE account_record_id = v_account_record_id and tenant_record_id = v_tenant_record_id;
     DELETE FROM invoice_tracking_id_history WHERE account_record_id = v_account_record_id and tenant_record_id = v_tenant_record_id;
     DELETE FROM invoice_tracking_ids WHERE account_record_id = v_account_record_id and tenant_record_id = v_tenant_record_id;
+    DELETE FROM invoice_payment_control_plugin_auto_pay_off WHERE account_id = p_account_id;
     DELETE FROM notifications WHERE search_key1 = v_account_record_id and search_key2 = v_tenant_record_id;
     DELETE FROM notifications_history WHERE search_key1 = v_account_record_id and search_key2 = v_tenant_record_id;
     DELETE FROM payment_attempt_history WHERE account_record_id = v_account_record_id and tenant_record_id = v_tenant_record_id;

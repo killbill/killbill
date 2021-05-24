@@ -47,6 +47,8 @@ BEGIN
     DELETE FROM invoice_tracking_id_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM invoice_tracking_ids WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM invoice_billing_events WHERE tenant_record_id = v_tenant_record_id;
+    DELETE FROM invoice_payment_control_plugin_auto_pay_off
+        WHERE account_id in (SELECT id from accounts where tenant_record_id = v_tenant_record_id);
     DELETE FROM notifications WHERE search_key2 = v_tenant_record_id;
     DELETE FROM notifications_history WHERE search_key2 = v_tenant_record_id;
     DELETE FROM payment_attempt_history WHERE tenant_record_id = v_tenant_record_id;
