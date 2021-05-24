@@ -43,8 +43,6 @@ BEGIN
     DELETE FROM tenants WHERE id = v_tenant_id;
 
     -- NOT DELETED TABLES
-    -- analytics_currency_conversion
-    -- analytics_reports WHERE
     -- node_infos
     -- roles_permissions
     -- service_broadcasts

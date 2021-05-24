@@ -22,36 +22,6 @@ BEGIN
     select record_id from tenants WHERE api_key = p_api_key into v_tenant_record_id;
     select id from tenants WHERE api_key = p_api_key into v_tenant_id;
 
-    DELETE FROM analytics_account_fields WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_account_tags WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_account_transitions WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_accounts WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_bundle_fields WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_bundle_tags WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_bundles WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_invoice_adjustments WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_invoice_credits WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_invoice_fields WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_invoice_item_adjustments WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_invoice_items WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_invoice_payment_fields WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_invoice_tags WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_invoices WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_notifications WHERE search_key2 = v_tenant_record_id;
-    DELETE FROM analytics_notifications_history WHERE search_key2 = v_tenant_record_id;
-    DELETE FROM analytics_payment_auths WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_payment_captures WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_payment_chargebacks WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_payment_credits WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_payment_fields WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_payment_method_fields WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_payment_purchases WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_payment_refunds WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_payment_tags WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_payment_voids WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_subscription_transitions WHERE tenant_record_id = v_tenant_record_id;
-    DELETE FROM analytics_transaction_fields WHERE tenant_record_id = v_tenant_record_id;
-
     DELETE FROM account_email_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM account_emails WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM account_history WHERE tenant_record_id = v_tenant_record_id;
@@ -98,10 +68,6 @@ BEGIN
     DELETE FROM tags WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM tenant_broadcasts WHERE tenant_record_id = v_tenant_record_id;
 
-    -- Uses tenant ID (instead of record id)
-    DELETE FROM stripe_payment_methods WHERE kb_tenant_id = v_tenant_id;
-    DELETE FROM stripe_responses WHERE kb_tenant_id = v_tenant_id;
-    DELETE FROM stripe_hpp_requests WHERE kb_tenant_id = v_tenant_id;
 
     END;
 //
