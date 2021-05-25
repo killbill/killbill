@@ -2,25 +2,23 @@
 -- THIS DELETES MOST OF THE TENANT INFORMATION.
 -- USE ONLY IN TESTING.
 --
--- A mysql stored procedure to trim tenant information.
+-- A postgresql stored procedure to trim tenant information.
 -- Doesn't delete the tenant and accounts.
 --
--- Usage (from mysql commandline):
+-- Usage (from postgresql commandline):
 --   CALL trimTenant(API_KEY)
 --
 --  For e.g.,
 --   CALL trimTenant('tenant1')
 
-drop procedure if exists trimTenant;
-DELIMITER //
-CREATE PROCEDURE trimTenant(p_api_key varchar(36))
+CREATE OR REPLACE PROCEDURE trimTenant(p_api_key varchar(36)) LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_tenant_record_id bigint;
+    v_tenant_id varchar(36);
 BEGIN
-
-    DECLARE v_tenant_record_id bigint /*! unsigned */;
-    DECLARE v_tenant_id varchar(36);
-
-    select record_id from tenants WHERE api_key = p_api_key into v_tenant_record_id;
-    select id from tenants WHERE api_key = p_api_key into v_tenant_id;
+    SELECT record_id FROM tenants WHERE api_key = p_api_key into v_tenant_record_id;
+    SELECT id FROM tenants WHERE api_key = p_api_key into v_tenant_id;
 
     DELETE FROM account_email_history WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM account_emails WHERE tenant_record_id = v_tenant_record_id;
@@ -70,7 +68,5 @@ BEGIN
     DELETE FROM tags WHERE tenant_record_id = v_tenant_record_id;
     DELETE FROM tenant_broadcasts WHERE tenant_record_id = v_tenant_record_id;
 
-
     END;
-//
-DELIMITER ;
+$$;
