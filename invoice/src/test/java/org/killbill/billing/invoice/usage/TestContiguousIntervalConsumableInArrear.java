@@ -1,7 +1,8 @@
 /*
  * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -25,6 +26,7 @@ import java.util.List;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 import org.killbill.billing.catalog.DefaultTier;
 import org.killbill.billing.catalog.DefaultTieredBlock;
 import org.killbill.billing.catalog.DefaultUsage;
@@ -40,9 +42,11 @@ import org.killbill.billing.invoice.usage.ContiguousIntervalUsageInArrear.UsageI
 import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitAggregate;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
+import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -1001,7 +1005,6 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
     @Test(groups = "fast")
     public void testGetRolledUpUsageOnlyUsageBeforeTransitionTime() throws Exception {
-
         final DefaultTieredBlock tieredBlock1 = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
         final DefaultTieredBlock tieredBlock2 = createDefaultTieredBlock("unit2", 10, 1000, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(tieredBlock1, tieredBlock2);
@@ -1029,7 +1032,95 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(unsortedRolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 0L);
         assertEquals(unsortedRolledUpUsage.get(1).getRolledUpUnits().size(), 1);
         assertEquals(unsortedRolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount().longValue(), 0L);
+    }
 
+    @Test(groups = "fast")
+    public void testGetRolledUpUsageUsageAtTransitionTimes() throws Exception {
+        final DefaultTieredBlock tieredBlock1 = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
+        final DefaultTier tier = createDefaultTierWithBlocks(tieredBlock1);
+
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
+
+        // 2015-03-15T18:10:17Z
+        final LocalDate t0 = new LocalDate(2015, 03, BCD);
+        final BillingEvent eventT0 = createMockBillingEvent(t0.toDateTime(new LocalTime(18, 10, 17), DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        Mockito.when(eventT0.getTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
+
+        // 2015-04-01T11:22:30Z
+        final LocalDate t1 = new LocalDate(2015, 04, 01);
+        final BillingEvent eventT1 = createMockBillingEvent(t1.toDateTime(new LocalTime(11, 22, 30), DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        Mockito.when(eventT1.getTransitionType()).thenReturn(SubscriptionBaseTransitionType.CANCEL);
+
+        final LocalDate targetDate = t1;
+
+        // At t0
+        final RawUsageRecord raw1 = new DefaultRawUsage(subscriptionId, t0, "unit", 12L, "tracking-1");
+
+        // At t1
+        final RawUsageRecord raw2 = new DefaultRawUsage(subscriptionId, t1, "unit", 10L, "tracking-2");
+
+        // Should be ignored
+        final RawUsageRecord raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 04, 02), "unit", 100L, "tracking-3");
+
+        final List<RawUsageRecord> rawUsageRecord = ImmutableList.of(raw1, raw2, raw3);
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsageRecord, targetDate, true, eventT0, eventT1);
+
+        final List<RolledUpUsageWithMetadata> rolledUpUsage = intervalConsumableInArrear.getRolledUpUsage().getUsage();
+        assertEquals(rolledUpUsage.size(), 1);
+        assertEquals(rolledUpUsage.get(0).getSubscriptionId(), subscriptionId);
+        assertEquals(rolledUpUsage.get(0).getStart().compareTo(t0), 0);
+        assertEquals(rolledUpUsage.get(0).getEnd().compareTo(t1), 0);
+        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().size(), 1);
+        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getUnitType(), "unit");
+        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 22L);
+    }
+
+    @Test(groups = "fast")
+    public void testGetRolledUpUsageUsageAtTransitionTimesCancelAtBCD() throws Exception {
+        final DefaultTieredBlock tieredBlock1 = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
+        final DefaultTier tier = createDefaultTierWithBlocks(tieredBlock1);
+
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
+
+        // 2015-03-15T18:10:17Z
+        final LocalDate t0 = new LocalDate(2015, 03, BCD);
+        final BillingEvent eventT0 = createMockBillingEvent(t0.toDateTime(new LocalTime(18, 10, 17), DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        Mockito.when(eventT0.getTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
+
+        // 2015-04-15T11:22:30Z
+        final LocalDate t1 = new LocalDate(2015, 04, BCD);
+        final BillingEvent eventT1 = createMockBillingEvent(t1.toDateTime(new LocalTime(11, 22, 30), DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        Mockito.when(eventT1.getTransitionType()).thenReturn(SubscriptionBaseTransitionType.CANCEL);
+
+        final LocalDate targetDate = t1;
+
+        // At t0
+        final RawUsageRecord raw1 = new DefaultRawUsage(subscriptionId, t0, "unit", 12L, "tracking-1");
+
+        // At t1
+        final RawUsageRecord raw2 = new DefaultRawUsage(subscriptionId, t1, "unit", 10L, "tracking-2");
+
+        // Should be ignored
+        final RawUsageRecord raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, BCD), "unit", 100L, "tracking-3");
+
+        final List<RawUsageRecord> rawUsageRecord = ImmutableList.of(raw1, raw2, raw3);
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsageRecord, targetDate, true, eventT0, eventT1);
+
+        // Verify transition times
+        assertEquals(intervalConsumableInArrear.transitionTimes.size(), 2);
+        assertEquals(intervalConsumableInArrear.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(intervalConsumableInArrear.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
+
+        final List<RolledUpUsageWithMetadata> rolledUpUsage = intervalConsumableInArrear.getRolledUpUsage().getUsage();
+        assertEquals(rolledUpUsage.size(), 1);
+        assertEquals(rolledUpUsage.get(0).getSubscriptionId(), subscriptionId);
+        assertEquals(rolledUpUsage.get(0).getStart().compareTo(t0), 0);
+        assertEquals(rolledUpUsage.get(0).getEnd().compareTo(t1), 0);
+        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().size(), 1);
+        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getUnitType(), "unit");
+        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 22L);
     }
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1124")
