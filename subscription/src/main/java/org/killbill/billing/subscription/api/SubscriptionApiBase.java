@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -141,15 +142,23 @@ public class SubscriptionApiBase {
 
         // Create an overridesWithContext with a null context to indicate this is dryRun and no price overridden plan should be created.
         final PlanPhasePriceOverridesWithCallContext overridesWithContext = new DefaultPlanPhasePriceOverridesWithCallContext(entitlementSpecifier.getOverrides(), null);
-        final StaticCatalog versionCatalog = catalog.versionForDate(utcNow);
+
+        final LocalDate dryRunEffDt = dryRunArguments.getEffectiveDate();
+        // EffectiveDate for the event is LocalDate but Catalog effectiveDate is a DateTime, so to maximize the chance of finding 'a' version
+        // on that date we take the time closer to midnight - if 2 versions where uploaded on the same LocalDate this is returns the latest one.
+        final DateTime catalogTargetDt = dryRunEffDt != null ?
+                                         dryRunEffDt.toDateTimeAtStartOfDay(DateTimeZone.UTC).plusDays(1).minusSeconds(1) :
+                                         utcNow;
+
+        final StaticCatalog staticCatalog = catalog.versionForDate(catalogTargetDt);
         final Plan plan = isInputSpecNullOrEmpty ?
                           null :
-                          versionCatalog.createOrFindPlan(inputSpec, overridesWithContext);
+                          staticCatalog.createOrFindPlan(inputSpec, overridesWithContext);
 
         switch (dryRunArguments.getAction()) {
             case START_BILLING:
                 final SubscriptionBase baseSubscription = dao.getBaseSubscription(bundleId, catalog, context);
-                final DateTime startEffectiveDate = dryRunArguments.getEffectiveDate() != null ? context.toUTCDateTime(dryRunArguments.getEffectiveDate()) : utcNow;
+                final DateTime startEffectiveDate = dryRunEffDt != null ? context.toUTCDateTime(dryRunEffDt) : utcNow;
                 final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, addonUtils, context);
                 final UUID subscriptionId = UUIDs.randomUUID();
                 dryRunEvents = apiService.getEventsOnCreation(subscriptionId, startEffectiveDate, bundleStartDate, plan, inputSpec.getPhaseType(), plan.getPriceList().getName(),
@@ -169,7 +178,7 @@ public class SubscriptionApiBase {
             case CHANGE:
                 final DefaultSubscriptionBase subscriptionForChange = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), catalog, context);
 
-                DateTime changeEffectiveDate = getDryRunEffectiveDate(dryRunArguments.getEffectiveDate(), subscriptionForChange, context);
+                DateTime changeEffectiveDate = getDryRunEffectiveDate(dryRunEffDt, subscriptionForChange, context);
                 if (changeEffectiveDate == null) {
                     BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
                     if (policy == null) {
@@ -185,8 +194,8 @@ public class SubscriptionApiBase {
             case STOP_BILLING:
                 final DefaultSubscriptionBase subscriptionForCancellation = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), catalog, context);
 
-                DateTime cancelEffectiveDate = getDryRunEffectiveDate(dryRunArguments.getEffectiveDate(), subscriptionForCancellation, context);
-                if (dryRunArguments.getEffectiveDate() == null) {
+                DateTime cancelEffectiveDate = getDryRunEffectiveDate(dryRunEffDt, subscriptionForCancellation, context);
+                if (dryRunEffDt == null) {
                     BillingActionPolicy policy = dryRunArguments.getBillingActionPolicy();
                     if (policy == null) {
                         final Plan currentPlan = subscriptionForCancellation.getCurrentPlan();
