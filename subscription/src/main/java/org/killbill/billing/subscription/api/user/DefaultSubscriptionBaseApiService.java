@@ -229,9 +229,10 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         try {
             for (final DefaultSubscriptionBase subscription : subscriptions) {
+
                 final BillingAlignment billingAlignment = (subscription.getState() == EntitlementState.PENDING ? null : catalog.billingAlignment(new PlanPhaseSpecifier(subscription.getLastActivePlan().getName(), subscription.getLastActivePhase().getPhaseType()),
                                                                                                                                                  clock.getUTCNow(),
-                                                                                                                                                 subscription.getStartDate()));
+                                                                                                                                                 subscription.getLastTransitionForCurrentPlan().getEffectiveTransitionTime()));
                 final Integer accountBillCycleDayLocal = accountInternalApi.getBCD(context);
                 final DateTime effectiveDate = subscription.getEffectiveDateForPolicy(policy, billingAlignment, accountBillCycleDayLocal, context);
                 subscriptionsWithEffectiveDate.put(subscription, effectiveDate);
