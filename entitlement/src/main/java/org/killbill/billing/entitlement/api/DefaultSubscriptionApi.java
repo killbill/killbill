@@ -136,26 +136,14 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     @Override
     public Subscription getSubscriptionForEntitlementId(final UUID entitlementId, final TenantContext tenantContext) throws SubscriptionApiException {
 
-        // Retrieve entitlements
-        final AccountEntitlements accountEntitlements;
         try {
             final UUID accountId = internalCallContextFactory.getAccountId(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
             final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
-            accountEntitlements = entitlementInternalApi.getAllEntitlementsForAccount(internalTenantContextWithValidAccountRecordId);
+            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementInternalApi.getEntitlementForId(entitlementId, internalTenantContextWithValidAccountRecordId);
+            return new DefaultSubscription(entitlement);
         } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
         }
-
-        // Build subscriptions
-        final Iterable<Subscription> accountSubscriptions = Iterables.<Subscription>concat(buildSubscriptionsFromEntitlements(accountEntitlements).values());
-
-        return Iterables.<Subscription>find(accountSubscriptions,
-                                            new Predicate<Subscription>() {
-                                                @Override
-                                                public boolean apply(final Subscription subscription) {
-                                                    return subscription.getId().equals(entitlementId);
-                                                }
-                                            });
     }
 
     @Override
@@ -164,13 +152,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         try {
             final InternalTenantContext contextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
             final UUID subscriptionId = subscriptionBaseInternalApi.getSubscriptionIdFromSubscriptionExternalKey(externalKey, contextWithoutAccountRecordId);
-            final UUID accountId = internalCallContextFactory.getAccountId(subscriptionId, ObjectType.SUBSCRIPTION, tenantContext);
-            final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
-
-            final Entitlement res = entitlementInternalApi.getEntitlementForExternalKey(externalKey, internalTenantContext);
-            return new DefaultSubscription((DefaultEntitlement) res);
-        } catch (final EntitlementApiException e) {
-            throw new SubscriptionApiException(e);
+            return getSubscriptionForEntitlementId(subscriptionId, tenantContext);
         } catch (SubscriptionBaseApiException e) {
             throw new SubscriptionApiException(e);
         }
