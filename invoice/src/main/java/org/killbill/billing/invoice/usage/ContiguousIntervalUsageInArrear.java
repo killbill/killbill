@@ -1,6 +1,7 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -50,6 +51,7 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecord
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
@@ -100,7 +102,8 @@ public abstract class ContiguousIntervalUsageInArrear {
     protected final InternalTenantContext internalTenantContext;
     protected final UsageDetailMode usageDetailMode;
 
-    private static class TransitionTime {
+    @VisibleForTesting
+    static class TransitionTime {
 
         private final LocalDate date;
         private final BillingEvent targetBillingEvent;
@@ -186,7 +189,8 @@ public abstract class ContiguousIntervalUsageInArrear {
                 addTransitionTimesForBillingEvent(billingEvent, transitionStartDate, endDate, billingEvent.getBillCycleDayLocal());
             } else {
                 final BillingEvent nextBillingEvent = billingEvents.get(i + 1);
-                final LocalDate nextEndDate = internalTenantContext.toLocalDate(nextBillingEvent.getEffectiveDate());
+                // endDate is inclusive in addTransitionTimesForBillingEvent
+                final LocalDate nextEndDate = internalTenantContext.toLocalDate(nextBillingEvent.getEffectiveDate()).minusDays(1);
                 addTransitionTimesForBillingEvent(billingEvent, transitionStartDate, nextEndDate, billingEvent.getBillCycleDayLocal());
             }
         }
@@ -382,7 +386,8 @@ public abstract class ContiguousIntervalUsageInArrear {
         //
         LocalDate prevDate = null;
         DateTime prevCatalogEffectiveDate = null;
-        for (final TransitionTime curTransition : transitionTimes) {
+        for (int i = 0; i < transitionTimes.size(); i++) {
+            final TransitionTime curTransition = transitionTimes.get(i);
 
             final LocalDate curDate = curTransition.getDate();
             if (prevDate != null) {
@@ -413,7 +418,11 @@ public abstract class ContiguousIntervalUsageInArrear {
                 if (prevRawUsage == null) {
                     while (rawUsageIterator.hasNext()) {
                         final RawUsageRecord curRawUsage = rawUsageIterator.next();
-                        if (curRawUsage.getDate().compareTo(curDate) >= 0) {
+                        final boolean isUsageForCancellationDay = i == transitionTimes.size() - 1 &&
+                                                                  curTransition.getTargetBillingEvent().getTransitionType() == SubscriptionBaseTransitionType.CANCEL &&
+                                                                  curDate.compareTo(curRawUsage.getDate()) == 0;
+                        if (!isUsageForCancellationDay &&
+                            curRawUsage.getDate().compareTo(curDate) >= 0) {
                             prevRawUsage = curRawUsage;
                             break;
                         }
