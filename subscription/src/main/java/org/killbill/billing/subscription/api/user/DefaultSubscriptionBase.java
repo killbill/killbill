@@ -507,8 +507,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     public BillingAlignment getBillingAlignment(final PlanPhaseSpecifier spec, final DateTime transitionTime, final VersionedCatalog publicCatalog) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
-            // TODO_CATALOG is this really the startDate we should be using ?
-            final BillingAlignment alignment = catalog.billingAlignment(spec, transitionTime, getStartDate());
+
+            final SubscriptionBaseTransition transition = (getState() == EntitlementState.PENDING) ?
+                                                          getPendingTransition() :
+                                                          getLastTransitionForCurrentPlan();
+            final BillingAlignment alignment = catalog.billingAlignment(spec, transitionTime, transition.getEffectiveTransitionTime());
             return alignment;
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);

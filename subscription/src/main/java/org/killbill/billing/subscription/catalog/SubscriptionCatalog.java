@@ -170,11 +170,6 @@ public class SubscriptionCatalog {
         return billingAlignment(planPhase, staticCatalog);
     }
 
-    public BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase)
-            throws CatalogApiException {
-        final StaticCatalog staticCatalog = versionForDate(clock.getUTCNow());
-        return billingAlignment(planPhase, staticCatalog);
-    }
 
     private BillingAlignment billingAlignment(final PlanPhaseSpecifier planPhase, final StaticCatalog staticCatalog)
             throws CatalogApiException {
