@@ -1342,4 +1342,113 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
     }
 
 
+    // One (CREATE) + one (CHANGE) not on boundary + one (CANCEL) billing event, aligned on BCD (=15) with targetDt = 1 month
+    // The CHANGE is not part of the transitions which is expected since it has the same usage section so part of the same interval
+    @Test(groups = "fast")
+    public void testTransitionsTimes6() throws Exception {
+
+        final LocalDate startDate = new LocalDate(2021, 5, 15);
+        final LocalDate targetDate = new LocalDate(2021, 6, 15);;
+        final LocalDate changeDate = new LocalDate(2021, 5, 28);;
+        final LocalDate endDate = new LocalDate(2021, 6, 15);;
+
+        final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
+
+        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        final BillingEvent event2 = createMockBillingEvent(BCD, changeDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
+        final BillingEvent event3 = createMockBillingEvent(BCD, endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, ImmutableList.of(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, internalCallContext);
+
+        intervalConsumableInArrear.addBillingEvent(event1);
+        intervalConsumableInArrear.addBillingEvent(event2);
+        intervalConsumableInArrear.addBillingEvent(event3);
+        intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, ImmutableSet.<String>of("unit"));
+
+        final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(true);
+        assertEquals(res.transitionTimes.size(), 2);
+        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(res.transitionTimes.get(1).getDate().compareTo(endDate), 0);
+        assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
+    }
+
+
+    // One (CREATE) + one (CHANGE) not on boundary + one (CANCEL) billing event, aligned on BCD (=15) with targetDt = 2 month, same as CANCEL
+    // The second transition is correctly pointing the CHANGE billing event
+    @Test(groups = "fast")
+    public void testTransitionsTimes7() throws Exception {
+
+        final LocalDate startDate = new LocalDate(2021, 5, 15);
+        final LocalDate changeDate = new LocalDate(2021, 5, 28);;
+        final LocalDate targetDate = new LocalDate(2021, 7, 15);;
+        final LocalDate endDate = targetDate;
+
+        final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
+
+        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        final BillingEvent event2 = createMockBillingEvent(BCD, changeDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
+        final BillingEvent event3 = createMockBillingEvent(BCD, endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, ImmutableList.of(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, internalCallContext);
+
+        intervalConsumableInArrear.addBillingEvent(event1);
+        intervalConsumableInArrear.addBillingEvent(event2);
+        intervalConsumableInArrear.addBillingEvent(event3);
+        intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, ImmutableSet.<String>of("unit"));
+
+        final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(true);
+        assertEquals(res.transitionTimes.size(), 3);
+        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(res.transitionTimes.get(1).getDate().compareTo(new LocalDate(2021, 6, 15)), 0);
+        assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
+        assertEquals(res.transitionTimes.get(2).getDate().compareTo(endDate), 0);
+        assertEquals(res.transitionTimes.get(2).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
+    }
+
+
+    // One (CREATE) + one (CHANGE) not on boundary + one (CANCEL) billing event, aligned on BCD (=15) with targetDt = 3 month
+    // Note we use 'build(false)' to indicate this is an open interval whose endDate is the targetDate
+    @Test(groups = "fast")
+    public void testTransitionsTimes8() throws Exception {
+
+        final LocalDate startDate = new LocalDate(2021, 5, 15);
+        final LocalDate changeDate = new LocalDate(2021, 5, 28);;
+        final LocalDate endDate = new LocalDate(2021, 7, 15);
+        final LocalDate targetDate = new LocalDate(2021, 8, 15);
+
+        final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
+
+        final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        final BillingEvent event2 = createMockBillingEvent(BCD, changeDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
+        final BillingEvent event3 = createMockBillingEvent(BCD, endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
+
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, ImmutableList.of(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, internalCallContext);
+
+        intervalConsumableInArrear.addBillingEvent(event1);
+        intervalConsumableInArrear.addBillingEvent(event2);
+        intervalConsumableInArrear.addBillingEvent(event3);
+        intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, ImmutableSet.<String>of("unit"));
+
+        final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(false);
+        assertEquals(res.transitionTimes.size(), 4);
+        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(res.transitionTimes.get(1).getDate().compareTo(new LocalDate(2021, 6, 15)), 0);
+        assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
+        assertEquals(res.transitionTimes.get(2).getDate().compareTo(new LocalDate(2021, 7, 15)), 0);
+        assertEquals(res.transitionTimes.get(2).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
+        // In practise this does not happen because we don't end up with 2 CANCEL for same subscriptions but usage code (mostly) disregard the
+        // billing event type, so this transition is expected.
+        assertEquals(res.transitionTimes.get(3).getDate().compareTo(new LocalDate(2021, 8, 15)), 0);
+        assertEquals(res.transitionTimes.get(3).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
+    }
+
 }
