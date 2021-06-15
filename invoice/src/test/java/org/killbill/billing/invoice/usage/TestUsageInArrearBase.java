@@ -49,6 +49,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.killbill.billing.util.jackson.ObjectMapper;
@@ -184,10 +185,10 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected BillingEvent createMockBillingEvent(final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages, final DateTime catalogEffectiveDate) throws Exception {
-        return createMockBillingEvent(BCD, effectiveDate, billingPeriod, usages, catalogEffectiveDate);
+        return createMockBillingEvent(BCD, effectiveDate, billingPeriod, usages, catalogEffectiveDate, SubscriptionBaseTransitionType.CREATE);
     }
 
-    protected BillingEvent createMockBillingEvent(final int bcd, final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages, final DateTime catalogEffectiveDate) throws Exception {
+    protected BillingEvent createMockBillingEvent(final int bcd, final DateTime effectiveDate, final BillingPeriod billingPeriod, final List<Usage> usages, final DateTime catalogEffectiveDate, SubscriptionBaseTransitionType beType) throws Exception {
         final BillingEvent result = Mockito.mock(BillingEvent.class);
         Mockito.when(result.getCurrency()).thenReturn(currency);
         Mockito.when(result.getBillCycleDayLocal()).thenReturn(bcd);
@@ -196,6 +197,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
         Mockito.when(result.getSubscriptionId()).thenReturn(subscriptionId);
         Mockito.when(result.getBundleId()).thenReturn(bundleId);
         Mockito.when(result.getCatalogEffectiveDate()).thenReturn(catalogEffectiveDate);
+        Mockito.when(result.getTransitionType()).thenReturn(beType);
 
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);

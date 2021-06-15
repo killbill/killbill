@@ -182,17 +182,19 @@ public abstract class ContiguousIntervalUsageInArrear {
             transitionTimes.add(new TransitionTime(startDate, firstBillingEvent));
         }
 
+        // Go through each billing event (be) and add transitions as required:
+        // - If we go from be1 -> be2, we don't include the transition from be2 -- will be included in the next round.
+        //   (This makes sure that all transitions point to the right billing event be1)
+        // - If we go from beLast -> endDt, we make sure we include the transition for endDt
         for (int i = 0; i < billingEvents.size(); i++) {
+            final boolean lastEvent = (i == billingEvents.size() - 1);
             final BillingEvent billingEvent = billingEvents.get(i);
-            final LocalDate transitionStartDate = internalTenantContext.toLocalDate(billingEvent.getEffectiveDate());
-            if (i == billingEvents.size() - 1) {
-                addTransitionTimesForBillingEvent(billingEvent, transitionStartDate, endDate, billingEvent.getBillCycleDayLocal());
-            } else {
-                final BillingEvent nextBillingEvent = billingEvents.get(i + 1);
-                // endDate is inclusive in addTransitionTimesForBillingEvent
-                final LocalDate nextEndDate = internalTenantContext.toLocalDate(nextBillingEvent.getEffectiveDate()).minusDays(1);
-                addTransitionTimesForBillingEvent(billingEvent, transitionStartDate, nextEndDate, billingEvent.getBillCycleDayLocal());
-            }
+            final LocalDate intervalStartDt = internalTenantContext.toLocalDate(billingEvent.getEffectiveDate());
+            final LocalDate intervalEndDt = !lastEvent ?
+                                            internalTenantContext.toLocalDate(billingEvents.get(i + 1).getEffectiveDate()) :
+                                            endDate;
+
+            addTransitionTimesForBillingEvent(billingEvent, intervalStartDt, intervalEndDt, billingEvent.getBillCycleDayLocal(), lastEvent);
         }
 
         if (closedInterval &&
@@ -204,13 +206,15 @@ public abstract class ContiguousIntervalUsageInArrear {
         return this;
     }
 
-    private void addTransitionTimesForBillingEvent(final BillingEvent event, final LocalDate startDate, final LocalDate endDate, final int bcd) {
+
+    private void addTransitionTimesForBillingEvent(final BillingEvent event, final LocalDate startDate, final LocalDate endDate, final int bcd, final boolean inclEndDt) {
         final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, bcd, usage.getBillingPeriod(), usage.getBillingMode());
 
         int numberOfPeriod = 0;
         // First billingCycleDate prior startDate
         LocalDate nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
-        while (!nextBillCycleDate.isAfter(endDate)) {
+
+        while (isBefore(nextBillCycleDate, endDate, inclEndDt)) {
             if (transitionTimes.isEmpty() || nextBillCycleDate.isAfter(transitionTimes.get(transitionTimes.size() - 1).getDate())) {
                 if (nextBillCycleDate.compareTo(rawUsageStartDate) >= 0) {
                     transitionTimes.add(new TransitionTime(nextBillCycleDate, event));
@@ -220,6 +224,15 @@ public abstract class ContiguousIntervalUsageInArrear {
             nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
         }
     }
+
+    private boolean isBefore(final LocalDate transitionDate, final LocalDate targetEndDate, final boolean beforeOrEqual) {
+        if (beforeOrEqual) {
+            return !transitionDate.isAfter(targetEndDate);
+        } else {
+            return transitionDate.isBefore(targetEndDate);
+        }
+    }
+
 
     /**
      * Compute the missing usage invoice items based on what should be billed and what has been billed ($ amount comparison).
