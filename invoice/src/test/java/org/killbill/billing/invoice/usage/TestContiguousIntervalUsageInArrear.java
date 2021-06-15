@@ -30,6 +30,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -49,19 +50,19 @@ public class TestContiguousIntervalUsageInArrear extends TestUsageInArrearBase {
         final BillingEvent billingEvent1 = createMockBillingEvent(1,
                                                                   new LocalDate(2019, 1, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC),
                                                                   BillingPeriod.MONTHLY,
-                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate);
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CREATE);
         final BillingEvent billingEvent2 = createMockBillingEvent(1,
                                                                   new LocalDate(2019, 1, 31).toDateTimeAtStartOfDay(DateTimeZone.UTC),
                                                                   BillingPeriod.MONTHLY,
-                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate);
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
         final BillingEvent billingEvent3 = createMockBillingEvent(5,
                                                                   new LocalDate(2019, 2, 5).toDateTimeAtStartOfDay(DateTimeZone.UTC),
                                                                   BillingPeriod.MONTHLY,
-                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate);
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
         final BillingEvent billingEvent4 = createMockBillingEvent(10,
                                                                   new LocalDate(2019, 3, 10).toDateTimeAtStartOfDay(DateTimeZone.UTC),
                                                                   BillingPeriod.MONTHLY,
-                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate);
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
         final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage,
                                                                                                                                 ImmutableList.<RawUsageRecord>of(),
                                                                                                                                 targetDate,
