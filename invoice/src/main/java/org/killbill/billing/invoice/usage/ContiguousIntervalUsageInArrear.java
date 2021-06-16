@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -157,9 +158,29 @@ public abstract class ContiguousIntervalUsageInArrear {
     }
 
     /**
-     * Builds the transitionTimes associated to that usage section. Those are determined based on billing events for when to start and when to stop,
-     * the per usage billingPeriod and finally the targetDate.
+     * Builds the transitionTimes associated to that usage section.
+     *
+     * The transitionTimes are aligned on the BCD for that subscription and are separated by the billingPeriod, except for possibly the first
+     * and last transitions. The billing events are all for this interval, meaning they all share the 'same' usage section except for the latest one
+     * when closedInterval=true, as it marks the boundary to a new (ContiguousIntervalUsageInArrear) interval
+     *
+     * Example:
+     *
+     *  The following 3 billing events:
+     *
+     *                 BCD         BCD  targetDt
+     *          CR     |    CHG    |    CANC
+     *          |-----------|------------|
+     *
+     *  Leads to:
+     *         |------|-----------|-----|
+     *     Tr1(CR)  Tr2(CR)   Tr3(CHG) Tr4(CANC)
+     *
+     *     We end up with 4 transitions aligned on the BCD, except for first and last. Each transition points to the excepted billing event.
+     *     (There is no transition for the CHG, since usage section is the same and so it does not represents a boundary)
+     *
      * <p/>
+     *
      * Those transition dates define the well defined billing granularity periods that should be billed for that specific usage section.
      *
      * @param closedInterval whether there was a last billing event referencing the usage section or whether this is ongoing and
@@ -176,7 +197,11 @@ public abstract class ContiguousIntervalUsageInArrear {
         if (targetDate.isBefore(startDate)) {
             return this;
         }
-        final LocalDate endDate = closedInterval ? internalTenantContext.toLocalDate(billingEvents.get(billingEvents.size() - 1).getEffectiveDate()) : targetDate;
+
+        final BillingEvent latestBillingEvent = billingEvents.get(billingEvents.size() - 1);
+        // This should be enforced in the UsageInvoiceItemGenerator
+        Preconditions.checkState(internalTenantContext.toLocalDate(latestBillingEvent.getEffectiveDate()).compareTo(targetDate) <= 0, "(remaining) billing events should be prior targetDate, latestBillingEvent=%s, targetDate=%s", latestBillingEvent.getEffectiveDate(), targetDate);
+        final LocalDate endDate = closedInterval ? internalTenantContext.toLocalDate(latestBillingEvent.getEffectiveDate()) : targetDate;
 
         if (startDate.compareTo(rawUsageStartDate) >= 0) {
             transitionTimes.add(new TransitionTime(startDate, firstBillingEvent));
@@ -200,7 +225,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         if (closedInterval &&
             transitionTimes.size() > 0 &&
             endDate.isAfter(transitionTimes.get(transitionTimes.size() - 1).getDate())) {
-            transitionTimes.add(new TransitionTime(endDate, billingEvents.get(billingEvents.size() - 1)));
+            transitionTimes.add(new TransitionTime(endDate, latestBillingEvent));
         }
         isBuilt.set(true);
         return this;
@@ -378,7 +403,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         //
         // Skip all items before our first transition date
         //
-        // prevRawUsage keeps track of first unconsumed raw usage element
+        // 'prevRawUsage' keeps track of first unconsumed raw usage element
         RawUsageRecord prevRawUsage = null;
         while (rawUsageIterator.hasNext()) {
             final RawUsageRecord curRawUsage = rawUsageIterator.next();
@@ -395,7 +420,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
         //
         // Loop through each interval [prevDate, curDate) and consume as many rawSubscriptionUsage elements within that range
-        // to create one RolledUpUsage per interval.
+        // to create one RolledUpUsage per interval. The first loop will be used to set the 'prevDate'.
         //
         LocalDate prevDate = null;
         DateTime prevCatalogEffectiveDate = null;
@@ -434,6 +459,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                         final boolean isUsageForCancellationDay = i == transitionTimes.size() - 1 &&
                                                                   curTransition.getTargetBillingEvent().getTransitionType() == SubscriptionBaseTransitionType.CANCEL &&
                                                                   curDate.compareTo(curRawUsage.getDate()) == 0;
+                        // Special treatment for final cancellation to make sure we include this usage point as part of the interval and bill for usage reported on cancellation date
                         if (!isUsageForCancellationDay &&
                             curRawUsage.getDate().compareTo(curDate) >= 0) {
                             prevRawUsage = curRawUsage;
