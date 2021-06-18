@@ -1119,8 +1119,23 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                    final UUID bundleId,
                                    final LocalDate effectiveDate,
                                    final BillingActionPolicy billingPolicy) {
+            this(dryRunType, productName, category, billingPeriod, priceList, phaseType, action, subscriptionId, bundleId, effectiveDate, billingPolicy, null);
+        }
+
+        public TestDryRunArguments(final DryRunType dryRunType,
+                                   final String productName,
+                                   final ProductCategory category,
+                                   final BillingPeriod billingPeriod,
+                                   final String priceList,
+                                   final PhaseType phaseType,
+                                   final SubscriptionEventType action,
+                                   final UUID subscriptionId,
+                                   final UUID bundleId,
+                                   final LocalDate effectiveDate,
+                                   final BillingActionPolicy billingPolicy,
+                                   @Nullable final List<PlanPhasePriceOverride> overrides) {
             this.dryRunType = dryRunType;
-            this.spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier(productName, billingPeriod, priceList, phaseType));
+            this.spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier(productName, billingPeriod, priceList, phaseType), null, null, overrides);
             this.action = action;
             this.subscriptionId = subscriptionId;
             this.bundleId = bundleId;
