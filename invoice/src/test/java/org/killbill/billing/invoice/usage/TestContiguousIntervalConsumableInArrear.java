@@ -1462,8 +1462,10 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, ImmutableSet.<String>of("unit"));
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(true);
-        assertEquals(res.transitionTimes.size(), 1);
+        assertEquals(res.transitionTimes.size(), 2);
         assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(res.transitionTimes.get(1).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
     }
 }
