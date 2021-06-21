@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -222,32 +221,38 @@ public abstract class ContiguousIntervalUsageInArrear {
             addTransitionTimesForBillingEvent(billingEvent, intervalStartDt, intervalEndDt, billingEvent.getBillCycleDayLocal(), lastEvent);
         }
 
+
+        // Symmetrical logic for endDate (on closedInterval) that we have with startDt
         if (closedInterval &&
             transitionTimes.size() > 0 &&
-            endDate.isAfter(transitionTimes.get(transitionTimes.size() - 1).getDate())) {
+            (endDate.isAfter(transitionTimes.get(transitionTimes.size() - 1).getDate()) || /* Includes endDate if not already part (aligned) with a transition */
+             (endDate.isEqual(startDate) && latestBillingEvent.getTransitionType() == SubscriptionBaseTransitionType.CANCEL))) /* Special treatment for final cancellation to make sure we include this usage point as part of the interval and bill for usage reported on cancellation date  */ {
             transitionTimes.add(new TransitionTime(endDate, latestBillingEvent));
         }
         isBuilt.set(true);
         return this;
     }
 
-
-    private void addTransitionTimesForBillingEvent(final BillingEvent event, final LocalDate startDate, final LocalDate endDate, final int bcd, final boolean inclEndDt) {
+    private void addTransitionTimesForBillingEvent(final BillingEvent event, final LocalDate startDate, final LocalDate endDate, final int bcd, final boolean lastEvent) {
         final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, bcd, usage.getBillingPeriod(), usage.getBillingMode());
+
 
         int numberOfPeriod = 0;
         // First billingCycleDate prior startDate
         LocalDate nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
-
-        while (isBefore(nextBillCycleDate, endDate, inclEndDt)) {
-            if (transitionTimes.isEmpty() || nextBillCycleDate.isAfter(transitionTimes.get(transitionTimes.size() - 1).getDate())) {
-                if (nextBillCycleDate.compareTo(rawUsageStartDate) >= 0) {
+        while (isBefore(nextBillCycleDate, endDate, lastEvent)) {
+            if (nextBillCycleDate.compareTo(rawUsageStartDate) >= 0) {
+                final TransitionTime lastTransition = transitionTimes.isEmpty() ? null : transitionTimes.get(transitionTimes.size() - 1);
+                if (transitionTimes.isEmpty() || /* Adds transition if nothing already */
+                    nextBillCycleDate.isAfter(lastTransition.getDate())) { /* Adds transition if strictly after the previous one */
                     transitionTimes.add(new TransitionTime(nextBillCycleDate, event));
                 }
             }
             numberOfPeriod++;
             nextBillCycleDate = bid.getFutureBillingDateFor(numberOfPeriod);
         }
+
+
     }
 
     private boolean isBefore(final LocalDate transitionDate, final LocalDate targetEndDate, final boolean beforeOrEqual) {
@@ -414,7 +419,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         }
 
         // Optimize path where all raw usage items are outside or our transitionTimes range
-        if (prevRawUsage == null || prevRawUsage.getDate().compareTo(transitionTimes.get(transitionTimes.size() - 1).getDate()) >= 0) {
+        if (prevRawUsage == null || prevRawUsage.getDate().compareTo(transitionTimes.get(transitionTimes.size() - 1).getDate()) > 0) {
             return new RolledUpUnitsWithTracking(getEmptyRolledUpUsage(), ImmutableSet.of());
         }
 
@@ -438,7 +443,14 @@ public abstract class ContiguousIntervalUsageInArrear {
 
                 // Start consuming prevRawUsage element if it exists and falls into the range
                 if (prevRawUsage != null) {
-                    if (prevRawUsage.getDate().compareTo(prevDate) >= 0 && prevRawUsage.getDate().compareTo(curDate) < 0) {
+
+                    // Special treatment for final cancellation to make sure we include this usage point as part of the interval and bill for usage reported on cancellation date
+                    final boolean isUsageForCancellationDay = i == transitionTimes.size() - 1 &&
+                                                              curTransition.getTargetBillingEvent().getTransitionType() == SubscriptionBaseTransitionType.CANCEL &&
+                                                              curDate.compareTo(prevRawUsage.getDate()) == 0;
+
+                    if (prevRawUsage.getDate().compareTo(prevDate) >= 0 &&
+                        (prevRawUsage.getDate().compareTo(curDate) < 0 || isUsageForCancellationDay)) {
                         final Long currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
                         final Long updatedAmount = computeUpdatedAmount(currentAmount, prevRawUsage.getAmount());
                         perRangeUnitToAmount.put(prevRawUsage.getUnitType(), updatedAmount);
