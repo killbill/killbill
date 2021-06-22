@@ -35,7 +35,7 @@ public class PriceOverridePattern {
 
     public PriceOverridePattern(final boolean useRECXMLNamesCompliant) {
         this.delimiter = useRECXMLNamesCompliant ?  CUSTOM_PLAN_NAME_DELIMITER : LEGACY_CUSTOM_PLAN_NAME_DELIMITER;
-        this.pattern = Pattern.compile("(.*)" + delimiter + "(\\d+)$");
+        this.pattern = Pattern.compile("(.*)" + delimiter + "(\\d+)(?:!\\d+)?$");
     }
 
     public String[] getPlanParts(final String planName) throws CatalogApiException  {
@@ -51,6 +51,10 @@ public class PriceOverridePattern {
 
     public Pattern pattern() {
         return pattern;
+    }
+
+    public String getPlanName(final String [] parts) {
+        return String.format("%s%s%s", parts[0], delimiter, parts[1]);
     }
 
     public boolean isOverriddenPlan(final String planName) {

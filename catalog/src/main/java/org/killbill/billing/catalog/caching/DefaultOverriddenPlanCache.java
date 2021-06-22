@@ -19,12 +19,9 @@ package org.killbill.billing.catalog.caching;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.DefaultPlan;
@@ -50,7 +47,6 @@ import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.dao.CatalogOverridePhaseDefinitionModelDao;
 import org.killbill.billing.catalog.dao.CatalogOverrideTierDefinitionModelDao;
 import org.killbill.billing.catalog.dao.CatalogOverrideUsageDefinitionModelDao;
-import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
@@ -89,14 +85,23 @@ public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
         args[1] = catalog;
 
         final CacheLoaderArgument argument = new CacheLoaderArgument(irrelevant, args, context);
-        final DefaultPlan defaultPlan = (DefaultPlan) cacheController.get(planName, argument);
+        final String planNameVersion = getPlanNameVersion(planName, catalog);
+        final DefaultPlan defaultPlan = (DefaultPlan) cacheController.get(planNameVersion, argument);
         defaultPlan.initialize(catalog);
         return defaultPlan;
     }
 
     @Override
     public void addDryRunPlan(final String planName, final Plan plan) {
-        cacheController.putIfAbsent(planName, plan);
+        final String planNameVersion = getPlanNameVersion(planName, plan.getCatalog());
+        cacheController.putIfAbsent(planNameVersion, plan);
+    }
+
+    // Given a planName and a catalog version (StaticCatalog), compute a unique key that will identify this (overriden) plan for this catalog version
+    // The return value can be used as a key to populate the overriden cache (cacheController), and this ensures that we would not share this entry across
+    // multiple catalog versions
+    private static String getPlanNameVersion(final String planName, final StaticCatalog catalog) {
+        return String.format("%s!%d", planName, catalog.getEffectiveDate().getTime());
     }
 
     private DefaultPlan loadOverriddenPlan(final String planName, final StandaloneCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
@@ -107,7 +112,7 @@ public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
         final List<CatalogOverridePhaseDefinitionModelDao> phaseDefs = overrideDao.getOverriddenPlanPhases(planDefRecordId, context);
         final DefaultPlan defaultPlan = catalog.findPlan(parentPlanName);
         final PlanPhasePriceOverride[] overrides = createOverrides(defaultPlan, phaseDefs, context);
-        final DefaultPlan result = new DefaultPlan(planName, defaultPlan, overrides);
+        final DefaultPlan result = new DefaultPlan(priceOverridePattern.getPlanName(parts), defaultPlan, overrides);
         result.initialize(catalog);
         return result;
     }
