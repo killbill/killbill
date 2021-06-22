@@ -143,7 +143,7 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
         Assert.assertEquals(curInvoice.getInvoiceItems().get(1).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
-        // Future dry-run change on the same plan
+        // Future dry-run change on the same plan with all prices overriden
         final PlanPhasePriceOverride override = new DefaultPlanPhasePriceOverride("pistol-monthly-discount-evergreen",
                                                                                   account.getCurrency(),
                                                                                   new BigDecimal("70.00"),
@@ -166,10 +166,35 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
         final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(bpEntitlement.getAccountId(), targetDate, dryRunSubscriptionActionArg, callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
-        // TODO Should we charge for the FIXED price? What does fixedPrice=null in the override section mean?
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), null, InvoiceItemType.FIXED, new BigDecimal("70.00")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), new LocalDate(2020, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("28.90")));
 
-        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
+
+        // Future dry-run change on the same plan with only the recuring price overriden
+        final PlanPhasePriceOverride override2 = new DefaultPlanPhasePriceOverride("pistol-monthly-discount-evergreen",
+                                                                                  account.getCurrency(),
+                                                                                  null,
+                                                                                  new BigDecimal("32.65"),
+                                                                                  ImmutableList.<UsagePriceOverride>of());
+        final List<PlanPhasePriceOverride> override2s = ImmutableList.<PlanPhasePriceOverride>of(override2);
+        final DryRunArguments dryRunSubscriptionActionArg2 = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION,
+                                                                                    "Pistol",
+                                                                                    ProductCategory.BASE,
+                                                                                    BillingPeriod.MONTHLY,
+                                                                                    "discount",
+                                                                                    PhaseType.EVERGREEN,
+                                                                                    SubscriptionEventType.CHANGE,
+                                                                                    bpEntitlement.getId(),
+                                                                                    bpEntitlement.getBundleId(),
+                                                                                    null,
+                                                                                    BillingActionPolicy.END_OF_TERM,
+                                                                                    override2s);
+        final Invoice dryRunInvoice2 = invoiceUserApi.triggerDryRunInvoiceGeneration(bpEntitlement.getAccountId(), targetDate, dryRunSubscriptionActionArg2, callContext);
+
+        final List<ExpectedInvoiceItemCheck> expectedInvoices2 = new ArrayList<ExpectedInvoiceItemCheck>();
+        expectedInvoices2.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), null, InvoiceItemType.FIXED, new BigDecimal("80.00")));
+        expectedInvoices2.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), new LocalDate(2020, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("32.65")));
+
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice2, expectedInvoices2);
     }
 }
