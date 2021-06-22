@@ -29,7 +29,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
-import org.killbill.billing.catalog.DefaultUsagePriceOverride;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -145,10 +144,10 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
         Assert.assertEquals(curInvoice.getInvoiceItems().get(1).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
         // Future dry-run change on the same plan
-        final PlanPhasePriceOverride override = new DefaultPlanPhasePriceOverride("pistol-monthly-discount",
+        final PlanPhasePriceOverride override = new DefaultPlanPhasePriceOverride("pistol-monthly-discount-evergreen",
                                                                                   account.getCurrency(),
-                                                                                  null,
-                                                                                  new BigDecimal("19.95"),
+                                                                                  new BigDecimal("70.00"),
+                                                                                  new BigDecimal("28.90"),
                                                                                   ImmutableList.<UsagePriceOverride>of());
         final List<PlanPhasePriceOverride> overrides = ImmutableList.<PlanPhasePriceOverride>of(override);
         final DryRunArguments dryRunSubscriptionActionArg = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION,
@@ -168,8 +167,8 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         // TODO Should we charge for the FIXED price? What does fixedPrice=null in the override section mean?
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), null, InvoiceItemType.FIXED, new BigDecimal("80")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), new LocalDate(2020, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), null, InvoiceItemType.FIXED, new BigDecimal("70.00")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), new LocalDate(2020, 12, 1), InvoiceItemType.RECURRING, new BigDecimal("28.90")));
 
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
     }
