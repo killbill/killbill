@@ -1,6 +1,7 @@
 /*
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.testng.Assert;
@@ -70,7 +72,7 @@ public class TestPluginPropertySerializer {
         }
     }
 
-    @Test(groups = "fast", enabled = true)
+    @Test(groups = "fast")
     public void testPluginPropertyWithComplexValue() throws PluginPropertySerializerException {
         final HashMap<String, BigDecimal> something = new HashMap<String, BigDecimal>();
         something.put("yoyo", new BigDecimal("0.0"));
@@ -79,6 +81,7 @@ public class TestPluginPropertySerializer {
         input.add(new PluginProperty("prev", "simple", false));
         input.add(new PluginProperty("foo", something, false));
         input.add(new PluginProperty("next", "easy", false));
+        input.add(new PluginProperty("date", new DateTime("2012-04-15T12:14:16Z"), false));
 
         final byte[] serialized = PluginPropertySerializer.serialize(input);
         final Iterable<PluginProperty> deserialized = PluginPropertySerializer.deserialize(serialized);
@@ -86,6 +89,11 @@ public class TestPluginPropertySerializer {
         for (PluginProperty cur : deserialized) {
             if (i == 0 || i == 2) {
                 Assert.assertEquals(cur, input.get(i));
+            } else if (i == 3) {
+                Assert.assertEquals(cur.getKey(), input.get(i).getKey());
+                Assert.assertEquals(cur.getIsUpdatable(), input.get(i).getIsUpdatable());
+                // Joda types are deserialized as String
+                Assert.assertEquals(cur.getValue(), input.get(i).getValue().toString());
             } else {
                 Assert.assertEquals(cur.getKey(), "foo");
                 Assert.assertTrue(cur.getValue() instanceof Map);
@@ -97,6 +105,5 @@ public class TestPluginPropertySerializer {
             }
             i++;
         }
-
     }
 }
