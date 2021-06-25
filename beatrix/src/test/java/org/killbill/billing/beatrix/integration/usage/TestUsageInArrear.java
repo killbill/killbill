@@ -55,6 +55,8 @@ import static org.testng.Assert.assertNotEquals;
 
 public class TestUsageInArrear extends TestIntegrationBase {
 
+
+
     @Test(groups = "slow")
     public void testWithUsageAtCancellationDay() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
@@ -107,6 +109,49 @@ public class TestUsageInArrear extends TestIntegrationBase {
         clock.addDays(15);
         assertListenerStatus();
     }
+
+
+    // We cancel on the startDt and expect to see the usage point for that day
+    @Test(groups = "slow")
+    public void testWithUsageAtCancellationDay2() throws Exception {
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        //
+        // CREATE SUBSCRIPTION AND EXPECT BOTH EVENTS: NextEvent.CREATE, NextEvent.BLOCK NextEvent.INVOICE
+        //
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        // Check bundle after BP got created otherwise we get an error from auditApi.
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+
+        //
+        // ADD ADD_ON ON THE SAME DAY
+        //
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+
+        // This point should be taken into account
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
+        // This point should not be taken into account as it is past cancellation date
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        aoSubscription.cancelEntitlementWithDate(new LocalDate(2012, 4, 1), true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.USAGE, new BigDecimal("2.95")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1"), internalCallContext);
+
+        assertListenerStatus();
+    }
+
 
     @Test(groups = "slow")
     public void testWithUsageAtCancellationDayAndEOTCancellation() throws Exception {

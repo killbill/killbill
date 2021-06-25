@@ -31,7 +31,6 @@ import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
@@ -45,7 +44,7 @@ import com.google.common.collect.ImmutableList;
 public class TestWithPriceOverride extends TestIntegrationBase {
 
     @Test(groups = "slow")
-    public void testCreatWithFixedPriceOverride() throws Exception {
+    public void testCreateWithFixedPriceOverride() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
         clock.setDay(new LocalDate(2012, 4, 1));
