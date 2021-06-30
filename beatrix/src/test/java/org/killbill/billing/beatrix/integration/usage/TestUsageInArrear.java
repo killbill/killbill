@@ -661,6 +661,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(firstInvoice, ImmutableSet.of("xxx-1", "xxx-2"), internalCallContext);
 
         // Void the first invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(firstInvoice.getId(), callContext);
         assertListenerStatus();
         invoiceChecker.checkTrackingIds(firstInvoice, ImmutableSet.of(), internalCallContext);

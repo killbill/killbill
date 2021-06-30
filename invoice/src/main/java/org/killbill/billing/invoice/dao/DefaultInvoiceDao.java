@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -1293,8 +1294,11 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Invoice creation event sent on COMMITTED
                 if (InvoiceStatus.COMMITTED.equals(newStatus)) {
                     notifyBusOfInvoiceCreation(entitySqlDaoWrapperFactory, invoice, context);
-                    // Deactivate any usage trackingIds if necessary
                 } else if (InvoiceStatus.VOID.equals(newStatus)) {
+                    // https://github.com/killbill/killbill/issues/1448
+                    notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceId, invoice.getAccountId(), context.getUserToken(), context);
+
+                    // Deactivate any usage trackingIds if necessary
                     final InvoiceTrackingSqlDao trackingSqlDao = entitySqlDaoWrapperFactory.become(InvoiceTrackingSqlDao.class);
                     final List<InvoiceTrackingModelDao> invoiceTrackingModelDaos = trackingSqlDao.getTrackingsForInvoices(ImmutableList.of(invoiceId.toString()), context);
                     if (!invoiceTrackingModelDaos.isEmpty()) {
