@@ -1,6 +1,7 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -66,7 +67,9 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(account.getAccountBalance().compareTo(invoices.get(1).getBalance()), 0);
 
         // void the invoice
+        callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_ADJUSTMENT);
         invoiceApi.voidInvoice(invoices.get(1).getInvoiceId(), requestOptions);
+        callbackServlet.assertListenerStatus();
 
         // Get the invoices excluding voided
         invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
@@ -85,7 +88,9 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
         // After invoice was voided verify the subscription is re-invoiced on a new invoice
         // trigger an invoice generation
+        callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_CREATION);
         invoiceApi.createFutureInvoice(accountJson.getAccountId(), clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), requestOptions);
+        callbackServlet.assertListenerStatus();
 
         // Get the invoices excluding voided
         invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
@@ -93,7 +98,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(invoices.size(), 2);
 
         // process payment
-        InvoicePayment invoicePayment = processPayment(accountJson, invoices.get(1), false);
+        final InvoicePayment invoicePayment = processPayment(accountJson, invoices.get(1), false);
 
         // try to void invoice
         try {
@@ -106,17 +111,14 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         //refund payment
         refundPayment(invoicePayment);
 
-        // try to void invoice
-        try {
-            invoiceApi.voidInvoice(invoices.get(1).getInvoiceId(), requestOptions);
-        } catch (final KillBillClientException e) {
-            assertTrue(false);
-        }
+        // Void invoice
+        callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_ADJUSTMENT);
+        invoiceApi.voidInvoice(invoices.get(1).getInvoiceId(), requestOptions);
+        callbackServlet.assertListenerStatus();
 
         // check that account balance is zero
         account = accountApi.getAccount(accountJson.getAccountId(), true, true, AuditLevel.NONE, requestOptions);
         assertEquals(account.getAccountBalance().compareTo(BigDecimal.ZERO), 0);
-
     }
 
     @Test(groups = "slow", description = "Can not void an invoice with partial payment")
@@ -129,15 +131,15 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(noPaymentsFromJson.size(), 0);
 
         // Get the invoices
-        List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         // verify account balance
-        Account account = accountApi.getAccount(accountJson.getAccountId(), true, true, AuditLevel.NONE, requestOptions);
+        final Account account = accountApi.getAccount(accountJson.getAccountId(), true, true, AuditLevel.NONE, requestOptions);
         assertEquals(account.getAccountBalance().compareTo(invoices.get(1).getBalance()), 0);
 
         // process payment
-        InvoicePayment invoicePayment = processPayment(accountJson, invoices.get(1), true);
+        final InvoicePayment invoicePayment = processPayment(accountJson, invoices.get(1), true);
 
         // try to void invoice
         try {
@@ -146,7 +148,6 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         } catch (final KillBillClientException e) {
             assertTrue(true);
         }
-
     }
 
     @Test(groups = "slow", description = "Void a child invoice")
@@ -177,7 +178,9 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(parentInvoices.size(), 1);
 
         // try to void child invoice
+        callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_ADJUSTMENT);
         invoiceApi.voidInvoice(child1Invoices.get(1).getInvoiceId(), requestOptions);
+        callbackServlet.assertListenerStatus();
 
         //  move the clock 1 month to check if invoices change
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
@@ -227,7 +230,9 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(parentInvoices.size(), 1);
 
         // try to void parent invoice
+        callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_ADJUSTMENT);
         invoiceApi.voidInvoice(parentInvoices.get(0).getInvoiceId(), requestOptions);
+        callbackServlet.assertListenerStatus();
 
         //  move the clock 1 month to check if invoices change
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE);
@@ -244,27 +249,29 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(child1Invoices.size(), 2);
     }
 
-    private InvoicePayment processPayment(Account accountJson, Invoice invoice, boolean partialPay) throws Exception {
-
+    private InvoicePayment processPayment(final Account accountJson, final Invoice invoice, final boolean partialPay) throws Exception {
         final BigDecimal payAmount = partialPay ? invoice.getBalance().subtract(BigDecimal.TEN) : invoice.getBalance();
         final InvoicePayment invoicePayment = new InvoicePayment();
         invoicePayment.setPurchasedAmount(payAmount);
         invoicePayment.setAccountId(accountJson.getAccountId());
         invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
 
+        callbackServlet.pushExpectedEvents(ExtBusEventType.PAYMENT_SUCCESS, ExtBusEventType.INVOICE_PAYMENT_SUCCESS);
         final InvoicePayment result = invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
         assertEquals(result.getTransactions().size(), 1);
         assertTrue(result.getTransactions().get(0).getAmount().compareTo(payAmount) == 0);
 
         return result;
     }
 
-    private void refundPayment(InvoicePayment payment) throws Exception {
-
+    private void refundPayment(final InvoicePayment payment) throws Exception {
         final InvoicePaymentTransaction refund = new InvoicePaymentTransaction();
         refund.setPaymentId(payment.getPaymentId());
         refund.setAmount(payment.getPurchasedAmount());
+        callbackServlet.pushExpectedEvents(ExtBusEventType.PAYMENT_SUCCESS, ExtBusEventType.INVOICE_PAYMENT_SUCCESS);
         invoicePaymentApi.createRefundWithAdjustments(payment.getPaymentId(), refund, payment.getPaymentMethodId(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
 
         final InvoicePayments allPayments = accountApi.getInvoicePayments(payment.getAccountId(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(allPayments.size(), 1);

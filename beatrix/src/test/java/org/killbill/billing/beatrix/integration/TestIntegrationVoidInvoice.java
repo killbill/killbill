@@ -1,6 +1,7 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -75,7 +76,9 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
 
         // Void the invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(invoices.get(1).getId(), callContext);
+        assertListenerStatus();
 
         remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
 
@@ -118,7 +121,9 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         paymentApi.createRefundWithPaymentControl(account, payment.getId(), payment.getPurchasedAmount(), payment.getCurrency(), clock.getUTCNow(), null, PLUGIN_PROPERTIES, PAYMENT_OPTIONS, callContext);
         assertListenerStatus();
 
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(invoices.get(2).getId(), callContext);
+        assertListenerStatus();
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, callContext);
         assertEquals(invoices.size(), 3);
         assertEquals(invoices.get(1).getStatus(), InvoiceStatus.VOID);

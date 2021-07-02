@@ -1,6 +1,7 @@
 /*
  * Copyright 2014-2020 Groupon, Inc
- * Copyright 2014-2020 The Billing Project, LLC
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -262,8 +263,13 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 3);
 
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceApi.voidInvoice(invoices.get(2).getId(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceApi.voidInvoice(invoices.get(1).getId(), callContext);
+        assertListenerStatus();
 
         // No change
         assertEquals(subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext).getChargedThroughDate(), new LocalDate(2017, 6, 16));
