@@ -18,6 +18,7 @@
 
 package org.killbill.billing.entitlement.dao;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +35,7 @@ import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao, BlockingState> {
@@ -59,8 +61,15 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
                                                                              @Bind("service") String serviceName,
                                                                              @SmartBindBean final InternalTenantContext context);
 
+
+    @SqlQuery
+    public abstract List<BlockingStateModelDao> getByBlockingIds(@BindIn("ids") final Iterable<UUID> ids,
+                                                                 @SmartBindBean final InternalTenantContext context);
+
+
     @SqlUpdate
     @Audited(ChangeType.DELETE)
     public void unactiveEvent(@Bind("id") String id,
                               @SmartBindBean final InternalCallContext context);
+
 }

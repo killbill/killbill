@@ -74,6 +74,7 @@ import org.skife.jdbi.v2.IDBI;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
@@ -299,7 +300,6 @@ public class EventsStreamBuilder {
                                             final int accountBCD,
                                             final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         final SubscriptionBase baseSubscription = findBaseSubscription(allSubscriptionsForBundle);
-
         final ImmutableAccountData account;
         try {
             account = accountInternalApi.getImmutableAccountDataById(bundle.getAccountId(), internalTenantContext);
@@ -310,7 +310,10 @@ public class EventsStreamBuilder {
         final VersionedCatalog catalog = getCatalog(internalTenantContext);
 
         // Retrieve the blocking states
-        final List<BlockingState> blockingStatesForAccount = defaultBlockingStateDao.getBlockingAllForAccountRecordId(catalog, internalTenantContext);
+        final ImmutableSet<UUID> blockingStateIds = baseSubscription != null  ?
+                                                    ImmutableSet.of(account.getId(), bundle.getId(), baseSubscription.getId(), subscription.getId()) :
+                                                    ImmutableSet.of(account.getId(), bundle.getId(), subscription.getId());
+        final List<BlockingState> blockingStatesForAccount = defaultBlockingStateDao.getByBlockingIds(blockingStateIds, internalTenantContext);
 
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
         return buildForEntitlement(blockingStatesForAccount, account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, accountBCD, bcdCache, catalog, internalTenantContext);

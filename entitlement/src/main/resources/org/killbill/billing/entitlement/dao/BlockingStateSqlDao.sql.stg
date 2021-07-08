@@ -119,6 +119,19 @@ and is_active = '1'
 ;
 >>
 
+getByBlockingIds() ::= <<
+select
+<allTableFields("")>
+from
+<tableName()>
+where blockable_id in (<ids>)
+and is_active = '1'
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
+;
+>>
+
+
 unactiveEvent() ::= <<
 update
 <tableName()>
