@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,7 +28,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
@@ -301,8 +301,11 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
+        clock.addDeltaFromReality(1000); // Make sure CHANGE does not collide with CREATE
+        assertListenerStatus();
+
         // Immediate change during trial
-        testListener.pushExpectedEvent(NextEvent.CREATE);
+        testListener.pushExpectedEvent(NextEvent.CHANGE);
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         entitlement.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
