@@ -1,6 +1,8 @@
 /*
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -133,15 +135,33 @@ public class DefaultEntitlementApiBase {
         return new DefaultAccountEntitlements(accountEventsStreams, entitlementsPerBundle);
     }
 
-    public Entitlement getEntitlementForId(final UUID entitlementId, final InternalTenantContext tenantContext) throws EntitlementApiException {
-        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(entitlementId, tenantContext);
-        return new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
-                                      blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
-                                      entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);
+    public List<Entitlement> getAllEntitlementsForBundle(final UUID bundleId, final InternalTenantContext tenantContext) throws EntitlementApiException {
+        final List<EventsStream> eventsStreamForBundle = eventsStreamBuilder.buildForBundle(bundleId, tenantContext);
+
+        final List<Entitlement> entitlements = new LinkedList<Entitlement>();
+        for (final EventsStream eventsStream : eventsStreamForBundle) {
+            final Entitlement entitlement = new DefaultEntitlement(eventsStream,
+                                                                   eventsStreamBuilder,
+                                                                   entitlementApi,
+                                                                   pluginExecution,
+                                                                   blockingStateDao,
+                                                                   subscriptionInternalApi,
+                                                                   checker,
+                                                                   notificationQueueService,
+                                                                   entitlementUtils,
+                                                                   dateHelper,
+                                                                   clock,
+                                                                   securityApi,
+                                                                   tenantContext,
+                                                                   internalCallContextFactory);
+            entitlements.add(entitlement);
+        }
+
+        return entitlements;
     }
 
-    public Entitlement getEntitlementForExternalKey(final String externalKey, final InternalTenantContext tenantContext) throws EntitlementApiException {
-        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(externalKey, tenantContext);
+    public Entitlement getEntitlementForId(final UUID entitlementId, final InternalTenantContext tenantContext) throws EntitlementApiException {
+        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(entitlementId, tenantContext);
         return new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
                                       blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
                                       entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);

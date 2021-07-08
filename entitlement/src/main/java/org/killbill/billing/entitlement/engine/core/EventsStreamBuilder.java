@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -42,7 +43,6 @@ import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
@@ -261,6 +261,23 @@ public class EventsStreamBuilder {
         return new DefaultAccountEventsStreams(account, bundles, subscriptionsPerBundle, eventsStreamPerBundle);
     }
 
+    public List<EventsStream> buildForBundle(final UUID bundleId, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+        final SubscriptionBaseBundle bundle;
+        final List<SubscriptionBase> subscriptionsForBundle;
+        try {
+            bundle = subscriptionInternalApi.getBundleFromId(bundleId, internalTenantContext);
+            subscriptionsForBundle = subscriptionInternalApi.getSubscriptionsForBundle(bundleId, null, internalTenantContext);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
+
+        final List<EventsStream> eventsStreams = new LinkedList<EventsStream>();
+        for (final SubscriptionBase subscription : subscriptionsForBundle) {
+            eventsStreams.add(buildForEntitlement(bundle, subscription, subscriptionsForBundle, internalTenantContext));
+        }
+        return eventsStreams;
+    }
+
     public EventsStream buildForEntitlement(final UUID entitlementId, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         try {
             final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, internalTenantContext);
@@ -269,16 +286,6 @@ public class EventsStreamBuilder {
             throw new EntitlementApiException(e);
         }
     }
-
-    public EventsStream buildForEntitlement(final String externalKey, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
-        try {
-            final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromExternalKey(externalKey, internalTenantContext);
-            return buildForEntitlement(subscription, internalTenantContext);
-        } catch (final SubscriptionBaseApiException e) {
-            throw new EntitlementApiException(e);
-        }
-    }
-
 
     public EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle,
                                             final SubscriptionBase subscription,
@@ -430,7 +437,6 @@ public class EventsStreamBuilder {
         }
     }
 
-
     private EventsStream buildForEntitlement(final SubscriptionBase subscription, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         final SubscriptionBaseBundle bundle;
         final List<SubscriptionBase> subscriptionsForBundle;
@@ -443,7 +449,6 @@ public class EventsStreamBuilder {
 
         return buildForEntitlement(bundle, subscription, subscriptionsForBundle, internalTenantContext);
     }
-
 
     private PlanPhaseSpecifier createPlanPhaseSpecifier(final SubscriptionBase subscription) {
         final String planName;

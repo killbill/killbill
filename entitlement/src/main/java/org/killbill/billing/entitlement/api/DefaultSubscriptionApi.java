@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -70,6 +71,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -161,19 +163,47 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     @Override
     public SubscriptionBundle getSubscriptionBundle(final UUID bundleId, final TenantContext tenantContext) throws SubscriptionApiException {
         final UUID accountId = internalCallContextFactory.getAccountId(bundleId, ObjectType.BUNDLE, tenantContext);
+        final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
 
-        final Optional<SubscriptionBundle> bundleOptional = Iterables.<SubscriptionBundle>tryFind(getSubscriptionBundlesForAccount(accountId, tenantContext),
-                                                                                                  new Predicate<SubscriptionBundle>() {
-                                                                                                      @Override
-                                                                                                      public boolean apply(final SubscriptionBundle bundle) {
-                                                                                                          return bundle.getId().equals(bundleId);
-                                                                                                      }
-                                                                                                  });
-        if (!bundleOptional.isPresent()) {
-            throw new SubscriptionApiException(ErrorCode.SUB_GET_INVALID_BUNDLE_ID, bundleId);
-        } else {
-            return bundleOptional.get();
+        final SubscriptionBaseBundle baseBundle;
+        try {
+            baseBundle = subscriptionBaseInternalApi.getBundleFromId(bundleId, internalTenantContextWithValidAccountRecordId);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new SubscriptionApiException(e);
         }
+
+        final List<Entitlement> bundleEntitlements;
+        try {
+            bundleEntitlements = entitlementInternalApi.getAllEntitlementsForBundle(bundleId, internalTenantContextWithValidAccountRecordId);
+        } catch (final EntitlementApiException e) {
+            throw new SubscriptionApiException(e);
+        }
+
+        // Build subscriptions
+        final List<Subscription> bundleSubscriptions = new LinkedList<Subscription>();
+        for (final Entitlement entitlement : bundleEntitlements) {
+            if (entitlement instanceof DefaultEntitlement) {
+                bundleSubscriptions.add(new DefaultSubscription((DefaultEntitlement) entitlement));
+            } else {
+                throw new ShouldntHappenException("Entitlement should be a DefaultEntitlement instance");
+            }
+        }
+
+        final String bundleExternalKey = bundleSubscriptions.get(0).getBundleExternalKey();
+        final SubscriptionBundleTimeline timeline = new DefaultSubscriptionBundleTimeline(accountId,
+                                                                                          bundleId,
+                                                                                          bundleExternalKey,
+                                                                                          bundleEntitlements,
+                                                                                          internalTenantContextWithValidAccountRecordId);
+
+        return new DefaultSubscriptionBundle(bundleId,
+                                             accountId,
+                                             bundleExternalKey,
+                                             bundleSubscriptions,
+                                             timeline,
+                                             baseBundle.getOriginalCreatedDate(),
+                                             baseBundle.getCreatedDate(),
+                                             baseBundle.getUpdatedDate());
     }
 
     @Override

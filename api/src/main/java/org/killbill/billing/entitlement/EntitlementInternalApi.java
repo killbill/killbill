@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +19,7 @@
 
 package org.killbill.billing.entitlement;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -32,9 +34,9 @@ public interface EntitlementInternalApi {
 
     AccountEntitlements getAllEntitlementsForAccount(InternalTenantContext context) throws EntitlementApiException;
 
-    Entitlement getEntitlementForId(final UUID uuid, final InternalTenantContext tenantContext) throws EntitlementApiException;
+    List<Entitlement> getAllEntitlementsForBundle(UUID bundleId, InternalTenantContext context) throws EntitlementApiException;
 
-    Entitlement getEntitlementForExternalKey(final String externalKey, final InternalTenantContext tenantContext) throws EntitlementApiException;
+    Entitlement getEntitlementForId(final UUID uuid, final InternalTenantContext tenantContext) throws EntitlementApiException;
 
     void pause(UUID bundleId, LocalDate effectiveDate, Iterable<PluginProperty> properties, InternalCallContext context) throws EntitlementApiException;
 
