@@ -88,6 +88,19 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
+    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final InternalTenantContext context) {
+        final List<BlockingState> result = new ArrayList<>();
+        for (UUID cur : blockableIds) {
+            final List<BlockingState> objs = blockingStates.get(cur);
+            if (objs != null && !objs.isEmpty()) {
+                result.addAll(objs);
+            }
+
+        }
+        return result;
+    }
+
+    @Override
     public synchronized void setBlockingStatesAndPostBlockingTransitionEvent(final Map<BlockingState, Optional<UUID>> states, final InternalCallContext context) {
         for (final BlockingState state : states.keySet()) {
             if (blockingStates.get(state.getBlockedId()) == null) {
