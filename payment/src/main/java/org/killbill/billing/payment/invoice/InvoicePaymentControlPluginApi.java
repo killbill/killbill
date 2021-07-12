@@ -20,6 +20,7 @@ package org.killbill.billing.payment.invoice;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -459,7 +460,37 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         if (prop == null) {
             return ImmutableMap.<UUID, BigDecimal>of();
         }
-        return (Map<UUID, BigDecimal>) prop.getValue();
+        // The deserialization may not recreate the map we expect, i.e Map<UUID, BigDecimal>, so we convert each key/value by hand
+        // See https://github.com/killbill/killbill/issues/1453
+        final Map<UUID, BigDecimal> res = new HashMap<>();
+        final Map m = (Map) prop.getValue();
+        for (final Object k : m.keySet()) {
+            UUID uuid;
+            if (k instanceof String) {
+                uuid = UUID.fromString((String) k);
+            } else if (k instanceof UUID) {
+                uuid = (UUID) k;
+            } else {
+                throw new IllegalStateException(String.format("Failed to deserialize plugin property map for adjustments: Invalid format for UUID, type=%s", k.getClass().getName()));
+            }
+
+            final Object v = m.get(k);
+            BigDecimal val;
+            if (v instanceof BigDecimal) {
+                val = (BigDecimal) v;
+            } else if (v instanceof String) {
+                val = new BigDecimal((String) v);
+            } else if (v instanceof Integer) {
+                val = BigDecimal.valueOf((Integer) v);
+            } else if (v == null) {
+                // Null is allowed to default ot item#amount
+                val = null;
+            } else {
+                throw new IllegalStateException(String.format("Failed to deserialize plugin property map for adjustments: Invalid format for BigDecimal, type=%s", v.getClass().getName()));
+            }
+            res.put(uuid, val);
+        }
+        return res;
     }
 
     private PluginProperty getPluginProperty(final Iterable<PluginProperty> properties, final String propertyName) {
