@@ -680,7 +680,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     @Override
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final UUID paymentAttemptId, final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
                                                final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final String transactionExternalKey,
-                                               final InternalCallContext context) throws InvoiceApiException {
+                                               final boolean success, final InternalCallContext context) throws InvoiceApiException {
 
         if (isInvoiceAdjusted && invoiceItemIdsWithNullAmounts.size() == 0) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEMS_ADJUSTMENT_MISSING);
@@ -716,51 +716,85 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 // Compute the actual amount to refund
                 final BigDecimal requestedPositiveAmount = invoiceDaoHelper.computePositiveRefundAmount(payment, requestedRefundAmount, invoiceItemIdsWithAmounts);
 
+                InvoicePaymentModelDao result;
+
                 // Before we go further, check if that refund already got inserted -- the payment system keeps a state machine
                 // and so this call may be called several time for the same  paymentCookieId (which is really the refundId)
                 final InvoicePaymentModelDao existingRefund = transactional.getPaymentForCookieId(transactionExternalKey, context);
                 if (existingRefund != null) {
-                    return existingRefund;
-                }
 
-                final InvoicePaymentModelDao refund = new InvoicePaymentModelDao(UUIDs.randomUUID(), context.getCreatedDate(), InvoicePaymentType.REFUND,
-                                                                                 payment.getInvoiceId(), paymentId,
-                                                                                 context.getCreatedDate(), requestedPositiveAmount.negate(),
-                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId(), true);
-                createAndRefresh(transactional, refund, context);
+                    Preconditions.checkState(existingRefund.getAmount().compareTo(requestedPositiveAmount.negate()) == 0,
+                                             "Found refund for transactionExternalKey=" + transactionExternalKey + ", amount=" + existingRefund.getAmount() +
+                                             "and does not match input amount=" + requestedPositiveAmount.negate());
 
-                // Retrieve invoice after the Refund
-                final InvoiceModelDao invoice = transInvoiceDao.getById(payment.getInvoiceId().toString(), context);
-                Preconditions.checkState(invoice != null, "Invoice shouldn't be null for payment " + payment.getId());
-                invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
+                    Preconditions.checkState(existingRefund.getPaymentId().compareTo(paymentId) == 0,
+                                             "Found refund for transactionExternalKey=" + transactionExternalKey + ", paymentId=" + existingRefund.getPaymentId() +
+                                             "and does not match input paymentId=" + paymentId);
 
-                final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-
-                // At this point, we created the refund which made the invoice balance positive and applied any existing
-                // available CBA to that invoice.
-                // We now need to adjust the invoice and/or invoice items if needed and specified.
-                final Set<UUID> initSet = new HashSet<>();
-                if (isInvoiceAdjusted) {
-                    // Invoice item adjustment
-                    for (final Entry<UUID, BigDecimal> entry : invoiceItemIdsWithAmounts.entrySet()) {
-                        final BigDecimal adjAmount = entry.getValue();
-                        final InvoiceItemModelDao item = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoice.getId(), entry.getKey(), adjAmount,
-                                                                                               invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
-                                                                                               context);
-
-                        createInvoiceItemFromTransaction(transInvoiceItemDao, item, context);
-                        invoice.addInvoiceItem(item);
+                    // The pending entry already exists, bail out (no need to send events, or compute cba logic)
+                    if (!existingRefund.getSuccess() && !success) {
+                        return existingRefund;
                     }
-                    initSet.add(invoice.getId());
+
+                    // At this point, we expect the request to be a transition PENDING -> SUCCESS (SUCCESS -> SUCCESS is also tolerated)
+                    Preconditions.checkState(success, "Found successful refund for transactionExternalKey=" + transactionExternalKey +  "and does not match pending input");
+                    // We only update date and the status
+                    existingRefund.setSuccess(true);
+                    existingRefund.setPaymentDate(context.getCreatedDate());
+                    transactional.updateAttempt(existingRefund.getId().toString(),
+                                                existingRefund.getPaymentId().toString(),
+                                                existingRefund.getPaymentDate().toDate(),
+                                                existingRefund.getAmount(),
+                                                existingRefund.getCurrency(),
+                                                existingRefund.getProcessedCurrency(),
+                                                existingRefund.getPaymentCookieId(),
+                                                existingRefund.getLinkedInvoicePaymentId().toString(),
+                                                existingRefund.getSuccess(),
+                                                context);
+                    result = existingRefund;
+                } else {
+                    final InvoicePaymentModelDao refund = new InvoicePaymentModelDao(UUIDs.randomUUID(), context.getCreatedDate(), InvoicePaymentType.REFUND,
+                                                                                     payment.getInvoiceId(), paymentId,
+                                                                                     context.getCreatedDate(), requestedPositiveAmount.negate(),
+                                                                                     payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId(), success);
+                    result = createAndRefresh(transactional, refund, context);
                 }
 
-                // The invoice object has been kept up-to-date, we can pass it to CBA complexity
-                final CBALogicWrapper cbaWrapper = new CBALogicWrapper(invoice.getAccountId(), invoicesTags, context, entitySqlDaoWrapperFactory);
-                cbaWrapper.runCBALogicWithNotificationEvents(initSet, ImmutableSet.of(), ImmutableList.of(invoice));
 
-                notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, refund, invoice.getAccountId(), paymentAttemptId, context.getUserToken(), context);
+                if (success) {
+                    // Retrieve invoice after the Refund
+                    final InvoiceModelDao invoice = transInvoiceDao.getById(payment.getInvoiceId().toString(), context);
+                    Preconditions.checkState(invoice != null, "Invoice shouldn't be null for payment " + payment.getId());
+                    invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
 
-                return refund;
+                    final InvoiceItemSqlDao transInvoiceItemDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+
+                    // At this point, we created the refund which made the invoice balance positive and applied any existing
+                    // available CBA to that invoice.
+                    // We now need to adjust the invoice and/or invoice items if needed and specified.
+                    final Set<UUID> initSet = new HashSet<>();
+                    if (isInvoiceAdjusted) {
+                        // Invoice item adjustment
+                        for (final Entry<UUID, BigDecimal> entry : invoiceItemIdsWithAmounts.entrySet()) {
+                            final BigDecimal adjAmount = entry.getValue();
+                            final InvoiceItemModelDao item = invoiceDaoHelper.createAdjustmentItem(entitySqlDaoWrapperFactory, invoice.getId(), entry.getKey(), adjAmount,
+                                                                                                   invoice.getCurrency(), context.getCreatedDate().toLocalDate(),
+                                                                                                   context);
+
+                            createInvoiceItemFromTransaction(transInvoiceItemDao, item, context);
+                            invoice.addInvoiceItem(item);
+                        }
+                        initSet.add(invoice.getId());
+                    }
+
+                    // The invoice object has been kept up-to-date, we can pass it to CBA complexity
+                    final CBALogicWrapper cbaWrapper = new CBALogicWrapper(invoice.getAccountId(), invoicesTags, context, entitySqlDaoWrapperFactory);
+                    cbaWrapper.runCBALogicWithNotificationEvents(initSet, ImmutableSet.of(), ImmutableList.of(invoice));
+
+                }
+                final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(result.getId().toString(), context);
+                notifyBusOfInvoicePayment(entitySqlDaoWrapperFactory, result, accountId, paymentAttemptId, context.getUserToken(), context);
+                return result;
             }
         });
     }

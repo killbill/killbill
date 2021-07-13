@@ -60,7 +60,7 @@ public interface InvoiceInternalApi {
      * @throws InvoiceApiException
      */
     InvoicePayment recordRefund(UUID paymentId, UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
-                                String transactionExternalKey, InternalCallContext context) throws InvoiceApiException;
+                                String transactionExternalKey, boolean success, InternalCallContext context) throws InvoiceApiException;
 
     InvoicePayment recordChargeback(UUID paymentId, UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
