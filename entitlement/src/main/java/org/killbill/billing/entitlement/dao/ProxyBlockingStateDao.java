@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,6 +20,7 @@
 package org.killbill.billing.entitlement.dao;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,7 +36,6 @@ import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.api.BlockingState;
@@ -295,16 +296,15 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                                                              final Collection<BlockingState> blockingStatesOnDiskCopy,
                                                              final Iterable<SubscriptionBase> baseSubscriptionsToConsider,
                                                              final Iterable<EventsStream> eventsStreams) {
+        final Map<UUID, EventsStream> baseSubscriptionIdToEventsStream = new HashMap<UUID, EventsStream>();
+        for (final EventsStream eventsStream : eventsStreams) {
+            baseSubscriptionIdToEventsStream.put(eventsStream.getSubscriptionBase().getId(), eventsStream);
+        }
+
         // Compute the blocking states not on disk for all base subscriptions
         final DateTime now = clock.getUTCNow();
         for (final SubscriptionBase baseSubscription : baseSubscriptionsToConsider) {
-            final EventsStream eventsStream = Iterables.<EventsStream>find(eventsStreams,
-                                                                           new Predicate<EventsStream>() {
-                                                                               @Override
-                                                                               public boolean apply(final EventsStream input) {
-                                                                                   return input.getSubscriptionBase().getId().equals(baseSubscription.getId());
-                                                                               }
-                                                                           });
+            final EventsStream eventsStream = baseSubscriptionIdToEventsStream.get(baseSubscription.getId());
 
             // First, check to see if the base entitlement is cancelled
             final Collection<BlockingState> blockingStatesNotOnDisk = eventsStream.computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
