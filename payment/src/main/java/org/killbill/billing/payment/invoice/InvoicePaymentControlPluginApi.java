@@ -481,7 +481,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             } else if (v instanceof String) {
                 val = new BigDecimal((String) v);
             } else if (v instanceof Integer) {
-                val = BigDecimal.valueOf((Integer) v);
+                val = new BigDecimal(((Integer) v).toString());
             } else if (v == null) {
                 // Null is allowed to default ot item#amount
                 val = null;
