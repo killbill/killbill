@@ -1108,7 +1108,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         final BigDecimal refundValue = new BigDecimal("13.45");
         adjustments.put(invoice2.getInvoiceItems().get(0).getId(), refundValue);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT_ERROR);
         invoicePaymentApi.createRefundForInvoicePayment(true, adjustments, account, payments.get(0).getId(), refundValue, payments.get(0).getCurrency(), null, UUID.randomUUID().toString(),
                                                         ImmutableList.<PluginProperty>of(), paymentOptions, callContext);
         assertListenerStatus();
@@ -1116,7 +1116,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
 
         final List<Payment> payments2 = paymentApi.getAccountPayments(account.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         paymentApi.notifyPendingTransactionOfStateChangedWithPaymentControl(account, payments2.get(0).getTransactions().get(1).getId(), true, paymentOptions, callContext);
         assertListenerStatus();
 

@@ -162,6 +162,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(paymentControlContext.getAccountId(), paymentControlContext);
         try {
             final InvoicePayment existingInvoicePayment;
+            final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(paymentControlContext.getTransactionId(), internalContext);
+            // If it's not SUCCESS, it is PENDING
+            final boolean success = paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.SUCCESS;
             switch (transactionType) {
                 case PURCHASE:
                     final UUID invoiceId = getInvoiceId(pluginProperties);
@@ -178,9 +181,6 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                             invoicePaymentAmount = paymentControlContext.getAmount();
                         }
 
-                        final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(paymentControlContext.getTransactionId(), internalContext);
-                        // If it's not SUCCESS, it is PENDING
-                        final boolean success = paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.SUCCESS;
                         log.debug("Notifying invoice of {} paymentId='{}', amount='{}', currency='{}', invoiceId='{}'", success ? "successful" : "pending", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
 
                         // For PENDING payments, the attempt will be kept as unsuccessful and an InvoicePaymentErrorInternalEvent sent on the bus (e.g. for Overdue)
@@ -201,7 +201,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
                     final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
                     final boolean isAdjusted = prop != null && prop.getValue() != null ? Boolean.valueOf(prop.getValue().toString()) : false;
-                    invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAttemptPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), internalContext);
+                    invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAttemptPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), success, internalContext);
                     break;
 
                 case CHARGEBACK:
@@ -243,6 +243,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                             isInvoiceAdjusted,
                                             idWithAmountMap,
                                             paymentControlContext.getTransactionExternalKey(),
+                                            success,
                                             internalContext);
                     break;
 
