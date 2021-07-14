@@ -1102,21 +1102,51 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice2.getPayments().size(), 1);
         assertTrue(invoice2.getPayments().get(0).isSuccess());
 
+        // Perform a similar PENDING payment transaction with a refund + item adjustments
+        paymentPlugin.makeNextPaymentPending();
+        final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
+        final BigDecimal refundValue = new BigDecimal("13.45");
+        adjustments.put(invoice2.getInvoiceItems().get(0).getId(), refundValue);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoicePaymentApi.createRefundForInvoicePayment(true, adjustments, account, payments.get(0).getId(), refundValue, payments.get(0).getCurrency(), null, UUID.randomUUID().toString(),
+                                                        ImmutableList.<PluginProperty>of(), paymentOptions, callContext);
+        assertListenerStatus();
+
+
+        final List<Payment> payments2 = paymentApi.getAccountPayments(account.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        busHandler.pushExpectedEvents(NextEvent.PAYMENT);
+        paymentApi.notifyPendingTransactionOfStateChangedWithPaymentControl(account, payments2.get(0).getTransactions().get(1).getId(), true, paymentOptions, callContext);
+        assertListenerStatus();
+
+
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance2.compareTo(BigDecimal.ZERO) == 0);
 
-        final List<Payment> payments2 = paymentApi.getAccountPayments(account.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
-        assertEquals(payments2.size(), 1);
-        assertEquals(payments2.get(0).getPurchasedAmount().compareTo(new BigDecimal("249.95")), 0);
-        assertEquals(payments2.get(0).getTransactions().size(), 1);
-        assertEquals(payments2.get(0).getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
-        assertEquals(payments2.get(0).getTransactions().get(0).getCurrency(), Currency.USD);
-        assertEquals(payments2.get(0).getTransactions().get(0).getProcessedAmount().compareTo(new BigDecimal("249.95")), 0);
-        assertEquals(payments2.get(0).getTransactions().get(0).getProcessedCurrency(), Currency.USD);
-        assertEquals(payments2.get(0).getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
-        assertEquals(payments2.get(0).getPaymentAttempts().size(), 1);
-        assertEquals(payments2.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
-        assertEquals(payments2.get(0).getPaymentAttempts().get(0).getStateName(), "SUCCESS");
+        final List<Payment> payments3 = paymentApi.getAccountPayments(account.getId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertEquals(payments3.size(), 1);
+        assertEquals(payments3.get(0).getPurchasedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments3.get(0).getTransactions().size(), 2);
+
+        assertEquals(payments3.get(0).getTransactions().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments3.get(0).getTransactions().get(0).getCurrency(), Currency.USD);
+        assertEquals(payments3.get(0).getTransactions().get(0).getProcessedAmount().compareTo(new BigDecimal("249.95")), 0);
+        assertEquals(payments3.get(0).getTransactions().get(0).getProcessedCurrency(), Currency.USD);
+        assertEquals(payments3.get(0).getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        assertEquals(payments3.get(0).getTransactions().get(1).getAmount().compareTo(refundValue), 0);
+        assertEquals(payments3.get(0).getTransactions().get(1).getCurrency(), Currency.USD);
+        assertEquals(payments3.get(0).getTransactions().get(1).getProcessedAmount().compareTo(refundValue), 0);
+        assertEquals(payments3.get(0).getTransactions().get(1).getProcessedCurrency(), Currency.USD);
+        assertEquals(payments3.get(0).getTransactions().get(1).getTransactionStatus(), TransactionStatus.SUCCESS);
+
+        assertEquals(payments3.get(0).getPaymentAttempts().size(), 2);
+        assertEquals(payments3.get(0).getPaymentAttempts().get(0).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        assertEquals(payments3.get(0).getPaymentAttempts().get(0).getStateName(), "SUCCESS");
+
+        assertEquals(payments3.get(0).getPaymentAttempts().get(1).getPluginName(), InvoicePaymentControlPluginApi.PLUGIN_NAME);
+        assertEquals(payments3.get(0).getPaymentAttempts().get(1).getStateName(), "SUCCESS");
     }
 
     @Test(groups = "slow", description = "Verify notifyPendingTransactionOfStateChanged behavior for PENDING->FAILURE")
