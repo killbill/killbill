@@ -38,7 +38,6 @@ import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.tenant.dao.TenantKVModelDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.util.config.definition.TenantConfig;
-import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.commons.concurrent.Executors;
@@ -174,6 +173,8 @@ public class TenantCacheInvalidation {
                     return;
                 }
 
+                logger.info("Processing broadcast entry cur={}", cur);
+
                 try {
                     final TenantKeyAndCookie tenantKeyAndCookie = extractTenantKeyAndCookie(cur.getType());
                     if (tenantKeyAndCookie != null) {
@@ -204,9 +205,11 @@ public class TenantCacheInvalidation {
                             } catch (final EventBusException e) {
                                 logger.warn("Failed to post event {}", event, e);
                             }
+                        } else {
+                            logger.warn("Failed to find CacheInvalidationCallback for {}", cur);
                         }
                     } else {
-                        logger.warn("Failed to find CacheInvalidationCallback for " + cur.getType());
+                        logger.warn("Failed to extract tenantKeyAndCookie for cur={}", cur);
                     }
                 } finally {
                     parent.setLatestRecordIdProcessed(cur.getRecordId());
