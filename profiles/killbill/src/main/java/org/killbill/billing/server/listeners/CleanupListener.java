@@ -28,7 +28,6 @@ import javax.servlet.ServletContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.LoggerContext;
 import net.sf.log4jdbc.sql.jdbcapi.DriverSpy;
 
 public class CleanupListener implements ServletContextListener {
@@ -75,9 +74,5 @@ public class CleanupListener implements ServletContextListener {
                 logger.warn("Unable to de-register driver", e);
             }
         }
-
-//         avoid memory leaks: https://logback.qos.ch/manual/jmxConfig.html
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        lc.stop();
     }
 }

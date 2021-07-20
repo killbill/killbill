@@ -86,6 +86,7 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
         try {
             // Re-Compute including the plugins
             createBootNodeInfo(false);
+            logger.info("Created nodeInfo for {}", CreatorName.get());
         } catch (JsonProcessingException e) {
             logger.error("Failed to create bootNodeInfo", e);
         }
@@ -93,6 +94,7 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
 
     @LifecycleHandlerType(LifecycleLevel.STOP_SERVICE)
     public void stop() {
+        logger.info("Deleting nodeInfo for {}", CreatorName.get());
         nodeInfoDao.delete(CreatorName.get());
     }
 
