@@ -33,7 +33,6 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -110,7 +109,6 @@ import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
-import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -312,8 +310,10 @@ public class InvoiceDispatcher {
 
         GlobalLock lock = null;
         try {
-            lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
-            return processAccountWithLock(parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, context);
+            // Grab lock unless we do a dry-run
+            final boolean isDryRun = dryRunArguments != null;
+            lock = !isDryRun ? locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries()) : null;
+            return processAccountInternal(parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, context);
         } catch (final LockFailedException e) {
             if (isApiCall) {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
@@ -329,7 +329,7 @@ public class InvoiceDispatcher {
         return null;
     }
 
-    private Invoice processAccountWithLock(final boolean parkedAccount,
+    private Invoice processAccountInternal(final boolean parkedAccount,
                                            final UUID accountId,
                                            @Nullable final LocalDate inputTargetDateMaybeNull,
                                            @Nullable final DryRunArguments dryRunArguments,
