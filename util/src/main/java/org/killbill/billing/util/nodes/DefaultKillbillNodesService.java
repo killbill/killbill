@@ -18,6 +18,8 @@
 package org.killbill.billing.util.nodes;
 
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -32,6 +34,7 @@ import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
 import org.killbill.clock.Clock;
+import org.killbill.commons.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +47,18 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultKillbillNodesService.class);
 
+    private final static int TERMINATION_TIMEOUT_SEC = 5;
+    private final static int TIME_PERIOD_SEC = 5;
+    private final static int INITIAL_DELAY_SEC = TIME_PERIOD_SEC;
 
     private final NodeInfoDao nodeInfoDao;
     private final PluginsInfoApi pluginInfoApi;
     private final Clock clock;
     private final NodeInfoMapper mapper;
     private final KillbillNodesApi nodesApi;
+
+    private ScheduledExecutorService nodeInfoExecutor;
+    private volatile boolean isStopped;
 
     @Inject
     public DefaultKillbillNodesService(final NodeInfoDao nodeInfoDao, final PluginsInfoApi pluginInfoApi, final KillbillNodesApi nodesApi, final Clock clock, final NodeInfoMapper mapper) {
@@ -58,6 +67,7 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
         this.nodesApi = nodesApi;
         this.clock = clock;
         this.mapper = mapper;
+        this.isStopped = false;
     }
 
     @Override
@@ -80,12 +90,27 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
         }
     }
 
+    public static class NodeInfoRunnable implements Runnable {
+        final NodeInfoDao nodeInfoDao;
+
+        public NodeInfoRunnable(final NodeInfoDao nodeInfoDao) {
+            this.nodeInfoDao = nodeInfoDao;
+        }
+
+        @Override
+        public void run() {
+            nodeInfoDao.setUpdatedDate(CreatorName.get());
+        }
+    }
+
 
     @LifecycleHandlerType(LifecycleLevel.START_SERVICE)
     public void start() {
         try {
             // Re-Compute including the plugins
             createBootNodeInfo(false);
+            this.nodeInfoExecutor = Executors.newSingleThreadScheduledExecutor("NodeInfoExecutor");
+            nodeInfoExecutor.scheduleAtFixedRate(new NodeInfoRunnable(nodeInfoDao), INITIAL_DELAY_SEC, TIME_PERIOD_SEC, TimeUnit.SECONDS);
             logger.info("Created nodeInfo for {}", CreatorName.get());
         } catch (JsonProcessingException e) {
             logger.error("Failed to create bootNodeInfo", e);
@@ -96,6 +121,21 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
     public void stop() {
         logger.info("Deleting nodeInfo for {}", CreatorName.get());
         nodeInfoDao.delete(CreatorName.get());
+        if (isStopped) {
+            return;
+        }
+        try {
+            nodeInfoExecutor.shutdown();
+            final boolean success = nodeInfoExecutor.awaitTermination(TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
+            if (!success) {
+                logger.warn("NodeInfoExecutor failed to complete termination within " + TERMINATION_TIMEOUT_SEC + "sec");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warn("NodeInfoExecutor stop sequence got interrupted");
+        } finally {
+            isStopped = true;
+        }
     }
 
     private void createBootNodeInfo(final boolean skipPlugins) throws JsonProcessingException {

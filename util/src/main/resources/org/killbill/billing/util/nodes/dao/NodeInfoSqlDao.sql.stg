@@ -41,6 +41,7 @@ getByNodeName() ::= <<
 select <allTableFields("")>
 from <tableName()>
 where node_name = :nodeName
+and updated_date \> :updatedDate
 and is_active = '1'
 ;
 >>
@@ -49,6 +50,7 @@ getAll() ::= <<
 select <allTableFields("")>
 from <tableName()>
 where is_active = '1'
+and updated_date \> :updatedDate
 order by node_name asc
 ;
 >>
@@ -57,6 +59,13 @@ updateNodeInfo() ::= <<
 update <tableName()>
 set node_info = :nodeInfo
 , updated_date = :updatedDate
+where node_name = :nodeName
+;
+>>
+
+setUpdatedDate() ::= <<
+update <tableName()>
+set updated_date = :updatedDate
 where node_name = :nodeName
 ;
 >>

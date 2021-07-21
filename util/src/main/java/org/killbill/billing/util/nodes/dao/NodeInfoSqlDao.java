@@ -36,12 +36,15 @@ public interface NodeInfoSqlDao {
     public void updateNodeInfo(@Bind("nodeName") final String nodeName, @Bind("nodeInfo") final String nodeInfo, @Bind("updatedDate") final Date updatedDate);
 
     @SqlUpdate
+    public void setUpdatedDate(@Bind("nodeName") final String nodeName, @Bind("updatedDate") final Date updatedDate);
+
+    @SqlUpdate
     public void delete(@Bind("nodeName") final String nodeName);
 
     @SqlQuery
-    public NodeInfoModelDao getByNodeName(@Bind("nodeName") final String nodeName);
+    public NodeInfoModelDao getByNodeName(@Bind("nodeName") final String nodeName, @Bind("updatedDate") final Date updatedDate);
 
     @SqlQuery
-    public List<NodeInfoModelDao> getAll();
+    public List<NodeInfoModelDao> getAll(@Bind("updatedDate") final Date updatedDate);
 
 }
