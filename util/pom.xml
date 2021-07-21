@@ -109,11 +109,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <groupId>javax.cache</groupId>
             <artifactId>cache-api</artifactId>
         </dependency>
@@ -153,8 +148,8 @@
             <scope>test</scope>
             <exclusions>
                 <exclusion>
-                    <artifactId>objenesis</artifactId>
                     <groupId>org.objenesis</groupId>
+                    <artifactId>objenesis</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -345,13 +340,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/migrator.xml</descriptor>
+                    </descriptors>
+                </configuration>
                 <executions>
                     <execution>
                         <id>assemble-migrator</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
+                        <phase>package</phase>
                         <configuration>
                             <finalName>killbill</finalName>
                             <archive>
@@ -362,21 +362,16 @@
                         </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/main/assembly/migrator.xml</descriptor>
-                    </descriptors>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>generate-sources</phase>
                         <goals>
                             <goal>add-source</goal>
                         </goals>
+                        <phase>generate-sources</phase>
                         <configuration>
                             <sources>
                                 <source>${project.build.directory}/generated-sources/java-templates</source>
