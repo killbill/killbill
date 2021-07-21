@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.inject.Named;
 
+import org.joda.time.DateTime;
 import org.killbill.billing.util.entity.dao.DBRouter;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.Handle;
@@ -34,6 +35,8 @@ import com.google.inject.Inject;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultNodeInfoDao implements NodeInfoDao {
+
+    private final static int CUTTOFF_INTERVAL_SEC = 3 * 60; // 3 minutes
 
     private final DBRouter<NodeInfoSqlDao> dbRouter;
     private final Clock clock;
@@ -49,8 +52,9 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
         dbRouter.inTransaction(false, new TransactionCallback<Void>() {
             @Override
             public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
+                final Date kbFirstCommit = new DateTime(2011, 10, 28, 0, 0).toDate();
                 final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
-                if (sqlDao.getByNodeName(nodeInfoModelDao.getNodeName()) != null) {
+                if (sqlDao.getByNodeName(nodeInfoModelDao.getNodeName(), kbFirstCommit) != null) {
                     sqlDao.delete(nodeInfoModelDao.getNodeName());
                 }
                 sqlDao.create(nodeInfoModelDao);
@@ -67,6 +71,19 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
                 final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
                 final Date updateDate = clock.getUTCNow().toDate();
                 sqlDao.updateNodeInfo(nodeName, nodeInfo, updateDate);
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void setUpdatedDate(final String nodeName) {
+        dbRouter.inTransaction(false, new TransactionCallback<Void>() {
+            @Override
+            public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
+                final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
+                final Date updateDate = clock.getUTCNow().toDate();
+                sqlDao.setUpdatedDate(nodeName, updateDate);
                 return null;
             }
         });
@@ -90,7 +107,8 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
             @Override
             public List<NodeInfoModelDao> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
-                return sqlDao.getAll();
+                final Date cutoffUpdatedDate = clock.getUTCNow().minusSeconds(CUTTOFF_INTERVAL_SEC).toDate();
+                return sqlDao.getAll(cutoffUpdatedDate);
             }
         });
     }
@@ -101,7 +119,8 @@ public class DefaultNodeInfoDao implements NodeInfoDao {
             @Override
             public NodeInfoModelDao inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
                 final NodeInfoSqlDao sqlDao = handle.attach(NodeInfoSqlDao.class);
-                return sqlDao.getByNodeName(nodeName);
+                final Date cutoffUpdatedDate = clock.getUTCNow().minusSeconds(CUTTOFF_INTERVAL_SEC).toDate();
+                return sqlDao.getByNodeName(nodeName, cutoffUpdatedDate);
             }
         });
     }

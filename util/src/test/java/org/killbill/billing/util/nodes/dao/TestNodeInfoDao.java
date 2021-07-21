@@ -24,6 +24,7 @@ import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class TestNodeInfoDao extends UtilTestSuiteWithEmbeddedDB {
 
@@ -49,7 +50,6 @@ public class TestNodeInfoDao extends UtilTestSuiteWithEmbeddedDB {
         assertEquals(all.size(), 1);
         assertEquals(all.get(0), newNode1);
 
-
         final DateTime initialBootTime2 = clock.getUTCNow();
         final NodeInfoModelDao node2 = new NodeInfoModelDao(-1L, "node2", initialBootTime2, now, "nodeInfo", true);
         nodeInfoDao.create(node2);
@@ -67,6 +67,15 @@ public class TestNodeInfoDao extends UtilTestSuiteWithEmbeddedDB {
         assertEquals(all.size(), 2);
         assertEquals(all.get(0), newNode1);
         assertEquals(all.get(1), newNode2);
+
+        now = clock.getUTCNow();
+        Thread.sleep(1001);
+        nodeInfoDao.setUpdatedDate(newNode1.getNodeName());
+        nodeInfoDao.setUpdatedDate(newNode2.getNodeName());
+        all = nodeInfoDao.getAll();
+        assertEquals(all.size(), 2);
+        assertTrue(all.get(0).getUpdatedDate().compareTo(now) >= 0);
+        assertTrue(all.get(1).getUpdatedDate().compareTo(now) >= 0);
     }
 
 }

@@ -25,6 +25,8 @@ public interface NodeInfoDao {
 
     public void updateNodeInfo(final String nodeName, final String nodeInfo);
 
+    public void setUpdatedDate(final String nodeName);
+
     public void delete(final String nodeName);
 
     public List<NodeInfoModelDao> getAll();
