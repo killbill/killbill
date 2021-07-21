@@ -68,14 +68,13 @@ public class TestNodeInfoDao extends UtilTestSuiteWithEmbeddedDB {
         assertEquals(all.get(0), newNode1);
         assertEquals(all.get(1), newNode2);
 
-        now = clock.getUTCNow();
-        Thread.sleep(1001);
+        clock.addDeltaFromReality(5000);
         nodeInfoDao.setUpdatedDate(newNode1.getNodeName());
         nodeInfoDao.setUpdatedDate(newNode2.getNodeName());
         all = nodeInfoDao.getAll();
         assertEquals(all.size(), 2);
-        assertTrue(all.get(0).getUpdatedDate().compareTo(now) >= 0);
-        assertTrue(all.get(1).getUpdatedDate().compareTo(now) >= 0);
+        assertTrue(all.get(0).getUpdatedDate().compareTo(now) > 0);
+        assertTrue(all.get(1).getUpdatedDate().compareTo(now) > 0);
     }
 
 }
