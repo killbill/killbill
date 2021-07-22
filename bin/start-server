@@ -29,8 +29,23 @@ PROPERTIES=${PROPERTIES-"$SERVER/src/main/resources/killbill-server.properties"}
 DEBUG_OPTS_ECLIPSE=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=12345 "
 DEBUG_OPTS_ECLIPSE_WAIT=" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=12345 "
 
-# Default JVM settings if unset
-MAVEN_OPTS=${MAVEN_OPTS-"-Djava.awt.headless=true -Duser.timezone=GMT -Xms512m -Xmx2048m -XX:MaxPermSize=512m -XX:MaxDirectMemorySize=512m -XX:+UseConcMarkSweepGC"}
+if type -p java; then
+    _java=java
+elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+    _java="$JAVA_HOME/bin/java"
+fi
+
+if [[ "$_java" ]]; then
+    version=$("$_java" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+    major=$(echo $version | cut -f 1 -d .)
+    minor=$(echo $version | cut -f 2 -d .)
+    COMMON_MAVEN_OPTS="-Djava.awt.headless=true -Duser.timezone=GMT -Xms512m -Xmx2048m -XX:MaxDirectMemorySize=512m"
+    if [ "$major" -eq 1 ] && [ "$minor" -eq 8 ]; then
+        MAVEN_OPTS=${MAVEN_OPTS-"$COMMON_MAVEN_OPTS -XX:+UseConcMarkSweepGC"}
+    else
+        MAVEN_OPTS=${MAVEN_OPTS-"$COMMON_MAVEN_OPTS --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.security=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED"}
+    fi
+fi
 
 LOG="$SERVER/src/main/resources/logback.xml"
 LOG_DIR="$SERVER/logs"
