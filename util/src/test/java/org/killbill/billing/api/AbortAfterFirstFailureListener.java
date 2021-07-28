@@ -51,7 +51,7 @@ public class AbortAfterFirstFailureListener implements IInvokedMethodListener {
 
         if (testResult.getStatus() == ITestResult.FAILURE) {
             // Don't skip other tests with the current test method is flaky
-            final boolean isFlakyTest = method.getTestMethod().getRetryAnalyzer() != null && method.getTestMethod().getRetryAnalyzer() instanceof FlakyRetryAnalyzer;
+            final boolean isFlakyTest = method.getTestMethod().getRetryAnalyzer(testResult) != null && method.getTestMethod().getRetryAnalyzer(testResult) instanceof FlakyRetryAnalyzer;
             if (!isFlakyTest) {
                 synchronized (this) {
                     logger.warn("!!! Test failure, all other tests will be skipped: {} !!!", testResult);
