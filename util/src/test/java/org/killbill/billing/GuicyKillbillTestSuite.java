@@ -191,7 +191,7 @@ public class GuicyKillbillTestSuite implements IHookable {
         if (!hasFailed && !result.isSuccess()) {
             // Ignore if the current test method is flaky
             final ITestNGMethod testNGMethod = result.getMethod();
-            final boolean isFlakyTest = testNGMethod != null && testNGMethod.getRetryAnalyzer() != null && testNGMethod.getRetryAnalyzer() instanceof FlakyRetryAnalyzer;
+            final boolean isFlakyTest = testNGMethod != null && testNGMethod.getRetryAnalyzer(result) != null && testNGMethod.getRetryAnalyzer(result) instanceof FlakyRetryAnalyzer;
             if (!isFlakyTest) {
                 hasFailed = true;
             }

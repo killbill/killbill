@@ -35,7 +35,7 @@ public class FlakyInvokedMethodListener implements IInvokedMethodListener {
             return;
         }
 
-        final IRetryAnalyzer retryAnalyzer = testResult.getMethod().getRetryAnalyzer();
+        final IRetryAnalyzer retryAnalyzer = testResult.getMethod().getRetryAnalyzer(testResult);
         if (retryAnalyzer != null &&
             retryAnalyzer instanceof FlakyRetryAnalyzer &&
             !((FlakyRetryAnalyzer) retryAnalyzer).shouldRetry()) {
