@@ -21,6 +21,7 @@ import org.skife.config.Config;
 import org.skife.config.Default;
 import org.skife.config.DefaultNull;
 import org.skife.config.Description;
+import org.skife.config.TimeSpan;
 
 public interface SecurityConfig extends KillbillConfig {
 
@@ -116,4 +117,51 @@ public interface SecurityConfig extends KillbillConfig {
              "support = entitlement:*, invoice:item_adjust")
     @Description("Okta permissions by Okta group")
     public String getShiroOktaPermissionsByGroup();
+
+    // Auth0 realm
+
+    @Config("org.killbill.security.auth0.url")
+    @DefaultNull
+    @Description("Auth0 tenant full url")
+    public String getShiroAuth0Url();
+
+    @Config("org.killbill.security.auth0.clientId")
+    @DefaultNull
+    @Description("Auth0 application Client ID")
+    public String getShiroAuth0ClientId();
+
+    @Config("org.killbill.security.auth0.clientSecret")
+    @DefaultNull
+    @Description("Auth0 application Client Secret")
+    public String getShiroAuth0ClientSecret();
+
+    @Config("org.killbill.security.auth0.apiIdentifier")
+    @DefaultNull
+    @Description("Auth0 API identifier")
+    public String getShiroAuth0APIIdentifier();
+
+    @Config("org.killbill.security.auth0.databaseConnectionName")
+    @DefaultNull
+    @Description("Auth0 database connection name")
+    public String getShiroAuth0DatabaseConnectionName();
+
+    @Config("org.killbill.security.auth0.connectTimeout")
+    @Default("5s")
+    @Description("Auth0 client connect timeout")
+    public TimeSpan getShiroAuth0ConnectTimeout();
+
+    @Config("org.killbill.security.auth0.readTimeout")
+    @Default("60s")
+    @Description("Auth0 client read timeout")
+    public TimeSpan getShiroAuth0ReadTimeout();
+
+    @Config("org.killbill.security.auth0.requestTimeout")
+    @Default("60s")
+    @Description("Auth0 client request timeout")
+    public TimeSpan getShiroAuth0RequestTimeout();
+
+    @Config("org.killbill.security.auth0.allowedClockSkew")
+    @Default("60s")
+    @Description("Auth0 JWT allowed clock skew")
+    public TimeSpan getShiroAuth0AllowedClockSkew();
 }
