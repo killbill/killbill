@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -35,6 +36,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.RbacConfig;
 import org.killbill.billing.util.config.definition.RedisCacheConfig;
 import org.killbill.billing.util.config.definition.SecurityConfig;
+import org.killbill.billing.util.security.shiro.realm.KillBillAuth0Realm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
@@ -53,6 +55,7 @@ public class KillBillShiroModule extends ShiroModule {
 
     public static final String KILLBILL_LDAP_PROPERTY = "killbill.server.ldap";
     public static final String KILLBILL_OKTA_PROPERTY = "killbill.server.okta";
+    public static final String KILLBILL_AUTH0_PROPERTY = "killbill.server.auth0";
     public static final String KILLBILL_RBAC_PROPERTY = "killbill.server.rbac";
 
     public static boolean isLDAPEnabled() {
@@ -61,6 +64,10 @@ public class KillBillShiroModule extends ShiroModule {
 
     public static boolean isOktaEnabled() {
         return Boolean.parseBoolean(System.getProperty(KILLBILL_OKTA_PROPERTY, "false"));
+    }
+
+    public static boolean isAuth0Enabled() {
+        return Boolean.parseBoolean(System.getProperty(KILLBILL_AUTH0_PROPERTY, "false"));
     }
 
     public static boolean isRBACEnabled() {
@@ -106,6 +113,8 @@ public class KillBillShiroModule extends ShiroModule {
 
         configureOktaRealm();
 
+        configureAuth0Realm();
+
         expose(new TypeLiteral<Set<Realm>>() {});
     }
 
@@ -122,6 +131,12 @@ public class KillBillShiroModule extends ShiroModule {
     protected void configureOktaRealm() {
         if (isOktaEnabled()) {
             bindRealm().to(KillBillOktaRealm.class).asEagerSingleton();
+        }
+    }
+
+    protected void configureAuth0Realm() {
+        if (isAuth0Enabled()) {
+            bindRealm().to(KillBillAuth0Realm.class).asEagerSingleton();
         }
     }
 

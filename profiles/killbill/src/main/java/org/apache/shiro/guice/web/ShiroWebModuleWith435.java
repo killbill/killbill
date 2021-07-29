@@ -63,6 +63,8 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
     @SuppressWarnings({"UnusedDeclaration"})
     public static final Key<BasicHttpAuthenticationFilter> AUTHC_BASIC = Key.get(BasicHttpAuthenticationFilter.class);
     @SuppressWarnings({"UnusedDeclaration"})
+    public static final Key<BearerHttpAuthenticationFilter> AUTHC_BEARER = Key.get(BearerHttpAuthenticationFilter.class);
+    @SuppressWarnings({"UnusedDeclaration"})
     public static final Key<NoSessionCreationFilter> NO_SESSION_CREATION = Key.get(NoSessionCreationFilter.class);
     @SuppressWarnings({"UnusedDeclaration"})
     public static final Key<LogoutFilter> LOGOUT = Key.get(LogoutFilter.class);

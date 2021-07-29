@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,10 +19,15 @@
 
 package org.killbill.billing.server.modules;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -37,6 +43,7 @@ import org.apache.shiro.realm.text.IniRealm;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter;
+import org.apache.shiro.web.filter.authc.BearerHttpAuthenticationFilter;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.mgt.WebSecurityManager;
 import org.apache.shiro.web.util.WebUtils;
@@ -52,6 +59,7 @@ import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.glue.RealmsFromShiroIniProvider;
 import org.killbill.billing.util.glue.RedisShiroManagerProvider;
 import org.killbill.billing.util.glue.SessionDAOProvider;
+import org.killbill.billing.util.security.shiro.realm.KillBillAuth0Realm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillJndiLdapRealm;
 import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
@@ -119,10 +127,13 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
         if (KillBillShiroModule.isOktaEnabled()) {
             bindRealm().to(KillBillOktaRealm.class).asEagerSingleton();
         }
+        if (KillBillShiroModule.isAuth0Enabled()) {
+            bindRealm().to(KillBillAuth0Realm.class).asEagerSingleton();
+        }
 
         if (KillBillShiroModule.isRBACEnabled()) {
-            addFilterChain(JaxrsResource.PREFIX + "/**", Key.get(CorsBasicHttpAuthenticationFilter.class));
-            addFilterChain(JaxrsResource.PLUGINS_PATH + "/**", Key.get(CorsBasicHttpAuthenticationOptionalFilter.class));
+            addFilterChain(JaxrsResource.PREFIX + "/**", Key.get(CorsBasicHttpAuthenticationFilter.class), Key.get(BearerHttpAuthenticationFilter.class));
+            addFilterChain(JaxrsResource.PLUGINS_PATH + "/**", Key.get(CorsBasicHttpAuthenticationOptionalFilter.class), Key.get(BearerHttpAuthenticationFilter.class));
         }
     }
 
@@ -185,10 +196,17 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
             // See https://bugzilla.mozilla.org/show_bug.cgi?id=778548 and http://www.kinvey.com/blog/60/kinvey-adds-cross-origin-resource-sharing-cors
             return "OPTIONS".equalsIgnoreCase(httpMethod) || super.isAccessAllowed(request, response, mappedValue);
         }
+
+        @Override
+        protected boolean isPermissive(final Object mappedValue) {
+            // Fallback to BearerHttpAuthenticationFilter
+            return true;
+        }
     }
 
     public static final class CorsBasicHttpAuthenticationOptionalFilter extends CorsBasicHttpAuthenticationFilter {
 
+        @Override
         protected boolean onAccessDenied(final ServletRequest request, final ServletResponse response) throws Exception {
             if (isLoginAttempt(request, response)) {
                 // Attempt to log-in
