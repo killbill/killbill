@@ -80,6 +80,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                @Nullable final UUID targetInvoiceId,
                                                final LocalDate targetDate,
                                                final Currency targetCurrency,
+                                               final boolean isDryRun,
                                                final InternalCallContext context) throws InvoiceApiException {
         if ((events == null)  || events.isAccountAutoInvoiceOff()) {
             return new InvoiceWithMetadata(null, ImmutableSet.of(), ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of(), false, context);
@@ -96,10 +97,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<UUID, SubscriptionFutureNotificationDates>();
 
-        final InvoiceGeneratorResult fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
+        final InvoiceGeneratorResult fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, isDryRun, context);
         invoice.addInvoiceItems(fixedAndRecurringItems.getItems());
 
-        final InvoiceGeneratorResult usageItemsWithTrackingIds = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, context);
+        final InvoiceGeneratorResult usageItemsWithTrackingIds = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, isDryRun, context);
         invoice.addInvoiceItems(usageItemsWithTrackingIds.getItems());
 
         if (targetInvoiceId != null) {

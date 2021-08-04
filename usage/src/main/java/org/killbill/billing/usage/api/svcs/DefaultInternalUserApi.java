@@ -18,12 +18,16 @@
 package org.killbill.billing.usage.api.svcs;
 
 import java.util.List;
+import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.callcontext.DefaultTenantContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.usage.DryRunTenantContext;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.api.BaseUserApi;
 import org.killbill.billing.usage.api.RawUsageRecord;
@@ -56,13 +60,13 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
     }
 
     @Override
-    public List<RawUsageRecord> getRawUsageForAccount(final LocalDate startDate, final LocalDate endDate, final InternalTenantContext internalTenantContext) {
+    public List<RawUsageRecord> getRawUsageForAccount(final LocalDate startDate, final LocalDate endDate, final boolean isDryRun, final InternalTenantContext internalTenantContext) {
 
         log.info("GetRawUsageForAccount startDate='{}', endDate='{}'", startDate, endDate);
 
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
-
-        final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, tenantContext);
+        final TenantContext tenantContextWithHint = isDryRun ? new DryRunTenantContext(tenantContext) : tenantContext;
+        final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, tenantContextWithHint);
         if (resultFromPlugin != null) {
             return resultFromPlugin;
         }
@@ -75,4 +79,5 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
             }
         }));
     }
+
 }

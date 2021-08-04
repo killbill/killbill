@@ -85,6 +85,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                                                 final LocalDate targetDate,
                                                 final Currency targetCurrency,
                                                 final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
+                                                final boolean isDryRun,
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Map<UUID, List<InvoiceItem>> perSubscriptionInArrearUsageItems = extractPerSubscriptionExistingInArrearUsageItems(eventSet.getUsages(), existingInvoices.getInvoices());
         try {
@@ -116,7 +117,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                             return input.getBillingMode() == BillingMode.IN_ARREAR;
                         }
                     })) {
-                    rawUsgRes = rawUsageOptimizer.getInArrearUsage(minBillingEventDate, targetDate, Iterables.concat(perSubscriptionInArrearUsageItems.values()), eventSet.getUsages(), internalCallContext);
+                    rawUsgRes = rawUsageOptimizer.getInArrearUsage(minBillingEventDate, targetDate, Iterables.concat(perSubscriptionInArrearUsageItems.values()), eventSet.getUsages(), isDryRun, internalCallContext);
 
                     // Check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate + 1 P, where P = max{all Periods available} (e.g MONTHLY)
                     // To make it simpler we check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate, and warn if this is not the case
