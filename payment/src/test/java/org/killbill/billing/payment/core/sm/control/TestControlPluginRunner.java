@@ -76,4 +76,41 @@ public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
         Assert.assertEquals(paymentControlResult.getAdjustedPluginProperties(), pluginProperties);
         Assert.assertFalse(paymentControlResult.isAborted());
     }
+
+    // This tests the PSP notification processing case
+    @Test(groups = "fast")
+    public void testPriorCallWithNullAccountAndPaymentMethodId() throws Exception {
+        final UUID paymentId = UUIDs.randomUUID();
+        final String paymentExternalKey = UUIDs.randomUUID().toString();
+        final UUID paymentTransactionId = UUIDs.randomUUID();
+        final String paymentTransactionExternalKey = UUIDs.randomUUID().toString();
+        final BigDecimal amount = BigDecimal.ONE;
+        final Currency currency = Currency.USD;
+        final ImmutableList<String> paymentControlPluginNames = ImmutableList.<String>of("not-registered");
+        final ImmutableList<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of();
+
+        final ControlPluginRunner controlPluginRunner = new ControlPluginRunner(new DefaultPaymentControlProviderPluginRegistry());
+        final PriorPaymentControlResult paymentControlResult = controlPluginRunner.executePluginPriorCalls(null,
+                null,
+                null,
+                null,
+                paymentId,
+                paymentExternalKey,
+                paymentTransactionId,
+                paymentTransactionExternalKey,
+                PaymentApiType.PAYMENT_TRANSACTION,
+                TransactionType.AUTHORIZE,
+                null,
+                amount,
+                currency,
+                null,
+                null,
+                true,
+                paymentControlPluginNames,
+                pluginProperties,
+                callContext);
+
+        Assert.assertNotNull(paymentControlResult);
+    }
+
 }

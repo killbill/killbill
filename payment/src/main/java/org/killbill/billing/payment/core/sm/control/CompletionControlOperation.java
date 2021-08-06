@@ -18,9 +18,11 @@
 package org.killbill.billing.payment.core.sm.control;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
 import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.payment.api.Payment;
@@ -74,7 +76,9 @@ public class CompletionControlOperation extends OperationControlCallback {
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
                 final PaymentTransactionModelDao transaction = paymentStateContext.getPaymentTransactionModelDao();
-                final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                final Account account = paymentStateContext.getAccount();
+                final UUID accountId = account != null ? account.getId() : null;
+                final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(accountId,
                                                                                                             paymentStateContext.getPaymentMethodId(),
                                                                                                             null,
                                                                                                             paymentStateControlContext.getAttemptId(),
