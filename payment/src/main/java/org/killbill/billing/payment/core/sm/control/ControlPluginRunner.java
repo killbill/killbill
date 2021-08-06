@@ -85,7 +85,9 @@ public class ControlPluginRunner {
         BigDecimal inputAmount = amount;
         Currency inputCurrency = currency;
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
-        PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(account,
+
+        final UUID accountId = account != null ? account.getId() : null;
+        PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(accountId,
                                                                                             paymentMethodId,
                                                                                             pluginName,
                                                                                             paymentAttemptId,
@@ -136,7 +138,8 @@ public class ControlPluginRunner {
             if (prevResult.isAborted()) {
                 throw new PaymentControlApiAbortException(controlPluginName);
             }
-            inputPaymentControlContext = new DefaultPaymentControlContext(account,
+
+            inputPaymentControlContext = new DefaultPaymentControlContext(accountId,
                                                                           inputPaymentMethodId,
                                                                           controlPluginName,
                                                                           paymentAttemptId,
@@ -179,7 +182,8 @@ public class ControlPluginRunner {
                                                                      final Iterable<PluginProperty> pluginProperties,
                                                                      final CallContext callContext) {
 
-        final PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(account,
+        final UUID accountId = account != null ? account.getId() : null;
+        final PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(accountId,
                                                                                                   paymentMethodId,
                                                                                                   pluginName,
                                                                                                   paymentAttemptId,
@@ -244,7 +248,8 @@ public class ControlPluginRunner {
                                                                      final Iterable<PluginProperty> pluginProperties,
                                                                      final CallContext callContext) {
 
-        final PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(account,
+        final UUID accountId = account != null ? account.getId() : null;
+        final PaymentControlContext inputPaymentControlContext = new DefaultPaymentControlContext(accountId,
                                                                                                   paymentMethodId,
                                                                                                   pluginName,
                                                                                                   paymentAttemptId,
@@ -298,7 +303,6 @@ public class ControlPluginRunner {
 
     public static class DefaultPaymentControlContext extends DefaultCallContext implements PaymentControlContext {
 
-        private final Account account;
         private final UUID paymentMethodId;
         private final String pluginName;
         private final UUID attemptId;
@@ -315,8 +319,8 @@ public class ControlPluginRunner {
         private final Currency processedCurrency;
         private final boolean isApiPayment;
 
-        public DefaultPaymentControlContext(final Account account,
-                                            final UUID paymentMethodId,
+        public DefaultPaymentControlContext(@Nullable final UUID accountId,
+                                            @Nullable final UUID paymentMethodId,
                                             @Nullable String pluginName,
                                             final UUID attemptId,
                                             @Nullable final UUID paymentId,
@@ -332,8 +336,9 @@ public class ControlPluginRunner {
                                             @Nullable final Currency processedCurrency,
                                             final boolean isApiPayment,
                                             final CallContext callContext) {
-            super(account.getId(), callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getUserToken(), callContext.getCreatedDate(), callContext.getUpdatedDate());
-            this.account = account;
+
+            super(accountId, callContext.getTenantId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getReasonCode(), callContext.getComments(), callContext.getUserToken(), callContext.getCreatedDate(), callContext.getUpdatedDate());
+
             this.paymentMethodId = paymentMethodId;
             this.pluginName = pluginName;
             this.attemptId = attemptId;
@@ -349,11 +354,6 @@ public class ControlPluginRunner {
             this.processedAmount = processedAmount;
             this.processedCurrency = processedCurrency;
             this.isApiPayment = isApiPayment;
-        }
-
-        @Override
-        public UUID getAccountId() {
-            return account.getId();
         }
 
         @Override
@@ -433,7 +433,7 @@ public class ControlPluginRunner {
         @Override
         public String toString() {
             return "DefaultPaymentControlContext{" +
-                   "account=" + account +
+                   "accountId=" + accountId +
                    ", paymentMethodId=" + paymentMethodId +
                    ", pluginName=" + pluginName +
                    ", attemptId=" + attemptId +

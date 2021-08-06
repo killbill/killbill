@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm.control;
 
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -26,6 +27,7 @@ import org.killbill.automaton.Operation.OperationCallback;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.OperationResult;
 import org.killbill.billing.ErrorCode;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.control.plugin.api.OnFailurePaymentControlResult;
 import org.killbill.billing.control.plugin.api.OnSuccessPaymentControlResult;
 import org.killbill.billing.control.plugin.api.PaymentApiType;
@@ -85,8 +87,10 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
 
             @Override
             public PluginDispatcherReturnType<OperationResult> doOperation() throws OperationException {
+                final Account account = paymentStateContext.getAccount();
+                final UUID accountId = account != null ? account.getId() : null;
 
-                final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+                final PaymentControlContext paymentControlContext = new DefaultPaymentControlContext(accountId,
                                                                                                      paymentStateContext.getPaymentMethodId(),
                                                                                                      null,
                                                                                                      paymentStateControlContext.getAttemptId(),
@@ -122,7 +126,8 @@ public abstract class OperationControlCallback extends OperationCallbackBase<Pay
                     final PaymentTransaction transaction = ((PaymentStateControlContext) paymentStateContext).getCurrentTransaction();
 
                     success = transaction.getTransactionStatus() == TransactionStatus.SUCCESS || transaction.getTransactionStatus() == TransactionStatus.PENDING;
-                    final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(paymentStateContext.getAccount(),
+
+                    final PaymentControlContext updatedPaymentControlContext = new DefaultPaymentControlContext(accountId,
                                                                                                                 paymentStateContext.getPaymentMethodId(),
                                                                                                                 null,
                                                                                                                 paymentStateControlContext.getAttemptId(),
