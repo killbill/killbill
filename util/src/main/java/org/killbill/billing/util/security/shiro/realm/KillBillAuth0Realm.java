@@ -50,7 +50,9 @@ import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
+import org.apache.shiro.subject.MutablePrincipalCollection;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.BoundRequestBuilder;
@@ -196,6 +198,29 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
             final Claims claims = verifyJWT(bearerToken);
             // Credentials are valid
             final Object principal = MoreObjects.firstNonNull(Strings.emptyToNull((String) claims.get("email")), claims.getSubject());
+
+            // For the JWT to contains the permissions, the `Add Permissions in the Access Token` setting must be turned on in Auth0
+            if (claims.containsKey("permissions") && claims.get("permissions") instanceof Iterable) {
+                // In order to use the permissions from the JWT (and avoid calling Auth0 later on), we need to eagerly cache them,
+                // as doGetAuthorizationInfo won't have access to the token
+                final org.apache.shiro.cache.Cache<Object, AuthorizationInfo> authorizationCache = getAuthorizationCache();
+                // Should never be null (initialized via init())
+                if (authorizationCache != null) {
+                    final SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo(null);
+                    final Set<String> permissions = new HashSet<String>();
+                    for (final Object permission : (Iterable) claims.get("permissions")) {
+                        permissions.add(permission.toString());
+                    }
+                    simpleAuthorizationInfo.setStringPermissions(permissions);
+
+                    final MutablePrincipalCollection principals = new SimplePrincipalCollection();
+                    principals.add(principal, getName());
+                    final Object authorizationCacheKey = getAuthorizationCacheKey(principals);
+
+                    authorizationCache.put(authorizationCacheKey, simpleAuthorizationInfo);
+                }
+            }
+
             return new SimpleAuthenticationInfo(principal, token.getCredentials(), getName());
         }
 
