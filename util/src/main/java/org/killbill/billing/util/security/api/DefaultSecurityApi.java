@@ -73,13 +73,13 @@ public class DefaultSecurityApi implements SecurityApi {
 
     private final UserDao userDao;
     private final Set<Realm> realms;
-    private final Map<Realm, Method> doGetAuthorizationInfoMethods = new HashMap<Realm, Method>();
+    private final Map<Realm, Method> getAuthorizationInfoMethods = new HashMap<Realm, Method>();
 
     @Inject
     public DefaultSecurityApi(final UserDao userDao, final Set<Realm> realms) {
         this.userDao = userDao;
         this.realms = realms;
-        buildDoGetAuthorizationInfoMethods();
+        buildGetAuthorizationInfoMethods();
     }
 
     @Override
@@ -135,7 +135,7 @@ public class DefaultSecurityApi implements SecurityApi {
         final Subject subject = SecurityUtils.getSubject();
 
         final Set<String> allPermissions = new HashSet<String>();
-        for (final Entry<Realm, Method> realmAndMethod : doGetAuthorizationInfoMethods.entrySet()) {
+        for (final Entry<Realm, Method> realmAndMethod : getAuthorizationInfoMethods.entrySet()) {
             try {
                 final AuthorizationInfo authorizationInfo = (AuthorizationInfo) realmAndMethod.getValue().invoke(realmAndMethod.getKey(), subject.getPrincipals());
                 if (authorizationInfo == null) {
@@ -331,32 +331,32 @@ public class DefaultSecurityApi implements SecurityApi {
         }
     }
 
-    private void buildDoGetAuthorizationInfoMethods() {
+    private void buildGetAuthorizationInfoMethods() {
         for (final Realm realm : realms) {
             if (!(realm instanceof AuthorizingRealm)) {
-                logger.debug("Unable to retrieve doGetAuthorizationInfo method from Realm {}: not an AuthorizingRealm", realm);
+                logger.debug("Unable to retrieve getAuthorizationInfo method from Realm {}: not an AuthorizingRealm", realm);
                 continue;
             }
 
-            Method doGetAuthorizationInfoMethod = null;
+            Method getAuthorizationInfoMethod = null;
             Class<?> clazz = realm.getClass();
             while (clazz != null) {
                 final Method[] methods = clazz.getDeclaredMethods();
                 for (final Method method : methods) {
-                    if ("doGetAuthorizationInfo".equals(method.getName())) {
-                        doGetAuthorizationInfoMethod = method;
-                        doGetAuthorizationInfoMethod.setAccessible(true);
+                    if ("getAuthorizationInfo".equals(method.getName())) {
+                        getAuthorizationInfoMethod = method;
+                        getAuthorizationInfoMethod.setAccessible(true);
                         break;
                     }
                 }
                 clazz = clazz.getSuperclass();
             }
-            if (doGetAuthorizationInfoMethod == null) {
-                logger.debug("Unable to retrieve doGetAuthorizationInfo method from Realm {}", realm);
+            if (getAuthorizationInfoMethod == null) {
+                logger.debug("Unable to retrieve getAuthorizationInfo method from Realm {}", realm);
                 continue;
             }
 
-            doGetAuthorizationInfoMethods.put(realm, doGetAuthorizationInfoMethod);
+            getAuthorizationInfoMethods.put(realm, getAuthorizationInfoMethod);
         }
     }
 }
