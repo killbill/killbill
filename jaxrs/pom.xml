@@ -112,6 +112,12 @@
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-platform-server</artifactId>
             <classifier>classes</classifier>
+            <exclusions>
+                <exclusion>
+                    <artifactId>metrics-guice</artifactId>
+                    <groupId>com.palominolabs.metrics</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>

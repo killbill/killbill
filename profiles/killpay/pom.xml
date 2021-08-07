@@ -51,6 +51,7 @@
         <dependency>
             <groupId>com.palominolabs.metrics</groupId>
             <artifactId>metrics-guice</artifactId>
+            <version>3.2.2</version>
             <scope>runtime</scope>
         </dependency>
         <!-- Will be required when we upgrade metrics-guice to 3.1.3 -->
