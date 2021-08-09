@@ -404,6 +404,7 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
         try {
             decoded = jwtParser.parseClaimsJws(token);
         } catch (final JwtException e) {
+            log.warn("Invalid JWT token: {}", e.getMessage());
             throw new AuthenticationException("ID token could not be decoded", e);
         }
 
