@@ -197,7 +197,9 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
             final String bearerToken = (String) token.getPrincipal();
             final Claims claims = verifyJWT(bearerToken);
             // Credentials are valid
-            final Object principal = MoreObjects.firstNonNull(Strings.emptyToNull((String) claims.get("email")), claims.getSubject());
+
+            // This config must match the one in Kaui
+            final Object principal = claims.get(securityConfig.getShiroAuth0UsernameClaim());
 
             // For the JWT to contains the permissions, the `Add Permissions in the Access Token` setting must be turned on in Auth0
             if (claims.containsKey("permissions") && claims.get("permissions") instanceof Iterable) {
