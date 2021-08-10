@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,13 +17,20 @@
 
 package org.killbill.billing.usage;
 
-import java.util.List;
+import java.util.UUID;
 
-import org.joda.time.LocalDate;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.usage.api.RawUsageRecord;
+import javax.annotation.Nullable;
 
-public interface InternalUserApi {
+import org.killbill.billing.callcontext.DefaultTenantContext;
+import org.killbill.billing.util.callcontext.TenantContext;
 
-    public List<RawUsageRecord> getRawUsageForAccount(final LocalDate stateDate, final LocalDate endDate, final boolean isDryRun, final InternalTenantContext tenantContext);
+public class DryRunTenantContext extends DefaultTenantContext {
+
+    public DryRunTenantContext(@Nullable final UUID accountId, @Nullable final UUID tenantId) {
+        super(accountId, tenantId);
+    }
+
+    public DryRunTenantContext(final TenantContext tenantContext) {
+        this(tenantContext.getAccountId(), tenantContext.getTenantId());
+    }
 }
