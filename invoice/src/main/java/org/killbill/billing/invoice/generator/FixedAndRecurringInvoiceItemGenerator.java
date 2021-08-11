@@ -40,6 +40,7 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -88,7 +89,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     public InvoiceGeneratorResult generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
                                                 final AccountInvoices existingInvoices, final LocalDate targetDate,
                                                 final Currency targetCurrency, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
-                                                final boolean isDryRun,
+                                                final DryRunType dryRunType,
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
 

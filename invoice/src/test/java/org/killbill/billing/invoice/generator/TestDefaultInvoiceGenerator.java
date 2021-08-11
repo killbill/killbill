@@ -128,14 +128,14 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testWithNullEventSetAndNullInvoiceSet() throws InvoiceApiException {
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, null, new AccountInvoices(), null, clock.getUTCToday(), Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, null, new AccountInvoices(), null, clock.getUTCToday(), Currency.USD, null, internalCallContext);
         assertNull(invoiceWithMetadata.getInvoice());
     }
 
     @Test(groups = "fast")
     public void testWithEmptyEventSet() throws InvoiceApiException {
         final BillingEventSet events = new MockBillingEventSet();
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, clock.getUTCToday(), Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, clock.getUTCToday(), Currency.USD, null, internalCallContext);
         assertNull(invoiceWithMetadata.getInvoice());
     }
 
@@ -154,7 +154,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event);
 
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 10, 3);
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -185,7 +185,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event);
 
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 10, 3);
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -218,7 +218,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // Target date is the next BCD, in local time
         final LocalDate targetDate = invoiceUtil.buildDate(2012, 8, bcdLocal);
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -242,7 +242,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // Set a target date of today (start date)
         final LocalDate targetDate = startDate;
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 1);
@@ -264,7 +264,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event);
 
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 10, 3);
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -296,7 +296,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event2);
 
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 10, 3);
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 2);
@@ -322,7 +322,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 12, 3);
         final UUID accountId = UUID.randomUUID();
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 4);
@@ -363,7 +363,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event3);
 
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 12, 3);
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), 4);
@@ -385,13 +385,13 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event1);
 
         LocalDate targetDate = invoiceUtil.buildDate(2011, 12, 1);
-        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final List<Invoice> existingInvoices = new ArrayList<Invoice>();
         final Invoice invoice1 = invoiceWithMetadata1.getInvoice();
         existingInvoices.add(invoice1);
 
         targetDate = invoiceUtil.buildDate(2011, 12, 3);
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
         assertNull(invoice2);
     }
@@ -564,7 +564,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 1, 1);
         events.add(createBillingEvent(UUID.randomUUID(), UUID.randomUUID(), targetDate, plan, planPhase, 1));
 
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getInvoiceItems().size(), 1);
@@ -581,7 +581,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         events.add(createBillingEvent(UUID.randomUUID(), UUID.randomUUID(), startDate, plan, planPhase, startDate.getDayOfMonth()));
 
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         final RecurringInvoiceItem item = (RecurringInvoiceItem) invoice.getInvoiceItems().get(0);
 
@@ -619,14 +619,14 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         events.add(event2);
         events.add(event1);
-        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, new LocalDate("2012-02-01"), Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, new LocalDate("2012-02-01"), Currency.USD, null, internalCallContext);
         final Invoice invoice1 = invoiceWithMetadata1.getInvoice();
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
 
         final List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, new LocalDate("2012-04-05"), Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, new LocalDate("2012-04-05"), Currency.USD, null, internalCallContext);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
@@ -651,7 +651,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event1);
 
         // ensure both components are invoiced
-        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, startDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, startDate, Currency.USD, null, internalCallContext);
         final Invoice invoice1 = invoiceWithMetadata1.getInvoice();
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 2);
@@ -664,7 +664,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final LocalDate currentDate = startDate.plusMonths(1);
 
         // ensure that only the recurring price is invoiced
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, currentDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, currentDate, Currency.USD, null, internalCallContext);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
@@ -690,7 +690,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event1);
 
         // ensure that a single invoice item is generated for the fixed cost
-        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, startDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, startDate, Currency.USD, null, internalCallContext);
         final Invoice invoice1 = invoiceWithMetadata1.getInvoice();assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
         assertEquals(invoice1.getBalance(), KillBillMoney.of(fixedCost1, invoice1.getCurrency()));
@@ -704,7 +704,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event2);
 
         // ensure that a single invoice item is generated for the fixed cost
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, phaseChangeDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, phaseChangeDate, Currency.USD, null, internalCallContext);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
         assertEquals(invoice2.getNumberOfItems(), 1);
         assertEquals(invoice2.getBalance(), KillBillMoney.of(fixedCost2, invoice2.getCurrency()));
@@ -736,7 +736,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final LocalDate discountPhaseEndDate = trialPhaseEndDate.plusMonths(6);
         events.add(createBillingEvent(subscriptionId, bundleId, discountPhaseEndDate, plan1, phase3, BILL_CYCLE_DAY));
 
-        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, creationDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, creationDate, Currency.USD, null, internalCallContext);
         final Invoice invoice1 = invoiceWithMetadata1.getInvoice();
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
@@ -745,7 +745,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final List<Invoice> invoiceList = new ArrayList<Invoice>();
         invoiceList.add(invoice1);
 
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, trialPhaseEndDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, trialPhaseEndDate, Currency.USD, null, internalCallContext);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
@@ -754,7 +754,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         invoiceList.add(invoice2);
         LocalDate targetDate = new LocalDate(trialPhaseEndDate.getYear(), trialPhaseEndDate.getMonthOfYear(), BILL_CYCLE_DAY);
-        final InvoiceWithMetadata invoiceWithMetadata3 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata3 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice3 = invoiceWithMetadata3.getInvoice();
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 1);
@@ -763,7 +763,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         invoiceList.add(invoice3);
         targetDate = targetDate.plusMonths(6);
-        final InvoiceWithMetadata invoiceWithMetadata4 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata4 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice4 = invoiceWithMetadata4.getInvoice();
         assertNotNull(invoice4);
         assertEquals(invoice4.getNumberOfItems(), 7);
@@ -776,7 +776,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final Plan plan1 = new MockPlan();
         final PlanPhase phase1 = createMockMonthlyPlanPhase(null, ZERO, PhaseType.TRIAL);
         events.add(createBillingEvent(UUID.randomUUID(), UUID.randomUUID(), clock.getUTCToday(), plan1, phase1, 1));
-        generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
     }
 
     @Test(groups = "fast")
@@ -796,7 +796,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(createBillingEvent(baseSubscription.getId(), baseSubscription.getBundleId(), april25, basePlan, basePlanEvergreen, 25));
 
         // generate invoice
-        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, april25, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, april25, Currency.USD, null, internalCallContext);
         final Invoice invoice1 = invoiceWithMetadata1.getInvoice();
         assertNotNull(invoice1);
         assertEquals(invoice1.getNumberOfItems(), 1);
@@ -818,7 +818,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(createBillingEvent(addOnSubscription2.getId(), baseSubscription.getBundleId(), april28, addOn2Plan, addOn2PlanPhaseEvergreen, 25));
 
         // generate invoice
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoices), null, april28, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoices), null, april28, Currency.USD, null, internalCallContext);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
 
         invoices.add(invoice2);
@@ -837,7 +837,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // generate invoice
         final LocalDate may1 = new LocalDate(2012, 5, 1);
-        final InvoiceWithMetadata invoiceWithMetadata3 = generator.generateInvoice(account, newEvents, new AccountInvoices(null, invoices), null, may1, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata3 = generator.generateInvoice(account, newEvents, new AccountInvoices(null, invoices), null, may1, Currency.USD, null, internalCallContext);
         final Invoice invoice3 = invoiceWithMetadata3.getInvoice();
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 3);
@@ -860,7 +860,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final BillingEventSet events = new MockBillingEventSet();
         events.add(createBillingEvent(originalSubscription.getId(), originalSubscription.getBundleId(), april25, originalPlan, originalPlanEvergreen, 25));
 
-        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, april25, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(), null, april25, Currency.USD, null, internalCallContext);
         final Invoice invoice1 = invoiceWithMetadata1.getInvoice();
 
         printDetailInvoice(invoice1);
@@ -883,7 +883,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(createBillingEvent(newSubscription.getId(), originalSubscription.getBundleId(), april25, newPlan, newPlanEvergreen, 25));
 
         // generate a new invoice
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoices), null, april25, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoices), null, april25, Currency.USD, null, internalCallContext);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
 
         printDetailInvoice(invoice2);
@@ -948,7 +948,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // Generate a new invoice
 
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, currency, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, currency, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertEquals(invoice.getNumberOfItems(), 7);
         assertEquals(invoice.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
@@ -983,7 +983,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         existingInvoices.add(invoice);
 
         // Generate next invoice (no-op)
-        final InvoiceWithMetadata newInvoiceWithMetdata = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, currency, false, internalCallContext);
+        final InvoiceWithMetadata newInvoiceWithMetdata = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, currency, null, internalCallContext);
         final Invoice newInvoice = newInvoiceWithMetdata.getInvoice();
         assertNull(newInvoice);
     }
@@ -1005,7 +1005,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 10, 3);
         final UUID accountId = UUID.randomUUID();
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
 
         assertNull(invoiceWithMetadata.getInvoice());
     }
@@ -1034,7 +1034,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         eventSet.add(createBillingEvent(subscriptionId2, bundleId, startDate, plan2, plan2phase1, 1));
 
         // generate the first invoice
-        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, eventSet, new AccountInvoices(null, invoices), null, startDate, currency, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, eventSet, new AccountInvoices(null, invoices), null, startDate, currency, null, internalCallContext);
         final Invoice invoice1 = invoiceWithMetadata1.getInvoice();
         assertNotNull(invoice1);
         assertTrue(invoice1.getBalance().compareTo(FIFTEEN.add(TWELVE)) == 0);
@@ -1046,7 +1046,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         eventSet.addSubscriptionWithAutoInvoiceOff(subscriptionId1);
 
         final LocalDate targetDate2 = startDate.plusMonths(1);
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, eventSet, new AccountInvoices(null, invoices), null, targetDate2, currency, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, eventSet, new AccountInvoices(null, invoices), null, targetDate2, currency, null, internalCallContext);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
         assertNotNull(invoice2);
         assertTrue(invoice2.getBalance().compareTo(TWELVE) == 0);
@@ -1055,7 +1055,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final LocalDate targetDate3 = targetDate2.plusMonths(1);
         eventSet.clearSubscriptionsWithAutoInvoiceOff();
         eventSet.add(subscription1creation);
-        final InvoiceWithMetadata invoiceWithMetadata3 = generator.generateInvoice(account, eventSet, new AccountInvoices(null, invoices), null, targetDate3, currency, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata3 = generator.generateInvoice(account, eventSet, new AccountInvoices(null, invoices), null, targetDate3, currency, null, internalCallContext);
         final Invoice invoice3 = invoiceWithMetadata3.getInvoice();
         assertNotNull(invoice3);
         assertTrue(invoice3.getBalance().compareTo(FIFTEEN.multiply(TWO).add(TWELVE)) == 0);
@@ -1078,7 +1078,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         final LocalDate targetDate = invoiceUtil.buildDate(2011, 10, 3);
         final UUID accountId = UUID.randomUUID();
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
 
         assertNotNull(invoiceWithMetadata.getInvoice());
         assertEquals(invoiceWithMetadata.getInvoice().getStatus(), InvoiceStatus.DRAFT);
@@ -1105,7 +1105,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(event);
 
         final LocalDate targetDate = invoiceUtil.buildDate(2016, 10, 9);
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
 
         assertNotNull(invoice);
@@ -1131,7 +1131,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         final List<Invoice> existingInvoices = new ArrayList<Invoice>();
         existingInvoices.add(invoice);
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, Currency.USD, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, Currency.USD, null, internalCallContext);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
 
         assertNull(invoice2);
@@ -1393,7 +1393,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
                                        final LocalDate targetDate, final int expectedNumberOfItems,
                                        final BigDecimal expectedAmount) throws InvoiceApiException {
         final Currency currency = Currency.USD;
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, currency, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, currency, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNotNull(invoice);
         assertEquals(invoice.getNumberOfItems(), expectedNumberOfItems);
@@ -1405,7 +1405,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
     private void testNullInvoiceGeneration(final BillingEventSet events, final List<Invoice> existingInvoices, final LocalDate targetDate) throws InvoiceApiException {
         final Currency currency = Currency.USD;
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, currency, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(null, existingInvoices), null, targetDate, currency, null, internalCallContext);
         final Invoice invoice = invoiceWithMetadata.getInvoice();
         assertNull(invoice);
     }

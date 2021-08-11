@@ -27,6 +27,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.SubscriptionFutureNotificationDates;
@@ -40,8 +41,7 @@ public abstract class InvoiceItemGenerator {
     public abstract InvoiceGeneratorResult generateItems(final ImmutableAccountData account, final UUID invoiceId, final BillingEventSet eventSet,
                                                          final AccountInvoices existingInvoices, final LocalDate targetDate,
                                                          final Currency targetCurrency, Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
-                                                         final boolean isDryRun,
-                                                         final InternalCallContext context) throws InvoiceApiException;
+                                                         final DryRunType dryRunType, final InternalCallContext context) throws InvoiceApiException;
 
     public static class InvoiceGeneratorResult {
 

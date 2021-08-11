@@ -125,8 +125,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                                                                    targetDate1,
                                                                                                    account.getCurrency(),
                                                                                                    new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                   false,
-                                                                                                   internalCallContext);
+                                                                                                   null, internalCallContext);
         assertEquals(result1.getItems().size(), 1);
         assertEquals(result1.getItems().get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
         assertEquals(result1.getItems().get(0).getStartDate().compareTo(new LocalDate("2020-01-01")), 0);
@@ -161,8 +160,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                                                                    targetDate2,
                                                                                                    account.getCurrency(),
                                                                                                    new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                   false,
-                                                                                                   internalCallContext);
+                                                                                                   null, internalCallContext);
         assertEquals(result2.getItems().size(), 0);
 
         // Two month after invoicing, optimization *does* not kick-in
@@ -178,8 +176,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                                                                    targetDate3,
                                                                                                    account.getCurrency(),
                                                                                                    new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                   false,
-                                                                                                   internalCallContext);
+                                                                                                   null, internalCallContext);
         assertEquals(result3.getItems().size(), 0);
     }
 
@@ -224,8 +221,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                                                                    targetDate1,
                                                                                                    account.getCurrency(),
                                                                                                    new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                   false,
-                                                                                                   internalCallContext);
+                                                                                                   null, internalCallContext);
         assertEquals(result1.getItems().size(), 1);
         assertEquals(result1.getItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(result1.getItems().get(0).getStartDate().compareTo(new LocalDate("2020-01-01")), 0);
@@ -261,8 +257,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                                                                    targetDate2,
                                                                                                    account.getCurrency(),
                                                                                                    new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                   false,
-                                                                                                   internalCallContext);
+                                                                                                   null, internalCallContext);
         assertEquals(result2.getItems().size(), 1);
         assertEquals(result2.getItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(result2.getItems().get(0).getStartDate().compareTo(new LocalDate("2020-02-01")), 0);
@@ -298,8 +293,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                                                                    targetDate3,
                                                                                                    account.getCurrency(),
                                                                                                    new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                   false,
-                                                                                                   internalCallContext);
+                                                                                                   null, internalCallContext);
         assertEquals(result3.getItems().size(), 1);
         assertEquals(result3.getItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(result3.getItems().get(0).getStartDate().compareTo(new LocalDate("2020-03-01")), 0);
@@ -348,8 +342,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                                                                    targetDate1,
                                                                                                    account.getCurrency(),
                                                                                                    new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                   false,
-                                                                                                   internalCallContext);
+                                                                                                   null, internalCallContext);
         assertEquals(result1.getItems().size(), 0);
 
         // Initial invoicing (targetDate2  = startDate + 1 month)
@@ -366,8 +359,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                                                                    targetDate2,
                                                                                                    account.getCurrency(),
                                                                                                    new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                   false,
-                                                                                                   internalCallContext);
+                                                                                                   null, internalCallContext);
         assertEquals(result2.getItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(result2.getItems().get(0).getStartDate().compareTo(new LocalDate("2020-01-01")), 0);
         assertEquals(result2.getItems().get(0).getEndDate().compareTo(new LocalDate("2020-02-01")), 0);
@@ -400,8 +392,7 @@ public class TestFixedAndRecurringInvoiceItemGeneratorWithOptimization extends I
                                                                                                    targetDate3,
                                                                                                    account.getCurrency(),
                                                                                                    new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                   false,
-                                                                                                   internalCallContext);
+                                                                                                   null, internalCallContext);
 
         assertEquals(result3.getItems().get(0).getInvoiceItemType(), InvoiceItemType.RECURRING);
         assertEquals(result3.getItems().get(0).getStartDate().compareTo(new LocalDate("2020-02-01")), 0);

@@ -374,8 +374,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                          startDate.plusMonths(threshold),
                                                                          account.getCurrency(),
                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                         false,
-                                                                         internalCallContext).getItems().size(), 1);
+                                                                         null, internalCallContext).getItems().size(), 1);
 
         // Simulate a big catch-up on that day
         for (int i = threshold; i < 2 * threshold; i++) {
@@ -406,8 +405,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                          startDate.plusMonths(2 * threshold),
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         false,
-                                                                                                         internalCallContext).getItems();
+                                                                                                         null, internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -467,8 +465,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                     false,
-                                                                                                     internalCallContext).getItems();
+                                                                                                     null, internalCallContext).getItems();
         // There will be one proposed, but because it will match one of ones in the existing list and we don't repair, it won't be returned
         assertEquals(generatedItems.size(), 0);
     }
@@ -530,8 +527,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         false,
-                                                                                                         internalCallContext).getItems();
+                                                                                                         null, internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -592,8 +588,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                     false,
-                                                                                                     internalCallContext).getItems();
+                                                                                                     null, internalCallContext).getItems();
         assertEquals(generatedItems.size(), 2);
         assertTrue(generatedItems.get(0) instanceof RecurringInvoiceItem);
         assertEquals(generatedItems.get(0).getStartDate(), new LocalDate("2016-01-01"));
@@ -674,8 +669,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         false,
-                                                                                                         internalCallContext).getItems();
+                                                                                                         null, internalCallContext).getItems();
 
             // Maybe we could auto-fix-it one day?
             // assertEquals(generatedItems.size(), 1);
@@ -754,8 +748,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                     false,
-                                                                                                     internalCallContext).getItems();
+                                                                                                     null, internalCallContext).getItems();
         assertEquals(generatedItems.size(), 1);
         assertTrue(generatedItems.get(0) instanceof RecurringInvoiceItem);
         assertEquals(generatedItems.get(0).getStartDate(), new LocalDate("2016-01-01"));
@@ -837,8 +830,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                 startDate,
                                                                 account.getCurrency(),
                                                                 new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                false,
-                                                                internalCallContext).getItems();
+                                                                null, internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -909,8 +901,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         false,
-                                                                                                         internalCallContext).getItems();
+                                                                                                         null, internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -946,8 +937,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         false,
-                                                                                                         internalCallContext).getItems();
+                                                                                                         null, internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -984,8 +974,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                          startDate,
                                                                                                          account.getCurrency(),
                                                                                                          new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                         false,
-                                                                                                         internalCallContext).getItems();
+                                                                                                         null, internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -1042,8 +1031,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                 startDate,
                                                                 account.getCurrency(),
                                                                 new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                false,
-                                                                internalCallContext).getItems();
+                                                                null, internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -1133,8 +1121,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                     false,
-                                                                                                     internalCallContext).getItems();
+                                                                                                     null, internalCallContext).getItems();
         assertTrue(generatedItems.isEmpty());
     }
 
@@ -1220,8 +1207,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                      startDate,
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                                                     false,
-                                                                                                     internalCallContext).getItems();
+                                                                                                     null, internalCallContext).getItems();
         assertTrue(generatedItems.isEmpty());
     }
 
@@ -1308,8 +1294,7 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                 startDate,
                                                                 account.getCurrency(),
                                                                 new HashMap<UUID, SubscriptionFutureNotificationDates>(),
-                                                                false,
-                                                                internalCallContext).getItems();
+                                                                null, internalCallContext).getItems();
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
