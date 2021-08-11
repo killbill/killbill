@@ -313,7 +313,7 @@ public class InvoiceDispatcher {
             // Grab lock unless we do a dry-run
             final boolean isDryRun = dryRunArguments != null;
             lock = !isDryRun ? locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries()) : null;
-            return processAccountInternal(parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, context);
+            return processAccountInternal(isApiCall, parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, context);
         } catch (final LockFailedException e) {
             if (isApiCall) {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
@@ -329,7 +329,8 @@ public class InvoiceDispatcher {
         return null;
     }
 
-    private Invoice processAccountInternal(final boolean parkedAccount,
+    private Invoice processAccountInternal(final boolean isApiCall,
+                                           final boolean parkedAccount,
                                            final UUID accountId,
                                            @Nullable final LocalDate inputTargetDateMaybeNull,
                                            @Nullable final DryRunArguments dryRunArguments,
@@ -348,15 +349,11 @@ public class InvoiceDispatcher {
         try {
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, dryRunArguments, context);
-            if (billingEvents.isAccountAutoInvoiceOff()) {
+            if (!isApiCall && billingEvents.isAccountAutoInvoiceOff()) {
                 return null;
             }
 
-            // Avoid pulling all invoices when AUTO_INVOICING_OFF is set since we will disable invoicing later
-            // (Note that we can't return right away as we send a NullInvoice event)
-            final AccountInvoices accountInvoices = billingEvents.isAccountAutoInvoiceOff() ?
-                                                    new AccountInvoices() : invoiceOptimizer.getInvoices(context);
-
+            final AccountInvoices accountInvoices = invoiceOptimizer.getInvoices(context);
             final Invoice invoice;
             if (!isDryRun) {
                 final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, accountInvoices, false, isRescheduled, Lists.newLinkedList(), context);
