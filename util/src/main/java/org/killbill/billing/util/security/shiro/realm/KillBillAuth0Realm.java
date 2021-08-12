@@ -112,8 +112,10 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
         if (securityConfig.getShiroAuth0Audience() != null) {
             jwtParserBuilder.requireAudience(securityConfig.getShiroAuth0Audience());
         }
+        if (securityConfig.getShiroAuth0Issuer() != null) {
+            jwtParserBuilder.requireIssuer(securityConfig.getShiroAuth0Issuer());
+        }
         this.jwtParser = jwtParserBuilder
-                             .requireIssuer(securityConfig.getShiroAuth0Url().endsWith("/") ? securityConfig.getShiroAuth0Url() : securityConfig.getShiroAuth0Url() + "/")
                              .setClock(new Clock() {
                                  @Override
                                  public Date now() {
