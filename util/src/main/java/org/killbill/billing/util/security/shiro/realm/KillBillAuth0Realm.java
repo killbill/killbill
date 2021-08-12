@@ -78,6 +78,7 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.JwtParserBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SigningKeyResolver;
 import io.jsonwebtoken.security.SignatureException;
@@ -107,9 +108,12 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
                                          .setReadTimeout((int) securityConfig.getShiroAuth0ReadTimeout().getMillis())
                                          .setRequestTimeout((int) securityConfig.getShiroAuth0RequestTimeout().getMillis());
         this.httpClient = new DefaultAsyncHttpClient(cfg.build());
-        this.jwtParser = Jwts.parserBuilder()
+        final JwtParserBuilder jwtParserBuilder = Jwts.parserBuilder();
+        if (securityConfig.getShiroAuth0Audience() != null) {
+            jwtParserBuilder.requireAudience(securityConfig.getShiroAuth0Audience());
+        }
+        this.jwtParser = jwtParserBuilder
                              .requireIssuer(securityConfig.getShiroAuth0Url().endsWith("/") ? securityConfig.getShiroAuth0Url() : securityConfig.getShiroAuth0Url() + "/")
-                             .requireAudience(securityConfig.getShiroAuth0APIIdentifier())
                              .setClock(new Clock() {
                                  @Override
                                  public Date now() {
