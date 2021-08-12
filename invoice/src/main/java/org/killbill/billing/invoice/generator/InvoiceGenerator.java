@@ -24,11 +24,12 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.invoice.api.DryRunInfo;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 import org.killbill.billing.junction.BillingEventSet;
 
 public interface InvoiceGenerator {
-    InvoiceWithMetadata generateInvoice(ImmutableAccountData account, @Nullable BillingEventSet events,  AccountInvoices existingInvoices,
-                                        final UUID targetInvoiceId, LocalDate targetDate, Currency targetCurrency, boolean isDryRun, InternalCallContext context) throws InvoiceApiException;
+    InvoiceWithMetadata generateInvoice(ImmutableAccountData account, @Nullable BillingEventSet events, AccountInvoices existingInvoices,
+                                        UUID targetInvoiceId, LocalDate targetDate, Currency targetCurrency, @Nullable DryRunInfo dryRunInfo, InternalCallContext context) throws InvoiceApiException;
 }

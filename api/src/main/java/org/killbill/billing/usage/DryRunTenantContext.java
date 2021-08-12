@@ -17,20 +17,57 @@
 
 package org.killbill.billing.usage;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.DefaultTenantContext;
+import org.killbill.billing.invoice.api.DryRunInfo;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.util.callcontext.TenantContext;
 
 public class DryRunTenantContext extends DefaultTenantContext {
 
-    public DryRunTenantContext(@Nullable final UUID accountId, @Nullable final UUID tenantId) {
+    private final DryRunType dryRunType;
+    private final LocalDate targetDate;
+
+    public DryRunTenantContext(@Nullable final DryRunInfo dryRunInfo, @Nullable final UUID accountId, @Nullable final UUID tenantId) {
         super(accountId, tenantId);
+        this.dryRunType = dryRunInfo != null ? dryRunInfo.getDryRunType() : null;
+        this.targetDate = dryRunInfo != null ? dryRunInfo.getInputTargetDate() : null;
     }
 
-    public DryRunTenantContext(final TenantContext tenantContext) {
-        this(tenantContext.getAccountId(), tenantContext.getTenantId());
+    public DryRunTenantContext(@Nullable final DryRunInfo dryRunInfo, final TenantContext tenantContext) {
+        this(dryRunInfo, tenantContext.getAccountId(), tenantContext.getTenantId());
+    }
+
+    public DryRunType getDryRunType() {
+        return dryRunType;
+    }
+
+    public LocalDate getTargetDate() {
+        return targetDate;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        final DryRunTenantContext that = (DryRunTenantContext) o;
+        return dryRunType == that.dryRunType && Objects.equals(targetDate, that.targetDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), dryRunType, targetDate);
     }
 }
