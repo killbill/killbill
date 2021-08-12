@@ -1,6 +1,6 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -15,16 +15,25 @@
  * under the License.
  */
 
-package org.killbill.billing.usage;
-
-import java.util.List;
+package org.killbill.billing.invoice.api;
 
 import org.joda.time.LocalDate;
-import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.invoice.api.DryRunInfo;
-import org.killbill.billing.usage.api.RawUsageRecord;
 
-public interface InternalUserApi {
+public class DryRunInfo {
 
-    public List<RawUsageRecord> getRawUsageForAccount(LocalDate stateDate, LocalDate endDate, DryRunInfo dryRunInfo, InternalTenantContext tenantContext);
+    final DryRunType dryRunType;
+    final LocalDate inputTargetDate;
+
+    public DryRunInfo(final DryRunType dryRunType, final LocalDate inputTargetDate) {
+        this.dryRunType = dryRunType;
+        this.inputTargetDate = inputTargetDate;
+    }
+
+    public DryRunType getDryRunType() {
+        return dryRunType;
+    }
+
+    public LocalDate getInputTargetDate() {
+        return inputTargetDate;
+    }
 }

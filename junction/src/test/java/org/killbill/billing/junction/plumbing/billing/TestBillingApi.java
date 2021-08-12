@@ -232,7 +232,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final BillingEventSet events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
 
         assertEquals(events.isAccountAutoInvoiceOff(), true);
-        assertEquals(events.size(), 0);
+        assertEquals(events.size(), 1);
     }
 
     @Test(groups = "fast")

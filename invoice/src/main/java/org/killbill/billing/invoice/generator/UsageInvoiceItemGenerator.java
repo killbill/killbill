@@ -37,7 +37,7 @@ import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.invoice.api.DryRunType;
+import org.killbill.billing.invoice.api.DryRunInfo;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -86,7 +86,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                                                 final LocalDate targetDate,
                                                 final Currency targetCurrency,
                                                 final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates,
-                                                final DryRunType dryRunType,
+                                                final DryRunInfo dryRunInfo,
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Map<UUID, List<InvoiceItem>> perSubscriptionInArrearUsageItems = extractPerSubscriptionExistingInArrearUsageItems(eventSet.getUsages(), existingInvoices.getInvoices());
         try {
@@ -118,7 +118,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                             return input.getBillingMode() == BillingMode.IN_ARREAR;
                         }
                     })) {
-                    rawUsgRes = rawUsageOptimizer.getInArrearUsage(minBillingEventDate, targetDate, Iterables.concat(perSubscriptionInArrearUsageItems.values()), eventSet.getUsages(), dryRunType, internalCallContext);
+                    rawUsgRes = rawUsageOptimizer.getInArrearUsage(minBillingEventDate, targetDate, Iterables.concat(perSubscriptionInArrearUsageItems.values()), eventSet.getUsages(), dryRunInfo, internalCallContext);
 
                     // Check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate + 1 P, where P = max{all Periods available} (e.g MONTHLY)
                     // To make it simpler we check existingInvoices#cutoffDate <= rawUsgRes#rawUsageStartDate, and warn if this is not the case

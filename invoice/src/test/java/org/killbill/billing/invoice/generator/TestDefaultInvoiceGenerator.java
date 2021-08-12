@@ -989,28 +989,6 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testAutoInvoiceOffAccount() throws Exception {
-        final MockBillingEventSet events = new MockBillingEventSet();
-        events.setAccountInvoiceOff(true);
-
-        final SubscriptionBase sub = createSubscription();
-        final LocalDate startDate = invoiceUtil.buildDate(2011, 9, 1);
-
-        final Plan plan = new MockPlan();
-        final BigDecimal rate1 = TEN;
-        final PlanPhase phase = createMockMonthlyPlanPhase(rate1);
-
-        final BillingEvent event = createBillingEvent(sub.getId(), sub.getBundleId(), startDate, plan, phase, 1);
-        events.add(event);
-
-        final LocalDate targetDate = invoiceUtil.buildDate(2011, 10, 3);
-        final UUID accountId = UUID.randomUUID();
-        final InvoiceWithMetadata invoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(), null, targetDate, Currency.USD, null, internalCallContext);
-
-        assertNull(invoiceWithMetadata.getInvoice());
-    }
-
-    @Test(groups = "fast")
     public void testAutoInvoiceOffWithCredits() throws CatalogApiException, InvoiceApiException {
         final Currency currency = Currency.USD;
         final List<Invoice> invoices = new ArrayList<Invoice>();

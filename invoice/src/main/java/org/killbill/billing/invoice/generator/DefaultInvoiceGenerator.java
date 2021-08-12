@@ -31,7 +31,7 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.invoice.api.DryRunType;
+import org.killbill.billing.invoice.api.DryRunInfo;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -81,9 +81,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                @Nullable final UUID targetInvoiceId,
                                                final LocalDate targetDate,
                                                final Currency targetCurrency,
-                                               @Nullable final DryRunType dryRunType,
+                                               @Nullable final DryRunInfo dryRunInfo,
                                                final InternalCallContext context) throws InvoiceApiException {
-        if ((events == null)  || events.isAccountAutoInvoiceOff()) {
+        if (events == null) {
             return new InvoiceWithMetadata(null, ImmutableSet.of(), ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of(), false, context);
         }
 
@@ -98,10 +98,10 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
         final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<UUID, SubscriptionFutureNotificationDates>();
 
-        final InvoiceGeneratorResult fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, dryRunType, context);
+        final InvoiceGeneratorResult fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, dryRunInfo, context);
         invoice.addInvoiceItems(fixedAndRecurringItems.getItems());
 
-        final InvoiceGeneratorResult usageItemsWithTrackingIds = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, dryRunType, context);
+        final InvoiceGeneratorResult usageItemsWithTrackingIds = usageInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, dryRunInfo, context);
         invoice.addInvoiceItems(usageItemsWithTrackingIds.getItems());
 
         if (targetInvoiceId != null) {
