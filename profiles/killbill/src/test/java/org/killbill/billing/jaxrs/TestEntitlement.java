@@ -978,7 +978,8 @@ public class TestEntitlement extends TestJaxrsBase {
         input.setBillingPeriod(BillingPeriod.MONTHLY);
         input.setPriceList("notrial");
 
-        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CREATION,
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE, /* BCD Update */
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
                                            ExtBusEventType.SUBSCRIPTION_CREATION,
                                            ExtBusEventType.ENTITLEMENT_CREATION); // Note that the BCD isn't set
         final Subscription subscriptionJson = subscriptionApi.createSubscription(input,

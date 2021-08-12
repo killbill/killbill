@@ -106,17 +106,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
         final DefaultBillingEventSet result;
 
-        if (found_AUTO_INVOICING_OFF) {
-            result = new DefaultBillingEventSet(true, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT); // billing is off, we are done
-            log.info("Account is AUTO_INVOICING_OFF: no billing event for accountId='{}'", accountId);
-            return result;
-        }
-
         final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(fullCatalog, context);
-
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
-        result = new DefaultBillingEventSet(false, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
+        result = new DefaultBillingEventSet(found_AUTO_INVOICING_OFF, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
         addBillingEventsForBundles(bundles, account, dryRunArguments, context, result, skippedSubscriptions, subscriptionsForAccount, fullCatalog, tagsForAccount);
         if (result.isEmpty()) {
             log.info("No billing event for accountId='{}'", accountId);
