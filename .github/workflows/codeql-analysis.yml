@@ -4,6 +4,9 @@ on:
   - push
   - workflow_dispatch
 
+env:
+  MAVEN_OPTS: "-Xmx2G -XX:+ExitOnOutOfMemoryError -Dmaven.wagon.rto=60000 -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3"
+
 jobs:
   analyze:
     name: Analyze
