@@ -140,6 +140,16 @@ public interface SecurityConfig extends KillbillConfig {
     @Description("Auth0 API identifier")
     public String getShiroAuth0APIIdentifier();
 
+    @Config("org.killbill.security.auth0.issuer")
+    @DefaultNull
+    @Description("Auth0 JWT expected issuer")
+    public String getShiroAuth0Issuer();
+
+    @Config("org.killbill.security.auth0.audience")
+    @DefaultNull
+    @Description("Auth0 JWT expected audience")
+    public String getShiroAuth0Audience();
+
     @Config("org.killbill.security.auth0.usernameClaim")
     @Default("sub")
     @Description("JWT claim to use as the user name")
