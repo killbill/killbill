@@ -158,7 +158,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         }
 
         if (targetDate.compareTo(maxDate) != 0) {
-            logger.warn("Adjusting target date from {} to {}", targetDate, maxDate);
+            logger.info("Adjusting target date from {} to {}", targetDate, maxDate);
         }
 
         return maxDate;

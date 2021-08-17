@@ -223,7 +223,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                     Preconditions.checkState(nbUsedTierBlocks == previousUsageQuantity, String.format("Expected usage for tier='%d', unit='%s' to be full, instead found units='[%d/%d]'",
                                                                                                       tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
                 } else {
-                    Preconditions.checkState(nbUsedTierBlocks - previousUsageQuantity >= 0, String.format("Expected usage for tier='%d', unit='%s' to contain at least as mush as current usage, instead found units='[%d/%d]",
+                    Preconditions.checkState(nbUsedTierBlocks - previousUsageQuantity >= 0, String.format("Expected usage for tier='%d', unit='%s' to contain at least as much as current usage, instead found units='[%d/%d]",
                                                                                                           tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
                 }
                 nbUsedTierBlocks = nbUsedTierBlocks - previousUsageQuantity;
