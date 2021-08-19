@@ -1,7 +1,10 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -22,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.tree.NodeInterval.AddNodeCallback;
 import org.killbill.billing.invoice.tree.NodeInterval.BuildNodeCallback;
 import org.killbill.billing.invoice.tree.NodeInterval.SearchCallback;
@@ -34,9 +38,9 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
+public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
-    private AddNodeCallback CALLBACK = new DummyAddNodeCallback();
+    private final AddNodeCallback CALLBACK = new DummyAddNodeCallback();
 
     public static class DummyNodeInterval extends ItemsNodeInterval {
 
@@ -90,8 +94,6 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
             return true;
         }
     }
-
-
 
     @Test(groups = "fast")
     public void testAddExistingItemSimple() {
@@ -212,7 +214,6 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         } catch (final IllegalStateException e) {
         }
     }
-
 
     @Test(groups = "fast")
     public void testAddOverlapNode4() {
@@ -406,7 +407,6 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         root.addNode(firstChildLevel1, CALLBACK);
         root.addNode(secondChildLevel1, CALLBACK);
 
-
         final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
         final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-04", "2014-01-10");
         final DummyNodeInterval thirdChildLevel2 = createNodeInterval("2014-01-11", "2014-01-20");
@@ -461,7 +461,6 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
         final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-21", "2014-01-31");
         root.addNode(firstChildLevel1, CALLBACK);
         root.addNode(secondChildLevel1, CALLBACK);
-
 
         final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-21", "2014-01-23");
         final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-24", "2014-01-25");
@@ -526,5 +525,4 @@ public class TestNodeInterval /* extends InvoiceTestSuiteNoDB  */ {
     private DummyNodeInterval createNodeInterval(final String startDate, final String endDate) {
         return createNodeInterval(new LocalDate(startDate), new LocalDate(endDate));
     }
-
 }

@@ -1,7 +1,10 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -29,7 +32,6 @@ public class NodeInterval {
     protected NodeInterval parent;
     protected NodeInterval leftChild;
     protected NodeInterval rightSibling;
-
     protected LocalDate start;
     protected LocalDate end;
 
@@ -88,14 +90,15 @@ public class NodeInterval {
      * and specific behavior can be tuned through specific callbacks.
      */
     public boolean addNode(final NodeInterval newNode, final AddNodeCallback callback) {
-
         Preconditions.checkNotNull(newNode);
         Preconditions.checkNotNull(callback);
 
+        // Recursion: we've found a node matching that interval
         if (!isRoot() && newNode.getStart().compareTo(start) == 0 && newNode.getEnd().compareTo(end) == 0) {
             return callback.onExistingNode(this, (ItemsNodeInterval) newNode);
         }
 
+        // Initialize (or update) the root interval
         computeRootInterval(newNode);
 
         newNode.parent = this;
@@ -111,15 +114,52 @@ public class NodeInterval {
         NodeInterval prevChild = null;
         NodeInterval curChild = leftChild;
         while (curChild != null) {
-
-            // newNode is contained, we go deeper in the tree
+            // newNode is contained (i.e. fits into curChild interval), we go deeper in the tree
             if (curChild.isItemContained(newNode)) {
                 return curChild.addNode(newNode, callback);
             }
 
-            // newNode overlaps, we have to rebalance
+            // newNode overlaps (i.e. curChild is contained in newNode), we have to rebalance:
+            // we go through the left child and all of its right siblings, "push" down the ones that
+            // are contained, and insert the newNode (along maybe with right siblings that aren't contained).
+            //
+            // For example, before:
+            //       A
+            //      /
+            //      B
+            //     /
+            //     Cde
+            //
+            //     A: [2014-01-01,2014-02-01]
+            //
+            //     B: [2014-01-01,2014-02-01]
+            //
+            //     C: [2014-01-01,2014-01-03]
+            //     d: [2014-01-03,2014-01-05]
+            //     e: [2014-01-16,2014-01-17]
+            //
+            // After inserting F [2014-01-01,2014-01-07]:
+            //        A
+            //       /
+            //       B
+            //      /
+            //      Fe
+            //     /
+            //     Cd
+            //
+            //     A: [2014-01-01,2014-02-01]
+            //
+            //     B: [2014-01-01,2014-02-01]
+            //
+            //     F: [2014-01-01,2014-01-07]
+            //     e: [2014-01-16,2014-01-17]
+            //
+            //     C: [2014-01-01,2014-01-03]
+            //     d: [2014-01-03,2014-01-05]
+            //
             if (curChild.isItemOverlap(newNode)) {
                 if (rebalance(newNode)) {
+                    // Return from the recursion
                     return callback.shouldInsertNode(this, (ItemsNodeInterval) newNode);
                 }
             }
@@ -177,7 +217,6 @@ public class NodeInterval {
         } else {
             return false;
         }
-
     }
 
     public void removeChild(final NodeInterval toBeRemoved) {
@@ -239,7 +278,7 @@ public class NodeInterval {
                 if (callback.isMatch(curChild)) {
                     return curChild;
                 }
-                NodeInterval result = curChild.findNode(targetDate, callback);
+                final NodeInterval result = curChild.findNode(targetDate, callback);
                 if (result != null) {
                     return result;
                 }
@@ -278,12 +317,12 @@ public class NodeInterval {
      *
      * @param callback
      */
-    public void walkTree(WalkCallback callback) {
+    public void walkTree(final WalkCallback callback) {
         Preconditions.checkNotNull(callback);
         walkTreeWithDepth(callback, 0);
     }
 
-    private void walkTreeWithDepth(WalkCallback callback, int depth) {
+    private void walkTreeWithDepth(final WalkCallback callback, final int depth) {
 
         Preconditions.checkNotNull(callback);
         callback.onCurrentNode(depth, this, parent);
@@ -295,14 +334,14 @@ public class NodeInterval {
         }
     }
 
-    public boolean isItemContained(final NodeInterval newNode) {
+    private boolean isItemContained(final NodeInterval newNode) {
         return (newNode.getStart().compareTo(start) >= 0 &&
                 newNode.getStart().compareTo(end) <= 0 &&
                 newNode.getEnd().compareTo(start) >= 0 &&
                 newNode.getEnd().compareTo(end) <= 0);
     }
 
-    public boolean isItemOverlap(final NodeInterval newNode) {
+    private boolean isItemOverlap(final NodeInterval newNode) {
         return ((newNode.getStart().compareTo(start) < 0 &&
                  newNode.getEnd().compareTo(end) >= 0) ||
                 (newNode.getStart().compareTo(start) <= 0 &&
@@ -368,7 +407,7 @@ public class NodeInterval {
 
     public String toStringVerbose() {
         final StringBuilder sb = new StringBuilder("{");
-        sb.append(toString());
+        sb.append(this);
         if (parent == null) {
             sb.append(", prnt=").append(parent);
         } else {
@@ -402,7 +441,7 @@ public class NodeInterval {
 
     /**
      * Since items may be added out of order, there is no guarantee that we don't suddenly have a new node
-     * whose interval emcompasses cuurent node(s). In which case we need to rebalance the tree.
+     * whose interval encompasses current node(s). In which case we need to rebalance the tree.
      *
      * @param newNode node that triggered a rebalance operation
      */
@@ -410,7 +449,7 @@ public class NodeInterval {
 
         NodeInterval prevRebalanced = null;
         NodeInterval curChild = leftChild;
-        List<NodeInterval> toBeRebalanced = Lists.newLinkedList();
+        final List<NodeInterval> toBeRebalanced = Lists.newLinkedList();
         do {
             if (curChild.isItemOverlap(newNode)) {
                 toBeRebalanced.add(curChild);
@@ -438,7 +477,7 @@ public class NodeInterval {
         }
 
         NodeInterval prev = null;
-        for (NodeInterval cur : toBeRebalanced) {
+        for (final NodeInterval cur : toBeRebalanced) {
             cur.parent = newNode;
             if (prev == null) {
                 newNode.leftChild = cur;

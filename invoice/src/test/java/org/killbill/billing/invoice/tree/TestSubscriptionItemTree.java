@@ -1,7 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,7 +37,6 @@ import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -45,12 +45,6 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    static {
-        OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
-    }
 
     private final UUID invoiceId = UUID.randomUUID();
     private final UUID accountId = UUID.randomUUID();
@@ -61,11 +55,8 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     private final String phaseName = "my-phase";
     private final Currency currency = Currency.USD;
 
-
-
     @Test(groups = "fast")
     public void testWithBCDChange() {
-
         final LocalDate startPeriod = new LocalDate(2014, 5, 1);
         final LocalDate endPeriod = new LocalDate(2014, 6, 1);
         final LocalDate bcdChange = new LocalDate(2014, 5, 15);
@@ -73,7 +64,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
         final BigDecimal monthlyRate = new BigDecimal("10.00");
         final BigDecimal fullAmount = monthlyRate;
-        final BigDecimal halfAmount =  new BigDecimal("5.00");
+        final BigDecimal halfAmount = new BigDecimal("5.00");
 
         final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startPeriod, endPeriod, fullAmount, monthlyRate, currency);
         final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endPeriod, newEndPeriod, halfAmount, monthlyRate, currency);
@@ -157,17 +148,13 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed2);
         tree.buildForMerge();
 
-
         final InvoiceItem expected1 = new RepairAdjInvoiceItem(invoiceId, accountId, startBlock, endBlock, new BigDecimal("-6.85"), currency, annual.getId());
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endDate, newEndDate, new BigDecimal("7.79"), yearlyAmount, currency);
-
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         expectedResult.addAll(ImmutableList.of(expected1, expected2));
         verifyResult(tree.getView(), expectedResult);
     }
-
-
 
     @Test(groups = "fast")
     public void testAnnualWithBlocking2() {
@@ -201,14 +188,10 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed2);
         tree.buildForMerge();
 
-
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         expectedResult.addAll(ImmutableList.of());
         verifyResult(tree.getView(), expectedResult);
     }
-
-
-
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1205")
     public void testBlockUnblock() {
@@ -575,7 +558,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
     }
 
-
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testDoubleBillingOnDifferentInvoices() {
         final LocalDate startDate1 = new LocalDate(2012, 5, 1);
@@ -638,7 +620,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         } catch (final IllegalStateException e) {
         }
     }
-
 
     @Test(groups = "fast")
     public void testMergeWithNoExisting() {
@@ -1030,8 +1011,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
-
     @Test(groups = "fast")
     public void testRepairWithFullItemAdjustment() {
 
@@ -1062,8 +1041,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         verifyResult(tree.getView(), expectedResult);
     }
-
-
 
     @Test(groups = "fast")
     public void testMergeMonthlyToAnnualWithNoProRation() {
@@ -1269,10 +1246,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
-
-
-    @Test(groups = "fast", description="https://github.com/killbill/killbill/issues/1251")
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1251")
     public void testRecuring$0PriceNoCatalogEffectiveDate() {
         final LocalDate startDate = new LocalDate(2019, 11, 1);
         final LocalDate endDate = new LocalDate(2019, 12, 1);
@@ -1293,12 +1267,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
-    private void printTreeJSON(final SubscriptionItemTree tree) throws IOException {
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        tree.getRoot().jsonSerializeTree(OBJECT_MAPPER, outputStream);
-        System.out.println(outputStream.toString("UTF-8"));
-    }
-
     private void printTree(final SubscriptionItemTree tree) throws IOException {
         System.out.println(TreePrinter.print(tree.getRoot()));
     }
@@ -1309,5 +1277,4 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
             assertTrue(result.get(i).matches(expectedResult.get(i)));
         }
     }
-
 }
