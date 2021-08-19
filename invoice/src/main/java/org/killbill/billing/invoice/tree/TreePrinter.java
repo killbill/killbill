@@ -1,6 +1,7 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -27,18 +28,20 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class TreePrinter {
 
-    public static String print(final ItemsNodeInterval root) {
+    public static String print(final NodeInterval root) {
         return print(buildCoordinates(root));
     }
 
-    private static String print(final SortedMap<XY, ItemsNodeInterval> tree) {
+    private static String print(final SortedMap<XY, NodeInterval> tree) {
         // Make left most node start at X=0
         translate(tree);
 
         final AtomicInteger totalOrdering = new AtomicInteger(64);
-        final Map<String, ItemsNodeInterval> legend = new LinkedHashMap<String, ItemsNodeInterval>();
+        final Map<String, NodeInterval> legend = new LinkedHashMap<String, NodeInterval>();
 
         final List<StringBuilder> builders = new LinkedList<StringBuilder>();
         for (int level = 0; level >= maxOffset(tree).Y; level--) {
@@ -57,7 +60,7 @@ public class TreePrinter {
         }
 
         builder.append("\n");
-        for (final Entry<String, ItemsNodeInterval> entry : legend.entrySet()) {
+        for (final Entry<String, NodeInterval> entry : legend.entrySet()) {
             builder.append(entry.getKey()).append(": ");
             appendNodeDetails(entry.getValue(), builder);
             builder.append("\n");
@@ -67,10 +70,10 @@ public class TreePrinter {
 
     private static void drawLevel(final boolean drawEdges,
                                   final int level,
-                                  final SortedMap<XY, ItemsNodeInterval> tree,
+                                  final SortedMap<XY, NodeInterval> tree,
                                   final List<StringBuilder> builders,
                                   final AtomicInteger totalOrdering,
-                                  final Map<String, ItemsNodeInterval> legend) {
+                                  final Map<String, NodeInterval> legend) {
         if (drawEdges && level == 0) {
             // Nothing to do for root
             return;
@@ -80,7 +83,7 @@ public class TreePrinter {
 
         int posX = 0;
         boolean sibling;
-        for (final Entry<XY, ItemsNodeInterval> entry : tree.entrySet()) {
+        for (final Entry<XY, NodeInterval> entry : tree.entrySet()) {
             final XY levelXY = entry.getKey();
             if (levelXY.Y > level) {
                 // Sorted - we haven't reached that level yet
@@ -125,47 +128,50 @@ public class TreePrinter {
         builder.append("\n");
     }
 
-    private static void appendNodeDetails(final ItemsNodeInterval interval, final StringBuilder builder) {
+    private static void appendNodeDetails(final NodeInterval interval, final StringBuilder builder) {
         builder.append("[")
                .append(interval.getStart())
                .append(",")
                .append(interval.getEnd())
                .append("]");
 
-        if (interval.getItems().isEmpty()) {
-            return;
-        }
-
-        builder.append("(");
-        final List<Item> items = interval.getItems();
-        for (int i = 0; i < items.size(); i++) {
-            final Item item = items.get(i);
-            if (i > 0) {
-                builder.append(",");
+        if (interval instanceof ItemsNodeInterval) {
+            if (((ItemsNodeInterval) interval).getItems().isEmpty()) {
+                return;
             }
-            builder.append(item.getAction().name().charAt(0));
+
+            builder.append("(");
+            final List<Item> items = ((ItemsNodeInterval) interval).getItems();
+            for (int i = 0; i < items.size(); i++) {
+                final Item item = items.get(i);
+                if (i > 0) {
+                    builder.append(",");
+                }
+                builder.append(item.getAction().name().charAt(0));
+            }
+            builder.append(")");
         }
-        builder.append(")");
     }
 
-    public static SortedMap<XY, ItemsNodeInterval> buildCoordinates(final ItemsNodeInterval root) {
+    @VisibleForTesting
+    static SortedMap<XY, NodeInterval> buildCoordinates(final NodeInterval root) {
         final XY reference = new XY(0, 0);
 
-        final SortedMap<XY, ItemsNodeInterval> result = new TreeMap<XY, ItemsNodeInterval>();
+        final SortedMap<XY, NodeInterval> result = new TreeMap<XY, NodeInterval>();
         result.put(reference, root);
         result.putAll(buildCoordinates(root, reference));
 
         return result;
     }
 
-    public static Map<XY, ItemsNodeInterval> buildCoordinates(final ItemsNodeInterval root, final XY initialCoords) {
-        final Map<XY, ItemsNodeInterval> result = new HashMap<XY, ItemsNodeInterval>();
+    private static Map<XY, NodeInterval> buildCoordinates(final NodeInterval root, final XY initialCoords) {
+        final Map<XY, NodeInterval> result = new HashMap<XY, NodeInterval>();
         if (root == null) {
             return result;
         }
 
         // Compute the coordinate of the left most child
-        ItemsNodeInterval curChild = (ItemsNodeInterval) root.getLeftChild();
+        NodeInterval curChild = (NodeInterval) root.getLeftChild();
         if (curChild == null) {
             return result;
         }
@@ -180,19 +186,19 @@ public class TreePrinter {
             curXY = rightSiblingXY(curXY);
 
             // Compute the coordinates of the tree below that child
-            final Map<XY, ItemsNodeInterval> subtree = buildCoordinates(curChild, curXY);
+            final Map<XY, NodeInterval> subtree = buildCoordinates(curChild, curXY);
             final XY offset = translate(subtree);
             translate(offset, curXY);
             result.put(curXY, curChild);
             result.putAll(subtree);
 
-            curChild = (ItemsNodeInterval) curChild.getRightSibling();
+            curChild = (NodeInterval) curChild.getRightSibling();
         }
 
         return result;
     }
 
-    private static XY translate(final Map<XY, ItemsNodeInterval> subtree) {
+    private static XY translate(final Map<XY, NodeInterval> subtree) {
         final XY offset = maxOffset(subtree);
         for (final XY xy : subtree.keySet()) {
             translate(offset, xy);
@@ -204,7 +210,7 @@ public class TreePrinter {
         xy.X = xy.X - offset.X;
     }
 
-    private static XY maxOffset(final Map<XY, ItemsNodeInterval> tree) {
+    private static XY maxOffset(final Map<XY, NodeInterval> tree) {
         final XY res = new XY(0, 0);
         for (final XY xy : tree.keySet()) {
             if (xy.X < res.X) {
