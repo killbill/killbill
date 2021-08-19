@@ -1,7 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -56,12 +57,12 @@ public class ItemsNodeInterval extends NodeInterval {
         this.items = items;
     }
 
-    public ItemsNodeInterval(final ItemsNodeInterval parent, final Item item) {
+    public ItemsNodeInterval(final NodeInterval parent, final Item item) {
         super(parent, item.getStartDate(), item.getEndDate());
         this.items = new ItemsInterval(this, item);
     }
 
-    public ItemsNodeInterval(final ItemsNodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
+    public ItemsNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
         super(parent, startDate, endDate);
         this.items = new ItemsInterval(this);
     }
@@ -75,12 +76,12 @@ public class ItemsNodeInterval extends NodeInterval {
         Preconditions.checkState(rightSibling == null);
 
         final List<Item> rawItems = items.getItems();
-        Preconditions.checkState(rawItems.size() == 1);
+        Preconditions.checkState(rawItems.size() == 1, "Interval should have a single item: " + rawItems);
 
         final Item[] splitItems = rawItems.get(0).split(splitDate);
 
-        final ItemsNodeInterval split1 = new ItemsNodeInterval((ItemsNodeInterval) this.parent, splitItems[0]);
-        final ItemsNodeInterval split2 = new ItemsNodeInterval((ItemsNodeInterval) this.parent, splitItems[1]);
+        final ItemsNodeInterval split1 = new ItemsNodeInterval(this.parent, splitItems[0]);
+        final ItemsNodeInterval split2 = new ItemsNodeInterval(this.parent, splitItems[1]);
         final ItemsNodeInterval[] result = new ItemsNodeInterval[2];
         result[0] = split1;
         result[1] = split2;
@@ -341,9 +342,6 @@ public class ItemsNodeInterval extends NodeInterval {
         }
     }
 
-
-
-
     //
     // This is not strictly necessary -- just there to add a layer of sanity on what our tree contains
     //
@@ -444,7 +442,7 @@ public class ItemsNodeInterval extends NodeInterval {
                         curDepth = depth;
                     }
                     generator.writeObject(node);
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     throw new RuntimeException("Failed to deserialize tree", e);
                 }
             }

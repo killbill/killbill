@@ -33,6 +33,8 @@ import org.killbill.billing.invoice.tree.NodeInterval.WalkCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Preconditions;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
@@ -50,13 +52,28 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
             this.id = UUID.randomUUID();
         }
 
-        public DummyNodeInterval(final DummyNodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
+        public DummyNodeInterval(final NodeInterval parent, final LocalDate startDate, final LocalDate endDate) {
             super(parent, startDate, endDate);
             this.id = UUID.randomUUID();
         }
 
         public UUID getId() {
             return id;
+        }
+
+        @Override
+        public ItemsNodeInterval[] split(final LocalDate splitDate) {
+            Preconditions.checkState(splitDate.compareTo(start) > 0 && splitDate.compareTo(end) < 0,
+                                     String.format("Unexpected item split with startDate='%s' and endDate='%s'", start, end));
+            Preconditions.checkState(leftChild == null);
+            Preconditions.checkState(rightSibling == null);
+
+            final DummyNodeInterval split1 = new DummyNodeInterval(this.parent, this.start, splitDate);
+            final DummyNodeInterval split2 = new DummyNodeInterval(this.parent, splitDate, this.end);
+            final DummyNodeInterval[] result = new DummyNodeInterval[2];
+            result[0] = split1;
+            result[1] = split2;
+            return result;
         }
 
         @Override
