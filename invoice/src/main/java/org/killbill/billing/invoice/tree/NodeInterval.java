@@ -166,11 +166,15 @@ public class NodeInterval {
 
             // newNode starts before cur element, try to insert before
             if (newNode.getStart().compareTo(curChild.getStart()) < 0) {
+                if (newNode.getEnd().compareTo(curChild.getStart()) > 0) {
+                    // newNode will need to be split so it can be inserted
+                    final NodeInterval[] newNodes = ((ItemsNodeInterval) newNode).split(curChild.getStart());
+                    curChild.getParent().addNode(newNodes[0], callback);
+                    curChild.getParent().addNode(newNodes[1], callback);
+                    return true;
+                }
 
                 // We have not implemented all cases so adding preconditions
-                Preconditions.checkState(newNode.getEnd().compareTo(curChild.getStart()) <= 0,
-                                         "Failed to insert new node %s, end date overlaps with right child %s", newNode, curChild);
-
                 Preconditions.checkState(prevChild == null || newNode.getStart().compareTo(prevChild.getEnd()) >= 0,
                                          "Failed to insert new node %s, start date overlaps with left child %s", newNode, prevChild);
 

@@ -38,7 +38,6 @@ import com.google.common.base.Preconditions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
 
 public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
@@ -77,6 +76,15 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
         }
 
         @Override
+        public String toString() {
+            final StringBuffer sb = new StringBuffer("DummyNodeInterval{");
+            sb.append("start=").append(start);
+            sb.append(", end=").append(end);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
         public boolean equals(final Object o) {
             if (this == o) {
                 return true;
@@ -87,10 +95,7 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
             final DummyNodeInterval that = (DummyNodeInterval) o;
 
-            if (id != null ? !id.equals(that.id) : that.id != null) {
-                return false;
-            }
-            return true;
+            return id != null ? id.equals(that.id) : that.id == null;
         }
 
         @Override
@@ -181,15 +186,27 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
 
-        final DummyNodeInterval firstChild = createNodeInterval("2014-01-03", "2014-01-07");
-        root.addNode(firstChild, CALLBACK);
+        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-03", "2014-01-07");
+        root.addNode(secondChildLevel1, CALLBACK);
 
-        try {
-            final DummyNodeInterval newNode = createNodeInterval("2014-01-01", "2014-01-04");
-            root.addNode(newNode, CALLBACK);
-            fail("Should fail to insert node");
-        } catch (final IllegalStateException e) {
-        }
+        final DummyNodeInterval newNode = createNodeInterval("2014-01-01", "2014-01-04");
+        root.addNode(newNode, CALLBACK);
+
+        // Newly created node "split" from newNode
+        final DummyNodeInterval firstChildLevel1 = (DummyNodeInterval) top.getLeftChild();
+        assertEquals(firstChildLevel1.getStart(), new LocalDate("2014-01-01"));
+        assertEquals(firstChildLevel1.getEnd(), new LocalDate("2014-01-03"));
+
+        // Newly created node "split" from newNode
+        final DummyNodeInterval firstChildLevel2 = (DummyNodeInterval) secondChildLevel1.getLeftChild();
+        assertEquals(firstChildLevel2.getStart(), new LocalDate("2014-01-03"));
+        assertEquals(firstChildLevel2.getEnd(), new LocalDate("2014-01-04"));
+
+        checkNode(top, 2, root, firstChildLevel1, null);
+        checkNode(firstChildLevel1, 0, top, null, secondChildLevel1);
+        checkNode(secondChildLevel1, 1, top, firstChildLevel2, null);
+
+        checkNode(firstChildLevel2, 0, secondChildLevel1, null, null);
     }
 
     @Test(groups = "fast")
@@ -199,17 +216,30 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
 
-        final DummyNodeInterval firstChild = createNodeInterval("2014-01-01", "2014-01-07");
-        root.addNode(firstChild, CALLBACK);
-        final DummyNodeInterval secondChild = createNodeInterval("2014-01-12", "2014-01-15");
-        root.addNode(secondChild, CALLBACK);
+        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
+        root.addNode(firstChildLevel1, CALLBACK);
+        final DummyNodeInterval thirdChildLevel1 = createNodeInterval("2014-01-12", "2014-01-15");
+        root.addNode(thirdChildLevel1, CALLBACK);
 
-        try {
-            final DummyNodeInterval newNode = createNodeInterval("2014-01-07", "2014-01-13");
-            root.addNode(newNode, CALLBACK);
-            fail("Should fail to insert node");
-        } catch (final IllegalStateException e) {
-        }
+        final DummyNodeInterval newNode = createNodeInterval("2014-01-07", "2014-01-13");
+        root.addNode(newNode, CALLBACK);
+
+        // Newly created node "split" from newNode
+        final DummyNodeInterval secondChildLevel1 = (DummyNodeInterval) firstChildLevel1.getRightSibling();
+        assertEquals(secondChildLevel1.getStart(), new LocalDate("2014-01-07"));
+        assertEquals(secondChildLevel1.getEnd(), new LocalDate("2014-01-12"));
+
+        // Newly created node "split" from newNode
+        final DummyNodeInterval firstChildLevel2 = (DummyNodeInterval) thirdChildLevel1.getLeftChild();
+        assertEquals(firstChildLevel2.getStart(), new LocalDate("2014-01-12"));
+        assertEquals(firstChildLevel2.getEnd(), new LocalDate("2014-01-13"));
+
+        checkNode(top, 3, root, firstChildLevel1, null);
+        checkNode(firstChildLevel1, 0, top, null, secondChildLevel1);
+        checkNode(secondChildLevel1, 0, top, null, thirdChildLevel1);
+        checkNode(thirdChildLevel1, 1, top, firstChildLevel2, null);
+
+        checkNode(firstChildLevel2, 0, thirdChildLevel1, null, null);
     }
 
     @Test(groups = "fast")
@@ -219,17 +249,30 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
 
-        final DummyNodeInterval firstChild = createNodeInterval("2014-01-01", "2014-01-07");
-        root.addNode(firstChild, CALLBACK);
-        final DummyNodeInterval secondChild = createNodeInterval("2014-01-12", "2014-01-15");
-        root.addNode(secondChild, CALLBACK);
+        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
+        root.addNode(firstChildLevel1, CALLBACK);
+        final DummyNodeInterval thirdChildLevel1 = createNodeInterval("2014-01-12", "2014-01-15");
+        root.addNode(thirdChildLevel1, CALLBACK);
 
-        try {
-            final DummyNodeInterval newNode = createNodeInterval("2014-01-06", "2014-01-12");
-            root.addNode(newNode, CALLBACK);
-            fail("Should fail to insert node");
-        } catch (final IllegalStateException e) {
-        }
+        final DummyNodeInterval newNode = createNodeInterval("2014-01-06", "2014-01-12");
+        root.addNode(newNode, CALLBACK);
+
+        // Newly created node "split" from newNode
+        final DummyNodeInterval firstChildLevel2 = (DummyNodeInterval) firstChildLevel1.getLeftChild();
+        assertEquals(firstChildLevel2.getStart(), new LocalDate("2014-01-06"));
+        assertEquals(firstChildLevel2.getEnd(), new LocalDate("2014-01-07"));
+
+        // Newly created node "split" from newNode
+        final DummyNodeInterval secondChildLevel1 = (DummyNodeInterval) firstChildLevel1.getRightSibling();
+        assertEquals(secondChildLevel1.getStart(), new LocalDate("2014-01-07"));
+        assertEquals(secondChildLevel1.getEnd(), new LocalDate("2014-01-12"));
+
+        checkNode(top, 3, root, firstChildLevel1, null);
+        checkNode(firstChildLevel1, 1, top, firstChildLevel2, secondChildLevel1);
+        checkNode(secondChildLevel1, 0, top, null, thirdChildLevel1);
+        checkNode(thirdChildLevel1, 0, top, null, null);
+
+        checkNode(firstChildLevel2, 0, firstChildLevel1, null, null);
     }
 
     @Test(groups = "fast")
@@ -239,17 +282,30 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
         final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
         root.addNode(top, CALLBACK);
 
-        final DummyNodeInterval firstChild = createNodeInterval("2014-01-01", "2014-01-07");
-        root.addNode(firstChild, CALLBACK);
-        final DummyNodeInterval secondChild = createNodeInterval("2014-01-12", "2014-01-15");
-        root.addNode(secondChild, CALLBACK);
+        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
+        root.addNode(firstChildLevel1, CALLBACK);
+        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-12", "2014-01-15");
+        root.addNode(secondChildLevel1, CALLBACK);
 
-        try {
-            final DummyNodeInterval newNode = createNodeInterval("2014-01-14", "2014-01-18");
-            root.addNode(newNode, CALLBACK);
-            fail("Should fail to insert node");
-        } catch (final IllegalStateException e) {
-        }
+        final DummyNodeInterval newNode = createNodeInterval("2014-01-14", "2014-01-18");
+        root.addNode(newNode, CALLBACK);
+
+        // Newly created node "split" from newNode
+        final DummyNodeInterval firstChildLevel2 = (DummyNodeInterval) secondChildLevel1.getLeftChild();
+        assertEquals(firstChildLevel2.getStart(), new LocalDate("2014-01-14"));
+        assertEquals(firstChildLevel2.getEnd(), new LocalDate("2014-01-15"));
+
+        // Newly created node "split" from newNode
+        final DummyNodeInterval thirdChildLevel1 = (DummyNodeInterval) secondChildLevel1.getRightSibling();
+        assertEquals(thirdChildLevel1.getStart(), new LocalDate("2014-01-15"));
+        assertEquals(thirdChildLevel1.getEnd(), new LocalDate("2014-01-18"));
+
+        checkNode(top, 3, root, firstChildLevel1, null);
+        checkNode(firstChildLevel1, 0, top, null, secondChildLevel1);
+        checkNode(secondChildLevel1, 1, top, firstChildLevel2, thirdChildLevel1);
+        checkNode(thirdChildLevel1, 0, top, null, null);
+
+        checkNode(firstChildLevel2, 0, secondChildLevel1, null, null);
     }
 
     @Test(groups = "fast")
