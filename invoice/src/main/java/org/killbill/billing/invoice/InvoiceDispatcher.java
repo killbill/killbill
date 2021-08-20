@@ -187,6 +187,31 @@ public class InvoiceDispatcher {
         this.parkedAccountsManager = parkedAccountsManager;
     }
 
+    public void processAccountBCDChange(final UUID accountId, final int newBCD, final InternalCallContext internalCallContext) {
+        try {
+            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, null, internalCallContext);
+            if (billingEvents.isEmpty()) {
+                return;
+            }
+
+            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
+
+            // Don't trigger an invoice now, or we might repair the current period: in practice, we expect the BCD change to apply at the billing cycle
+            DateTime rescheduleDate = clock.getUTCNow().withDayOfMonth(newBCD);
+            if (rescheduleDate.isBefore(clock.getUTCNow())) {
+                rescheduleDate = rescheduleDate.plusMonths(1);
+            }
+            final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(rescheduleDate, billingEvents, internalCallContext);
+            setFutureNotifications(account, futureAccountNotifications, internalCallContext);
+        } catch (final CatalogApiException e) {
+            log.warn("Failed to retrieve BillingEvents for accountId='{}'", accountId, e);
+        } catch (final AccountApiException e) {
+            log.warn("Failed to retrieve BillingEvents for accountId='{}'", accountId, e);
+        } catch (final SubscriptionBaseApiException e) {
+            log.warn("Failed to retrieve BillingEvents for accountId='{}'", accountId, e);
+        }
+    }
+
     public void processSubscriptionStartRequestedDate(final RequestedSubscriptionInternalEvent transition, final InternalCallContext context) {
         final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule(context).getMillis();
         final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
@@ -228,7 +253,7 @@ public class InvoiceDispatcher {
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
 
-            commitInvoiceAndSetFutureNotifications(account, notificationsBuilder.build(), context);
+            setFutureNotifications(account, notificationsBuilder.build(), context);
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed handling SubscriptionBase change.",
                      new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, transition.getSubscriptionId().toString()));
@@ -583,7 +608,7 @@ public class InvoiceDispatcher {
                 log.warn("Ignoring rescheduleDate='{}', delayed scheduling is unsupported in dry-run", rescheduleDate);
             } else {
                 final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(rescheduleDate, billingEvents, internalCallContext);
-                commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
+                setFutureNotifications(account, futureAccountNotifications, internalCallContext);
             }
             return null;
         }
@@ -609,7 +634,7 @@ public class InvoiceDispatcher {
                 // Although we have a null invoice, it could be as a result of removing $0 USAGE (config#isUsageZeroAmountDisabled)
                 // and so we may still need to set the CTD for such subscriptions.
                 setChargedThroughDatesNoExceptions(invoiceWithMetadata.getChargeThroughDates(), internalCallContext);
-                commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
+                setFutureNotifications(account, futureAccountNotifications, internalCallContext);
                 postEvent(event);
             }
             return null;
@@ -668,7 +693,7 @@ public class InvoiceDispatcher {
         } finally {
             // Make sure we always set future notifications in case of errors
             if (!isDryRun && !success) {
-                commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
+                setFutureNotifications(account, futureAccountNotifications, internalCallContext);
             }
 
             if (isDryRun || success) {
@@ -838,9 +863,9 @@ public class InvoiceDispatcher {
         log.info(tmp.toString());
     }
 
-    private void commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
-                                                        final FutureAccountNotifications futureAccountNotifications,
-                                                        final InternalCallContext context) {
+    private void setFutureNotifications(final ImmutableAccountData account,
+                                        final FutureAccountNotifications futureAccountNotifications,
+                                        final InternalCallContext context) {
         commitInvoiceAndSetFutureNotifications(account, null, null, ImmutableSet.of(), futureAccountNotifications, null, context);
     }
 

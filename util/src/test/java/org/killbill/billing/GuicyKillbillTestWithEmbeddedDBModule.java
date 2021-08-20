@@ -22,6 +22,7 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.PlatformDBTestingHelper;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
 import org.killbill.billing.platform.test.glue.TestPlatformModuleWithEmbeddedDB;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.glue.GlobalLockerModule;
 import org.killbill.billing.util.glue.IDBISetup;
 import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
@@ -42,11 +43,11 @@ public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModu
     private final boolean withOSGI;
 
     public GuicyKillbillTestWithEmbeddedDBModule(final KillbillConfigSource configSource, final ClockMock clock) {
-        this(false, configSource, clock);
+        this(false, configSource, clock, new KillbillFeatures());
     }
 
-    public GuicyKillbillTestWithEmbeddedDBModule(final boolean withOSGI, final KillbillConfigSource configSource, final ClockMock clock) {
-        super(configSource, clock);
+    public GuicyKillbillTestWithEmbeddedDBModule(final boolean withOSGI, final KillbillConfigSource configSource, final ClockMock clock, final KillbillFeatures killbillFeatures) {
+        super(configSource, clock, killbillFeatures);
         this.withOSGI = withOSGI;
     }
 

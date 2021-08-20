@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,6 +19,7 @@
 
 package org.killbill.billing.invoice;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -26,8 +28,10 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.events.BlockingTransitionInternalEvent;
 import org.killbill.billing.events.BusInternalEvent;
+import org.killbill.billing.events.ChangedField;
 import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceCreationInternalEvent;
 import org.killbill.billing.events.RequestedSubscriptionInternalEvent;
@@ -176,6 +180,21 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                  dispatcher.processSubscriptionStartRequestedDate(event, context);
                                              }
                                          });
+        subscriberQueueHandler.subscribe(AccountChangeInternalEvent.class,
+                                         new SubscriberAction<AccountChangeInternalEvent>() {
+                                             @Override
+                                             public void run(final AccountChangeInternalEvent event) {
+                                                 for (final ChangedField changedField : event.getChangedFields()) {
+                                                     if ("billCycleDayLocal".equals(changedField.getFieldName()) &&
+                                                         !Objects.equals(changedField.getOldValue(), changedField.getNewValue()) &&
+                                                         !"0".equals(changedField.getOldValue())) {
+                                                         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "AccountBCDChange", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
+                                                         dispatcher.processAccountBCDChange(event.getAccountId(), Integer.parseInt(changedField.getNewValue()), context);
+                                                         return;
+                                                     }
+                                                 }
+                                             }
+                                         });
 
         this.retryableSubscriber = new RetryableSubscriber(clock, this, subscriberQueueHandler);
     }
@@ -206,7 +225,6 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
         super.stop();
     }
 
-
     private void handleEvent(final BusInternalEvent event) {
         if (busDispatcherOptimizer.shouldDispatch(event)) {
             retryableSubscriber.handleEvent(event);
@@ -228,6 +246,12 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
     @AllowConcurrentEvents
     @Subscribe
     public void handleSubscriptionTransition(final RequestedSubscriptionInternalEvent event) {
+        handleEvent(event);
+    }
+
+    @AllowConcurrentEvents
+    @Subscribe
+    public void handleAccountChange(final AccountChangeInternalEvent event) {
         handleEvent(event);
     }
 
