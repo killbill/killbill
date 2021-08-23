@@ -125,6 +125,102 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
+    public void testWithBCDChange3() {
+        final LocalDate existingItem1StartPeriod = new LocalDate(2014, 5, 17);
+        final LocalDate existingItem1EndPeriod = new LocalDate(2014, 6, 17);
+        final LocalDate existingItem2StartPeriod = existingItem1EndPeriod;
+        final LocalDate existingItem2EndPeriod = new LocalDate(2014, 7, 17);
+
+        final LocalDate proposedItem1StartPeriod = new LocalDate(2014, 5, 17);
+        final LocalDate proposedItem1EndPeriod = new LocalDate(2014, 5, 20);
+        final LocalDate proposedItem2StartPeriod = proposedItem1EndPeriod;
+        final LocalDate proposedItem2EndPeriod = new LocalDate(2014, 6, 20);
+        final LocalDate proposedItem3StartPeriod = proposedItem2EndPeriod;
+        final LocalDate proposedItem3EndPeriod = new LocalDate(2014, 7, 20);
+        final LocalDate proposedItem4StartPeriod = proposedItem3EndPeriod;
+        final LocalDate proposedItem4EndPeriod = new LocalDate(2014, 8, 17);
+
+        final BigDecimal monthlyRate = new BigDecimal("10.00");
+        final BigDecimal fullAmount = monthlyRate;
+
+        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem1StartPeriod, existingItem1EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem2StartPeriod, existingItem2EndPeriod, fullAmount, monthlyRate, currency);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(item1);
+        tree.addItem(item2);
+        tree.build();
+
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem1StartPeriod, proposedItem1EndPeriod, new BigDecimal("1"), monthlyRate, currency);
+        final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem2StartPeriod, proposedItem2EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem proposed3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem3StartPeriod, proposedItem3EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem proposed4 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem4StartPeriod, proposedItem4EndPeriod, new BigDecimal("7"), monthlyRate, currency);
+
+        tree.mergeProposedItem(proposed1);
+        tree.mergeProposedItem(proposed2);
+        tree.mergeProposedItem(proposed3);
+        tree.mergeProposedItem(proposed4);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem2EndPeriod, proposedItem3EndPeriod, new BigDecimal("1"), monthlyRate, currency);
+        expectedResult.add(expected1);
+        final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem3EndPeriod, proposedItem4EndPeriod, new BigDecimal("7"), monthlyRate, currency);
+        expectedResult.add(expected2);
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
+    public void testWithBCDChange4() {
+        final LocalDate existingItem1StartPeriod = new LocalDate(2014, 5, 17);
+        final LocalDate existingItem1EndPeriod = new LocalDate(2014, 5, 20);
+        final LocalDate existingItem2StartPeriod = existingItem1EndPeriod;
+        final LocalDate existingItem2EndPeriod = new LocalDate(2014, 6, 20);
+        final LocalDate existingItem3StartPeriod = existingItem2EndPeriod;
+        final LocalDate existingItem3EndPeriod = new LocalDate(2014, 7, 20);
+        final LocalDate existingItem4StartPeriod = existingItem3EndPeriod;
+        final LocalDate existingItem4EndPeriod = new LocalDate(2014, 8, 17);
+
+        final LocalDate proposedItem1StartPeriod = new LocalDate(2014, 5, 17);
+        final LocalDate proposedItem1EndPeriod = new LocalDate(2014, 6, 17);
+        final LocalDate proposedItem2StartPeriod = existingItem1EndPeriod;
+        final LocalDate proposedItem2EndPeriod = new LocalDate(2014, 7, 17);
+        final LocalDate proposedItem3StartPeriod = proposedItem2EndPeriod;
+        final LocalDate proposedItem3EndPeriod = new LocalDate(2014, 8, 17);
+
+        final BigDecimal monthlyRate = new BigDecimal("10.00");
+        final BigDecimal fullAmount = monthlyRate;
+
+        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem1StartPeriod, existingItem1EndPeriod, new BigDecimal("1"), monthlyRate, currency);
+        final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem2StartPeriod, existingItem2EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem item3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem3StartPeriod, existingItem3EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem item4 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem4StartPeriod, existingItem4EndPeriod, new BigDecimal("7"), monthlyRate, currency);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(item1);
+        tree.addItem(item2);
+        tree.addItem(item3);
+        tree.addItem(item4);
+        tree.build();
+
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem1StartPeriod, proposedItem1EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem2StartPeriod, proposedItem2EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem proposed3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem3StartPeriod, proposedItem3EndPeriod, fullAmount, monthlyRate, currency);
+
+        tree.mergeProposedItem(proposed1);
+        tree.mergeProposedItem(proposed2);
+        tree.mergeProposedItem(proposed3);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
     public void testAnnualToNewAnnualWithLaterDate() {
 
         final LocalDate startAnnual1 = new LocalDate(2015, 1, 1);
