@@ -70,7 +70,7 @@ public class ItemsNodeInterval extends NodeInterval {
     public ItemsNodeInterval[] split(final LocalDate splitDate) {
 
         Preconditions.checkState(splitDate.compareTo(start) > 0 && splitDate.compareTo(end) < 0,
-                                 String.format("Unexpected item split with startDate='%s' and endDate='%s'", start, end));
+                                 String.format("Unexpected item split with startDate='%s' and endDate='%s', splitDate='%s'", start, end, splitDate));
 
         Preconditions.checkState(leftChild == null);
         Preconditions.checkState(rightSibling == null);
