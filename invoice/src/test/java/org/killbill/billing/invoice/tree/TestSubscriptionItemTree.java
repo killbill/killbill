@@ -185,7 +185,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
         final LocalDate proposedItem1StartPeriod = new LocalDate(2014, 5, 17);
         final LocalDate proposedItem1EndPeriod = new LocalDate(2014, 6, 17);
-        final LocalDate proposedItem2StartPeriod = existingItem1EndPeriod;
+        final LocalDate proposedItem2StartPeriod = proposedItem1EndPeriod;
         final LocalDate proposedItem2EndPeriod = new LocalDate(2014, 7, 17);
         final LocalDate proposedItem3StartPeriod = proposedItem2EndPeriod;
         final LocalDate proposedItem3EndPeriod = new LocalDate(2014, 8, 17);
@@ -1397,7 +1397,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
-    private void printTree(final SubscriptionItemTree tree) throws IOException {
+    private void printTree(final SubscriptionItemTree tree) {
         System.out.println(TreePrinter.print(tree.getRoot()));
     }
 
