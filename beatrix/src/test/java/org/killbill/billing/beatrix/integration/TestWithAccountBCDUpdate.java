@@ -88,12 +88,12 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
         clock.addDays(27);
         assertListenerStatus();
 
-        // Regular invoice (17th -> 17th), but the 3 days between 2016-07-17 and 2016-07-20 are also repaired
+        // Regular invoice (17th -> 17th)
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 17), new LocalDate(2016, 8, 17), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 17), new LocalDate(2016, 7, 20), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-25")));
-        invoiceChecker.checkInvoice(invoices.get(4).getId(), callContext, expectedInvoices);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 17), new LocalDate(2016, 7, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("-25")));
+        invoiceChecker.checkInvoice(invoices.get(5).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
         // 2016-7-20: nothing happens
@@ -109,7 +109,7 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
         // Regular invoice (17th -> 17th)
         invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 8, 17), new LocalDate(2016, 9, 17), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        invoiceChecker.checkInvoice(invoices.get(5).getId(), callContext, expectedInvoices);
+        invoiceChecker.checkInvoice(invoices.get(6).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
     }
 
@@ -175,10 +175,17 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
-        // Move the BCD back to the 17 -- no repair happens upon the BCD change
+        // Move the BCD back to the 17 -- the 3 days between 2016-07-17 and 2016-07-20 are repaired
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
         accountUserApi.updateAccount(account.getId(), new DefaultMutableAccountData(null, null, null, 0, null, null, null, 17, null, null, null, null, null, null, null, null, null, null, null, null, null, false), callContext);
         assertListenerStatus();
         assertEquals(accountUserApi.getAccountById(account.getId(), callContext).getBillCycleDayLocal(), (Integer) 17);
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 17), new LocalDate(2016, 7, 20), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-25")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 20), new LocalDate(2016, 6, 20), InvoiceItemType.CBA_ADJ, new BigDecimal("25")));
+        invoiceChecker.checkInvoice(invoices.get(4).getId(), callContext, expectedInvoices);
+        expectedInvoices.clear();
 
         return account;
     }

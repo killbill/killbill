@@ -189,7 +189,7 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
                                                          !Objects.equals(changedField.getOldValue(), changedField.getNewValue()) &&
                                                          !"0".equals(changedField.getOldValue())) {
                                                          final InternalCallContext context = internalCallContextFactory.createInternalCallContext(event.getSearchKey2(), event.getSearchKey1(), "AccountBCDChange", CallOrigin.INTERNAL, UserType.SYSTEM, event.getUserToken());
-                                                         dispatcher.processAccountBCDChange(event.getAccountId(), Integer.parseInt(changedField.getNewValue()), context);
+                                                         dispatcher.processAccountBCDChange(event.getAccountId(), context);
                                                          return;
                                                      }
                                                  }

@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -187,28 +188,11 @@ public class InvoiceDispatcher {
         this.parkedAccountsManager = parkedAccountsManager;
     }
 
-    public void processAccountBCDChange(final UUID accountId, final int newBCD, final InternalCallContext internalCallContext) {
+    public void processAccountBCDChange(final UUID accountId, final InternalCallContext internalCallContext) {
         try {
-            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, null, internalCallContext);
-            if (billingEvents.isEmpty()) {
-                return;
-            }
-
-            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
-
-            // Don't trigger an invoice now, or we might repair the current period: in practice, we expect the BCD change to apply at the billing cycle
-            DateTime rescheduleDate = clock.getUTCNow().withDayOfMonth(newBCD);
-            if (rescheduleDate.isBefore(clock.getUTCNow())) {
-                rescheduleDate = rescheduleDate.plusMonths(1);
-            }
-            final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(rescheduleDate, billingEvents, internalCallContext);
-            setFutureNotifications(account, futureAccountNotifications, internalCallContext);
-        } catch (final CatalogApiException e) {
-            log.warn("Failed to retrieve BillingEvents for accountId='{}'", accountId, e);
-        } catch (final AccountApiException e) {
-            log.warn("Failed to retrieve BillingEvents for accountId='{}'", accountId, e);
-        } catch (final SubscriptionBaseApiException e) {
-            log.warn("Failed to retrieve BillingEvents for accountId='{}'", accountId, e);
+            processAccount(false, accountId, null, null, false, internalCallContext);
+        } catch (final InvoiceApiException e) {
+            log.warn("Failed to process BCD change for accountId='{}'", accountId, e);
         }
     }
 
