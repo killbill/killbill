@@ -83,18 +83,33 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
     public void testAccountBCDChangeWithNoOptimization() throws Exception {
         final Account account = setupScenario();
 
-        // 2016-7-17: BCD alignment. We repair earliest period and generate trailing pro-ration.
+        // 2016-7-17: BCD alignment
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addDays(27);
         assertListenerStatus();
 
+        // Regular invoice (17th -> 17th), but the 3 days between 2016-07-17 and 2016-07-20 are also repaired
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 17), new LocalDate(2016, 6, 17), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 20), new LocalDate(2016, 8, 17), InvoiceItemType.RECURRING, new BigDecimal("225.76")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 17), new LocalDate(2016, 5, 20), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-25")));
-        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 20), new LocalDate(2016, 6, 17), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-225.76")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 17), new LocalDate(2016, 8, 17), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 17), new LocalDate(2016, 7, 20), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-25")));
         invoiceChecker.checkInvoice(invoices.get(4).getId(), callContext, expectedInvoices);
+        expectedInvoices.clear();
+
+        // 2016-7-20: nothing happens
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addDays(3);
+        assertListenerStatus();
+
+        // 2016-8-17
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addDays(28);
+        assertListenerStatus();
+
+        // Regular invoice (17th -> 17th)
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 8, 17), new LocalDate(2016, 9, 17), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        invoiceChecker.checkInvoice(invoices.get(5).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
     }
 
