@@ -575,7 +575,44 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
                 Assert.assertEquals(curNode, expectedNodesAfterRemoval.remove(0));
             }
         });
+    }
 
+    @Test(groups = "fast")
+    public void testRebalanceWithSplits() {
+        final DummyNodeInterval root = new DummyNodeInterval();
+
+        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2021-05-17", "2021-05-20");
+        root.addNode(firstChildLevel1, CALLBACK);
+        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2021-05-20", "2021-06-20");
+        root.addNode(secondChildLevel1, CALLBACK);
+
+
+        final DummyNodeInterval newNode = createNodeInterval("2021-05-17", "2021-06-17");
+        root.addNode(newNode, CALLBACK);
+
+        final List<NodeInterval> expectedNodes = new ArrayList<NodeInterval>();
+        expectedNodes.add(root);
+        expectedNodes.add(newNode);
+        expectedNodes.add(firstChildLevel1);
+        final DummyNodeInterval secondChildLevel1Split1 = createNodeInterval("2021-05-20", "2021-06-17");
+        secondChildLevel1Split1.parent = newNode;
+        expectedNodes.add(secondChildLevel1Split1);
+
+        final DummyNodeInterval secondChildLevel1Split2 = createNodeInterval("2021-06-17", "2021-06-20");
+        secondChildLevel1Split2.parent = newNode.parent;
+        expectedNodes.add(secondChildLevel1Split2);
+
+        System.out.println(TreePrinter.print(root));
+
+        root.walkTree(new WalkCallback() {
+            @Override
+            public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
+                final NodeInterval expectedNode = expectedNodes.remove(0);
+                if (!curNode.isRoot()) {
+                    Assert.assertTrue(curNode.isSame(expectedNode));
+                }
+            }
+        });
     }
 
     private void checkInterval(final NodeInterval real, final NodeInterval expected) {

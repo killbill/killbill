@@ -157,7 +157,7 @@ public class NodeInterval {
             //     C: [2014-01-01,2014-01-03]
             //     d: [2014-01-03,2014-01-05]
             //
-            if (curChild.isItemOverlap(newNode)) {
+            if (curChild.isItemEncompassed(newNode)) {
                 if (rebalance(newNode)) {
                     // Return from the recursion
                     return callback.shouldInsertNode(this, (ItemsNodeInterval) newNode);
@@ -345,11 +345,27 @@ public class NodeInterval {
                 newNode.getEnd().compareTo(end) <= 0);
     }
 
-    private boolean isItemOverlap(final NodeInterval newNode) {
+    private boolean isItemEncompassed(final NodeInterval newNode) {
         return ((newNode.getStart().compareTo(start) < 0 &&
                  newNode.getEnd().compareTo(end) >= 0) ||
                 (newNode.getStart().compareTo(start) <= 0 &&
                  newNode.getEnd().compareTo(end) > 0));
+    }
+
+    private boolean isItemOverlaped(final NodeInterval newNode) {
+        return isItemOverlapedLeft(newNode) || isItemOverlapedRight(newNode);
+    }
+
+    private boolean isItemOverlapedLeft(final NodeInterval newNode) {
+        return (newNode.getStart().compareTo(start) < 0 &&
+                newNode.getEnd().compareTo(start) > 0 &&
+                newNode.getEnd().compareTo(end) < 0);
+    }
+
+    private boolean isItemOverlapedRight(final NodeInterval newNode) {
+        return (newNode.getStart().compareTo(start) > 0 &&
+                newNode.getStart().compareTo(end) < 0 &&
+                newNode.getEnd().compareTo(end) > 0);
     }
 
     @JsonIgnore
@@ -449,14 +465,31 @@ public class NodeInterval {
      *
      * @param newNode node that triggered a rebalance operation
      */
-    private boolean rebalance(final NodeInterval newNode) {
+    boolean rebalance(final NodeInterval newNode) {
 
         NodeInterval prevRebalanced = null;
         NodeInterval curChild = leftChild;
         final List<NodeInterval> toBeRebalanced = Lists.newLinkedList();
         do {
-            if (curChild.isItemOverlap(newNode)) {
+            if (curChild.isItemEncompassed(newNode)) {
                 toBeRebalanced.add(curChild);
+            } else if (curChild.isItemOverlapedLeft(newNode)) {
+                final LocalDate splitDate = newNode.getEnd();
+                // Split curChild and rebalance (under newNode) the left part
+                final NodeInterval curChildRightSibling = curChild.rightSibling;
+                curChild.rightSibling = null;
+                final NodeInterval[] curNodes = ((ItemsNodeInterval) curChild).split(splitDate);
+                curNodes[0].rightSibling = curNodes[1];
+                curNodes[1].rightSibling = curChildRightSibling;
+                toBeRebalanced.add(curNodes[0]);
+
+                Preconditions.checkState(curChild.leftChild == null,
+                                         "Splitting a node (curChild=%s) during rebalance with children, not implemented", curChild);
+            } else if (curChild.isItemOverlapedRight(newNode)) {
+                // We could implement this -- fairly symmetrical to previous case, but cannot convince myself this is valid use case
+                // The caller, addNode(), should have already split 'newNode' prior we see a need of rebalancing on a subsequent sibling from curChild
+                Preconditions.checkState(!curChild.isItemOverlapedRight(newNode),
+                                         "Failed to rebalance new node %s, new Node overlaps on the right with cur child %s", newNode, curChild);
             } else {
                 if (toBeRebalanced.size() > 0) {
                     break;
