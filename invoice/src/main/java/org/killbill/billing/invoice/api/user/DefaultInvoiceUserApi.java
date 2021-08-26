@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -97,6 +98,8 @@ import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEn
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultInvoiceUserApi.class);
+
+    private static final String INVOICE_OPERATION = "INVOICE_OPERATION";
 
     private final InvoiceDao dao;
     private final InvoiceDispatcher dispatcher;
@@ -661,11 +664,24 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
-        // Update invoice status first prior we update CTD as we typically don't update CTD for non committed invoices.
-        dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
-        final Invoice invoice = getInvoice(invoiceId, context);
-        dispatcher.setChargedThroughDates(invoice, internalCallContext);
+        final WithAccountLock withAccountLock = new WithAccountLock() {
+            @Override
+            public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
+                final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
+                // Update invoice status first prior we update CTD as we typically don't update CTD for non committed invoices.
+                dao.changeInvoiceStatus(invoiceId, InvoiceStatus.COMMITTED, internalCallContext);
+                final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
+                dispatcher.setChargedThroughDates(invoice, internalCallContext);
+                return ImmutableList.<DefaultInvoice>of(invoice);
+            }
+        };
+
+        final UUID accountId = getInvoiceInternal(invoiceId, context).getAccountId();
+
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
+        properties.add(new PluginProperty(INVOICE_OPERATION, "commit", false));
+
+        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, context);
     }
 
     @Override
@@ -718,14 +734,28 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public void voidInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
-        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
-        Invoice invoice = getInvoice(invoiceId, context);
+        final WithAccountLock withAccountLock = new WithAccountLock() {
+            @Override
+            public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
+                final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
+                final Invoice currentInvoice = getInvoiceInternal(invoiceId, context);
+                if (currentInvoice.getNumberOfPayments() > 0) {
+                    canInvoiceBeVoided(currentInvoice);
+                }
 
-        if (invoice.getNumberOfPayments() > 0) {
-            canInvoiceBeVoided(invoice);
-        }
+                dao.changeInvoiceStatus(invoiceId, InvoiceStatus.VOID, internalCallContext);
 
-        dao.changeInvoiceStatus(invoiceId, InvoiceStatus.VOID, internalCallContext);
+                final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
+                return ImmutableList.of(invoice);
+            }
+        };
+
+        final UUID accountId = getInvoiceInternal(invoiceId, context).getAccountId();
+
+        final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
+        properties.add(new PluginProperty(INVOICE_OPERATION, "void", false));
+
+        invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, context);
     }
 
     @Override
