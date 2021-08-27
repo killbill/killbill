@@ -410,6 +410,10 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.addItem(newItem2);
         tree.addItem(repair2);
         tree.build();
+
+
+        printTree(tree);
+
         verifyResult(tree.getView(), expectedResult);
 
         tree = new SubscriptionItemTree(subscriptionId, invoiceId);
@@ -419,6 +423,9 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.addItem(repair1);
         tree.addItem(initial);
         tree.build();
+
+        printTree(tree);
+
         verifyResult(tree.getView(), expectedResult);
 
         tree = new SubscriptionItemTree(subscriptionId, invoiceId);
@@ -1299,7 +1306,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         System.out.println(outputStream.toString("UTF-8"));
     }
 
-    private void printTree(final SubscriptionItemTree tree) throws IOException {
+    private void printTree(final SubscriptionItemTree tree) {
         System.out.println(TreePrinter.print(tree.getRoot()));
     }
 
