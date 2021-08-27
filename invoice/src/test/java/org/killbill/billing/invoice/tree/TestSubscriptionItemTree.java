@@ -1344,8 +1344,20 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(correctInitialItem);
         tree.buildForMerge();
 
-        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, wrongStartDate, endDate, BigDecimal.ZERO, Currency.USD, wrongInitialItem.getId());
-        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(correctInitialItem, repair);
+        final InvoiceItem expected = new RecurringInvoiceItem(invoiceId,
+                                                                accountId,
+                                                                bundleId,
+                                                                subscriptionId,
+                                                                productName,
+                                                                planName,
+                                                                phaseName,
+                                                                null,
+                                                                correctStartDate,
+                                                                wrongStartDate,
+                                                                new BigDecimal("0.40"),
+                                                                rate,
+                                                                currency);
+        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(expected);
         verifyResult(tree.getView(), expectedResult);
 
     }

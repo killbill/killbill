@@ -30,7 +30,6 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
-import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -1324,35 +1323,9 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 9, 8), new LocalDate(2016, 10, 8), InvoiceItemType.RECURRING, new BigDecimal("19.95")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 9, 9), new LocalDate(2016, 10, 8), InvoiceItemType.REPAIR_ADJ, BigDecimal.ZERO));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 9, 8), new LocalDate(2016, 9, 9), InvoiceItemType.RECURRING, new BigDecimal("0.66")));
 
-
-        // Interestingly uncommenting this shows a double billing detected, so the scenario is not really well supported...
-        /*
-        2021-08-27T22:55:03.730+0000 [main] INFO org.killbill.billing.junction.plumbing.billing.DefaultInternalBillingApi - Computed billing events for accountId='39464ada-d3bc-4bd9-89d0-f54d8f8635af'
-DefaultBillingEvent{type=CREATE, effectiveDate=2016-09-08T00:00:00.000Z, planPhaseName=pistol-monthly-notrial-evergreen, subscriptionId=559a2298-2a70-4c6a-aece-e4032c018ace, totalOrdering=1}
-2021-08-27T22:55:03.785+0000 [main] WARN org.killbill.billing.invoice.InvoiceDispatcher - Illegal invoicing state detected for accountId='39464ada-d3bc-4bd9-89d0-f54d8f8635af', dryRunArguments='null', parking account
-{cause=java.lang.IllegalStateException: Double billing detected: addItemsCancelled=[3fd5f966-d96d-4f2a-bd27-99ffbd95f363], addItemsToBeCancelled=[d41d3557-1b03-46de-b36c-1c74825824a3], code=4, formattedMsg='ILLEGAL INVOICING STATE accountItemTree=AccountItemTree{subscriptionItemTree={559a2298-2a70-4c6a-aece-e4032c018ace=SubscriptionItemTree{targetInvoiceId=1c861c8f-6d1b-40a6-bb47-26ac8da9c319, subscriptionId=559a2298-2a70-4c6a-aece-e4032c018ace, root=ItemsNodeInterval{items=ItemsInterval{items=[]}}, isBuilt=false, isMerged=false, items=[], existingIgnoredItems=[], remainingIgnoredItems=[], pendingItemAdj=[]}}}'}
-	at org.killbill.billing.invoice.generator.FixedAndRecurringInvoiceItemGenerator.generateItems(FixedAndRecurringInvoiceItemGenerator.java:127)
-	at org.killbill.billing.invoice.generator.DefaultInvoiceGenerator.generateInvoice(DefaultInvoiceGenerator.java:101)
-	at org.killbill.billing.invoice.InvoiceDispatcher.generateKillBillInvoice(InvoiceDispatcher.java:700)
-	at org.killbill.billing.invoice.InvoiceDispatcher.processAccountWithLockAndInputTargetDate(InvoiceDispatcher.java:591)
-	at org.killbill.billing.invoice.InvoiceDispatcher.processAccountInternal(InvoiceDispatcher.java:364)
-	at org.killbill.billing.invoice.InvoiceDispatcher.processAccount(InvoiceDispatcher.java:317)
-	at org.killbill.billing.invoice.api.user.DefaultInvoiceUserApi.triggerInvoiceGeneration(DefaultInvoiceUserApi.java:287)
-	at org.killbill.billing.invoice.api.user.DefaultInvoiceUserApi$$EnhancerByGuice$$3a4ad754.CGLIB$triggerInvoiceGeneration$5(<generated>)
-	at org.killbill.billing.invoice.api.user.DefaultInvoiceUserApi$$EnhancerByGuice$$3a4ad754$$FastClassByGuice$$b79ca568.invoke(<generated>)
-	at com.google.inject.internal.cglib.proxy.$MethodProxy.invokeSuper(MethodProxy.java:228)
-	at com.google.inject.internal.InterceptorStackCallback$InterceptedMethodInvocation.proceed(InterceptorStackCallback.java:76)
-	at org.killbill.billing.util.glue.KillbillApiAopModule$ProfilingMethodInterceptor$1.execute(KillbillApiAopModule.java:76)
-	at org.killbill.commons.profiling.Profiling.executeWithProfiling(Profiling.java:35)
-	at org.killbill.billing.util.glue.KillbillApiAopModule$ProfilingMethodInterceptor.invoke(KillbillApiAopModule.java:92)
-	at com.google.inject.internal.InterceptorStackCallback$InterceptedMethodInvocation.proceed(InterceptorStackCallback.java:78)
-	at com.google.inject.internal.InterceptorStackCallback.intercept(InterceptorStackCallback.java:54)
-....
-         */
-        //checkNoMoreInvoiceToGenerate(account);
+        checkNoMoreInvoiceToGenerate(account);
     }
 
 
