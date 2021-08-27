@@ -19,13 +19,12 @@
 
 package org.killbill.billing.invoice.tree;
 
-import java.util.List;
+import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 public class NodeInterval {
 
@@ -81,6 +80,21 @@ public class NodeInterval {
         return;
     }
 
+    private static boolean insertNode(final NodeInterval parentNode, @Nullable final NodeInterval prevNode, @Nullable final NodeInterval nextNode, final NodeInterval newNode, final AddNodeCallback callback) {
+        if (!callback.shouldInsertNode(parentNode, (ItemsNodeInterval) newNode)) {
+            return false;
+        }
+        newNode.parent = parentNode;
+        if (prevNode == null) {
+            parentNode.leftChild = newNode;
+        } else {
+            prevNode.rightSibling = newNode;
+        }
+        newNode.rightSibling = nextNode;
+        return true;
+    }
+
+
     /**
      * Add a new node in the tree.
      *
@@ -95,6 +109,7 @@ public class NodeInterval {
 
         // Recursion: we've found a node matching that interval
         if (!isRoot() && newNode.getStart().compareTo(start) == 0 && newNode.getEnd().compareTo(end) == 0) {
+            // Case I.a
             return callback.onExistingNode(this, (ItemsNodeInterval) newNode);
         }
 
@@ -103,124 +118,32 @@ public class NodeInterval {
 
         newNode.parent = this;
         if (leftChild == null) {
-            if (callback.shouldInsertNode(this, (ItemsNodeInterval) newNode)) {
-                leftChild = newNode;
-                return true;
-            } else {
-                return false;
-            }
+            return insertNode(this, null, null, newNode, callback);
         }
 
         NodeInterval prevChild = null;
         NodeInterval curChild = leftChild;
         while (curChild != null) {
-            // newNode is contained (i.e. fits into curChild interval), we go deeper in the tree
-            if (curChild.isThisItemContaining(newNode)) {
-                return curChild.addNode(newNode, callback);
-            }
-
-            // newNode overlaps (i.e. curChild is contained in newNode), we have to rebalance:
-            // we go through the left child and all of its right siblings, "push" down the ones that
-            // are contained, and insert the newNode (along maybe with right siblings that aren't contained).
-            //
-            // For example, before:
-            //       A
-            //      /
-            //      B
-            //     /
-            //     Cde
-            //
-            //     A: [2014-01-01,2014-02-01]
-            //
-            //     B: [2014-01-01,2014-02-01]
-            //
-            //     C: [2014-01-01,2014-01-03]
-            //     d: [2014-01-03,2014-01-05]
-            //     e: [2014-01-16,2014-01-17]
-            //
-            // After inserting F [2014-01-01,2014-01-07]:
-            //        A
-            //       /
-            //       B
-            //      /
-            //      Fe
-            //     /
-            //     Cd
-            //
-            //     A: [2014-01-01,2014-02-01]
-            //
-            //     B: [2014-01-01,2014-02-01]
-            //
-            //     F: [2014-01-01,2014-01-07]
-            //     e: [2014-01-16,2014-01-17]
-            //
-            //     C: [2014-01-01,2014-01-03]
-            //     d: [2014-01-03,2014-01-05]
-            //
-            if (curChild.isThisItemEncompassed(newNode)) {
-                if (rebalance(newNode)) {
-                    // Return from the recursion
-                    return callback.shouldInsertNode(this, (ItemsNodeInterval) newNode);
-                }
-            }
-
-            // newNode starts before cur element, try to insert before
             if (newNode.getStart().compareTo(curChild.getStart()) < 0) {
-                if (newNode.getEnd().compareTo(curChild.getStart()) > 0) {
-                    // newNode will need to be split so it can be inserted
+                if (newNode.getEnd().compareTo(curChild.getStart()) <= 0) {
+                    return insertNode(this, prevChild, curChild, newNode, callback);
+                } else {
                     final NodeInterval[] newNodes = ((ItemsNodeInterval) newNode).split(curChild.getStart());
                     curChild.getParent().addNode(newNodes[0], callback);
-                    curChild.getParent().addNode(newNodes[1], callback);
-                    return true;
+                    return curChild.getParent().addNode(newNodes[1], callback);
                 }
-
-                // We have not implemented all cases so adding preconditions
-                Preconditions.checkState(prevChild == null || newNode.getStart().compareTo(prevChild.getEnd()) >= 0,
-                                         "Failed to insert new node %s, start date overlaps with left child %s", newNode, prevChild);
-
-                if (callback.shouldInsertNode(this, (ItemsNodeInterval) newNode)) {
-                    newNode.rightSibling = curChild;
-                    if (prevChild == null) {
-                        leftChild = newNode;
-                    } else {
-                        prevChild.rightSibling = newNode;
-                    }
-                    return true;
-                } else {
-                    return false;
-                }
-
+            } else if (curChild.isThisItemContaining(newNode)) {
+                return curChild.addNode(newNode, callback);
             } else if (newNode.getStart().compareTo(curChild.getEnd()) < 0) {
-
-                Preconditions.checkState(newNode.getStart().compareTo(curChild.getStart()) >= 0,
-                                         "Failed to insert new node %s, start date is prior last child start date %s", newNode, curChild);
-
-                // newNode will need to be split so it can be inserted
                 final NodeInterval[] newNodes = ((ItemsNodeInterval) newNode).split(curChild.getEnd());
                 curChild.getParent().addNode(newNodes[0], callback);
-                curChild.getParent().addNode(newNodes[1], callback);
-                return true;
+                return curChild.getParent().addNode(newNodes[1], callback);
+            } else {
+                prevChild = curChild;
+                curChild = curChild.rightSibling;
             }
-            prevChild = curChild;
-            curChild = curChild.rightSibling;
         }
-
-        if (newNode.getStart().compareTo(prevChild.getEnd()) < 0) {
-            final NodeInterval[] newNodes = ((ItemsNodeInterval) newNode).split(prevChild.getEnd());
-            prevChild.getParent().addNode(newNodes[0], callback);
-            prevChild.getParent().addNode(newNodes[1], callback);
-            return true;
-        }
-
-        Preconditions.checkState(newNode.getStart().compareTo(prevChild.getEnd()) >= 0,
-                                 "Failed to insert new node %s, start date overlaps with left child %s", newNode, prevChild);
-
-        if (callback.shouldInsertNode(this, (ItemsNodeInterval) newNode)) {
-            prevChild.rightSibling = newNode;
-            return true;
-        } else {
-            return false;
-        }
+        return insertNode(this, prevChild, null, newNode, callback);
     }
 
     public void removeChild(final NodeInterval toBeRemoved) {
@@ -457,73 +380,6 @@ public class NodeInterval {
         }
         sb.append('}');
         return sb.toString();
-    }
-
-    /**
-     * Since items may be added out of order, there is no guarantee that we don't suddenly have a new node
-     * whose interval encompasses current node(s). In which case we need to rebalance the tree.
-     *
-     * @param newNode node that triggered a rebalance operation
-     */
-    boolean rebalance(final NodeInterval newNode) {
-
-        NodeInterval prevRebalanced = null;
-        NodeInterval curChild = leftChild;
-        final List<NodeInterval> toBeRebalanced = Lists.newLinkedList();
-        do {
-            if (curChild.isThisItemEncompassed(newNode)) {
-                toBeRebalanced.add(curChild);
-            } else if (curChild.isThisItemOverlapedLeft(newNode)) {
-                final LocalDate splitDate = newNode.getEnd();
-                // Split curChild and rebalance (under newNode) the left part
-                final NodeInterval curChildRightSibling = curChild.rightSibling;
-                curChild.rightSibling = null;
-                final NodeInterval[] curNodes = ((ItemsNodeInterval) curChild).split(splitDate);
-                curNodes[0].rightSibling = curNodes[1];
-                curNodes[1].rightSibling = curChildRightSibling;
-                toBeRebalanced.add(curNodes[0]);
-
-                Preconditions.checkState(curChild.leftChild == null,
-                                         "Splitting a node (curChild=%s) during rebalance with children, not implemented", curChild);
-            } else if (curChild.isThisItemOverlapedRight(newNode)) {
-                // We could implement this -- fairly symmetrical to previous case, but cannot convince myself this is valid use case
-                // The caller, addNode(), should have already split 'newNode' prior we see a need of rebalancing on a subsequent sibling from curChild
-                Preconditions.checkState(!curChild.isThisItemOverlapedRight(newNode),
-                                         "Failed to rebalance new node %s, new Node overlaps on the right with cur child %s", newNode, curChild);
-            } else {
-                if (toBeRebalanced.size() > 0) {
-                    break;
-                }
-                prevRebalanced = curChild;
-            }
-            curChild = curChild.rightSibling;
-        } while (curChild != null);
-
-        if (toBeRebalanced.isEmpty()) {
-            return false;
-        }
-
-        newNode.parent = this;
-        final NodeInterval lastNodeToRebalance = toBeRebalanced.get(toBeRebalanced.size() - 1);
-        newNode.rightSibling = lastNodeToRebalance.rightSibling;
-        lastNodeToRebalance.rightSibling = null;
-        if (prevRebalanced == null) {
-            leftChild = newNode;
-        } else {
-            prevRebalanced.rightSibling = newNode;
-        }
-
-        NodeInterval prev = null;
-        for (final NodeInterval cur : toBeRebalanced) {
-            cur.parent = newNode;
-            if (prev == null) {
-                newNode.leftChild = cur;
-            } else {
-                prev.rightSibling = cur;
-            }
-            prev = cur;
-        }
-        return true;
     }
 
     private void computeRootInterval(final NodeInterval newNode) {
