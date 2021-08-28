@@ -1360,13 +1360,24 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         assertListenerStatus();
 
 
+        // Prior the change introduced in 6338109f8cdc7, this is what the code would have generated
+        final InvoiceModelDao prevBehaviorInvoice = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, startDate, startDate, Currency.USD, false, InvoiceStatus.COMMITTED, false);
+        final InvoiceItemModelDao  prevRecurring = new InvoiceItemModelDao(initialDate, InvoiceItemType.RECURRING, prevBehaviorInvoice.getId(), prevBehaviorInvoice.getAccountId(),
+                                                                           bpEntitlement.getBundleId(), entitlementId, "", "Pistol", "pistol-monthly-notrial", "pistol-monthly-notrial-evergreen", null,
+                                                                           null, new LocalDate(2016, 1, 1), new LocalDate(2016, 2, 1), new BigDecimal("19.85"), new BigDecimal("19.95"), account.getCurrency(), null);
+        final InvoiceItemModelDao prevRepair = new InvoiceItemModelDao(prevBehaviorInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, prevBehaviorInvoice.getId(), prevBehaviorInvoice.getAccountId(),
+                                                                    bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null, null,
+                                                                    null, new LocalDate(2016, 1, 1), new LocalDate(2016, 1, 30),  new BigDecimal("-18.66"), new BigDecimal("19.95"), account.getCurrency(), wrongRecurring.getId());
+
+        prevBehaviorInvoice.addInvoiceItem(prevRecurring);
+        prevBehaviorInvoice.addInvoiceItem(prevRepair);
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        insertInvoiceItems(prevBehaviorInvoice);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 1, 1), new LocalDate(2016, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2016, 1, 1), new LocalDate(2016, 1, 30), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-18.66")));
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        assertListenerStatus();
 
         checkNoMoreInvoiceToGenerate(account);
     }
