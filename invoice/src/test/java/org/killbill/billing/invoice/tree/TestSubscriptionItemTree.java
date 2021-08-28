@@ -429,26 +429,11 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", "someelse", null, repairDate, endDate, amount2, rate2, currency);
         expectedResult.add(expected2);
 
-        // First test with items in order
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(initial);
         tree.addItem(newItem);
         tree.addItem(repair);
         tree.build();
-        verifyResult(tree.getView(), expectedResult);
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair);
-        tree.addItem(newItem);
-        tree.addItem(initial);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
-
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair);
-        tree.addItem(initial);
-        tree.addItem(newItem);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
     }
 
     @Test(groups = "fast")
