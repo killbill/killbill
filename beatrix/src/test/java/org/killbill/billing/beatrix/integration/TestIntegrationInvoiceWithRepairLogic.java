@@ -1366,8 +1366,8 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
                                                                            bpEntitlement.getBundleId(), entitlementId, "", "Pistol", "pistol-monthly-notrial", "pistol-monthly-notrial-evergreen", null,
                                                                            null, new LocalDate(2016, 1, 1), new LocalDate(2016, 2, 1), new BigDecimal("19.85"), new BigDecimal("19.95"), account.getCurrency(), null);
         final InvoiceItemModelDao prevRepair = new InvoiceItemModelDao(prevBehaviorInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, prevBehaviorInvoice.getId(), prevBehaviorInvoice.getAccountId(),
-                                                                    bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null, null,
-                                                                    null, new LocalDate(2016, 1, 1), new LocalDate(2016, 1, 30),  new BigDecimal("-18.66"), new BigDecimal("19.95"), account.getCurrency(), wrongRecurring.getId());
+                                                                       bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null, null,
+                                                                       null, new LocalDate(2016, 1, 1), new LocalDate(2016, 1, 30),  new BigDecimal("-18.66"), new BigDecimal("19.95"), account.getCurrency(), wrongRecurring.getId());
 
         prevBehaviorInvoice.addInvoiceItem(prevRecurring);
         prevBehaviorInvoice.addInvoiceItem(prevRepair);
@@ -1419,14 +1419,30 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         insertInvoiceItems(repairInvoice);
         assertListenerStatus();
 
+
+        // Prior the change introduced in 6338109f8cdc7, this is what the code would have generated
+        final InvoiceModelDao prevBehaviorInvoice = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, startDate, startDate, Currency.USD, false, InvoiceStatus.COMMITTED, false);
+        final InvoiceItemModelDao  prevRecurring = new InvoiceItemModelDao(initialDate, InvoiceItemType.RECURRING, prevBehaviorInvoice.getId(), prevBehaviorInvoice.getAccountId(),
+                                                                           bpEntitlement.getBundleId(), entitlementId, "", "Pistol", "pistol-monthly-notrial", "pistol-monthly-notrial-evergreen", null,
+                                                                           null, new LocalDate(2013, 6, 15), new LocalDate(2013, 7, 15), new BigDecimal("19.85"), new BigDecimal("19.95"), account.getCurrency(), null);
+        final InvoiceItemModelDao prevRepair1 = new InvoiceItemModelDao(prevBehaviorInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, prevBehaviorInvoice.getId(), prevBehaviorInvoice.getAccountId(),
+                                                                        bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null, null,
+                                                                        null, new LocalDate(2013, 6, 15), new LocalDate(2013, 6, 21),  new BigDecimal("-3.99"), new BigDecimal("19.95"), account.getCurrency(), linkedItemId);
+        final InvoiceItemModelDao prevRepair2 = new InvoiceItemModelDao(prevBehaviorInvoice.getCreatedDate(), InvoiceItemType.REPAIR_ADJ, prevBehaviorInvoice.getId(), prevBehaviorInvoice.getAccountId(),
+                                                                        bpEntitlement.getBundleId(), bpEntitlement.getBaseEntitlementId(), null, null, null, null, null,
+                                                                        null, new LocalDate(2013, 6, 26), new LocalDate(2013, 7, 15),  new BigDecimal("-12.63"), new BigDecimal("19.95"), account.getCurrency(), linkedItemId);
+        prevBehaviorInvoice.addInvoiceItem(prevRecurring);
+        prevBehaviorInvoice.addInvoiceItem(prevRepair1);
+        prevBehaviorInvoice.addInvoiceItem(prevRepair2);
+
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        insertInvoiceItems(prevBehaviorInvoice);
         assertListenerStatus();
 
-        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2013, 6, 15), new LocalDate(2013, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2013, 6, 15), new LocalDate(2013, 6, 21), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-3.99")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2013, 6, 26), new LocalDate(2013, 7, 15), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-12.63")));
+        // Nothing to generate - new behavior is compatible with older behavior
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        assertListenerStatus();
 
 
         checkNoMoreInvoiceToGenerate(account);
