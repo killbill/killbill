@@ -80,6 +80,7 @@ public class NodeInterval {
         return;
     }
 
+    // Convenient (static) method to insert a node that belongs below parent, right to prevNode (if not null) and before nextNode (if not null)
     private static boolean insertNode(final NodeInterval parentNode, @Nullable final NodeInterval prevNode, @Nullable final NodeInterval nextNode, final NodeInterval newNode, final AddNodeCallback callback) {
         if (!callback.shouldInsertNode(parentNode, (ItemsNodeInterval) newNode)) {
             return false;
@@ -107,42 +108,74 @@ public class NodeInterval {
         Preconditions.checkNotNull(newNode);
         Preconditions.checkNotNull(callback);
 
-        // Recursion: we've found a node matching that interval
+        // We've found a exact node matching that newNode interval
         if (!isRoot() && newNode.getStart().compareTo(start) == 0 && newNode.getEnd().compareTo(end) == 0) {
-            // Case I.a
             return callback.onExistingNode(this, (ItemsNodeInterval) newNode);
         }
 
         // Initialize (or update) the root interval
         computeRootInterval(newNode);
 
-        newNode.parent = this;
+        // No leftChild, insert as the leftChild
         if (leftChild == null) {
             return insertNode(this, null, null, newNode, callback);
         }
 
+        //
+        // Go through children to decide where to insert newNode:
+        // All the possibilities are summarized with the few cases below and
+        // further recursions for the right part of the newNode's split
+        //
         NodeInterval prevChild = null;
         NodeInterval curChild = leftChild;
         while (curChild != null) {
             if (newNode.getStart().compareTo(curChild.getStart()) < 0) {
                 if (newNode.getEnd().compareTo(curChild.getStart()) <= 0) {
+                    // newNode is strictly prior curChild, insert before
+                    //         |------| curChild
+                    // |-------|    newNode
+                    // |----|     newNode
                     return insertNode(this, prevChild, curChild, newNode, callback);
                 } else {
+                    // newNode starts prior curChild, but overlaps, split on the curChild#start
+                    // Note that it does not matter what happens with newNode#end, and whether it even spans multiple children,
+                    // the recursion will take care of it.
+                    //         |------| curChild          |-----| (rightChild)
+                    // |----------|     newNode
+                    // |-----------------------------------------------------------|  newNode
                     final NodeInterval[] newNodes = ((ItemsNodeInterval) newNode).split(curChild.getStart());
                     curChild.getParent().addNode(newNodes[0], callback);
                     return curChild.getParent().addNode(newNodes[1], callback);
                 }
             } else if (curChild.isThisItemContaining(newNode)) {
+                // newNode is contained within curChild, recurse to have curChild become the parent
+                //         |------| curChild
+                //         |------|   newNode
+                //         |----|     newNode
+                //           |----|   newNode
+                //           |-|     newNode
                 return curChild.addNode(newNode, callback);
             } else if (newNode.getStart().compareTo(curChild.getEnd()) < 0) {
+                // newNode starts after curChild#start, but overlaps curChild, split on the curChild#end
+                // Note that it does not matter what happens with newNode#end, and whether it even spans multiple children,
+                // the recursion will take care of it.
+                //         |------| curChild           |-----| (rightChild)
+                //         |---------|   newNode
+                //            |---------|   newNode
+                //            |--------------------------------------------------------|   newNode
                 final NodeInterval[] newNodes = ((ItemsNodeInterval) newNode).split(curChild.getEnd());
                 curChild.getParent().addNode(newNodes[0], callback);
                 return curChild.getParent().addNode(newNodes[1], callback);
             } else {
+                // Go to next child and try again...
                 prevChild = curChild;
                 curChild = curChild.rightSibling;
             }
         }
+        // We reached to end, this node belongs after the last child, insert
+        //         |------| curChild (last one)
+        //                |---------|   newNode
+        //                     |---------|   newNode
         return insertNode(this, prevChild, null, newNode, callback);
     }
 
