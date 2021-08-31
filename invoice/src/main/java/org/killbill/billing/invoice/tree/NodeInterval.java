@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class NodeInterval {
@@ -147,7 +148,7 @@ public class NodeInterval {
                     curChild.getParent().addNode(newNodes[0], callback);
                     return curChild.getParent().addNode(newNodes[1], callback);
                 }
-            } else if (curChild.isThisItemContaining(newNode)) {
+            } else if (newNode.getEnd().compareTo(curChild.getEnd()) <= 0) {
                 // newNode is contained within curChild, recurse to have curChild become the parent
                 //         |------| curChild
                 //         |------|   newNode
@@ -179,7 +180,8 @@ public class NodeInterval {
         return insertNode(this, prevChild, null, newNode, callback);
     }
 
-    public void removeChild(final NodeInterval toBeRemoved) {
+    @VisibleForTesting
+    void removeChild(final NodeInterval toBeRemoved) {
         NodeInterval prevChild = null;
         NodeInterval curChild = leftChild;
         while (curChild != null) {
@@ -223,7 +225,8 @@ public class NodeInterval {
      * @param callback   custom logic to decide if a given node is a match
      * @return the found node or null if there is nothing.
      */
-    public NodeInterval findNode(final LocalDate targetDate, final SearchCallback callback) {
+    @VisibleForTesting
+    NodeInterval findNode(final LocalDate targetDate, final SearchCallback callback) {
 
         Preconditions.checkNotNull(callback);
         Preconditions.checkNotNull(targetDate);
@@ -292,36 +295,6 @@ public class NodeInterval {
             curChild.walkTreeWithDepth(callback, (depth + 1));
             curChild = curChild.getRightSibling();
         }
-    }
-
-    // 'newNode' is contained into 'this' (includes equal)
-    private boolean isThisItemContaining(final NodeInterval newNode) {
-        return (newNode.getStart().compareTo(start) >= 0 &&
-                newNode.getEnd().compareTo(end) <= 0);
-    }
-
-    // 'newNode' contains 'this' (does not includes equal)
-    private boolean isThisItemEncompassed(final NodeInterval newNode) {
-        return ((newNode.getStart().compareTo(start) < 0 &&
-                 newNode.getEnd().compareTo(end) >= 0) ||
-                (newNode.getStart().compareTo(start) <= 0 &&
-                 newNode.getEnd().compareTo(end) > 0));
-    }
-
-    private boolean isThisItemOverlaped(final NodeInterval newNode) {
-        return isThisItemOverlapedLeft(newNode) || isThisItemOverlapedRight(newNode);
-    }
-
-    private boolean isThisItemOverlapedLeft(final NodeInterval newNode) {
-        return (newNode.getStart().compareTo(start) < 0 &&
-                newNode.getEnd().compareTo(start) > 0 &&
-                newNode.getEnd().compareTo(end) < 0);
-    }
-
-    private boolean isThisItemOverlapedRight(final NodeInterval newNode) {
-        return (newNode.getStart().compareTo(start) > 0 &&
-                newNode.getStart().compareTo(end) < 0 &&
-                newNode.getEnd().compareTo(end) > 0);
     }
 
     @JsonIgnore
