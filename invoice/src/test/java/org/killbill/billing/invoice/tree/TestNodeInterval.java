@@ -19,7 +19,6 @@
 
 package org.killbill.billing.invoice.tree;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -28,15 +27,12 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.tree.NodeInterval.AddNodeCallback;
 import org.killbill.billing.invoice.tree.NodeInterval.BuildNodeCallback;
-import org.killbill.billing.invoice.tree.NodeInterval.SearchCallback;
 import org.killbill.billing.invoice.tree.NodeInterval.WalkCallback;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Preconditions;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestNodeInterval extends InvoiceTestSuiteNoDB {
@@ -148,36 +144,6 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
         checkNode(thirdChildLevel2, 0, thirdChildLevel1, null, null);
     }
 
-    @Test(groups = "fast")
-    public void testAddExistingItemWithRebalance() {
-        final DummyNodeInterval root = new DummyNodeInterval();
-
-        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
-        root.addNode(top, CALLBACK);
-
-        final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
-        final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-03", "2014-01-5");
-        final DummyNodeInterval thirdChildLevel2 = createNodeInterval("2014-01-16", "2014-01-17");
-        root.addNode(firstChildLevel2, CALLBACK);
-        root.addNode(secondChildLevel2, CALLBACK);
-        root.addNode(thirdChildLevel2, CALLBACK);
-
-        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
-        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-08", "2014-01-15");
-        final DummyNodeInterval thirdChildLevel1 = createNodeInterval("2014-01-16", "2014-02-01");
-        root.addNode(firstChildLevel1, CALLBACK);
-        root.addNode(secondChildLevel1, CALLBACK);
-        root.addNode(thirdChildLevel1, CALLBACK);
-
-        checkNode(top, 3, root, firstChildLevel1, null);
-        checkNode(firstChildLevel1, 2, top, firstChildLevel2, secondChildLevel1);
-        checkNode(secondChildLevel1, 0, top, null, thirdChildLevel1);
-        checkNode(thirdChildLevel1, 1, top, thirdChildLevel2, null);
-
-        checkNode(firstChildLevel2, 0, firstChildLevel1, null, secondChildLevel2);
-        checkNode(secondChildLevel2, 0, firstChildLevel1, null, null);
-        checkNode(thirdChildLevel2, 0, thirdChildLevel1, null, null);
-    }
 
     @Test(groups = "fast")
     public void testAddOverlapNode1() {
@@ -357,57 +323,6 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testSearch() {
-        final DummyNodeInterval root = new DummyNodeInterval();
-
-        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
-        root.addNode(top, CALLBACK);
-
-        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-07");
-        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-08", "2014-01-15");
-        final DummyNodeInterval thirdChildLevel1 = createNodeInterval("2014-01-16", "2014-02-01");
-        root.addNode(firstChildLevel1, CALLBACK);
-        root.addNode(secondChildLevel1, CALLBACK);
-        root.addNode(thirdChildLevel1, CALLBACK);
-
-        final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
-        final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-03", "2014-01-5");
-        final DummyNodeInterval thirdChildLevel2 = createNodeInterval("2014-01-16", "2014-01-17");
-        root.addNode(firstChildLevel2, CALLBACK);
-        root.addNode(secondChildLevel2, CALLBACK);
-        root.addNode(thirdChildLevel2, CALLBACK);
-
-        final DummyNodeInterval firstChildLevel3 = createNodeInterval("2014-01-01", "2014-01-02");
-        final DummyNodeInterval secondChildLevel3 = createNodeInterval("2014-01-03", "2014-01-04");
-        root.addNode(firstChildLevel3, CALLBACK);
-        root.addNode(secondChildLevel3, CALLBACK);
-
-        final NodeInterval search1 = root.findNode(new LocalDate("2014-01-04"), new SearchCallback() {
-            @Override
-            public boolean isMatch(final NodeInterval curNode) {
-                return curNode instanceof DummyNodeInterval && ((DummyNodeInterval) curNode).getId().equals(secondChildLevel3.getId());
-            }
-        });
-        checkInterval(search1, secondChildLevel3);
-
-        final NodeInterval search2 = root.findNode(new SearchCallback() {
-            @Override
-            public boolean isMatch(final NodeInterval curNode) {
-                return curNode instanceof DummyNodeInterval && ((DummyNodeInterval) curNode).getId().equals(thirdChildLevel2.getId());
-            }
-        });
-        checkInterval(search2, thirdChildLevel2);
-
-        final NodeInterval nullSearch = root.findNode(new SearchCallback() {
-            @Override
-            public boolean isMatch(final NodeInterval curNode) {
-                return curNode instanceof DummyNodeInterval && "foo".equals(((DummyNodeInterval) curNode).getId().toString());
-            }
-        });
-        assertNull(nullSearch);
-    }
-
-    @Test(groups = "fast")
     public void testWalkTree() {
         final DummyNodeInterval root = new DummyNodeInterval();
 
@@ -468,152 +383,6 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
         }
     }
 
-    @Test(groups = "fast")
-    public void testRemoveLeftChildWithGrandChildren() {
-        final DummyNodeInterval root = new DummyNodeInterval();
-
-        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
-        root.addNode(top, CALLBACK);
-
-        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-20");
-        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-21", "2014-01-31");
-        root.addNode(firstChildLevel1, CALLBACK);
-        root.addNode(secondChildLevel1, CALLBACK);
-
-        final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-01", "2014-01-03");
-        final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-04", "2014-01-10");
-        final DummyNodeInterval thirdChildLevel2 = createNodeInterval("2014-01-11", "2014-01-20");
-        root.addNode(firstChildLevel2, CALLBACK);
-        root.addNode(secondChildLevel2, CALLBACK);
-        root.addNode(thirdChildLevel2, CALLBACK);
-
-        // Let's verify we get it right prior removing the node
-        final List<NodeInterval> expectedNodes = new ArrayList<NodeInterval>();
-        expectedNodes.add(root);
-        expectedNodes.add(top);
-        expectedNodes.add(firstChildLevel1);
-        expectedNodes.add(firstChildLevel2);
-        expectedNodes.add(secondChildLevel2);
-        expectedNodes.add(thirdChildLevel2);
-        expectedNodes.add(secondChildLevel1);
-
-        root.walkTree(new WalkCallback() {
-            @Override
-            public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
-                Assert.assertEquals(curNode, expectedNodes.remove(0));
-            }
-        });
-
-        // Remove node and verify again
-        top.removeChild(firstChildLevel1);
-
-        final List<NodeInterval> expectedNodesAfterRemoval = new ArrayList<NodeInterval>();
-        expectedNodesAfterRemoval.add(root);
-        expectedNodesAfterRemoval.add(top);
-        expectedNodesAfterRemoval.add(firstChildLevel2);
-        expectedNodesAfterRemoval.add(secondChildLevel2);
-        expectedNodesAfterRemoval.add(thirdChildLevel2);
-        expectedNodesAfterRemoval.add(secondChildLevel1);
-
-        root.walkTree(new WalkCallback() {
-            @Override
-            public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
-                Assert.assertEquals(curNode, expectedNodesAfterRemoval.remove(0));
-            }
-        });
-    }
-
-    @Test(groups = "fast")
-    public void testRemoveMiddleChildWithGrandChildren() {
-        final DummyNodeInterval root = new DummyNodeInterval();
-
-        final DummyNodeInterval top = createNodeInterval("2014-01-01", "2014-02-01");
-        root.addNode(top, CALLBACK);
-
-        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2014-01-01", "2014-01-20");
-        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2014-01-21", "2014-01-31");
-        root.addNode(firstChildLevel1, CALLBACK);
-        root.addNode(secondChildLevel1, CALLBACK);
-
-        final DummyNodeInterval firstChildLevel2 = createNodeInterval("2014-01-21", "2014-01-23");
-        final DummyNodeInterval secondChildLevel2 = createNodeInterval("2014-01-24", "2014-01-25");
-        final DummyNodeInterval thirdChildLevel2 = createNodeInterval("2014-01-26", "2014-01-31");
-        root.addNode(firstChildLevel2, CALLBACK);
-        root.addNode(secondChildLevel2, CALLBACK);
-        root.addNode(thirdChildLevel2, CALLBACK);
-
-        // Original List without removing node:
-        final List<NodeInterval> expectedNodes = new ArrayList<NodeInterval>();
-        expectedNodes.add(root);
-        expectedNodes.add(top);
-        expectedNodes.add(firstChildLevel1);
-        expectedNodes.add(secondChildLevel1);
-        expectedNodes.add(firstChildLevel2);
-        expectedNodes.add(secondChildLevel2);
-        expectedNodes.add(thirdChildLevel2);
-
-        root.walkTree(new WalkCallback() {
-            @Override
-            public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
-                Assert.assertEquals(curNode, expectedNodes.remove(0));
-            }
-        });
-
-        top.removeChild(secondChildLevel1);
-
-        final List<NodeInterval> expectedNodesAfterRemoval = new ArrayList<NodeInterval>();
-        expectedNodesAfterRemoval.add(root);
-        expectedNodesAfterRemoval.add(top);
-        expectedNodesAfterRemoval.add(firstChildLevel1);
-        expectedNodesAfterRemoval.add(firstChildLevel2);
-        expectedNodesAfterRemoval.add(secondChildLevel2);
-        expectedNodesAfterRemoval.add(thirdChildLevel2);
-
-        root.walkTree(new WalkCallback() {
-            @Override
-            public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
-                Assert.assertEquals(curNode, expectedNodesAfterRemoval.remove(0));
-            }
-        });
-    }
-
-    @Test(groups = "fast")
-    public void testRebalanceWithSplits() {
-        final DummyNodeInterval root = new DummyNodeInterval();
-
-        final DummyNodeInterval firstChildLevel1 = createNodeInterval("2021-05-17", "2021-05-20");
-        root.addNode(firstChildLevel1, CALLBACK);
-        final DummyNodeInterval secondChildLevel1 = createNodeInterval("2021-05-20", "2021-06-20");
-        root.addNode(secondChildLevel1, CALLBACK);
-
-
-        final DummyNodeInterval newNode = createNodeInterval("2021-05-17", "2021-06-17");
-        root.addNode(newNode, CALLBACK);
-
-        final List<NodeInterval> expectedNodes = new ArrayList<NodeInterval>();
-        expectedNodes.add(root);
-        expectedNodes.add(newNode);
-        expectedNodes.add(firstChildLevel1);
-        final DummyNodeInterval secondChildLevel1Split1 = createNodeInterval("2021-05-20", "2021-06-17");
-        secondChildLevel1Split1.parent = newNode;
-        expectedNodes.add(secondChildLevel1Split1);
-
-        final DummyNodeInterval secondChildLevel1Split2 = createNodeInterval("2021-06-17", "2021-06-20");
-        secondChildLevel1Split2.parent = newNode.parent;
-        expectedNodes.add(secondChildLevel1Split2);
-
-        System.out.println(TreePrinter.print(root));
-
-        root.walkTree(new WalkCallback() {
-            @Override
-            public void onCurrentNode(final int depth, final NodeInterval curNode, final NodeInterval parent) {
-                final NodeInterval expectedNode = expectedNodes.remove(0);
-                if (!curNode.isRoot()) {
-                    Assert.assertTrue(curNode.isSame(expectedNode));
-                }
-            }
-        });
-    }
 
     private void checkInterval(final NodeInterval real, final NodeInterval expected) {
         assertEquals(real.getStart(), expected.getStart());

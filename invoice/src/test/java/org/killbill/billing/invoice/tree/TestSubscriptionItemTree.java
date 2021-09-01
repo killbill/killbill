@@ -429,26 +429,11 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", "someelse", null, repairDate, endDate, amount2, rate2, currency);
         expectedResult.add(expected2);
 
-        // First test with items in order
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(initial);
         tree.addItem(newItem);
         tree.addItem(repair);
         tree.build();
-        verifyResult(tree.getView(), expectedResult);
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair);
-        tree.addItem(newItem);
-        tree.addItem(initial);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
-
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair);
-        tree.addItem(initial);
-        tree.addItem(newItem);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
     }
 
     @Test(groups = "fast")
@@ -515,7 +500,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem expected3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, repairDate2, endDate, amount3, rate3, currency);
         expectedResult.add(expected3);
 
-        // First test with items in order
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(initial);
         tree.addItem(newItem1);
@@ -525,23 +509,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.build();
         verifyResult(tree.getView(), expectedResult);
 
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair2);
-        tree.addItem(newItem1);
-        tree.addItem(newItem2);
-        tree.addItem(repair1);
-        tree.addItem(initial);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
-
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair1);
-        tree.addItem(newItem1);
-        tree.addItem(initial);
-        tree.addItem(repair2);
-        tree.addItem(newItem2);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
     }
 
     @Test(groups = "fast")
@@ -1344,8 +1311,20 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(correctInitialItem);
         tree.buildForMerge();
 
-        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, wrongStartDate, endDate, BigDecimal.ZERO, Currency.USD, wrongInitialItem.getId());
-        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(correctInitialItem, repair);
+        final InvoiceItem expected = new RecurringInvoiceItem(invoiceId,
+                                                                accountId,
+                                                                bundleId,
+                                                                subscriptionId,
+                                                                productName,
+                                                                planName,
+                                                                phaseName,
+                                                                null,
+                                                                correctStartDate,
+                                                                wrongStartDate,
+                                                                new BigDecimal("0.40"),
+                                                                rate,
+                                                                currency);
+        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(expected);
         verifyResult(tree.getView(), expectedResult);
 
     }
