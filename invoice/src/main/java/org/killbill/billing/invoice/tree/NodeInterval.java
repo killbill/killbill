@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 import org.joda.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class NodeInterval {
@@ -180,33 +179,6 @@ public class NodeInterval {
         return insertNode(this, prevChild, null, newNode, callback);
     }
 
-    @VisibleForTesting
-    void removeChild(final NodeInterval toBeRemoved) {
-        NodeInterval prevChild = null;
-        NodeInterval curChild = leftChild;
-        while (curChild != null) {
-            if (curChild.isSame(toBeRemoved)) {
-                if (prevChild == null) {
-                    if (curChild.getLeftChild() == null) {
-                        leftChild = curChild.getRightSibling();
-                    } else {
-                        leftChild = curChild.getLeftChild();
-                        adjustRightMostChildSibling(curChild);
-                    }
-                } else {
-                    if (curChild.getLeftChild() == null) {
-                        prevChild.rightSibling = curChild.getRightSibling();
-                    } else {
-                        prevChild.rightSibling = curChild.getLeftChild();
-                        adjustRightMostChildSibling(curChild);
-                    }
-                }
-                break;
-            }
-            prevChild = curChild;
-            curChild = curChild.getRightSibling();
-        }
-    }
 
     private void adjustRightMostChildSibling(final NodeInterval curNode) {
         NodeInterval tmpChild = curNode.getLeftChild();
@@ -217,39 +189,7 @@ public class NodeInterval {
         }
         preTmpChild.rightSibling = curNode.getRightSibling();
     }
-
-    /**
-     * Return the first node satisfying the date and match callback.
-     *
-     * @param targetDate target date for possible match nodes whose interval comprises that date
-     * @param callback   custom logic to decide if a given node is a match
-     * @return the found node or null if there is nothing.
-     */
-    @VisibleForTesting
-    NodeInterval findNode(final LocalDate targetDate, final SearchCallback callback) {
-
-        Preconditions.checkNotNull(callback);
-        Preconditions.checkNotNull(targetDate);
-
-        if (targetDate.compareTo(getStart()) < 0 || targetDate.compareTo(getEnd()) > 0) {
-            return null;
-        }
-
-        NodeInterval curChild = leftChild;
-        while (curChild != null) {
-            if (curChild.getStart().compareTo(targetDate) <= 0 && curChild.getEnd().compareTo(targetDate) >= 0) {
-                if (callback.isMatch(curChild)) {
-                    return curChild;
-                }
-                final NodeInterval result = curChild.findNode(targetDate, callback);
-                if (result != null) {
-                    return result;
-                }
-            }
-            curChild = curChild.getRightSibling();
-        }
-        return null;
-    }
+    
 
     /**
      * Return the first node satisfying the date and match callback.
