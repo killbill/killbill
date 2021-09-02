@@ -19,20 +19,24 @@ package org.killbill.billing.util.features;
 
 import com.google.common.base.MoreObjects;
 
-public final class KillbillFeatures {
+public class KillbillFeatures {
 
     public static final String PROP_FEATURE_INVOICE_OPTIMIZATION = "killbill.features.invoice.optimization";
     public static final String PROP_FEATURE_BUS_OPTIMIZATION = "killbill.features.bus.optimization";
+    public static final String PROP_FEATURE_ALLOW_ACCOUNT_BCD_UPDATE = "killbill.features.account.allowBCDUpdate";
 
     private static final String FEATURE_INVOICE_OPTIMIZATION = "${killbill.features.invoice.optimization}";
     private static final String FEATURE_BUS_OPTIMIZATION = "${killbill.features.bus.optimization}";
+    private static final String FEATURE_ALLOW_ACCOUNT_BCD_UPDATE = "${killbill.features.account.allowBCDUpdate}";
 
     private final boolean isInvoiceOptimizationOn;
     private final boolean isBusOptimizationOn;
+    private final boolean allowAccountBCDUpdate;
 
     public KillbillFeatures() {
         this.isInvoiceOptimizationOn = Boolean.valueOf(MoreObjects.<String>firstNonNull(FEATURE_INVOICE_OPTIMIZATION, "false"));
         this.isBusOptimizationOn = Boolean.valueOf(MoreObjects.<String>firstNonNull(FEATURE_BUS_OPTIMIZATION, "false"));
+        this.allowAccountBCDUpdate = Boolean.valueOf(MoreObjects.<String>firstNonNull(FEATURE_ALLOW_ACCOUNT_BCD_UPDATE, "false"));
     }
 
     public boolean isInvoiceOptimizationOn() {
@@ -41,5 +45,9 @@ public final class KillbillFeatures {
 
     public boolean isBusOptimizationOn() {
         return isBusOptimizationOn;
+    }
+
+    public boolean allowAccountBCDUpdate() {
+        return allowAccountBCDUpdate;
     }
 }

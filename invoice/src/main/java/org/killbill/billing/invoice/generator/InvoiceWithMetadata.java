@@ -18,9 +18,7 @@
 package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -31,7 +29,6 @@ import javax.annotation.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -78,11 +75,14 @@ public class InvoiceWithMetadata {
     // Remove all the IN_ADVANCE items for which we have no invoice items
     private void build() {
         // nextRecurringDate are computed based on *proposed* items, and not missing items (= proposed - existing). So
-        // we need to filter out the dates for which there is no item left otherwsie we may end up in creating too many notification dates
+        // we need to filter out the dates for which there is no item left otherwise we may end up in creating too many notification dates
         // and in particular that could lead to an infinite loop.
         for (final Entry<UUID, SubscriptionFutureNotificationDates> entry : perSubscriptionFutureNotificationDates.entrySet()) {
             final SubscriptionFutureNotificationDates tmp = entry.getValue();
-            if (tmp.getRecurringBillingMode() == BillingMode.IN_ADVANCE && !hasItemsForSubscription(entry.getKey(), InvoiceItemType.RECURRING)) {
+            if (tmp.getNextRecurringDate() != null &&
+                tmp.getRecurringBillingMode() == BillingMode.IN_ADVANCE &&
+                !hasItemsForSubscription(entry.getKey(), InvoiceItemType.RECURRING) &&
+                !hasItemsForDate(tmp.getNextRecurringDate()) /* e.g. REPAIR_ADJ */) {
                 tmp.resetNextRecurringDate();
             }
         }
@@ -144,13 +144,22 @@ public class InvoiceWithMetadata {
         return chargedThroughDates;
     }
 
-
     private boolean hasItemsForSubscription(final UUID subscriptionId, final InvoiceItemType invoiceItemType) {
         return invoice != null && Iterables.any(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
             @Override
             public boolean apply(final InvoiceItem input) {
                 return input.getInvoiceItemType() == invoiceItemType &&
                        input.getSubscriptionId().equals(subscriptionId);
+            }
+        });
+    }
+
+    private boolean hasItemsForDate(final LocalDate date) {
+        return invoice != null && Iterables.any(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return (input.getStartDate() != null && input.getStartDate().compareTo(date) == 0) ||
+                       (input.getEndDate() != null && input.getEndDate().compareTo(date) == 0);
             }
         });
     }

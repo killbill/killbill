@@ -1,6 +1,7 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -63,7 +64,7 @@ public class TestTreePrinter extends InvoiceTestSuiteNoDB {
         node11.rightSibling = node12;
         node12.leftChild = node23;
 
-        final SortedMap<XY, ItemsNodeInterval> coords = TreePrinter.buildCoordinates(root);
+        final SortedMap<XY, NodeInterval> coords = TreePrinter.buildCoordinates(root);
         Assert.assertEquals(coords.size(), 4);
         Assert.assertEquals(coords.get(new XY(0, 0)), root);
         Assert.assertEquals(coords.get(new XY(-1, -1)), node11);
@@ -74,7 +75,7 @@ public class TestTreePrinter extends InvoiceTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testComplexMultiLevelTree() throws Exception {
-        Map<XY, ItemsNodeInterval> coords = TreePrinter.buildCoordinates(root);
+        Map<XY, NodeInterval> coords = TreePrinter.buildCoordinates(root);
         Assert.assertEquals(coords.size(), 1);
         Assert.assertEquals(coords.get(new XY(0, 0)), root);
 

@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -56,6 +57,7 @@ import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
@@ -66,6 +68,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
+import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
@@ -74,18 +77,25 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     private final CacheController<Long, ImmutableAccountData> accountImmutableCacheController;
     private final BusOptimizer eventBus;
+    private final KillbillFeatures killbillFeatures;
     private final InternalCallContextFactory internalCallContextFactory;
-    private final Clock clock;
     private final AuditDao auditDao;
 
     @Inject
-    public DefaultAccountDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi, final BusOptimizer eventBus, final Clock clock, final CacheControllerDispatcher cacheControllerDispatcher,
-                             final InternalCallContextFactory internalCallContextFactory, final NonEntityDao nonEntityDao, final AuditDao auditDao) {
+    public DefaultAccountDao(final IDBI dbi,
+                             @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi,
+                             final BusOptimizer eventBus,
+                             final KillbillFeatures killbillFeatures,
+                             final Clock clock,
+                             final CacheControllerDispatcher cacheControllerDispatcher,
+                             final InternalCallContextFactory internalCallContextFactory,
+                             final NonEntityDao nonEntityDao,
+                             final AuditDao auditDao) {
         super(nonEntityDao, cacheControllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), AccountSqlDao.class);
         this.accountImmutableCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
-        this.clock = clock;
+        this.killbillFeatures = killbillFeatures;
         this.auditDao = auditDao;
     }
 
@@ -209,9 +219,18 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                     throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
                 }
 
-                specifiedAccount.validateAccountUpdateInput(currentAccount, treatNullValueAsReset);
+                specifiedAccount.validateAccountUpdateInput(currentAccount, treatNullValueAsReset, killbillFeatures.allowAccountBCDUpdate());
 
                 if (!treatNullValueAsReset) {
+                    if ((currentAccount.getBillingCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
+                        specifiedAccount.getBillingCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL) || // and the proposed date is not 0
+                        killbillFeatures.allowAccountBCDUpdate()) {
+                        // Use the specified BCD
+                    } else {
+                        // Keep the current BCD
+                        specifiedAccount.setBillingCycleDayLocal(currentAccount.getBillingCycleDayLocal());
+                    }
+
                     // Set unspecified (null) fields to their current values
                     specifiedAccount.mergeWithDelegate(currentAccount);
                 }

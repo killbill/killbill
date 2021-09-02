@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -32,12 +33,17 @@ import org.killbill.billing.glue.AccountModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.audit.dao.DefaultAuditDao;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.glue.KillBillModule;
 
 public class DefaultAccountModule extends KillBillModule implements AccountModule {
 
     public DefaultAccountModule(final KillbillConfigSource configSource) {
         super(configSource);
+    }
+
+    public DefaultAccountModule(final KillbillConfigSource configSource, final KillbillFeatures killbillFeatures) {
+        super(configSource, killbillFeatures);
     }
 
     private void installConfig() {
@@ -62,6 +68,10 @@ public class DefaultAccountModule extends KillBillModule implements AccountModul
         bind(AccountService.class).to(DefaultAccountService.class).asEagerSingleton();
     }
 
+    private void installKillBillFeatures() {
+        bind(KillbillFeatures.class).toInstance(killbillFeatures);
+    }
+
     @Override
     protected void configure() {
         installConfig();
@@ -69,5 +79,6 @@ public class DefaultAccountModule extends KillBillModule implements AccountModul
         installAccountService();
         installAccountUserApi();
         installInternalApi();
+        installKillBillFeatures();
     }
 }

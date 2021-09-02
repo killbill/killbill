@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -187,6 +188,14 @@ public class InvoiceDispatcher {
         this.parkedAccountsManager = parkedAccountsManager;
     }
 
+    public void processAccountBCDChange(final UUID accountId, final InternalCallContext internalCallContext) {
+        try {
+            processAccount(false, accountId, null, null, false, internalCallContext);
+        } catch (final InvoiceApiException e) {
+            log.warn("Failed to process BCD change for accountId='{}'", accountId, e);
+        }
+    }
+
     public void processSubscriptionStartRequestedDate(final RequestedSubscriptionInternalEvent transition, final InternalCallContext context) {
         final long dryRunNotificationTime = invoiceConfig.getDryRunNotificationSchedule(context).getMillis();
         final boolean isInvoiceNotificationEnabled = dryRunNotificationTime > 0;
@@ -228,7 +237,7 @@ public class InvoiceDispatcher {
 
             final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
 
-            commitInvoiceAndSetFutureNotifications(account, notificationsBuilder.build(), context);
+            setFutureNotifications(account, notificationsBuilder.build(), context);
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed handling SubscriptionBase change.",
                      new InvoiceApiException(ErrorCode.INVOICE_NO_ACCOUNT_ID_FOR_SUBSCRIPTION_ID, transition.getSubscriptionId().toString()));
@@ -583,7 +592,7 @@ public class InvoiceDispatcher {
                 log.warn("Ignoring rescheduleDate='{}', delayed scheduling is unsupported in dry-run", rescheduleDate);
             } else {
                 final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(rescheduleDate, billingEvents, internalCallContext);
-                commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
+                setFutureNotifications(account, futureAccountNotifications, internalCallContext);
             }
             return null;
         }
@@ -609,7 +618,7 @@ public class InvoiceDispatcher {
                 // Although we have a null invoice, it could be as a result of removing $0 USAGE (config#isUsageZeroAmountDisabled)
                 // and so we may still need to set the CTD for such subscriptions.
                 setChargedThroughDatesNoExceptions(invoiceWithMetadata.getChargeThroughDates(), internalCallContext);
-                commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
+                setFutureNotifications(account, futureAccountNotifications, internalCallContext);
                 postEvent(event);
             }
             return null;
@@ -668,7 +677,7 @@ public class InvoiceDispatcher {
         } finally {
             // Make sure we always set future notifications in case of errors
             if (!isDryRun && !success) {
-                commitInvoiceAndSetFutureNotifications(account, futureAccountNotifications, internalCallContext);
+                setFutureNotifications(account, futureAccountNotifications, internalCallContext);
             }
 
             if (isDryRun || success) {
@@ -838,9 +847,9 @@ public class InvoiceDispatcher {
         log.info(tmp.toString());
     }
 
-    private void commitInvoiceAndSetFutureNotifications(final ImmutableAccountData account,
-                                                        final FutureAccountNotifications futureAccountNotifications,
-                                                        final InternalCallContext context) {
+    private void setFutureNotifications(final ImmutableAccountData account,
+                                        final FutureAccountNotifications futureAccountNotifications,
+                                        final InternalCallContext context) {
         commitInvoiceAndSetFutureNotifications(account, null, null, ImmutableSet.of(), futureAccountNotifications, null, context);
     }
 

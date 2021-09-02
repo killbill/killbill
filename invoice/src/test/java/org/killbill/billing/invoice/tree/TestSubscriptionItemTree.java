@@ -1,7 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,7 +37,6 @@ import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.annotations.Test;
 
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -45,12 +45,6 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    static {
-        OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
-    }
 
     private final UUID invoiceId = UUID.randomUUID();
     private final UUID accountId = UUID.randomUUID();
@@ -61,11 +55,8 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
     private final String phaseName = "my-phase";
     private final Currency currency = Currency.USD;
 
-
-
     @Test(groups = "fast")
     public void testWithBCDChange() {
-
         final LocalDate startPeriod = new LocalDate(2014, 5, 1);
         final LocalDate endPeriod = new LocalDate(2014, 6, 1);
         final LocalDate bcdChange = new LocalDate(2014, 5, 15);
@@ -73,7 +64,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
         final BigDecimal monthlyRate = new BigDecimal("10.00");
         final BigDecimal fullAmount = monthlyRate;
-        final BigDecimal halfAmount =  new BigDecimal("5.00");
+        final BigDecimal halfAmount = new BigDecimal("5.00");
 
         final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startPeriod, endPeriod, fullAmount, monthlyRate, currency);
         final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endPeriod, newEndPeriod, halfAmount, monthlyRate, currency);
@@ -97,7 +88,137 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
+    @Test(groups = "fast")
+    public void testWithBCDChange2() {
+        final LocalDate existingItemStartPeriod = new LocalDate(2014, 6, 20);
+        final LocalDate existingItemEndPeriod = new LocalDate(2014, 7, 20);
 
+        final LocalDate proposedItem1StartPeriod = new LocalDate(2014, 6, 17);
+        final LocalDate proposedItem1EndPeriod = new LocalDate(2014, 7, 17);
+        final LocalDate proposedItem2StartPeriod = proposedItem1EndPeriod;
+        final LocalDate proposedItem2EndPeriod = new LocalDate(2014, 8, 17);
+
+        final BigDecimal monthlyRate = new BigDecimal("10.00");
+        final BigDecimal fullAmount = monthlyRate;
+
+        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItemStartPeriod, existingItemEndPeriod, fullAmount, monthlyRate, currency);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(item1);
+        tree.build();
+
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem1StartPeriod, proposedItem1EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem2StartPeriod, proposedItem2EndPeriod, fullAmount, monthlyRate, currency);
+
+        tree.mergeProposedItem(proposed1);
+        tree.mergeProposedItem(proposed2);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem1StartPeriod, existingItemStartPeriod, new BigDecimal("1"), monthlyRate, currency);
+        expectedResult.add(expected1);
+        final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItemEndPeriod, proposedItem2EndPeriod, new BigDecimal("9.03"), monthlyRate, currency);
+        expectedResult.add(expected2);
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
+    public void testWithBCDChange3() {
+        final LocalDate existingItem1StartPeriod = new LocalDate(2014, 5, 17);
+        final LocalDate existingItem1EndPeriod = new LocalDate(2014, 6, 17);
+        final LocalDate existingItem2StartPeriod = existingItem1EndPeriod;
+        final LocalDate existingItem2EndPeriod = new LocalDate(2014, 7, 17);
+
+        final LocalDate proposedItem1StartPeriod = new LocalDate(2014, 5, 17);
+        final LocalDate proposedItem1EndPeriod = new LocalDate(2014, 5, 20);
+        final LocalDate proposedItem2StartPeriod = proposedItem1EndPeriod;
+        final LocalDate proposedItem2EndPeriod = new LocalDate(2014, 6, 20);
+        final LocalDate proposedItem3StartPeriod = proposedItem2EndPeriod;
+        final LocalDate proposedItem3EndPeriod = new LocalDate(2014, 7, 20);
+        final LocalDate proposedItem4StartPeriod = proposedItem3EndPeriod;
+        final LocalDate proposedItem4EndPeriod = new LocalDate(2014, 8, 17);
+
+        final BigDecimal monthlyRate = new BigDecimal("10.00");
+        final BigDecimal fullAmount = monthlyRate;
+
+        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem1StartPeriod, existingItem1EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem2StartPeriod, existingItem2EndPeriod, fullAmount, monthlyRate, currency);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(item1);
+        tree.addItem(item2);
+        tree.build();
+
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem1StartPeriod, proposedItem1EndPeriod, new BigDecimal("1"), monthlyRate, currency);
+        final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem2StartPeriod, proposedItem2EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem proposed3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem3StartPeriod, proposedItem3EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem proposed4 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem4StartPeriod, proposedItem4EndPeriod, new BigDecimal("7"), monthlyRate, currency);
+
+        tree.mergeProposedItem(proposed1);
+        tree.mergeProposedItem(proposed2);
+        tree.mergeProposedItem(proposed3);
+        tree.mergeProposedItem(proposed4);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem2EndPeriod, proposedItem3EndPeriod, new BigDecimal("1"), monthlyRate, currency);
+        expectedResult.add(expected1);
+        final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem3EndPeriod, proposedItem4EndPeriod, new BigDecimal("7"), monthlyRate, currency);
+        expectedResult.add(expected2);
+        verifyResult(tree.getView(), expectedResult);
+    }
+
+    @Test(groups = "fast")
+    public void testWithBCDChange4() {
+        final LocalDate existingItem1StartPeriod = new LocalDate(2014, 5, 17);
+        final LocalDate existingItem1EndPeriod = new LocalDate(2014, 5, 20);
+        final LocalDate existingItem2StartPeriod = existingItem1EndPeriod;
+        final LocalDate existingItem2EndPeriod = new LocalDate(2014, 6, 20);
+        final LocalDate existingItem3StartPeriod = existingItem2EndPeriod;
+        final LocalDate existingItem3EndPeriod = new LocalDate(2014, 7, 20);
+        final LocalDate existingItem4StartPeriod = existingItem3EndPeriod;
+        final LocalDate existingItem4EndPeriod = new LocalDate(2014, 8, 17);
+
+        final LocalDate proposedItem1StartPeriod = new LocalDate(2014, 5, 17);
+        final LocalDate proposedItem1EndPeriod = new LocalDate(2014, 6, 17);
+        final LocalDate proposedItem2StartPeriod = proposedItem1EndPeriod;
+        final LocalDate proposedItem2EndPeriod = new LocalDate(2014, 7, 17);
+        final LocalDate proposedItem3StartPeriod = proposedItem2EndPeriod;
+        final LocalDate proposedItem3EndPeriod = new LocalDate(2014, 8, 17);
+
+        final BigDecimal monthlyRate = new BigDecimal("10.00");
+        final BigDecimal fullAmount = monthlyRate;
+
+        final InvoiceItem item1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem1StartPeriod, existingItem1EndPeriod, new BigDecimal("1"), monthlyRate, currency);
+        final InvoiceItem item2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem2StartPeriod, existingItem2EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem item3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem3StartPeriod, existingItem3EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem item4 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem4StartPeriod, existingItem4EndPeriod, new BigDecimal("7"), monthlyRate, currency);
+
+        final SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
+        tree.addItem(item1);
+        tree.addItem(item2);
+        tree.addItem(item3);
+        tree.addItem(item4);
+        tree.build();
+
+        tree.flatten(true);
+
+        final InvoiceItem proposed1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem1StartPeriod, proposedItem1EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem proposed2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem2StartPeriod, proposedItem2EndPeriod, fullAmount, monthlyRate, currency);
+        final InvoiceItem proposed3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem3StartPeriod, proposedItem3EndPeriod, fullAmount, monthlyRate, currency);
+
+        tree.mergeProposedItem(proposed1);
+        tree.mergeProposedItem(proposed2);
+        tree.mergeProposedItem(proposed3);
+        tree.buildForMerge();
+
+        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        verifyResult(tree.getView(), expectedResult);
+    }
 
     @Test(groups = "fast")
     public void testAnnualToNewAnnualWithLaterDate() {
@@ -157,17 +278,13 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed2);
         tree.buildForMerge();
 
-
         final InvoiceItem expected1 = new RepairAdjInvoiceItem(invoiceId, accountId, startBlock, endBlock, new BigDecimal("-6.85"), currency, annual.getId());
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endDate, newEndDate, new BigDecimal("7.79"), yearlyAmount, currency);
-
 
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         expectedResult.addAll(ImmutableList.of(expected1, expected2));
         verifyResult(tree.getView(), expectedResult);
     }
-
-
 
     @Test(groups = "fast")
     public void testAnnualWithBlocking2() {
@@ -201,14 +318,10 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed2);
         tree.buildForMerge();
 
-
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         expectedResult.addAll(ImmutableList.of());
         verifyResult(tree.getView(), expectedResult);
     }
-
-
-
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1205")
     public void testBlockUnblock() {
@@ -316,26 +429,11 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", "someelse", null, repairDate, endDate, amount2, rate2, currency);
         expectedResult.add(expected2);
 
-        // First test with items in order
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(initial);
         tree.addItem(newItem);
         tree.addItem(repair);
         tree.build();
-        verifyResult(tree.getView(), expectedResult);
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair);
-        tree.addItem(newItem);
-        tree.addItem(initial);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
-
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair);
-        tree.addItem(initial);
-        tree.addItem(newItem);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
     }
 
     @Test(groups = "fast")
@@ -402,7 +500,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem expected3 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, repairDate2, endDate, amount3, rate3, currency);
         expectedResult.add(expected3);
 
-        // First test with items in order
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(initial);
         tree.addItem(newItem1);
@@ -412,23 +509,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.build();
         verifyResult(tree.getView(), expectedResult);
 
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair2);
-        tree.addItem(newItem1);
-        tree.addItem(newItem2);
-        tree.addItem(repair1);
-        tree.addItem(initial);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
-
-        tree = new SubscriptionItemTree(subscriptionId, invoiceId);
-        tree.addItem(repair1);
-        tree.addItem(newItem1);
-        tree.addItem(initial);
-        tree.addItem(repair2);
-        tree.addItem(newItem2);
-        tree.build();
-        verifyResult(tree.getView(), expectedResult);
     }
 
     @Test(groups = "fast")
@@ -575,7 +655,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
 
     }
 
-
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testDoubleBillingOnDifferentInvoices() {
         final LocalDate startDate1 = new LocalDate(2012, 5, 1);
@@ -638,7 +717,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         } catch (final IllegalStateException e) {
         }
     }
-
 
     @Test(groups = "fast")
     public void testMergeWithNoExisting() {
@@ -1030,8 +1108,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
-
     @Test(groups = "fast")
     public void testRepairWithFullItemAdjustment() {
 
@@ -1062,8 +1138,6 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final List<InvoiceItem> expectedResult = Lists.newLinkedList();
         verifyResult(tree.getView(), expectedResult);
     }
-
-
 
     @Test(groups = "fast")
     public void testMergeMonthlyToAnnualWithNoProRation() {
@@ -1237,8 +1311,20 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(correctInitialItem);
         tree.buildForMerge();
 
-        final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, wrongStartDate, endDate, BigDecimal.ZERO, Currency.USD, wrongInitialItem.getId());
-        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(correctInitialItem, repair);
+        final InvoiceItem expected = new RecurringInvoiceItem(invoiceId,
+                                                                accountId,
+                                                                bundleId,
+                                                                subscriptionId,
+                                                                productName,
+                                                                planName,
+                                                                phaseName,
+                                                                null,
+                                                                correctStartDate,
+                                                                wrongStartDate,
+                                                                new BigDecimal("0.40"),
+                                                                rate,
+                                                                currency);
+        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(expected);
         verifyResult(tree.getView(), expectedResult);
 
     }
@@ -1269,10 +1355,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
-
-
-
-    @Test(groups = "fast", description="https://github.com/killbill/killbill/issues/1251")
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1251")
     public void testRecuring$0PriceNoCatalogEffectiveDate() {
         final LocalDate startDate = new LocalDate(2019, 11, 1);
         final LocalDate endDate = new LocalDate(2019, 12, 1);
@@ -1293,13 +1376,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         verifyResult(tree.getView(), expectedResult);
     }
 
-    private void printTreeJSON(final SubscriptionItemTree tree) throws IOException {
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        tree.getRoot().jsonSerializeTree(OBJECT_MAPPER, outputStream);
-        System.out.println(outputStream.toString("UTF-8"));
-    }
-
-    private void printTree(final SubscriptionItemTree tree) throws IOException {
+    private void printTree(final SubscriptionItemTree tree) {
         System.out.println(TreePrinter.print(tree.getRoot()));
     }
 
@@ -1309,5 +1386,4 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
             assertTrue(result.get(i).matches(expectedResult.get(i)));
         }
     }
-
 }
