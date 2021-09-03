@@ -180,24 +180,15 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         final BigDecimal accountCBA2 = invoiceUserApi.getAccountCBA(account.getId(), callContext);
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceUserApi.voidInvoice(invoice2.getId(), callContext);
-        assertListenerStatus();
 
-        final BigDecimal accountBalance3 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
-        final BigDecimal accountCBA3 = invoiceUserApi.getAccountCBA(account.getId(), callContext);
-
-        /* This lead to the following:
-        2021-09-02T22:54:14.875+0000 [main] WARN org.killbill.billing.invoice.InvoiceDispatcher - Illegal invoicing state detected for accountId='6f1e5365-7a0e-40fe-bc11-203df1cb52e5', dryRunArguments='null', parking account
-{cause=java.lang.IllegalStateException: Missing cancelledItem for cancelItem=REPAIR_ADJ{startDate='2013-07-01', endDate='2013-07-15', amount='-9.31', linkedItemId='0e920939-008d-49db-b8d1-4e91aec71f0f'}, code=4, formattedMsg='ILLEGAL INVOICING STATE'}
-	at org.killbill.billing.invoice.generator.InvoicePruner.getFullyRepairedItemsClosure(InvoicePruner.java:95)
-	at org.killbill.billing.invoice.generator.FixedAndRecurringInvoiceItemGenerator.generateItems(FixedAndRecurringInvoiceItemGenerator.java:97)
-	at org.killbill.billing.invoice.generator.DefaultInvoiceGenerator.generateInvoice(DefaultInvoiceGenerator.java:101)
-	at org.killbill.billing.invoice.InvoiceDispatcher.generateKillBillInvoice(InvoiceDispatcher.java:700)
-	at org.killbill.billing.invoice.InvoiceDispatcher.processAccountWithLockAndInputTargetDate(InvoiceDispatcher.java:591)
-         */
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
-
+        try {
+            invoiceUserApi.voidInvoice(invoice2.getId(), callContext);
+            Assert.fail("Should fail to void a repaired invoice");
+        } catch (final RuntimeException e) {
+            if (!e.getMessage().contains("because it contains items being repaired")) {
+                throw e;
+            }
+        }
 
         checkNoMoreInvoiceToGenerate(account.getId());
 
