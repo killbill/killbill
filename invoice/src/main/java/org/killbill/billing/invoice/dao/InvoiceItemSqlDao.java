@@ -25,6 +25,7 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.dao.CounterMappings;
 import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
@@ -32,6 +33,7 @@ import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, InvoiceItem> {
@@ -62,4 +64,7 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
 
     @SqlQuery
     BigDecimal getAccountCBA(@SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    Iterable<CounterMappings> getRepairMap(@BindIn("ids") final Iterable<String> invoiceIds, @SmartBindBean final InternalTenantContext context);
 }
