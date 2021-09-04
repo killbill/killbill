@@ -1361,7 +1361,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                       context.getUserToken());
             eventBus.postFromTransaction(event, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
-            log.error(String.format("Failed to post invoice creation event %s for account %s", invoice.getAccountId()), e);
+            log.error("Failed to post invoice creation event for account '{}'", invoice.getAccountId(), e);
         }
     }
 
