@@ -310,11 +310,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         busHandler.waitAndIgnoreEvents(3000);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceUserApi.voidInvoice(firstInvoice.getId(), callContext);
-        assertListenerStatus();
-
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceUserApi.voidInvoice(secondInvoice.getId(), callContext);
+        invoiceUserApi.voidInvoice(fourthInvoice.getId(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
@@ -322,8 +318,13 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceUserApi.voidInvoice(fourthInvoice.getId(), callContext);
+        invoiceUserApi.voidInvoice(secondInvoice.getId(), callContext);
         assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.voidInvoice(firstInvoice.getId(), callContext);
+        assertListenerStatus();
+
 
         // This remove the __PARK__ tag and fixes the state !
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.NULL_INVOICE);
