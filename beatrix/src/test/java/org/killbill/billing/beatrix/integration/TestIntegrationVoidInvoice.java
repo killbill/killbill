@@ -167,7 +167,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         final Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                                            new ExpectedInvoiceItemCheck(new LocalDate(2013, 6, 15), new LocalDate(2013, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")),
+                                                             new ExpectedInvoiceItemCheck(new LocalDate(2013, 6, 15), new LocalDate(2013, 7, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")),
                                                              new ExpectedInvoiceItemCheck(new LocalDate(2013, 6, 15), new LocalDate(2013, 6, 15), InvoiceItemType.CBA_ADJ, new BigDecimal("-19.95")));
 
 
@@ -177,10 +177,10 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
-        final BigDecimal accountCBA2 = invoiceUserApi.getAccountCBA(account.getId(), callContext);
-
-
+        final Invoice invoice3 = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                             new ExpectedInvoiceItemCheck(new LocalDate(2013, 7, 1), new LocalDate(2013, 7, 15), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-9.31")),
+                                                             new ExpectedInvoiceItemCheck(new LocalDate(2013, 7, 1), new LocalDate(2013, 7, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("9.31")));
+        // We disallow to void the invoice as it was repaired
         try {
             invoiceUserApi.voidInvoice(invoice2.getId(), callContext);
             Assert.fail("Should fail to void a repaired invoice");
@@ -190,7 +190,33 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
             }
         }
 
-        checkNoMoreInvoiceToGenerate(account.getId());
+        // Void the invoice where the REPAIR_ADJ occurred first
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.voidInvoice(invoice3.getId(), callContext);
+        assertListenerStatus();
 
+
+        // NOW check we allow voiding the invoice2
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.voidInvoice(invoice2.getId(), callContext);
+        assertListenerStatus();
+
+
+        // We were left with an unstable state by VOIDing the previous periods....
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2013, 6, 15), new LocalDate(2013, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("10.64")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2013, 7, 1), new LocalDate(2013, 7, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("-10.64")));
+
+        // 20 - 10.64 = 9.36
+        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        Assert.assertEquals(accountBalance2.compareTo(new BigDecimal("-9.36")), 0);
+        final BigDecimal accountCBA2 = invoiceUserApi.getAccountCBA(account.getId(), callContext);
+        Assert.assertEquals(accountCBA2.compareTo(new BigDecimal("9.36")), 0);
+
+        checkNoMoreInvoiceToGenerate(account.getId());
     }
 }

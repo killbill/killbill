@@ -27,6 +27,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.util.dao.CounterMappings;
 import org.testng.Assert;
@@ -98,52 +99,81 @@ public class TestInvoiceItemSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testRepairMap()  {
-        final InvoiceItemSqlDao dao = dbi.onDemand(InvoiceItemSqlDao.class);
+        final InvoiceSqlDao invoiceSqlDao = dbi.onDemand(InvoiceSqlDao.class);
+        final InvoiceItemSqlDao invoiceItemSqlDao = dbi.onDemand(InvoiceItemSqlDao.class);
 
         final UUID accountId = UUID.randomUUID();
 
         // 1 REPAIR against 1st invoice
-        final UUID invoiceId1 = UUID.randomUUID();
+        final InvoiceModelDao invoice1 = new InvoiceModelDao(accountId, new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
+        invoiceSqlDao.create(invoice1, internalCallContext);
         final UUID invoiceItemId1 = UUID.randomUUID();
-        final InvoiceItemModelDao item1 = new InvoiceItemModelDao(invoiceItemId1, null, InvoiceItemType.RECURRING, invoiceId1, accountId, null, null, null, "description",
+        final InvoiceItemModelDao item1 = new InvoiceItemModelDao(invoiceItemId1, null, InvoiceItemType.RECURRING, invoice1.getId(), accountId, null, null, null, "description",
                                                                   null, null, null, null, null, new LocalDate(), null, BigDecimal.TEN, null, Currency.USD, null);
-        dao.create(item1, internalCallContext);
+        invoiceItemSqlDao.create(item1, internalCallContext);
 
+        final InvoiceModelDao invoiceRepair1 = new InvoiceModelDao(accountId, new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
+        invoiceSqlDao.create(invoiceRepair1, internalCallContext);
         final UUID repairId1 = UUID.randomUUID();
-        final InvoiceItemModelDao repair1 = new InvoiceItemModelDao( repairId1, null, InvoiceItemType.REPAIR_ADJ, UUID.randomUUID(), accountId, null, null, null, "description",
-                                                            null, null, null, null, null, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, item1.getId());
-        dao.create(repair1, internalCallContext);
+        final InvoiceItemModelDao repair1 = new InvoiceItemModelDao( repairId1, null, InvoiceItemType.REPAIR_ADJ, invoiceRepair1.getId(), accountId, null, null, null, "description",
+                                                                     null, null, null, null, null, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, item1.getId());
+        invoiceItemSqlDao.create(repair1, internalCallContext);
 
 
         // 2 REPAIRs against 2nd invoice
-        final UUID invoiceId2 = UUID.randomUUID();
+        final InvoiceModelDao invoice2 = new InvoiceModelDao(accountId, new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
+        invoiceSqlDao.create(invoice2, internalCallContext);
         final UUID invoiceItemId2 = UUID.randomUUID();
-        final InvoiceItemModelDao item2 = new InvoiceItemModelDao(invoiceItemId2, null, InvoiceItemType.RECURRING, invoiceId2, accountId, null, null, null, "description",
+        final InvoiceItemModelDao item2 = new InvoiceItemModelDao(invoiceItemId2, null, InvoiceItemType.RECURRING, invoice2.getId(), accountId, null, null, null, "description",
                                                                   null, null, null, null, null, new LocalDate(), null, BigDecimal.TEN, null, Currency.USD, null);
-        dao.create(item2, internalCallContext);
+        invoiceItemSqlDao.create(item2, internalCallContext);
 
+        final InvoiceModelDao invoiceRepair2a = new InvoiceModelDao(accountId, new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
+        invoiceSqlDao.create(invoiceRepair2a, internalCallContext);
         final UUID repairId2a = UUID.randomUUID();
-        final InvoiceItemModelDao repair2a = new InvoiceItemModelDao( repairId2a, null, InvoiceItemType.REPAIR_ADJ, UUID.randomUUID(), accountId, null, null, null, "description",
+        final InvoiceItemModelDao repair2a = new InvoiceItemModelDao( repairId2a, null, InvoiceItemType.REPAIR_ADJ, invoiceRepair2a.getId(), accountId, null, null, null, "description",
                                                                       null, null, null, null, null, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, item2.getId());
-        dao.create(repair2a, internalCallContext);
+        invoiceItemSqlDao.create(repair2a, internalCallContext);
 
+        final InvoiceModelDao invoiceRepair2b = new InvoiceModelDao(accountId, new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
+        invoiceSqlDao.create(invoiceRepair2b, internalCallContext);
         final UUID repairId2b = UUID.randomUUID();
-        final InvoiceItemModelDao repair2b = new InvoiceItemModelDao( repairId2b, null, InvoiceItemType.REPAIR_ADJ, UUID.randomUUID(), accountId, null, null, null, "description",
+        final InvoiceItemModelDao repair2b = new InvoiceItemModelDao( repairId2b, null, InvoiceItemType.REPAIR_ADJ, invoiceRepair2b.getId(), accountId, null, null, null, "description",
                                                                       null, null, null, null, null, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, item2.getId());
-        dao.create(repair2b, internalCallContext);
+        invoiceItemSqlDao.create(repair2b, internalCallContext);
 
 
         // 0 REPAIR against 3rd invoice
-        final UUID invoiceId3 = UUID.randomUUID();
+        final InvoiceModelDao invoice3 = new InvoiceModelDao(accountId, new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
+        invoiceSqlDao.create(invoice3, internalCallContext);
         final UUID invoiceItemId3 = UUID.randomUUID();
-        final InvoiceItemModelDao item3 = new InvoiceItemModelDao(invoiceItemId3, null, InvoiceItemType.RECURRING, invoiceId3, accountId, null, null, null, "description",
+        final InvoiceItemModelDao item3 = new InvoiceItemModelDao(invoiceItemId3, null, InvoiceItemType.RECURRING, invoice3.getId(), accountId, null, null, null, "description",
                                                                   null, null, null, null, null, new LocalDate(), null, BigDecimal.TEN, null, Currency.USD, null);
-        dao.create(item3, internalCallContext);
+        invoiceItemSqlDao.create(item3, internalCallContext);
 
-        final Iterable<CounterMappings> repairedMapRes = dao.getRepairMap(ImmutableList.of(invoiceId1.toString(), invoiceId2.toString(), invoiceId3.toString()), internalCallContext);
+        //////
+
+        // 1 REPAIR against 4th invoice (VOID)
+        final InvoiceModelDao invoice4 = new InvoiceModelDao(accountId, new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.COMMITTED);
+        invoiceSqlDao.create(invoice4, internalCallContext);
+        final UUID invoiceItemId4 = UUID.randomUUID();
+        final InvoiceItemModelDao item4 = new InvoiceItemModelDao(invoiceItemId4, null, InvoiceItemType.RECURRING, invoice4.getId(), accountId, null, null, null, "description",
+                                                                  null, null, null, null, null, new LocalDate(), null, BigDecimal.TEN, null, Currency.USD, null);
+        invoiceItemSqlDao.create(item4, internalCallContext);
+
+        final InvoiceModelDao invoiceRepair4 = new InvoiceModelDao(accountId, new LocalDate(), new LocalDate(), Currency.USD, false, InvoiceStatus.VOID);
+        invoiceSqlDao.create(invoiceRepair4, internalCallContext);
+        final UUID repairId4 = UUID.randomUUID();
+        final InvoiceItemModelDao repair4 = new InvoiceItemModelDao( repairId4, null, InvoiceItemType.REPAIR_ADJ, invoiceRepair4.getId(), accountId, null, null, null, "description",
+                                                                     null, null, null, null, null, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, item4.getId());
+        invoiceItemSqlDao.create(repair4, internalCallContext);
+
+
+
+        final Iterable<CounterMappings> repairedMapRes = invoiceItemSqlDao.getRepairMap(ImmutableList.of(invoice1.getId().toString(), invoice2.getId().toString(), invoice3.getId().toString(), invoice4.getId().toString()), internalCallContext);
         final Map<String, Integer> repairedMap = CounterMappings.toMap(repairedMapRes);
         Assert.assertEquals(repairedMap.size(), 2);
-        Assert.assertEquals(repairedMap.get(invoiceId1.toString()), Integer.valueOf(1));
-        Assert.assertEquals(repairedMap.get(invoiceId2.toString()), Integer.valueOf(2));
+        Assert.assertEquals(repairedMap.get(invoice1.getId().toString()), Integer.valueOf(1));
+        Assert.assertEquals(repairedMap.get(invoice2.getId().toString()), Integer.valueOf(2));
     }
 }

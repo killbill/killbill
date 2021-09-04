@@ -116,16 +116,19 @@ and <accountRecordIdField("ii.")> = :accountRecordId
 
 getRepairMap(ids) ::= <<
   SELECT
-  i1.invoice_id the_key
-  , count(i1.invoice_id) the_count
-  FROM <tableName()> i1
-  JOIN <tableName()> i2 on i1.account_record_id = i2.account_record_id and i2.type = 'REPAIR_ADJ' and i2.linked_item_id = i1.id
+  ii1.invoice_id the_key
+  , count(ii1.invoice_id) the_count
+  FROM <tableName()> ii1
+  JOIN <tableName()> ii2 on ii1.account_record_id = ii2.account_record_id and ii2.type = 'REPAIR_ADJ' and ii2.linked_item_id = ii1.id
+  JOIN invoices i on i.id = ii2.invoice_id
   WHERE
-  i1.invoice_id in (<ids>)
-  and i2.id is not null
-  <AND_CHECK_TENANT("i1.")>
-  <AND_CHECK_TENANT("i2.")>
-  group by i1.invoice_id
+  ii1.invoice_id in (<ids>)
+  and i.status = 'COMMITTED'
+  and ii2.id is not null
+  <AND_CHECK_TENANT("ii1.")>
+  <AND_CHECK_TENANT("ii2.")>
+  <AND_CHECK_TENANT("i.")>
+  group by ii1.invoice_id
   ;
 >>
 
