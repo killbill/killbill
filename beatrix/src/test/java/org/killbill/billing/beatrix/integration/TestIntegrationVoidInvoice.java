@@ -185,9 +185,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
             invoiceUserApi.voidInvoice(invoice2.getId(), callContext);
             Assert.fail("Should fail to void a repaired invoice");
         } catch (final RuntimeException e) {
-            if (!e.getMessage().contains("because it contains items being repaired")) {
-                throw e;
-            }
+            assertTrue(e.getMessage().contains("because it contains items being repaired"));
         }
 
         // Void the invoice where the REPAIR_ADJ occurred first
