@@ -744,6 +744,26 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
     }
 
+    private void checkInvoiceNotRepaired(final InvoiceModelDao invoice) throws InvoiceApiException {
+        if (invoice.getIsRepaired()) {
+            // TODO ErrorCode https://github.com/killbill/killbill/issues/1501
+            throw new IllegalStateException(String.format("Cannot void invoice %s because it contains items being repaired", invoice.getId()));
+        }
+    }
+
+    private void checkInvoiceDoesContainGeneratedCredit(final InvoiceModelDao invoice) throws InvoiceApiException {
+        if (Iterables.tryFind(invoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
+            @Override
+            public boolean apply(final InvoiceItemModelDao invoiceItemModelDao) {
+                // Positive CBA
+                return InvoiceItemType.CBA_ADJ == invoiceItemModelDao.getType() && invoiceItemModelDao.getAmount().compareTo(BigDecimal.ZERO) > 0;
+            }
+        }).isPresent()) {
+            // TODO ErrorCode https://github.com/killbill/killbill/issues/1501
+            throw new IllegalStateException(String.format("Cannot void invoice %s because it contains credit items (credit generation)", invoice.getId()));
+        }
+    }
+
     @Override
     public void voidInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
         final WithAccountLock withAccountLock = new WithAccountLock() {
@@ -752,15 +772,11 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                 final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
 
                 final InvoiceModelDao rawInvoice = dao.getById(invoiceId, internalCallContext);
-                if (rawInvoice.getIsRepaired()) {
-                    // TODO ErrorCode for InvoiceApiException
-                    throw new RuntimeException(String.format("Cannot void invoice %s because it contains items being repaired", rawInvoice.getId()));
-                }
+                checkInvoiceNotRepaired(rawInvoice);
+                checkInvoiceDoesContainGeneratedCredit(rawInvoice);
 
-                final Invoice currentInvoice =  new DefaultInvoice(rawInvoice, getCatalogSafelyForPrettyNames(internalCallContext));
-                if (currentInvoice.getNumberOfPayments() > 0) {
-                    canInvoiceBeVoided(currentInvoice);
-                }
+                final Invoice currentInvoice = new DefaultInvoice(rawInvoice, getCatalogSafelyForPrettyNames(internalCallContext));
+                checkInvoiceNotPaid(currentInvoice);
 
                 dao.changeInvoiceStatus(invoiceId, InvoiceStatus.VOID, internalCallContext);
 
@@ -792,13 +808,15 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return dao.getInvoicePaymentAuditLogsWithHistoryForId(invoicePaymentId, auditLevel, internalCallContextFactory.createInternalTenantContext(invoicePaymentId, ObjectType.INVOICE_PAYMENT, tenantContext));
     }
 
-    private void canInvoiceBeVoided(final Invoice invoice) throws InvoiceApiException {
-        final List<InvoicePayment> invoicePayments = invoice.getPayments();
-        final BigDecimal amountPaid = InvoiceCalculatorUtils.computeInvoiceAmountPaid(invoice.getCurrency(), invoicePayments)
-                                                            .add(InvoiceCalculatorUtils.computeInvoiceAmountRefunded(invoice.getCurrency(), invoicePayments));
+    private void checkInvoiceNotPaid(final Invoice invoice) throws InvoiceApiException {
+        if (invoice.getNumberOfPayments() > 0) {
+            final List<InvoicePayment> invoicePayments = invoice.getPayments();
+            final BigDecimal amountPaid = InvoiceCalculatorUtils.computeInvoiceAmountPaid(invoice.getCurrency(), invoicePayments)
+                                                                .add(InvoiceCalculatorUtils.computeInvoiceAmountRefunded(invoice.getCurrency(), invoicePayments));
 
-        if (amountPaid.compareTo(BigDecimal.ZERO) != 0) {
-            throw new InvoiceApiException(ErrorCode.CAN_NOT_VOID_INVOICE_THAT_IS_PAID, invoice.getId().toString());
+            if (amountPaid.compareTo(BigDecimal.ZERO) != 0) {
+                throw new InvoiceApiException(ErrorCode.CAN_NOT_VOID_INVOICE_THAT_IS_PAID, invoice.getId().toString());
+            }
         }
     }
 }
