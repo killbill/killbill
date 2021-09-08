@@ -389,11 +389,36 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testVoidInvoice() throws Exception {
-       // try to void invoice
-        invoiceUserApi.voidInvoice(invoiceId, callContext);
 
+        // Void invoice
+        invoiceUserApi.voidInvoice(invoiceId, callContext);
         final Invoice invoice = invoiceUserApi.getInvoice(invoiceId, callContext);
         Assert.assertEquals(invoice.getStatus(), InvoiceStatus.VOID);
+
+        // Check we cannot add items on a VOIDed invoice
+        try {
+            final InvoiceItem creditItem = new CreditAdjInvoiceItem(invoiceId, accountId, clock.getUTCToday(), "something", BigDecimal.TEN, accountCurrency, null);
+            invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(creditItem), true, null, callContext);
+            Assert.fail("Should not allow to add items to a VOIDed invoice");
+        } catch (final Exception ignore) {
+            // No check because of  https://github.com/killbill/killbill/issues/1501
+        }
+
+        try {
+            final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceId, accountId, null, "description", clock.getUTCToday(), clock.getUTCToday(), BigDecimal.TEN, accountCurrency, null);
+            invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, null, callContext).get(0);
+            Assert.fail("Should not allow to add items to a VOIDed invoice");
+        } catch (final Exception ignore) {
+            // No check because of  https://github.com/killbill/killbill/issues/1501
+        }
+
+        try {
+            final InvoiceItem originalItem = invoice.getInvoiceItems().get(0);
+            invoiceUserApi.insertInvoiceItemAdjustment(accountId, invoiceId, originalItem.getId(), clock.getUTCToday(), null, null, null, callContext);
+            Assert.fail("Should not allow to add items to a VOIDed invoice");
+        } catch (final Exception ignore) {
+            // No check because of  https://github.com/killbill/killbill/issues/1501
+        }
     }
 
     @Test(groups = "slow")

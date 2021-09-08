@@ -406,7 +406,19 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         final WithAccountLock withAccountLock = new WithAccountLock() {
             @Override
             public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
-                final DefaultInvoice invoice = getInvoiceAndCheckCurrency(invoiceId, currency, context);
+
+                final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
+                if (InvoiceStatus.VOID == invoice.getStatus()) {
+                    // TODO Add missing error https://github.com/killbill/killbill/issues/1501
+                    throw new IllegalStateException(String.format("Cannot add credit or external charge for invoice id %s because it is in \" + InvoiceStatus.VOID + \" status\"",
+                                                                  invoice.getId()));
+                }
+
+                // Check the specified currency matches the one of the existing invoice
+                if (currency != null && invoice.getCurrency() != currency) {
+                    throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currency, invoice.getCurrency());
+                }
+
                 final InvoiceItem adjustmentItem = invoiceApiHelper.createAdjustmentItem(invoice,
                                                                                          invoiceItemId,
                                                                                          amount,
@@ -563,9 +575,18 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                     } else {
                         if (newAndExistingInvoices.get(invoiceIdForItem) == null) {
                             final DefaultInvoice existingInvoiceForExternalCharge = getInvoiceInternal(invoiceIdForItem, context);
-                            if (InvoiceStatus.COMMITTED.equals(existingInvoiceForExternalCharge.getStatus())) {
-                                throw new InvoiceApiException(ErrorCode.INVOICE_ALREADY_COMMITTED, existingInvoiceForExternalCharge.getId());
+                            switch (existingInvoiceForExternalCharge.getStatus()) {
+                                case COMMITTED:
+                                    throw new InvoiceApiException(ErrorCode.INVOICE_ALREADY_COMMITTED, existingInvoiceForExternalCharge.getId());
+                                case VOID:
+                                    // TODO Add missing error https://github.com/killbill/killbill/issues/1501
+                                    throw new IllegalStateException(String.format("Cannot add credit or external charge for invoice id %s because it is in \" + InvoiceStatus.VOID + \" status\"",
+                                                                                  existingInvoiceForExternalCharge.getId()));
+                                case DRAFT:
+                                default:
+                                    break;
                             }
+
                             newAndExistingInvoices.put(invoiceIdForItem, existingInvoiceForExternalCharge);
                         }
                         curInvoiceForItem = newAndExistingInvoices.get(invoiceIdForItem);
@@ -633,7 +654,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         };
 
         return invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, context);
-
     }
 
     private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final InternalCallContext context) {
@@ -653,14 +673,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return invoices;
     }
 
-    private DefaultInvoice getInvoiceAndCheckCurrency(final UUID invoiceId, @Nullable final Currency currency, final TenantContext context) throws InvoiceApiException {
-        final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
-        // Check the specified currency matches the one of the existing invoice
-        if (currency != null && invoice.getCurrency() != currency) {
-            throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currency, invoice.getCurrency());
-        }
-        return invoice;
-    }
 
     @Override
     public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
