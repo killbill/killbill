@@ -738,7 +738,14 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             @Override
             public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
                 final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
-                final Invoice currentInvoice = getInvoiceInternal(invoiceId, context);
+
+                final InvoiceModelDao rawInvoice = dao.getById(invoiceId, internalCallContext);
+                if (rawInvoice.getIsRepaired()) {
+                    // TODO ErrorCode for InvoiceApiException
+                    throw new RuntimeException(String.format("Cannot void invoice %s because it contains items being repaired", rawInvoice.getId()));
+                }
+
+                final Invoice currentInvoice =  new DefaultInvoice(rawInvoice, getCatalogSafelyForPrettyNames(internalCallContext));
                 if (currentInvoice.getNumberOfPayments() > 0) {
                     canInvoiceBeVoided(currentInvoice);
                 }

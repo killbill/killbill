@@ -43,6 +43,8 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.dao.CounterMappings;
+import org.killbill.billing.util.dao.CounterMappingsMapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -234,7 +236,8 @@ public class InvoiceDaoHelper {
         setInvoiceItemsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         setInvoicePaymentsWithinTransaction(invoice, entitySqlDaoWrapperFactory, context);
         setTrackingIdsFromTransaction(invoice, entitySqlDaoWrapperFactory, context);
-        setInvoicesWrittenOff(invoice, invoicesTags);
+        setInvoiceWrittenOff(invoice, invoicesTags);
+        setInvoiceRepaired(invoice, entitySqlDaoWrapperFactory, context);
         if (!invoice.isParentInvoice()) {
             setParentInvoice(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
         }
@@ -250,6 +253,7 @@ public class InvoiceDaoHelper {
         setInvoicePaymentsWithinTransaction(invoices, entitySqlDaoWrapperFactory, context);
         setTrackingIdsFromTransaction(invoices, entitySqlDaoWrapperFactory, context);
         setInvoicesWrittenOff(invoices, invoicesTags);
+        setInvoicesRepaired(invoices, entitySqlDaoWrapperFactory, context);
 
         final Iterable<InvoiceModelDao> nonParentInvoices = Iterables.<InvoiceModelDao>filter(invoices, new Predicate<InvoiceModelDao>() {
             @Override
@@ -357,8 +361,12 @@ public class InvoiceDaoHelper {
         }
     }
 
-    private void setInvoicesWrittenOff(final InvoiceModelDao invoice, final List<Tag> invoicesTags) {
+    private void setInvoiceWrittenOff(final InvoiceModelDao invoice, final List<Tag> invoicesTags) {
         setInvoicesWrittenOff(ImmutableList.of(invoice), invoicesTags);
+    }
+
+    private void setInvoiceRepaired(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        setInvoicesRepaired(ImmutableList.of(invoice), entitySqlDaoWrapperFactory, context);
     }
 
     private void setInvoicesWrittenOff(final Iterable<InvoiceModelDao> invoices, final List<Tag> invoicesTags) {
@@ -375,6 +383,29 @@ public class InvoiceDaoHelper {
             }
         }
     }
+
+    private void setInvoicesRepaired(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+        final Iterable<String> invoiceIds = Iterables.transform(invoices, new Function<InvoiceModelDao, String>() {
+            @Override
+            public String apply(final InvoiceModelDao invoiceModelDao) {
+                return invoiceModelDao.getId().toString();
+            }
+        });
+        if (Iterables.isEmpty(invoiceIds)) {
+            return;
+        }
+
+        final Iterable<CounterMappings> repairedMapRes = invoiceItemSqlDao.getRepairMap(ImmutableList.copyOf(invoiceIds), context);
+        final Map<String, Integer> repairedMap = CounterMappings.toMap(repairedMapRes);
+        for (final InvoiceModelDao cur : invoices) {
+            final Integer repairedItems = repairedMap.get(cur.getId().toString());
+            if (repairedItems != null && repairedItems > 0) {
+                cur.setRepaired(true);
+            }
+        }
+    }
+
 
     private void setTrackingIdsFromTransaction(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         setTrackingIdsFromTransaction(ImmutableList.of(invoice), entitySqlDaoWrapperFactory, context);
