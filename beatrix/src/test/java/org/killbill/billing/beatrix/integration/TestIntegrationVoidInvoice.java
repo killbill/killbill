@@ -139,7 +139,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         assertEquals(invoices.get(2).getStatus(), InvoiceStatus.VOID);
     }
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled=false)
     public void testVoidRepairedInvoice() throws Exception {
 
         final DateTime initialDate = new DateTime(2013, 6, 15, 0, 0, 0, 0, testTimeZone);

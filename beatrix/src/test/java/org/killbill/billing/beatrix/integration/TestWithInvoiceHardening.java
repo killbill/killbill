@@ -216,7 +216,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
 
 
-    @Test(groups = "slow")
+    @Test(groups = "slow", enabled = false)
     public void testFixParkedAccountByVoidingInvoices() throws Exception {
 
         final DateTimeZone testTimeZone = DateTimeZone.UTC;
