@@ -79,9 +79,11 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import static org.killbill.billing.invoice.TestInvoiceHelper.FIVE;
 import static org.killbill.billing.invoice.TestInvoiceHelper.TEN;
@@ -1564,43 +1566,6 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testDeleteCBANotConsumed() throws Exception {
-        final UUID accountId = account.getId();
-
-        // Create invoice 1
-        // Scenario: single item with payment
-        // * $10 item
-        // Then, a repair occur:
-        // * $-10 repair
-        // * $10 generated CBA due to the repair (assume previous payment)
-        final Invoice invoice1 = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final InvoiceItem fixedItem1 = new FixedPriceInvoiceItem(invoice1.getId(), invoice1.getAccountId(), null, null, null, UUID.randomUUID().toString(),
-                                                                 UUID.randomUUID().toString(), null, clock.getUTCToday(), BigDecimal.TEN, Currency.USD);
-        final RepairAdjInvoiceItem repairAdjInvoiceItem = new RepairAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
-                                                                                   fixedItem1.getStartDate(), fixedItem1.getEndDate(),
-                                                                                   fixedItem1.getAmount().negate(), fixedItem1.getCurrency(),
-                                                                                   fixedItem1.getId());
-        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(fixedItem1.getInvoiceId(), fixedItem1.getAccountId(),
-                                                                                                         fixedItem1.getStartDate(), fixedItem1.getAmount(),
-                                                                                                         fixedItem1.getCurrency());
-        invoiceUtil.createInvoice(invoice1, context);
-        invoiceUtil.createInvoiceItem(fixedItem1, context);
-        invoiceUtil.createInvoiceItem(repairAdjInvoiceItem, context);
-        invoiceUtil.createInvoiceItem(creditBalanceAdjInvoiceItem1, context);
-
-        // Verify scenario - no CBA should have been used
-        Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 10.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 10.00, 10.00, context);
-
-        // Delete the CBA on invoice 1
-        invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
-
-        // Verify the result
-        Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 0.00);
-        invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 0.00, context);
-    }
-
-    @Test(groups = "slow")
     public void testRefundWithCBAPartiallyConsumed() throws Exception {
         final UUID accountId = account.getId();
 
@@ -1736,7 +1701,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCantDeleteCBAIfInvoiceBalanceBecomesNegative() throws Exception {
+    public void testCantDeleteSystemGeneratedCredit() throws Exception {
         final UUID accountId = account.getId();
 
         // Create invoice 1
@@ -1763,13 +1728,53 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         try {
             invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
             Assert.fail();
-        } catch (InvoiceApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_WOULD_BE_NEGATIVE.getCode());
+        } catch (IllegalStateException e) {
+            Assert.assertEquals(e.getMessage(), "Cannot delete system generated credit");
         }
 
         // Verify the result
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 10.00);
         invoiceUtil.verifyInvoice(invoice1.getId(), 0.00, 10.00, context);
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testDeleteConsumedCredit() throws Exception {
+        final UUID accountId = account.getId();
+
+        final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
+
+        final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoice.getId(), accountId, UUID.randomUUID(), UUID.randomUUID(), "test product", "test plan", "test ZOO", null,
+                                                                    clock.getUTCNow().plusMonths(-1).toLocalDate(), clock.getUTCNow().toLocalDate(),
+                                                                    BigDecimal.TEN, BigDecimal.TEN, Currency.USD);
+
+
+
+        final CreditBalanceAdjInvoiceItem creditBalanceAdjInvoiceItem1 = new CreditBalanceAdjInvoiceItem(invoice.getId(), invoice.getAccountId(),
+                                                                                                         invoice.getInvoiceDate(), BigDecimal.ONE.negate(),
+                                                                                                         invoice.getCurrency());
+        invoiceUtil.createInvoice(invoice, context);
+        invoiceUtil.createInvoiceItem(recurringItem, context);
+        invoiceUtil.createInvoiceItem(creditBalanceAdjInvoiceItem1, context);
+
+        invoiceUtil.verifyInvoice(invoice.getId(), 9.00, -1.00, context);
+
+        // Delete the CBA on invoice 1
+        invoiceDao.deleteCBA(accountId, invoice.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
+
+        final InvoiceModelDao res = invoiceDao.getById(invoice.getId(), context);
+        Assert.assertEquals(res.getInvoiceItems().size(), 3);
+        Assert.assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(res).compareTo(BigDecimal.TEN), 0);
+        Assert.assertEquals(InvoiceModelDaoHelper.getCBAAmount(res).compareTo(BigDecimal.ZERO), 0);
+        final InvoiceItemModelDao cbaAdj = Iterables.tryFind(res.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
+            @Override
+            public boolean apply(final InvoiceItemModelDao input) {
+                return input.getType() == InvoiceItemType.CBA_ADJ && input.getAmount().compareTo(creditBalanceAdjInvoiceItem1.getAmount().negate()) == 0;
+            }
+        }).orNull();
+        Assert.assertNotNull(cbaAdj);
+
     }
 
     @Test(groups = "slow")

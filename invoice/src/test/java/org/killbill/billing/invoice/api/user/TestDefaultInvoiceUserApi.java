@@ -539,7 +539,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
 
     @Test(groups = "slow")
-    public void testVoidInvoiceWithGenCredits() throws Exception {
+    public void testDeleteUserGeneratedCredit() throws Exception {
 
         final Account account = invoiceUtil.createAccount(callContext);
         final UUID accountId = account.getId();
@@ -551,8 +551,9 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(items1.size(), 1);
         final Invoice invoice1 = invoiceUserApi.getInvoice(items1.get(0).getInvoiceId(), callContext);
 
-        final InvoiceItem creditItem = new CreditAdjInvoiceItem(invoice1.getId(), accountId, clock.getUTCToday(), "something", new BigDecimal("200.00"), accountCurrency, null);
-        invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(creditItem), true, null, callContext);
+        final InvoiceItem creditItemInput = new CreditAdjInvoiceItem(invoice1.getId(), accountId, clock.getUTCToday(), "something", new BigDecimal("200.00"), accountCurrency, null);
+        final List<InvoiceItem> itemCredits = invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(creditItemInput), true, null, callContext);
+        final InvoiceItem itemCredit = itemCredits.get(0);
 
         // No credit as invoice is still in DRAFT
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
@@ -588,43 +589,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
             // No check because of  https://github.com/killbill/killbill/issues/1501
         }
 
-        /*
-          So at this point:
-          - We cannot void the invoice
-          - We cannot delete the generation of credit on the invoice - leads to 'Cannot execute operation, the invoice balance would become negative'
-          - We cannot add a (charge) item to consume the generation of the credit - leads to Cannot add credit or external charge for invoice id 7e6a01a3-ba55-4540-b99c-c76d422fda1d because it is already in COMMITTED status
-         */
-
-
-
-        /*
-        final Invoice latestInvoice2 = invoiceUserApi.getInvoice(items2.get(0).getInvoiceId(), callContext);
-        final InvoiceItem creditUsedItem = Iterables.tryFind(latestInvoice2.getInvoiceItems(), new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem invoiceItem) {
-                return InvoiceItemType.CBA_ADJ == invoiceItem.getInvoiceItemType() && invoiceItem.getAmount().compareTo(BigDecimal.ZERO) < 0;
-            }
-        }).get();
-
-        invoiceUserApi.deleteCBA(accountId, latestInvoice2.getId(), creditUsedItem.getId(), callContext);
-
-        final BigDecimal accountBalance4 = invoiceUserApi.getAccountBalance(accountId, callContext);
-        final BigDecimal accountCBA4 = invoiceUserApi.getAccountCBA(accountId, callContext);
-        Assert.assertEquals(accountBalance4.compareTo(new BigDecimal("-50")), 0);
-        Assert.assertEquals(accountCBA4.compareTo(new BigDecimal("100")), 0);
-
-
-        // Cannot add credit or external charge for invoice id 7e6a01a3-ba55-4540-b99c-c76d422fda1d because it is already in COMMITTED status
-        final InvoiceItem fakeChargeToConsumeCredit = new ExternalChargeInvoiceItem(invoice1.getId(), accountId, null, "Fake charge to consume credit", clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("100.00"), accountCurrency, null);
-        invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(fakeChargeToConsumeCredit), true, null, callContext);
-
-        final Invoice latestInvoice1 = invoiceUserApi.getInvoice(items1.get(0).getInvoiceId(), callContext);
-        Assert.assertEquals(latestInvoice1.getBalance().compareTo(BigDecimal.ZERO), 0);
-        Assert.assertEquals(latestInvoice1.getCreditedAmount().compareTo(BigDecimal.ZERO), 0);
-
-         */
-
-/*
+        Invoice latestInvoice1 = invoiceUserApi.getInvoice(items1.get(0).getInvoiceId(), callContext);
         final InvoiceItem creditGenItem = Iterables.tryFind(latestInvoice1.getInvoiceItems(), new Predicate<InvoiceItem>() {
             @Override
             public boolean apply(final InvoiceItem invoiceItem) {
@@ -632,21 +597,35 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
             }
         }).get();
 
-        // Ah ah... bummer, this fails with 'Cannot execute operation, the invoice balance would become negative'
-        //invoiceUserApi.deleteCBA(accountId, invoice1.getId(), creditGenItem.getId(), callContext);
-*/
+        // Delete the credit generation
+        invoiceUserApi.deleteCBA(accountId, invoice1.getId(), creditGenItem.getId(), callContext);
 
-        /*
-        invoiceUserApi.voidInvoice(invoice1.getId(), callContext);
+        latestInvoice1 = invoiceUserApi.getInvoice(items1.get(0).getInvoiceId(), callContext);
+        Assert.assertEquals(latestInvoice1.getBalance().compareTo(BigDecimal.ZERO), 0);
+        // {EXTERNAL_CHARGE 50.0, CREDIT_ADJ -200.0, CBA_ADJ 200.0}
+        // + new items {CBA_ADJ -100.0, ITEM_ADJ 100.0}
+        Assert.assertEquals(latestInvoice1.getInvoiceItems().size(), 5);
 
-        // We verify that credit *used* on invoice1 is reclaimed, i.e the system ignores it as the invoice was voided.
-        final BigDecimal accountBalance5 = invoiceUserApi.getAccountBalance(accountId, callContext);
-        final BigDecimal accountCBA5 = invoiceUserApi.getAccountCBA(accountId, callContext);
-        Assert.assertEquals(accountBalance5.compareTo(new BigDecimal("50")), 0);
-        Assert.assertEquals(accountCBA5.compareTo(BigDecimal.ZERO), 0);
+        Assert.assertNotNull(Iterables.tryFind(latestInvoice1.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem invoiceItem) {
+                return InvoiceItemType.CBA_ADJ == invoiceItem.getInvoiceItemType() && invoiceItem.getAmount().compareTo(new BigDecimal("-100.0")) == 0;
+            }
+        }).orNull());
+        Assert.assertNotNull(Iterables.tryFind(latestInvoice1.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem invoiceItem) {
+                return InvoiceItemType.ITEM_ADJ == invoiceItem.getInvoiceItemType() &&
+                       invoiceItem.getAmount().compareTo(new BigDecimal("100.0")) == 0 &&
+                       invoiceItem.getLinkedItemId().equals(itemCredit.getId());
+            }
+        }).orNull());
 
-         */
 
+        final BigDecimal accountBalance4 = invoiceUserApi.getAccountBalance(accountId, callContext);
+        final BigDecimal accountCBA4 = invoiceUserApi.getAccountCBA(accountId, callContext);
+        Assert.assertEquals(accountBalance4.compareTo(new BigDecimal("50.0")), 0);
+        Assert.assertEquals(accountCBA4.compareTo(BigDecimal.ZERO), 0);
     }
 
 }

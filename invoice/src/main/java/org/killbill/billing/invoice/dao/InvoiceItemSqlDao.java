@@ -65,6 +65,10 @@ public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, Inv
     @SqlQuery
     BigDecimal getAccountCBA(@SmartBindBean final InternalTenantContext context);
 
+
+    @SqlQuery
+    List<InvoiceItemModelDao> getConsumedCBAItems(@SmartBindBean final InternalTenantContext context);
+
     @SqlQuery
     Iterable<CounterMappings> getRepairMap(@BindIn("ids") final Iterable<String> invoiceIds, @SmartBindBean final InternalTenantContext context);
 }

@@ -114,6 +114,22 @@ and <accountRecordIdField("ii.")> = :accountRecordId
 ;
 >>
 
+getConsumedCBAItems() ::= <<
+  SELECT <allTableFields("ii.")>
+  FROM <tableName()> ii
+  JOIN invoices i ON i.id = ii.invoice_id
+  WHERE
+  i.status = 'COMMITTED'
+  and ii.type = 'CBA_ADJ'
+  and ii.amount \< 0
+  and <accountRecordIdField("i.")> = :accountRecordId
+  and <accountRecordIdField("ii.")> = :accountRecordId
+  <AND_CHECK_TENANT("i.")>
+  <AND_CHECK_TENANT("ii.")>
+  order by <recordIdField("ii.")> DESC
+  ;
+>>
+
 getRepairMap(ids) ::= <<
   SELECT
   ii1.invoice_id the_key
