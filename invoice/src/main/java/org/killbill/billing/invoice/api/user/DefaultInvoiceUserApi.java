@@ -751,14 +751,18 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
     }
 
-    private void checkInvoiceDoesContainGeneratedCredit(final InvoiceModelDao invoice) throws InvoiceApiException {
-        if (Iterables.tryFind(invoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
+    private void checkInvoiceDoesContainUsedGeneratedCredit(final UUID accountId, final InvoiceModelDao invoice, final CallContext context) throws InvoiceApiException {
+        final BigDecimal accountCBA = dao.getAccountCBA(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        final InvoiceItemModelDao largeCreditGen = Iterables.tryFind(invoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
             @Override
             public boolean apply(final InvoiceItemModelDao invoiceItemModelDao) {
                 // Positive CBA
-                return InvoiceItemType.CBA_ADJ == invoiceItemModelDao.getType() && invoiceItemModelDao.getAmount().compareTo(BigDecimal.ZERO) > 0;
+                return InvoiceItemType.CBA_ADJ == invoiceItemModelDao.getType() && /* CBA item */
+                       invoiceItemModelDao.getAmount().compareTo(BigDecimal.ZERO) > 0 && /* Credit generation */
+                       invoiceItemModelDao.getAmount().compareTo(accountCBA) > 0; /* Some of it was used already */
             }
-        }).isPresent()) {
+        }).orNull();
+        if (largeCreditGen != null) {
             // TODO ErrorCode https://github.com/killbill/killbill/issues/1501
             throw new IllegalStateException(String.format("Cannot void invoice %s because it contains credit items (credit generation)", invoice.getId()));
         }
@@ -766,15 +770,16 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     @Override
     public void voidInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
+
+        final UUID accountId = getInvoiceInternal(invoiceId, context).getAccountId();
         final WithAccountLock withAccountLock = new WithAccountLock() {
             @Override
             public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
                 final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
-
                 final InvoiceModelDao rawInvoice = dao.getById(invoiceId, internalCallContext);
                 if (rawInvoice.getStatus() == InvoiceStatus.COMMITTED) {
                     checkInvoiceNotRepaired(rawInvoice);
-                    checkInvoiceDoesContainGeneratedCredit(rawInvoice);
+                    checkInvoiceDoesContainUsedGeneratedCredit(accountId, rawInvoice, context);
                 }
 
                 final Invoice currentInvoice = new DefaultInvoice(rawInvoice, getCatalogSafelyForPrettyNames(internalCallContext));
@@ -787,7 +792,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        final UUID accountId = getInvoiceInternal(invoiceId, context).getAccountId();
 
         final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
         properties.add(new PluginProperty(INVOICE_OPERATION, "void", false));

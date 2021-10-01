@@ -1144,7 +1144,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
                     // In case this is a credit invoice (pure credit, or mixed), we allow to 'delete' credit generation
                     if (creditItem != null) { /* Credit Invoice */
-                        final BigDecimal accountCBA = cbaDao.getAccountCBAFromTransaction(entitySqlDaoWrapperFactory, context);
+                            final BigDecimal accountCBA = cbaDao.getAccountCBAFromTransaction(entitySqlDaoWrapperFactory, context);
                         // If we don't have enough credit left on the account, we reclaim what is necessary
                         if (accountCBA.compareTo(cbaItem.getAmount()) < 0) {
                             final BigDecimal amountToReclaim = cbaItem.getAmount().subtract(accountCBA);
@@ -1161,8 +1161,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                         final InvoiceItemModelDao itemAdj = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.ITEM_ADJ, invoice.getId(), invoice.getAccountId(),
                                                                                     null, null, null, null, null, null, null, null, context.getCreatedDate().toLocalDate(),
                                                                                     null, cbaItem.getAmount(), null, cbaItem.getCurrency(), creditItem.getId());
-                        // createInvoiceItemFromTransaction
                         invoiceIds.add(invoice.getId());
+                        // We use createAndRefresh instead of createInvoiceItemFromTransaction to bypass the validation on the ITEM_ADJ
                         createAndRefresh(invoiceItemSqlDao, itemAdj, context);
                     } else /* System generated credit, e.g Repair invoice */ {
                         // TODO Add missing error https://github.com/killbill/killbill/issues/1501

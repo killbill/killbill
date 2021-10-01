@@ -139,7 +139,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         assertEquals(invoices.get(2).getStatus(), InvoiceStatus.VOID);
     }
 
-    @Test(groups = "slow", enabled=false)
+    @Test(groups = "slow")
     public void testVoidRepairedInvoice() throws Exception {
 
         final DateTime initialDate = new DateTime(2013, 6, 15, 0, 0, 0, 0, testTimeZone);
@@ -192,7 +192,6 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(invoice3.getId(), callContext);
         assertListenerStatus();
-
 
         // NOW check we allow voiding the invoice2
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
