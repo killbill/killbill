@@ -132,8 +132,8 @@ public class BusOptimizerNoop implements BusOptimizer {
     }
 
     @Override
-    public void stopQueue() {
-        delegate.stopQueue();
+    public boolean stopQueue() {
+        return delegate.stopQueue();
     }
 
     @Override

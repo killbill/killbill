@@ -1,6 +1,8 @@
 /*
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -83,7 +85,9 @@ public class PushNotificationRetryService {
 
     public void stop() throws NoSuchNotificationQueue {
         if (retryQueue != null) {
-            retryQueue.stopQueue();
+            if (!retryQueue.stopQueue()) {
+                log.warn("Timed out while shutting down {} queue: IN_PROCESSING entries might be left behind", retryQueue.getFullQName());
+            }
             notificationQueueService.deleteNotificationQueue(retryQueue.getServiceName(), retryQueue.getQueueName());
         }
     }
