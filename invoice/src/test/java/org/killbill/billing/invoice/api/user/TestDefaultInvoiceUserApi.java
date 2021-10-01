@@ -460,7 +460,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
             final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(invoiceId, accountId, null, "description", clock.getUTCToday(), clock.getUTCToday(), BigDecimal.TEN, accountCurrency, null);
             invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, null, callContext).get(0);
             Assert.fail("Should not allow to add items to a VOIDed invoice");
-        } catch (final Exception ignore) {
+        } catch (final IllegalStateException ignore) {
             // No check because of  https://github.com/killbill/killbill/issues/1501
         }
 
