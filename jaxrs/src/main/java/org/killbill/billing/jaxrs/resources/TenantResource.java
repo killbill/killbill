@@ -242,7 +242,7 @@ public class TenantResource extends JaxRsResourceBase {
     @GET
     @Path("/" + UPLOAD_PER_TENANT_CONFIG + "/{keyPrefix:" + ANYTHING_PATTERN + "}" + "/" + SEARCH)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve a per tenant key value based on key prefix", response = TenantKeyValueJson.class)
+    @ApiOperation(value = "Retrieve a per tenant key value based on key prefix", response = TenantKeyValueJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid tenantId supplied")})
     public Response getAllPluginConfiguration(@PathParam("keyPrefix") final String keyPrefix,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws TenantApiException {
