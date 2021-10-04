@@ -602,22 +602,20 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         latestInvoice1 = invoiceUserApi.getInvoice(items1.get(0).getInvoiceId(), callContext);
         Assert.assertEquals(latestInvoice1.getBalance().compareTo(BigDecimal.ZERO), 0);
-        // {EXTERNAL_CHARGE 50.0, CREDIT_ADJ -200.0, CBA_ADJ 200.0}
-        // + new items {CBA_ADJ -100.0, ITEM_ADJ 100.0}
-        Assert.assertEquals(latestInvoice1.getInvoiceItems().size(), 5);
+        Assert.assertEquals(latestInvoice1.getInvoiceItems().size(), 3);
 
         Assert.assertNotNull(Iterables.tryFind(latestInvoice1.getInvoiceItems(), new Predicate<InvoiceItem>() {
             @Override
             public boolean apply(final InvoiceItem invoiceItem) {
-                return InvoiceItemType.CBA_ADJ == invoiceItem.getInvoiceItemType() && invoiceItem.getAmount().compareTo(new BigDecimal("-100.0")) == 0;
+                return InvoiceItemType.CBA_ADJ == invoiceItem.getInvoiceItemType() && invoiceItem.getAmount().compareTo(BigDecimal.ZERO) == 0;
             }
         }).orNull());
         Assert.assertNotNull(Iterables.tryFind(latestInvoice1.getInvoiceItems(), new Predicate<InvoiceItem>() {
             @Override
             public boolean apply(final InvoiceItem invoiceItem) {
-                return InvoiceItemType.ITEM_ADJ == invoiceItem.getInvoiceItemType() &&
-                       invoiceItem.getAmount().compareTo(new BigDecimal("100.0")) == 0 &&
-                       invoiceItem.getLinkedItemId().equals(itemCredit.getId());
+                return InvoiceItemType.CREDIT_ADJ == invoiceItem.getInvoiceItemType() &&
+                       // Original credit amount - CBA gen (we just deleted)
+                       invoiceItem.getAmount().compareTo(new BigDecimal("-100.00")) == 0;
             }
         }).orNull());
 

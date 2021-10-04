@@ -1764,13 +1764,13 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceDao.deleteCBA(accountId, invoice.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
 
         final InvoiceModelDao res = invoiceDao.getById(invoice.getId(), context);
-        Assert.assertEquals(res.getInvoiceItems().size(), 3);
+        Assert.assertEquals(res.getInvoiceItems().size(), 2);
         Assert.assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(res).compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(InvoiceModelDaoHelper.getCBAAmount(res).compareTo(BigDecimal.ZERO), 0);
         final InvoiceItemModelDao cbaAdj = Iterables.tryFind(res.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
             @Override
             public boolean apply(final InvoiceItemModelDao input) {
-                return input.getType() == InvoiceItemType.CBA_ADJ && input.getAmount().compareTo(creditBalanceAdjInvoiceItem1.getAmount().negate()) == 0;
+                return input.getType() == InvoiceItemType.CBA_ADJ && input.getAmount().compareTo(BigDecimal.ZERO) == 0;
             }
         }).orNull();
         Assert.assertNotNull(cbaAdj);

@@ -1086,11 +1086,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
             final BigDecimal positiveCbaAmount = cbaItem.getAmount().negate();
             final BigDecimal adjustedAmount = leftToReclaim.compareTo(positiveCbaAmount) >= 0 ? positiveCbaAmount : leftToReclaim;
-            final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, cbaItem.getInvoiceId(), accountId,
-                                                                           null, null, null, null, null, null, null, null, context.getCreatedDate().toLocalDate(),
-                                                                           null, adjustedAmount, null, cbaItem.getCurrency(), cbaItem.getId());
-            createInvoiceItemFromTransaction(transactional, cbaAdjItem, context);
-            invoiceIds.add(cbaAdjItem.getInvoiceId());
+            final BigDecimal itemAmount = positiveCbaAmount.subtract(adjustedAmount);
+            transactional.updateItemFields(cbaItem.getId().toString(), itemAmount.negate(), "Reclaim used credit", null, context);
+
+            invoiceIds.add(cbaItem.getInvoiceId());
             leftToReclaim = leftToReclaim.subtract(adjustedAmount);
             if (leftToReclaim.compareTo(BigDecimal.ZERO) <= 0) {
                 break;
@@ -1108,10 +1107,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         transactionalSqlDao.execute(false, InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
                 // Retrieve the invoice and make sure it belongs to the right account
-                final InvoiceModelDao invoice = transactional.getById(invoiceId.toString(), context);
+                final InvoiceModelDao invoice = invoiceSqlDao.getById(invoiceId.toString(), context);
                 if (invoice == null ||
                     !invoice.getAccountId().equals(accountId) ||
                     invoice.isMigrated() ||
@@ -1128,12 +1127,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
 
                 if (cbaItem.getAmount().compareTo(BigDecimal.ZERO) < 0) { /* Credit consumption */
-                    // First, adjust the same invoice with the CBA amount to "delete"
-                    final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
-                                                                                   null, null, null, null, null, null, null, null, context.getCreatedDate().toLocalDate(),
-                                                                                   null, cbaItem.getAmount().negate(), null, cbaItem.getCurrency(), cbaItem.getId());
+
+                    invoiceItemSqlDao.updateItemFields(cbaItem.getId().toString(), BigDecimal.ZERO, "Delete used credit", null, context);
                     invoiceIds.add(invoice.getId());
-                    createInvoiceItemFromTransaction(invoiceItemSqlDao, cbaAdjItem, context);
                 } else if (cbaItem.getAmount().compareTo(BigDecimal.ZERO) > 0) {  /* Credit generation */
                     final InvoiceItemModelDao creditItem = Iterables.tryFind(invoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
                         @Override
@@ -1153,17 +1149,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                      String.format("Unexpected state, reclaimed used credit [%s/%s]", reclaimed, amountToReclaim));
                         }
 
-                        // We now have enough credit left on the account, so we can consume it on the original invoice
-                        final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
-                                                                                       null, null, null, null, null, null, null, null, context.getCreatedDate().toLocalDate(),
-                                                                                       null, cbaItem.getAmount().negate(), null, cbaItem.getCurrency(), cbaItem.getId());
-                        createInvoiceItemFromTransaction(invoiceItemSqlDao, cbaAdjItem, context);
-                        final InvoiceItemModelDao itemAdj = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.ITEM_ADJ, invoice.getId(), invoice.getAccountId(),
-                                                                                    null, null, null, null, null, null, null, null, context.getCreatedDate().toLocalDate(),
-                                                                                    null, cbaItem.getAmount(), null, cbaItem.getCurrency(), creditItem.getId());
+                        invoiceItemSqlDao.updateItemFields(cbaItem.getId().toString(), BigDecimal.ZERO, "Delete gen credit", null, context);
+                        final BigDecimal adjustedCreditAmount = creditItem.getAmount().add(cbaItem.getAmount());
+                        invoiceItemSqlDao.updateItemFields(creditItem.getId().toString(), adjustedCreditAmount, "Delete gen credit", null, context);
                         invoiceIds.add(invoice.getId());
-                        // We use createAndRefresh instead of createInvoiceItemFromTransaction to bypass the validation on the ITEM_ADJ
-                        createAndRefresh(invoiceItemSqlDao, itemAdj, context);
                     } else /* System generated credit, e.g Repair invoice */ {
                         // TODO Add missing error https://github.com/killbill/killbill/issues/1501
                         throw new IllegalStateException("Cannot delete system generated credit");
