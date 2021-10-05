@@ -1,5 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -90,7 +93,9 @@ public abstract class DefaultOverdueNotifierBase implements OverdueNotifier {
     @Override
     public void stop() {
         if (overdueQueue != null) {
-            overdueQueue.stopQueue();
+            if (!overdueQueue.stopQueue()) {
+                log.warn("Timed out while shutting down {} queue: IN_PROCESSING entries might be left behind", overdueQueue.getFullQName());
+            }
             try {
                 notificationQueueService.deleteNotificationQueue(overdueQueue.getServiceName(), overdueQueue.getQueueName());
             } catch (NoSuchNotificationQueue e) {

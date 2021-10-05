@@ -1,6 +1,8 @@
 /*
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -129,7 +131,9 @@ public class Janitor {
             }
 
             if (janitorQueue != null) {
-                janitorQueue.stopQueue();
+                if (!janitorQueue.stopQueue()) {
+                    log.warn("Timed out while shutting down {} queue: IN_PROCESSING entries might be left behind", janitorQueue.getFullQName());
+                }
                 notificationQueueService.deleteNotificationQueue(KILLBILL_SERVICES.PAYMENT_SERVICE.getServiceName(), QUEUE_NAME);
             }
         } catch (final InterruptedException e) {
