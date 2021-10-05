@@ -24,6 +24,7 @@ import java.util.List;
 import org.killbill.billing.lifecycle.ServiceFinder;
 import org.killbill.billing.util.broadcast.dao.BroadcastModelDao;
 import org.killbill.billing.util.dao.AuditLogModelDaoMapper;
+import org.killbill.billing.util.dao.CounterMappingsMapper;
 import org.killbill.billing.util.dao.EntityHistoryModelDaoMapperFactory;
 import org.killbill.billing.util.dao.RecordIdIdMappingsMapper;
 import org.killbill.billing.util.entity.Entity;
@@ -93,6 +94,7 @@ public class IDBISetup {
         return ImmutableList.<ResultSetMapper>builder()
                 .add(new AuditLogModelDaoMapper())
                 .add(new RecordIdIdMappingsMapper())
+                .add(new CounterMappingsMapper())
                 .add(new DatabaseSchemaSqlDao.ColumnInfoMapper())
                 .build();
     }

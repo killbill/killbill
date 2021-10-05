@@ -1,7 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2016 Groupon, Inc
- * Copyright 2014-2016 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -53,7 +55,7 @@ public class AccountItemTree {
     private final UUID targetInvoiceId;
     private final Map<UUID, SubscriptionItemTree> subscriptionItemTree;
     private final List<InvoiceItem> allExistingItems;
-    private List<InvoiceItem> pendingItemAdj;
+    private final List<InvoiceItem> pendingItemAdj;
 
     private boolean isBuilt;
 
@@ -73,12 +75,12 @@ public class AccountItemTree {
         Preconditions.checkState(!isBuilt);
 
         if (pendingItemAdj.size() > 0) {
-            for (InvoiceItem item : pendingItemAdj) {
+            for (final InvoiceItem item : pendingItemAdj) {
                 addExistingItem(item, true);
             }
             pendingItemAdj.clear();
         }
-        for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
+        for (final SubscriptionItemTree tree : subscriptionItemTree.values()) {
             tree.build();
         }
         isBuilt = true;
@@ -133,11 +135,11 @@ public class AccountItemTree {
     public void mergeWithProposedItems(final List<InvoiceItem> proposedItems) {
 
         build();
-        for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
+        for (final SubscriptionItemTree tree : subscriptionItemTree.values()) {
             tree.flatten(true);
         }
 
-        for (InvoiceItem item : proposedItems) {
+        for (final InvoiceItem item : proposedItems) {
             final UUID subscriptionId = getSubscriptionId(item, null);
             SubscriptionItemTree tree = subscriptionItemTree.get(subscriptionId);
             if (tree == null) {
@@ -147,7 +149,7 @@ public class AccountItemTree {
             tree.mergeProposedItem(item);
         }
 
-        for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
+        for (final SubscriptionItemTree tree : subscriptionItemTree.values()) {
             tree.buildForMerge();
         }
     }
@@ -157,7 +159,7 @@ public class AccountItemTree {
      */
     public List<InvoiceItem> getResultingItemList() {
         final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
-        for (SubscriptionItemTree tree : subscriptionItemTree.values()) {
+        for (final SubscriptionItemTree tree : subscriptionItemTree.values()) {
             final List<InvoiceItem> simplifiedView = tree.getView();
             if (simplifiedView.size() > 0) {
                 result.addAll(simplifiedView);
@@ -195,5 +197,17 @@ public class AccountItemTree {
         sb.append("subscriptionItemTree=").append(subscriptionItemTree);
         sb.append('}');
         return sb.toString();
+    }
+
+    public String prettyPrint() {
+        final StringBuilder stringBuilder = new StringBuilder("AccountItemTree (accountId=").append(accountId).append(")\n");
+        for (final Entry<UUID, SubscriptionItemTree> subscriptionItemTreeEntry : subscriptionItemTree.entrySet()) {
+            stringBuilder.append("Subscription: ")
+                         .append(subscriptionItemTreeEntry.getKey())
+                         .append("\n")
+                         .append(TreePrinter.print(subscriptionItemTreeEntry.getValue().getRoot()))
+                         .append("\n");
+        }
+        return stringBuilder.toString();
     }
 }

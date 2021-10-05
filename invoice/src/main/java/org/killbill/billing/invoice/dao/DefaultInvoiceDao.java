@@ -737,7 +737,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     }
 
                     // At this point, we expect the request to be a transition PENDING -> SUCCESS (SUCCESS -> SUCCESS is also tolerated)
-                    Preconditions.checkState(success, "Found successful refund for transactionExternalKey=" + transactionExternalKey +  "and does not match pending input");
+                    Preconditions.checkState(success, "Found successful refund for transactionExternalKey=" + transactionExternalKey + "and does not match pending input");
                     // We only update date and the status
                     existingRefund.setSuccess(true);
                     existingRefund.setPaymentDate(context.getCreatedDate());
@@ -759,7 +759,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                      payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId(), success);
                     result = createAndRefresh(transactional, refund, context);
                 }
-
 
                 if (success) {
                     // Retrieve invoice after the Refund
@@ -1077,23 +1076,48 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
+    private BigDecimal reclaimCreditFromTransaction(final UUID accountId, final BigDecimal amountToReclaim, final Set<UUID> invoiceIds, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) throws InvoiceApiException, EntityPersistenceException {
+
+        final InvoiceItemSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
+        final List<InvoiceItemModelDao> cbaUsedItems = transactional.getConsumedCBAItems(context);
+
+        BigDecimal leftToReclaim = amountToReclaim;
+        for (final InvoiceItemModelDao cbaItem : cbaUsedItems) {
+
+            final BigDecimal positiveCbaAmount = cbaItem.getAmount().negate();
+            final BigDecimal adjustedAmount = leftToReclaim.compareTo(positiveCbaAmount) >= 0 ? positiveCbaAmount : leftToReclaim;
+            final BigDecimal itemAmount = positiveCbaAmount.subtract(adjustedAmount);
+            transactional.updateItemFields(cbaItem.getId().toString(), itemAmount.negate(), "Reclaim used credit", null, context);
+
+            invoiceIds.add(cbaItem.getInvoiceId());
+            leftToReclaim = leftToReclaim.subtract(adjustedAmount);
+            if (leftToReclaim.compareTo(BigDecimal.ZERO) <= 0) {
+                break;
+            }
+        }
+        return amountToReclaim.subtract(leftToReclaim);
+    }
+
     @Override
     public void deleteCBA(final UUID accountId, final UUID invoiceId, final UUID invoiceItemId, final InternalCallContext context) throws InvoiceApiException {
+
         final List<Tag> invoicesTags = getInvoicesTags(context);
+        final Set<UUID> invoiceIds = new HashSet<>();
 
         transactionalSqlDao.execute(false, InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final InvoiceSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
 
                 // Retrieve the invoice and make sure it belongs to the right account
-                final InvoiceModelDao invoice = transactional.getById(invoiceId.toString(), context);
+                final InvoiceModelDao invoice = invoiceSqlDao.getById(invoiceId.toString(), context);
                 if (invoice == null ||
                     !invoice.getAccountId().equals(accountId) ||
                     invoice.isMigrated() ||
-                    invoice.getStatus() == InvoiceStatus.DRAFT) {
+                    invoice.getStatus() != InvoiceStatus.COMMITTED) {
                     throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
                 }
+                invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
 
                 // Retrieve the invoice item and make sure it belongs to the right invoice
                 final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
@@ -1102,74 +1126,41 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
                 }
 
-                // First, adjust the same invoice with the CBA amount to "delete"
-                final InvoiceItemModelDao cbaAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoice.getId(), invoice.getAccountId(),
-                                                                               null, null, null, null, null, null, null, null, context.getCreatedDate().toLocalDate(),
-                                                                               null, cbaItem.getAmount().negate(), null, cbaItem.getCurrency(), cbaItem.getId());
-                createInvoiceItemFromTransaction(invoiceItemSqlDao, cbaAdjItem, context);
+                if (cbaItem.getAmount().compareTo(BigDecimal.ZERO) < 0) { /* Credit consumption */
 
-                // Verify the final invoice balance is not negative
-                invoiceDaoHelper.populateChildren(invoice, invoicesTags, entitySqlDaoWrapperFactory, context);
-                if (InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).compareTo(BigDecimal.ZERO) < 0) {
-                    throw new InvoiceApiException(ErrorCode.INVOICE_WOULD_BE_NEGATIVE);
-                }
+                    invoiceItemSqlDao.updateItemFields(cbaItem.getId().toString(), BigDecimal.ZERO, "Delete used credit", null, context);
+                    invoiceIds.add(invoice.getId());
+                } else if (cbaItem.getAmount().compareTo(BigDecimal.ZERO) > 0) {  /* Credit generation */
+                    final InvoiceItemModelDao creditItem = Iterables.tryFind(invoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
+                        @Override
+                        public boolean apply(final InvoiceItemModelDao targetItem) {
+                            return targetItem.getType() == InvoiceItemType.CREDIT_ADJ && targetItem.getAmount().negate().compareTo(cbaItem.getAmount()) >= 0;
+                        }
+                    }).orNull();
 
-                // If there is more account credit than CBA we adjusted, we're done.
-                // Otherwise, we need to find further invoices on which this credit was consumed
-                final BigDecimal accountCBA = cbaDao.getAccountCBAFromTransaction(entitySqlDaoWrapperFactory, context);
-                if (accountCBA.compareTo(BigDecimal.ZERO) < 0) {
-                    if (accountCBA.compareTo(cbaItem.getAmount().negate()) < 0) {
-                        throw new IllegalStateException("The account balance can't be lower than the amount adjusted");
-                    }
-                    final List<InvoiceModelDao> invoicesFollowing = getAllNonMigratedInvoicesByAccountAfterDate(false, transactional, invoice.getInvoiceDate(), null, context);
-                    invoiceDaoHelper.populateChildren(invoicesFollowing, invoicesTags, entitySqlDaoWrapperFactory, context);
-
-                    // The remaining amount to adjust (i.e. the amount of credits used on following invoices)
-                    // is the current account CBA balance (minus the sign)
-                    BigDecimal positiveRemainderToAdjust = accountCBA.negate();
-                    for (final InvoiceModelDao invoiceFollowing : invoicesFollowing) {
-                        if (invoiceFollowing.getId().equals(invoice.getId())) {
-                            continue;
+                    // In case this is a credit invoice (pure credit, or mixed), we allow to 'delete' credit generation
+                    if (creditItem != null) { /* Credit Invoice */
+                            final BigDecimal accountCBA = cbaDao.getAccountCBAFromTransaction(entitySqlDaoWrapperFactory, context);
+                        // If we don't have enough credit left on the account, we reclaim what is necessary
+                        if (accountCBA.compareTo(cbaItem.getAmount()) < 0) {
+                            final BigDecimal amountToReclaim = cbaItem.getAmount().subtract(accountCBA);
+                            final BigDecimal reclaimed = reclaimCreditFromTransaction(accountId, amountToReclaim, invoiceIds, entitySqlDaoWrapperFactory, context);
+                            Preconditions.checkState(reclaimed.compareTo(amountToReclaim) == 0,
+                                                     String.format("Unexpected state, reclaimed used credit [%s/%s]", reclaimed, amountToReclaim));
                         }
 
-                        // Add a single adjustment per invoice
-                        BigDecimal positiveCBAAdjItemAmount = BigDecimal.ZERO;
-
-                        for (final InvoiceItemModelDao cbaUsed : invoiceFollowing.getInvoiceItems()) {
-                            // Ignore non CBA items or credits (CBA >= 0)
-                            if (!InvoiceItemType.CBA_ADJ.equals(cbaUsed.getType()) ||
-                                cbaUsed.getAmount().compareTo(BigDecimal.ZERO) >= 0) {
-                                continue;
-                            }
-
-                            final BigDecimal positiveCBAUsedAmount = cbaUsed.getAmount().negate();
-                            final BigDecimal positiveNextCBAAdjItemAmount;
-                            if (positiveCBAUsedAmount.compareTo(positiveRemainderToAdjust) < 0) {
-                                positiveNextCBAAdjItemAmount = positiveCBAUsedAmount;
-                                positiveRemainderToAdjust = positiveRemainderToAdjust.subtract(positiveNextCBAAdjItemAmount);
-                            } else {
-                                positiveNextCBAAdjItemAmount = positiveRemainderToAdjust;
-                                positiveRemainderToAdjust = BigDecimal.ZERO;
-                            }
-                            positiveCBAAdjItemAmount = positiveCBAAdjItemAmount.add(positiveNextCBAAdjItemAmount);
-
-                            if (positiveRemainderToAdjust.compareTo(BigDecimal.ZERO) == 0) {
-                                break;
-                            }
-                        }
-
-                        // Add the adjustment on that invoice
-                        final InvoiceItemModelDao nextCBAAdjItem = new InvoiceItemModelDao(context.getCreatedDate(), InvoiceItemType.CBA_ADJ, invoiceFollowing.getId(),
-                                                                                           invoice.getAccountId(), null, null, null, null, null, null, null, null,
-                                                                                           context.getCreatedDate().toLocalDate(), null,
-                                                                                           positiveCBAAdjItemAmount, null, cbaItem.getCurrency(), cbaItem.getId());
-                        createInvoiceItemFromTransaction(invoiceItemSqlDao, nextCBAAdjItem, context);
-                        if (positiveRemainderToAdjust.compareTo(BigDecimal.ZERO) == 0) {
-                            break;
-                        }
+                        invoiceItemSqlDao.updateItemFields(cbaItem.getId().toString(), BigDecimal.ZERO, "Delete gen credit", null, context);
+                        final BigDecimal adjustedCreditAmount = creditItem.getAmount().add(cbaItem.getAmount());
+                        invoiceItemSqlDao.updateItemFields(creditItem.getId().toString(), adjustedCreditAmount, "Delete gen credit", null, context);
+                        invoiceIds.add(invoice.getId());
+                    } else /* System generated credit, e.g Repair invoice */ {
+                        // TODO Add missing error https://github.com/killbill/killbill/issues/1501
+                        throw new IllegalStateException("Cannot delete system generated credit");
                     }
                 }
-
+                for (final UUID invoiceId : invoiceIds) {
+                    notifyBusOfInvoiceAdjustment(entitySqlDaoWrapperFactory, invoiceId, accountId, context.getUserToken(), context);
+                }
                 return null;
             }
         });

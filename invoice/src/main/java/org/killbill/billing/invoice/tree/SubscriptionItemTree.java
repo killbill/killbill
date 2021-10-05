@@ -1,7 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
- * Copyright 2014-2017 Groupon, Inc
- * Copyright 2014-2017 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -47,19 +48,19 @@ public class SubscriptionItemTree {
     private final UUID targetInvoiceId;
     private final UUID subscriptionId;
 
-    private ItemsNodeInterval root =new ItemsNodeInterval();
+    private ItemsNodeInterval root = new ItemsNodeInterval();
     private boolean isBuilt = false;
     private boolean isMerged = false;
 
     private static final Comparator<InvoiceItem> INVOICE_ITEM_COMPARATOR = new Comparator<InvoiceItem>() {
         @Override
         public int compare(final InvoiceItem o1, final InvoiceItem o2) {
-            int startDateComp = o1.getStartDate().compareTo(o2.getStartDate());
+            final int startDateComp = o1.getStartDate().compareTo(o2.getStartDate());
             if (startDateComp != 0) {
                 return startDateComp;
             }
-            int itemTypeComp =  (o1.getInvoiceItemType().ordinal()<o2.getInvoiceItemType().ordinal() ? -1 :
-                                 (o1.getInvoiceItemType().ordinal()==o2.getInvoiceItemType().ordinal() ? 0 : 1));
+            final int itemTypeComp = (o1.getInvoiceItemType().ordinal() < o2.getInvoiceItemType().ordinal() ? -1 :
+                                      (o1.getInvoiceItemType().ordinal() == o2.getInvoiceItemType().ordinal() ? 0 : 1));
             if (itemTypeComp != 0) {
                 return itemTypeComp;
             }
@@ -133,7 +134,6 @@ public class SubscriptionItemTree {
         pendingItemAdj.clear();
 
         root.buildForExistingItems(items, targetInvoiceId);
-
 
         isBuilt = true;
     }
@@ -217,11 +217,11 @@ public class SubscriptionItemTree {
 
         final List<InvoiceItem> tmp = new LinkedList<InvoiceItem>();
         tmp.addAll(remainingIgnoredItems);
-        for (final Item item: items) {
+        for (final Item item : items) {
             if (item != null) {
                 tmp.add(item.toInvoiceItem());
             }
-        };
+        }
 
         final List<InvoiceItem> result = Ordering.<InvoiceItem>from(INVOICE_ITEM_COMPARATOR).sortedCopy(tmp);
         checkItemsListState(result);
@@ -233,7 +233,7 @@ public class SubscriptionItemTree {
 
         LocalDate prevRecurringEndDate = null;
         LocalDate prevRepairEndDate = null;
-        for (InvoiceItem cur : orderedList) {
+        for (final InvoiceItem cur : orderedList) {
             switch (cur.getInvoiceItemType()) {
                 case FIXED:
                     break;

@@ -137,6 +137,7 @@ import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.dao.NonEntityDao;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.nodes.KillbillNodesApi;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.bus.api.PersistentBus;
@@ -337,6 +338,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected NotificationQueueService notificationQueueService;
 
     protected ConfigurableInvoiceConfig invoiceConfig;
+    protected KillbillFeatures killbillFeatures = new KillbillFeatures();
 
     @Override
     protected void assertListenerStatus() {
@@ -351,7 +353,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         final InvoiceConfig defaultInvoiceConfig = new ConfigurationObjectFactory(skifeConfigSource).build(InvoiceConfig.class);
         invoiceConfig = new ConfigurableInvoiceConfig(defaultInvoiceConfig);
-        final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource, clock, invoiceConfig));
+        final Injector g = Guice.createInjector(Stage.PRODUCTION, new BeatrixIntegrationModule(configSource, clock, invoiceConfig, killbillFeatures));
         g.injectMembers(this);
     }
 

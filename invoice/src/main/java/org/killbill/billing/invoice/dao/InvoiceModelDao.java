@@ -58,6 +58,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     private InvoiceModelDao parentInvoice;
 
     private boolean isWrittenOff;
+    private boolean isRepaired;
 
     public InvoiceModelDao() { /* For the DAO mapper */ }
 
@@ -72,6 +73,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.currency = currency;
         this.migrated = migrated;
         this.isWrittenOff = false;
+        this.isRepaired = false;
         this.status = status;
         this.isParentInvoice = isParentInvoice;
     }
@@ -204,6 +206,19 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
 
     public void setIsWrittenOff(final boolean isWrittenOff) {
         this.isWrittenOff = isWrittenOff;
+    }
+
+    public boolean isRepaired() {
+        return isRepaired;
+    }
+
+    // Make BeanInspector happy when invoked from EntityHistoryBinder
+    public boolean getIsRepaired() {
+        return isRepaired;
+    }
+
+    public void setRepaired(final boolean repaired) {
+        this.isRepaired = repaired;
     }
 
     public void setStatus(final InvoiceStatus status) {

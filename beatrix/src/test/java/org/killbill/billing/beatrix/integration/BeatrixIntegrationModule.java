@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -84,25 +85,28 @@ public class BeatrixIntegrationModule extends KillBillModule {
     private final InvoiceConfig invoiceConfig;
 
     public BeatrixIntegrationModule(final KillbillConfigSource configSource, final ClockMock clock) {
-        this(configSource, clock, null);
+        this(configSource, clock, null, new KillbillFeatures());
     }
 
-    public BeatrixIntegrationModule(final KillbillConfigSource configSource, final ClockMock clock, @Nullable final InvoiceConfig invoiceConfig) {
-        super(configSource);
+    public BeatrixIntegrationModule(final KillbillConfigSource configSource,
+                                    final ClockMock clock,
+                                    @Nullable final InvoiceConfig invoiceConfig,
+                                    final KillbillFeatures killbillFeatures) {
+        super(configSource, killbillFeatures);
         this.clock = clock;
         this.invoiceConfig = invoiceConfig;
     }
 
     @Override
     protected void configure() {
-        install(new GuicyKillbillTestWithEmbeddedDBModule(true, configSource, clock));
+        install(new GuicyKillbillTestWithEmbeddedDBModule(true, configSource, clock, killbillFeatures));
         install(new CacheModule(configSource));
         install(new ConfigModule(configSource));
         install(new EventModule(configSource));
         install(new CallContextModule(configSource));
         install(new TagStoreModule(configSource));
         install(new CustomFieldModule(configSource));
-        install(new DefaultAccountModule(configSource));
+        install(new DefaultAccountModule(configSource, killbillFeatures));
         install(new CatalogModule(configSource));
         install(new DefaultSubscriptionModule(configSource));
         install(new DefaultEntitlementModule(configSource));
@@ -151,6 +155,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
                 bind(InvoiceOptimizer.class).to(InvoiceOptimizerNoop.class).asEagerSingleton();
             }
         }
+
         protected void installInvoiceGenerator() {
             bind(InvoiceGenerator.class).to(DefaultInvoiceGenerator.class).asEagerSingleton();
         }

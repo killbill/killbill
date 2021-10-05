@@ -406,7 +406,19 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         final WithAccountLock withAccountLock = new WithAccountLock() {
             @Override
             public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
-                final DefaultInvoice invoice = getInvoiceAndCheckCurrency(invoiceId, currency, context);
+
+                final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
+                if (InvoiceStatus.VOID == invoice.getStatus()) {
+                    // TODO Add missing error https://github.com/killbill/killbill/issues/1501
+                    throw new IllegalStateException(String.format("Cannot add credit or external charge for invoice id %s because it is in \" + InvoiceStatus.VOID + \" status\"",
+                                                                  invoice.getId()));
+                }
+
+                // Check the specified currency matches the one of the existing invoice
+                if (currency != null && invoice.getCurrency() != currency) {
+                    throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currency, invoice.getCurrency());
+                }
+
                 final InvoiceItem adjustmentItem = invoiceApiHelper.createAdjustmentItem(invoice,
                                                                                          invoiceItemId,
                                                                                          amount,
@@ -563,9 +575,18 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                     } else {
                         if (newAndExistingInvoices.get(invoiceIdForItem) == null) {
                             final DefaultInvoice existingInvoiceForExternalCharge = getInvoiceInternal(invoiceIdForItem, context);
-                            if (InvoiceStatus.COMMITTED.equals(existingInvoiceForExternalCharge.getStatus())) {
-                                throw new InvoiceApiException(ErrorCode.INVOICE_ALREADY_COMMITTED, existingInvoiceForExternalCharge.getId());
+                            switch (existingInvoiceForExternalCharge.getStatus()) {
+                                case COMMITTED:
+                                    throw new InvoiceApiException(ErrorCode.INVOICE_ALREADY_COMMITTED, existingInvoiceForExternalCharge.getId());
+                                case VOID:
+                                    // TODO Add missing error https://github.com/killbill/killbill/issues/1501
+                                    throw new IllegalStateException(String.format("Cannot add credit or external charge for invoice id %s because it is in \" + InvoiceStatus.VOID + \" status\"",
+                                                                                  existingInvoiceForExternalCharge.getId()));
+                                case DRAFT:
+                                default:
+                                    break;
                             }
+
                             newAndExistingInvoices.put(invoiceIdForItem, existingInvoiceForExternalCharge);
                         }
                         curInvoiceForItem = newAndExistingInvoices.get(invoiceIdForItem);
@@ -633,7 +654,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         };
 
         return invoiceApiHelper.dispatchToInvoicePluginsAndInsertItems(accountId, false, withAccountLock, properties, context);
-
     }
 
     private void notifyBusOfInvoiceAdjustment(final UUID invoiceId, final UUID accountId, final InternalCallContext context) {
@@ -653,14 +673,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return invoices;
     }
 
-    private DefaultInvoice getInvoiceAndCheckCurrency(final UUID invoiceId, @Nullable final Currency currency, final TenantContext context) throws InvoiceApiException {
-        final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
-        // Check the specified currency matches the one of the existing invoice
-        if (currency != null && invoice.getCurrency() != currency) {
-            throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currency, invoice.getCurrency());
-        }
-        return invoice;
-    }
 
     @Override
     public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
@@ -732,16 +744,46 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
     }
 
+    private void checkInvoiceNotRepaired(final InvoiceModelDao invoice) throws InvoiceApiException {
+        if (invoice.getIsRepaired()) {
+            // TODO ErrorCode https://github.com/killbill/killbill/issues/1501
+            throw new IllegalStateException(String.format("Cannot void invoice %s because it contains items being repaired", invoice.getId()));
+        }
+    }
+
+    private void checkInvoiceDoesContainUsedGeneratedCredit(final UUID accountId, final InvoiceModelDao invoice, final CallContext context) throws InvoiceApiException {
+        final BigDecimal accountCBA = dao.getAccountCBA(accountId, internalCallContextFactory.createInternalTenantContext(accountId, context));
+        final InvoiceItemModelDao largeCreditGen = Iterables.tryFind(invoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
+            @Override
+            public boolean apply(final InvoiceItemModelDao invoiceItemModelDao) {
+                // Positive CBA
+                return InvoiceItemType.CBA_ADJ == invoiceItemModelDao.getType() && /* CBA item */
+                       invoiceItemModelDao.getAmount().compareTo(BigDecimal.ZERO) > 0 && /* Credit generation */
+                       invoiceItemModelDao.getAmount().compareTo(accountCBA) > 0; /* Some of it was used already */
+            }
+        }).orNull();
+        if (largeCreditGen != null) {
+            // TODO ErrorCode https://github.com/killbill/killbill/issues/1501
+            throw new IllegalStateException(String.format("Cannot void invoice %s because it contains credit items (credit generation)", invoice.getId()));
+        }
+    }
+
     @Override
     public void voidInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
+
+        final UUID accountId = getInvoiceInternal(invoiceId, context).getAccountId();
         final WithAccountLock withAccountLock = new WithAccountLock() {
             @Override
             public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
                 final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(invoiceId, ObjectType.INVOICE, context);
-                final Invoice currentInvoice = getInvoiceInternal(invoiceId, context);
-                if (currentInvoice.getNumberOfPayments() > 0) {
-                    canInvoiceBeVoided(currentInvoice);
+                final InvoiceModelDao rawInvoice = dao.getById(invoiceId, internalCallContext);
+                if (rawInvoice.getStatus() == InvoiceStatus.COMMITTED) {
+                    checkInvoiceNotRepaired(rawInvoice);
+                    checkInvoiceDoesContainUsedGeneratedCredit(accountId, rawInvoice, context);
                 }
+
+                final Invoice currentInvoice = new DefaultInvoice(rawInvoice, getCatalogSafelyForPrettyNames(internalCallContext));
+                checkInvoiceNotPaid(currentInvoice);
 
                 dao.changeInvoiceStatus(invoiceId, InvoiceStatus.VOID, internalCallContext);
 
@@ -750,7 +792,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         };
 
-        final UUID accountId = getInvoiceInternal(invoiceId, context).getAccountId();
 
         final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
         properties.add(new PluginProperty(INVOICE_OPERATION, "void", false));
@@ -773,13 +814,15 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return dao.getInvoicePaymentAuditLogsWithHistoryForId(invoicePaymentId, auditLevel, internalCallContextFactory.createInternalTenantContext(invoicePaymentId, ObjectType.INVOICE_PAYMENT, tenantContext));
     }
 
-    private void canInvoiceBeVoided(final Invoice invoice) throws InvoiceApiException {
-        final List<InvoicePayment> invoicePayments = invoice.getPayments();
-        final BigDecimal amountPaid = InvoiceCalculatorUtils.computeInvoiceAmountPaid(invoice.getCurrency(), invoicePayments)
-                                                            .add(InvoiceCalculatorUtils.computeInvoiceAmountRefunded(invoice.getCurrency(), invoicePayments));
+    private void checkInvoiceNotPaid(final Invoice invoice) throws InvoiceApiException {
+        if (invoice.getNumberOfPayments() > 0) {
+            final List<InvoicePayment> invoicePayments = invoice.getPayments();
+            final BigDecimal amountPaid = InvoiceCalculatorUtils.computeInvoiceAmountPaid(invoice.getCurrency(), invoicePayments)
+                                                                .add(InvoiceCalculatorUtils.computeInvoiceAmountRefunded(invoice.getCurrency(), invoicePayments));
 
-        if (amountPaid.compareTo(BigDecimal.ZERO) != 0) {
-            throw new InvoiceApiException(ErrorCode.CAN_NOT_VOID_INVOICE_THAT_IS_PAID, invoice.getId().toString());
+            if (amountPaid.compareTo(BigDecimal.ZERO) != 0) {
+                throw new InvoiceApiException(ErrorCode.CAN_NOT_VOID_INVOICE_THAT_IS_PAID, invoice.getId().toString());
+            }
         }
     }
 }
