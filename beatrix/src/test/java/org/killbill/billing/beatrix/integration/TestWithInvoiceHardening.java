@@ -19,6 +19,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -37,7 +38,9 @@ import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
+import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -50,8 +53,11 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import static org.killbill.billing.ErrorCode.INVOICE_NOTHING_TO_DO;
 import static org.testng.Assert.assertEquals;
@@ -214,8 +220,38 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
     }
 
+    private void deleteUsedCredit(final UUID accountId, final BigDecimal targetAmount) throws InvoiceApiException {
+        final List<Invoice> allInvoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+        final Iterable<InvoiceItem> allItems = Iterables.concat(Iterables.transform(allInvoices, new Function<Invoice, List<InvoiceItem>>() {
+
+            @Override
+            public List<InvoiceItem> apply(final Invoice input) {
+                return input.getInvoiceItems();
+            }
+        }));
+        final InvoiceItem usedCredit = Iterables.tryFind(allItems, new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getInvoiceItemType() == InvoiceItemType.CBA_ADJ &&
+                       input.getAmount().compareTo(targetAmount) == 0;
+            }
+        }).orNull();
+        Assert.assertNotNull(usedCredit);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.deleteCBA(accountId, usedCredit.getInvoiceId(), usedCredit.getId(), callContext);
+        assertListenerStatus();
 
 
+    }
+
+    //
+    // Complicated scenario where we want to test that given some bad data
+    //  1/ leading the account to be parked and
+    //  2/ leading the system to have both generated and used some credit
+    //  we are able using our 'void' and credit 'deletion api' to come back to a good state, i.e
+    //  credit was reclaimed, and account is back into a good state
+    //
     @Test(groups = "slow")
     public void testFixParkedAccountByVoidingInvoices() throws Exception {
 
@@ -248,7 +284,6 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         //
         // Simulate some bad data on disk
         //
-
         // Invoice 1: RECURRING 2019-4-27 -> 2019-5-27
         final InvoiceModelDao firstInvoice = new InvoiceModelDao(UUID.randomUUID(), clock.getUTCNow(), account.getId(), null, new LocalDate(2019, 4, 27), new LocalDate(2019, 4, 27), account.getCurrency(), false, InvoiceStatus.COMMITTED, false);
         final UUID initialRecuringItemId = UUID.randomUUID();
@@ -309,6 +344,22 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
         busHandler.waitAndIgnoreEvents(3000);
 
+        // <! end of setup>
+        //
+        // We need to first VOID invoices that have REPAIR items otherwsie VOID operation on invoices being repaired would fail
+        // However, in order to VOID such REPAIR invoices for which (system) credit was generated, we need to ensure there is enough
+        // credit available on the account, hence the step of manually reclaiming credit before each operation.
+        //
+
+        deleteUsedCredit(account.getId(), new BigDecimal("-23.96"));
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.voidInvoice(secondInvoice.getId(), callContext);
+        assertListenerStatus();
+
+        deleteUsedCredit(account.getId(), new BigDecimal("-5.99"));
+        deleteUsedCredit(account.getId(), new BigDecimal("-3.99"));
+
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(fourthInvoice.getId(), callContext);
         assertListenerStatus();
@@ -317,9 +368,6 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         invoiceUserApi.voidInvoice(thirdInvoice.getId(), callContext);
         assertListenerStatus();
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceUserApi.voidInvoice(secondInvoice.getId(), callContext);
-        assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(firstInvoice.getId(), callContext);

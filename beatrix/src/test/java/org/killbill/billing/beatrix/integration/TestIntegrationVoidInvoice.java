@@ -193,7 +193,6 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         invoiceUserApi.voidInvoice(invoice3.getId(), callContext);
         assertListenerStatus();
 
-
         // NOW check we allow voiding the invoice2
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(invoice2.getId(), callContext);

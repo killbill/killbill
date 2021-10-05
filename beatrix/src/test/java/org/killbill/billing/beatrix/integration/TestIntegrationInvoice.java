@@ -30,9 +30,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -40,7 +38,6 @@ import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -49,14 +46,84 @@ import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationInvoice extends TestIntegrationBase {
+
+
+    @Test(groups = "slow")
+    public void testWithUserCreditDeletion() throws Exception {
+        final DateTime initialCreationDate = new DateTime(2015, 5, 15, 0, 0, 0, 0, testTimeZone);
+        // set clock to the initial start date
+        clock.setTime(initialCreationDate);
+
+        final int billingDay = 14;
+
+        log.info("Beginning test with BCD of " + billingDay);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(billingDay));
+
+        add_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+
+        // Move through time and verify we get the same invoice
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        Collection<Invoice> invoices = invoiceUserApi.getUnpaidInvoicesByAccountId(account.getId(), null, new LocalDate(clock.getUTCNow(), account.getTimeZone()), callContext);
+        assertEquals(invoices.size(), 1);
+
+        final UUID unpaidInvoiceId = invoices.iterator().next().getId();
+        final Invoice firstInvoice = invoiceUserApi.getInvoice(unpaidInvoiceId, callContext);
+        assertTrue(firstInvoice.getBalance().compareTo(new BigDecimal("249.95")) == 0);
+
+        final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance1.compareTo(new BigDecimal("249.95")) == 0);
+
+        // Add the 1000.00 credit
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), "some description", new BigDecimal("1000.00"), account.getCurrency(), null);
+        final List<InvoiceItem> creditItems = invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.of(inputCredit), true, null, callContext);
+        assertListenerStatus();
+
+        Assert.assertEquals(creditItems.size(), 1);
+        final InvoiceItem creditItem = creditItems.get(0);
+        final Invoice creditInvoice = invoiceUserApi.getInvoice(creditItem.getInvoiceId(), callContext);
+        final InvoiceItem cbaGenItem = Iterables.tryFind(creditInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem invoiceItem) {
+                return invoiceItem.getInvoiceItemType() == InvoiceItemType.CBA_ADJ;
+            }
+        }).orNull();
+        Assert.assertNotNull(cbaGenItem);
+
+
+        // Next month invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        assertEquals(invoices.size(), 4);
+
+        // Verify credit has been used on 2 previous invoices and we still have some left
+        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance2.compareTo(new BigDecimal("-500.10")) == 0);
+
+        // We expect 3 events as we modified 3 invoices
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.deleteCBA(account.getId(), creditItem.getInvoiceId(), cbaGenItem.getId(), callContext);
+        assertListenerStatus();
+    }
 
     @Test(groups = "slow")
     public void testApplyCreditOnExistingBalance() throws Exception {
