@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -39,6 +40,7 @@ import org.killbill.billing.util.cache.TenantKVCacheLoader;
 import org.killbill.billing.util.cache.TenantOverdueConfigCacheLoader;
 import org.killbill.billing.util.cache.TenantRecordIdCacheLoader;
 import org.killbill.billing.util.cache.TenantStateMachineConfigCacheLoader;
+import org.killbill.billing.util.config.definition.CacheConfig;
 import org.killbill.billing.util.config.definition.EhCacheConfig;
 import org.killbill.billing.util.config.definition.RedisCacheConfig;
 import org.redisson.api.RedissonClient;
@@ -58,6 +60,9 @@ public class CacheModule extends KillBillModule {
 
     @Override
     protected void configure() {
+        final CacheConfig cacheConfig = new ConfigurationObjectFactory(skifeConfigSource).build(CacheConfig.class);
+        bind(CacheConfig.class).toInstance(cacheConfig);
+
         final EhCacheConfig ehCacheConfig = new ConfigurationObjectFactory(skifeConfigSource).build(EhCacheConfig.class);
         bind(EhCacheConfig.class).toInstance(ehCacheConfig);
 

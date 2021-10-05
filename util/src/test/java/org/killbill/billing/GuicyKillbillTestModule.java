@@ -29,6 +29,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
+import org.killbill.billing.util.features.KillbillFeatures;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
@@ -40,7 +41,11 @@ public class GuicyKillbillTestModule extends KillBillModule {
     private final ClockMock clock;
 
     public GuicyKillbillTestModule(final KillbillConfigSource configSource, final ClockMock clock) {
-        super(configSource);
+        this(configSource, clock, new KillbillFeatures());
+    }
+
+    public GuicyKillbillTestModule(final KillbillConfigSource configSource, final ClockMock clock, final KillbillFeatures killbillFeatures) {
+        super(configSource, killbillFeatures);
         this.clock = clock;
 
         internalCallContext = new MutableInternalCallContext(InternalCallContextFactory.INTERNAL_TENANT_RECORD_ID,

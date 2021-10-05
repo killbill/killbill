@@ -143,7 +143,8 @@ public class Item {
 
     public Item[] split(final LocalDate splitDate) {
 
-        Preconditions.checkState(action == ItemAction.ADD);
+        // Relax this pre-condition to allow splitting from 'merge' phase as well.
+        //Preconditions.checkState(action == ItemAction.ADD);
         Preconditions.checkState(currentRepairedAmount.compareTo(BigDecimal.ZERO) == 0);
         Preconditions.checkState(adjustedAmount.compareTo(BigDecimal.ZERO) == 0);
 

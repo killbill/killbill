@@ -1,6 +1,8 @@
 /*
- * Copyright 2014-2019 Groupon, Inc
- * Copyright 2014-2019 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -81,7 +83,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -121,7 +123,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-29.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 3, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("20.00")));
 
-        DryRunArguments dryRun = new TestDryRunArguments(DryRunType.TARGET_DATE);
+        final DryRunArguments dryRun = new TestDryRunArguments(DryRunType.TARGET_DATE);
 
         // Issue a first dry-run on 2020-03-02
         // We should not see the items that were repaired a month prior now because of the cutoff date
@@ -136,9 +138,9 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Issue a series of dry-run starting on 2020-04-01
         DateTime nextDate = clock.getUTCNow().plusMonths(1);
         for (int i = 0; i < 5; i++) {
-            Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
+            final Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
             // Filter to eliminate CBA
-            int actualRecurring = Iterables.size(Iterables.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            final int actualRecurring = Iterables.size(Iterables.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
                 @Override
                 public boolean apply(final InvoiceItem invoiceItem) {
                     return invoiceItem.getInvoiceItemType() == InvoiceItemType.RECURRING;
@@ -165,7 +167,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -209,7 +211,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // 2020-02-01
@@ -253,7 +255,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 4, 1), new LocalDate(2020, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("200.00")));
     }
 
-
     @Test(groups = "slow")
     public void testRecurringInArrear2() throws Exception {
 
@@ -264,11 +265,9 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
         assertNotNull(account);
 
-
-
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // 2020-02-01
@@ -278,7 +277,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
-
 
         // Cancel in the past (previous period)
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
@@ -293,8 +291,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         assertListenerStatus();
     }
 
-
-
     @Test(groups = "slow")
     public void testRecurringInArrear3() throws Exception {
 
@@ -307,7 +303,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // 2020-03-01
@@ -334,7 +330,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 4, 1), new LocalDate(2020, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
-
     }
 
     private Invoice getCurrentDraftInvoice(final UUID accountId, final int nbTries) {
@@ -349,14 +344,13 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
             }
             try {
                 Thread.sleep(100);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 Assert.fail(e.getMessage());
             }
         }
         Assert.fail("Failed to find draft invoice for account");
         return null;
     }
-
 
     @Test(groups = "slow")
     public void testRecurringInArrear4() throws Exception {
@@ -373,7 +367,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // 2021-02-01
@@ -385,8 +379,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                      new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 1), new LocalDate(2021, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
-
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 1), new LocalDate(2021, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
         // 2021-03-01
         clock.addMonths(1);
@@ -397,8 +390,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                              new ExpectedInvoiceItemCheck(new LocalDate(2021, 2, 1), new LocalDate(2021, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
-
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 2, 1), new LocalDate(2021, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
         // 2021-04-01
         clock.addMonths(1);
@@ -409,9 +401,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                              new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
-
-
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
         // Cancel on 2021-04-30
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
@@ -419,12 +409,10 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         entitlement.cancelEntitlementWithDate(new LocalDate(2021, 4, 30), true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-
         // 2021-05-01
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL);
         clock.addMonths(1);
         assertListenerStatus();
-
 
         invoice = getCurrentDraftInvoice(account.getId(), 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -442,9 +430,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
     }
-
-
-
 
     @Test(groups = "slow")
     public void testUsageInArrear() throws Exception {
@@ -507,6 +492,5 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
 
     }
-
 }
 

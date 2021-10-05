@@ -589,14 +589,11 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
                                                                                                      account.getCurrency(),
                                                                                                      new HashMap<UUID, SubscriptionFutureNotificationDates>(),
                                                                                                      null, internalCallContext).getItems();
-        assertEquals(generatedItems.size(), 2);
+        assertEquals(generatedItems.size(), 1);
         assertTrue(generatedItems.get(0) instanceof RecurringInvoiceItem);
-        assertEquals(generatedItems.get(0).getStartDate(), new LocalDate("2016-01-01"));
+        assertEquals(generatedItems.get(0).getStartDate(), new LocalDate("2016-01-30"));
         assertEquals(generatedItems.get(0).getEndDate(), new LocalDate("2016-02-01"));
-        assertEquals(generatedItems.get(0).getAmount().compareTo(amount), 0);
-        assertTrue(generatedItems.get(1) instanceof RepairAdjInvoiceItem);
-        assertEquals(generatedItems.get(1).getAmount().compareTo(amount.negate()), 0);
-        assertEquals(generatedItems.get(1).getLinkedItemId(), invoice.getInvoiceItems().get(0).getId());
+        assertEquals(generatedItems.get(0).getAmount().compareTo(new BigDecimal("0.65")), 0);
     }
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")

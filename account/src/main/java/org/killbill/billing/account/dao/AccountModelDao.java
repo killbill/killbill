@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2021 Equinix, Inc
+ * Copyright 2014-2021 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -139,12 +140,7 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
 
         setCurrency(currentAccount.getCurrency());
 
-        if (currentAccount.getBillingCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
-            billingCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL) {  // and the proposed date is not 0
-            setBillingCycleDayLocal(billingCycleDayLocal);
-        } else {
-            setBillingCycleDayLocal(currentAccount.getBillingCycleDayLocal());
-        }
+        // Note: the caller is responsible for setting the BCD
 
         // Set all updatable fields with the new values if non null, otherwise defaults to the current values
         setEmail(email != null ? email : currentAccount.getEmail());
@@ -173,7 +169,9 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
         }
     }
 
-    public void validateAccountUpdateInput(final AccountModelDao currentAccount, final boolean ignoreNullInput) {
+    public void validateAccountUpdateInput(final AccountModelDao currentAccount,
+                                           final boolean ignoreNullInput,
+                                           final boolean allowAccountBCDUpdate) {
         //
         // We don't allow update on the following fields:
         //
@@ -199,8 +197,9 @@ public class AccountModelDao extends EntityModelDaoBase implements TimeZoneAware
         }
 
         if ((ignoreNullInput || (billingCycleDayLocal != DEFAULT_BILLING_CYCLE_DAY_LOCAL)) &&
+            !allowAccountBCDUpdate && // BCD update is disallowed
             currentAccount.getBillingCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is already a BCD set
-            !currentAccount.getBillingCycleDayLocal().equals(billingCycleDayLocal)) { // and it does not match we we have
+            !currentAccount.getBillingCycleDayLocal().equals(billingCycleDayLocal)) { // and it does not match what we have
             throw new IllegalArgumentException(String.format("Killbill doesn't support updating the account BCD: new=%s, current=%s", billingCycleDayLocal, currentAccount.getBillingCycleDayLocal()));
         }
 
