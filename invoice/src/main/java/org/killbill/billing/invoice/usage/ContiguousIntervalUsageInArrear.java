@@ -325,7 +325,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
             final List<RolledUpUnit> rolledUpUnits = ru.getRolledUpUnits();
 
-            final UsageInArrearAggregate toBeBilledUsageDetails = getToBeBilledUsageDetails(rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
+            final UsageInArrearAggregate toBeBilledUsageDetails = getToBeBilledUsageDetails(ru.getStart(), ru.getEnd(), rolledUpUnits, billedItems, areAllBilledItemsWithDetails);
             final BigDecimal toBeBilledUsageUnrounded = toBeBilledUsageDetails.getAmount();
             // See https://github.com/killbill/killbill/issues/1124
             final BigDecimal toBeBilledUsage = KillBillMoney.of(toBeBilledUsageUnrounded, getCurrency());
@@ -360,7 +360,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
     protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException;
 
-    protected abstract UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException;
+    protected abstract UsageInArrearAggregate getToBeBilledUsageDetails(final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException;
 
     private boolean areAllBilledItemsWithDetails(final Iterable<InvoiceItem> billedItems) {
         boolean atLeastOneItemWithoutDetails = Iterables.any(billedItems, new Predicate<InvoiceItem>() {

@@ -112,7 +112,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     }
 
     @Override
-    protected UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    protected UsageInArrearAggregate getToBeBilledUsageDetails(final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
 
         final Map<String, List<UsageConsumableInArrearTierUnitAggregate>> previousUnitsUsage;
         if (usageDetailMode == UsageDetailMode.DETAIL || areAllBilledItemsWithDetails) {
@@ -133,7 +133,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             }
             final List<UsageConsumableInArrearTierUnitAggregate> previousUsage = previousUnitsUsage.containsKey(cur.getUnitType()) ? previousUnitsUsage.get(cur.getUnitType()) : ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of();
 
-            final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledConsumableInArrear = computeToBeBilledConsumableInArrear(cur, previousUsage);
+            final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledConsumableInArrear = computeToBeBilledConsumableInArrear(startDate, endDate, cur, previousUsage);
             usageConsumableInArrearTierUnitAggregates.addAll(toBeBilledConsumableInArrear);
         }
         final UsageInArrearAggregate toBeBilledUsageDetails = new UsageConsumableInArrearAggregate(usageConsumableInArrearTierUnitAggregates);
@@ -179,14 +179,14 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     }
 
     @VisibleForTesting
-    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrear(final RolledUpUnit roUnit, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage) throws CatalogApiException {
+    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrear(final LocalDate startDate, final LocalDate endDate, final RolledUpUnit roUnit, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage) throws CatalogApiException {
 
         Preconditions.checkState(isBuilt.get());
         final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
 
         switch (usage.getTierBlockPolicy()) {
             case ALL_TIERS:
-                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(tieredBlocks, previousUsage, roUnit.getAmount());
+                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(startDate, endDate, tieredBlocks, previousUsage, roUnit.getAmount());
             case TOP_TIER:
                 return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, previousUsage, roUnit.getAmount()));
             default:
@@ -194,7 +194,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         }
     }
 
-    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final Long units) throws CatalogApiException {
+    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final LocalDate startDate, final LocalDate endDate, final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final Long units) throws CatalogApiException {
 
         List<UsageConsumableInArrearTierUnitAggregate> toBeBilledDetails = Lists.newLinkedList();
         long remainingUnits = units;
@@ -220,11 +220,11 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             if (hasPreviousUsage) {
                 final Long previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : 0;
                 if (tierNum < lastPreviousUsageTier) {
-                    Preconditions.checkState(nbUsedTierBlocks == previousUsageQuantity, String.format("Expected usage for tier='%d', unit='%s' to be full, instead found units='[%d/%d]'",
-                                                                                                      tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
+                    Preconditions.checkState(nbUsedTierBlocks == previousUsageQuantity, String.format("Expected usage for subscription='%s', targetDate='%s', startDt='%s', endDt='%s', tier='%d', unit='%s' to be full, instead found units='[%d/%d]'",
+                                                                                                      getSubscriptionId(), targetDate, startDate, endDate, tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
                 } else {
-                    Preconditions.checkState(nbUsedTierBlocks - previousUsageQuantity >= 0, String.format("Expected usage for tier='%d', unit='%s' to contain at least as much as current usage, instead found units='[%d/%d]",
-                                                                                                          tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
+                    Preconditions.checkState(nbUsedTierBlocks - previousUsageQuantity >= 0, String.format("Expected usage for subscription='%s', targetDate='%s', startDt='%s', endDt='%s', tier='%d', unit='%s' to contain at least as much as current usage, instead found units='[%d/%d]",
+                                                                                                          getSubscriptionId(), targetDate, startDate, endDate, tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
                 }
                 nbUsedTierBlocks = nbUsedTierBlocks - previousUsageQuantity;
             }

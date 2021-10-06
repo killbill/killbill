@@ -87,7 +87,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @Override
-    protected UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    protected UsageInArrearAggregate getToBeBilledUsageDetails(final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
         return computeToBeBilledCapacityInArrear(rolledUpUnits);
     }
 
