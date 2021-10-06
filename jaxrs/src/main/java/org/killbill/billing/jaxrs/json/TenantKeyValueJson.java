@@ -22,8 +22,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="TenantKeyValue")
-public class TenantKeyValueJson {
+@ApiModel(value="TenantKeyValue", parent = JsonBase.class)
+public class TenantKeyValueJson extends JsonBase {
 
     private final String key;
     private final List<String> values;
