@@ -101,6 +101,7 @@ public abstract class ContiguousIntervalUsageInArrear {
     protected final InvoiceConfig invoiceConfig;
     protected final InternalTenantContext internalTenantContext;
     protected final UsageDetailMode usageDetailMode;
+    protected final boolean isDryRun;
 
     @VisibleForTesting
     static class TransitionTime {
@@ -138,6 +139,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                                            final LocalDate rawUsageStartDate,
                                            final UsageDetailMode usageDetailMode,
                                            final InvoiceConfig invoiceConfig,
+                                           final boolean isDryRun,
                                            final InternalTenantContext internalTenantContext) {
         this.usage = usage;
         this.accountId = accountId;
@@ -152,6 +154,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         this.billingEvents = Lists.newLinkedList();
         this.allSeenUnitTypes = new LinkedHashMap<BillingEvent, Set<String>>();
         this.transitionTimes = Lists.newLinkedList();
+        this.isDryRun = isDryRun;
         this.isBuilt = new AtomicBoolean(false);
         this.usageDetailMode = usageDetailMode;
     }
