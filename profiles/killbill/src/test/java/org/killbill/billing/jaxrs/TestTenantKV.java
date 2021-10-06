@@ -28,6 +28,7 @@ import org.awaitility.Durations;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.RequestOptions;
+import org.killbill.billing.client.model.TenantKeyValues;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.ComboPaymentTransaction;
 import org.killbill.billing.client.model.gen.Payment;
@@ -146,6 +147,28 @@ public class TestTenantKV extends TestJaxrsBase {
                   });
         Assert.assertEquals(voidPaymentOtherTenant2Ref.get().getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
         Assert.assertEquals(voidPaymentOtherTenant2Ref.get().getTransactions().get(1).getStatus(), TransactionStatus.SUCCESS);
+    }
+
+    @Test(groups = "slow", description = "Retrieve per tenant keys and values based on a key prefix")
+    public void testAllPluginConfig() throws Exception {
+        final String keyPrefix = "dummy_tenant";
+
+        final String tenant1KeyName = "dummy_tenant_1_key";
+        final String tenant1Value = "dummy_tenant_1_value";
+        final TenantKeyValue tenant1Config = tenantApi.insertUserKeyValue(tenant1KeyName, tenant1Value, requestOptions);
+
+        final String tenant2KeyName = "dummy_tenant_2_key";
+        final String tenant2Value = "dummy_tenant_2_value";
+        final TenantKeyValue tenant2Config = tenantApi.insertUserKeyValue(tenant2KeyName, tenant2Value, requestOptions);
+
+        final TenantKeyValues tenantKeyValues = tenantApi.getAllPluginConfiguration(keyPrefix, requestOptions);
+
+        Assert.assertFalse(tenantKeyValues.isEmpty());
+        Assert.assertSame(tenantKeyValues.size(), 2);
+        Assert.assertEquals(tenantKeyValues.get(0).getKey(), tenant1Config.getKey());
+        Assert.assertEquals(tenantKeyValues.get(0).getValues(), tenant1Config.getValues());
+        Assert.assertEquals(tenantKeyValues.get(1).getKey(), tenant2Config.getKey());
+        Assert.assertEquals(tenantKeyValues.get(1).getValues(), tenant2Config.getValues());
     }
 
     private Payment createComboPaymentTransaction(final RequestOptions requestOptions) throws KillBillClientException {
