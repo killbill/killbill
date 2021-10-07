@@ -74,7 +74,7 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
         LocalDate targetDate = new LocalDate(2013, 6, 23);
 
         final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsageRecord>of(), ImmutableSet.of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), usageDetailMode, invoiceConfig, internalCallContext);
-        final List<ContiguousIntervalUsageInArrear> result = foo.computeInArrearUsageInterval();
+        final List<ContiguousIntervalUsageInArrear> result = foo.computeInArrearUsageInterval(false);
         assertEquals(result.size(), 3);
 
         final ContiguousIntervalUsageInArrear firstResult = Iterables.tryFind(result, new Predicate<ContiguousIntervalUsageInArrear>() {

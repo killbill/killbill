@@ -63,8 +63,9 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                                                    final LocalDate rawUsageStartDate,
                                                    final UsageDetailMode usageDetailMode,
                                                    final InvoiceConfig invoiceConfig,
+                                                   final boolean isDryRun,
                                                    final InternalTenantContext internalTenantContext) {
-        super(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
+        super(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingId, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, isDryRun, internalTenantContext);
     }
 
     @Override
@@ -73,9 +74,13 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
         final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
         if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
-                                          String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', amountToBill='%s', (previously billed amount='%s', new proposed amount='%s')",
-                                                        startDate, endDate, amountToBill, billedUsage, toBeBilledUsage));
+            if (isDryRun) {
+                return;
+            } else {
+                throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
+                                              String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', amountToBill='%s', (previously billed amount='%s', new proposed amount='%s')",
+                                                            startDate, endDate, amountToBill, billedUsage, toBeBilledUsage));
+            }
         } else /* amountToBill.compareTo(BigDecimal.ZERO) >= 0 */ {
             if (!isPeriodPreviouslyBilled || amountToBill.compareTo(BigDecimal.ZERO) > 0) {
                 final String itemDetails = areAllBilledItemsWithDetails ? toJson(toBeBilledUsageDetails) : null;
@@ -87,7 +92,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
     }
 
     @Override
-    protected UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    protected UsageInArrearAggregate getToBeBilledUsageDetails(final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
         return computeToBeBilledCapacityInArrear(rolledUpUnits);
     }
 

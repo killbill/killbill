@@ -123,9 +123,9 @@ public class SubscriptionUsageInArrear {
      * @param existingUsage the existing on disk usage items.
      * @throws CatalogApiException
      */
-    public SubscriptionUsageInArrearItemsAndNextNotificationDate computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage, final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger) throws CatalogApiException, InvoiceApiException {
+    public SubscriptionUsageInArrearItemsAndNextNotificationDate computeMissingUsageInvoiceItems(final List<InvoiceItem> existingUsage, final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger, final boolean isDryRun) throws CatalogApiException, InvoiceApiException {
         final SubscriptionUsageInArrearItemsAndNextNotificationDate result = new SubscriptionUsageInArrearItemsAndNextNotificationDate();
-        final List<ContiguousIntervalUsageInArrear> billingEventTransitionTimePeriods = computeInArrearUsageInterval();
+        final List<ContiguousIntervalUsageInArrear> billingEventTransitionTimePeriods = computeInArrearUsageInterval(isDryRun);
         for (final ContiguousIntervalUsageInArrear usageInterval : billingEventTransitionTimePeriods) {
             final UsageInArrearItemsAndNextNotificationDate newItemsWithDetailsAndDate = usageInterval.computeMissingItemsAndNextNotificationDate(existingUsage);
 
@@ -139,7 +139,7 @@ public class SubscriptionUsageInArrear {
     }
 
     @VisibleForTesting
-    List<ContiguousIntervalUsageInArrear> computeInArrearUsageInterval() throws CatalogApiException, InvoiceApiException {
+    List<ContiguousIntervalUsageInArrear> computeInArrearUsageInterval(final boolean isDryRun) throws CatalogApiException, InvoiceApiException {
         final List<ContiguousIntervalUsageInArrear> usageIntervals = Lists.newLinkedList();
 
         final Map<UsageKey, ContiguousIntervalUsageInArrear> inFlightInArrearUsageIntervals = new HashMap<UsageKey, ContiguousIntervalUsageInArrear>();
@@ -168,8 +168,8 @@ public class SubscriptionUsageInArrear {
                 ContiguousIntervalUsageInArrear existingInterval = inFlightInArrearUsageIntervals.get(usageKey);
                 if (existingInterval == null) {
                     existingInterval = usage.getUsageType() == UsageType.CAPACITY ?
-                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext) :
-                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, internalTenantContext);
+                                       new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, isDryRun, internalTenantContext) :
+                                       new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawSubscriptionUsage, existingTrackingIds, targetDate, rawUsageStartDate, usageDetailMode, invoiceConfig, isDryRun, internalTenantContext);
 
                     inFlightInArrearUsageIntervals.put(usageKey, existingInterval);
                 }

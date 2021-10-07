@@ -109,7 +109,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected ContiguousIntervalCapacityUsageInArrear createContiguousIntervalCapacityInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
-        final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, new LocalDate(events[0].getEffectiveDate()), detailMode, invoiceConfig, internalCallContext);
+        final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = new ContiguousIntervalCapacityUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, new LocalDate(events[0].getEffectiveDate()), detailMode, invoiceConfig, false, internalCallContext);
         for (final BillingEvent event : events) {
             intervalCapacityInArrear.addBillingEvent(event);
             intervalCapacityInArrear.addAllSeenUnitTypesForBillingEvent(event, intervalCapacityInArrear.getUnitTypes());
@@ -123,7 +123,7 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     }
 
     protected ContiguousIntervalConsumableUsageInArrear createContiguousIntervalConsumableInArrear(final DefaultUsage usage, final List<RawUsageRecord> rawUsages, final LocalDate targetDate, final boolean closedInterval, UsageDetailMode detailMode, final BillingEvent... events) {
-        final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, new LocalDate(events[0].getEffectiveDate()), detailMode, invoiceConfig, internalCallContext);
+        final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsages, EMPTY_EXISTING_TRACKING_IDS, targetDate, new LocalDate(events[0].getEffectiveDate()), detailMode, invoiceConfig, false, internalCallContext);
         for (final BillingEvent event : events) {
             intervalConsumableInArrear.addBillingEvent(event);
             intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event, intervalConsumableInArrear.getUnitTypes());
