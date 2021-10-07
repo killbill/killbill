@@ -28,6 +28,7 @@ import org.awaitility.Durations;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.RequestOptions;
+import org.killbill.billing.client.model.TenantKeyValues;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.ComboPaymentTransaction;
 import org.killbill.billing.client.model.gen.Payment;
@@ -35,7 +36,6 @@ import org.killbill.billing.client.model.gen.PaymentMethod;
 import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.gen.PaymentTransaction;
 import org.killbill.billing.client.model.gen.PluginProperty;
-import org.killbill.billing.client.model.gen.Tenant;
 import org.killbill.billing.client.model.gen.TenantKeyValue;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -45,6 +45,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+
+import static org.testng.Assert.assertEquals;
 
 public class TestTenantKV extends TestJaxrsBase {
 
@@ -56,16 +58,16 @@ public class TestTenantKV extends TestJaxrsBase {
         final String pluginConfig = getResourceBodyString("org/killbill/billing/server/plugin.yml");
         final TenantKeyValue tenantKey0 = tenantApi.uploadPluginConfiguration(pluginName, pluginConfig, requestOptions);
         callbackServlet.assertListenerStatus();
-        Assert.assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_CONFIG_.toString() + pluginName);
+        assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_CONFIG_ + pluginName);
 
         final TenantKeyValue tenantKey1 = tenantApi.getPluginConfiguration(pluginName, requestOptions);
-        Assert.assertEquals(tenantKey1.getKey(), TenantKV.TenantKey.PLUGIN_CONFIG_.toString() + pluginName);
-        Assert.assertEquals(tenantKey1.getValues().size(), 1);
+        assertEquals(tenantKey1.getKey(), TenantKV.TenantKey.PLUGIN_CONFIG_ + pluginName);
+        assertEquals(tenantKey1.getValues().size(), 1);
 
         tenantApi.deletePluginConfiguration(pluginName, requestOptions);
         final TenantKeyValue tenantKey2 = tenantApi.getPluginConfiguration(pluginName, requestOptions);
-        Assert.assertEquals(tenantKey2.getKey(), TenantKV.TenantKey.PLUGIN_CONFIG_.toString() + pluginName);
-        Assert.assertEquals(tenantKey2.getValues().size(), 0);
+        assertEquals(tenantKey2.getKey(), TenantKV.TenantKey.PLUGIN_CONFIG_ + pluginName);
+        assertEquals(tenantKey2.getValues().size(), 0);
     }
 
     @Test(groups = "slow", description = "Upload and retrieve a per plugin payment state machine config")
@@ -73,26 +75,26 @@ public class TestTenantKV extends TestJaxrsBase {
         final RequestOptions requestOptionsForOriginalTenant = requestOptions;
 
         // Create another tenant - it will have a different state machine
-        final Tenant otherTenantWithDifferentStateMachine = createTenant(UUID.randomUUID().toString(), UUID.randomUUID().toString(), true);
+        createTenant(UUID.randomUUID().toString(), UUID.randomUUID().toString(), true);
 
         // Verify initial state
         final TenantKeyValue emptyTenantKey = tenantApi.getPluginPaymentStateMachineConfig(PLUGIN_NAME, requestOptionsForOriginalTenant);
-        Assert.assertEquals(emptyTenantKey.getValues().size(), 0);
+        assertEquals(emptyTenantKey.getValues().size(), 0);
         final TenantKeyValue emptyTenantKeyOtherTenant = tenantApi.getPluginPaymentStateMachineConfig(PLUGIN_NAME, requestOptions);
-        Assert.assertEquals(emptyTenantKeyOtherTenant.getValues().size(), 0);
+        assertEquals(emptyTenantKeyOtherTenant.getValues().size(), 0);
 
         callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
         final String stateMachineConfig = getResourceBodyString("org/killbill/billing/server/SimplePaymentStates.xml");
         final TenantKeyValue tenantKey0 = tenantApi.uploadPluginPaymentStateMachineConfig(PLUGIN_NAME, stateMachineConfig, requestOptions);
         callbackServlet.assertListenerStatus();
-        Assert.assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_.toString() + PLUGIN_NAME);
+        assertEquals(tenantKey0.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_ + PLUGIN_NAME);
 
         // Verify only the other tenant has the new state machine
         final TenantKeyValue emptyTenantKey1 = tenantApi.getPluginPaymentStateMachineConfig(PLUGIN_NAME, requestOptionsForOriginalTenant);
-        Assert.assertEquals(emptyTenantKey1.getValues().size(), 0);
+        assertEquals(emptyTenantKey1.getValues().size(), 0);
         final TenantKeyValue tenantKey1OtherTenant = tenantApi.getPluginPaymentStateMachineConfig(PLUGIN_NAME, requestOptions);
-        Assert.assertEquals(tenantKey1OtherTenant.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_.toString() + PLUGIN_NAME);
-        Assert.assertEquals(tenantKey1OtherTenant.getValues().size(), 1);
+        assertEquals(tenantKey1OtherTenant.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_ + PLUGIN_NAME);
+        assertEquals(tenantKey1OtherTenant.getValues().size(), 1);
 
         // Create an auth in both tenant
         final Payment payment = createComboPaymentTransaction(requestOptionsForOriginalTenant);
@@ -103,15 +105,15 @@ public class TestTenantKV extends TestJaxrsBase {
         paymentApi.voidPayment(payment.getPaymentId(), new PaymentTransaction(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptionsForOriginalTenant);
         callbackServlet.assertListenerStatus();
         final Payment voidPayment = paymentApi.getPayment(payment.getPaymentId(), NULL_PLUGIN_PROPERTIES, requestOptionsForOriginalTenant);
-        Assert.assertEquals(voidPayment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
-        Assert.assertEquals(voidPayment.getTransactions().get(1).getStatus(), TransactionStatus.SUCCESS);
+        assertEquals(voidPayment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
+        assertEquals(voidPayment.getTransactions().get(1).getStatus(), TransactionStatus.SUCCESS);
 
         // Void in the other tenant (disallowed)
         try {
             paymentApi.voidPayment(paymentOtherTenant.getPaymentId(), new PaymentTransaction(), NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
             Assert.fail();
         } catch (final KillBillClientException e) {
-            Assert.assertEquals((int) e.getBillingException().getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
+            assertEquals((int) e.getBillingException().getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
         }
         callbackServlet.assertListenerStatus();
 
@@ -120,8 +122,8 @@ public class TestTenantKV extends TestJaxrsBase {
         tenantApi.deletePluginPaymentStateMachineConfig(PLUGIN_NAME, requestOptions);
         final TenantKeyValue tenantKey2 = tenantApi.getPluginPaymentStateMachineConfig(PLUGIN_NAME, requestOptions);
         callbackServlet.assertListenerStatus();
-        Assert.assertEquals(tenantKey2.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_.toString() + PLUGIN_NAME);
-        Assert.assertEquals(tenantKey2.getValues().size(), 0);
+        assertEquals(tenantKey2.getKey(), TenantKV.TenantKey.PLUGIN_PAYMENT_STATE_MACHINE_ + PLUGIN_NAME);
+        assertEquals(tenantKey2.getValues().size(), 0);
 
         final AtomicReference<Payment> voidPaymentOtherTenant2Ref = new AtomicReference<Payment>();
         Awaitility.await()
@@ -129,7 +131,7 @@ public class TestTenantKV extends TestJaxrsBase {
                   .pollInterval(Durations.TWO_SECONDS)
                   .until(new Callable<Boolean>() {
                       @Override
-                      public Boolean call() throws Exception {
+                      public Boolean call() {
                           // The void should now go through
                           try {
                               callbackServlet.pushExpectedEvent(ExtBusEventType.PAYMENT_SUCCESS);
@@ -144,8 +146,30 @@ public class TestTenantKV extends TestJaxrsBase {
                           }
                       }
                   });
-        Assert.assertEquals(voidPaymentOtherTenant2Ref.get().getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
-        Assert.assertEquals(voidPaymentOtherTenant2Ref.get().getTransactions().get(1).getStatus(), TransactionStatus.SUCCESS);
+        assertEquals(voidPaymentOtherTenant2Ref.get().getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
+        assertEquals(voidPaymentOtherTenant2Ref.get().getTransactions().get(1).getStatus(), TransactionStatus.SUCCESS);
+    }
+
+    @Test(groups = "slow", description = "Retrieve per tenant keys and values based on a key prefix")
+    public void testAllPluginConfig() throws Exception {
+        final String keyPrefix = "dummy_tenant";
+
+        final String tenant1KeyName = "dummy_tenant_1_key";
+        final String tenant1Value = "dummy_tenant_1_value";
+        final TenantKeyValue tenant1Config = tenantApi.insertUserKeyValue(tenant1KeyName, tenant1Value, requestOptions);
+
+        final String tenant2KeyName = "dummy_tenant_2_key";
+        final String tenant2Value = "dummy_tenant_2_value";
+        final TenantKeyValue tenant2Config = tenantApi.insertUserKeyValue(tenant2KeyName, tenant2Value, requestOptions);
+
+        final TenantKeyValues tenantKeyValues = tenantApi.getAllPluginConfiguration(keyPrefix, requestOptions);
+
+        Assert.assertFalse(tenantKeyValues.isEmpty());
+        Assert.assertSame(tenantKeyValues.size(), 2);
+        assertEquals(tenantKeyValues.get(0).getKey(), tenant1Config.getKey());
+        assertEquals(tenantKeyValues.get(0).getValues(), tenant1Config.getValues());
+        assertEquals(tenantKeyValues.get(1).getKey(), tenant2Config.getKey());
+        assertEquals(tenantKeyValues.get(1).getValues(), tenant2Config.getValues());
     }
 
     private Payment createComboPaymentTransaction(final RequestOptions requestOptions) throws KillBillClientException {
@@ -170,7 +194,7 @@ public class TestTenantKV extends TestJaxrsBase {
         final ComboPaymentTransaction comboAuthorization = new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of(), null);
         final Payment payment = paymentApi.createComboPayment(comboAuthorization, NULL_PLUGIN_NAMES, requestOptions);
         callbackServlet.assertListenerStatus();
-        Assert.assertEquals(payment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
+        assertEquals(payment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);
 
         return payment;
     }
