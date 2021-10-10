@@ -186,9 +186,27 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         if (fixed != null) {
             fixed.validate(catalog, errors);
         }
+
+        // FIXEDTERM CHECK
+        if (fixed != null){
+            if (duration.getUnit() == TimeUnit.UNLIMITED){
+                throw new IllegalStateException("FIXED category can't have UNLIMITED time unit");
+            }
+        }
+
+
         if (recurring != null) {
             recurring.validate(catalog, errors);
         }
+
+        // EVERGREEN CHECK
+        if (recurring != null){
+            if (duration.getUnit() != TimeUnit.UNLIMITED){
+                throw new IllegalStateException("RECURRING category must have UNLIMITED time unit");
+            }
+        }
+
+
         duration.validate(catalog, errors);
 
         validateCollection(catalog, errors, usages);
