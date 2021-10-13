@@ -100,8 +100,8 @@
             <artifactId>killbill-plugin-api-currency</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.skife.config</groupId>
-            <artifactId>config-magic</artifactId>
+            <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-config-magic</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

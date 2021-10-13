@@ -152,6 +152,10 @@
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-config-magic</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-metrics</artifactId>
         </dependency>
         <dependency>
@@ -172,10 +176,6 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.skife.config</groupId>
-            <artifactId>config-magic</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
