@@ -17,9 +17,10 @@
 
 package org.killbill.billing.catalog.dao;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -27,26 +28,15 @@ import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.catalog.CatalogTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
-import org.killbill.billing.catalog.DefaultTierPriceOverride;
-import org.killbill.billing.catalog.DefaultTieredBlockPriceOverride;
-import org.killbill.billing.catalog.DefaultUsagePriceOverride;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.TierPriceOverride;
-import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
-import org.killbill.billing.catalog.api.UsagePriceOverride;
-import org.killbill.billing.catalog.api.UsageType;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 public class TestCatalogUserApi extends CatalogTestSuiteWithEmbeddedDB {
 
@@ -57,20 +47,12 @@ public class TestCatalogUserApi extends CatalogTestSuiteWithEmbeddedDB {
 	protected MutableCallContext callContext;
     
 	@Test(groups = "slow")
-    public void testOverrideUploadCatalog() throws Exception {
+    	public void testOverrideUploadCatalog() throws Exception {
 
         final StandaloneCatalog catalog = getCatalog("SpyCarBasic.xml");
         
         catalogUserApi.uploadCatalog(Resources.asCharSource(Resources.getResource("org/killbill/billing/catalog/SpyCarBasic.xml"), Charsets.UTF_8).read(), callContext);
         
-        final Plan plan = catalog.findPlan("standard-monthly");
-
-        final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
-        resolvedOverrides[0] = null;
-        resolvedOverrides[1] = new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), Currency.USD, null, new BigDecimal("128.76"), null);
-        final CatalogOverridePlanDefinitionModelDao newPlan = catalogOverrideDao.getOrCreateOverridePlanDefinition(plan, new DateTime(catalog.getEffectiveDate()), resolvedOverrides, internalCallContext);
-        assertEquals(newPlan.getParentPlanName(), "standard-monthly");
-        assertTrue(newPlan.getIsActive());
     }
 
 
