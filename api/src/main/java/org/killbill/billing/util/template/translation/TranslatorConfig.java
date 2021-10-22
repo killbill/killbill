@@ -40,12 +40,12 @@ public interface TranslatorConfig {
 
     // Invoices
     @Config("org.killbill.template.bundlePath")
-    @Default("org/killbill/billing/util/template/translation/InvoiceTranslation")
+    @Default("org/killbill/billing/util/invoice/translation/InvoiceTranslation")
     @Description("Path to the invoice template translation bundle")
     public String getInvoiceTemplateBundlePath();
 
     @Config("org.killbill.template.name")
-    @Default("org/killbill/billing/util/email/templates/HtmlInvoiceTemplate.mustache")
+    @Default("org/killbill/billing/util/invoice/templates/HtmlInvoiceTemplate.mustache")
     @Description("Path to the HTML invoice template")
     String getTemplateName();
 
