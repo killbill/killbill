@@ -45,7 +45,7 @@ public class TestCatalogValidation extends TestIntegrationBase {
         super.beforeMethod();
 
         // Setup tenant
-        clock.setTime(new DateTime("2020-09-20T12:56:02"));
+        clock.setTime(new DateTime("2021-10-24T12:56:02"));
         testCallContext = setupTenant();
 
         // Setup account in right tenant
