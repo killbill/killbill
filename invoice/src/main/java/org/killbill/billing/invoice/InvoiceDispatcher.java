@@ -494,7 +494,7 @@ public class InvoiceDispatcher {
             if (prev != null && prev.compareTo(cur) == 0) {
                 continue;
             }
-            if (cur.compareTo(targetDate) >= 0) {
+            if (cur.compareTo(targetDate) > 0) {
                 break;
             }
 
@@ -526,12 +526,17 @@ public class InvoiceDispatcher {
             prev = cur;
         }
 
-        pluginProperties = new LinkedList<PluginProperty>();
-        pluginProperties.add(new PluginProperty(DRY_RUN_CUR_DATE_PROP, targetDate, false));
-        pluginProperties.add(new PluginProperty(DRY_RUN_TARGET_DATE_PROP, targetDate, false));
-        final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, accountInvoices, dryRunInfo, false, pluginProperties, context);
-        final Invoice targetInvoice = invoiceWithFutureNotifications != null ? invoiceWithFutureNotifications.getInvoice() : null;
-        return targetInvoice != null ? targetInvoice : additionalInvoice;
+        final boolean isTargetDateAlignedOnLastTransition = prev != null && prev.compareTo(targetDate) == 0;
+        if (isTargetDateAlignedOnLastTransition) {
+            return additionalInvoice;
+        } else { /* The provided targetDate does not coincide with any transition, so we try it and return what we find if there is anything or default to previous transition  */
+            pluginProperties = new LinkedList<PluginProperty>();
+            pluginProperties.add(new PluginProperty(DRY_RUN_CUR_DATE_PROP, targetDate, false));
+            pluginProperties.add(new PluginProperty(DRY_RUN_TARGET_DATE_PROP, targetDate, false));
+            final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, targetDate, billingEvents, accountInvoices, dryRunInfo, false, pluginProperties, context);
+            final Invoice targetInvoice = invoiceWithFutureNotifications != null ? invoiceWithFutureNotifications.getInvoice() : null;
+            return targetInvoice != null ? targetInvoice : additionalInvoice;
+        }
     }
 
     private void parkAccount(final UUID accountId, final InternalCallContext context) {
