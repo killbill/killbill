@@ -29,11 +29,13 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogUpdater;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
-import org.killbill.billing.catalog.api.InvalidConfigException;
+import org.killbill.billing.catalog.api.Plan;
+import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
@@ -45,6 +47,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
+import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
@@ -104,9 +107,10 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             // Validation purpose:  Will throw if bad XML or catalog validation fails
             final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
             final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
+            
+            boolean isAddCatalog = true;
 
             if (versionedCatalog != null) {
-
                 final StaticCatalog lastVersion = versionedCatalog.getCurrentVersion();
                 // lastVersion could be null if tenant was created with a default catalog (yack)
                 if (lastVersion != null && lastVersion.getCatalogName() != null && !newCatalogVersion.getCatalogName().equals(lastVersion.getCatalogName())) {
@@ -132,10 +136,33 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
                         throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
                     }
                 }
+                // Fix for https://github.com/killbill/killbill/issues/1481
+                for (StaticCatalog c : versionedCatalog.getVersions()) {
+					for (final Plan plan : ((StandaloneCatalog) c).getPlans()) {
+						if (plan != null) {
+							for (int k = 0; k < plan.getAllPhases().length; k++) {
+							    final Plan curPlan = ((StandaloneCatalog) newCatalogVersion).getPlansMap().findByName(plan.getName());
+							    final PlanPhase cur = curPlan.getAllPhases()[k];
+								final PlanPhase target = plan.getAllPhases()[k];
+								if (newCatalogVersion.getCatalogName().equals(c.getCatalogName())
+										 && cur != null && !cur.getName().equals(target.getName())) {
+									isAddCatalog = false;
+									final ValidationErrors errors = new ValidationErrors();
+									errors.add(new ValidationError(String.format("Phase '%s'for plan '%s' in version '%s' does not exist in version '%s'",
+                                            cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate(), plan.getCatalog().getEffectiveDate()),
+											DefaultVersionedCatalog.class, ""));
+			                        logger.info("Failed to load new catalog version: " + errors.toString());
+			                        throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+								}
+							}
+						}
+					}
+				}
             }
-
-            tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogXML, callContext);
-            catalogCache.clearCatalog(internalTenantContext);
+            if(isAddCatalog) {
+				tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogXML, callContext);
+	            catalogCache.clearCatalog(internalTenantContext);
+            }
         } catch (final TenantApiException e) {
             throw new CatalogApiException(e);
         } catch (final ValidationException e) {
