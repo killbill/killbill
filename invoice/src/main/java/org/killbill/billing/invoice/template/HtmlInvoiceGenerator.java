@@ -72,7 +72,7 @@ public class HtmlInvoiceGenerator {
 
     public HtmlInvoice generateInvoice(final Account account, @Nullable final Invoice invoice, final boolean manualPay, final InternalTenantContext context) throws IOException {
         // Don't do anything if the invoice is null
-        if (invoice == null) {
+        if (invoice == null || invoice.getNumberOfItems() == 0) {
             return null;
         }
 
