@@ -174,19 +174,16 @@ public class ItemsInterval {
     private Item getResulting_ADD_Item() {
         //
         // At this point we pruned the items so that we can have either:
-        // - 2 items (ADD + CANCEL, where CANCEL does NOT point to ADD item -- otherwise this is a cancelling pair that
-        //            would have been removed in mergeCancellingPairs logic)
+        // - 2 items (ADD + CANCEL)
         // - 1 ADD item, simple enough we return it
         // - 1 CANCEL, there is nothing to return but the period will be ignored by the parent
-        // - Nothing at all; this valid, this just means its original items got removed during mergeCancellingPairs logic,
-        //   but its NodeInterval has children so it could not be deleted.
         //
         Preconditions.checkState(items.size() <= 2, "Double billing detected: %s", items);
 
         final Collection<Item> addItems = findItems(ItemAction.ADD);
         Preconditions.checkState(addItems.size() <= 1, "Double billing detected: %s", items);
 
-        final Item item = findItem(ItemAction.ADD);
+        Item item = findItem(ItemAction.ADD);
 
         // Double billing sanity check across nodes
         if (item != null) {
@@ -194,7 +191,12 @@ public class ItemsInterval {
             final Item cancelItem = findItem(ItemAction.CANCEL);
             if (cancelItem != null) {
                 Preconditions.checkState(cancelItem.getLinkedId() != null, "Invalid CANCEL item=%s", cancelItem);
-                addItemsCancelled.add(cancelItem.getLinkedId());
+                if (cancelItem.getLinkedId().equals(item.getId())) {
+                    // Cancelling pair, we don't return anything
+                    item = null;
+                } else {
+                    addItemsCancelled.add(cancelItem.getLinkedId());
+                }
             }
             final Set<UUID> addItemsToBeCancelled = new HashSet<UUID>();
             checkDoubleBilling(addItemsCancelled, addItemsToBeCancelled);

@@ -43,17 +43,21 @@ import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.tc.util.Assert;
+import com.google.common.collect.Iterables;
 
 import static com.tc.util.Assert.fail;
+import static org.killbill.billing.ErrorCode.INVOICE_NOTHING_TO_DO;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -104,6 +108,62 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
     //
     // Basic test with one subscription that verifies the behavior of using invoice dryRun api with no date
     //
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1505")
+    public void testForIssue_1505() throws Exception {
+        clock.setTime(new DateTime("2021-09-20T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(10));
+        assertNotNull(account);
+
+        // Start subscription in the past on 2021-08-10
+        final LocalDate billingStartDate = new LocalDate(2021, 8, 10);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", billingStartDate, billingStartDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        assertListenerStatus();
+
+        final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2021, 8, 10), new LocalDate(2021, 9, 10), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        final Invoice secondInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 9, 10), new LocalDate(2021, 10, 10), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        final InvoiceItem recurringItem = Iterables.tryFind(secondInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem input) {
+                return input.getInvoiceItemType() == InvoiceItemType.RECURRING;
+            }
+        }).orNull();
+        Assert.assertNotNull(recurringItem);
+
+        // Full item adjustment for the RECURRING from second invoice
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), secondInvoice.getId(), recurringItem.getId(), clock.getUTCToday(), "", "", null, callContext);
+        assertListenerStatus();
+
+        // Cancel Subscription on 2021-09-20
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
+        bp.cancelEntitlementWithDate(new LocalDate(2021, 9, 10), true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // We see a third Invoice generated with a $0 REPAIR_ADJ item
+        final Invoice thirdInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                                 new ExpectedInvoiceItemCheck(new LocalDate(2021, 9, 10), new LocalDate(2021, 10, 10), InvoiceItemType.REPAIR_ADJ, BigDecimal.ZERO));
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            Assert.fail("Should not generate an invoice");
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
+        } finally {
+            assertListenerStatus();
+        }
+    }
+
     @Test(groups = "slow")
     public void testDryRunWithNoTargetDate() throws Exception {
         final int billingDay = 14;
@@ -310,7 +370,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
             invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate.minusDays(1), dryRunSubscriptionActionArg, callContext);
             fail("Should fail to trigger dryRun invoice prior subscription starts");
         } catch (final InvoiceApiException e) {
-            assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
+            assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
         }
 
         // Second, on the startDate
@@ -430,7 +490,6 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 3, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
-
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 4, 1), new LocalDate(2014, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 4, 1), DRY_RUN_TARGET_DATE_ARG, callContext);
@@ -662,8 +721,6 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 25), new LocalDate(2017, 12, 25), InvoiceItemType.CBA_ADJ, new BigDecimal("-56.44")));
 
     }
-
-
 
     @Test(groups = "slow", description = "See https://github.com/killbill/killbill/issues/1313")
     public void testDryRunTargetDatesWith_AUTO_INVOICING_REUSE_DRAFT() throws Exception {
