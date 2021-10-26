@@ -185,9 +185,8 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
         for (int i = 0; i < plan.getAllPhases().length; i++) {
             final PlanPhase cur = plan.getAllPhases()[i];
             final PlanPhase target = targetPlan.getAllPhases()[i];
-          //  if (!cur.getName().equals(target.getName())) {
-             if (plan.getCatalog().getEffectiveDate()!=targetPlan.getCatalog().getEffectiveDate() && !cur.getName().equals(target.getName())) {
-                errors.add(new ValidationError(String.format("Phase '%s'for plan '%s' in version '%s' does not exist in version '%s'",
+            if (!cur.getName().equals(target.getName())) {
+               errors.add(new ValidationError(String.format("Phase '%s'for plan '%s' in version '%s' does not exist in version '%s'",
                                                              cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
                                                DefaultVersionedCatalog.class, ""));
             }
