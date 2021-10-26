@@ -73,9 +73,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
     public void testGenerateEmptyInvoice() throws Exception {
         final Invoice invoice = Mockito.mock(Invoice.class);
         final HtmlInvoice output = g.generateInvoice(createAccount(), invoice, false, internalCallContext);
-        Assert.assertNotNull(output);
-        Assert.assertNotNull(output.getBody());
-        Assert.assertEquals(output.getSubject(), "Your invoice");
+        Assert.assertNull(output);
     }
 
     @Test(groups = "fast")
@@ -120,7 +118,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
         items.add(createInvoiceItem(price1, "Domain 1", startDate, endDate, "ning-plus"));
         items.add(createInvoiceItem(price2, "Domain 2", startDate, endDate, "ning-pro"));
         Mockito.when(dummyInvoice.getInvoiceItems()).thenReturn(items);
-
+        Mockito.when(dummyInvoice.getNumberOfItems()).thenReturn(2);
         return dummyInvoice;
     }
 
@@ -132,6 +130,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
         Mockito.when(item.getEndDate()).thenReturn(endDate);
         Mockito.when(item.getPlanName()).thenReturn(planName);
         Mockito.when(item.getDescription()).thenReturn(networkName);
+        Mockito.when(item.getCurrency()).thenReturn(Currency.USD);
 
         return item;
     }
