@@ -60,7 +60,6 @@ public class TestCatalogValidation extends TestIntegrationBase {
         assertListenerStatus();
         
         final VersionedCatalog catalog = catalogUserApi.getCatalog("ExampleCatalog", testCallContext);
-        catalog.getCatalogName();
         Assert.assertEquals(catalog.getCatalogName(), "ExampleCatalog");
     }
     
