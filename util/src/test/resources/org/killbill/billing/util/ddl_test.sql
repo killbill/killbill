@@ -65,12 +65,13 @@ CREATE TABLE bundles (
     tenant_record_id bigint /*! unsigned */ not null default 0,
     PRIMARY KEY(record_id)
 ) /*! CHARACTER SET utf8 COLLATE utf8_bin */;
-
+CREATE UNIQUE INDEX bundles_external_key ON bundles(external_key, tenant_record_id);
 DROP TABLE IF EXISTS subscriptions;
 CREATE TABLE subscriptions (
     record_id serial unique,
     id varchar(36) NOT NULL,
     bundle_id varchar(36) NOT NULL,
+    external_key varchar(255) NOT NULL,
     category varchar(32) NOT NULL,
     start_date datetime NOT NULL,
     bundle_start_date datetime NOT NULL,
