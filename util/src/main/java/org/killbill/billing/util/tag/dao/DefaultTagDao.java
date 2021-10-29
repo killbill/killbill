@@ -18,6 +18,7 @@
 
 package org.killbill.billing.util.tag.dao;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -234,18 +235,25 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
                 final TagDefinitionModelDao tagDefinition = getTagDefinitionFromTransaction(tagDefinitionId, entitySqlDaoWrapperFactory, context);
                 final TagSqlDao transactional = entitySqlDaoWrapperFactory.become(TagSqlDao.class);
                 final List<TagModelDao> tags = transactional.getTagsForObject(objectId, objectType, context);
-                TagModelDao tag = null;
+                final List<TagModelDao> toBeDeleted = new ArrayList<>();
                 for (final TagModelDao cur : tags) {
-                    if (cur.getTagDefinitionId().equals(tagDefinitionId)) {
-                        tag = cur;
-                        break;
+                    if (cur.getTagDefinitionId().equals(tagDefinitionId) && cur.getIsActive()) {
+                        toBeDeleted.add(cur);
                     }
                 }
-                if (tag == null) {
+                if (toBeDeleted.size() == 0) {
                     throw new TagApiException(ErrorCode.TAG_DOES_NOT_EXIST, tagDefinition.getName());
                 }
-                // Delete the tag
-                transactional.markTagAsDeleted(tag.getId().toString(), context);
+
+                // Delete the tags - normal case we should have only 1, but to harden the code, we remove all
+                // and keep a reference on the first one for the event.
+                TagModelDao tag = null;
+                for (final TagModelDao cur : toBeDeleted) {
+                    if (tag == null) {
+                        tag = cur;
+                    }
+                    transactional.markTagAsDeleted(cur.getId().toString(), context);
+                }
 
                 postBusEventFromTransaction(tag, tag, ChangeType.DELETE, entitySqlDaoWrapperFactory, context);
                 return null;
