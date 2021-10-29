@@ -17,9 +17,12 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import static org.testng.Assert.assertEquals;
+
 import java.io.IOException;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.VersionedCatalog;
@@ -56,11 +59,12 @@ public class TestCatalogValidation extends TestIntegrationBase {
     public void testUploadCatalog() throws Exception {
         uploadCatalog("CatalogValidation-v1.xml");
         assertListenerStatus();
-        uploadCatalog("CatalogValidation-v2.xml");
-        assertListenerStatus();
-        
-        final VersionedCatalog catalog = catalogUserApi.getCatalog("ExampleCatalog", testCallContext);
-        Assert.assertEquals(catalog.getCatalogName(), "ExampleCatalog");
+		try {
+			uploadCatalog("CatalogValidation-v2.xml");
+			assertListenerStatus();
+		} catch (CatalogApiException cApiException) {
+			assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
+		}
     }
     
     private void uploadCatalog(final String name) throws CatalogApiException, IOException {
