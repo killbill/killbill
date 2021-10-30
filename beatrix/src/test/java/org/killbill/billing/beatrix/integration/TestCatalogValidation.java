@@ -59,7 +59,7 @@ public class TestCatalogValidation extends TestIntegrationBase {
     public void testUploadCatalog() throws Exception {
         uploadCatalog("CatalogValidation-v1.xml");
         assertListenerStatus();
-		try {
+	    try {
 			uploadCatalog("CatalogValidation-v2.xml");
 			assertListenerStatus();
 		} catch (CatalogApiException cApiException) {
