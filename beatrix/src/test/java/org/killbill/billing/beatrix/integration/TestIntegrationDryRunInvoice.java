@@ -20,10 +20,12 @@ package org.killbill.billing.beatrix.integration;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -51,6 +53,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import static com.tc.util.Assert.fail;
@@ -63,6 +66,45 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
     private static final DryRunArguments DRY_RUN_UPCOMING_INVOICE_ARG = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE);
     private static final DryRunArguments DRY_RUN_TARGET_DATE_ARG = new TestDryRunArguments(DryRunType.TARGET_DATE);
 
+
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1503")
+    public void testForIssue_1503() throws Exception {
+        clock.setTime(new DateTime("2021-04-01T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        assertNotNull(account);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        bp.cancelEntitlementWithDate(new LocalDate(2021, 6, 1), true, ImmutableList.<PluginProperty>of(), callContext);
+
+        // We see one recurring from 2021-5-1 -> 2021-6-1
+        final Invoice dryRunInvoice1 = invoiceUserApi.triggerDryRunInvoiceGeneration(bp.getAccountId(), new LocalDate(2021, 5, 1), DRY_RUN_TARGET_DATE_ARG, callContext);
+        invoiceChecker.checkInvoiceNoAudits(dryRunInvoice1, ImmutableList.of(new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95"))));
+
+        // From any date > 2021-5-1, we should see nothing
+        Set<LocalDate> nextDates = ImmutableSet.of(new LocalDate(2021, 6, 1), /* cancelation date */
+                                                   new LocalDate(2021, 6, 3),
+                                                   new LocalDate(2021, 7, 1));
+
+        for (LocalDate targetDate : nextDates) {
+            try {
+                invoiceUserApi.triggerDryRunInvoiceGeneration(bp.getAccountId(), targetDate, DRY_RUN_TARGET_DATE_ARG, callContext);
+                Assert.fail(String.format("Should not have received an invoice for date %s", targetDate));
+            } catch(final InvoiceApiException e) {
+                assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
+            }
+        }
+
+    }
     //
     // Basic test with one subscription that verifies the behavior of using invoice dryRun api with no date
     //
