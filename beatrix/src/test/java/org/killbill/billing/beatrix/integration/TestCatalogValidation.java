@@ -59,12 +59,12 @@ public class TestCatalogValidation extends TestIntegrationBase {
     public void testUploadCatalog() throws Exception {
         uploadCatalog("CatalogValidation-v1.xml");
         assertListenerStatus();
-	    try {
-			uploadCatalog("CatalogValidation-v2.xml");
-			assertListenerStatus();
-		} catch (CatalogApiException cApiException) {
-			assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
-		}
+        try {
+            uploadCatalog("CatalogValidation-v2.xml");
+    		assertListenerStatus();
+    	} catch (CatalogApiException cApiException) {
+    		assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
+    	}
     }
     
     private void uploadCatalog(final String name) throws CatalogApiException, IOException {
