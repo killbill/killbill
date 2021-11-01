@@ -61,6 +61,7 @@ public class TestCatalogValidation extends TestIntegrationBase {
         assertListenerStatus();
         try {
             uploadCatalog("CatalogValidation-v2.xml");
+            assertListenerStatus();
     	} catch (CatalogApiException cApiException) {
     		assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
     	}
