@@ -29,11 +29,11 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogUpdater;
+import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
-import org.killbill.billing.catalog.api.InvalidConfigException;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
@@ -105,32 +105,17 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
             final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
 
+            // Fix for https://github.com/killbill/killbill/issues/1481
             if (versionedCatalog != null) {
-
-                final StaticCatalog lastVersion = versionedCatalog.getCurrentVersion();
-                // lastVersion could be null if tenant was created with a default catalog (yack)
-                if (lastVersion != null && lastVersion.getCatalogName() != null && !newCatalogVersion.getCatalogName().equals(lastVersion.getCatalogName())) {
-                    final ValidationErrors errors = new ValidationErrors();
-                    errors.add(String.format("Catalog name '%s' should match previous catalog name '%s'", newCatalogVersion.getCatalogName(), lastVersion.getCatalogName()),
-                               StandaloneCatalog.class, "");
+                final ValidationErrors errors = new ValidationErrors();
+                ((DefaultVersionedCatalog)versionedCatalog).add((StandaloneCatalog)newCatalogVersion);
+                ((DefaultVersionedCatalog)versionedCatalog).validate(null, errors);
+                if (!errors.isEmpty()) {
                     // Bummer ValidationException CTOR is private to package...
                     //final ValidationException validationException = new ValidationException(errors);
                     //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
                     logger.info("Failed to load new catalog version: " + errors.toString());
                     throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-                }
-
-                for (StaticCatalog c : versionedCatalog.getVersions()) {
-                    if (c.getEffectiveDate().compareTo(newCatalogVersion.getEffectiveDate()) == 0) {
-                        final ValidationErrors errors = new ValidationErrors();
-                        errors.add(String.format("Catalog version for effectiveDate '%s' already exists", newCatalogVersion.getEffectiveDate()),
-                                   StandaloneCatalog.class, "");
-                        // Bummer ValidationException CTOR is private to package...
-                        //final ValidationException validationException = new ValidationException(errors);
-                        //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-                        logger.info("Failed to load new catalog version: " + errors.toString());
-                        throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-                    }
                 }
             }
 
