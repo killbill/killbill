@@ -83,8 +83,8 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         } else {
             internalTenantContext = createInternalTenantContext(tenantContext);
         }
-        final VersionedCatalog fullCatalog1 = catalogService.getFullCatalog(true, true, internalTenantContext);
-        return fullCatalog1;
+        final VersionedCatalog fullCatalog = catalogService.getFullCatalog(true, true, internalTenantContext);
+        return fullCatalog;
     }
 
     @Override
