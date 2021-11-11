@@ -35,6 +35,7 @@ import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.util.jackson.ObjectMapper;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -436,6 +437,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.build();
     }
 
+
     @Test(groups = "fast")
     public void testInvalidRepair() {
         final LocalDate startDate = new LocalDate(2014, 1, 1);
@@ -447,23 +449,22 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem tooEarlyRepair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate.minusDays(1), endDate, rate.negate(), currency, initial.getId());
         final InvoiceItem tooLateRepair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate.plusDays(1), rate.negate(), currency, initial.getId());
 
+        List<InvoiceItem> result;
         SubscriptionItemTree tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(initial);
         tree.addItem(tooEarlyRepair);
-        try {
-            tree.build();
-            fail();
-        } catch (final IllegalStateException e) {
-        }
+        tree.build();
+
+        result  = tree.getView();
+        Assert.assertEquals(result.size(), 0);
 
         tree = new SubscriptionItemTree(subscriptionId, invoiceId);
         tree.addItem(initial);
         tree.addItem(tooLateRepair);
-        try {
-            tree.build();
-            fail();
-        } catch (final IllegalStateException e) {
-        }
+        tree.build();
+        result  = tree.getView();
+        Assert.assertEquals(result.size(), 0);
+
     }
 
     @Test(groups = "fast")
