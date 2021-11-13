@@ -57,15 +57,15 @@ public class CatalogUpdater {
 
     public static String DEFAULT_CATALOG_NAME = "DEFAULT";
     
-    public static String INVALID_PLAN = "Plan doesn't exist or Plan is Invalid.";
+    public static String INVALID_PLAN = "Plan is invalid. Please check.";
     
-    public static String INVALID_PRODUCT_NAME = "Product Name doesnt exist. Please provide valid Product Name.";
+    public static String INVALID_PRODUCT_NAME = "Please provide valid product name.";
     
-    public static String INVALID_PRICE = "Please check Amount and Currency. Amount should be greater than 0 and currency should be valid.";
+    public static String INVALID_PRICE = "Please check amount and currency. Amount should be greater than 0 and currency should be valid.";
     
-    public static String BASE_PLAN_PRODUCTS_NOT_EMPTY = "Base Plan Products should not be empty.";
+    public static String BASE_PLAN_PRODUCTS_NOT_EMPTY = "List of available base products should not be empty for add-ons.";
     
-    public static String EXISTING_PRODUCTS_NOT_EMPTY = "Existing current product should not be empty.";
+    public static String EXISTING_PRODUCTS_NOT_EMPTY = "Available base products contain invalid product.Please check.";
             
 
     private final DefaultMutableStaticCatalog catalog;
