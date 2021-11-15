@@ -56,6 +56,17 @@ import com.google.common.collect.ImmutableList;
 public class CatalogUpdater {
 
     public static String DEFAULT_CATALOG_NAME = "DEFAULT";
+    
+    public static String INVALID_PLAN = "Plan is invalid. Please check.";
+    
+    public static String INVALID_PRODUCT_NAME = "Please provide valid product name.";
+    
+    public static String INVALID_PRICE = "Please check amount and currency. Amount should be greater than 0 and currency should be valid.";
+    
+    public static String BASE_PLAN_PRODUCTS_NOT_EMPTY = "List of available base products should not be empty for add-ons.";
+    
+    public static String EXISTING_PRODUCTS_NOT_EMPTY = "Available base products contain invalid product.Please check.";
+            
 
     private final DefaultMutableStaticCatalog catalog;
 
@@ -109,12 +120,12 @@ public class CatalogUpdater {
 
         // We need at least a planId
         if (desc == null || desc.getPlanId() == null) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR , INVALID_PLAN);
         }
 
         DefaultPlan plan = (DefaultPlan) getExistingPlan(desc.getPlanId());
         if (plan == null && desc.getProductName() == null) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, INVALID_PRODUCT_NAME);
         }
 
         validateNewPlanDescriptor(desc);
@@ -287,16 +298,16 @@ public class CatalogUpdater {
         final boolean invalidPrice = (desc.getAmount() == null || desc.getAmount().compareTo(BigDecimal.ZERO) < 0) ||
                                      desc.getCurrency() == null;
         if (invalidPlan || invalidPrice) {
-            throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+            throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR,  INVALID_PRICE);
         }
 
         if (desc.getProductCategory() == ProductCategory.ADD_ON) {
             if (desc.getAvailableBaseProducts() == null || desc.getAvailableBaseProducts().isEmpty()) {
-                throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+                throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR,  BASE_PLAN_PRODUCTS_NOT_EMPTY);
             }
             for (final String cur : desc.getAvailableBaseProducts()) {
                 if (getExistingProduct(cur) == null) {
-                    throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, desc);
+                    throw new CatalogApiException(ErrorCode.CAT_INVALID_SIMPLE_PLAN_DESCRIPTOR, EXISTING_PRODUCTS_NOT_EMPTY);
                 }
             }
         }
