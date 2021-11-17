@@ -169,6 +169,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return transitions.get(0).getEffectiveTransitionTime();
     }
 
+    
     @Override
     public EntitlementState getState() {
 
@@ -178,11 +179,16 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
 
         final SubscriptionBaseTransition pendingTransition = getPendingTransition();
-        if (pendingTransition != null) {
-            return EntitlementState.PENDING;
+        if (pendingTransition != null && pendingTransition.getEffectiveTransitionTime().isAfter(clock.getUTCNow())) {
+        		return EntitlementState.PENDING;
         }
+        else if(pendingTransition.getEffectiveTransitionTime().isBefore(clock.getUTCNow()) && isFutureCancelled()){
+        	return EntitlementState.CANCELLED;
+        }
+        
         throw new IllegalStateException("Should return a valid EntitlementState");
     }
+
 
     @Override
     public EntitlementSourceType getSourceType() {
