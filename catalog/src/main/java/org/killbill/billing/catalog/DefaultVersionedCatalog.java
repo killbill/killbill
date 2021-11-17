@@ -38,16 +38,16 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
-
-import com.google.common.base.Preconditions;
 
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -196,13 +196,13 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
     }
     
     private void validatePlanDuration(final Plan plan, final PlanPhase cur, final ValidationErrors errors) {
-        if(cur.getPhaseType().name().equals(PhaseType.EVERGREEN.name()) && !cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
-            errors.add(new ValidationError(String.format("EVERGREEN Phase '%s'for plan '%s' in version '%s'  must have duration as UNLIMITED'",
+        if (cur.getPhaseType().name().equals(PhaseType.EVERGREEN.name()) && !cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
+            errors.add(new ValidationError(String.format("EVERGREEN Phase '%s' for plan '%s' in version '%s' must have duration as UNLIMITED'",
                     cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
                     DefaultVersionedCatalog.class, "")); 
         }
-        if(cur.getPhaseType().name().equals(PhaseType.FIXEDTERM.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
-            errors.add(new ValidationError(String.format("FIXEDTERM Phase '%s'for plan '%s' in version '%s'  must not have duration as UNLIMITED'",
+        if (cur.getPhaseType().name().equals(PhaseType.FIXEDTERM.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
+            errors.add(new ValidationError(String.format("FIXEDTERM Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
                     cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
                     DefaultVersionedCatalog.class, "")); 
         }
