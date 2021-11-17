@@ -190,6 +190,21 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                                                              cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
                                                DefaultVersionedCatalog.class, ""));
             }
+	    //Fix for https://github.com/killbill/killbill/issues/1465
+            validatePlanDuration(plan, cur, errors);
+        }
+    }
+    
+    private void validatePlanDuration(final Plan plan, final PlanPhase cur, final ValidationErrors errors) {
+        if(cur.getPhaseType().name().equals(PhaseType.EVERGREEN.name()) && !cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
+            errors.add(new ValidationError(String.format("EVERGREEN Phase '%s'for plan '%s' in version '%s'  must have duration as UNLIMITED'",
+                    cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
+                    DefaultVersionedCatalog.class, "")); 
+        }
+        if(cur.getPhaseType().name().equals(PhaseType.FIXEDTERM.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
+            errors.add(new ValidationError(String.format("FIXEDTERM Phase '%s'for plan '%s' in version '%s'  must not have duration as UNLIMITED'",
+                    cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
+                    DefaultVersionedCatalog.class, "")); 
         }
     }
 
