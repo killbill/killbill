@@ -66,23 +66,23 @@ public class TestCatalogValidation extends TestIntegrationBase {
     }
     
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1465")
-	public void testUploadCatalogPlanValidation() throws Exception {
-		try {
-			uploadCatalog("CatalogValidation-v2.xml");
-			assertListenerStatus();
-		} catch (CatalogApiException cApiException) {
-			assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
-		}
-
-		try {
-			uploadCatalog("CatalogValidation-v3.xml");
-			assertListenerStatus();
-		} catch (CatalogApiException cApiException) {
-			//assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
-			assertNotEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
-		}
-
+    public void testUploadCatalogPlanValidation() throws Exception {
+	try {
+	    uploadCatalog("CatalogValidation-v2.xml");
+	    assertListenerStatus();
+	} catch (CatalogApiException cApiException) {
+		assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
 	}
+
+	try {
+	    uploadCatalog("CatalogValidation-v3.xml");
+	    assertListenerStatus();
+	} catch (CatalogApiException cApiException) {
+		//assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
+		assertNotEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
+	}
+
+    }
     private void uploadCatalog(final String name) throws CatalogApiException, IOException {
         catalogUserApi.uploadCatalog(Resources.asCharSource(Resources.getResource("catalogs/testCatalogValidation/" + name), Charsets.UTF_8).read(), testCallContext);
     }
