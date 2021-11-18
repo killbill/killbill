@@ -206,6 +206,16 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                     cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
                     DefaultVersionedCatalog.class, "")); 
         }
+        if (cur.getPhaseType().name().equals(PhaseType.DISCOUNT.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
+            errors.add(new ValidationError(String.format("DISCOUNT Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
+                    cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
+                    DefaultVersionedCatalog.class, "")); 
+        }
+        if (cur.getPhaseType().name().equals(PhaseType.TRIAL.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
+            errors.add(new ValidationError(String.format("TRIAL Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
+                    cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
+                    DefaultVersionedCatalog.class, "")); 
+        }
     }
 
     @Override
