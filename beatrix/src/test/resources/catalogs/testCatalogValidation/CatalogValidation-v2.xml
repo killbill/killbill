@@ -45,7 +45,7 @@
             <product>Standard</product>
             <initialPhases>
             </initialPhases>
-            <finalPhase type="FIXEDTERM">
+            <finalPhase type="EVERGREEN">
                 <duration>
                     <unit>UNLIMITED</unit>
                 </duration>
