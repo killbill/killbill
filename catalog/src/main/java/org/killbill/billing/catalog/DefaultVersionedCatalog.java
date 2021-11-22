@@ -200,20 +200,9 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             errors.add(new ValidationError(String.format("EVERGREEN Phase '%s' for plan '%s' in version '%s' must have duration as UNLIMITED'",
                     cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
                     DefaultVersionedCatalog.class, "")); 
-        }
-        if (cur.getPhaseType().name().equals(PhaseType.FIXEDTERM.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
-            errors.add(new ValidationError(String.format("FIXEDTERM Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
-                    cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
-                    DefaultVersionedCatalog.class, "")); 
-        }
-        if (cur.getPhaseType().name().equals(PhaseType.DISCOUNT.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
-            errors.add(new ValidationError(String.format("DISCOUNT Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
-                    cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
-                    DefaultVersionedCatalog.class, "")); 
-        }
-        if (cur.getPhaseType().name().equals(PhaseType.TRIAL.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
-            errors.add(new ValidationError(String.format("TRIAL Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
-                    cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
+        } else if (!cur.getPhaseType().name().equals(PhaseType.EVERGREEN.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) { 
+        	errors.add(new ValidationError(String.format("'%s' Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
+        			cur.getPhaseType().name(), cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
                     DefaultVersionedCatalog.class, "")); 
         }
     }
