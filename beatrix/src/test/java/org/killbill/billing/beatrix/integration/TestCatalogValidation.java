@@ -67,19 +67,21 @@ public class TestCatalogValidation extends TestIntegrationBase {
     
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1465")
     public void testUploadCatalogPlanValidation() throws Exception {
+	/*
+	* This is the test case for #1465. CatalogValidation-v3.xml is added to the DB even if the validation fails for 1465. So to test this #1465 validation, 2nd catalog CatalogValidation-v4.xml needs to be updated and it validates those validations.
+	*/
 	try {
-	    uploadCatalog("CatalogValidation-v2.xml");
+	    uploadCatalog("CatalogValidation-v3.xml");
 	    assertListenerStatus();
 	} catch (CatalogApiException cApiException) {
 		assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
 	}
 
 	try {
-	    uploadCatalog("CatalogValidation-v3.xml");
+	    uploadCatalog("CatalogValidation-v4.xml");
 	    assertListenerStatus();
 	} catch (CatalogApiException cApiException) {
-		//assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
-		assertNotEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
+		assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
 	}
 
     }
