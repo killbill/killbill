@@ -17,7 +17,7 @@
   -->
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="https://docs.killbill.io/latest/catalog.xsd">
-    <effectiveDate>2021-10-26T00:00:00+00:00</effectiveDate>
+    <effectiveDate>2021-10-06T00:00:00+00:00</effectiveDate>
     <catalogName>ExampleCatalog</catalogName>
     <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
     <currencies>
@@ -47,7 +47,8 @@
             </initialPhases>
             <finalPhase type="EVERGREEN">
                 <duration>
-                    <unit>LIMITED</unit>
+                    <unit>DAYS</unit>
+		                <number>30</number>	
                 </duration>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
