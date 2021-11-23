@@ -509,17 +509,22 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription.getStartDate().compareTo(startDate.toDateTime(accountData.getReferenceTime())), 0);
 
         subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, callContext);
+        
+        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(subscription2.getStartDate().compareTo(subscription.getStartDate()), 0);
+        assertEquals(subscription2.getState(), Entitlement.EntitlementState.PENDING);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL);
         clock.addDays(5);
         assertListenerStatus();
 
-        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
-        assertEquals(subscription2.getStartDate().compareTo(subscription.getStartDate()), 0);
-        assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
-        assertNull(subscription2.getCurrentPlan());
+        final DefaultSubscriptionBase subscription3 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(subscription3.getStartDate().compareTo(subscription.getStartDate()), 0);
+        assertEquals(subscription3.getState(), Entitlement.EntitlementState.CANCELLED);
+        assertNull(subscription3.getCurrentPlan());
     }
-
+    
+  
 
     @Test(groups = "slow", description="See https://github.com/killbill/killbill/issues/1207")
     public void testDoubleFutureLaterCancellation() throws SubscriptionBaseApiException {

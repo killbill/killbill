@@ -184,6 +184,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         throw new IllegalStateException("Should return a valid EntitlementState");
     }
 
+
     @Override
     public EntitlementSourceType getSourceType() {
         if (transitions == null) {
