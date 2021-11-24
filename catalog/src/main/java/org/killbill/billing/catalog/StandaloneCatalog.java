@@ -41,6 +41,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Listing;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
@@ -50,10 +51,12 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
 import org.killbill.xmlloader.ValidatingConfig;
+import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
 @XmlRootElement(name = "catalog")
@@ -280,8 +283,32 @@ public class StandaloneCatalog extends ValidatingConfig<StandaloneCatalog> imple
         validateCollection(catalog, errors, (DefaultPlan[]) plans.toArray(new DefaultPlan[0]));
         priceLists.validate(catalog, errors);
         planRules.validate(catalog, errors);
+        
         return errors;
     }
+
+	public ValidationErrors validatePlanDuration(final StaticCatalog newCatalogVersion, final ValidationErrors errors)
+			throws CatalogApiException {
+		for (final Plan plan : newCatalogVersion.getPlans()) {
+			PlanPhase[] planPhases = plan.getAllPhases();
+			for (int i = 0; i < planPhases.length; i++) {
+				if (planPhases[i].getPhaseType().name().equals(PhaseType.EVERGREEN.name())
+						&& !planPhases[i].getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
+					errors.add(new ValidationError(String.format(
+							"EVERGREEN Phase '%s' for plan '%s' in version '%s' must have duration as UNLIMITED'",
+							planPhases[i].getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
+							DefaultVersionedCatalog.class, ""));
+				} else if (!planPhases[i].getPhaseType().name().equals(PhaseType.EVERGREEN.name())
+						&& planPhases[i].getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
+					errors.add(new ValidationError(String.format(
+							"'%s' Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
+							planPhases[i].getPhaseType().name(), planPhases[i].getName(), plan.getName(),
+							plan.getCatalog().getEffectiveDate()), DefaultVersionedCatalog.class, ""));
+				}
+			}
+		}
+		return errors;
+	}
 
     @Override
     public void initialize(final StandaloneCatalog catalog) {
