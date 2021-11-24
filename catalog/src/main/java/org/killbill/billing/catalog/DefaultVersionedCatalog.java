@@ -189,23 +189,10 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                errors.add(new ValidationError(String.format("Phase '%s'for plan '%s' in version '%s' does not exist in version '%s'",
                                                              cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
                                                DefaultVersionedCatalog.class, ""));
-            }
-	    //Fix for https://github.com/killbill/killbill/issues/1465
-            validatePlanDuration(plan, cur, errors);
+            }	   
         }
     }
     
-    private void validatePlanDuration(final Plan plan, final PlanPhase cur, final ValidationErrors errors) {
-        if (cur.getPhaseType().name().equals(PhaseType.EVERGREEN.name()) && !cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) {
-            errors.add(new ValidationError(String.format("EVERGREEN Phase '%s' for plan '%s' in version '%s' must have duration as UNLIMITED'",
-                    cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
-                    DefaultVersionedCatalog.class, "")); 
-        } else if (!cur.getPhaseType().name().equals(PhaseType.EVERGREEN.name()) && cur.getDuration().getUnit().name().equals(TimeUnit.UNLIMITED.name())) { 
-        	errors.add(new ValidationError(String.format("'%s' Phase '%s' for plan '%s' in version '%s' must not have duration as UNLIMITED'",
-        			cur.getPhaseType().name(), cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate()),
-                    DefaultVersionedCatalog.class, "")); 
-        }
-    }
 
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
