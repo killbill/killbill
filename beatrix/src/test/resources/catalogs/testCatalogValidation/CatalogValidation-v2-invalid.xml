@@ -17,7 +17,7 @@
   -->
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="https://docs.killbill.io/latest/catalog.xsd">
-    <effectiveDate>2021-10-07T00:00:00+00:00</effectiveDate>
+    <effectiveDate>2021-10-15T00:00:00+00:00</effectiveDate>
     <catalogName>ExampleCatalog</catalogName>
     <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
     <currencies>
@@ -41,6 +41,7 @@
         </cancelPolicy>
     </rules>
     <plans>
+        <!-- Valid and same as in V1  -->
         <plan name="standard-monthly">
             <product>Standard</product>
             <initialPhases>
@@ -60,11 +61,32 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="standard2-monthly">
+            <product>Standard</product>
+            <initialPhases>
+            </initialPhases>
+            <!-- FIXEDTERM phase types must have a non-UNLIMITED Duration specified -->
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>24.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
     </plans>
     <priceLists>
         <defaultPriceList name="DEFAULT">
             <plans>
                 <plan>standard-monthly</plan>
+                <plan>standard2-monthly</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
