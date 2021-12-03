@@ -596,7 +596,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
         final DefaultPlanPhase evergreenPhase1 = new DefaultPlanPhase();
         evergreenPhase1.setPhaseType(PhaseType.EVERGREEN);
-        evergreenPhase1.setDuration(new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(1));
+        evergreenPhase1.setDuration(new DefaultDuration().setUnit(TimeUnit.UNLIMITED));
         evergreenPhase1.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
 
         // Add a Plan with a DISCOUNT phase
