@@ -72,29 +72,7 @@ import static org.testng.Assert.fail;
 public class TestIntegration extends TestIntegrationBase {
 
 
-    @Test(groups = "slow")
-    public void testXXX() throws Exception {
-        clock.setDay(new LocalDate(2021, 12, 1));
-
-        final AccountData accountData = getAccountData(1);
-        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
-        accountChecker.checkAccount(account.getId(), accountData, callContext);
-
-        final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
-
-        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-fixedterm");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        assertNotNull(entitlementId);
-        assertListenerStatus();
-
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
-        clock.addMonths(1);
-        assertListenerStatus();
-
-    }
-
-    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/897")
+     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/897")
     public void testFutureCancelBPWithAOBeforePhase() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
