@@ -38,11 +38,9 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.xmlloader.ValidatingConfig;
@@ -189,7 +187,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                errors.add(new ValidationError(String.format("Phase '%s'for plan '%s' in version '%s' does not exist in version '%s'",
                                                              cur.getName(), plan.getName(), plan.getCatalog().getEffectiveDate(), targetPlan.getCatalog().getEffectiveDate()),
                                                DefaultVersionedCatalog.class, ""));
-            }	   
+            }
         }
     }
     

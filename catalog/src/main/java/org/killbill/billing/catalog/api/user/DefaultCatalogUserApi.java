@@ -99,30 +99,26 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
         try {
 
-            final VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
-
+            VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
+            if (versionedCatalog == null) {
+                // If this is the first version
+                versionedCatalog = new DefaultVersionedCatalog();
+            }
             // Validation purpose:  Will throw if bad XML or catalog validation fails
             final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
             final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
             final ValidationErrors errors = new ValidationErrors();
             // Fix for https://github.com/killbill/killbill/issues/1481
-            if (versionedCatalog != null) {
-                ((DefaultVersionedCatalog)versionedCatalog).add((StandaloneCatalog)newCatalogVersion);
-                ((DefaultVersionedCatalog)versionedCatalog).validate(null, errors);
-                if (!errors.isEmpty()) {
-                    // Bummer ValidationException CTOR is private to package...
-                    //final ValidationException validationException = new ValidationException(errors);
-                    //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-                    logger.info("Failed to load new catalog version: " + errors.toString());
-                    throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-                }
-            }
-            //Fix for https://github.com/killbill/killbill/issues/1465
-            ((StandaloneCatalog)newCatalogVersion).validatePlanDuration(newCatalogVersion, errors);
+            ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
+            ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
             if (!errors.isEmpty()) {
+                // Bummer ValidationException CTOR is private to package...
+                //final ValidationException validationException = new ValidationException(errors);
+                //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
                 logger.info("Failed to load new catalog version: " + errors.toString());
-                throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, "Please provide valid plan duration.");
+                throw new CatalogApiException(ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
             }
+
             tenantApi.addTenantKeyValue(TenantKey.CATALOG.toString(), catalogXML, callContext);
             catalogCache.clearCatalog(internalTenantContext);
         } catch (final TenantApiException e) {
