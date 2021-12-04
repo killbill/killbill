@@ -63,7 +63,7 @@ public class TestApiListener {
 
     private static final Joiner SPACE_JOINER = Joiner.on(" ");
 
-    private static final long DELAY = 10000;
+    private static final long DELAY = Long.parseLong(System.getProperty("killbill.test.apiListenerDelay", "30000"));
 
     private final List<NextEvent> nextExpectedEvent;
     private final IDBI idbi;
