@@ -48,56 +48,56 @@ import com.google.common.io.Resources;
 
 public class TestCatalogFixedTerm extends TestIntegrationBase {
 
-	private CallContext testCallContext;
-	 private Account account;
+    private CallContext testCallContext;
+    private Account account;
 
-	@BeforeMethod(groups = "slow")
-	public void beforeMethod() throws Exception {
-		if (hasFailed()) {
-			return;
-		}
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
+        if (hasFailed()) {
+            return;
+        }
 
-		super.beforeMethod();
+        super.beforeMethod();
 
-		// Setup tenant
-		clock.setTime(new DateTime("2021-12-01T12:56:02"));
-		testCallContext = setupTenant();
+        // Setup tenant
+        clock.setTime(new DateTime("2021-12-01T12:56:02"));
+        testCallContext = setupTenant();
 
-		// Setup account in right tenant
-		account = setupAccount(testCallContext); 
-	}
+        // Setup account in right tenant
+        account = setupAccount(testCallContext);
+    }
 
-	@Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
-	public void testFixedTermPhaseAndRecurringBillingPeriod() throws Exception {
-		uploadCatalog("fixedterm-and-biennial-billing.xml");
-		assertListenerStatus();
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
+    public void testFixedTermPhaseAndRecurringBillingPeriod() throws Exception {
+        uploadCatalog("fixedterm-and-biennial-billing.xml");
+        assertListenerStatus();
 
-		busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
-				NextEvent.PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
+                                      NextEvent.PAYMENT);
 
-		final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-biennial", null);
-		final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-biennial", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
-        
-        invoiceChecker.checkInvoice(account.getId(), 1, testCallContext,new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
-        
-        busHandler.pushExpectedEvents(NextEvent.INVOICE,NextEvent.INVOICE_PAYMENT,NextEvent.PAYMENT); //TODO: Is this correct?
+
+        invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); //TODO: Is this correct?
         clock.addYears(2);
         assertListenerStatus();
-        
-        invoiceChecker.checkInvoice(account.getId(), 2, testCallContext,new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
-        
+
+        invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
+
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         clock.addYears(1);
         assertListenerStatus();
-        
-	}
 
-	private void uploadCatalog(final String name) throws CatalogApiException, IOException {
-		catalogUserApi.uploadCatalog(Resources
-				.asCharSource(Resources.getResource("catalogs/testCatalogFixedTerm/" + name), Charsets.UTF_8)
-				.read(), testCallContext);
-	}
+    }
+
+    private void uploadCatalog(final String name) throws CatalogApiException, IOException {
+        catalogUserApi.uploadCatalog(Resources
+                                             .asCharSource(Resources.getResource("catalogs/testCatalogFixedTerm/" + name), Charsets.UTF_8)
+                                             .read(), testCallContext);
+    }
 
 }
