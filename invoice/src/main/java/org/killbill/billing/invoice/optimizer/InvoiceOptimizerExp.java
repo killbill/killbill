@@ -179,14 +179,7 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
                                     }
                                 }).orNull();
                                 if (existingItem != null) {
-                                    if (existingItem.getEndDate().compareTo(invoiceItem.getEndDate()) != 0 ||
-                                        !existingItem.getPlanName().equals(invoiceItem.getPlanName()) ||
-                                        !existingItem.getPhaseName().equals(invoiceItem.getPhaseName()) ||
-                                        existingItem.getCatalogEffectiveDate().compareTo(invoiceItem.getCatalogEffectiveDate()) != 0) {
-                                        return true;
-                                    } else {
-                                        return false;
-                                    }
+                                    return true;
                                 }
                             }
                             return false;

@@ -426,9 +426,30 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 6, 1), callContext);
+            Assert.fail("Should not generate any invoice");
+        } catch (final InvoiceApiException nothing) {
+            Assert.assertEquals(nothing.getCode(), INVOICE_NOTHING_TO_DO.getCode());
+        } finally {
+            assertListenerStatus();
+        }
+
         // 2021-07-01  : Nothing to invoice
         clock.addMonths(1);
         assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        try {
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 7, 1), callContext);
+            Assert.fail("Should not generate any invoice");
+        } catch (final InvoiceApiException nothing) {
+            Assert.assertEquals(nothing.getCode(), INVOICE_NOTHING_TO_DO.getCode());
+        } finally {
+            assertListenerStatus();
+        }
+
     }
 
     @Test(groups = "slow")
