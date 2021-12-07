@@ -111,6 +111,8 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
             createBootNodeInfo(false);
             this.nodeInfoExecutor = Executors.newSingleThreadScheduledExecutor("NodeInfoExecutor");
             nodeInfoExecutor.scheduleAtFixedRate(new NodeInfoRunnable(nodeInfoDao), INITIAL_DELAY_SEC, TIME_PERIOD_SEC, TimeUnit.SECONDS);
+            // In tests, the service is created once and re-used.
+            this.isStopped = false;
             logger.info("Created nodeInfo for {}", CreatorName.get());
         } catch (JsonProcessingException e) {
             logger.error("Failed to create bootNodeInfo", e);
@@ -129,8 +131,10 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
             final boolean success = nodeInfoExecutor.awaitTermination(TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
             if (!success) {
                 logger.warn("NodeInfoExecutor failed to complete termination within " + TERMINATION_TIMEOUT_SEC + "sec");
+                nodeInfoExecutor.shutdownNow();
             }
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
+            nodeInfoExecutor.shutdownNow();
             Thread.currentThread().interrupt();
             logger.warn("NodeInfoExecutor stop sequence got interrupted");
         } finally {
