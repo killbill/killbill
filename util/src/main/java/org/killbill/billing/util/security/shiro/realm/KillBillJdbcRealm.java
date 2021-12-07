@@ -46,6 +46,9 @@ public class KillBillJdbcRealm extends JdbcRealm {
         // See JavaDoc warning: https://shiro.apache.org/static/1.2.3/apidocs/org/apache/shiro/realm/AuthenticatingRealm.html
         //setAuthenticationCachingEnabled(true);
 
+        // See https://issues.apache.org/jira/browse/SHIRO-552 and https://github.com/apache/shiro/pull/138
+        setSaltIsBase64Encoded(false);
+
         // Tweak JdbcRealm defaults
         setPermissionsLookupEnabled(true);
         setAuthenticationQuery(KILLBILL_SALTED_AUTHENTICATION_QUERY);
