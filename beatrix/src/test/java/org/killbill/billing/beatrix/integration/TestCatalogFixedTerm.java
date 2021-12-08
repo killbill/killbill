@@ -65,24 +65,25 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
 
         // Setup account in right tenant
         account = setupAccount(testCallContext);
+        
+        //upload catalog
+        uploadCatalog("WeaponsHireSmall.xml");
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
-    public void testFixedTermPhaseAndRecurringBillingPeriod() throws Exception {
-        uploadCatalog("fixedterm-and-biennial-billing.xml");
-        assertListenerStatus();
+    public void testFixedTermPhaseInAdvanceBilling() throws Exception {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
                                       NextEvent.PAYMENT);
 
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("p1-biennial", null);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inadvance", null);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); //TODO: Is this correct?
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
         clock.addYears(2);
         assertListenerStatus();
 
@@ -93,6 +94,57 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         assertListenerStatus();
 
     }
+    
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
+    public void testFixedTermPhaseInArrearBilling() throws Exception {
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inarrear", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        assertNotNull(entitlementId);
+        assertListenerStatus();
+        
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        clock.addYears(2);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
+        
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        clock.addYears(2);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
+
+    }
+    
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
+    public void testDiscountAndRecurringPhaseInAdvanceBilling() throws Exception {
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
+                                      NextEvent.PAYMENT);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inadvance-discountandrecurring", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        assertNotNull(entitlementId);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        clock.addYears(2);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT,NextEvent.PHASE,NextEvent.NULL_INVOICE); //TODO: not sure why NULL_INVOICE is required here but found it in the bus_events_history table
+        clock.addYears(1);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 3, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 01), new LocalDate(2026, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+        
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        clock.addYears(2);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 4, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2026, 12, 01), new LocalDate(2028, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+    }
+    
 
     private void uploadCatalog(final String name) throws CatalogApiException, IOException {
         catalogUserApi.uploadCatalog(Resources
