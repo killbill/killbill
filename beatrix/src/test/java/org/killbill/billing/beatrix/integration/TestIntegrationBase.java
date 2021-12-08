@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.sql.DataSource;
 
 import org.awaitility.Awaitility;
 import org.joda.time.DateTime;
@@ -110,6 +111,7 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.billing.platform.jndi.ReferenceableDataSourceSpy;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
@@ -154,6 +156,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.IHookable;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -167,6 +170,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+import com.zaxxer.hikari.HikariDataSource;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -205,6 +209,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     };
 
     protected final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+
+    @Inject
+    @Named("osgi")
+    protected DataSource osgiDataSource;
 
     @Inject
     protected Lifecycle lifecycle;
@@ -395,6 +403,18 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         log.debug("afterMethod callcontext classLoader = " + (Thread.currentThread().getContextClassLoader() != null ? Thread.currentThread().getContextClassLoader().toString() : "null"));
 
         log.debug("DONE WITH TEST");
+    }
+
+    @AfterClass(groups = "slow")
+    public void afterClass() throws Exception {
+        // Because of the way the OSGI DataSource is created in ReferenceableDataSourceSpyProvider (required by DefaultOSGIService->KillbillActivator),
+        // a new instance is generated for each test class. We need to explicitly close it to avoid thread leaks (e.g. Hikari housekeeper).
+        if (osgiDataSource instanceof ReferenceableDataSourceSpy) {
+            final ReferenceableDataSourceSpy referenceableDataSourceSpy = (ReferenceableDataSourceSpy) this.osgiDataSource;
+            if (referenceableDataSourceSpy.getDataSource() instanceof HikariDataSource) {
+                ((HikariDataSource) (referenceableDataSourceSpy.getDataSource())).close();
+            }
+        }
     }
 
     protected void checkNoMoreInvoiceToGenerate(final Account account) {
