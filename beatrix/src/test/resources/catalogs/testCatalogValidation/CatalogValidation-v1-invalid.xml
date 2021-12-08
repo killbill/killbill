@@ -45,6 +45,7 @@
             <product>Standard</product>
             <initialPhases>
             </initialPhases>
+            <!-- Phase type changed from V1, this is invalid -->
             <finalPhase type="FIXEDTERM">
                 <duration>
                     <unit>UNLIMITED</unit>

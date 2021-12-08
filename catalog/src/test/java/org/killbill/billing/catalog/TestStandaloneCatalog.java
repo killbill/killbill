@@ -20,12 +20,10 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.xmlloader.ValidationException;
-import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 
 public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
 
@@ -35,7 +33,7 @@ public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
             getCatalog("CatalogWithValidationErrors.xml");
             Assert.fail();
         } catch (final ValidationException e) {
-            Assert.assertEquals(e.getErrors().size(), 13);
+            Assert.assertEquals(e.getErrors().size(), 15);
             Assert.assertEquals(e.getErrors().get(0).getDescription(), "Invalid product for plan 'standard'");
             Assert.assertEquals(e.getErrors().get(1).getDescription(), "Duration can only have 'UNLIMITED' unit if the number is omitted");
             Assert.assertEquals(e.getErrors().get(2).getDescription(), "Finite Duration must have a well defined length");
@@ -49,7 +47,8 @@ public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
             Assert.assertEquals(e.getErrors().get(10).getDescription(), "Duplicate rule for create plan alignment DefaultCaseCreateAlignment {alignment =START_OF_BUNDLE, product=null, productCategory=null, billingPeriod=null, priceList=null}");
             Assert.assertEquals(e.getErrors().get(11).getDescription(), "Duplicate rule for billing alignment DefaultCaseBillingAlignment {alignment=ACCOUNT, phaseType=null, product=null, productCategory=null, billingPeriod=null, priceList=null}");
             Assert.assertEquals(e.getErrors().get(12).getDescription(), "Duplicate rule for price list transition DefaultCasePriceList {fromProduct=null, fromProductCategory=null, fromBillingPeriod=null, fromPriceList=null, toPriceList=DefaultPriceList{name='DEFAULT}}");
-
+            Assert.assertEquals(e.getErrors().get(13).getDescription(), "EVERGREEN Phase 'standard-trial-evergreen' for plan 'standard-trial' in version 'Fri Feb 08 00:00:00 GMT 2013' must have duration as UNLIMITED'");
+            Assert.assertEquals(e.getErrors().get(14).getDescription(), "'TRIAL' Phase 'standard-trial-trial' for plan 'standard-trial' in version 'Fri Feb 08 00:00:00 GMT 2013' must not have duration as UNLIMITED'");
         }
     }
 

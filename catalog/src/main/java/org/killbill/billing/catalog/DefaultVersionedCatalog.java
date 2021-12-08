@@ -47,8 +47,6 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
-import com.google.common.base.Preconditions;
-
 @XmlRootElement(name = "catalogs")
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCatalog> implements VersionedCatalog, Externalizable {
@@ -192,6 +190,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
             }
         }
     }
+    
 
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {

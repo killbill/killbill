@@ -93,7 +93,7 @@ public class TestXMLWriter extends CatalogTestSuiteNoDB {
 
         final DefaultPlanPhase evergreenPhase = new DefaultPlanPhase();
         evergreenPhase.setPhaseType(PhaseType.EVERGREEN);
-        evergreenPhase.setDuration(new DefaultDuration().setUnit(TimeUnit.MONTHS).setNumber(1));
+        evergreenPhase.setDuration(new DefaultDuration().setUnit(TimeUnit.UNLIMITED));
         evergreenPhase.setRecurring(new DefaultRecurring().setBillingPeriod(BillingPeriod.MONTHLY).setRecurringPrice(new DefaultInternationalPrice().setPrices(new DefaultPrice[]{new DefaultPrice().setCurrency(Currency.USD).setValue(BigDecimal.TEN)})));
 
         final DefaultPlan newPlan = new DefaultPlan();
