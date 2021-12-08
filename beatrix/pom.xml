@@ -64,6 +64,17 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <exclusions>
+                <!-- https://github.com/brettwooldridge/HikariCP/issues/1746 -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>testing-mysql-server</artifactId>
             <!-- Technically, test-runtime -->
@@ -189,6 +200,10 @@
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-platform-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.billing</groupId>
+            <artifactId>killbill-platform-base</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing</groupId>
