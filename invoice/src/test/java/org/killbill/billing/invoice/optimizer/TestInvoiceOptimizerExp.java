@@ -123,7 +123,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         final Invoice proposed = createInvoice(targetDate);
         proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, startDate, new LocalDate(2021, 3, 1)));
         proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1)));
-        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, new BigDecimal("9.88"), new LocalDate(2021, 4, 1), new LocalDate(2021, 4, 30))); // cancelDate
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, new BigDecimal("9.88"), new LocalDate(2021, 4, 1), cancelDate));
 
         // P0M
         final LocalDate cutoffDate = targetDate;
@@ -135,6 +135,8 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
 
         final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
 
+        // Note that we don't really need the billing events except to fetch Plan info in AccountInvoicesExp#filterProposedItems
+        // so we don't need to explicitly add the CANCEL billing event
         final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ARREAR, SubscriptionBaseTransitionType.CREATE));
 
@@ -268,6 +270,211 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         // Latest existing (P1M)
         Assert.assertEquals(proposedItems.get(0).getStartDate(), new LocalDate(2021, 4, 1));
         Assert.assertEquals(proposedItems.get(0).getEndDate(), cancelDate);
+    }
+
+
+
+    @Test(groups = "fast")
+    public void testInAdvanceP0M() {
+
+        final LocalDate startDate = new LocalDate(2021, 2, 1);
+        LocalDate targetDate =  new LocalDate(2021, 5, 1);
+
+        // Proposed: invoice from 2021-2-1 -> 2021-6-1
+        final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
+        final Invoice proposed = createInvoice(targetDate);
+
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, startDate, new LocalDate(2021, 3, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1)));
+
+
+        // P0M
+        final LocalDate cutoffDate = targetDate;
+        // Existing: invoice from 2021-2-1 -> 2021-5-1
+        // Existing (filtered) empty
+        final List<Invoice> existing = new ArrayList<Invoice>();
+        final Invoice invoice = createInvoice(cutoffDate);
+        existing.add(invoice);
+
+        final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
+        billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
+
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
+        test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
+        Assert.assertEquals(proposedItems.size(), 1);
+        // New proposed item
+        Assert.assertEquals(proposedItems.get(0).getStartDate(), new LocalDate(2021, 5, 1));
+        Assert.assertEquals(proposedItems.get(0).getEndDate(), new LocalDate(2021, 6, 1));
+    }
+
+    @Test(groups = "fast")
+    public void testInAdvanceLateP0M() {
+        // Exactly same test as testInAdvanceP0M as we both end up with the same empty filtered existing invoices
+    }
+
+    @Test(groups = "fast")
+    public void testInAdvanceWithCancellationP0M() {
+
+        final LocalDate startDate = new LocalDate(2021, 2, 1);
+        final LocalDate cancelDate = new LocalDate(2021, 4, 30);
+        final LocalDate targetDate =  new LocalDate(2021, 5, 1);
+
+        // Proposed: invoice from 2021-2-1 -> 2021-4-30
+        final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
+        final Invoice proposed = createInvoice(targetDate);
+
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, startDate, new LocalDate(2021, 3, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 4, 1), cancelDate));
+
+
+        // P0M
+        final LocalDate cutoffDate = targetDate;
+        // Existing: invoice from 2021-2-1 -> 2021-4-30
+        // Existing (filtered) empty
+        final List<Invoice> existing = new ArrayList<Invoice>();
+        final Invoice invoice = createInvoice(cutoffDate);
+        existing.add(invoice);
+
+
+        // Note that we don't really need the billing events except to fetch Plan info in AccountInvoicesExp#filterProposedItems
+        // so we don't need to explicitly add the CANCEL billing event
+        final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
+        billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
+
+
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
+        test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
+        Assert.assertEquals(proposedItems.size(), 0);
+    }
+
+
+
+    @Test(groups = "fast")
+    public void testInAdvanceP1M() {
+
+        final LocalDate startDate = new LocalDate(2021, 2, 1);
+        LocalDate targetDate =  new LocalDate(2021, 5, 1);
+
+        // Proposed: invoice from 2021-2-1 -> 2021-6-1
+        final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
+        final Invoice proposed = createInvoice(targetDate);
+
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, startDate, new LocalDate(2021, 3, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1)));
+
+        // P1M
+        final LocalDate cutoffDate = targetDate.minusMonths(1);
+        // Existing: invoice from 2021-2-1 -> 2021-5-1
+        // Existing (filtered)  2021-4-1 ->  2021-5-1
+        final List<Invoice> existing = new ArrayList<Invoice>();
+        final Invoice invoice = createInvoice(cutoffDate);
+        final InvoiceItem newItem = createItem(invoice.getId(), BigDecimal.TEN, BigDecimal.TEN,new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1));
+        invoice.addInvoiceItem(newItem);
+        existing.add(invoice);
+
+
+        final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
+        billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
+
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
+        test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
+        Assert.assertEquals(proposedItems.size(), 2);
+        // Latest existing (P1M) - this would be filtered out by the tree later on
+        Assert.assertEquals(proposedItems.get(0).getStartDate(), new LocalDate(2021, 4, 1));
+        Assert.assertEquals(proposedItems.get(0).getEndDate(), new LocalDate(2021, 5, 1));
+        // New proposed item
+        Assert.assertEquals(proposedItems.get(1).getStartDate(), new LocalDate(2021, 5, 1));
+        Assert.assertEquals(proposedItems.get(1).getEndDate(), new LocalDate(2021, 6, 1));
+    }
+
+
+    @Test(groups = "fast")
+    public void testInAdvanceLateP1M() {
+
+        final LocalDate startDate = new LocalDate(2021, 2, 1);
+        LocalDate targetDate =  new LocalDate(2021, 5, 1);
+
+        // Proposed: invoice from 2021-2-1 -> 2021-6-1
+        final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
+        final Invoice proposed = createInvoice(targetDate);
+
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, startDate, new LocalDate(2021, 3, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1)));
+
+        // P1M
+        final LocalDate cutoffDate = targetDate.minusMonths(1);
+        // Existing: empty
+        // Existing (filtered)  empty
+        final List<Invoice> existing = new ArrayList<Invoice>();
+        final Invoice invoice = createInvoice(cutoffDate);
+        final InvoiceItem newItem = createItem(invoice.getId(), BigDecimal.TEN, BigDecimal.TEN,new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1));
+        invoice.addInvoiceItem(newItem);
+        existing.add(invoice);
+
+
+        final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
+        billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
+
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
+        test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
+        Assert.assertEquals(proposedItems.size(), 2);
+        // Latest existing (P1M) - this would be regenerated, we would catch up for one period
+        Assert.assertEquals(proposedItems.get(0).getStartDate(), new LocalDate(2021, 4, 1));
+        Assert.assertEquals(proposedItems.get(0).getEndDate(), new LocalDate(2021, 5, 1));
+        // New proposed item
+        Assert.assertEquals(proposedItems.get(1).getStartDate(), new LocalDate(2021, 5, 1));
+        Assert.assertEquals(proposedItems.get(1).getEndDate(), new LocalDate(2021, 6, 1));
+    }
+
+
+    @Test(groups = "fast")
+    public void testInAdvanceWithCancellationP1M() {
+
+        final LocalDate startDate = new LocalDate(2021, 2, 1);
+        final LocalDate cancelDate = new LocalDate(2021, 4, 30);
+        final LocalDate targetDate =  new LocalDate(2021, 5, 1);
+
+        // Proposed: invoice from 2021-2-1 -> 2021-4-30
+        final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
+        final Invoice proposed = createInvoice(targetDate);
+
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, startDate, new LocalDate(2021, 3, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, BigDecimal.TEN, new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1)));
+        proposedItems.add(createItem(proposed.getId(), BigDecimal.TEN, new BigDecimal("9.88"), new LocalDate(2021, 4, 1), cancelDate));
+
+
+        // P0M
+        final LocalDate cutoffDate = targetDate.minusMonths(1);
+        // Existing: invoice from 2021-2-1 -> 2021-4-30
+        // Existing (filtered) 2021-4-1 -> 2021-4-30
+        final List<Invoice> existing = new ArrayList<Invoice>();
+        final Invoice invoice = createInvoice(cutoffDate);
+        final InvoiceItem newItem = createItem(invoice.getId(), BigDecimal.TEN, new BigDecimal("9.88"),new LocalDate(2021, 4, 1), cancelDate);
+        invoice.addInvoiceItem(newItem);
+        existing.add(invoice);
+
+
+
+        // Note that we don't really need the billing events except to fetch Plan info in AccountInvoicesExp#filterProposedItems
+        // so we don't need to explicitly add the CANCEL billing event
+        final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
+        billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
+
+
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
+        test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
+        Assert.assertEquals(proposedItems.size(), 1);
+        // Latest existing (P1M)
+        Assert.assertEquals(proposedItems.get(0).getStartDate(), new LocalDate(2021, 4, 1));
+        Assert.assertEquals(proposedItems.get(0).getEndDate(), cancelDate);
+
     }
 
 

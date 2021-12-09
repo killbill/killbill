@@ -39,7 +39,6 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
-import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -70,6 +69,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         allExtraProperties.put(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION, "true");
         return getConfigSource(null, allExtraProperties);
     }
+
 
     @Test(groups = "slow")
     public void testRecurringInAdvance() throws Exception {
@@ -108,7 +108,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
-        // Trigger a change way in the past (prior the cuttoff date
+        // Trigger a change way in the past (prior the cuttoff date)
         // org.killbill.invoice.readInvoicesBackFrom= 1 month => cuttoff date = 2020-02-01
         //
         // We verify that invoice only tried to REPAIR from cutoff date -- and in particular the period 2020-01-15 - 2020-02-01 is left untouched.
@@ -123,22 +123,16 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-29.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 3, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("20.00")));
 
-        final DryRunArguments dryRun = new TestDryRunArguments(DryRunType.TARGET_DATE);
-
         // Issue a first dry-run on 2020-03-02
         // We should not see the items that were repaired a month prior now because of the cutoff date
         final DateTime nextDate1 = clock.getUTCNow().plusDays(1);
-        try {
-            invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate1, testTimeZone), dryRun, callContext);
-            Assert.fail("Dry run invoice should not generate any invoice");
-        } catch (final InvoiceApiException e) {
-            assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
-        }
+        checkNothingToInvoice(account.getId(), new LocalDate(nextDate1, testTimeZone), true);
+
 
         // Issue a series of dry-run starting on 2020-04-01
         DateTime nextDate = clock.getUTCNow().plusMonths(1);
         for (int i = 0; i < 5; i++) {
-            final Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), dryRun, callContext);
+            final Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
             // Filter to eliminate CBA
             final int actualRecurring = Iterables.size(Iterables.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
                 @Override
@@ -150,7 +144,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
             assertEquals(actualRecurring, 1);
             nextDate = nextDate.plusMonths(1);
         }
-
     }
 
     // Used to demonstrate what happens when maxInvoiceLimit = 0 and we do billing IN_ADVANCE
@@ -187,7 +180,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         assertListenerStatus();
 
         // Do a change today => Only new item 2020-01-16 - 2020-02-01 gets generated
-        // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose tragetDt >= cutoffDt
+        // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose targetDt >= cutoffDt
         // - Proposed items correctly generate the 2 expected items but the first one is filtered because its start date  2020-01-15 < cutoffDt
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
@@ -289,6 +282,9 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
+
+        checkNothingToInvoice(account.getId(), new LocalDate(2020, 3, 1), false);
+
     }
 
     @Test(groups = "slow")
@@ -332,25 +328,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
     }
 
-    private Invoice getCurrentDraftInvoice(final UUID accountId, final int nbTries) {
-        int curTry = nbTries;
-        while (curTry-- > 0) {
-            final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
-            if (invoices.size() > 0) {
-                final Invoice lastInvoice = invoices.get(invoices.size() - 1);
-                if (lastInvoice.getStatus() == InvoiceStatus.DRAFT) {
-                    return lastInvoice;
-                }
-            }
-            try {
-                Thread.sleep(100);
-            } catch (final InterruptedException e) {
-                Assert.fail(e.getMessage());
-            }
-        }
-        Assert.fail("Failed to find draft invoice for account");
-        return null;
-    }
 
     @Test(groups = "slow")
     public void testRecurringInArrear4() throws Exception {
@@ -426,29 +403,13 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
-        try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 6, 1), callContext);
-            Assert.fail("Should not generate any invoice");
-        } catch (final InvoiceApiException nothing) {
-            Assert.assertEquals(nothing.getCode(), INVOICE_NOTHING_TO_DO.getCode());
-        } finally {
-            assertListenerStatus();
-        }
+        checkNothingToInvoice(account.getId(), new LocalDate(2021, 6, 1), false);
 
         // 2021-07-01  : Nothing to invoice
         clock.addMonths(1);
         assertListenerStatus();
 
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
-        try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 7, 1), callContext);
-            Assert.fail("Should not generate any invoice");
-        } catch (final InvoiceApiException nothing) {
-            Assert.assertEquals(nothing.getCode(), INVOICE_NOTHING_TO_DO.getCode());
-        } finally {
-            assertListenerStatus();
-        }
+        checkNothingToInvoice(account.getId(), new LocalDate(2021, 7, 1), false);
 
     }
 
@@ -511,7 +472,44 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                                  // Re-invoiced.
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
-
     }
+
+    private void checkNothingToInvoice(final UUID accountId, final LocalDate targetDate, final boolean isDryRun) {
+        try {
+            if (isDryRun) {
+                invoiceUserApi.triggerDryRunInvoiceGeneration(accountId, targetDate, new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+            } else {
+                busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+                invoiceUserApi.triggerInvoiceGeneration(accountId, targetDate, callContext);
+            }
+            Assert.fail("Should not generate any invoice");
+        } catch (final InvoiceApiException e) {
+            assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
+        } finally {
+            assertListenerStatus();
+        }
+    }
+
+
+    private Invoice getCurrentDraftInvoice(final UUID accountId, final int nbTries) {
+        int curTry = nbTries;
+        while (curTry-- > 0) {
+            final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+            if (invoices.size() > 0) {
+                final Invoice lastInvoice = invoices.get(invoices.size() - 1);
+                if (lastInvoice.getStatus() == InvoiceStatus.DRAFT) {
+                    return lastInvoice;
+                }
+            }
+            try {
+                Thread.sleep(100);
+            } catch (final InterruptedException e) {
+                Assert.fail(e.getMessage());
+            }
+        }
+        Assert.fail("Failed to find draft invoice for account");
+        return null;
+    }
+
 }
 
