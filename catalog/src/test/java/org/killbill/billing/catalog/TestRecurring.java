@@ -20,25 +20,24 @@ package org.killbill.billing.catalog;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.xmlloader.ValidationErrors;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class TestRecurring extends CatalogTestSuiteNoDB {
 
-    private MockCatalog catalog;
-
-    @BeforeMethod
-    public void beforeMethod() {
-        catalog = new MockCatalog();
+    private static MockCatalog createCatalog() {
+        final MockCatalog catalog = new MockCatalog();
         catalog.setSupportedCurrencies(new Currency[] {Currency.USD});
+        return catalog;
     }
 
     @Test(groups = "fast")
     public void testValidRecurring() {
-        DefaultRecurring recurring = MockRecurring.validRecurring();
+        final MockCatalog catalog = createCatalog();
+
+        final DefaultRecurring recurring = MockRecurring.validRecurring();
         recurring.initialize(catalog);
 
-        ValidationErrors errors = recurring.validate(catalog, new ValidationErrors());
+        final ValidationErrors errors = recurring.validate(catalog, new ValidationErrors());
         errors.log(log);
 
         Assert.assertEquals(errors.size(), 0);
@@ -46,10 +45,12 @@ public class TestRecurring extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testNegativePlanPrice() {
-        DefaultRecurring recurring = MockRecurring.newRecurring("-1");
+        final MockCatalog catalog = createCatalog();
+
+        final DefaultRecurring recurring = MockRecurring.newRecurring("-1");
         recurring.initialize(catalog);
 
-        ValidationErrors errors = recurring.validate(catalog, new ValidationErrors());
+        final ValidationErrors errors = recurring.validate(catalog, new ValidationErrors());
         errors.log(log);
 
         Assert.assertEquals(errors.size(), 1);
