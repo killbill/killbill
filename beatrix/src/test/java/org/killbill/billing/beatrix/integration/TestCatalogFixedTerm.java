@@ -84,14 +84,15 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
-        clock.addYears(2);
+        clock.addYears(2);//2023-12-01
         assertListenerStatus();
-
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
 
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
-        clock.addYears(1);
+        clock.addYears(1);//2024-12-01
         assertListenerStatus();
+        
+        checkNoMoreInvoiceToGenerate(account.getId(), testCallContext);
 
     }
     
@@ -105,14 +106,16 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         assertListenerStatus();
         
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
-        clock.addYears(2);
+        clock.addYears(2);//2023-12-01
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
         
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
-        clock.addYears(2);
+        clock.addYears(2);//2025-12-01
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
+        
+        checkNoMoreInvoiceToGenerate(account.getId(), testCallContext);
 
     }
     
@@ -129,17 +132,17 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
-        clock.addYears(2);
+        clock.addYears(2); //2023-12-01
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
 
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT,NextEvent.PHASE,NextEvent.NULL_INVOICE); //TODO: not sure why NULL_INVOICE is required here but found it in the bus_events_history table
-        clock.addYears(1);
+        busHandler.pushExpectedEvents(NextEvent.PHASE,NextEvent.INVOICE, NextEvent.NULL_INVOICE,NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        clock.addYears(1); //2024-12-01
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 3, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2024, 12, 01), new LocalDate(2026, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
         
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        clock.addYears(2);
+        clock.addYears(2); //2026-12-01
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 4, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2026, 12, 01), new LocalDate(2028, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
