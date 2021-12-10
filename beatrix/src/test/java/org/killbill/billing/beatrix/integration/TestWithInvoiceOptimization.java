@@ -413,10 +413,14 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         checkNothingToInvoice(account.getId(), new LocalDate(2021, 7, 1), false);
     }
 
-
+    //
+    //  Usage tests as readInvoicesBackFrom also affects USAGE generation -- we only have a partial view of existing invoices.
+    //  Both readInvoicesBackFrom and readMaxRawUsagePreviousPeriod need to be in sync
+    //
     @Test(groups = "slow")
-    public void testUsageInArrear() throws Exception {
+    public void testUsageInArrear1() throws Exception {
 
+        // This setting also affects the USAGE items as it filters what we read from disk
         invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
 
         clock.setDay(new LocalDate(2021, 4, 1));
@@ -473,6 +477,78 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                                  // Re-invoiced.
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
+    }
+
+
+    // Same test as testUsageInArrear1 but no double USAGE billing
+    // We set both setMaxInvoiceLimit = P2m and readMaxRawUsagePreviousPeriod = 2
+    @Test(groups = "slow")
+    public void testUsageInArrear2() throws Exception {
+
+        // This setting also affects the USAGE items as it filters what we read from disk
+        invoiceConfig.setMaxInvoiceLimit(new Period("P2m"));
+
+        clock.setDay(new LocalDate(2021, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        // Base Plan required to get an add-on with usage
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+
+        // AO subscription
+        final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2021, 4, 1), 99L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2021, 4, 15), 100L, callContext);
+
+        // 2020-05-01
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2022, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+
+        // $0 invoice
+        // 2020-06-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
+
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2021, 6, 1), 50L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), 300L, callContext);
+
+        // 2020-07-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2021, 6, 1), new LocalDate(2021, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
+
+
+        recordUsageData(aoSubscription.getId(), "tracking-5", "bullets", new LocalDate(2021, 7, 2), 40L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-6", "bullets", new LocalDate(2021, 7, 18), 310L, callContext);
+
+        // 2020-08-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2021, 7, 1), new LocalDate(2021, 8, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
+        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-5", "tracking-6"), internalCallContext);
+
     }
 
 
