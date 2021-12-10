@@ -20,7 +20,6 @@ package org.killbill.billing.invoice.usage;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;

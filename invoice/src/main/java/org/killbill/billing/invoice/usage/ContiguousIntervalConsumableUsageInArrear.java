@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,13 +32,16 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.generator.InvoiceDateUtils;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
+import org.killbill.billing.invoice.model.RecurringInvoiceItemData;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUnitAggregate;
@@ -48,6 +50,7 @@ import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
+import org.killbill.billing.util.currency.KillBillMoney;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +82,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     }
 
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
+    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result, BillingPeriod billingPeriod, LocalDate billingStartDate) throws InvoiceApiException {
         // In the case past invoice items showed the details (areAllBilledItemsWithDetails=true), billed usage has already been taken into account
         // as it part of the reconciliation logic, so no need to subtract it here
         final BigDecimal amountToBill = (usage.getTierBlockPolicy() == TierBlockPolicy.ALL_TIERS && areAllBilledItemsWithDetails) ? toBeBilledUsage : toBeBilledUsage.subtract(billedUsage);
@@ -97,19 +100,92 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                         // See https://github.com/killbill/killbill/issues/1325
                         // Our current sql schema limits to an int value ...
                         final Integer quantity = toBeBilledUsageDetail.getQuantity() <= Integer.MAX_VALUE ? toBeBilledUsageDetail.getQuantity().intValue() : -1;
+
+                        BigDecimal afterRateTierPrice = toBeBilledUsageDetail.getTierPrice();
+//                        判断上个月订阅 & 用量费用大于0 by eilir 2021-12-26
+                        if(billingPeriod.getPeriod().getMonths() == 1 &&
+                           billingStartDate.getMonthOfYear() == LocalDate.now().getMonthOfYear() - 1 &&
+                           toBeBilledUsageDetail.getTierPrice().compareTo(BigDecimal.ZERO) > 0){
+                            final BigDecimal leadingProRationPeriods = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
+                            afterRateTierPrice = KillBillMoney.of(leadingProRationPeriods.multiply(toBeBilledUsageDetail.getTierPrice()), getCurrency());
+                        }
+
+
                         final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                                      getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), quantity, itemDetails);
+                                                                      getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, toBeBilledUsageDetail.getAmount(), afterRateTierPrice, getCurrency(), quantity, itemDetails);
                         result.add(item);
                     }
                 } else {
                     final String itemDetails = toJson(toBeBilledUsageDetails);
+
+
+                    // modify by toria 2021-12-10 17:04:35
+                    // 用量支持不足月比例折扣
+                    BigDecimal afterRateAmount = amountToBill;
+
+                    // by eilir 2021-12-26
+                    if ( amountToBill.compareTo(BigDecimal.ZERO) > 0 &&
+                         billingPeriod.getPeriod().getMonths() == 1 &&
+                         billingStartDate.getMonthOfYear() >= LocalDate.now().getMonthOfYear() - 1 ) {
+                        final BigDecimal leadingProRationPeriods = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
+                        final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, endDate, leadingProRationPeriods);
+                        log.info("Adding pro-ration: {}", itemData);
+                        afterRateAmount = KillBillMoney.of(leadingProRationPeriods.multiply(amountToBill), getCurrency());
+                    }
+
+//                    RecurringInvoiceItemDataWithNextBillingCycleDate itemWithNextBillingCycleDate = null;
+//                    try {
+//                        itemWithNextBillingCycleDate = frInvoiceItemGenerator.generateInvoiceItemData(startDate, endDate,
+//                        targetDate,
+//                        getBillCycleDayLocal(),
+//                        getBillingPeriod(),
+//                        getRecurringBillingMode());
+//                    } catch (InvalidDateSequenceException e) {
+//                        e.printStackTrace();
+//                        throw new InvoiceApiException(ErrorCode.INVOICE_INVALID_DATE_SEQUENCE, startDate, endDate, targetDate);
+//                    }
+//
+//                    for (final RecurringInvoiceItemData itemDatum : itemWithNextBillingCycleDate.getItemData()) {
+//                        if(itemDatum != null){
+//                            afterRateAmount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(amountToBill), getCurrency());
+//                            break;
+//                        }
+//                    }
+//                    final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(startDate, endDate, targetDate, billingCycleDayLocal, billingPeriod, billingMode);
+//                    if (endDate != null && !endDate.isAfter(billingIntervalDetail.getFirstBillingCycleDate())) {
+
+//                    }
+//                    if (billingIntervalDetail.getFirstBillingCycleDate().isAfter(startDate)) {
+//                        final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, billingIntervalDetail.getFirstBillingCycleDate(), billingPeriod);
+//                        if (leadingProRationPeriods != null && leadingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
+//                            // Not common - add info in the logs for debugging purposes
+
+//                        }
+//                    }
+
+//                    billingEvents.get(0).getBillingPeriod()
+
+
                     final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                                  getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
+                                                                  getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, afterRateAmount, amountToBill, getCurrency(), null, itemDetails);
                     result.add(item);
                 }
             }
         }
     }
+
+//    private BigDecimal calc(final LocalDate startDate, BillingPeriod billingPeriod){
+//        final LocalDate previousBillingCycleDate = endDate.minus(billingPeriod.getPeriod());
+//        // nextBillingCycleDate 应该是 previousBillingCycleDate 加上 billingperiod
+//        final int daysBetween = Days.daysBetween(startDate, startDate.plus(billingPeriod.getPeriod())).getDays();
+//        if (daysBetween <= 0) {
+//            return BigDecimal.ZERO;
+//        }
+//        final BigDecimal daysInPeriod = new BigDecimal(daysBetween);
+//        final BigDecimal days = new BigDecimal(Days.daysBetween(startDate, endDate).getDays());
+//
+//        days.divide(daysInPeriod, KillBillMoney.MAX_SCALE, KillBillMoney.ROUNDING_METHOD);
+//    }
 
     @Override
     protected UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {

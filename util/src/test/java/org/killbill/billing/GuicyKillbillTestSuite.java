@@ -58,7 +58,6 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Listeners;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import redis.embedded.RedisServer;
 
 import static org.testng.ITestResult.CREATED;

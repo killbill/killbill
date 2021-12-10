@@ -39,6 +39,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingMode;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
@@ -270,7 +271,7 @@ public abstract class ContiguousIntervalUsageInArrear {
      * @param existingUsage existing on disk usage items for the subscription
      * @throws CatalogApiException
      */
-    public UsageInArrearItemsAndNextNotificationDate computeMissingItemsAndNextNotificationDate(final List<InvoiceItem> existingUsage) throws CatalogApiException, InvoiceApiException {
+    public UsageInArrearItemsAndNextNotificationDate computeMissingItemsAndNextNotificationDate(final List<InvoiceItem> existingUsage, BillingPeriod billingPeriod, LocalDate billingStartDate) throws CatalogApiException, InvoiceApiException {
 
         Preconditions.checkState(isBuilt.get());
 
@@ -329,7 +330,7 @@ public abstract class ContiguousIntervalUsageInArrear {
             final BigDecimal toBeBilledUsageUnrounded = toBeBilledUsageDetails.getAmount();
             // See https://github.com/killbill/killbill/issues/1124
             final BigDecimal toBeBilledUsage = KillBillMoney.of(toBeBilledUsageUnrounded, getCurrency());
-            populateResults(ru.getStart(), ru.getEnd(), ru.getCatalogEffectiveDate(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, isPeriodPreviouslyBilled, result);
+            populateResults(ru.getStart(), ru.getEnd(), ru.getCatalogEffectiveDate(), billedUsage, toBeBilledUsage, toBeBilledUsageDetails, areAllBilledItemsWithDetails, isPeriodPreviouslyBilled, result, billingPeriod, billingStartDate);
 
         }
         final LocalDate nextNotificationDate = computeNextNotificationDate();
@@ -358,7 +359,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         return res.isPresent() ? res.get() : null;
     }
 
-    protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException;
+    protected abstract void populateResults(final LocalDate startDate, final LocalDate endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result, BillingPeriod billingPeriod, LocalDate billingStartDate) throws InvoiceApiException;
 
     protected abstract UsageInArrearAggregate getToBeBilledUsageDetails(final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException;
 
@@ -634,6 +635,20 @@ public abstract class ContiguousIntervalUsageInArrear {
     public Usage getUsage() {
         return usage;
     }
+
+    public int getBillCycleDayLocal() {
+        return billingEvents.get(0).getBillCycleDayLocal();
+    }
+
+    public BillingPeriod getBillingPeriod(){
+        return billingEvents.get(0).getBillingPeriod();
+    }
+
+    public BillingMode getRecurringBillingMode(){
+        return billingEvents.get(0).getPlan().getRecurringBillingMode();
+    }
+
+
 
     public UUID getBundleId() {
         return billingEvents.get(0).getBundleId();

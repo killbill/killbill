@@ -373,7 +373,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                      usage.getName(), null, firstBCDDate, endDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii2);
 
-        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems, event1.getBillingPeriod(), event1.getEffectiveDate().toLocalDate());
         checkTrackingIds(rawUsageRecords, usageResult.getTrackingIds());
 
         final List<InvoiceItem> result = usageResult.getInvoiceItems();
@@ -1111,7 +1111,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), null, startDate, firstBCDDate, new BigDecimal("3.69"), currency);
         invoiceItems.add(ii1);
 
-        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems, event1.getBillingPeriod(), event1.getEffectiveDate().toLocalDate());
         // Nothing to bill
         Assert.assertTrue(usageResult.getInvoiceItems().isEmpty());
         checkTrackingIds(rawUsages, usageResult.getTrackingIds());
@@ -1142,7 +1142,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final ContiguousIntervalUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage, rawUsageRecords, targetDate, true, usageDetailMode, event1, event2);
 
-        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(existingItems);
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalConsumableInArrear.computeMissingItemsAndNextNotificationDate(existingItems, event1.getBillingPeriod(), event1.getEffectiveDate().toLocalDate());
 
         checkTrackingIds(rawUsageRecords, usageResult.getTrackingIds());
 

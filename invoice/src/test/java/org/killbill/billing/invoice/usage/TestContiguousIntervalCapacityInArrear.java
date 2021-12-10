@@ -17,14 +17,12 @@
 
 package org.killbill.billing.invoice.usage;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultLimit;
@@ -32,10 +30,8 @@ import org.killbill.billing.catalog.DefaultTier;
 import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
@@ -214,7 +210,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         final InvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), null, firstBCDDate, endDate, BigDecimal.ONE, currency);
         invoiceItems.add(ii2);
 
-        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalCapacityInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems);
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalCapacityInArrear.computeMissingItemsAndNextNotificationDate(invoiceItems, event1.getBillingPeriod(), event1.getEffectiveDate().toLocalDate());
         final List<InvoiceItem> result = usageResult.getInvoiceItems();
         assertEquals(result.size(), 2);
 
@@ -404,7 +400,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         final ContiguousIntervalCapacityUsageInArrear intervalCapacityInArrear = createContiguousIntervalCapacityInArrear(usage, rawUsageRecords, targetDate, true, usageDetailMode, event1, event2);
 
-        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalCapacityInArrear.computeMissingItemsAndNextNotificationDate(existingItems);
+        final UsageInArrearItemsAndNextNotificationDate usageResult = intervalCapacityInArrear.computeMissingItemsAndNextNotificationDate(existingItems, event1.getBillingPeriod(), event1.getEffectiveDate().toLocalDate());
 
         checkTrackingIds(rawUsageRecords, usageResult.getTrackingIds());
 
