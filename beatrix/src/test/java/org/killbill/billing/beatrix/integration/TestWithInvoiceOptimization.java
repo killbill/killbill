@@ -189,8 +189,9 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Double invoicing due to bad config! (no REPAIR)
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 16), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("10.30")));
-
     }
+
+
 
     @Test(groups = "slow")
     public void testRecurringInArrear() throws Exception {
@@ -410,8 +411,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         assertListenerStatus();
 
         checkNothingToInvoice(account.getId(), new LocalDate(2021, 7, 1), false);
-
     }
+
 
     @Test(groups = "slow")
     public void testUsageInArrear() throws Exception {
@@ -473,6 +474,109 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
     }
+
+
+
+    //
+    // 'Bill Run' types of scenarios where we generate invoices on the 1st with subscriptions not aligned on the 1st
+    //
+    @Test(groups = "slow")
+    public void testBillRunInAdvance() throws Exception {
+
+        // Set P1m to look one month back from NOW
+        // E.g bill date = 2020-03-01 -> cutoff = 2020-02-01 and so any proposed item with startDt > 2020-02-01  will not be filtered out
+        //     and we end up generating 2020-02-15 -> 2020-03-15
+        // Notes: Setting P0m would not work with such a scenario
+        //
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+
+        clock.setTime(new DateTime("2020-01-15T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
+        assertNotNull(account);
+
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2020-02-01
+        clock.addDays(17);
+
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 15), new LocalDate(2020, 2, 15), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        // 2020-03-01
+        clock.addMonths(1);
+
+
+        invoice = getCurrentDraftInvoice(account.getId(), 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 2, 15), new LocalDate(2020, 3, 15), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        // 2020-04-01
+        clock.addMonths(1);
+
+        invoice = getCurrentDraftInvoice(account.getId(), 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 15), new LocalDate(2020, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+    }
+
+
+    @Test(groups = "slow")
+    public void testBillRunInArrear() throws Exception {
+
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+
+        clock.setTime(new DateTime("2021-01-15T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
+        assertNotNull(account);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2021-02-01
+        clock.addDays(16);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), callContext);
+        assertListenerStatus();
+
+        // 2021-03-01
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), callContext);
+        assertListenerStatus();
+
+        // 2021-04-01
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE,  NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), callContext);
+        assertListenerStatus();
+    }
+
 
     private void checkNothingToInvoice(final UUID accountId, final LocalDate targetDate, final boolean isDryRun) {
         try {
