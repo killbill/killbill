@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
@@ -51,6 +53,7 @@ import org.killbill.billing.util.features.KillbillFeatures;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -351,7 +354,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // 2021-02-01
         clock.addMonths(1);
 
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), 10);
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), null,10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -362,7 +365,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // 2021-03-01
         clock.addMonths(1);
 
-        invoice = getCurrentDraftInvoice(account.getId(), 10);
+        invoice = getCurrentDraftInvoice(account.getId(), null,10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -373,7 +376,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // 2021-04-01
         clock.addMonths(1);
 
-        invoice = getCurrentDraftInvoice(account.getId(), 10);
+        invoice = getCurrentDraftInvoice(account.getId(), null, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -392,7 +395,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoice = getCurrentDraftInvoice(account.getId(), 10);
+        invoice = getCurrentDraftInvoice(account.getId(), null, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -582,7 +585,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // 2020-02-01
         clock.addDays(17);
 
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), 10);
+        Invoice invoice = getCurrentDraftInvoice(account.getId(),null,  10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -594,7 +597,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
 
 
-        invoice = getCurrentDraftInvoice(account.getId(), 10);
+        invoice = getCurrentDraftInvoice(account.getId(), null, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -605,7 +608,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // 2020-04-01
         clock.addMonths(1);
 
-        invoice = getCurrentDraftInvoice(account.getId(), 10);
+        invoice = getCurrentDraftInvoice(account.getId(), null, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -614,6 +617,77 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 15), new LocalDate(2020, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
 
     }
+
+    @Test(groups = "slow")
+    public void testBillRunInAdvanceLeadingProration() throws Exception {
+
+        // Set P1m to look one month back from NOW
+        // Very interesting, we cannot set P0m otherwise the Draft invoice isn not being returned as part of the
+        // existing invoices and we end up with 2 Draft invoices... ah ah...
+        //
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+
+        clock.setTime(new DateTime("2020-01-15T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        assertNotNull(account);
+
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Check initial invoice got created
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), null, 10);
+
+        // 2020-02-01
+        clock.addDays(17);
+
+        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            // The first item is generated immediately as we create the subscription and the second as we move the clock but we have no event to sync on because of AUTO_INVOICING_DRAFT
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 2;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        // We see the leading pro-ration + the in-advance full period
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 15), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("16.42")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 2, 1), new LocalDate(2020, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+
+        // 2020-03-01
+        clock.addMonths(1);
+
+
+        invoice = getCurrentDraftInvoice(account.getId(), null, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        // 2020-04-01
+        clock.addMonths(1);
+
+        invoice = getCurrentDraftInvoice(account.getId(), null, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 4, 1), new LocalDate(2020, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+    }
+
 
 
     @Test(groups = "slow")
@@ -638,6 +712,10 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), callContext);
         assertListenerStatus();
 
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 15), new LocalDate(2021, 2, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+
         // 2021-03-01
         clock.addMonths(1);
 
@@ -645,12 +723,69 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), callContext);
         assertListenerStatus();
 
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 2, 15), new LocalDate(2021, 3, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+
         // 2021-04-01
         clock.addMonths(1);
 
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE,  NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), callContext);
         assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 15), new LocalDate(2021, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testBillRunInArrearLeadingProration() throws Exception {
+
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+
+        clock.setTime(new DateTime("2021-01-15T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        assertNotNull(account);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2021-02-01
+        clock.addDays(16);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 15), new LocalDate(2021, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("54.84")));
+
+        // 2021-03-01
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 2, 1), new LocalDate(2021, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        // 2021-04-01
+        clock.addMonths(1);
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE,  NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
     }
 
 
@@ -671,13 +806,14 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
     }
 
 
-    private Invoice getCurrentDraftInvoice(final UUID accountId, final int nbTries) {
+    private Invoice getCurrentDraftInvoice(final UUID accountId, @Nullable final Function<Invoice, Boolean> condFn, final int nbTries) {
         int curTry = nbTries;
         while (curTry-- > 0) {
             final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
             if (invoices.size() > 0) {
                 final Invoice lastInvoice = invoices.get(invoices.size() - 1);
-                if (lastInvoice.getStatus() == InvoiceStatus.DRAFT) {
+                if (lastInvoice.getStatus() == InvoiceStatus.DRAFT &&
+                    (condFn == null || condFn.apply(lastInvoice))) /* If we have a condition, let's check it satisfies */ {
                     return lastInvoice;
                 }
             }
