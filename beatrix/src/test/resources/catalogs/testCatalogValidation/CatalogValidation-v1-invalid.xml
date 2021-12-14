@@ -48,8 +48,7 @@
             <!-- Phase type changed from V1, this is invalid -->
             <finalPhase type="FIXEDTERM">
                 <duration>
-                    <unit>MONTHS</unit>
-                    <number>12</number>
+                    <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
