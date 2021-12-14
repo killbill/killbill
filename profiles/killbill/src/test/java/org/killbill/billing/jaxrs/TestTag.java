@@ -233,7 +233,7 @@ public class TestTag extends TestJaxrsBase {
     public void testTagsPagination() throws Exception {
         final Account account = createAccount();
         for (int i = 0; i < 5; i++) {
-            final TagDefinition tagDefinition = new TagDefinition(null, false, UUID.randomUUID().toString().substring(0, 5), UUID.randomUUID().toString(), ImmutableList.<ObjectType>of(ObjectType.ACCOUNT), null);
+            final TagDefinition tagDefinition = new TagDefinition(null, false, "td-" + i, UUID.randomUUID().toString(), ImmutableList.<ObjectType>of(ObjectType.ACCOUNT), null);
             final UUID tagDefinitionId = tagDefinitionApi.createTagDefinition(tagDefinition, requestOptions).getId();
             accountApi.createAccountTags(account.getAccountId(), ImmutableList.<UUID>of(tagDefinitionId), requestOptions);
         }
