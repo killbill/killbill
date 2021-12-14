@@ -155,38 +155,25 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
                             }
                         }
 
-                        // Any cutoff date 't' will return invoices with all items where:
-                        // - If IN_ADVANCE, all items where startDate >= t
-                        // - If IN_ARREAR, all items where endDate >= t; however, in more complex use cases
-                        //  (e.g cancellation in past leading to trailing pro-ration), we want to return the item
-                        // so we compare with an exiting item and check for meaningful changes (end date, plan,...)
-                        //
-                        final LocalDate startOrEndDate;
-                        if (billingMode == BillingMode.IN_ADVANCE) {
-                            return invoiceItem.getStartDate().compareTo(cutoffDate) >= 0;
-                        } else /*  BillingMode.IN_ARREAR */ {
-                            if (invoiceItem.getEndDate().compareTo(cutoffDate) >= 0) {
-                                return true;
-                            }
-
+                        if ((billingMode == BillingMode.IN_ADVANCE && invoiceItem.getStartDate().compareTo(cutoffDate) >= 0) ||
+                            (billingMode == BillingMode.IN_ARREAR && invoiceItem.getEndDate().compareTo(cutoffDate) >= 0)) {
+                            return true;
+                        } else {
                             for (final Invoice inv : invoices) {
                                 final InvoiceItem existingItem = Iterables.tryFind(inv.getInvoiceItems(), new Predicate<InvoiceItem>() {
                                     @Override
                                     public boolean apply(final InvoiceItem item) {
+                                        // If we find a similar item in the 'existing' list, i.e same subscription, same start date,
+                                        // we keep it so it cancels out in the tree later.
+                                        // We don't include the end date to catch trailing pro-ration (early cancellation)
+                                        //
                                         return (item.getInvoiceItemType() == InvoiceItemType.RECURRING &&
                                                 item.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
                                                 item.getStartDate().compareTo(invoiceItem.getStartDate()) == 0);
                                     }
                                 }).orNull();
                                 if (existingItem != null) {
-                                    if (existingItem.getEndDate().compareTo(invoiceItem.getEndDate()) != 0 ||
-                                        !existingItem.getPlanName().equals(invoiceItem.getPlanName()) ||
-                                        !existingItem.getPhaseName().equals(invoiceItem.getPhaseName()) ||
-                                        existingItem.getCatalogEffectiveDate().compareTo(invoiceItem.getCatalogEffectiveDate()) != 0) {
-                                        return true;
-                                    } else {
-                                        return false;
-                                    }
+                                    return true;
                                 }
                             }
                             return false;
