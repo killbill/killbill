@@ -68,10 +68,7 @@
             <!-- EVERGREEN phase types must have an UNLIMITED Duration specified -->
             <finalPhase type="EVERGREEN">
                 <duration>
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
+                    <unit>UNLIMITED</unit>
                 </duration>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
