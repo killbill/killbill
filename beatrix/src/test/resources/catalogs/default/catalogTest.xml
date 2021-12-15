@@ -546,22 +546,10 @@
 
         <plan name="pistol-monthly-fixedterm">
             <product>Pistol</product>
-            <initialPhases>
-                <phase type="TRIAL">
-                    <duration>
-                        <unit>DAYS</unit>
-                        <number>30</number>
-                    </duration>
-                    <fixed>
-                        <fixedPrice>
-                        </fixedPrice>
-                    </fixed>
-                </phase>
-            </initialPhases>
             <finalPhase type="FIXEDTERM">
                 <duration>
                     <unit>MONTHS</unit>
-                    <number>12</number>
+                    <number>1</number>
                 </duration>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>

@@ -563,6 +563,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
         try {
+
             final List<SubscriptionBillingEvent> result = new ArrayList<SubscriptionBillingEvent>();
             final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
                     clock, transitions, Order.ASC_FROM_PAST,
@@ -572,14 +573,18 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             StaticCatalog lastActiveCatalog = null;
             final PriorityQueue<SubscriptionBillingEvent> candidatesCatalogChangeEvents = new PriorityQueue<SubscriptionBillingEvent>();
             boolean foundInitialEvent = false;
+
+            SubscriptionBaseTransitionData lastPhaseTransition = null;
             while (it.hasNext()) {
 
                 final SubscriptionBaseTransitionData cur = (SubscriptionBaseTransitionData) it.next();
-
                 final boolean isCreateOrTransfer = cur.getTransitionType() == SubscriptionBaseTransitionType.CREATE ||
                                                    cur.getTransitionType() == SubscriptionBaseTransitionType.TRANSFER;
                 final boolean isChangeEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CHANGE;
+                final boolean isPhaseEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.PHASE;
                 final boolean isCancelEvent = cur.getTransitionType() == SubscriptionBaseTransitionType.CANCEL;
+
+
 
                 if (!foundInitialEvent) {
                     foundInitialEvent = isCreateOrTransfer;
@@ -588,6 +593,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                 // Remove anything prior to first CREATE
                 if (foundInitialEvent) {
 
+                    // Track the last transition that may modify the phase -- either from a new Plan or new PlanPhase of the same Plan
+                    if (isCreateOrTransfer || isChangeEvent || isPhaseEvent) {
+                        lastPhaseTransition = cur;
+                    }
 
                     // Look for any catalog change transition whose date is less the cur event
                     SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
@@ -643,12 +652,35 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     }
                 }
             }
+            // If we end up with a PlanPhase which is not evergreen, it means it should STOP at the end of the duration
+            // Ideally, we should have a special transition type (e.g 'EXPIRED') and not compute this transition dynamically
+            // See https://github.com/killbill/killbill/issues/824
+            SubscriptionBillingEvent expiredTransition = null;
+            if (lastPhaseTransition != null &&
+                lastPhaseTransition.getNextPhase() != null &&
+                lastPhaseTransition.getNextPhase().getPhaseType() != PhaseType.EVERGREEN) {
+                final DateTime effectiveDate = lastPhaseTransition.getNextPhase().getDuration().addToDateTime(lastPhaseTransition.getEffectiveTransitionTime());
+                // Insert the expiredTransition at the right place depending on whether or not we still have pending catalog version transitions
+                // (there is a sorting of all billing event in junction, so this is not strictly necessary but cleaner)
+                expiredTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CANCEL, null, null, effectiveDate,
+                                                                                                       lastPhaseTransition.getTotalOrdering(), lastPhaseTransition.getNextBillingCycleDayLocal(),
+                                                                                                       CatalogDateHelper.toUTCDateTime(lastPhaseTransition.getNextPlan().getCatalog().getEffectiveDate()));
+            }
+
 
             SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
             while (prevCandidateForCatalogChangeEvents != null) {
+                if (expiredTransition != null && expiredTransition.getEffectiveDate().compareTo(prevCandidateForCatalogChangeEvents.getEffectiveDate()) <= 0) {
+                    result.add(expiredTransition);
+                    expiredTransition = null;
+                }
                 result.add(prevCandidateForCatalogChangeEvents);
                 prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
             }
+            if (expiredTransition != null) {
+                result.add(expiredTransition);
+            }
+
             return result;
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
