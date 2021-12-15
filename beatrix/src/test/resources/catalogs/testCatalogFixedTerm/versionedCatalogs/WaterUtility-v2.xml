@@ -71,28 +71,28 @@
 				</recurring>
 			</finalPhase>
 		</plan>
-  <plan name="plumber-insurance-monthly2">
-  <effectiveDateForExistingSubscriptions>2021-04-12T00:00:00+00:00
+		<plan name="plumber-insurance-monthly2">
+			<effectiveDateForExistingSubscriptions>2021-04-12T00:00:00+00:00
 			</effectiveDateForExistingSubscriptions>
-            <product>PlumberInsurance</product>
-            <initialPhases>
-            </initialPhases>
-            <finalPhase type="FIXEDTERM">
-              	<duration>
+			<product>PlumberInsurance</product>
+			<initialPhases>
+			</initialPhases>
+			<finalPhase type="FIXEDTERM">
+				<duration>
 					<unit>DAYS</unit>
 					<number>100</number>
 				</duration>
-                <recurring>
-                    <billingPeriod>MONTHLY</billingPeriod>
-                    <recurringPrice>
-                        <price>
-                            <currency>USD</currency>
-                            <value>60</value>
-                        </price>
-                    </recurringPrice>
-                </recurring>
-            </finalPhase>
-        </plan>                      
+				<recurring>
+					<billingPeriod>MONTHLY</billingPeriod>
+					<recurringPrice>
+						<price>
+							<currency>USD</currency>
+							<value>60</value>
+						</price>
+					</recurringPrice>
+				</recurring>
+			</finalPhase>
+		</plan>
 	</plans>
 	<priceLists>
 		<defaultPriceList name="DEFAULT">
