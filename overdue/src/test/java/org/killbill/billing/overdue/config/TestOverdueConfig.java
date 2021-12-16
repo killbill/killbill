@@ -19,7 +19,12 @@ package org.killbill.billing.overdue.config;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import org.killbill.billing.overdue.api.EmailNotification;
+import org.joda.time.Period;
+import org.killbill.billing.catalog.api.Duration;
+import org.killbill.billing.overdue.api.OverdueCondition;
+import org.killbill.billing.overdue.api.OverdueConfig;
+import org.killbill.billing.overdue.api.OverdueState;
+import org.killbill.billing.overdue.api.OverdueStatesAccount;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -74,5 +79,34 @@ public class TestOverdueConfig extends OverdueTestSuiteNoDB {
         Assert.assertEquals(c.getOverdueStatesAccount().getInitialReevaluationInterval().getDays(), 1);
 
         Assert.assertEquals(c.getOverdueStatesAccount().getFirstState().getName(), "OD1");
+    }
+
+    @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1497")
+    public void testBadOverdueXml() throws Exception {
+        final OverdueConfig overdueConfig = getOverdueConfig("BadOverdue.xml");
+
+        final OverdueStatesAccount statesAccount = overdueConfig.getOverdueStatesAccount();
+        Assert.assertNotNull(statesAccount);
+
+        final Period reevaluationInterval = statesAccount.getInitialReevaluationInterval();
+        Assert.assertNull(reevaluationInterval);
+
+        final OverdueState[] overdueStates = statesAccount.getStates();
+        Assert.assertNotNull(overdueStates);
+        Assert.assertEquals(overdueStates.length, 4);
+
+        for (final OverdueState state : overdueStates) {
+            Assert.assertNotNull(state.getAutoReevaluationInterval());
+
+            final OverdueCondition condition = state.getOverdueCondition();
+            Assert.assertNotNull(condition);
+
+            Assert.assertNotNull(condition.getTotalUnpaidInvoiceBalanceEqualsOrExceeds());
+
+            final Duration duration = condition.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds();
+            Assert.assertNull(duration);
+
+            // Thus, calling method in duration will throw NullPointerException
+        }
     }
 }
