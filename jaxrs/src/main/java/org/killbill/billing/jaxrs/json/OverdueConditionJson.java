@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 
+import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.jaxrs.json.CatalogJson.DurationJson;
 import org.killbill.billing.overdue.api.OverdueCondition;
 import org.killbill.billing.overdue.config.DefaultDuration;
@@ -57,7 +58,9 @@ public class OverdueConditionJson {
     }
 
     public OverdueConditionJson(final OverdueCondition overdueCondition) {
-        this.timeSinceEarliestUnpaidInvoiceEqualsOrExceeds = new DurationJson(overdueCondition.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds());
+        this.timeSinceEarliestUnpaidInvoiceEqualsOrExceeds = overdueCondition.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds() == null ?
+                                                             new DurationJson(TimeUnit.DAYS, 1) :
+                                                             new DurationJson(overdueCondition.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds());
         this.controlTagInclusion = overdueCondition.getInclusionControlTagType();
         this.controlTagExclusion = overdueCondition.getExclusionControlTagType();
         this.numberOfUnpaidInvoicesEqualsOrExceeds = overdueCondition.getNumberOfUnpaidInvoicesEqualsOrExceeds();
