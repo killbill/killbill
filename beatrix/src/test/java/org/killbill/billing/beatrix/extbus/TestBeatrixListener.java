@@ -60,7 +60,6 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.tag.DefaultTagDefinition;
-import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -71,9 +70,7 @@ import org.testng.annotations.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.killbill.billing.util.tag.dao.SystemTags.PARK_TAG_DEFINITION_ID;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -712,7 +709,7 @@ public class TestBeatrixListener {
     public void testJsonProcessingException() throws Exception {
         InvoicePaymentInfoInternalEvent event = mock(InvoicePaymentInfoInternalEvent.class);
         when(event.getBusEventType()).thenReturn(BusInternalEventType.INVOICE_PAYMENT_INFO);
-        when(objectMapper.writeValueAsString(anyObject())).thenThrow(JsonProcessingException.class);
+        when(objectMapper.writeValueAsString(any())).thenThrow(JsonProcessingException.class);
 
         // Just make sure exception gets swallowed.
         beatrixListener.handleAllInternalKillbillEvents(event);
@@ -729,7 +726,6 @@ public class TestBeatrixListener {
 
         beatrixListener.handleAllInternalKillbillEvents(event);
     }
-
 
 
     private void provideCommonBusEventInfo(BusInternalEvent event) {
