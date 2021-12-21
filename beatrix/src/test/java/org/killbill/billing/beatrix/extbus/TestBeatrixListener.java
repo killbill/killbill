@@ -72,8 +72,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.killbill.billing.util.tag.dao.SystemTags.PARK_TAG_DEFINITION_ID;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -712,7 +711,7 @@ public class TestBeatrixListener {
     public void testJsonProcessingException() throws Exception {
         InvoicePaymentInfoInternalEvent event = mock(InvoicePaymentInfoInternalEvent.class);
         when(event.getBusEventType()).thenReturn(BusInternalEventType.INVOICE_PAYMENT_INFO);
-        when(objectMapper.writeValueAsString(anyObject())).thenThrow(JsonProcessingException.class);
+        when(objectMapper.writeValueAsString(any())).thenThrow(JsonProcessingException.class);
 
         // Just make sure exception gets swallowed.
         beatrixListener.handleAllInternalKillbillEvents(event);
