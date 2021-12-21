@@ -79,8 +79,8 @@ public class TestOverdueResource extends TestJaxRsResourceBase {
      * 'timeSinceEarliestUnpaidInvoiceEqualsOrExceeds' element.
      */
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1497")
-    public void testGetOverdueConfigJson_noTimeSinceEarliest() throws Exception {
-        final OverdueConfig overdueConfig = getOverdueConfig("overdue_no-TimeSinceEarliest.xml");
+    public void testGetOverdueConfigJsonNoTimeSinceEarliest() throws Exception {
+        final OverdueConfig overdueConfig = getOverdueConfig("overdue_noTimeSinceEarliest.xml");
 
         when(context.createTenantContextNoAccountId(servletRequest)).thenReturn(tenantContext);
         when(overdueApi.getOverdueConfig(any())).thenReturn(overdueConfig);
@@ -110,11 +110,11 @@ public class TestOverdueResource extends TestJaxRsResourceBase {
 
     /**
      * XML in test contains the same value as defined in: https://github.com/killbill/killbill/issues/1497, except that
-     * 'timeSinceEarliestUnpaidInvoiceEqualsOrExceeds' element is added
+     * 'timeSinceEarliestUnpaidInvoiceEqualsOrExceeds' element is added.
      */
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1497")
-    public void testGetOverdueConfigJson_withTimeSinceEarliest() throws Exception {
-        final OverdueConfig overdueConfig = getOverdueConfig("overdue_with-TimeSinceEarliest.xml");
+    public void testGetOverdueConfigJsonWithTimeSinceEarliest() throws Exception {
+        final OverdueConfig overdueConfig = getOverdueConfig("overdue_withTimeSinceEarliest.xml");
 
         when(context.createTenantContextNoAccountId(servletRequest)).thenReturn(tenantContext);
         when(overdueApi.getOverdueConfig(any())).thenReturn(overdueConfig);
@@ -128,12 +128,12 @@ public class TestOverdueResource extends TestJaxRsResourceBase {
 
     /**
      * XML in test have the same content as used in {@link #testGetOverdueConfigJson()}, but with
-     * 'totalUnpaidInvoiceBalanceEqualsOrExceeds' removed in all condition. Purpose of this to proof that
-     * 'totalUnpaidInvoiceBalanceEqualsOrExceeds' in not causing problem in JSON marshalling context.
+     * 'totalUnpaidInvoiceBalanceEqualsOrExceeds' removed in all condition. Purpose of this to prove that
+     * 'totalUnpaidInvoiceBalanceEqualsOrExceeds' is not causing any problem when marshalling to JSON.
      */
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1497")
-    public void testGetOverdueConfigJson_withTimeSinceEarliest_noTotalInvoice() throws Exception {
-        final OverdueConfig overdueConfig = getOverdueConfig("overdue_with-TimeSinceEarliest_no-TotalUnpaidInvoice.xml");
+    public void testGetOverdueConfigJsonWithTimeSinceEarliestNoTotalInvoice() throws Exception {
+        final OverdueConfig overdueConfig = getOverdueConfig("overdue_withTimeSinceEarliestNoTotalUnpaidInvoice.xml");
 
         when(context.createTenantContextNoAccountId(servletRequest)).thenReturn(tenantContext);
         when(overdueApi.getOverdueConfig(any())).thenReturn(overdueConfig);
