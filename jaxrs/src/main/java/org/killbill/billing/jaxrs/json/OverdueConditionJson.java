@@ -58,7 +58,7 @@ public class OverdueConditionJson {
 
     public OverdueConditionJson(final OverdueCondition overdueCondition) {
         this.timeSinceEarliestUnpaidInvoiceEqualsOrExceeds = overdueCondition.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds() == null ?
-                                                             new DurationJson(null, 0) :
+                                                             null :
                                                              new DurationJson(overdueCondition.getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds());
         this.controlTagInclusion = overdueCondition.getInclusionControlTagType();
         this.controlTagExclusion = overdueCondition.getExclusionControlTagType();
