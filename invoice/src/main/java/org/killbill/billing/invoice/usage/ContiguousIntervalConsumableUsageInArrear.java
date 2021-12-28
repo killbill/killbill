@@ -103,10 +103,11 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
                         BigDecimal afterRateTierPrice = toBeBilledUsageDetail.getTierPrice();
 //                        判断上个月订阅 & 用量费用大于0 by eilir 2021-12-26
-                        if(billingPeriod.getPeriod().getMonths() == 1 &&
+                        if(
                            billingStartDate.getMonthOfYear() == LocalDate.now().getMonthOfYear() - 1 &&
                            toBeBilledUsageDetail.getTierPrice().compareTo(BigDecimal.ZERO) > 0){
-                            final BigDecimal leadingProRationPeriods = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
+                            final BigDecimal leadingProRationPeriods = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, endDate,
+                                                                                                                                   billingPeriod == BillingPeriod.NO_BILLING_PERIOD ? BillingPeriod.MONTHLY : billingPeriod);
                             afterRateTierPrice = KillBillMoney.of(leadingProRationPeriods.multiply(toBeBilledUsageDetail.getTierPrice()), getCurrency());
                         }
 
@@ -125,9 +126,10 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
                     // by eilir 2021-12-26
                     if ( amountToBill.compareTo(BigDecimal.ZERO) > 0 &&
-                         billingPeriod.getPeriod().getMonths() == 1 &&
+//                         billingPeriod.getPeriod().getMonths() == 1 &&
                          billingStartDate.getMonthOfYear() >= LocalDate.now().getMonthOfYear() - 1 ) {
-                        final BigDecimal leadingProRationPeriods = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
+                        final BigDecimal leadingProRationPeriods = InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod(startDate, endDate,
+                                                                                                                               billingPeriod == BillingPeriod.NO_BILLING_PERIOD ? BillingPeriod.MONTHLY : billingPeriod);
                         final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, endDate, leadingProRationPeriods);
                         log.info("Adding pro-ration: {}", itemData);
                         afterRateAmount = KillBillMoney.of(leadingProRationPeriods.multiply(amountToBill), getCurrency());
