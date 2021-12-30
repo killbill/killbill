@@ -70,9 +70,9 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Range;
 import com.google.inject.Inject;
 
+import static org.killbill.billing.invoice.generator.InvoiceDateUtils.adjForCalendarMonth;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateNumberOfWholeBillingPeriods;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate;
-import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationBeforeFirstBillingPeriod;
 import static org.killbill.billing.subscription.api.SubscriptionBaseTransitionType.BCD_CHANGE;
 
 public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator {
@@ -355,8 +355,10 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         // is to charge for that period
         //
         if (endDate != null && !endDate.isAfter(billingIntervalDetail.getFirstBillingCycleDate())) {
-            final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, endDate, billingPeriod);
-            final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, endDate, leadingProRationPeriods);
+            LocalDate newstartDate = startDate;
+            LocalDate newendDate = endDate;
+            final RecurringInvoiceItemData itemData = adjForCalendarMonth(newstartDate, newendDate, billingIntervalDetail.getFirstBillingCycleDate());
+//            final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, endDate, leadingProRationPeriods);
             results.add(itemData);
             return new RecurringInvoiceItemDataWithNextBillingCycleDate(results, billingIntervalDetail);
         }
@@ -367,13 +369,16 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         // ii) The endDate is is not null and is strictly after our firstBillingCycleDate (previous check)
         //
         if (billingIntervalDetail.getFirstBillingCycleDate().isAfter(startDate)) {
-            final BigDecimal leadingProRationPeriods = calculateProRationBeforeFirstBillingPeriod(startDate, billingIntervalDetail.getFirstBillingCycleDate(), billingPeriod);
-            if (leadingProRationPeriods != null && leadingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
+            LocalDate newstartDate = startDate;
+            LocalDate newendDate = endDate;
+//            final BigDecimal leadingProRationPeriods = adjForCalendarMonth(startDate, billingIntervalDetail.getFirstBillingCycleDate(), billingPeriod, startDate);
+//            if (leadingProRationPeriods != null && leadingProRationPeriods.compareTo(BigDecimal.ZERO) > 0) {
                 // Not common - add info in the logs for debugging purposes
-                final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, billingIntervalDetail.getFirstBillingCycleDate(), leadingProRationPeriods);
+//                final RecurringInvoiceItemData itemData = new RecurringInvoiceItemData(startDate, billingIntervalDetail.getFirstBillingCycleDate(), leadingProRationPeriods);
+                final RecurringInvoiceItemData itemData = adjForCalendarMonth(newstartDate, endDate, billingIntervalDetail.getFirstBillingCycleDate());
                 log.info("Adding pro-ration: {}", itemData);
                 results.add(itemData);
-            }
+//            }
         }
 
         //
