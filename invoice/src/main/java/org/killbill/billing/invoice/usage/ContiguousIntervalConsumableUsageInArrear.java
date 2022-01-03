@@ -129,9 +129,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                     BigDecimal afterRateAmount = amountToBill;
 
                     // by eilir 2021-12-26
-                    if ( amountToBill.compareTo(BigDecimal.ZERO) > 0 &&
-//                         billingPeriod.getPeriod().getMonths() == 1 &&
-                         billingStartDate.getMonthOfYear() >= LocalDate.now().getMonthOfYear() - 1 ) {
+                    if ( amountToBill.compareTo(BigDecimal.ZERO) > 0 ) {
                         LocalDate newstartDate = startDate;
                         LocalDate newendDate = endDate;
                         final BigDecimal leadingProRationPeriods = InvoiceDateUtils.adjForCalendarMonth(newstartDate, newendDate,

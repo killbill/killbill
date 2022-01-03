@@ -110,19 +110,16 @@ public class InvoiceDateUtils {
      * @return
      */
     public static BigDecimal adjForCalendarMonth(LocalDate startDate, LocalDate endDate, BillingPeriod period, final LocalDate billingStartDate) {
-        // 1. 如果startDate, endDate 相差整月，不需要改
-        // 2. 如果同月，一个为5，大的改为月末，小的改为月初
-        // 3. 如果跨月，一个为5，大的改为小月末，小的改为大月初
-        // 4. 如果billingStartDate是上个月，则计算proration。这个在前面已经判断过。这里的proration计算，应该再确认一次。
-        // 之后把这里的startDate改为billingStartDate，其余不变。
         if (period.getPeriod().getMonths() == 1) {
-            if(startDate.plusMonths(1) == endDate && billingStartDate.getMonthOfYear() < startDate.getMonthOfYear()) {
+            if(startDate.plusMonths(1).equals(endDate) && billingStartDate.isBefore(startDate.minusMonths(1).withDayOfMonth(5))) {
                 return BigDecimal.ONE;
             }
-            if (billingStartDate.getMonthOfYear() == startDate.getMonthOfYear() && billingStartDate.isBefore(startDate)) {
+            if (billingStartDate.withDayOfMonth(1).equals(startDate.withDayOfMonth(1))) { // 首月不足月比例
                 startDate = billingStartDate;
                 if(startDate.getMonthOfYear() != endDate.getMonthOfYear()) {
                     endDate = endDate.withDayOfMonth(1);
+                } else {
+                    endDate = endDate.plusMonths(1).withDayOfMonth(1);
                 }
             }
         }
@@ -130,57 +127,7 @@ public class InvoiceDateUtils {
     }
 
     public static RecurringInvoiceItemData adjForCalendarMonth(LocalDate startDate, LocalDate endDate, final LocalDate billingStartDate) {
-        BigDecimal proration = null;
-        // 1. 如果startDate, endDate 相差整月，不需要改
-        // 2. 如果同月，一个为5，大的改为月末，小的改为月初
-        // 3. 如果跨月，一个为5，大的改为小月末，小的改为大月初
-        // 4. 如果billingStartDate是上个月，则计算proration。这个在前面已经判断过。这里的proration计算，应该再确认一次。
-        // 之后把这里的startDate改为billingStartDate，其余不变。
-        if (endDate == null && billingStartDate.isBefore(startDate.plusMonths(1))) {
-            endDate = billingStartDate.getDayOfMonth() == 5 ? billingStartDate.minusDays(4) : billingStartDate;
-            if (endDate.isBefore(startDate)) {
-                endDate = endDate.plusMonths(1);
-            }
-            proration = calculateProrationBetweenDates(startDate, endDate, Days.daysBetween(startDate, startDate.plusMonths(1)).getDays());
-            return new RecurringInvoiceItemData(startDate, endDate, proration);
-        }
-        if(billingStartDate.getMonthOfYear() + 1 == endDate.getMonthOfYear() &&
-                //        if(billingStartDate.getMonthOfYear() + 1 == startDate.getMonthOfYear() &&
-                //           endDate.minusMonths(1) == startDate &&
-                ////           endDate.getDayOfMonth() != startDate.getDayOfMonth() &&
-                //           billingStartDate.isBefore(startDate)) {
-           billingStartDate.isBefore(startDate)) {
-            if (startDate.getMonthOfYear() == endDate.getMonthOfYear()) {
-                if (startDate.getDayOfMonth() == 5) {
-                    startDate = startDate.minusDays(4);
-                }
-                if (endDate.getDayOfMonth() == 5) {
-                    endDate = endDate.plusMonths(1).minusDays(4);
-                }
-            } else {
-                if (startDate.getDayOfMonth() == 5) {
-                    startDate = startDate.plusMonths(1).minusDays(4);
-                }
-                if (endDate.getDayOfMonth() == 5) {
-                    endDate = endDate.minusMonths(1).minusDays(4);
-                }
-            }
-            proration = calculateProRationBeforeFirstBillingPeriod(billingStartDate, startDate, BillingPeriod.MONTHLY);
-            return new RecurringInvoiceItemData(billingStartDate, startDate, proration);
-        } else if (billingStartDate.getMonthOfYear() == startDate.getMonthOfYear()){
-            if (endDate.getDayOfMonth() == 5) {
-                if ( startDate.getDayOfMonth() < 5) {
-                    endDate = endDate.plusMonths(1).minusDays(4);
-                } else {
-                    endDate = endDate.minusMonths(1).minusDays(4);
-                    if( endDate.isBefore(startDate)) {
-                        endDate = endDate.plusMonths(1);
-                    }
-                }
-
-            }
-        }
-        proration = calculateProRationBeforeFirstBillingPeriod(startDate, endDate, BillingPeriod.MONTHLY);
+        BigDecimal proration = adjForCalendarMonth(startDate, endDate, BillingPeriod.MONTHLY, billingStartDate);
         return new RecurringInvoiceItemData(startDate, endDate, proration);
     }
 }
