@@ -126,8 +126,21 @@ public class InvoiceDateUtils {
         return calculateProrationBetweenDates(startDate, endDate, Days.daysBetween(startDate, startDate.plusMonths(1)).getDays());
     }
 
-    public static RecurringInvoiceItemData adjForCalendarMonth(LocalDate startDate, LocalDate endDate, final LocalDate billingStartDate) {
-        BigDecimal proration = adjForCalendarMonth(startDate, endDate, BillingPeriod.MONTHLY, billingStartDate);
+    public static RecurringInvoiceItemData adjForCalendarMonth(LocalDate startDate, LocalDate endDate, final LocalDate firstBillingCycleDate) {
+        BigDecimal proration = null;
+        if (endDate == null && firstBillingCycleDate.isBefore(startDate.plusMonths(1))) {
+            endDate = firstBillingCycleDate.getDayOfMonth() == 5 ? firstBillingCycleDate.minusDays(4) : firstBillingCycleDate;
+            if (endDate.isBefore(startDate)) {
+                endDate = endDate.plusMonths(1);
+            }
+            proration = calculateProrationBetweenDates(startDate, endDate, Days.daysBetween(startDate, startDate.plusMonths(1)).getDays());
+            return new RecurringInvoiceItemData(startDate, endDate, proration);
+        }
+        if(endDate != null && !startDate.plusMonths(1).equals(endDate)) {
+            proration = adjForCalendarMonth(startDate, endDate, BillingPeriod.MONTHLY, firstBillingCycleDate);
+        } else {
+            proration = BigDecimal.ONE;
+        }
         return new RecurringInvoiceItemData(startDate, endDate, proration);
     }
 }
