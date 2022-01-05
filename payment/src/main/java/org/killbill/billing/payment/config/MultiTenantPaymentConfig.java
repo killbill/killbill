@@ -170,6 +170,11 @@ public class MultiTenantPaymentConfig extends MultiTenantConfigBase implements P
     }
 
     @Override
+    public boolean isAllowedToOverwritePaymentMethodId() {
+        return staticConfig.isAllowedToOverwritePaymentMethodId();
+    }
+
+    @Override
     protected Class<? extends KillbillConfig> getConfigClass() {
         return PaymentConfig.class;
     }

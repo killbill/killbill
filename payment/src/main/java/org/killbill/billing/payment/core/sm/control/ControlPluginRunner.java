@@ -43,6 +43,7 @@ import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,10 +52,13 @@ public class ControlPluginRunner {
     private static final Logger log = LoggerFactory.getLogger(ControlPluginRunner.class);
 
     private final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry;
+    private final PaymentConfig paymentConfig;
 
     @Inject
-    public ControlPluginRunner(final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry) {
+    public ControlPluginRunner(final OSGIServiceRegistration<PaymentControlPluginApi> paymentControlPluginRegistry,
+                              final PaymentConfig paymentConfig) {
         this.paymentControlPluginRegistry = paymentControlPluginRegistry;
+        this.paymentConfig = paymentConfig;
     }
 
     public PriorPaymentControlResult executePluginPriorCalls(final Account account,
@@ -122,12 +126,12 @@ public class ControlPluginRunner {
             }
 
             if (prevResult.getAdjustedPaymentMethodId() != null) {
-                // We only allow setting the paymentMethodId but disallow overwriting an existing paymentMethodId for a given Payment. See #1097
-                if (paymentMethodId != null) {
+                // We only allow setting the paymentMethodId but disallow overwriting an existing paymentMethodId for a given Payment - See #1097
+                // unless the property isAllowedToOverwritePaymentMethodId was explicitly configured to allow this
+                if (paymentConfig.isAllowedToOverwritePaymentMethodId() || paymentMethodId != null) {
                     throw new PaymentControlApiException(String.format("Not allowed to overwrite paymentMethodId '%s' for payment '%s'",
                                                                        paymentMethodId, paymentId));
                 }
-
                 inputPaymentMethodId = prevResult.getAdjustedPaymentMethodId();
             }
             if (prevResult.getAdjustedPluginName() != null) {
