@@ -129,4 +129,10 @@ public interface PaymentConfig extends KillbillConfig {
     @Default("50")
     @Description("Maximum number of times the system will retry to grab global lock (with a 100ms wait each time)")
     int getMaxGlobalLockRetries();
+
+    @Config("org.killbill.payment.method.overwrite")
+    @Default("false")
+    @Description("Ability to overwrite an existing payment method from a control plugin")
+    boolean isAllowedToOverwritePaymentMethodId();
+
 }
