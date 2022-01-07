@@ -38,45 +38,35 @@ public abstract class InvoiceCalculatorUtils {
 
     public static boolean isInvoiceAdjustmentItem(final InvoiceItem invoiceItemToCheck, final Iterable<InvoiceItem> invoiceItems) {
         // Invoice level credit, i.e. credit adj, but NOT on its on own invoice
-
-        if ((InvoiceItemType.CREDIT_ADJ.equals(invoiceItemToCheck.getInvoiceItemType()) && (Iterables.size(invoiceItems) != 2 || !isCreditInvoice(invoiceItems)))) {
-            return true;
-        } else {
-            return false;
-        }
-
+    	
+    	return InvoiceItemType.CREDIT_ADJ.equals(invoiceItemToCheck.getInvoiceItemType())  &&
+                !isCreditInvoice(invoiceItems);
     }
 
-    private static boolean isCreditInvoice(final Iterable<InvoiceItem> invoiceItems) { //checks if the invoiceItems correspond to a CREDIT, that is there are only 2 items out of which one is a CREDIT_ADJ and the other is a CBA_ADJ
+    private static boolean isCreditInvoice(final Iterable<InvoiceItem> invoiceItems) { 
 
-        if (Iterables.size(invoiceItems) != 2) { //if the number of invoice items are not 2, the invoice DOES NOT correspond to a CREDIT, so return false
+        if (Iterables.size(invoiceItems) != 2) { 
             return false;
         }
 
-        Iterator<InvoiceItem> itr = invoiceItems.iterator();
+        final Iterator<InvoiceItem> itr = invoiceItems.iterator();
 
-        InvoiceItem item1 = itr.next();
-        InvoiceItem item2 = itr.next();
+        final InvoiceItem item1 = itr.next();
+        final InvoiceItem item2 = itr.next();
 
-        //If there is no item type of CREDIT_ADJ, return false
         if (!InvoiceItemType.CREDIT_ADJ.equals(item1.getInvoiceItemType()) && !InvoiceItemType.CREDIT_ADJ.equals(item2.getInvoiceItemType())) {
             return false;
         }
+        
+        return ((InvoiceItemType.CREDIT_ADJ.equals(item1.getInvoiceItemType()) && isCbaAdjItemInCreditInvoice(item1, item2)) || 
+        		(InvoiceItemType.CREDIT_ADJ.equals(item2.getInvoiceItemType()) && isCbaAdjItemInCreditInvoice(item2, item1)));
 
-        //If item1 is CREDIT_ADJ and item2 is CBA_ADJ or vice versa, return true
-        if ((InvoiceItemType.CREDIT_ADJ.equals(item1.getInvoiceItemType()) && isCbaAdjItemInCreditInvoice(item1, item2)) || (InvoiceItemType.CREDIT_ADJ.equals(item2.getInvoiceItemType()) && isCbaAdjItemInCreditInvoice(item2, item1))) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
-    private static boolean isCbaAdjItemInCreditInvoice(final InvoiceItem creditAdjItem, final InvoiceItem itemToCheck) { // check if it is a CBA_ADJ item within a CREDIT invoice of its own
-        if (InvoiceItemType.CBA_ADJ.equals(itemToCheck.getInvoiceItemType()) && itemToCheck.getInvoiceId().equals(creditAdjItem.getInvoiceId()) && itemToCheck.getAmount().compareTo(creditAdjItem.getAmount().negate()) == 0) {
-            return true;
-        } else {
-            return false;
-        }
+    private static boolean isCbaAdjItemInCreditInvoice(final InvoiceItem creditAdjItem, final InvoiceItem itemToCheck) { 
+    	return (InvoiceItemType.CBA_ADJ.equals(itemToCheck.getInvoiceItemType()) && 
+        		itemToCheck.getInvoiceId().equals(creditAdjItem.getInvoiceId()) && 
+        		itemToCheck.getAmount().compareTo(creditAdjItem.getAmount().negate()) == 0);
     }
 
     // Item adjustments
@@ -160,7 +150,7 @@ public abstract class InvoiceCalculatorUtils {
 
             if (InvoiceItemType.CREDIT_ADJ.equals(item1.getInvoiceItemType())) {
                 amountAdjusted = amountAdjusted.add(item1.getAmount());
-            } else {
+            } else  { // since the isCreditInvoice is already checked, this implies that item2 is of type CREDIT_ADJ
                 amountAdjusted = amountAdjusted.add(item2.getAmount());
             }
         }
