@@ -58,7 +58,6 @@ import static org.testng.Assert.assertEquals;
 
 public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
-
     @Override
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
@@ -101,7 +100,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         // Post an external charge
         final BigDecimal externalChargeAmount = BigDecimal.TEN;
         final UUID bundleId = UUID.randomUUID();
-        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, bundleId, UUID.randomUUID().toString(), clock.getUTCToday(), clock.getUTCToday(),externalChargeAmount, accountCurrency, null);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, bundleId, UUID.randomUUID().toString(), clock.getUTCToday(), clock.getUTCToday(), externalChargeAmount, accountCurrency, null);
         final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, null, callContext).get(0);
         verifyExternalChargeOnNewInvoice(accountId, invoiceId, accountBalance, bundleId, externalChargeAmount, externalChargeInvoiceItem);
     }
@@ -125,7 +124,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal adjustedAccountBalance = invoiceUserApi.getAccountBalance(accountId, callContext);
         Assert.assertEquals(adjustedAccountBalance, initialAccountBalance.add(externalChargeAmount));
     }
-
 
     @Test(groups = "slow")
     public void testOriginalAmountCharged() throws Exception {
@@ -266,7 +264,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         testAdjustPartialInvoiceItem(false);
     }
 
-
     @Test(groups = "slow")
     public void testAddTaxItems() throws Exception {
 
@@ -283,7 +280,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(resultTaxInvoiceItems.get(0).getAmount().compareTo(taxItemAmount), 0);
         Assert.assertEquals(resultTaxInvoiceItems.get(0).getBundleId(), bundleId);
     }
-
 
     private void testAdjustPartialInvoiceItem(final boolean recurring) throws Exception {
         final Account account = invoiceUtil.createAccount(callContext);
@@ -370,7 +366,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         final Invoice invoiceWithTag = invoiceUserApi.getInvoice(invoiceId, callContext);
         assertEquals(invoiceWithTag.getBalance().compareTo(BigDecimal.ZERO), 0);
-
 
         invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
         tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, false, callContext);
@@ -502,7 +497,6 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         }
     }
 
-
     @Test(groups = "slow")
     public void testVoidInvoiceWithUsedCredits() throws Exception {
 
@@ -517,9 +511,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(items1.size(), 1);
         final Invoice invoice1 = invoiceUserApi.getInvoice(items1.get(0).getInvoiceId(), callContext);
 
-
         final InvoiceItem externalCharge2 = new ExternalChargeInvoiceItem(null, accountId, null, "description", clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("50.00"), accountCurrency, null);
-        final List<InvoiceItem> items2 =  invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge2), true, null, callContext);
+        final List<InvoiceItem> items2 = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge2), true, null, callContext);
         assertEquals(items2.size(), 1);
         final Invoice invoice2 = invoiceUserApi.getInvoice(items2.get(0).getInvoiceId(), callContext);
 
@@ -537,13 +530,11 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(accountCBA2.compareTo(new BigDecimal("150")), 0);
     }
 
-
     @Test(groups = "slow")
     public void testDeleteUserGeneratedCredit() throws Exception {
 
         final Account account = invoiceUtil.createAccount(callContext);
         final UUID accountId = account.getId();
-
 
         // Invoice created in DRAFT state so we can add credit items on top of it
         final InvoiceItem externalCharge1 = new ExternalChargeInvoiceItem(null, accountId, null, "description", clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("100.00"), accountCurrency, null);
@@ -563,7 +554,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Create new invoice (COMMITTED)
         final InvoiceItem externalCharge2 = new ExternalChargeInvoiceItem(null, accountId, null, "description", clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("50.00"), accountCurrency, null);
-        final List<InvoiceItem> items2 =  invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge2), true, null, callContext);
+        final List<InvoiceItem> items2 = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge2), true, null, callContext);
         assertEquals(items2.size(), 1);
         final Invoice invoice2 = invoiceUserApi.getInvoice(items2.get(0).getInvoiceId(), callContext);
 
@@ -619,11 +610,71 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
             }
         }).orNull());
 
-
         final BigDecimal accountBalance4 = invoiceUserApi.getAccountBalance(accountId, callContext);
         final BigDecimal accountCBA4 = invoiceUserApi.getAccountCBA(accountId, callContext);
         Assert.assertEquals(accountBalance4.compareTo(new BigDecimal("50.0")), 0);
         Assert.assertEquals(accountCBA4.compareTo(BigDecimal.ZERO), 0);
     }
 
+    @Test(groups = "slow")
+    public void testCreditOnDraftInvoice() throws Exception {
+
+        final Account account = invoiceUtil.createAccount(callContext);
+        final UUID accountId = account.getId();
+
+        // Create external charge
+        final BigDecimal externalChargeAmount = BigDecimal.TEN;
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, externalChargeAmount, accountCurrency, null);
+
+        // Create invoice in draft status with external charge
+        final InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), false, null, callContext).get(0);
+        final Invoice externalChargeInvoice = invoiceUserApi.getInvoice(externalChargeInvoiceItem.getInvoiceId(), callContext);
+        Assert.assertEquals(externalChargeInvoice.getChargedAmount().compareTo(externalChargeAmount), 0);
+        Assert.assertEquals(externalChargeInvoice.getBalance().compareTo(BigDecimal.ZERO), 0); // invoice is in DRAFT status, so balance is 0
+
+        //Post a credit on draft invoice
+        final BigDecimal creditAmount = new BigDecimal(3);
+        final InvoiceItem credit = new CreditAdjInvoiceItem(externalChargeInvoice.getId(), accountId, clock.getUTCToday(), "Adding credit", creditAmount, accountCurrency, null);
+        invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(credit), true, null, callContext);
+
+        final Invoice updatedExternalChargeInvoice = invoiceUserApi.getInvoice(externalChargeInvoice.getId(), callContext);
+        Assert.assertEquals(updatedExternalChargeInvoice.getChargedAmount().compareTo(new BigDecimal(7)), 0); // credit is adjusted in the amountCharged since invoice is in DRAFT status 
+        Assert.assertEquals(updatedExternalChargeInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);// invoice is in DRAFT status, so balance is 0
+        
+        //commit invoice
+        invoiceUserApi.commitInvoice(externalChargeInvoice.getId(), callContext);
+        final Invoice committedInvoice = invoiceUserApi.getInvoice(externalChargeInvoice.getId(), callContext);
+        Assert.assertEquals(committedInvoice.getChargedAmount().compareTo(new BigDecimal(7)), 0);
+        Assert.assertEquals(committedInvoice.getBalance().compareTo(new BigDecimal(7)), 0); //invoice is committed so balance is now 7
+    }
+
+    @Test(groups = "slow")
+    public void testCreditWithoutDraftInvoice() throws Exception {
+
+        final Account account = invoiceUtil.createAccount(callContext);
+        final UUID accountId = account.getId();
+
+        // Create an external charge invoice
+        final BigDecimal externalChargeAmount = new BigDecimal(300);
+        final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, externalChargeAmount, accountCurrency, null);
+        InvoiceItem externalChargeInvoiceItem = invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), true, null, callContext).get(0);
+        final Invoice externalChargeInvoice = invoiceUserApi.getInvoice(externalChargeInvoiceItem.getInvoiceId(), callContext);
+        Assert.assertEquals(externalChargeInvoice.getBalance().compareTo(externalChargeAmount), 0);
+        Assert.assertEquals(externalChargeInvoice.getChargedAmount().compareTo(externalChargeAmount), 0);
+
+        // Create a credit invoice
+        final InvoiceItem creditItem = new CreditAdjInvoiceItem(null, accountId, clock.getUTCToday(), "something", new BigDecimal("200.00"), accountCurrency, null);
+        final InvoiceItem creditInvoiceItem = invoiceUserApi.insertCredits(accountId, clock.getUTCToday(), ImmutableList.of(creditItem), true, null, callContext).get(0);
+        final Invoice creditInvoice = invoiceUserApi.getInvoice(creditInvoiceItem.getInvoiceId(), callContext);
+        Assert.assertEquals(creditInvoice.getBalance().compareTo(new BigDecimal(0)), 0);
+        Assert.assertEquals(creditInvoice.getChargedAmount().compareTo(new BigDecimal(0)), 0);
+
+        // Verify that invoice balance reflects the credit
+        final Invoice updatedExternalChargeInvoice = invoiceUserApi.getInvoice(externalChargeInvoiceItem.getInvoiceId(), callContext);
+        Assert.assertEquals(updatedExternalChargeInvoice.getBalance().compareTo(new BigDecimal(100)), 0);
+
+        // Verify that amountCharged DOES NOT reflect the credit since invoice is NOT in DRAFT status
+        Assert.assertEquals(updatedExternalChargeInvoice.getChargedAmount().compareTo(new BigDecimal(300)), 0);
+
+    }
 }
