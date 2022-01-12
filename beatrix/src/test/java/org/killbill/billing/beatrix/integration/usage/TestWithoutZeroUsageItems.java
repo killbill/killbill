@@ -43,10 +43,12 @@ import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
 import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
+import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableSet;
@@ -67,15 +69,15 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         return getConfigSource(null, allExtraProperties);
     }
 
-
-    @BeforeClass(groups = "slow")
-    public void beforeClass() throws Exception {
+    @BeforeMethod(groups = "slow")
+    public void beforeMethod() throws Exception {
         if (hasFailed()) {
             return;
         }
-        super.beforeClass();
+        super.beforeMethod();
         invoiceConfig.setZeroAmountUsageDisabled(true);
         invoiceConfig.setItemResultBehaviorMode(UsageDetailMode.DETAIL);
+
     }
 
     @Test(groups = "slow")
