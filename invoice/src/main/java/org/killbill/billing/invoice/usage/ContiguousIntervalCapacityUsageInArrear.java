@@ -130,10 +130,16 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                     complies = false;
                 } else {
 
-                    allUnitAmountToZero = ro.getAmount() > 0 ? false : allUnitAmountToZero;
+                    allUnitAmountToZero = ro.getAmount().compareTo(BigDecimal.ZERO) > 0 ? false : allUnitAmountToZero;
 
                     if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
-                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), curTierPrice, ro.getAmount()));
+                        // FIXME-1469 change to correct BigDecimal implementation
+                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(
+                                tierNum,
+                                ro.getUnitType(),
+                                curTierPrice,
+                                ro.getAmount().longValue()) // FIXME-1469 change to correct BigDecimal implementation
+                        );
                         perUnitTypeDetailTierLevel.add(ro.getUnitType());
                     }
                 }
