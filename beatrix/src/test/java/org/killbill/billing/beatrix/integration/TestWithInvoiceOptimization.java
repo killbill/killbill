@@ -41,6 +41,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
+import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -112,7 +113,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
         // Trigger a change way in the past (prior the cuttoff date)
-        // org.killbill.invoice.readInvoicesBackFrom= 1 month => cuttoff date = 2020-02-01
+        // org.killbill.invoice.maxInvoiceLimit= 1 month => cuttoff date = 2020-02-01
         //
         // We verify that invoice only tried to REPAIR from cutoff date -- and in particular the period 2020-01-15 - 2020-02-01 is left untouched.
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
@@ -238,7 +239,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         // Cancel way in the past (prior the cuttoff date)
-        // org.killbill.invoice.readInvoicesBackFrom= 1 month => cuttoff date = 2020-03-01
+        // org.killbill.invoice.maxInvoiceLimit= 1 month => cuttoff date = 2020-03-01
         // NOTE that for IN_ARREAR a cuttoff date of 2020-03-01 returns items from 2020-02-01 - 2020-03-01
         //
         // We verify that invoice only tried to REPAIR from cutoff date -- and in particular the period 2020-01-15 - 2020-02-01 is left untouched.
@@ -417,8 +418,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
     }
 
     //
-    //  Usage tests as readInvoicesBackFrom also affects USAGE generation -- we only have a partial view of existing invoices.
-    //  Both readInvoicesBackFrom and readMaxRawUsagePreviousPeriod need to be in sync
+    //  Usage tests as maxInvoiceLimit also affects USAGE generation -- we only have a partial view of existing invoices.
+    //  Both maxInvoiceLimit and readMaxRawUsagePreviousPeriod need to be in sync
     //
     @Test(groups = "slow")
     public void testUsageInArrear1() throws Exception {
@@ -466,7 +467,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), 300L, callContext);
 
         // We have 2 conflicting properties (on purpose) for this test that will lead to re-invoice the usage on month 2021-04-01 -> 2021-05-01:
-        // - org.killbill.invoice.readInvoicesBackFrom= 1 -> meaning usage code does not see such invoice
+        // - org.killbill.invoice.maxInvoiceLimit= 1 -> meaning usage code does not see such invoice
         // - org.killbill.invoice.readMaxRawUsagePreviousPeriod = 2 -> meaning we pull usage data from back to 2021-04-01
         //
 
@@ -785,6 +786,181 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+    }
+
+
+    @Test(groups = "slow")
+    public void testBillRunInArrearWithUsageAndRecurring() throws Exception {
+
+        // Usage records are pulled using the most aggressive cuttoffDt
+        // 1. Because we set zeroAmountUsageDisabled=true, we don't rely on existing state (i.e the latest endDate of all usage items) to find the starting point of the cuttoffDt
+        // but instead, we default to 1 period (month) prior the date of the bill run
+        // 2. Because maxRawUsagePreviousPeriod=0, we don't go past the cuttoffDt computed in 1
+        // So, for bill run= Feb 1st -> (usage) cuttoffDt = Jan 1st - anything prior that will be ignored.
+        //
+        invoiceConfig.setMaxRawUsagePreviousPeriod(0);
+        invoiceConfig.setZeroAmountUsageDisabled(true);
+        // We make sure that our invoice optimization cuttOffDt is not greater than the usage optimization date, otherwise this could create issues
+        // as reflected by the WARN https://github.com/killbill/killbill/blob/killbill-0.22.27/invoice/src/main/java/org/killbill/billing/invoice/generator/UsageInvoiceItemGenerator.java#L131
+        //
+        // To make it simpler we keep both cuttoffDt on the same value, but we could set any value, e.g P1m, P2m, ...
+        // So, for bill run= Feb 1st -> invoice cuttOffDt = Jan 1st
+        invoiceConfig.setMaxInvoiceLimit(new Period("P0m"));
+
+        clock.setTime(new DateTime("2021-01-15T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
+        assertNotNull(account);
+
+        // Don't allow system generated invoices
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        // Reuse invoice until committed
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+
+        // Create an in-arrear RECURRING subscription
+        final LocalDate effDt1 = new LocalDate(2020, 8, 15);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
+        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null), null, effDt1, effDt1, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Subscription sub1 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, callContext);
+        assertListenerStatus();
+
+        // Create an in-arrear USAGE subscription
+        final LocalDate effDt2 = new LocalDate(2020, 9, 1);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("training-usage-in-arrear");
+        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null), null, effDt2, effDt2, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, callContext);
+        assertListenerStatus();
+
+        // Generate some usage data for past months
+        recordUsageData(sub2.getId(), "tracking-old-1", "hours", new LocalDate(2020, 9, 19), 1L, callContext);
+        recordUsageData(sub2.getId(), "tracking-old-2", "hours", new LocalDate(2020, 10, 19), 1L, callContext);
+        recordUsageData(sub2.getId(), "tracking-old-3", "hours", new LocalDate(2020, 11, 19), 1L, callContext);
+        recordUsageData(sub2.getId(), "tracking-old-4", "hours", new LocalDate(2020, 12, 19), 1L, callContext);
+
+        // Generate usage data for this month
+        recordUsageData(sub2.getId(), "tracking-1", "hours", new LocalDate(2021, 1, 19), 1L, callContext);
+
+        // 2021-02-01
+        // (Hum... Interestingly, there is no future notification set on the 1st although sub2#BCD is the 1st...)
+        clock.addDays(17);
+        Thread.sleep(1000);
+
+        // Bill run on the 2021-02-01 with targetDate end of month (EOM)
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), callContext);
+
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 2;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        // The original invoice is a catchup invoice since there is no invoice and both subscriptions started way in the past
+        // However, with our aggressive cuttoffDt, we only see what we would normally expect to see on this invoice if we had invoiced up to this point
+        // (The catchup invoice already contains everything it should have and nothing more)
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 15), new LocalDate(2021, 2, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 1), new LocalDate(2021, 2, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
+
+        // 2021-02-15
+        // Invoice notification on the 15 (Recurring subscription)
+        clock.addDays(14);
+        Thread.sleep(1000);
+
+
+        recordUsageData(sub2.getId(), "tracking-2-a", "hours", new LocalDate(2021, 2, 15), 1L, callContext);
+
+        // 2021-03-01
+        clock.addDays(14);
+        Thread.sleep(1000);
+
+        recordUsageData(sub2.getId(), "tracking-2-b", "hours", new LocalDate(2021, 2, 25), 1L, callContext);
+
+
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), callContext);
+
+        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 2;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 2, 15), new LocalDate(2021, 3, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 2, 1), new LocalDate(2021, 3, 1), InvoiceItemType.USAGE, new BigDecimal("200.00")));
+
+        // 2021-03-15
+        // Invoice notification on the 15 (Recurring subscription)
+        clock.addDays(14);
+        Thread.sleep(1000);
+
+
+        recordUsageData(sub2.getId(), "tracking-3", "hours", new LocalDate(2021, 3, 15), 1L, callContext);
+
+        // 2021-04-01
+        clock.addDays(17);
+        Thread.sleep(1000);
+
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), callContext);
+
+        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 2;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 15), new LocalDate(2021, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
+
+
+        // 2021-04-15
+        // Invoice notification on the 15 (Recurring subscription)
+        clock.addDays(14);
+        Thread.sleep(1000);
+
+        recordUsageData(sub2.getId(), "tracking-4", "hours", new LocalDate(2021, 4, 15), 1L, callContext);
+
+        // 2021-05-01
+        clock.addDays(16);
+        Thread.sleep(1000);
+
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 5, 31), callContext);
+
+        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 2;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 15), new LocalDate(2021, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
+
+
 
     }
 
