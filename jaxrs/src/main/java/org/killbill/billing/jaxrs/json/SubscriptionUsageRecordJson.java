@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -101,7 +102,7 @@ public class SubscriptionUsageRecordJson {
     public static class UsageRecordJson {
 
         private final LocalDate recordDate;
-        private final Long amount;
+        private final Long amount; // FIXME-1469 change to correct BigDecimal implementation
 
         @JsonCreator
         public UsageRecordJson(@JsonProperty("recordDate") final LocalDate recordDate,
@@ -119,7 +120,8 @@ public class SubscriptionUsageRecordJson {
         }
 
         public UsageRecord toUsageRecord() {
-            return new UsageRecord(recordDate, amount);
+            // FIXME-1469 change to correct BigDecimal implementation
+            return new UsageRecord(recordDate, new BigDecimal(amount));
         }
     }
 
