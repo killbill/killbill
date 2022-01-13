@@ -1048,9 +1048,14 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         T apply(F input) throws E;
     }
 
-    protected void recordUsageData(final UUID subscriptionId, final String trackingId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
+    protected void recordUsageData(final UUID subscriptionId,
+                                   final String trackingId,
+                                   final String unitType,
+                                   final LocalDate startDate,
+                                   final Long amount, // FIXME-1469 change to correct BigDecimal implementation
+                                   final CallContext context) throws UsageApiException {
         final List<UsageRecord> usageRecords = new ArrayList<UsageRecord>();
-        usageRecords.add(new UsageRecord(startDate, amount));
+        usageRecords.add(new UsageRecord(startDate, new BigDecimal(amount)));
         final List<UnitUsageRecord> unitUsageRecords = new ArrayList<UnitUsageRecord>();
         unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
         final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, trackingId, unitUsageRecords);
