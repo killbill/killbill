@@ -30,7 +30,7 @@ public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierU
     private final long tierBlockSize;
     private BigDecimal amount;
 
-    public UsageConsumableInArrearTierUnitAggregate(int tier, String tierUnit, BigDecimal tierPrice, Long tierBlockSize, Long quantity) {
+    public UsageConsumableInArrearTierUnitAggregate(int tier, String tierUnit, BigDecimal tierPrice, Long tierBlockSize, BigDecimal quantity) {
         this(tier, tierUnit, tierPrice, tierBlockSize, quantity, computeAmount(tierPrice, quantity));
     }
 
@@ -39,7 +39,7 @@ public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierU
                                                     @JsonProperty("tierUnit") String tierUnit,
                                                     @JsonProperty("tierPrice") BigDecimal tierPrice,
                                                     @JsonProperty("tierBlockSize") Long tierBlockSize,
-                                                    @JsonProperty("quantity") Long quantity,
+                                                    @JsonProperty("quantity") BigDecimal quantity,
                                                     @JsonProperty("amount") BigDecimal amount) {
         super(tier, tierUnit, tierPrice, quantity);
         this.amount = amount;
@@ -58,7 +58,7 @@ public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierU
         return tierPrice;
     }
 
-    public Long getQuantity() {
+    public BigDecimal getQuantity() {
         return quantity;
     }
 
@@ -74,12 +74,12 @@ public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierU
         return tierBlockSize;
     }
 
-    public void updateQuantityAndAmount(final Long additionalQuantity) {
-        this.quantity = quantity + additionalQuantity;
+    public void updateQuantityAndAmount(final BigDecimal additionalQuantity) {
+        this.quantity = quantity.add(additionalQuantity);
         this.amount = computeAmount(tierPrice, quantity);
     }
 
-    private static BigDecimal computeAmount(final BigDecimal targetTierPrice, final Long targetQuantity) {
-        return targetTierPrice.multiply(BigDecimal.valueOf(targetQuantity));
+    private static BigDecimal computeAmount(final BigDecimal targetTierPrice, final BigDecimal targetQuantity) {
+        return targetTierPrice.multiply(targetQuantity);
     }
 }
