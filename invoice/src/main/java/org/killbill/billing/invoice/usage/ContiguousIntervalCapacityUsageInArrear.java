@@ -133,13 +133,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                     allUnitAmountToZero = ro.getAmount().compareTo(BigDecimal.ZERO) > 0 ? false : allUnitAmountToZero;
 
                     if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
-                        // FIXME-1469 change to correct BigDecimal implementation
-                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(
-                                tierNum,
-                                ro.getUnitType(),
-                                curTierPrice,
-                                ro.getAmount().longValue()) // FIXME-1469 change to correct BigDecimal implementation
-                        );
+                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), curTierPrice, ro.getAmount()));
                         perUnitTypeDetailTierLevel.add(ro.getUnitType());
                     }
                 }

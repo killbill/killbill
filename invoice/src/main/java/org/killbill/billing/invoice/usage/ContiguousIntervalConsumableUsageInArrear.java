@@ -100,7 +100,9 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                         final String itemDetails = toJson(toBeBilledUsageDetail);
                         // See https://github.com/killbill/killbill/issues/1325
                         // Our current sql schema limits to an int value ...
-                        final Integer quantity = toBeBilledUsageDetail.getQuantity() <= Integer.MAX_VALUE ? toBeBilledUsageDetail.getQuantity().intValue() : -1;
+                        // FIXME-1469 change this to BigDecimal :
+                        // final Integer quantity = toBeBilledUsageDetail.getQuantity() <= Integer.MAX_VALUE ? toBeBilledUsageDetail.getQuantity().intValue() : -1;
+                        final Integer quantity = toBeBilledUsageDetail.getQuantity().intValue();
                         final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
                                                                       getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), quantity, itemDetails);
                         result.add(item);
@@ -162,7 +164,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                     UsageConsumableInArrearTierUnitAggregate usageUnitAggregate = new UsageConsumableInArrearTierUnitAggregate(
                             targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(),
                             targetTierUnitDetail.getTierBlockSize(),
-                            quantity.longValue(), // FIXME-1469 change to correct BigDecimal implementation
+                            quantity,
                             bi.getAmount());
                     tierDetails.add(usageUnitAggregate);
                 }
@@ -227,7 +229,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             }
             // We generate an entry if we consumed anything on this tier or if this is the first tier to also support $0 Usage item
             if (hasPreviousUsage) {
-                final Long previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : 0;
+                // FIXME-1469 change to correct BigDecimal implementation
+                final Long previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity().longValue() : 0;
                 // Be lenient for dryRun use cases as we could have plugin optimizations not returning full usage data
                 if (!isDryRun) {
                     if (tierNum < lastPreviousUsageTier) {
@@ -241,7 +244,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 nbUsedTierBlocks = nbUsedTierBlocks - previousUsageQuantity;
             }
             if (tierNum == 1 || nbUsedTierBlocks > 0) {
-                toBeBilledDetails.add(new UsageConsumableInArrearTierUnitAggregate(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), blockTierSize, nbUsedTierBlocks));
+                // FIXME-1469 might causing floating point problem. Take nbUsedTierBlocks changes carefully
+                toBeBilledDetails.add(new UsageConsumableInArrearTierUnitAggregate(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), blockTierSize, new BigDecimal(nbUsedTierBlocks)));
             }
         }
         return toBeBilledDetails;
@@ -270,7 +274,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         }
         final long lastBlockTierSize = targetBlock.getSize().longValue();
         final long nbBlocks = units / lastBlockTierSize + (units % lastBlockTierSize == 0 ? 0 : 1);
-        return new UsageConsumableInArrearTierUnitAggregate(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), targetBlock.getSize().longValue(), nbBlocks);
+        // FIXME-1469 might causing floating point problem. Take 'nbBlocks' changes carefully
+        return new UsageConsumableInArrearTierUnitAggregate(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), targetBlock.getSize().longValue(), new BigDecimal(nbBlocks));
     }
 
     @Override
