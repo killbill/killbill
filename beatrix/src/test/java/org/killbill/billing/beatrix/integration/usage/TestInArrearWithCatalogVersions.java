@@ -68,8 +68,8 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 1), 143L, callContext);
-        recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 18), 57L, callContext);
+        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 1), BigDecimal.valueOf(143L), callContext);
+        recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 18), BigDecimal.valueOf(57L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -79,10 +79,10 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("300.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
 
-        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), 100L, callContext); // -> Uses v1 : $150
+        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(100L), callContext); // -> Uses v1 : $150
 
         // Catalog change with new price on 2016-05-08
-        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 10), 100L, callContext); // -> Uses v2 : $250
+        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 10), BigDecimal.valueOf(100L), callContext); // -> Uses v2 : $250
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -113,8 +113,8 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 1), 143L, callContext);
-        recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 18), 57L, callContext);
+        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 1), BigDecimal.valueOf(143L), callContext);
+        recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 18), BigDecimal.valueOf(57L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -124,7 +124,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("300.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
 
-        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), 100L, callContext); // -> Uses v1 : $150
+        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(100L), callContext); // -> Uses v1 : $150
 
         final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
@@ -141,7 +141,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 7), InvoiceItemType.USAGE, new BigDecimal("150.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3"), internalCallContext);
 
-        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 10), 100L, callContext); // -> Uses special plan : $100
+        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 10), BigDecimal.valueOf(100L), callContext); // -> Uses special plan : $100
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addDays(23);
@@ -172,8 +172,8 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 5), 1L, callContext);
-        recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 5), 99L, callContext);
+        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 5), BigDecimal.valueOf(1L), callContext);
+        recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 5), BigDecimal.valueOf(99L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -183,9 +183,9 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("150.00")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
 
-        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 1), 100L, callContext);
-        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 2), 900L, callContext);
-        recordUsageData(entitlementId, "t5", "kilowatt-hour", new LocalDate(2016, 5, 3), 200L, callContext); // Move to tier 2.
+        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 1), BigDecimal.valueOf(100L), callContext);
+        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(900L), callContext);
+        recordUsageData(entitlementId, "t5", "kilowatt-hour", new LocalDate(2016, 5, 3), BigDecimal.valueOf(200L), callContext); // Move to tier 2.
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -203,10 +203,10 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         removeUsageData(entitlementId, "kilowatt-hour", new LocalDate(2016, 5, 3));
 
         //
-        recordUsageData(entitlementId, "t6", "kilowatt-hour", new LocalDate(2016, 6, 5), 100L, callContext);
-        recordUsageData(entitlementId, "t7", "kilowatt-hour", new LocalDate(2016, 6, 8), 900L, callContext);
-        recordUsageData(entitlementId, "t8", "kilowatt-hour", new LocalDate(2016, 6, 12), 50L, callContext); // Move to tier 2.
-        recordUsageData(entitlementId, "t9", "kilowatt-hour", new LocalDate(2016, 6, 13), 50L, callContext);
+        recordUsageData(entitlementId, "t6", "kilowatt-hour", new LocalDate(2016, 6, 5), BigDecimal.valueOf(100L), callContext);
+        recordUsageData(entitlementId, "t7", "kilowatt-hour", new LocalDate(2016, 6, 8), BigDecimal.valueOf(900L), callContext);
+        recordUsageData(entitlementId, "t8", "kilowatt-hour", new LocalDate(2016, 6, 12), BigDecimal.valueOf(50L), callContext); // Move to tier 2.
+        recordUsageData(entitlementId, "t9", "kilowatt-hour", new LocalDate(2016, 6, 13), BigDecimal.valueOf(50L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -249,8 +249,8 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 5), 1L, callContext);
-        recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 5), 99L, callContext);
+        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 5), BigDecimal.valueOf(1L), callContext);
+        recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 5), BigDecimal.valueOf(99L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -262,12 +262,12 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
-        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), 100L, callContext);
+        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(100L), callContext);
 
         // Update subscription BCD
         bp.updateBCD(9, new LocalDate(2016, 5, 9), callContext);
 
-        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 10), 10L, callContext);
+        recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 10), BigDecimal.valueOf(10L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addDays(9);
