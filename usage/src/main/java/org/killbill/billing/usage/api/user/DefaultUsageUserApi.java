@@ -83,7 +83,8 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
         final List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
         for (final UnitUsageRecord unitUsageRecord : record.getUnitUsageRecord()) {
             for (final UsageRecord usageRecord : unitUsageRecord.getDailyAmount()) {
-                usages.add(new RolledUpUsageModelDao(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), usageRecord.getAmount(), trackingIds));
+                // FIXME-1469 : API backward compat in usageRecord.getAmount()
+                usages.add(new RolledUpUsageModelDao(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), BigDecimal.valueOf(usageRecord.getAmount()), trackingIds));
             }
         }
         rolledUpUsageDao.record(usages, internalCallContext);
@@ -141,8 +142,9 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
                 continue;
             }
 
+            // FIXME-1469 : API backward compat
             BigDecimal currentAmount = tmp.get(cur.getUnitType());
-            BigDecimal updatedAmount = (currentAmount != null) ? currentAmount.add(cur.getAmount()) : cur.getAmount();
+            BigDecimal updatedAmount = (currentAmount != null) ? currentAmount.add(BigDecimal.valueOf(cur.getAmount())) : BigDecimal.valueOf(cur.getAmount());
             tmp.put(cur.getUnitType(), updatedAmount);
         }
         final List<RolledUpUnit> result = new ArrayList<RolledUpUnit>(tmp.size());

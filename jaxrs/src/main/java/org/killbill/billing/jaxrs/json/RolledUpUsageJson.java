@@ -89,7 +89,7 @@ public class RolledUpUsageJson {
         }
 
         public RolledUpUnitJson(final RolledUpUnit input) {
-            this(input.getUnitType(), input.getAmount());
+            this(input.getUnitType(), BigDecimal.valueOf(input.getAmount()) /* FIXME-1469 : API backward compat */);
         }
 
         public String getUnitType() {

@@ -146,7 +146,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                 creditItem.getAmount().negate(),
                                                 creditItem.getRate(),
                                                 creditItem.getCurrency(),
-                                                creditItem.getQuantity(),
+                                                BigDecimal.valueOf(creditItem.getQuantity()), /* FIXME-1469 : API backward compat */
                                                 creditItem.getItemDetails());
             }
         });
@@ -614,7 +614,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                            inputItem.getRate(),
                                                                            accountCurrency,
                                                                            inputItem.getLinkedItemId(),
-                                                                           inputItem.getQuantity(),
+                                                                           BigDecimal.valueOf(inputItem.getQuantity()), /* FIXME-1469 : API backward compat */
                                                                            inputItem.getItemDetails());
 
                             break;
@@ -630,7 +630,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                       inputItem.getAmount().negate(),
                                                                       inputItem.getRate(),
                                                                       inputItem.getCurrency(),
-                                                                      inputItem.getQuantity(),
+                                                                      BigDecimal.valueOf(inputItem.getQuantity()), /* FIXME-1469 : API backward compat */
                                                                       inputItem.getItemDetails());
                             break;
                         case TAX:

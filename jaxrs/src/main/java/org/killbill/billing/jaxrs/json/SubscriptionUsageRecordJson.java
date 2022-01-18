@@ -29,7 +29,6 @@ import org.killbill.billing.usage.api.UsageRecord;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
@@ -120,8 +119,7 @@ public class SubscriptionUsageRecordJson {
         }
 
         public UsageRecord toUsageRecord() {
-            // FIXME-1469 change to correct BigDecimal implementation
-            return new UsageRecord(recordDate, new BigDecimal(amount));
+            return new UsageRecord(recordDate, new BigDecimal(amount).longValue() /* FIXME-1469 : API backward compat */);
         }
     }
 

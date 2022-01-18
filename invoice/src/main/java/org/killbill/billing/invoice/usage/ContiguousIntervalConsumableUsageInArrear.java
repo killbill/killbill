@@ -156,7 +156,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 final UsageConsumableInArrearTierUnitAggregate targetTierUnitDetail = fromJson(bi.getItemDetails(), new TypeReference<UsageConsumableInArrearTierUnitAggregate>() {});
                 if (targetTierUnitDetail.getTierUnit().equals(unitType)) {
                     // See https://github.com/killbill/killbill/issues/1325
-                    final BigDecimal quantity = bi.getQuantity();
+                    /* FIXME-1469 : API backward compat */
+                    final BigDecimal quantity = BigDecimal.valueOf(bi.getQuantity());
                     UsageConsumableInArrearTierUnitAggregate usageUnitAggregate = new UsageConsumableInArrearTierUnitAggregate(
                             targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(),
                             targetTierUnitDetail.getTierBlockSize(),
@@ -193,9 +194,9 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
         switch (usage.getTierBlockPolicy()) {
             case ALL_TIERS:
-                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(startDate, endDate, tieredBlocks, previousUsage, roUnit.getAmount());
+                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(startDate, endDate, tieredBlocks, previousUsage, BigDecimal.valueOf(roUnit.getAmount()) /* FIXME-1469 : API backward compat */);
             case TOP_TIER:
-                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, previousUsage, roUnit.getAmount().longValue() /* FIXME-1469 change to correct BigDecimal implementation */));
+                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, previousUsage, roUnit.getAmount() /* FIXME-1469 change to correct BigDecimal implementation */));
             default:
                 throw new IllegalStateException("Unknown TierBlockPolicy " + usage.getTierBlockPolicy());
         }

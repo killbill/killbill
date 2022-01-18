@@ -59,7 +59,7 @@ public class TestSubscriptionUsageRecordJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().size(), 1);
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getUnitType(), "foo");
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getDailyAmount().size(), 1);
-        Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getDailyAmount().get(0).getAmount(), BigDecimal.valueOf(5L));
+        Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getDailyAmount().get(0).getAmount(), (Long) BigDecimal.valueOf(5L).longValue() /* FIXME-1469 : API backward compat */);
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getDailyAmount().get(0).getDate(), localDate);
     }
 }

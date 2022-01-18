@@ -55,8 +55,8 @@ public class DefaultRawUsage implements RawUsageRecord {
     }
 
     @Override
-    public BigDecimal getAmount() {
-        return amount;
+    public Long getAmount() {
+        return amount.longValue();
     }
 
     @Override
