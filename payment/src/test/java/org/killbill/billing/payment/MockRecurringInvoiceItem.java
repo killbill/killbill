@@ -180,7 +180,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public BigDecimal getQuantity() { return quantity; }
+    public Integer getQuantity() { return quantity.intValue() /* FIXME-1469 : API backward compat */; }
 
     @Override
     public String getItemDetails() { return itemDetails; }

@@ -203,7 +203,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
-    public BigDecimal getQuantity() { return item.getQuantity(); }
+    public Integer getQuantity() { return item.getQuantity(); }
 
     @Override
     public String getItemDetails() { return item.getItemDetails(); }

@@ -96,7 +96,9 @@ public class InvoiceWithMetadata {
                     public boolean apply(final InvoiceItem invoiceItem) {
                         return invoiceItem.getInvoiceItemType() != InvoiceItemType.USAGE ||
                                invoiceItem.getAmount().compareTo(BigDecimal.ZERO) != 0 ||
-                               (invoiceItem.getQuantity() != null &&  invoiceItem.getQuantity().compareTo(BigDecimal.ZERO) > 0);
+                                /* FIXME-1469 : API backward compat */
+                               // (invoiceItem.getQuantity() != null &&  invoiceItem.getQuantity().compareTo(BigDecimal.ZERO) > 0);
+                               (invoiceItem.getQuantity() != null &&  invoiceItem.getQuantity() > 0);
                     }
                 });
                 final ImmutableList<InvoiceItem> filteredItems = ImmutableList.copyOf(resultingItems);

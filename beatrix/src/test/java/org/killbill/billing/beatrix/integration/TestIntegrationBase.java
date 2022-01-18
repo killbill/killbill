@@ -1052,10 +1052,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                    final String trackingId,
                                    final String unitType,
                                    final LocalDate startDate,
-                                   final BigDecimal amount, // FIXME-1469 change to correct BigDecimal implementation
+                                   final BigDecimal amount,
                                    final CallContext context) throws UsageApiException {
         final List<UsageRecord> usageRecords = new ArrayList<>();
-        usageRecords.add(new UsageRecord(startDate, amount));
+        usageRecords.add(new UsageRecord(startDate, amount.longValue())); /* FIXME-1469 : API backward compat */
         final List<UnitUsageRecord> unitUsageRecords = new ArrayList<>();
         unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
         final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, trackingId, unitUsageRecords);

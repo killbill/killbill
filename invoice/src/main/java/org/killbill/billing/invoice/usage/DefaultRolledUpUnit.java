@@ -37,8 +37,8 @@ public class DefaultRolledUpUnit implements RolledUpUnit {
     }
 
     @Override
-    public BigDecimal getAmount() {
-        return amount;
+    public Long getAmount() {
+        return amount.longValue();
     }
 
     @Override

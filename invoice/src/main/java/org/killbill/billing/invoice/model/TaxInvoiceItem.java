@@ -18,7 +18,6 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -71,7 +70,7 @@ public class TaxInvoiceItem extends InvoiceItemCatalogBase {
               i.getRate(),
               i.getCurrency(),
               i.getLinkedItemId(),
-              i.getQuantity(),
+              BigDecimal.valueOf(i.getQuantity()), /* FIXME-1469 : API backward compat */
               i.getItemDetails(),
               i.getInvoiceItemType());
     }

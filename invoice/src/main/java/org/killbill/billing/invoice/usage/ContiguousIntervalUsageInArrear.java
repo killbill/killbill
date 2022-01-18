@@ -455,7 +455,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                     if (prevRawUsage.getDate().compareTo(prevDate) >= 0 &&
                         (prevRawUsage.getDate().compareTo(curDate) < 0 || isUsageForCancellationDay)) {
                         final BigDecimal currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
-                        final BigDecimal updatedAmount = computeUpdatedAmount(currentAmount, prevRawUsage.getAmount());
+                        final BigDecimal updatedAmount = computeUpdatedAmount(currentAmount, BigDecimal.valueOf(prevRawUsage.getAmount()));
                         perRangeUnitToAmount.put(prevRawUsage.getUnitType(), updatedAmount);
                         trackingIds.add(new TrackingRecordId(prevRawUsage.getTrackingId(), invoiceId, prevRawUsage.getSubscriptionId(), prevRawUsage.getUnitType(), prevRawUsage.getDate()));
                         prevRawUsage = null;
@@ -483,7 +483,7 @@ public abstract class ContiguousIntervalUsageInArrear {
 
                         final BigDecimal currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
                         // FIXME-1469 : API backward compat
-                        final BigDecimal updatedAmount = computeUpdatedAmount(currentAmount, curRawUsage.getAmount());
+                        final BigDecimal updatedAmount = computeUpdatedAmount(currentAmount, BigDecimal.valueOf(curRawUsage.getAmount()));
                         perRangeUnitToAmount.put(curRawUsage.getUnitType(), updatedAmount);
                         trackingIds.add(new TrackingRecordId(curRawUsage.getTrackingId(), invoiceId, curRawUsage.getSubscriptionId(), curRawUsage.getUnitType(), curRawUsage.getDate()));
                     }

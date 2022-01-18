@@ -75,7 +75,7 @@ public class FixedPriceInvoiceItem extends InvoiceItemCatalogBase {
               i.getRate(),
               i.getCurrency(),
               i.getLinkedItemId(),
-              i.getQuantity(),
+              BigDecimal.valueOf(i.getQuantity()), /* FIXME-1469 : API backward compat */
               i.getItemDetails(),
               i.getInvoiceItemType());
     }
