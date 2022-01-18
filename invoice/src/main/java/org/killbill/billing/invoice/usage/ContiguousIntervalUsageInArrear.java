@@ -482,6 +482,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                         }
 
                         final BigDecimal currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
+                        // FIXME-1469 : API backward compat
                         final BigDecimal updatedAmount = computeUpdatedAmount(currentAmount, curRawUsage.getAmount());
                         perRangeUnitToAmount.put(curRawUsage.getUnitType(), updatedAmount);
                         trackingIds.add(new TrackingRecordId(curRawUsage.getTrackingId(), invoiceId, curRawUsage.getSubscriptionId(), curRawUsage.getUnitType(), curRawUsage.getDate()));
