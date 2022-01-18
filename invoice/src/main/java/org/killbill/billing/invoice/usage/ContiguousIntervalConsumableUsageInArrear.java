@@ -98,11 +98,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
                     for (UsageConsumableInArrearTierUnitAggregate toBeBilledUsageDetail : ((UsageConsumableInArrearAggregate) toBeBilledUsageDetails).getTierDetails()) {
                         final String itemDetails = toJson(toBeBilledUsageDetail);
-                        // See https://github.com/killbill/killbill/issues/1325
-                        // Our current sql schema limits to an int value ...
-                        // FIXME-1469 change this to BigDecimal :
-                        // final Integer quantity = toBeBilledUsageDetail.getQuantity() <= Integer.MAX_VALUE ? toBeBilledUsageDetail.getQuantity().intValue() : -1;
-                        final Integer quantity = toBeBilledUsageDetail.getQuantity().intValue();
+                        final BigDecimal quantity = toBeBilledUsageDetail.getQuantity();
                         final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
                                                                       getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), quantity, itemDetails);
                         result.add(item);
@@ -160,7 +156,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 final UsageConsumableInArrearTierUnitAggregate targetTierUnitDetail = fromJson(bi.getItemDetails(), new TypeReference<UsageConsumableInArrearTierUnitAggregate>() {});
                 if (targetTierUnitDetail.getTierUnit().equals(unitType)) {
                     // See https://github.com/killbill/killbill/issues/1325
-                    final BigDecimal quantity = BigDecimal.valueOf(bi.getQuantity());
+                    final BigDecimal quantity = bi.getQuantity();
                     UsageConsumableInArrearTierUnitAggregate usageUnitAggregate = new UsageConsumableInArrearTierUnitAggregate(
                             targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(),
                             targetTierUnitDetail.getTierBlockSize(),

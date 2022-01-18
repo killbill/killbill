@@ -902,7 +902,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                     startDate, endDate,
                                     amount,
                                     rateTierPrice, currency,
-                                    quantity.intValue(), // // FIXME-1469 change to correct BigDecimal implementation
+                                    quantity,
                                     usageInArrearDetail);
     }
 
@@ -936,11 +936,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final List<InvoiceItem> existingItems = new ArrayList<>();
 
         final InvoiceItem i1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, null,
-                                                    new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("10.00") /* amount */, new BigDecimal("1.00") /* rate = tierPrice*/, currency, 10 /* # units*/, usageInArrearDetail1);
+                                                    new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("10.00") /* amount */, new BigDecimal("1.00") /* rate = tierPrice*/, currency, BigDecimal.valueOf(10) /* # units*/, usageInArrearDetail1);
         final InvoiceItem i2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, null,
-                                                    new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("400.00"), new BigDecimal("10.00"), currency, 40, usageInArrearDetail2);
+                                                    new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("400.00"), new BigDecimal("10.00"), currency, BigDecimal.valueOf(40), usageInArrearDetail2);
         final InvoiceItem i3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, null,
-                                                    new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("160.00"), new BigDecimal("2.00"), currency, 80, usageInArrearDetail3);
+                                                    new LocalDate(2014, 03, 20), new LocalDate(2014, 04, 15), new BigDecimal("160.00"), new BigDecimal("2.00"), currency, BigDecimal.valueOf(80), usageInArrearDetail3);
         existingItems.addAll(ImmutableList.<InvoiceItem>of(i1, i2, i3));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL, existingItems);

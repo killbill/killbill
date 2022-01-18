@@ -184,7 +184,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         invoiceForPreviousBehavior.addInvoiceItem(new InvoiceItemModelDao(UUID.randomUUID(), clock.getUTCNow(), InvoiceItemType.USAGE, invoiceForPreviousBehavior.getId(), account.getId(), null, aoSubscription.getBundleId(), aoSubscription.getId(), "",
                                                                           "Bullets", "bullets-usage-in-arrear", "bullets-usage-in-arrear-evergreen", "bullets-usage-in-arrear-usage", catalogEffectiveDate,
                                                                           new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1),
-                                                                          BigDecimal.ZERO, BigDecimal.ZERO, Currency.USD, null, 0, "{\"tier\":1,\"tierUnit\":\"bullets\",\"tierPrice\":2.95,\"tierBlockSize\":100,\"quantity\":0,\"amount\":5.90}"));
+                                                                          BigDecimal.ZERO, BigDecimal.ZERO, Currency.USD, null, BigDecimal.ZERO, "{\"tier\":1,\"tierUnit\":\"bullets\",\"tierPrice\":2.95,\"tierBlockSize\":100,\"quantity\":0,\"amount\":5.90}"));
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         insertInvoiceItems(invoiceForPreviousBehavior);
         assertListenerStatus();
