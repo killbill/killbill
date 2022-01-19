@@ -101,11 +101,11 @@ public class SubscriptionUsageRecordJson {
     public static class UsageRecordJson {
 
         private final LocalDate recordDate;
-        private final Long amount; // FIXME-1469 change to correct BigDecimal implementation
+        private final BigDecimal amount;
 
         @JsonCreator
         public UsageRecordJson(@JsonProperty("recordDate") final LocalDate recordDate,
-                               @JsonProperty("amount") final Long amount) {
+                               @JsonProperty("amount") final BigDecimal amount) {
             this.recordDate = recordDate;
             this.amount = amount;
         }
@@ -114,12 +114,12 @@ public class SubscriptionUsageRecordJson {
             return recordDate;
         }
 
-        public Long getAmount() {
+        public BigDecimal getAmount() {
             return amount;
         }
 
         public UsageRecord toUsageRecord() {
-            return new UsageRecord(recordDate, new BigDecimal(amount).longValue() /* FIXME-1469 : API backward compat */);
+            return new UsageRecord(recordDate, amount == null ? null : amount.longValue() /* FIXME-1469 : API backward compat */);
         }
     }
 

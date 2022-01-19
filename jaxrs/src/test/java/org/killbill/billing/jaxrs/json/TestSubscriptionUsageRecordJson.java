@@ -37,9 +37,9 @@ public class TestSubscriptionUsageRecordJson extends JaxrsTestSuiteNoDB {
         final LocalDate localDate = new LocalDate();
         final UUID subscriptionId = UUID.randomUUID();
         final String trackingId = UUID.randomUUID().toString();
-        final List<UnitUsageRecordJson> unitUsageRecords = new ArrayList<UnitUsageRecordJson>();
-        final List<UsageRecordJson> usageRecords = new ArrayList<UsageRecordJson>();
-        final UsageRecordJson usageRecordJson = new UsageRecordJson(localDate, 5L);
+        final List<UnitUsageRecordJson> unitUsageRecords = new ArrayList<>();
+        final List<UsageRecordJson> usageRecords = new ArrayList<>();
+        final UsageRecordJson usageRecordJson = new UsageRecordJson(localDate, BigDecimal.valueOf(5L));
         usageRecords.add(usageRecordJson);
         final UnitUsageRecordJson unitUsageRecordJson = new UnitUsageRecordJson("foo", usageRecords);
         unitUsageRecords.add(unitUsageRecordJson);
@@ -50,7 +50,7 @@ public class TestSubscriptionUsageRecordJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().size(), 1);
         Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUnitType(), "foo");
         Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUsageRecords().size(), 1);
-        Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUsageRecords().get(0).getAmount(), Long.valueOf(5L));
+        Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUsageRecords().get(0).getAmount(), BigDecimal.valueOf(5L));
         Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUsageRecords().get(0).getRecordDate(), localDate);
 
         final SubscriptionUsageRecord subscriptionUsageRecord = subscriptionUsageRecordJson.toSubscriptionUsageRecord();
