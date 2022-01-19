@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountInternalApi;
@@ -93,7 +94,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     @Override
-    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
+    public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, @Nullable final LocalDate cutoffDt, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
         final VersionedCatalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
 
         // Check to see if billing is off for the account
@@ -106,7 +107,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
         final DefaultBillingEventSet result;
 
-        final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(fullCatalog, context);
+        final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(fullCatalog, cutoffDt, context);
+        // TODO Do we even need pulling the bundles?
         final List<SubscriptionBaseBundle> bundles = subscriptionApi.getBundlesForAccount(accountId, context);
         final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
         result = new DefaultBillingEventSet(found_AUTO_INVOICING_OFF, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
@@ -179,6 +181,8 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             dryRunArguments.getAction() == SubscriptionEventType.START_BILLING &&
             dryRunArguments.getBundleId() == null) {
             final UUID fakeBundleId = UUIDs.randomUUID();
+
+            // TODO cutoffdt for dryRun ?
             final List<SubscriptionBase> subscriptions = subscriptionApi.getSubscriptionsForBundle(fakeBundleId, dryRunArguments, context);
 
             addBillingEventsForSubscription(account, subscriptions, null, currentAccountBCD, context, result, skipSubscriptionsSet, catalog);
@@ -194,6 +198,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             if (dryRunArgumentsForBundle == null || dryRunArgumentsForBundle.getAction() == null) {
                 subscriptions = getSubscriptionsForAccountByBundleId(subscriptionsForAccount, bundle.getId());
             } else {
+                // TODO cutoffdt for dryRun ?
                 subscriptions = subscriptionApi.getSubscriptionsForBundle(bundle.getId(), dryRunArgumentsForBundle, context);
             }
 

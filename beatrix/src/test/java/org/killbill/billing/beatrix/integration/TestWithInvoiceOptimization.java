@@ -417,6 +417,81 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         checkNothingToInvoice(account.getId(), new LocalDate(2021, 7, 1), false);
     }
 
+    @Test(groups = "slow")
+    public void testRecurringInArrear5() throws Exception {
+
+        // If we want to catch the early cancelation, we need to set at least P1m (if not this is ignored)
+        invoiceConfig.setMaxRawUsagePreviousPeriod(0);
+        invoiceConfig.setZeroAmountUsageDisabled(true);
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+
+        clock.setTime(new DateTime("2020-01-01T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        assertNotNull(account);
+
+        // Don't allow system generated invoices
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        // Reuse invoice until committed
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2020-02-01
+        clock.addMonths(1);
+
+        // Bill run on the 2020-02-01 with targetDate end of month (EOM)
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 2, 28), callContext);
+
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 1;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        // 2020-02-15
+        clock.addDays(14);
+
+        // Cancel in the past (previous period)
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 2, 15), true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2020-03-01
+        clock.addMonths(1);
+
+        // Bill run on the 2020-02-01 with targetDate end of month (EOM)
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 3, 31), callContext);
+
+        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 1;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 2, 1), new LocalDate(2020, 2, 15), InvoiceItemType.RECURRING, new BigDecimal("48.28")));
+
+        checkNothingToInvoice(account.getId(), new LocalDate(2020, 3, 1), false);
+
+    }
+
     //
     //  Usage tests as maxInvoiceLimit also affects USAGE generation -- we only have a partial view of existing invoices.
     //  Both maxInvoiceLimit and readMaxRawUsagePreviousPeriod need to be in sync

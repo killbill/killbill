@@ -228,7 +228,10 @@ public class InvoiceDispatcher {
 
     private void processSubscriptionStartRequestedDateWithLock(final UUID accountId, final RequestedSubscriptionInternalEvent transition, final InternalCallContext context) {
         try {
-            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, null, context);
+            // TODO
+            // Can we use cutoffDt ?
+            // Do we even need the billing events ?
+            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, null, null, context);
             if (billingEvents.isEmpty()) {
                 return;
             }
@@ -361,13 +364,15 @@ public class InvoiceDispatcher {
         final DryRunInfo dryRunInfo = isDryRun ? new DryRunInfo(dryRunArguments.getDryRunType(), dryRunInfoDate) : null;
 
         try {
+
+            final AccountInvoices accountInvoices = invoiceOptimizer.getInvoices(context);
+
             // Make sure to first set the BCD if needed then get the account object (to have the BCD set)
-            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, dryRunArguments, context);
+            final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, dryRunArguments, accountInvoices.getBillingEventCutoffDate(), context);
             if (!isApiCall && billingEvents.isAccountAutoInvoiceOff()) {
                 return null;
             }
 
-            final AccountInvoices accountInvoices = invoiceOptimizer.getInvoices(context);
             final Invoice invoice;
             if (!isDryRun) {
                 final InvoiceWithFutureNotifications invoiceWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, accountInvoices, dryRunInfo, isRescheduled, Lists.newLinkedList(), context);

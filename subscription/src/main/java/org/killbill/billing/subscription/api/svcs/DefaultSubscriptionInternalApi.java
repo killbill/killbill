@@ -285,10 +285,10 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final VersionedCatalog publicCatalog,  final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(final VersionedCatalog publicCatalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
-            final Map<UUID, List<DefaultSubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(catalog, context);
+            final Map<UUID, List<DefaultSubscriptionBase>> internalSubscriptions = dao.getSubscriptionsForAccount(catalog, cutoffDt, context);
             final Map<UUID, List<SubscriptionBase>> result = new HashMap<UUID, List<SubscriptionBase>>();
             for (final UUID bundleId : internalSubscriptions.keySet()) {
                 final List<DefaultSubscriptionBase> subscriptionsForApiUse = createSubscriptionsForApiUse(internalSubscriptions.get(bundleId));

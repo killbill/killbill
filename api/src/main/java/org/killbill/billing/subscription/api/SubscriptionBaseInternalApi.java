@@ -30,7 +30,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
@@ -75,7 +74,7 @@ public interface SubscriptionBaseInternalApi {
             throws SubscriptionBaseApiException;
 
     // TODO_CATALOG revisit which apis should take a Catalog
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(VersionedCatalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(VersionedCatalog catalog, final LocalDate cutoffDt,  InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
