@@ -1,0 +1,22 @@
+name: Sync master into work-for-release-0.23.x
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: work-for-release-0.23.x
+      - name: Merge master branch
+        run: |
+          git fetch origin master:master
+          git merge origin/master
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          branch: work-for-release-0.23.x-promotion
