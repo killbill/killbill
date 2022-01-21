@@ -157,7 +157,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 if (targetTierUnitDetail.getTierUnit().equals(unitType)) {
                     // See https://github.com/killbill/killbill/issues/1325
                     /* FIXME-1469 : API backward compat */
-                    final BigDecimal quantity = BigDecimal.valueOf(bi.getQuantity());
+                    final BigDecimal quantity = bi.getQuantity() == null ? null : BigDecimal.valueOf(bi.getQuantity());
                     UsageConsumableInArrearTierUnitAggregate usageUnitAggregate = new UsageConsumableInArrearTierUnitAggregate(
                             targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(),
                             targetTierUnitDetail.getTierBlockSize(),

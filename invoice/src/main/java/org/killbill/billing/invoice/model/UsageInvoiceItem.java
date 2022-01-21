@@ -77,7 +77,7 @@ public class UsageInvoiceItem extends InvoiceItemCatalogBase {
               i.getRate(),
               i.getCurrency(),
               i.getLinkedItemId(),
-              BigDecimal.valueOf(i.getQuantity()), /* FIXME-1469 : API backward compat */
+              i.getQuantity() == null ? null : BigDecimal.valueOf(i.getQuantity()), /* FIXME-1469 : API backward compat */
               i.getItemDetails(),
               i.getInvoiceItemType());
     }
