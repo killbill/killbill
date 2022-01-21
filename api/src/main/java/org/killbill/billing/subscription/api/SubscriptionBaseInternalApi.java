@@ -73,7 +73,6 @@ public interface SubscriptionBaseInternalApi {
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId, DryRunArguments dryRunArguments, InternalTenantContext context)
             throws SubscriptionBaseApiException;
 
-    // TODO_CATALOG revisit which apis should take a Catalog
     public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(VersionedCatalog catalog, final LocalDate cutoffDt,  InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
