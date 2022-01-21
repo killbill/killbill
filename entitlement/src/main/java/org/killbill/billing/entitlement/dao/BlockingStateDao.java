@@ -68,6 +68,16 @@ public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, Block
     public List<BlockingState> getBlockingAllForAccountRecordId(VersionedCatalog catalog, InternalTenantContext context);
 
     /**
+     * Return all events for tuple {service, blockable_id} having at least one block_billing
+     *
+     * @param catalog full catalog
+     * @param context call context
+     * @return list of active blocking states for that account
+     */
+    public List<BlockingState> getBlockingActiveForAccount(VersionedCatalog catalog, InternalTenantContext context);
+
+
+    /**
      * Return all events (past and future) across all services for a given set of blockableIds
      *
      * @param blockableIds ids of the blockable object

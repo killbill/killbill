@@ -92,7 +92,7 @@ public class BlockingCalculator {
         final Collection<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
         final Collection<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
-        final List<BlockingState> blockingEvents = blockingApi.getBlockingAllForAccount(catalog, context);
+        final List<BlockingState> blockingEvents = blockingApi.getBlockingActiveForAccount(catalog, context);
 
         // Group blocking states per type
         final Collection<BlockingState> accountBlockingEvents = new LinkedList<BlockingState>();

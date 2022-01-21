@@ -50,7 +50,7 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
     }
 
     @Override
-    public List<BlockingState> getBlockingAllForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
         return dao.getBlockingAllForAccountRecordId(catalog, context);
     }
 

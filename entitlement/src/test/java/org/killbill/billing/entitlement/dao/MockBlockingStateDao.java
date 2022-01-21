@@ -88,6 +88,11 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
+    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
+        return MoreObjects.firstNonNull(blockingStatesPerAccountRecordId.get(context.getAccountRecordId()), ImmutableList.<BlockingState>of());
+    }
+
+    @Override
     public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final InternalTenantContext context) {
         final List<BlockingState> result = new ArrayList<>();
         for (UUID cur : blockableIds) {

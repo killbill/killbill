@@ -57,6 +57,10 @@ public interface BlockingStateSqlDao extends EntitySqlDao<BlockingStateModelDao,
                                                                              @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
+    public abstract List<BlockingStateModelDao> getBlockingActiveForAccount(@SmartBindBean final InternalTenantContext context);
+
+
+    @SqlQuery
     public abstract List<BlockingStateModelDao> getBlockingHistoryForService(@Bind("blockableId") UUID blockableId,
                                                                              @Bind("service") String serviceName,
                                                                              @SmartBindBean final InternalTenantContext context);

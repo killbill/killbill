@@ -29,7 +29,7 @@ public interface BlockingInternalApi {
 
     public BlockingState getBlockingStateForService(UUID blockableId, BlockingStateType blockingStateType, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingAllForAccount(final VersionedCatalog catalog, InternalTenantContext context);
+    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, InternalTenantContext context);
 
     public void setBlockingState(BlockingState state, InternalCallContext context);
 }

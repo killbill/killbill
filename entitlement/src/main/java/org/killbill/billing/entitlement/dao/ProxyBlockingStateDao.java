@@ -240,6 +240,12 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
+    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
+        final List<BlockingState> statesOnDisk = delegate.getBlockingActiveForAccount(catalog, context);
+        return addBlockingStatesNotOnDisk(statesOnDisk, catalog, context);
+    }
+
+    @Override
     public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final InternalTenantContext context) {
         return delegate.getByBlockingIds(blockableIds, context);
     }
@@ -270,6 +276,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         final Iterable<SubscriptionBase> baseSubscriptionsToConsider;
         final Iterable<EventsStream> eventsStreams;
         try {
+            // TODO cutoffDt
             final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(catalog, null, context);
             baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(Iterables.<SubscriptionBase>concat(subscriptions.values()),
                                                                              new Predicate<SubscriptionBase>() {

@@ -101,7 +101,7 @@ public class TestOverdueModule extends DefaultOverdueModule {
         }
 
         @Override
-        public List<BlockingState> getBlockingAllForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
+        public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
             throw new UnsupportedOperationException();
         }
 
