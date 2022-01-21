@@ -11,10 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          fetch-depth: 0
           ref: work-for-release-0.23.x
       - name: Merge master branch
         run: |
-          git fetch origin master:master
           git merge origin/master
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
