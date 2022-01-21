@@ -13,6 +13,14 @@ jobs:
         with:
           fetch-depth: 0
           ref: work-for-release-0.23.x
+      - name: Setup git user
+        env:
+          BUILD_USER: ${{ secrets.BUILD_USER }}
+          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+        run: |
+          git config --global user.email "contact@killbill.io"
+          git config --global user.name "Kill Bill core team"
+          git config --global url."https://${BUILD_USER}:${BUILD_TOKEN}@github.com/".insteadOf "git@github.com:"
       - name: Merge master branch
         run: |
           git merge origin/master
