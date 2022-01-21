@@ -21,7 +21,7 @@ import java.io.File;
 import org.killbill.xmlloader.XMLLoader;
 
 public class LoadCatalog {
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) {
         if (args.length != 1) {
             System.err.println("Usage: <catalog filepath>");
             System.exit(0);
@@ -30,9 +30,11 @@ public class LoadCatalog {
         if(!file.exists()) {
             System.err.println("Error: '" + args[0] + "' does not exist");
         }
-        StandaloneCatalog catalog = XMLLoader.getObjectFromUri(file.toURI(), StandaloneCatalog.class);   
-        if (catalog != null) {
+        try {
+            XMLLoader.getObjectFromUri(file.toURI(), StandaloneCatalog.class);
             System.out.println("Success: Catalog loads!");
+        } catch (Exception e) {
+            System.err.println(String.format("Error: Cannot load %s because: %s", file.getName(), e));
         }
     }
 

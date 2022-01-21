@@ -163,6 +163,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         paymentExecutors.initialize();
         ((MockPaymentDao) paymentDao).reset();
         Profiling.resetPerThreadProfilingData();
+        clock.resetDeltaFromReality();
     }
 
     @AfterMethod(groups = "fast")

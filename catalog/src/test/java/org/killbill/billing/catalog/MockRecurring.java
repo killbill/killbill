@@ -26,4 +26,14 @@ public class MockRecurring extends DefaultRecurring {
         setRecurringPrice(recurringPrice);
     }
 
+    public static MockRecurring validRecurring() {
+        return newRecurring("1");
+    }
+
+    public static MockRecurring newRecurring(String price) {
+        MockRecurring mock = new MockRecurring(BillingPeriod.MONTHLY, MockInternationalPrice.createUSD(price));
+        mock.setPlan("Test Recurring");
+        mock.setPhase(new MockPlanPhase());
+        return mock;
+    }
 }

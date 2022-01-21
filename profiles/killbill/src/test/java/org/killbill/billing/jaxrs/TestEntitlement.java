@@ -831,6 +831,8 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getPrices().get(1).getRecurringPrice(), new BigDecimal("249.95"));
     }
 
+
+
     @Test(groups = "slow", description = "Can create an entitlement with a past billing date")
     public void testCreateSubscriptionBillingInThePast() throws Exception {
         final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
@@ -856,8 +858,9 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                                 NULL_PLUGIN_PROPERTIES,
                                                                                 requestOptions);
 
+
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(entitlementJson.getChargedThroughDate(), new LocalDate("2012-05-24"));
+        verifyChargedThroughDate(entitlementJson.getSubscriptionId(), new LocalDate("2012-05-24"));
         Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate().minusMonths(1));
         Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
@@ -1201,8 +1204,7 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertNotNull(refreshedSubscription);
 
         // We charged a full period 2012-05-28 - 2012-06-28 based on the new BCD
-        Assert.assertEquals(refreshedSubscription.getChargedThroughDate(), new LocalDate(2012, 6, 28));
-
+        verifyChargedThroughDate(refreshedSubscription.getSubscriptionId(), new LocalDate(2012, 6, 28));
     }
 
     @Test(groups = "slow", description = "Verify we can move the BCD associated with the subscription")
@@ -1413,7 +1415,18 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getPrices().get(2).getPhaseName(), "super-monthly-evergreen");
         Assert.assertNull(subscription.getPrices().get(2).getFixedPrice());
         Assert.assertEquals(subscription.getPrices().get(2).getRecurringPrice(), new BigDecimal("1200.00"));
-
-
     }
+
+    private void verifyChargedThroughDate(final UUID subscriptionId, final LocalDate ctd) {
+        // The call completion may return after the INVOICE event was received and prior the CTD was updated as it
+        // done outside and after the transaction: See https://github.com/killbill/killbill/blob/killbill-0.22.27/invoice/src/main/java/org/killbill/billing/invoice/api/user/DefaultInvoiceUserApi.java#L686
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                final Subscription refreshedSubscription = subscriptionApi.getSubscription(subscriptionId, requestOptions);
+                return refreshedSubscription != null && refreshedSubscription.getChargedThroughDate().compareTo(ctd) == 0;
+            }
+        });
+    }
+
 }

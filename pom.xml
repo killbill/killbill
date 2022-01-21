@@ -22,10 +22,10 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.144.73</version>
+        <version>0.145.2</version>
     </parent>
     <artifactId>killbill</artifactId>
-    <version>0.22.28-SNAPSHOT</version>
+    <version>0.22.29-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
@@ -82,7 +82,7 @@
                 <!-- log4jdbc-log4j2-jdbc4 still pulls 2.0-beta8 -->
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-api</artifactId>
-                <version>2.0</version>
+                <version>2.17.1</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>

@@ -375,6 +375,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         overdueConfigCache.loadDefaultOverdueConfig((OverdueConfig) null);
 
+        invoiceConfig.reset();
         clock.resetDeltaFromReality();
         busHandler.reset();
 
@@ -1220,14 +1221,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private boolean isZeroAmountUsageDisabled;
         private UsageDetailMode detailMode;
         private Period maxInvoiceLimit;
+        private int maxRawUsagePreviousPeriod;
 
         public ConfigurableInvoiceConfig(final InvoiceConfig defaultInvoiceConfig) {
             this.defaultInvoiceConfig = defaultInvoiceConfig;
-            isInvoicingSystemEnabled = defaultInvoiceConfig.isInvoicingSystemEnabled();
-            shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
-            isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
-            detailMode = defaultInvoiceConfig.getItemResultBehaviorMode();
-            maxInvoiceLimit = defaultInvoiceConfig.getMaxInvoiceLimit();
+            reset();
         }
 
         @Override
@@ -1296,12 +1294,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         @Override
         public int getMaxRawUsagePreviousPeriod() {
-            return defaultInvoiceConfig.getMaxRawUsagePreviousPeriod();
+            return maxRawUsagePreviousPeriod;
         }
 
         @Override
         public int getMaxRawUsagePreviousPeriod(final InternalTenantContext tenantContext) {
             return defaultInvoiceConfig.getMaxRawUsagePreviousPeriod();
+        }
+
+        public void setMaxRawUsagePreviousPeriod(int maxRawUsagePreviousPeriod) {
+            this.maxRawUsagePreviousPeriod = maxRawUsagePreviousPeriod;
         }
 
         @Override
@@ -1388,6 +1390,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         public void setZeroAmountUsageDisabled(final boolean isZeroAmountUsageDisabled) {
             this.isZeroAmountUsageDisabled = isZeroAmountUsageDisabled;
+        }
+
+        public void reset() {
+            isInvoicingSystemEnabled = defaultInvoiceConfig.isInvoicingSystemEnabled();
+            shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
+            isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
+            detailMode = defaultInvoiceConfig.getItemResultBehaviorMode();
+            maxInvoiceLimit = defaultInvoiceConfig.getMaxInvoiceLimit();
+            maxRawUsagePreviousPeriod = defaultInvoiceConfig.getMaxRawUsagePreviousPeriod();
         }
     }
 }

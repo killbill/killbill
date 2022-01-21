@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2020-2021 Equinix, Inc
+  ~ Copyright 2014-2021 The Billing Project, LLC
+  ~
+  ~ The Billing Project licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<overdueConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="https://docs.killbill.io/latest/overdue.xsd">
+    <accountOverdueStates>
+        <state name="Worst">
+            <condition>
+                <totalUnpaidInvoiceBalanceEqualsOrExceeds>1000.00</totalUnpaidInvoiceBalanceEqualsOrExceeds>
+            </condition>
+            <externalMessage>You must pay now</externalMessage>
+            <blockChanges>true</blockChanges>
+            <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>
+            <autoReevaluationInterval>
+                <unit>DAYS</unit><number>1</number>
+            </autoReevaluationInterval>
+        </state>
+        <state name="Worse">
+            <condition>
+                <totalUnpaidInvoiceBalanceEqualsOrExceeds>100.00</totalUnpaidInvoiceBalanceEqualsOrExceeds>
+            </condition>
+            <externalMessage>That starts to be a lot</externalMessage>
+            <blockChanges>true</blockChanges>
+            <disableEntitlementAndChangesBlocked>true</disableEntitlementAndChangesBlocked>
+            <autoReevaluationInterval>
+                <unit>DAYS</unit><number>1</number>
+            </autoReevaluationInterval>
+        </state>
+        <state name="ReallyBad">
+            <condition>
+                <totalUnpaidInvoiceBalanceEqualsOrExceeds>10.00</totalUnpaidInvoiceBalanceEqualsOrExceeds>
+            </condition>
+            <externalMessage>hummmm</externalMessage>
+            <blockChanges>true</blockChanges>
+            <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>
+            <autoReevaluationInterval>
+                <unit>DAYS</unit><number>1</number>
+            </autoReevaluationInterval>
+        </state>
+        <state name="Bad">
+            <condition>
+                <totalUnpaidInvoiceBalanceEqualsOrExceeds>1.00</totalUnpaidInvoiceBalanceEqualsOrExceeds>
+            </condition>
+            <externalMessage>You have unpaid invoices</externalMessage>
+            <blockChanges>true</blockChanges>
+            <disableEntitlementAndChangesBlocked>false</disableEntitlementAndChangesBlocked>
+            <autoReevaluationInterval>
+                <unit>DAYS</unit><number>1</number>
+            </autoReevaluationInterval>
+        </state>
+    </accountOverdueStates>
+</overdueConfig>

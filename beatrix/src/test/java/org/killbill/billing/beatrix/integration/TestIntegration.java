@@ -36,9 +36,11 @@ import org.killbill.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -69,7 +71,8 @@ import static org.testng.Assert.fail;
 
 public class TestIntegration extends TestIntegrationBase {
 
-    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/897")
+
+     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/897")
     public void testFutureCancelBPWithAOBeforePhase() throws Exception {
         // We take april as it has 30 days (easier to play with BCD)
         // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
@@ -939,7 +942,7 @@ public class TestIntegration extends TestIntegrationBase {
         // We check there is no more recurring for Refurbish-Maintenance
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
 
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 

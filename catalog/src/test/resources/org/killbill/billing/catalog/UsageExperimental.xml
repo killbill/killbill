@@ -30,6 +30,7 @@
 
     <currencies>
         <currency>BTC</currency>
+        <currency>USD</currency>
     </currencies>
 
     <units>
