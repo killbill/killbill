@@ -28,6 +28,8 @@
 
     <currencies>
         <currency>USD</currency>
+        <currency>GBP</currency>
+        <currency>EUR</currency>
     </currencies>
 
     <units>

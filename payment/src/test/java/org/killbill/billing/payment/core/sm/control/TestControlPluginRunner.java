@@ -50,7 +50,7 @@ public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
         final ImmutableList<String> paymentControlPluginNames = ImmutableList.<String>of("not-registered");
         final ImmutableList<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of();
 
-        final ControlPluginRunner controlPluginRunner = new ControlPluginRunner(new DefaultPaymentControlProviderPluginRegistry());
+        final ControlPluginRunner controlPluginRunner = new ControlPluginRunner(new DefaultPaymentControlProviderPluginRegistry(), paymentConfig);
         final PriorPaymentControlResult paymentControlResult = controlPluginRunner.executePluginPriorCalls(account,
                                                                                                            paymentMethodId,
                                                                                                            null,
@@ -89,7 +89,7 @@ public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
         final ImmutableList<String> paymentControlPluginNames = ImmutableList.<String>of("not-registered");
         final ImmutableList<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of();
 
-        final ControlPluginRunner controlPluginRunner = new ControlPluginRunner(new DefaultPaymentControlProviderPluginRegistry());
+        final ControlPluginRunner controlPluginRunner = new ControlPluginRunner(new DefaultPaymentControlProviderPluginRegistry(), paymentConfig);
         final PriorPaymentControlResult paymentControlResult = controlPluginRunner.executePluginPriorCalls(null,
                 null,
                 null,
