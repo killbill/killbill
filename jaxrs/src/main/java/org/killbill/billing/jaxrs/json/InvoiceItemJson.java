@@ -258,7 +258,7 @@ public class InvoiceItemJson extends JsonBase {
             }
 
             @Override
-            public Integer getQuantity() { return quantity.intValue(); /* FIXME-1469 : API backward compat */ }
+            public Integer getQuantity() { return quantity == null ? null : quantity.intValue(); /* FIXME-1469 : API backward compat */ }
 
             @Override
             public String getItemDetails() { return itemDetails; }
