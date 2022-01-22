@@ -182,7 +182,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(states.size(), 5);
 
 
-        states = blockingStateDao.getBlockingActiveForAccount(catalog, internalCallContext);
+        states = blockingStateDao.getBlockingActiveForAccount(catalog, null, internalCallContext);
         Assert.assertEquals(states.size(), 2);
 
     }

@@ -32,6 +32,7 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -204,7 +205,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     }
 
     @Override
-    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
+    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
             @Override
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {

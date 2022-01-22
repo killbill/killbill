@@ -19,6 +19,9 @@ package org.killbill.billing.junction;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.VersionedCatalog;
@@ -29,7 +32,7 @@ public interface BlockingInternalApi {
 
     public BlockingState getBlockingStateForService(UUID blockableId, BlockingStateType blockingStateType, String serviceName, InternalTenantContext context);
 
-    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, InternalTenantContext context);
+    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, @Nullable final LocalDate cutoffDt, InternalTenantContext context);
 
     public void setBlockingState(BlockingState state, InternalCallContext context);
 }

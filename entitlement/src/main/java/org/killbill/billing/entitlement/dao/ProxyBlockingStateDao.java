@@ -33,6 +33,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -236,13 +237,13 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     @Override
     public List<BlockingState> getBlockingAllForAccountRecordId(final VersionedCatalog catalog, final InternalTenantContext context) {
         final List<BlockingState> statesOnDisk = delegate.getBlockingAllForAccountRecordId(catalog, context);
-        return addBlockingStatesNotOnDisk(statesOnDisk, catalog, context);
+        return addBlockingStatesNotOnDisk(statesOnDisk, catalog, null, context);
     }
 
     @Override
-    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
-        final List<BlockingState> statesOnDisk = delegate.getBlockingActiveForAccount(catalog, context);
-        return addBlockingStatesNotOnDisk(statesOnDisk, catalog, context);
+    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
+        final List<BlockingState> statesOnDisk = delegate.getBlockingActiveForAccount(catalog, cutoffDt, context);
+        return addBlockingStatesNotOnDisk(statesOnDisk, catalog, cutoffDt, context);
     }
 
     @Override
@@ -269,6 +270,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     // See DefaultEntitlement#computeAddOnBlockingStates
     private List<BlockingState> addBlockingStatesNotOnDisk(final List<BlockingState> blockingStatesOnDisk,
                                                            final VersionedCatalog catalog,
+                                                           @Nullable final LocalDate cutoffDt,
                                                            final InternalTenantContext context) {
         final Collection<BlockingState> blockingStatesOnDiskCopy = new LinkedList<BlockingState>(blockingStatesOnDisk);
 
@@ -276,8 +278,7 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
         final Iterable<SubscriptionBase> baseSubscriptionsToConsider;
         final Iterable<EventsStream> eventsStreams;
         try {
-            // TODO cutoffDt
-            final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(catalog, null, context);
+            final Map<UUID, List<SubscriptionBase>> subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(catalog, cutoffDt, context);
             baseSubscriptionsToConsider = Iterables.<SubscriptionBase>filter(Iterables.<SubscriptionBase>concat(subscriptions.values()),
                                                                              new Predicate<SubscriptionBase>() {
                                                                                  @Override

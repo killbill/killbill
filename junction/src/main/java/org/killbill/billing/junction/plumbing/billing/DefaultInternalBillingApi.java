@@ -50,7 +50,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.UUIDs;
@@ -119,7 +118,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         // Pretty-print the events, before and after the blocking calculator does its magic
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
         eventsToString(logStringBuilder, result);
-        if (blockCalculator.insertBlockingEvents(result, skippedSubscriptions, subscriptionsForAccount, fullCatalog, context)) {
+        if (blockCalculator.insertBlockingEvents(result, skippedSubscriptions, subscriptionsForAccount, fullCatalog, cutoffDt, context)) {
             logStringBuilder.append("\nBilling Events After Blocking");
             eventsToString(logStringBuilder, result);
         }
@@ -190,7 +189,6 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             if (dryRunArgumentsForBundle == null || dryRunArgumentsForBundle.getAction() == null) {
                 subscriptions = getSubscriptionsForAccountByBundleId(subscriptionsForAccount, bundleId);
             } else {
-                // TODO cutoffdt for dryRun ?
                 subscriptions = subscriptionApi.getSubscriptionsForBundle(bundleId, dryRunArgumentsForBundle, context);
             }
 
@@ -277,7 +275,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
 
         for (final SubscriptionBase subscription : subscriptions) {
-
+            // TODO Can we batch those ?
             final List<SubscriptionBillingEvent> billingTransitions = subscriptionApi.getSubscriptionBillingEvents(catalog, subscription, context);
             if (billingTransitions.isEmpty() ||
                 (billingTransitions.get(0).getType() != SubscriptionBaseTransitionType.CREATE &&
