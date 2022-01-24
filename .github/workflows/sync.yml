@@ -13,6 +13,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: work-for-release-0.23.x
+          ssh-key: ${{ secrets.CREATE_PULL_REQUEST_SSH_KEY }}
       - name: Setup git user
         env:
           BUILD_USER: ${{ secrets.BUILD_USER }}
