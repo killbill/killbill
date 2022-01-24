@@ -122,7 +122,7 @@ join (
   where 1=1
   and <accountRecordIdField("")> = :accountRecordId
   <AND_CHECK_TENANT("")>
-  and block_billing
+  and block_billing = 1
   group by service, blockable_id
   having count(*) > 0) tmp
 on bs1.service = tmp.service
