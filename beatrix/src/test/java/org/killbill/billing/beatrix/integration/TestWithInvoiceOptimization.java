@@ -881,7 +881,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         //
         // To make it simpler we keep both cuttoffDt on the same value, but we could set any value, e.g P1m, P2m, ...
         // So, for bill run= Feb 1st -> invoice cuttOffDt = Jan 1st
-        invoiceConfig.setMaxInvoiceLimit(new Period("P0m"));
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
 
         clock.setTime(new DateTime("2021-01-15T3:56:02"));
 
@@ -931,7 +931,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
             public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 2;
+                return invoice.getInvoiceItems().size() == 3;
             }
         }, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -942,6 +942,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // However, with our aggressive cuttoffDt, we only see what we would normally expect to see on this invoice if we had invoiced up to this point
         // (The catchup invoice already contains everything it should have and nothing more)
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 12, 15), new LocalDate(2021, 1, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 15), new LocalDate(2021, 2, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 1), new LocalDate(2021, 2, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
 
