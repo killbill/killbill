@@ -243,7 +243,8 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     @Override
     public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
         final List<BlockingState> statesOnDisk = delegate.getBlockingActiveForAccount(catalog, cutoffDt, context);
-        return addBlockingStatesNotOnDisk(statesOnDisk, catalog, cutoffDt, context);
+        final List<BlockingState> result = (statesOnDisk.size() > 0) ? addBlockingStatesNotOnDisk(statesOnDisk, catalog, cutoffDt, context) : statesOnDisk;
+        return result;
     }
 
     @Override
