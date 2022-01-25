@@ -300,7 +300,7 @@ public class TestInvoiceHelper {
     }
 
     public List<InvoiceItemModelDao> getInvoiceItemByInvoiceId(final UUID invoiceId, final InternalCallContext internalCallContext) {
-        return invoiceItemSqlDao.getInvoiceItemsByInvoice(invoiceId.toString(), internalCallContext);
+        return invoiceItemSqlDao.getInvoiceItemsForInvoices(ImmutableList.of(invoiceId), internalCallContext);
     }
 
     public void createInvoice(final Invoice invoice, final InternalCallContext internalCallContext) throws EntityPersistenceException {
