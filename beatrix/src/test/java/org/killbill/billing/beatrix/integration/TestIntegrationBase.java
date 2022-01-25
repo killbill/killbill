@@ -1049,10 +1049,15 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         T apply(F input) throws E;
     }
 
-    protected void recordUsageData(final UUID subscriptionId, final String trackingId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
-        final List<UsageRecord> usageRecords = new ArrayList<UsageRecord>();
-        usageRecords.add(new UsageRecord(startDate, amount));
-        final List<UnitUsageRecord> unitUsageRecords = new ArrayList<UnitUsageRecord>();
+    protected void recordUsageData(final UUID subscriptionId,
+                                   final String trackingId,
+                                   final String unitType,
+                                   final LocalDate startDate,
+                                   final BigDecimal amount,
+                                   final CallContext context) throws UsageApiException {
+        final List<UsageRecord> usageRecords = new ArrayList<>();
+        usageRecords.add(new UsageRecord(startDate, amount.longValue())); /* FIXME-1469 : API backward compat */
+        final List<UnitUsageRecord> unitUsageRecords = new ArrayList<>();
         unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
         final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, trackingId, unitUsageRecords);
         usageUserApi.recordRolledUpUsage(record, context);

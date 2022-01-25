@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.joda.time.LocalDate;
@@ -34,7 +35,7 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
     private final JaxRsResourceBaseTest base = new JaxRsResourceBaseTest();
 
     @Test(groups = "fast")
-    public void testExtractPluginProperties() throws Exception {
+    public void testExtractPluginProperties() {
         final List<String> pluginPropertiesString = ImmutableList.<String>of("payment_cryptogram=EHuWW9PiBkWvqE5juRwDzAUFBAk=",
                                                                              "cc_number=4111111111111111",
                                                                              "cc_type=visa",
@@ -55,7 +56,7 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    public void testExtractPluginPropertiesWithNullProperty() throws Exception {
+    public void testExtractPluginPropertiesWithNullProperty() {
         final List<String> pluginPropertiesString = ImmutableList.<String>of("foo=",
                                                                              "bar=ttt");
         final List<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>copyOf(base.extractPluginProperties(pluginPropertiesString));
@@ -73,30 +74,30 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
 
 
     @Test(groups = "fast")
-    public void testGetHighestRecordDate() throws Exception {
+    public void testGetHighestRecordDate() {
         final UsageResourceTest usageResource = new UsageResourceTest();
 
         final List<UsageRecordJson> fooRecords = ImmutableList.<UsageRecordJson>builder()
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 04), 28L))
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 05), 2L))
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 01), 1L))
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 06), 24L))
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 04), BigDecimal.valueOf(28L)))
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 05), BigDecimal.valueOf(2L)))
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 01), BigDecimal.valueOf(1L)))
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 06), BigDecimal.valueOf(24L)))
                 .build();
         final UnitUsageRecordJson unitRecordFoo = new UnitUsageRecordJson("foo", fooRecords);
 
         final List<UsageRecordJson> barRecords = ImmutableList.<UsageRecordJson>builder()
-                .add(new UsageRecordJson(new LocalDate(2018, 02, 04), 28L))
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 06), 2L))
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 18), 1L)) // Highest date point
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 13), 24L))
+                .add(new UsageRecordJson(new LocalDate(2018, 02, 04), BigDecimal.valueOf(28L)))
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 06), BigDecimal.valueOf(2L)))
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 18), BigDecimal.valueOf(1L))) // Highest date point
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 13), BigDecimal.valueOf(24L)))
                 .build();
         final UnitUsageRecordJson unitRecordBar = new UnitUsageRecordJson("bar", barRecords);
 
         final List<UsageRecordJson> zooRecords = ImmutableList.<UsageRecordJson>builder()
-                .add(new UsageRecordJson(new LocalDate(2018, 02, 04), 28L))
-                .add(new UsageRecordJson(new LocalDate(2018, 03, 06), 2L))
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 17), 1L))
-                .add(new UsageRecordJson(new LocalDate(2018, 04, 12), 24L))
+                .add(new UsageRecordJson(new LocalDate(2018, 02, 04), BigDecimal.valueOf(28L)))
+                .add(new UsageRecordJson(new LocalDate(2018, 03, 06), BigDecimal.valueOf(2L)))
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 17), BigDecimal.valueOf(1L)))
+                .add(new UsageRecordJson(new LocalDate(2018, 04, 12), BigDecimal.valueOf(24L)))
                 .build();
         final UnitUsageRecordJson unitRecordZoo = new UnitUsageRecordJson("zoo", zooRecords);
 

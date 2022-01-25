@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,9 +37,9 @@ public class TestSubscriptionUsageRecordJson extends JaxrsTestSuiteNoDB {
         final LocalDate localDate = new LocalDate();
         final UUID subscriptionId = UUID.randomUUID();
         final String trackingId = UUID.randomUUID().toString();
-        final List<UnitUsageRecordJson> unitUsageRecords = new ArrayList<UnitUsageRecordJson>();
-        final List<UsageRecordJson> usageRecords = new ArrayList<UsageRecordJson>();
-        final UsageRecordJson usageRecordJson = new UsageRecordJson(localDate, 5L);
+        final List<UnitUsageRecordJson> unitUsageRecords = new ArrayList<>();
+        final List<UsageRecordJson> usageRecords = new ArrayList<>();
+        final UsageRecordJson usageRecordJson = new UsageRecordJson(localDate, BigDecimal.valueOf(5L));
         usageRecords.add(usageRecordJson);
         final UnitUsageRecordJson unitUsageRecordJson = new UnitUsageRecordJson("foo", usageRecords);
         unitUsageRecords.add(unitUsageRecordJson);
@@ -49,7 +50,7 @@ public class TestSubscriptionUsageRecordJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().size(), 1);
         Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUnitType(), "foo");
         Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUsageRecords().size(), 1);
-        Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUsageRecords().get(0).getAmount(), new Long(5L));
+        Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUsageRecords().get(0).getAmount(), BigDecimal.valueOf(5L));
         Assert.assertEquals(subscriptionUsageRecordJson.getUnitUsageRecords().get(0).getUsageRecords().get(0).getRecordDate(), localDate);
 
         final SubscriptionUsageRecord subscriptionUsageRecord = subscriptionUsageRecordJson.toSubscriptionUsageRecord();
@@ -58,7 +59,7 @@ public class TestSubscriptionUsageRecordJson extends JaxrsTestSuiteNoDB {
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().size(), 1);
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getUnitType(), "foo");
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getDailyAmount().size(), 1);
-        Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getDailyAmount().get(0).getAmount(), new Long(5L));
+        Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getDailyAmount().get(0).getAmount(), (Long) BigDecimal.valueOf(5L).longValue() /* FIXME-1469 : API backward compat */);
         Assert.assertEquals(subscriptionUsageRecord.getUnitUsageRecord().get(0).getDailyAmount().get(0).getDate(), localDate);
     }
 }

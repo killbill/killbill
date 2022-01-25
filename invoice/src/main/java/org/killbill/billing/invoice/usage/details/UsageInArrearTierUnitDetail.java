@@ -29,13 +29,13 @@ public class UsageInArrearTierUnitDetail {
     protected final int tier;
     protected final String tierUnit;
     protected final BigDecimal tierPrice;
-    protected Long quantity;
+    protected BigDecimal quantity;
 
     @JsonCreator
     public UsageInArrearTierUnitDetail(@JsonProperty("tier") int tier,
                                        @JsonProperty("tierUnit") String tierUnit,
                                        @JsonProperty("tierPrice") BigDecimal tierPrice,
-                                       @JsonProperty("quantity") Long quantity) {
+                                       @JsonProperty("quantity") BigDecimal quantity) {
         this.tier = tier;
         this.tierUnit = tierUnit;
         this.tierPrice = tierPrice;
@@ -54,7 +54,7 @@ public class UsageInArrearTierUnitDetail {
         return tierPrice;
     }
 
-    public Long getQuantity() {
+    public BigDecimal getQuantity() {
         return quantity;
     }
 }

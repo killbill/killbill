@@ -115,14 +115,14 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), 99L, callContext);
-        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
+        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // Wrong subscription - should be ignored...
-        testUsagePluginApi.recordUsageData(UUID.randomUUID(), "tracking-3", "bullets", new LocalDate(2012, 4, 5), 100L, callContext);
+        testUsagePluginApi.recordUsageData(UUID.randomUUID(), "tracking-3", "bullets", new LocalDate(2012, 4, 5), BigDecimal.valueOf(100L), callContext);
 
         // Wrong unit - should be ignored...
-        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-3", "bullets2", new LocalDate(2012, 4, 6), 200L, callContext);
+        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-3", "bullets2", new LocalDate(2012, 4, 6), BigDecimal.valueOf(200L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
@@ -215,7 +215,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
             return result;
         }
 
-        public void recordUsageData(final UUID subscriptionId, final String trackingId, final String unitType, final LocalDate startDate, final Long amount, final CallContext context) throws UsageApiException {
+        public void recordUsageData(final UUID subscriptionId, final String trackingId, final String unitType, final LocalDate startDate, final BigDecimal amount, final CallContext context) throws UsageApiException {
 
             List<RawUsageRecord> record = usageData.get(startDate);
             if (record == null) {

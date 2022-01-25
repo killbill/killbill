@@ -19,7 +19,6 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +37,6 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
-import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +75,7 @@ public class InvoiceItemFactory {
         final BigDecimal rate = invoiceItemModelDao.getRate();
         final Currency currency = invoiceItemModelDao.getCurrency();
         final UUID linkedItemId = invoiceItemModelDao.getLinkedItemId();
-        final Integer quantity = invoiceItemModelDao.getQuantity();
+        final BigDecimal quantity = invoiceItemModelDao.getQuantity();
         final String itemDetails = invoiceItemModelDao.getItemDetails();
 
         final InvoiceItemType type = invoiceItemModelDao.getType();

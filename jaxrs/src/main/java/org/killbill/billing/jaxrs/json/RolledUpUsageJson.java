@@ -16,6 +16,7 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,7 +30,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(value="RolledUpUsage")
 public class RolledUpUsageJson {
@@ -79,24 +79,24 @@ public class RolledUpUsageJson {
     public static class RolledUpUnitJson {
 
         private final String unitType;
-        private final Long amount;
+        private final BigDecimal amount;
 
         @JsonCreator
         public RolledUpUnitJson(@JsonProperty("unitType") final String unitType,
-                                @JsonProperty("amount") final Long amount) {
+                                @JsonProperty("amount") final BigDecimal amount) {
             this.unitType = unitType;
             this.amount = amount;
         }
 
         public RolledUpUnitJson(final RolledUpUnit input) {
-            this(input.getUnitType(), input.getAmount());
+            this(input.getUnitType(), BigDecimal.valueOf(input.getAmount()) /* FIXME-1469 : API backward compat */);
         }
 
         public String getUnitType() {
             return unitType;
         }
 
-        public Long getAmount() {
+        public BigDecimal getAmount() {
             return amount;
         }
     }

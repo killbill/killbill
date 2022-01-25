@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,9 +98,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
                     for (UsageConsumableInArrearTierUnitAggregate toBeBilledUsageDetail : ((UsageConsumableInArrearAggregate) toBeBilledUsageDetails).getTierDetails()) {
                         final String itemDetails = toJson(toBeBilledUsageDetail);
-                        // See https://github.com/killbill/killbill/issues/1325
-                        // Our current sql schema limits to an int value ...
-                        final Integer quantity = toBeBilledUsageDetail.getQuantity() <= Integer.MAX_VALUE ? toBeBilledUsageDetail.getQuantity().intValue() : -1;
+                        final BigDecimal quantity = toBeBilledUsageDetail.getQuantity();
                         final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
                                                                       getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), quantity, itemDetails);
                         result.add(item);
@@ -159,8 +156,14 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 final UsageConsumableInArrearTierUnitAggregate targetTierUnitDetail = fromJson(bi.getItemDetails(), new TypeReference<UsageConsumableInArrearTierUnitAggregate>() {});
                 if (targetTierUnitDetail.getTierUnit().equals(unitType)) {
                     // See https://github.com/killbill/killbill/issues/1325
-                    final Long quantity = bi.getQuantity().longValue();
-                    tierDetails.add(new UsageConsumableInArrearTierUnitAggregate(targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(), targetTierUnitDetail.getTierBlockSize(), quantity, bi.getAmount()));
+                    /* FIXME-1469 : API backward compat */
+                    final BigDecimal quantity = bi.getQuantity() == null ? null : BigDecimal.valueOf(bi.getQuantity());
+                    UsageConsumableInArrearTierUnitAggregate usageUnitAggregate = new UsageConsumableInArrearTierUnitAggregate(
+                            targetTierUnitDetail.getTier(), targetTierUnitDetail.getTierUnit(), bi.getRate(),
+                            targetTierUnitDetail.getTierBlockSize(),
+                            quantity,
+                            bi.getAmount());
+                    tierDetails.add(usageUnitAggregate);
                 }
             } else {
                 final UsageConsumableInArrearAggregate usageDetail = fromJson(bi.getItemDetails(), new TypeReference<UsageConsumableInArrearAggregate>() {});
@@ -191,25 +194,25 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
         switch (usage.getTierBlockPolicy()) {
             case ALL_TIERS:
-                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(startDate, endDate, tieredBlocks, previousUsage, roUnit.getAmount());
+                return computeToBeBilledConsumableInArrearWith_ALL_TIERS(startDate, endDate, tieredBlocks, previousUsage, BigDecimal.valueOf(roUnit.getAmount()) /* FIXME-1469 : API backward compat */);
             case TOP_TIER:
-                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, previousUsage, roUnit.getAmount()));
+                return Arrays.asList(computeToBeBilledConsumableInArrearWith_TOP_TIER(tieredBlocks, previousUsage, roUnit.getAmount() /* FIXME-1469 change to correct BigDecimal implementation */));
             default:
                 throw new IllegalStateException("Unknown TierBlockPolicy " + usage.getTierBlockPolicy());
         }
     }
 
-    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final LocalDate startDate, final LocalDate endDate, final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final Long units) throws CatalogApiException {
+    List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final LocalDate startDate, final LocalDate endDate, final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final BigDecimal units) throws CatalogApiException {
 
         List<UsageConsumableInArrearTierUnitAggregate> toBeBilledDetails = Lists.newLinkedList();
-        long remainingUnits = units;
+        // FIXME-1469 change to correct BigDecimal implementation
+        long remainingUnits = units.longValue();
         int tierNum = 0;
 
         final int lastPreviousUsageTier = previousUsage.size(); // we count tier from 1, 2, ...
         final boolean hasPreviousUsage = lastPreviousUsageTier > 0;
 
         for (final TieredBlock tieredBlock : tieredBlocks) {
-
             tierNum++;
             final long blockTierSize = tieredBlock.getSize().longValue();
             final long tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
@@ -223,7 +226,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             }
             // We generate an entry if we consumed anything on this tier or if this is the first tier to also support $0 Usage item
             if (hasPreviousUsage) {
-                final Long previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : 0;
+                // FIXME-1469 change to correct BigDecimal implementation
+                final Long previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity().longValue() : 0;
                 // Be lenient for dryRun use cases as we could have plugin optimizations not returning full usage data
                 if (!isDryRun) {
                     if (tierNum < lastPreviousUsageTier) {
@@ -237,7 +241,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 nbUsedTierBlocks = nbUsedTierBlocks - previousUsageQuantity;
             }
             if (tierNum == 1 || nbUsedTierBlocks > 0) {
-                toBeBilledDetails.add(new UsageConsumableInArrearTierUnitAggregate(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), blockTierSize, nbUsedTierBlocks));
+                // FIXME-1469 might causing floating point problem. Take nbUsedTierBlocks changes carefully
+                toBeBilledDetails.add(new UsageConsumableInArrearTierUnitAggregate(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), blockTierSize, new BigDecimal(nbUsedTierBlocks)));
             }
         }
         return toBeBilledDetails;
@@ -266,7 +271,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         }
         final long lastBlockTierSize = targetBlock.getSize().longValue();
         final long nbBlocks = units / lastBlockTierSize + (units % lastBlockTierSize == 0 ? 0 : 1);
-        return new UsageConsumableInArrearTierUnitAggregate(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), targetBlock.getSize().longValue(), nbBlocks);
+        // FIXME-1469 might causing floating point problem. Take 'nbBlocks' changes carefully
+        return new UsageConsumableInArrearTierUnitAggregate(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), targetBlock.getSize().longValue(), new BigDecimal(nbBlocks));
     }
 
     @Override

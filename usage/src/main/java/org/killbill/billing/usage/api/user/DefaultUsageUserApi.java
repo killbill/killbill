@@ -16,6 +16,7 @@
 
 package org.killbill.billing.usage.api.user;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +83,8 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
         final List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
         for (final UnitUsageRecord unitUsageRecord : record.getUnitUsageRecord()) {
             for (final UsageRecord usageRecord : unitUsageRecord.getDailyAmount()) {
-                usages.add(new RolledUpUsageModelDao(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), usageRecord.getAmount(), trackingIds));
+                // FIXME-1469 : API backward compat in usageRecord.getAmount()
+                usages.add(new RolledUpUsageModelDao(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), BigDecimal.valueOf(usageRecord.getAmount()), trackingIds));
             }
         }
         rolledUpUsageDao.record(usages, internalCallContext);
@@ -128,7 +130,7 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     private List<RolledUpUnit> getRolledUpUnitsForRawPluginUsage(final UUID subscriptionId, @Nullable final String unitType, final List<RawUsageRecord> rawAccountUsage) {
-        final Map<String, Long> tmp = new HashMap<String, Long>();
+        final Map<String, BigDecimal> tmp = new HashMap<>();
         for (RawUsageRecord cur : rawAccountUsage) {
             // Filter out wrong subscriptionId
             if (cur.getSubscriptionId().compareTo(subscriptionId) != 0) {
@@ -140,8 +142,9 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
                 continue;
             }
 
-            Long currentAmount = tmp.get(cur.getUnitType());
-            Long updatedAmount = (currentAmount != null) ? currentAmount + cur.getAmount() : cur.getAmount();
+            // FIXME-1469 : API backward compat
+            BigDecimal currentAmount = tmp.get(cur.getUnitType());
+            BigDecimal updatedAmount = (currentAmount != null) ? currentAmount.add(BigDecimal.valueOf(cur.getAmount())) : BigDecimal.valueOf(cur.getAmount());
             tmp.put(cur.getUnitType(), updatedAmount);
         }
         final List<RolledUpUnit> result = new ArrayList<RolledUpUnit>(tmp.size());
@@ -152,10 +155,10 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     private List<RolledUpUnit> getRolledUpUnits(final List<RolledUpUsageModelDao> usageForSubscription) {
-        final Map<String, Long> tmp = new HashMap<String, Long>();
+        final Map<String, BigDecimal> tmp = new HashMap<>();
         for (RolledUpUsageModelDao cur : usageForSubscription) {
-            Long currentAmount = tmp.get(cur.getUnitType());
-            Long updatedAmount = (currentAmount != null) ? currentAmount + cur.getAmount() : cur.getAmount();
+            BigDecimal currentAmount = tmp.get(cur.getUnitType());
+            BigDecimal updatedAmount = (currentAmount != null) ? currentAmount.add(cur.getAmount()) : cur.getAmount();
             tmp.put(cur.getUnitType(), updatedAmount);
         }
         final List<RolledUpUnit> result = new ArrayList<RolledUpUnit>(tmp.size());
