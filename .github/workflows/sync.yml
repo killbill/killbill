@@ -29,3 +29,5 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           branch: work-for-release-0.23.x-promotion
+          title: 'Sync master into work-for-release-0.23.x'
+          body: 'Merge latest master into work-for-release-0.23.x'
