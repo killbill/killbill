@@ -469,22 +469,28 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             @Override
             public List<DefaultSubscriptionBase> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
 
-                final List<SubscriptionBundleModelDao> bundleModels = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getByAccountRecordId(context);
 
                 final SubscriptionSqlDao subscriptionSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
                 final List<SubscriptionModelDao> subscriptionModels = cutoffDt == null ?
                                                                       subscriptionSqlDao.getByAccountRecordId(context) :
                                                                       subscriptionSqlDao.getActiveByAccountRecordId(cutoffDt.toDate(), context);
+
+                // We avoid pulling the bundles when a cutoffDt is specified, as those are not really used
+                final List<SubscriptionBundleModelDao> bundleModels = cutoffDt == null ?
+                                                                      entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getByAccountRecordId(context) :
+                                                                      ImmutableList.of();
+
                 return new ArrayList<DefaultSubscriptionBase>(Collections2.transform(subscriptionModels, new Function<SubscriptionModelDao, DefaultSubscriptionBase>() {
                     @Override
                     public DefaultSubscriptionBase apply(final SubscriptionModelDao input) {
-                        final SubscriptionBundleModelDao bundleModel = Iterables.find(bundleModels, new Predicate<SubscriptionBundleModelDao>() {
+                        final SubscriptionBundleModelDao bundleModel = Iterables.tryFind(bundleModels, new Predicate<SubscriptionBundleModelDao>() {
                             @Override
                             public boolean apply(final SubscriptionBundleModelDao bundleInput) {
                                 return bundleInput.getId().equals(input.getBundleId());
                             }
-                        });
-                        return SubscriptionModelDao.toSubscription(input, bundleModel.getExternalKey());
+                        }).orNull();
+                        final String bundleExternalKey = bundleModel != null ? bundleModel.getExternalKey() : null;
+                        return SubscriptionModelDao.toSubscription(input, bundleExternalKey);
                     }
                 }));
             }
