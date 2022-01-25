@@ -450,7 +450,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     @Override
     public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) throws CatalogApiException {
         final Map<UUID, List<DefaultSubscriptionBase>> subscriptionsFromAccountId = getSubscriptionsFromAccountId(cutoffDt, context);
-        final List<SubscriptionBaseEvent> eventsForAccount = getEventsForAccountId(context);
+        final List<SubscriptionBaseEvent> eventsForAccount = getEventsForAccountId(cutoffDt, context);
 
         final Map<UUID, List<DefaultSubscriptionBase>> result = new HashMap<UUID, List<DefaultSubscriptionBase>>();
         final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscriptions = ArrayListMultimap.create();
@@ -807,11 +807,14 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }));
     }
 
-    private List<SubscriptionBaseEvent> getEventsForAccountId(final InternalTenantContext context) {
+    public List<SubscriptionBaseEvent> getEventsForAccountId(@Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<SubscriptionBaseEvent>>() {
             @Override
             public List<SubscriptionBaseEvent> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<SubscriptionEventModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getByAccountRecordId(context);
+                final SubscriptionEventSqlDao subscriptionEventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+                final List<SubscriptionEventModelDao> models = cutoffDt == null ?
+                                                               subscriptionEventSqlDao.getByAccountRecordId(context) :
+                                                               subscriptionEventSqlDao.getActiveByAccountRecordId(cutoffDt.toDate(), context);
                 return filterSubscriptionBaseEvents(models);
             }
         });
