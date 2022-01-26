@@ -42,7 +42,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.AccountEntitlements;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
@@ -70,8 +69,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -407,7 +404,15 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-        final DateTime effectiveDate = inputEffectiveDate == null ? callContext.getCreatedDate() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
+        final DateTime effectiveDate;
+        if (inputBlockingState.getEffectiveDate() != null) {
+            // Takes precedence over inputEffectiveDate
+            effectiveDate = inputBlockingState.getEffectiveDate();
+        } else if (inputEffectiveDate == null) {
+            effectiveDate = callContext.getCreatedDate();
+        } else {
+            effectiveDate = internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
+        }
         final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, effectiveDate);
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(

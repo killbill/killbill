@@ -190,7 +190,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
 
         final LocalDate resolvedRequestedDate = toLocalDate(requestedDate);
-        final BlockingState input = new DefaultBlockingState(blockableId, type, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, null);
+        final BlockingState input = new DefaultBlockingState(blockableId, type, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, json.getEffectiveDate());
         subscriptionApi.addBlockingState(input, resolvedRequestedDate, pluginProperties, callContext);
         return uriInfo != null ?
                uriBuilder.buildResponse(uriInfo, AccountResource.class, "getBlockingStates", accountId, ImmutableMap.<String, String>of(QUERY_BLOCKING_STATE_TYPES, type.name()) , request) :

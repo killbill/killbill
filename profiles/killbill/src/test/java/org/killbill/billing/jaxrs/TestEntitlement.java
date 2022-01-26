@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.model.BlockingStates;
 import org.killbill.billing.client.model.BulkSubscriptionsBundles;
 import org.killbill.billing.client.model.Bundles;
 import org.killbill.billing.client.model.Invoices;
@@ -44,11 +45,13 @@ import org.killbill.billing.client.model.Subscriptions;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AccountTimeline;
+import org.killbill.billing.client.model.gen.BlockingState;
 import org.killbill.billing.client.model.gen.BulkSubscriptionsBundle;
 import org.killbill.billing.client.model.gen.Bundle;
 import org.killbill.billing.client.model.gen.Invoice;
 import org.killbill.billing.client.model.gen.PhasePrice;
 import org.killbill.billing.client.model.gen.Subscription;
+import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
@@ -1415,6 +1418,268 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getPrices().get(2).getPhaseName(), "super-monthly-evergreen");
         Assert.assertNull(subscription.getPrices().get(2).getFixedPrice());
         Assert.assertEquals(subscription.getPrices().get(2).getRecurringPrice(), new BigDecimal("1200.00"));
+    }
+
+    @Test(groups = "slow", description = "Can specify timestamps for entitlement")
+    public void testEntitlementWithDateTimeAndPause() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final Subscription entitlementJson = createSubscription(accountJson.getAccountId(),
+                                                                UUID.randomUUID().toString(),
+                                                                productName,
+                                                                ProductCategory.BASE,
+                                                                term);
+
+        final BlockingState activateSubscriptionBS = new BlockingState();
+        activateSubscriptionBS.setService("custom-entitlement");
+        activateSubscriptionBS.setStateName("ACTIVATION");
+        // Starts at 00:00:01
+        activateSubscriptionBS.setEffectiveDate(new DateTime(2012, 4, 25, 0, 0, 1, 0));
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.BLOCKING_STATE);
+        subscriptionApi.addSubscriptionBlockingState(entitlementJson.getSubscriptionId(),
+                                                     activateSubscriptionBS,
+                                                     null,
+                                                     NULL_PLUGIN_PROPERTIES,
+                                                     requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Retrieves with GET
+        Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(subscription.getEvents().size(), 4);
+        // The blocking state technically happens before the entitlement start
+        Assert.assertEquals(subscription.getEvents().get(0).getEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
+        // Local date only for the subscription event
+        Assert.assertEquals(subscription.getEvents().get(0).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(1).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        Assert.assertEquals(subscription.getEvents().get(1).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(2).getEventType(), SubscriptionEventType.START_BILLING);
+        Assert.assertEquals(subscription.getEvents().get(2).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(3).getEventType(), SubscriptionEventType.PHASE);
+        Assert.assertEquals(subscription.getEvents().get(3).getEffectiveDate(), new LocalDate(2012, 5, 25));
+
+        BlockingStates allSubscriptionBlockingStates = accountApi.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION),
+                                                                                    ImmutableList.<String>of(activateSubscriptionBS.getService()),
+                                                                                    AuditLevel.NONE,
+                                                                                    requestOptions);
+        Assert.assertEquals(allSubscriptionBlockingStates.size(), 1);
+        Assert.assertEquals(allSubscriptionBlockingStates.get(0).getStateName(), activateSubscriptionBS.getStateName());
+        Assert.assertFalse(allSubscriptionBlockingStates.get(0).isBlockEntitlement());
+        // DateTime for the blocking state
+        Assert.assertEquals(allSubscriptionBlockingStates.get(0).getEffectiveDate().compareTo(activateSubscriptionBS.getEffectiveDate()), 0);
+
+        // MOVE AFTER TRIAL
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
+        clock.addDays(30);
+        callbackServlet.assertListenerStatus();
+
+        subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getChargedThroughDate().compareTo(new LocalDate(2012, 6, 25)), 0);
+
+        final BlockingState deactivateSubscriptionBS = new BlockingState();
+        deactivateSubscriptionBS.setService("custom-entitlement");
+        deactivateSubscriptionBS.setStateName("DEACTIVATION");
+        deactivateSubscriptionBS.setIsBlockBilling(true);
+        deactivateSubscriptionBS.setIsBlockEntitlement(true);
+        // Stops at 23:59:59 at the CTD
+        deactivateSubscriptionBS.setEffectiveDate(new DateTime(2012, 6, 25, 23, 59, 59, 0));
+
+        subscriptionApi.addSubscriptionBlockingState(entitlementJson.getSubscriptionId(),
+                                                     deactivateSubscriptionBS,
+                                                     null,
+                                                     NULL_PLUGIN_PROPERTIES,
+                                                     requestOptions);
+        // No event yet as it's effective at the end of the CTD
+        callbackServlet.assertListenerStatus();
+
+        subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertNull(subscription.getCancelledDate());
+        Assert.assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(subscription.getEvents().size(), 6);
+        Assert.assertEquals(subscription.getEvents().get(0).getEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
+        // Local date only for the subscription event
+        Assert.assertEquals(subscription.getEvents().get(0).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(1).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        Assert.assertEquals(subscription.getEvents().get(1).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(2).getEventType(), SubscriptionEventType.START_BILLING);
+        Assert.assertEquals(subscription.getEvents().get(2).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(3).getEventType(), SubscriptionEventType.PHASE);
+        Assert.assertEquals(subscription.getEvents().get(3).getEffectiveDate(), new LocalDate(2012, 5, 25));
+        Assert.assertEquals(subscription.getEvents().get(4).getEventType(), SubscriptionEventType.PAUSE_ENTITLEMENT);
+        // Local date only for the subscription event
+        Assert.assertEquals(subscription.getEvents().get(4).getEffectiveDate(), new LocalDate(2012, 6, 25));
+        Assert.assertEquals(subscription.getEvents().get(5).getEventType(), SubscriptionEventType.PAUSE_BILLING);
+        // Local date only for the subscription event
+        Assert.assertEquals(subscription.getEvents().get(5).getEffectiveDate(), new LocalDate(2012, 6, 25));
+
+        allSubscriptionBlockingStates = accountApi.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION),
+                                                                     ImmutableList.<String>of(activateSubscriptionBS.getService()),
+                                                                     AuditLevel.NONE,
+                                                                     requestOptions);
+        Assert.assertEquals(allSubscriptionBlockingStates.size(), 2);
+        Assert.assertEquals(allSubscriptionBlockingStates.get(0).getStateName(), activateSubscriptionBS.getStateName());
+        Assert.assertFalse(allSubscriptionBlockingStates.get(0).isBlockEntitlement());
+        // DateTime for the blocking state
+        Assert.assertEquals(allSubscriptionBlockingStates.get(0).getEffectiveDate().compareTo(activateSubscriptionBS.getEffectiveDate()), 0);
+        Assert.assertEquals(allSubscriptionBlockingStates.get(1).getStateName(), deactivateSubscriptionBS.getStateName());
+        Assert.assertTrue(allSubscriptionBlockingStates.get(1).isBlockBilling());
+        Assert.assertTrue(allSubscriptionBlockingStates.get(1).isBlockEntitlement());
+        // DateTime for the blocking state
+        Assert.assertEquals(allSubscriptionBlockingStates.get(1).getEffectiveDate().compareTo(deactivateSubscriptionBS.getEffectiveDate()), 0);
+
+        // 1 hour before the event, the subscription is still active
+        clock.setTime(deactivateSubscriptionBS.getEffectiveDate().minusHours(1));
+        callbackServlet.assertListenerStatus();
+
+        subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+
+        // Move to the CTD -- verify no invoice is generated, but that the subscription is blocked
+        callbackServlet.pushExpectedEvents(ExtBusEventType.BLOCKING_STATE);
+        clock.setTime(deactivateSubscriptionBS.getEffectiveDate());
+        callbackServlet.assertListenerStatus();
+
+        subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertNull(subscription.getCancelledDate());
+        Assert.assertEquals(subscription.getState(), EntitlementState.BLOCKED);
+    }
+
+    @Test(groups = "slow", description = "Can specify timestamps for entitlement")
+    public void testEntitlementWithDateTimeAndCancel() throws Exception {
+        final DateTime initialDate = new DateTime(2012, 4, 25, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final Subscription entitlementJson = createSubscription(accountJson.getAccountId(),
+                                                                UUID.randomUUID().toString(),
+                                                                productName,
+                                                                ProductCategory.BASE,
+                                                                term);
+
+        final BlockingState activateSubscriptionBS = new BlockingState();
+        activateSubscriptionBS.setService("custom-entitlement");
+        activateSubscriptionBS.setStateName("ACTIVATION");
+        // Starts at 00:00:01
+        activateSubscriptionBS.setEffectiveDate(new DateTime(2012, 4, 25, 0, 0, 1, 0));
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.BLOCKING_STATE);
+        subscriptionApi.addSubscriptionBlockingState(entitlementJson.getSubscriptionId(),
+                                                     activateSubscriptionBS,
+                                                     null,
+                                                     NULL_PLUGIN_PROPERTIES,
+                                                     requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        // Retrieves with GET
+        Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(subscription.getEvents().size(), 4);
+        // The blocking state technically happens before the entitlement start
+        Assert.assertEquals(subscription.getEvents().get(0).getEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
+        // Local date only for the subscription event
+        Assert.assertEquals(subscription.getEvents().get(0).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(1).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        Assert.assertEquals(subscription.getEvents().get(1).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(2).getEventType(), SubscriptionEventType.START_BILLING);
+        Assert.assertEquals(subscription.getEvents().get(2).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(3).getEventType(), SubscriptionEventType.PHASE);
+        Assert.assertEquals(subscription.getEvents().get(3).getEffectiveDate(), new LocalDate(2012, 5, 25));
+
+        BlockingStates allSubscriptionBlockingStates = accountApi.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION),
+                                                                                    ImmutableList.<String>of(activateSubscriptionBS.getService()),
+                                                                                    AuditLevel.NONE,
+                                                                                    requestOptions);
+        Assert.assertEquals(allSubscriptionBlockingStates.size(), 1);
+        Assert.assertEquals(allSubscriptionBlockingStates.get(0).getStateName(), activateSubscriptionBS.getStateName());
+        Assert.assertFalse(allSubscriptionBlockingStates.get(0).isBlockEntitlement());
+        // DateTime for the blocking state
+        Assert.assertEquals(allSubscriptionBlockingStates.get(0).getEffectiveDate().compareTo(activateSubscriptionBS.getEffectiveDate()), 0);
+
+        // MOVE AFTER TRIAL
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
+                                           ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_PAYMENT_SUCCESS,
+                                           ExtBusEventType.PAYMENT_SUCCESS);
+        clock.addDays(30);
+        callbackServlet.assertListenerStatus();
+
+        // Cancel IMM (Billing EOT)
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_CANCEL,
+                                           ExtBusEventType.ENTITLEMENT_CANCEL);
+        subscriptionApi.cancelSubscriptionPlan(entitlementJson.getSubscriptionId(), null, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        final BlockingState deactivateSubscriptionBS = new BlockingState();
+        deactivateSubscriptionBS.setService("custom-entitlement");
+        deactivateSubscriptionBS.setStateName("DEACTIVATION");
+        deactivateSubscriptionBS.setIsBlockEntitlement(true);
+        // Stops at 23:59:59
+        deactivateSubscriptionBS.setEffectiveDate(new DateTime(2012, 5, 25, 23, 59, 59, 0));
+
+        subscriptionApi.addSubscriptionBlockingState(entitlementJson.getSubscriptionId(),
+                                                     deactivateSubscriptionBS,
+                                                     null,
+                                                     NULL_PLUGIN_PROPERTIES,
+                                                     requestOptions);
+        // No event yet as it's effective at the end of day only
+        callbackServlet.assertListenerStatus();
+
+        // Retrieves to check EndDate
+        subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertNotNull(subscription.getCancelledDate());
+        Assert.assertEquals(subscription.getCancelledDate().compareTo(new LocalDate(clock.getUTCNow())), 0);
+        // It is cancelled from a Kill Bill entitlement perspective already (IMM)
+        Assert.assertEquals(subscription.getState(), EntitlementState.CANCELLED);
+        Assert.assertEquals(subscription.getEvents().size(), 7);
+        Assert.assertEquals(subscription.getEvents().get(0).getEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
+        // Local date only for the subscription event
+        Assert.assertEquals(subscription.getEvents().get(0).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(1).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        Assert.assertEquals(subscription.getEvents().get(1).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(2).getEventType(), SubscriptionEventType.START_BILLING);
+        Assert.assertEquals(subscription.getEvents().get(2).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(subscription.getEvents().get(3).getEventType(), SubscriptionEventType.PHASE);
+        Assert.assertEquals(subscription.getEvents().get(3).getEffectiveDate(), new LocalDate(2012, 5, 25));
+        Assert.assertEquals(subscription.getEvents().get(4).getEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        Assert.assertEquals(subscription.getEvents().get(4).getEffectiveDate(), new LocalDate(2012, 5, 25));
+        Assert.assertEquals(subscription.getEvents().get(5).getEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
+        // Local date only for the subscription event
+        Assert.assertEquals(subscription.getEvents().get(5).getEffectiveDate(), new LocalDate(2012, 5, 25));
+        Assert.assertEquals(subscription.getEvents().get(6).getEventType(), SubscriptionEventType.STOP_BILLING);
+        Assert.assertEquals(subscription.getEvents().get(6).getEffectiveDate(), new LocalDate(2012, 6, 25));
+
+        allSubscriptionBlockingStates = accountApi.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION),
+                                                                     ImmutableList.<String>of(activateSubscriptionBS.getService()),
+                                                                     AuditLevel.NONE,
+                                                                     requestOptions);
+        Assert.assertEquals(allSubscriptionBlockingStates.size(), 2);
+        Assert.assertEquals(allSubscriptionBlockingStates.get(0).getStateName(), activateSubscriptionBS.getStateName());
+        Assert.assertFalse(allSubscriptionBlockingStates.get(0).isBlockEntitlement());
+        // DateTime for the blocking state
+        Assert.assertEquals(allSubscriptionBlockingStates.get(0).getEffectiveDate().compareTo(activateSubscriptionBS.getEffectiveDate()), 0);
+        Assert.assertEquals(allSubscriptionBlockingStates.get(1).getStateName(), deactivateSubscriptionBS.getStateName());
+        Assert.assertTrue(allSubscriptionBlockingStates.get(1).isBlockEntitlement());
+        // DateTime for the blocking state
+        Assert.assertEquals(allSubscriptionBlockingStates.get(1).getEffectiveDate().compareTo(deactivateSubscriptionBS.getEffectiveDate()), 0);
+
+        // Move to end of day
+        callbackServlet.pushExpectedEvents(ExtBusEventType.BLOCKING_STATE);
+        clock.setTime(deactivateSubscriptionBS.getEffectiveDate());
+        callbackServlet.assertListenerStatus();
     }
 
     private void verifyChargedThroughDate(final UUID subscriptionId, final LocalDate ctd) {
