@@ -351,13 +351,23 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(res1.size(), 1);
         assertEquals(res1.get(bundle.getId()).size(), 2);
 
+        final List<SubscriptionBaseEvent> events1 = ((DefaultSubscriptionDao) dao).getEventsForAccountId(null, callContextWithAccountID);
+        assertEquals(events1.size(), 3);
+
+
         final Map<UUID, List<DefaultSubscriptionBase>> res2 =  dao.getSubscriptionsFromAccountId(cancelDate.toLocalDate(), callContextWithAccountID);
         assertEquals(res2.size(), 1);
         assertEquals(res2.get(bundle.getId()).size(), 2);
 
+        final List<SubscriptionBaseEvent> events2 = ((DefaultSubscriptionDao) dao).getEventsForAccountId(cancelDate.toLocalDate(), callContextWithAccountID);
+        assertEquals(events2.size(), 3);
+
         final Map<UUID, List<DefaultSubscriptionBase>> res3 =  dao.getSubscriptionsFromAccountId(cancelDate.plusDays(1).toLocalDate(), callContextWithAccountID);
         assertEquals(res3.size(), 1);
         assertEquals(res3.get(bundle.getId()).size(), 1);
+
+        final List<SubscriptionBaseEvent> events3 = ((DefaultSubscriptionDao) dao).getEventsForAccountId(cancelDate.plusDays(1).toLocalDate(), callContextWithAccountID);
+        assertEquals(events3.size(), 1);
 
     }
 
