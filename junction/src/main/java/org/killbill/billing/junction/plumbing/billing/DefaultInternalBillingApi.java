@@ -71,6 +71,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultInternalBillingApi.class);
 
+    private static final long NANO_TO_MILLI_SEC = (1000L * 1000L);
     private static final int MAX_NB_EVENTS_TO_PRINT = 20;
 
     private final AccountInternalApi accountApi;
@@ -94,6 +95,9 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
 
     @Override
     public BillingEventSet getBillingEventsForAccountAndUpdateAccountBCD(final UUID accountId, final DryRunArguments dryRunArguments, @Nullable final LocalDate cutoffDt, final InternalCallContext context) throws CatalogApiException, AccountApiException, SubscriptionBaseApiException {
+
+        long iniTs = System.nanoTime();
+
         final VersionedCatalog fullCatalog = catalogInternalApi.getFullCatalog(true, true, context);
 
         // Check to see if billing is off for the account
@@ -106,7 +110,10 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
         final DefaultBillingEventSet result;
 
+        long subsIniTs = System.nanoTime();
         final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount = subscriptionApi.getSubscriptionsForAccount(fullCatalog, cutoffDt, context);
+        long subsAfterTs = System.nanoTime();
+
         final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, context);
         result = new DefaultBillingEventSet(found_AUTO_INVOICING_OFF, found_INVOICING_DRAFT, found_INVOICING_REUSE_DRAFT);
         addBillingEventsForBundles(account, dryRunArguments, context, result, skippedSubscriptions, subscriptionsForAccount, fullCatalog, tagsForAccount);
@@ -118,10 +125,20 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         // Pretty-print the events, before and after the blocking calculator does its magic
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
         eventsToString(logStringBuilder, result);
-        if (blockCalculator.insertBlockingEvents(result, skippedSubscriptions, subscriptionsForAccount, fullCatalog, cutoffDt, context)) {
+
+        long bsIniTs = System.nanoTime();
+        final boolean afterBlocking = blockCalculator.insertBlockingEvents(result, skippedSubscriptions, subscriptionsForAccount, fullCatalog, cutoffDt, context);
+        long bsAfterTs = System.nanoTime();
+        if (afterBlocking) {
             logStringBuilder.append("\nBilling Events After Blocking");
             eventsToString(logStringBuilder, result);
         }
+
+        logStringBuilder.append(String.format("\nBilling Events total=%d mSec, subs=%d mSec, bs=%d mSec",
+                                              (System.nanoTime() - iniTs) / NANO_TO_MILLI_SEC,
+                                              (subsAfterTs - subsIniTs) / NANO_TO_MILLI_SEC,
+                                              (bsAfterTs - bsIniTs) / NANO_TO_MILLI_SEC));
+
         log.info(logStringBuilder.toString());
 
         return result;
