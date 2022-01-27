@@ -134,7 +134,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             eventsToString(logStringBuilder, result);
         }
 
-        logStringBuilder.append(String.format("\nBilling Events total=%d mSec, subs=%d mSec, bs=%d mSec",
+        logStringBuilder.append(String.format("%nBilling Events total=%d mSec, subs=%d mSec, bs=%d mSec",
                                               (System.nanoTime() - iniTs) / NANO_TO_MILLI_SEC,
                                               (subsAfterTs - subsIniTs) / NANO_TO_MILLI_SEC,
                                               (bsAfterTs - bsIniTs) / NANO_TO_MILLI_SEC));
