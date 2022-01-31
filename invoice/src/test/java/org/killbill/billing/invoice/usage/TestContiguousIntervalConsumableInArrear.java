@@ -471,25 +471,25 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         Assert.assertEquals(rolledUpUsage.get(0).getEnd().compareTo(t1), 0);
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getUnitType(), "unit");
-        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount(), (Long) BigDecimal.valueOf(10L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount(), BigDecimal.valueOf(10L));
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getUnitType(), "unit2");
-        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getAmount(), (Long) BigDecimal.valueOf(0L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getAmount(), BigDecimal.valueOf(0L));
 
         Assert.assertEquals(rolledUpUsage.get(1).getStart().compareTo(t1), 0);
         Assert.assertEquals(rolledUpUsage.get(1).getEnd().compareTo(t2), 0);
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getUnitType(), "unit");
-        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount(), (Long) BigDecimal.valueOf(0L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount(), BigDecimal.valueOf(0L));
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getUnitType(), "unit2");
-        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getAmount(), (Long) BigDecimal.valueOf(0L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getAmount(), BigDecimal.valueOf(0L));
 
         Assert.assertEquals(rolledUpUsage.get(2).getStart().compareTo(t2), 0);
         Assert.assertEquals(rolledUpUsage.get(2).getEnd().compareTo(t3), 0);
         Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getUnitType(), "unit");
-        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getAmount(), (Long) BigDecimal.valueOf(20L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getAmount(), BigDecimal.valueOf(20L));
         Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(1).getUnitType(), "unit2");
-        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(1).getAmount(), (Long) BigDecimal.valueOf(21L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(1).getAmount(), BigDecimal.valueOf(21L));
     }
 
     @Test(groups = "fast")

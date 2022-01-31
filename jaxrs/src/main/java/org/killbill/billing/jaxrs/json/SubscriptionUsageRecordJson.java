@@ -119,7 +119,7 @@ public class SubscriptionUsageRecordJson {
         }
 
         public UsageRecord toUsageRecord() {
-            return new UsageRecord(recordDate, amount == null ? null : amount.longValue() /* FIXME-1469 : API backward compat */);
+            return new UsageRecord(recordDate, amount);
         }
     }
 
@@ -130,7 +130,6 @@ public class SubscriptionUsageRecordJson {
                 return input.toUnitUsageRecord();
             }
         }));
-        final SubscriptionUsageRecord result = new SubscriptionUsageRecord(subscriptionId, trackingId, tmp);
-        return result;
+        return new SubscriptionUsageRecord(subscriptionId, trackingId, tmp);
     }
 }

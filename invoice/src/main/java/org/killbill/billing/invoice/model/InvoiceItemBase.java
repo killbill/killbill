@@ -195,8 +195,8 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public Integer getQuantity() {
-        return quantity == null ? null : quantity.intValue();
+    public BigDecimal getQuantity() {
+        return quantity;
     }
 
     @Override

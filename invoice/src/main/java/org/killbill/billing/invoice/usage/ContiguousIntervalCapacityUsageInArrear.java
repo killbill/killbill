@@ -129,12 +129,10 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                 if (tierLimit.getMax() != (double) -1 && ro.getAmount().doubleValue() > tierLimit.getMax()) {
                     complies = false;
                 } else {
-                    /* FIXME-1469 : API backward compat */
-                    // allUnitAmountToZero = ro.getAmount().compareTo(BigDecimal.ZERO) > 0 ? false : allUnitAmountToZero;
-                    allUnitAmountToZero = ro.getAmount() <= 0 && allUnitAmountToZero;
+                    allUnitAmountToZero = ro.getAmount().compareTo(BigDecimal.ZERO) <= 0 && allUnitAmountToZero;
 
                     if (!perUnitTypeDetailTierLevel.contains(ro.getUnitType())) {
-                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), curTierPrice, BigDecimal.valueOf(ro.getAmount())) /* FIXME-1469 : API backward compat */);
+                        toBeBilledDetails.add(new UsageInArrearTierUnitDetail(tierNum, ro.getUnitType(), curTierPrice, ro.getAmount()));
                         perUnitTypeDetailTierLevel.add(ro.getUnitType());
                     }
                 }

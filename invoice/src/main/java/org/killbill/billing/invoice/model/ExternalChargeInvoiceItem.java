@@ -48,7 +48,7 @@ public class ExternalChargeInvoiceItem extends InvoiceItemCatalogBase {
 
     public ExternalChargeInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final UUID bundleId, final UUID subscriptionId,
                                      final String productName, final String planName, final String phaseName, final String prettyProductName, final String prettyPlanName, final String prettyPhaseName, @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
-                                     final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, @Nullable String itemDetails) {
+                                     final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId, @Nullable final String itemDetails) {
         super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, null, prettyProductName, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, linkedItemId, null, itemDetails, InvoiceItemType.EXTERNAL_CHARGE);
     }
 
@@ -82,7 +82,7 @@ public class ExternalChargeInvoiceItem extends InvoiceItemCatalogBase {
               i.getRate(),
               i.getCurrency(),
               i.getLinkedItemId(),
-              i.getQuantity() == null ? null : BigDecimal.valueOf(i.getQuantity()), /* FIXME-1469 : API backward compat */
+              i.getQuantity(),
               i.getItemDetails(),
               i.getInvoiceItemType());
     }

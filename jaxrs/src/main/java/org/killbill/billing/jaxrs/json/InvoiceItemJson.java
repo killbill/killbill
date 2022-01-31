@@ -134,7 +134,7 @@ public class InvoiceItemJson extends JsonBase {
              item.getInvoiceItemType(),
              item.getDescription(), item.getStartDate(), item.getEndDate(),
              item.getAmount(), item.getRate(), item.getCurrency(),
-             (item.getQuantity() == null ? null : BigDecimal.valueOf(item.getQuantity()) /* FIXME-1469 : API backward compat */), item.getItemDetails(), item.getCatalogEffectiveDate(),
+             item.getQuantity(), item.getItemDetails(), item.getCatalogEffectiveDate(),
              toInvoiceItemJson(childItems), toAuditLogJson(auditLogs));
     }
 
@@ -258,7 +258,7 @@ public class InvoiceItemJson extends JsonBase {
             }
 
             @Override
-            public Integer getQuantity() { return quantity == null ? null : quantity.intValue(); /* FIXME-1469 : API backward compat */ }
+            public BigDecimal getQuantity() { return quantity; }
 
             @Override
             public String getItemDetails() { return itemDetails; }
