@@ -21,6 +21,9 @@ package org.killbill.billing.entitlement.api.svcs;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.StaticCatalog;
@@ -50,8 +53,8 @@ public class DefaultInternalBlockingApi implements BlockingInternalApi {
     }
 
     @Override
-    public List<BlockingState> getBlockingAllForAccount(final VersionedCatalog catalog, final InternalTenantContext context) {
-        return dao.getBlockingAllForAccountRecordId(catalog, context);
+    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
+        return dao.getBlockingActiveForAccount(catalog, cutoffDt, context);
     }
 
     @Override

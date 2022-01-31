@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -79,11 +80,13 @@ public class BlockingCalculator {
      * Given a set of billing events, add corresponding blocking (overdue) billing events.
      *
      * @param billingEvents the original list of billing events to update (without overdue events)
+     * @param cutoffDt an optional cutoffDt to filter out billing events
      */
     public boolean insertBlockingEvents(final SortedSet<BillingEvent> billingEvents,
                                         final Set<UUID> skippedSubscriptions,
                                         final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount,
                                         final VersionedCatalog catalog,
+                                        @Nullable final LocalDate cutoffDt,
                                         final InternalTenantContext context) throws CatalogApiException {
         if (billingEvents.size() <= 0) {
             return false;
@@ -92,7 +95,7 @@ public class BlockingCalculator {
         final Collection<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
         final Collection<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
 
-        final List<BlockingState> blockingEvents = blockingApi.getBlockingAllForAccount(catalog, context);
+        final List<BlockingState> blockingEvents = blockingApi.getBlockingActiveForAccount(catalog, cutoffDt, context);
 
         // Group blocking states per type
         final Collection<BlockingState> accountBlockingEvents = new LinkedList<BlockingState>();

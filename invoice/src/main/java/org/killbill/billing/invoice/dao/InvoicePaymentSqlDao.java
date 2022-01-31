@@ -34,6 +34,7 @@ import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDao, InvoicePayment> {
@@ -41,6 +42,11 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
     @SqlQuery
     public List<InvoicePaymentModelDao> getByPaymentId(@Bind("paymentId") final String paymentId,
                                                        @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    List<InvoicePaymentModelDao> getPaymentsForInvoices(@BindIn("invoiceIds") final Iterable<UUID> invoiceIds,
+                                                         @SmartBindBean final InternalTenantContext context);
+
 
     @SqlQuery
     public List<InvoicePaymentModelDao> getAllPaymentsForInvoiceIncludedInit(@Bind("invoiceId") final String invoiceId,
