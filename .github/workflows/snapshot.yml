@@ -1,0 +1,12 @@
+name: snapshot
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    uses: killbill/gh-actions-shared/.github/workflows/snapshot.yml@main
+    secrets:
+      OSSRH_USER: ${{ secrets.OSSRH_USER }}
+      OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
