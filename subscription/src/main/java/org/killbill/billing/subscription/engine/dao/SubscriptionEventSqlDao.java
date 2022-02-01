@@ -24,6 +24,7 @@ import java.util.List;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionEventModelDao;
+import org.killbill.billing.subscription.engine.dao.model.SubscriptionModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.entity.dao.Audited;
@@ -41,6 +42,10 @@ public interface SubscriptionEventSqlDao extends EntitySqlDao<SubscriptionEventM
     @Audited(ChangeType.DELETE)
     public void unactiveEvent(@Bind("id") String id,
                               @SmartBindBean final InternalCallContext context);
+
+    @SqlQuery
+    public List<SubscriptionEventModelDao> getActiveByAccountRecordId(@Bind("cutoffDt") Date cutoffDt,
+                                                                 @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<SubscriptionEventModelDao> getFutureActiveEventForSubscription(@Bind("subscriptionId") String subscriptionId,

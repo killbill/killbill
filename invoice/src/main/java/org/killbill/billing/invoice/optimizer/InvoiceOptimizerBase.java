@@ -52,20 +52,26 @@ public abstract class InvoiceOptimizerBase implements InvoiceOptimizer {
     public static class AccountInvoices {
 
         protected final LocalDate cutoffDate;
+        protected final LocalDate beCutoffDate;
         protected final List<Invoice> invoices;
 
         @VisibleForTesting
-        public AccountInvoices(final LocalDate cutoffDate, final List<Invoice> invoices) {
+        public AccountInvoices(final LocalDate cutoffDate, final LocalDate beCutoffDate, final List<Invoice> invoices) {
             this.cutoffDate = cutoffDate;
             this.invoices = invoices;
+            this.beCutoffDate = beCutoffDate;
         }
 
         public AccountInvoices() {
-            this(null, ImmutableList.of());
+            this(null, null, ImmutableList.of());
         }
 
         public LocalDate getCutoffDate() {
             return cutoffDate;
+        }
+
+        public LocalDate getBillingEventCutoffDate() {
+            return beCutoffDate;
         }
 
         public List<Invoice> getInvoices() {
