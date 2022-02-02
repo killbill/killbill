@@ -203,8 +203,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
     List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final LocalDate startDate, final LocalDate endDate, final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final BigDecimal units) throws CatalogApiException {
         final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledDetails = Lists.newLinkedList();
-        // FIXME-1469 change to correct BigDecimal implementation
-        long remainingUnits = units.longValue();
+        BigDecimal remainingUnits = units;
         int tierNum = 0;
 
         final int lastPreviousUsageTier = previousUsage.size(); // we count tier from 1, 2, ...
@@ -212,54 +211,54 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
         for (final TieredBlock tieredBlock : tieredBlocks) {
             tierNum++;
-            final long blockTierSize = tieredBlock.getSize().longValue();
-            final long tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
-            long nbUsedTierBlocks;
-            if (tieredBlock.getMax() != (double) -1 && tmp > tieredBlock.getMax() ) {
-                nbUsedTierBlocks = tieredBlock.getMax().longValue();
-                remainingUnits -= tieredBlock.getMax() * blockTierSize;
+            final BigDecimal blockTierSize = BigDecimal.valueOf(tieredBlock.getSize());
+            final BigDecimal blockTierMax = BigDecimal.valueOf(tieredBlock.getMax());
+            final long tmp = remainingUnits.longValue() / blockTierSize.longValue() + (remainingUnits.longValue() % blockTierSize.longValue() == 0 ? 0 : 1);
+            BigDecimal nbUsedTierBlocks;
+            if (tieredBlock.getMax() != (double) -1 && tmp > blockTierMax.longValue()) {
+                nbUsedTierBlocks = BigDecimal.valueOf(tieredBlock.getMax());
+                remainingUnits = remainingUnits.subtract(BigDecimal.valueOf(tieredBlock.getMax() * blockTierSize.longValue()));
             } else {
-                nbUsedTierBlocks = tmp;
-                remainingUnits = 0;
+                nbUsedTierBlocks = BigDecimal.valueOf(tmp);
+                remainingUnits = BigDecimal.ZERO;
             }
             // We generate an entry if we consumed anything on this tier or if this is the first tier to also support $0 Usage item
             if (hasPreviousUsage) {
-                // FIXME-1469 change to correct BigDecimal implementation
                 final BigDecimal previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : BigDecimal.ZERO;
                 // Be lenient for dryRun use cases as we could have plugin optimizations not returning full usage data
                 if (!isDryRun) {
                     if (tierNum < lastPreviousUsageTier) {
-                        Preconditions.checkState(nbUsedTierBlocks == previousUsageQuantity.longValue(), String.format("Expected usage for subscription='%s', targetDate='%s', startDt='%s', endDt='%s', tier='%s', unit='%s' to be full, instead found units='[%s/%s]'",
+                        Preconditions.checkState(nbUsedTierBlocks.compareTo(previousUsageQuantity) == 0, String.format("Expected usage for subscription='%s', targetDate='%s', startDt='%s', endDt='%s', tier='%s', unit='%s' to be full, instead found units='[%s/%s]'",
                                                                                                           getSubscriptionId(), targetDate, startDate, endDate, tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
                     } else {
-                        Preconditions.checkState(nbUsedTierBlocks - previousUsageQuantity.longValue() >= 0, String.format("Expected usage for subscription='%s', targetDate='%s', startDt='%s', endDt='%s', tier='%s', unit='%s' to contain at least as much as current usage, instead found units='[%s/%s]'",
+                        Preconditions.checkState(nbUsedTierBlocks.subtract(previousUsageQuantity).compareTo(BigDecimal.ZERO) >= 0, String.format("Expected usage for subscription='%s', targetDate='%s', startDt='%s', endDt='%s', tier='%s', unit='%s' to contain at least as much as current usage, instead found units='[%s/%s]'",
                                                                                                               getSubscriptionId(), targetDate, startDate, endDate, tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
                     }
                 }
-                nbUsedTierBlocks = nbUsedTierBlocks - previousUsageQuantity.longValue();
+                nbUsedTierBlocks = nbUsedTierBlocks.subtract(previousUsageQuantity);
             }
-            if (tierNum == 1 || nbUsedTierBlocks > 0) {
-                // FIXME-1469 might causing floating point problem. Take nbUsedTierBlocks changes carefully
-                toBeBilledDetails.add(new UsageConsumableInArrearTierUnitAggregate(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), blockTierSize, new BigDecimal(nbUsedTierBlocks)));
+            if (tierNum == 1 || nbUsedTierBlocks.compareTo(BigDecimal.ZERO) > 0) {
+                toBeBilledDetails.add(new UsageConsumableInArrearTierUnitAggregate(tierNum, tieredBlock.getUnit().getName(), tieredBlock.getPrice().getPrice(getCurrency()), blockTierSize, nbUsedTierBlocks));
             }
         }
         return toBeBilledDetails;
     }
 
     UsageConsumableInArrearTierUnitAggregate computeToBeBilledConsumableInArrearWith_TOP_TIER(final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final BigDecimal units) throws CatalogApiException {
-        Long remainingUnits = units.longValue();
+        BigDecimal remainingUnits = units;
         // By default last last tierBlock
         TieredBlock targetBlock = tieredBlocks.get(tieredBlocks.size() - 1);
         int targetTierNum = tieredBlocks.size();
         int tierNum = 0;
         // Loop through all tier block
         for (final TieredBlock tieredBlock : tieredBlocks) {
-
             tierNum++;
-            final long blockTierSize = tieredBlock.getSize().longValue();
-            final long tmp = remainingUnits / blockTierSize + (remainingUnits % blockTierSize == 0 ? 0 : 1);
-            if ( tmp > tieredBlock.getMax()) { /* Includes the case where max is unlimited (-1) */
-                remainingUnits -= tieredBlock.getMax().longValue() * blockTierSize;
+            final BigDecimal blockTierMax = BigDecimal.valueOf(tieredBlock.getMax());
+            final BigDecimal blockTierSize = BigDecimal.valueOf(tieredBlock.getSize());
+            final BigDecimal[] divRemaining =  remainingUnits.divideAndRemainder(blockTierSize);
+            final BigDecimal tmp =  (divRemaining[1].compareTo(BigDecimal.ZERO) == 0) ? divRemaining[0] : divRemaining[0].add(BigDecimal.ONE);
+            if (tmp.compareTo(blockTierMax) > 0) { /* Includes the case where max is unlimited (-1) */
+                remainingUnits = remainingUnits.subtract(blockTierMax.multiply(blockTierSize));
             } else {
                 targetBlock = tieredBlock;
                 targetTierNum = tierNum;
@@ -268,8 +267,12 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         }
         final long lastBlockTierSize = targetBlock.getSize().longValue();
         final long nbBlocks = units.longValue() / lastBlockTierSize + (units.longValue() % lastBlockTierSize == 0 ? 0 : 1);
-        // FIXME-1469 might causing floating point problem. Take 'nbBlocks' changes carefully
-        return new UsageConsumableInArrearTierUnitAggregate(targetTierNum, targetBlock.getUnit().getName(), targetBlock.getPrice().getPrice(getCurrency()), targetBlock.getSize().longValue(), new BigDecimal(nbBlocks));
+        return new UsageConsumableInArrearTierUnitAggregate(
+                targetTierNum,
+                targetBlock.getUnit().getName(),
+                targetBlock.getPrice().getPrice(getCurrency()),
+                BigDecimal.valueOf(lastBlockTierSize),
+                BigDecimal.valueOf(nbBlocks));
     }
 
     @Override
