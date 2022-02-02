@@ -34,6 +34,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.TimeUnit;
@@ -280,5 +281,17 @@ public class TestCatalog extends TestJaxrsBase {
     private VersionedCatalog catalogFromXML(final String catalogsXml) throws SAXException, TransformerException, IOException, JAXBException {
         final InputStream stream = new ByteArrayInputStream(catalogsXml.getBytes());
         return XMLLoader.getObjectFromStreamNoValidation(stream, DefaultVersionedCatalog.class);
+    }
+
+    @Test(groups = "slow", description = "Missing recurringBillingMode in JSON return 1576")
+    public void testGetCatalogJSONWithRecurringBillingMode() throws Exception {
+        uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.xml", false);
+        List<Catalog> catalogsJson = catalogApi.getCatalogJson(null, null, requestOptions);
+        Assert.assertEquals(catalogsJson.size(), 1);
+        System.out.println(catalogsJson.get(0).getProducts().get(0).getPlans().toString());
+        Assert.assertEquals(catalogsJson.get(0).getProducts().get(0).getPlans().get(0).getRecurringBillingMode(), BillingMode.IN_ADVANCE);
+        Assert.assertNotEquals(catalogsJson.get(0).getProducts().get(1).getPlans().get(0).getRecurringBillingMode(), BillingMode.IN_ARREAR);
+        Assert.assertNotEquals(catalogsJson.get(0).getProducts().get(2).getPlans().get(0).getRecurringBillingMode(), null);
+
     }
 }
