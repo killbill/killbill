@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2022 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -28,7 +28,8 @@ public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>
     public enum EventType {
         API_USER,
         PHASE,
-        BCD_UPDATE
+        BCD_UPDATE,
+        EXPIRED
     }
 
     public EventType getType();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2022 Ning, Inc.
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -255,6 +255,8 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
                 return SubscriptionBaseTransitionType.PHASE;
             case BCD_UPDATE:
                 return SubscriptionBaseTransitionType.BCD_CHANGE;
+            case EXPIRED:
+            	return SubscriptionBaseTransitionType.EXPIRED;
             default:
                 throw new SubscriptionBaseError("Unexpected event type " + eventType);
         }
