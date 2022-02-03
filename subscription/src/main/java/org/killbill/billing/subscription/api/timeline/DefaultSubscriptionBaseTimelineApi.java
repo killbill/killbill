@@ -75,33 +75,16 @@ public class DefaultSubscriptionBaseTimelineApi extends SubscriptionApiBase impl
             if (subscriptions.size() == 0) {
                 throw new SubscriptionBaseRepairException(ErrorCode.SUB_NO_ACTIVE_SUBSCRIPTIONS, bundle.getId());
             }
-            final String viewId = getViewId(((DefaultSubscriptionBaseBundle) bundle).getLastSysUpdateDate(), subscriptions);
             final List<SubscriptionBaseTimeline> repairs = createGetSubscriptionRepairList(subscriptions, Collections.<SubscriptionBaseTimeline>emptyList(), catalog, internalTenantContext);
-            return createGetBundleRepair(bundle.getId(), bundle.getExternalKey(), viewId, repairs);
+            return createGetBundleRepair(bundle.getId(), bundle.getExternalKey(), repairs);
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseRepairException(e);
         }
     }
 
-    private String getViewId(final DateTime lastUpdateBundleDate, final List<DefaultSubscriptionBase> subscriptions) {
-        final StringBuilder tmp = new StringBuilder();
-        long lastOrderedId = -1;
-        for (final SubscriptionBase cur : subscriptions) {
-            lastOrderedId = lastOrderedId < ((DefaultSubscriptionBase) cur).getLastEventOrderedId() ? ((DefaultSubscriptionBase) cur).getLastEventOrderedId() : lastOrderedId;
-        }
-        tmp.append(lastOrderedId);
-        tmp.append("-");
-        tmp.append(lastUpdateBundleDate.toDate().getTime());
 
-        return tmp.toString();
-    }
-
-    private BundleBaseTimeline createGetBundleRepair(final UUID bundleId, final String externalKey, final String viewId, final List<SubscriptionBaseTimeline> repairList) {
+    private BundleBaseTimeline createGetBundleRepair(final UUID bundleId, final String externalKey, final List<SubscriptionBaseTimeline> repairList) {
         return new BundleBaseTimeline() {
-            @Override
-            public String getViewId() {
-                return viewId;
-            }
 
             @Override
             public List<SubscriptionBaseTimeline> getSubscriptions() {
