@@ -138,6 +138,56 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
     }
 
 
+
+    @Test(groups = "slow", description = "Verify active blocking states are being returned")
+    public void testActiveBlockingStates() throws AccountApiException {
+
+        final UUID accountId = createAccount(getAccountData(1)).getId();
+        final String service = "Coco";
+
+        clock.setDay(new LocalDate(2022, 1, 18));
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState stateA1 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, "warning", service, false, false, false, clock.getUTCNow());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(stateA1, Optional.<UUID>absent()), internalCallContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState stateA2 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, "warning+", service, false, false, false, clock.getUTCNow());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(stateA2, Optional.<UUID>absent()), internalCallContext);
+        assertListenerStatus();
+
+        final UUID bundleId = UUID.randomUUID();
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState stateB1 = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, "block", service, true, true, true, clock.getUTCNow());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(stateB1, Optional.<UUID>absent()), internalCallContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState stateA3 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, "warning++", service, false, false, false, clock.getUTCNow());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(stateA3, Optional.<UUID>absent()), internalCallContext);
+        assertListenerStatus();
+
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState stateB2 = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, "unblock", service, false, false, false, clock.getUTCNow());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(stateB2, Optional.<UUID>absent()), internalCallContext);
+        assertListenerStatus();
+
+
+        List<BlockingState> states = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
+        Assert.assertEquals(states.size(), 5);
+
+
+        states = blockingStateDao.getBlockingActiveForAccount(catalog, null, internalCallContext);
+        Assert.assertEquals(states.size(), 2);
+
+    }
+
+
     @Test(groups = "slow", description = "Check BlockingStateDao with multiple services")
     public void testDaoWithMultipleServices() throws Exception {
         final UUID uuid = createAccount(getAccountData(1)).getId();
