@@ -155,7 +155,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
                                                                                                                         blockingState2, Optional.<UUID>absent()),
                                                                          internalCallContext);
 
-        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalog, null, internalCallContext);
+        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalog, internalCallContext);
 
         assertEquals(billingEvents.size(), 7);
 
@@ -799,7 +799,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
                                                                                                                         blockingState4, Optional.<UUID>absent()),
                                                                          internalCallContext);
 
-        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalog, null, internalCallContext);
+        blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalog, internalCallContext);
 
         assertEquals(billingEvents.size(), 5);
         final List<BillingEvent> events = new ArrayList<BillingEvent>(billingEvents);

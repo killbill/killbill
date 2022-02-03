@@ -20,7 +20,6 @@ package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -40,8 +39,8 @@ import org.skife.jdbi.v2.unstable.BindIn;
 public interface InvoiceItemSqlDao extends EntitySqlDao<InvoiceItemModelDao, InvoiceItem> {
 
     @SqlQuery
-    List<InvoiceItemModelDao> getInvoiceItemsForInvoices(@BindIn("invoiceIds") final Iterable<UUID> invoiceIds,
-                                                         @SmartBindBean final InternalTenantContext context);
+    List<InvoiceItemModelDao> getInvoiceItemsByInvoice(@Bind("invoiceId") final String invoiceId,
+                                                       @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     List<InvoiceItemModelDao> getInvoiceItemsBySubscription(@Bind("subscriptionId") final String subscriptionId,

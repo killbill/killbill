@@ -18,17 +18,14 @@
 package org.killbill.billing.subscription.engine.dao;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.DefaultPriceListSet;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -47,7 +44,6 @@ import org.killbill.billing.subscription.engine.dao.model.SubscriptionModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
-import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.util.UUIDs;
@@ -56,7 +52,6 @@ import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -323,51 +318,39 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         final String externalKey = "6577564455sgwers2";
         final DateTime startDate = clock.getUTCNow();
 
-        final List<SubscriptionBaseEvent> resultSubscriptions = createSubscription(bundle, externalKey, startDate, null);
+        final SubscriptionBuilder builder = new SubscriptionBuilder()
+                .setId(UUIDs.randomUUID())
+                .setBundleId(bundle.getId())
+                .setExternalKey(externalKey)
+                .setBundleExternalKey(bundle.getExternalKey())
+                .setCategory(ProductCategory.BASE)
+                .setBundleStartDate(startDate)
+                .setAlignStartDate(startDate)
+                .setMigrated(false);
+
+        final ApiEventBuilder createBuilder = new ApiEventBuilder()
+                .setSubscriptionId(builder.getId())
+                .setEventPlan("shotgun-monthly")
+                .setEventPlanPhase("shotgun-monthly-trial")
+                .setEventPriceList(DefaultPriceListSet.DEFAULT_PRICELIST_NAME)
+                .setEffectiveDate(startDate)
+                .setFromDisk(true);
+        final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
+
+
+        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
+                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        final List<SubscriptionBaseEvent> resultSubscriptions = dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
+                                                                                                  ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+                                                                                                  catalog,
+                                                                                                  internalCallContext);
+        assertListenerStatus();
         assertEquals(resultSubscriptions.size(), 1);
 
         final SubscriptionBase s = dao.getSubscriptionFromId(resultSubscriptions.get(0).getSubscriptionId(), catalog, internalCallContext);
         assertEquals(s.getExternalKey(), externalKey);
-    }
-
-
-
-    @Test(groups = "slow")
-    public void testGetActiveSubscriptionsForAccounts() throws SubscriptionBaseApiException, CatalogApiException {
-
-
-        final String bundleExternalKey = "54341455sttfs1";
-        final DateTime startDate = clock.getUTCNow();
-        final DateTime cancelDate = startDate.plusDays(17);
-
-        final DefaultSubscriptionBaseBundle bundleDef = new DefaultSubscriptionBaseBundle(bundleExternalKey, accountId, startDate, startDate, startDate, startDate);
-        final SubscriptionBaseBundle bundle = dao.createSubscriptionBundle(bundleDef, catalog, true, internalCallContext);
-
-        createSubscription(bundle, null, startDate, null);
-        createSubscription(bundle, null, startDate, cancelDate);
-
-        final InternalCallContext callContextWithAccountID = internalCallContextFactory.createInternalCallContext(accountId, callContext);
-        final Map<UUID, List<DefaultSubscriptionBase>> res1 =  dao.getSubscriptionsFromAccountId(null, callContextWithAccountID);
-        assertEquals(res1.size(), 1);
-        assertEquals(res1.get(bundle.getId()).size(), 2);
-
-        final List<SubscriptionBaseEvent> events1 = ((DefaultSubscriptionDao) dao).getEventsForAccountId(null, callContextWithAccountID);
-        assertEquals(events1.size(), 3);
-
-
-        final Map<UUID, List<DefaultSubscriptionBase>> res2 =  dao.getSubscriptionsFromAccountId(cancelDate.toLocalDate(), callContextWithAccountID);
-        assertEquals(res2.size(), 1);
-        assertEquals(res2.get(bundle.getId()).size(), 2);
-
-        final List<SubscriptionBaseEvent> events2 = ((DefaultSubscriptionDao) dao).getEventsForAccountId(cancelDate.toLocalDate(), callContextWithAccountID);
-        assertEquals(events2.size(), 3);
-
-        final Map<UUID, List<DefaultSubscriptionBase>> res3 =  dao.getSubscriptionsFromAccountId(cancelDate.plusDays(1).toLocalDate(), callContextWithAccountID);
-        assertEquals(res3.size(), 1);
-        assertEquals(res3.get(bundle.getId()).size(), 1);
-
-        final List<SubscriptionBaseEvent> events3 = ((DefaultSubscriptionDao) dao).getEventsForAccountId(cancelDate.plusDays(1).toLocalDate(), callContextWithAccountID);
-        assertEquals(events3.size(), 1);
 
     }
 
@@ -434,52 +417,4 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
                                       }
                                   });
     }
-
-
-    private List<SubscriptionBaseEvent> createSubscription(final SubscriptionBaseBundle bundle, final String externalKey, final DateTime startDate, final DateTime cancelDate) {
-
-        final SubscriptionBuilder builder = new SubscriptionBuilder()
-                .setId(UUIDs.randomUUID())
-                .setBundleId(bundle.getId())
-                .setBundleExternalKey(bundle.getExternalKey())
-                .setCategory(ProductCategory.BASE)
-                .setBundleStartDate(startDate)
-                .setAlignStartDate(startDate)
-                .setExternalKey(externalKey)
-                .setMigrated(false);
-
-        final ApiEventBuilder createBuilder = new ApiEventBuilder()
-                .setSubscriptionId(builder.getId())
-                .setEventPlan("shotgun-monthly")
-                .setEventPlanPhase("shotgun-monthly-trial")
-                .setEventPriceList(DefaultPriceListSet.DEFAULT_PRICELIST_NAME)
-                .setEffectiveDate(startDate)
-                .setFromDisk(true);
-        final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
-
-        final ApiEventBuilder cancelBuilder = cancelDate != null ? new ApiEventBuilder()
-                .setSubscriptionId(builder.getId())
-                .setEffectiveDate(cancelDate)
-                .setFromDisk(true) : null;
-
-        final SubscriptionBaseEvent cancelEvent = cancelBuilder != null ?
-                                                  new ApiEventCancel(cancelBuilder) : null;
-
-
-        final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
-        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
-                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
-        testListener.pushExpectedEvents(NextEvent.CREATE);
-        final ImmutableList<SubscriptionBaseEvent> events = cancelEvent !=  null ?
-                                                            ImmutableList.<SubscriptionBaseEvent>of(creationEvent, cancelEvent) :
-                                                            ImmutableList.<SubscriptionBaseEvent>of(creationEvent);
-
-        final List<SubscriptionBaseEvent> result = dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
-                                                                                     ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), events),
-                                                                                     catalog,
-                                                                                     internalCallContext);
-        assertListenerStatus();
-        return result;
-    }
-
 }

@@ -32,7 +32,6 @@ import javax.annotation.Nullable;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -194,23 +193,6 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
             public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
                 return new ArrayList<BlockingState>(Collections2.transform(sqlDao.getByAccountRecordId(context),
-                                                                           new Function<BlockingStateModelDao, BlockingState>() {
-                                                                               @Override
-                                                                               public BlockingState apply(@Nullable final BlockingStateModelDao src) {
-                                                                                   return BlockingStateModelDao.toBlockingState(src);
-                                                                               }
-                                                                           }));
-            }
-        });
-    }
-
-    @Override
-    public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<BlockingState>>() {
-            @Override
-            public List<BlockingState> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final BlockingStateSqlDao sqlDao = entitySqlDaoWrapperFactory.become(BlockingStateSqlDao.class);
-                return new ArrayList<BlockingState>(Collections2.transform(sqlDao.getBlockingActiveForAccount(context),
                                                                            new Function<BlockingStateModelDao, BlockingState>() {
                                                                                @Override
                                                                                public BlockingState apply(@Nullable final BlockingStateModelDao src) {

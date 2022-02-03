@@ -44,15 +44,9 @@ public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao, S
     public List<SubscriptionModelDao> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,
                                                                    @SmartBindBean final InternalTenantContext context);
 
-
-    @SqlQuery
-    public List<SubscriptionModelDao> getActiveByAccountRecordId(@Bind("cutoffDt") Date cutoffDt,
-                                                                 @SmartBindBean final InternalTenantContext context);
-
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    public void updateChargedThroughDate(@Bind("id") String id,
-                                         @Bind("chargedThroughDate") Date chargedThroughDate,
+    public void updateChargedThroughDate(@Bind("id") String id, @Bind("chargedThroughDate") Date chargedThroughDate,
                                          @SmartBindBean final InternalCallContext context);
 
 }

@@ -141,7 +141,7 @@ public class EventsStreamBuilder {
         final Map<UUID, List<SubscriptionBase>> subscriptions;
         try {
             final VersionedCatalog catalog = getCatalog(internalTenantContext);
-            subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(catalog, null, internalTenantContext);
+            subscriptions = subscriptionInternalApi.getSubscriptionsForAccount(catalog, internalTenantContext);
             return buildForAccount(subscriptions, catalog, internalTenantContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);

@@ -19,8 +19,6 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +29,6 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.client.KillBillClientException;
-import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.Accounts;
 import org.killbill.billing.client.model.AuditLogs;
 import org.killbill.billing.client.model.CustomFields;
@@ -43,7 +40,6 @@ import org.killbill.billing.client.model.gen.CustomField;
 import org.killbill.billing.client.model.gen.PaymentMethod;
 import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.gen.Tag;
-import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
@@ -55,7 +51,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
@@ -89,25 +84,6 @@ public class TestAccount extends TestJaxrsBase {
         }
 
         mockPaymentProviderPlugin.clear();
-    }
-
-    @Test(groups = "slow", description = "Verify encoded headers")
-    public void testEncodedHeaders() throws Exception {
-        final String comment = "マリオありがとう！ しかし、私たちの王女は別の城にいます！";
-        final RequestOptions requestOptions = RequestOptions.builder()
-                                                            // All 3 headers will be decoded, so non encoded values might become corrupted (e.g. Toto -> Nh)
-                                                            .withCreatedBy(createdBy)
-                                                            .withReason(reason)
-                                                            .withComment(Base64.getEncoder().encodeToString(comment.getBytes(StandardCharsets.UTF_8)))
-                                                            .withHeader("X-Killbill-Encoding", "base64")
-                                                            .withFollowLocation(true)
-                                                            .withQueryParamsForFollow(ImmutableMultimap.of(JaxrsResource.QUERY_AUDIT, AuditLevel.MINIMAL.name()))
-                                                            .build();
-        final Account emptyAccount = new Account();
-
-        final Account account = accountApi.createAccount(emptyAccount, requestOptions);
-        Assert.assertNotNull(account.getExternalKey());
-        Assert.assertEquals(account.getAuditLogs().get(0).getComments(), comment);
     }
 
     @Test(groups = "slow", description = "Verify no PII data is required")

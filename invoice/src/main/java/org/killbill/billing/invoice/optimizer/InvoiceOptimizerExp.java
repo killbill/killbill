@@ -73,21 +73,13 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
 
         boolean isMaxInvoiceLimitSet = maxInvoiceLimit != null && !maxInvoiceLimit.equals(UNSPECIFIED_PERIOD);
 
-        final LocalDate cutoffDt = isMaxInvoiceLimitSet ? callContext.toLocalDate(clock.getUTCNow()).minus(maxInvoiceLimit) : null;
-        //
-        // We need to compute a 'cutoffDt' for junction (billing events) that is at least one period less than the one computed for invoice
-        // to support in-arrear trailing pro-ration use cases - i.e cancellation did not occur EOT.
-        // The strategy is to use the existing config to remove one more period than what has been specified for invoice.
-        // Note that it's ok to return more but returning not enough would lead to unexpected REPAIR
-        // (See TestWithInvoiceOptimization#testRecurringInArrear5 for instance)
-        //
-        final LocalDate beCutoffDt = isMaxInvoiceLimitSet ? cutoffDt.minus(maxInvoiceLimit) : null;
+        final LocalDate fromDate = isMaxInvoiceLimitSet ? callContext.toLocalDate(clock.getUTCNow()).minus(maxInvoiceLimit) : null;
         final List<Invoice> existingInvoices = new LinkedList<Invoice>();
-        final List<InvoiceModelDao> invoicesByAccount = invoiceDao.getInvoicesByAccount(false, cutoffDt, null, callContext);
+        final List<InvoiceModelDao> invoicesByAccount = invoiceDao.getInvoicesByAccount(false, fromDate, null, callContext);
         for (final InvoiceModelDao invoiceModelDao : invoicesByAccount) {
             existingInvoices.add(new DefaultInvoice(invoiceModelDao));
         }
-        return new AccountInvoicesExp(cutoffDt, beCutoffDt, existingInvoices);
+        return new AccountInvoicesExp(fromDate, existingInvoices);
     }
 
     @Override
@@ -106,8 +98,8 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
 
     public static class AccountInvoicesExp extends AccountInvoices {
 
-        public AccountInvoicesExp(final LocalDate cutoffDate, final LocalDate beCutoffDate, final List<Invoice> invoices) {
-            super(cutoffDate, beCutoffDate, invoices);
+        public AccountInvoicesExp(final LocalDate cutoffDate, final List<Invoice> invoices) {
+            super(cutoffDate, invoices);
         }
 
         public AccountInvoicesExp() {

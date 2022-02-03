@@ -82,17 +82,6 @@ getInvoicePayments() ::= <<
     ;
 >>
 
-getPaymentsForInvoices() ::= <<
-    SELECT <allTableFields("")>
-    FROM <tableName()>
-    WHERE invoice_id in (<invoiceIds>)
-    <andCheckSoftDeletionWithComma("t.")>
-    AND payment_id IS NOT NULL
-    <AND_CHECK_TENANT("")>
-    <defaultOrderBy("")>
-    ;
->>
-
 getRemainingAmountPaid() ::= <<
     SELECT SUM(amount)
     FROM <tableName()>

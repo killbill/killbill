@@ -37,7 +37,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -448,9 +447,10 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) throws CatalogApiException {
-        final Map<UUID, List<DefaultSubscriptionBase>> subscriptionsFromAccountId = getSubscriptionsFromAccountId(cutoffDt, context);
-        final List<SubscriptionBaseEvent> eventsForAccount = getEventsForAccountId(cutoffDt, context);
+    public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
+
+        final Map<UUID, List<DefaultSubscriptionBase>> subscriptionsFromAccountId = getSubscriptionsFromAccountId(context);
+        final List<SubscriptionBaseEvent> eventsForAccount = getEventsForAccountId(context);
 
         final Map<UUID, List<DefaultSubscriptionBase>> result = new HashMap<UUID, List<DefaultSubscriptionBase>>();
         final Multimap<UUID, SubscriptionBaseEvent> eventsForSubscriptions = ArrayListMultimap.create();
@@ -464,33 +464,24 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         return result;
     }
 
-    public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsFromAccountId(@Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
+    private Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsFromAccountId(final InternalTenantContext context) {
         final List<DefaultSubscriptionBase> allSubscriptions = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<DefaultSubscriptionBase>>() {
             @Override
             public List<DefaultSubscriptionBase> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
 
+                final List<SubscriptionBundleModelDao> bundleModels = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getByAccountRecordId(context);
 
-                final SubscriptionSqlDao subscriptionSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
-                final List<SubscriptionModelDao> subscriptionModels = cutoffDt == null ?
-                                                                      subscriptionSqlDao.getByAccountRecordId(context) :
-                                                                      subscriptionSqlDao.getActiveByAccountRecordId(cutoffDt.toDate(), context);
-
-                // We avoid pulling the bundles when a cutoffDt is specified, as those are not really used
-                final List<SubscriptionBundleModelDao> bundleModels = cutoffDt == null ?
-                                                                      entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getByAccountRecordId(context) :
-                                                                      ImmutableList.of();
-
+                final List<SubscriptionModelDao> subscriptionModels = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getByAccountRecordId(context);
                 return new ArrayList<DefaultSubscriptionBase>(Collections2.transform(subscriptionModels, new Function<SubscriptionModelDao, DefaultSubscriptionBase>() {
                     @Override
                     public DefaultSubscriptionBase apply(final SubscriptionModelDao input) {
-                        final SubscriptionBundleModelDao bundleModel = Iterables.tryFind(bundleModels, new Predicate<SubscriptionBundleModelDao>() {
+                        final SubscriptionBundleModelDao bundleModel = Iterables.find(bundleModels, new Predicate<SubscriptionBundleModelDao>() {
                             @Override
                             public boolean apply(final SubscriptionBundleModelDao bundleInput) {
                                 return bundleInput.getId().equals(input.getBundleId());
                             }
-                        }).orNull();
-                        final String bundleExternalKey = bundleModel != null ? bundleModel.getExternalKey() : null;
-                        return SubscriptionModelDao.toSubscription(input, bundleExternalKey);
+                        });
+                        return SubscriptionModelDao.toSubscription(input, bundleModel.getExternalKey());
                     }
                 }));
             }
@@ -813,14 +804,11 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }));
     }
 
-    public List<SubscriptionBaseEvent> getEventsForAccountId(@Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
+    private List<SubscriptionBaseEvent> getEventsForAccountId(final InternalTenantContext context) {
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<SubscriptionBaseEvent>>() {
             @Override
             public List<SubscriptionBaseEvent> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionEventSqlDao subscriptionEventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-                final List<SubscriptionEventModelDao> models = cutoffDt == null ?
-                                                               subscriptionEventSqlDao.getByAccountRecordId(context) :
-                                                               subscriptionEventSqlDao.getActiveByAccountRecordId(cutoffDt.toDate(), context);
+                final List<SubscriptionEventModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getByAccountRecordId(context);
                 return filterSubscriptionBaseEvents(models);
             }
         });

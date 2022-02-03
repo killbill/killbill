@@ -22,9 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -75,9 +72,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     List<DefaultSubscriptionBase> getSubscriptions(UUID bundleId, List<SubscriptionBaseEvent> dryRunEvents, final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
-    Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog,  LocalDate cutoffDt, InternalTenantContext context) throws CatalogApiException;
-
-    Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsFromAccountId(@Nullable final LocalDate cutoffDt, final InternalTenantContext context);
+    Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
     // Update
     void updateChargedThroughDate(DefaultSubscriptionBase subscription, InternalCallContext context);

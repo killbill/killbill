@@ -93,7 +93,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         final Invoice invoice = createInvoice(cutoffDate);
         existing.add(invoice);
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
 
         final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ARREAR, SubscriptionBaseTransitionType.CREATE));
@@ -133,7 +133,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         final Invoice invoice = createInvoice(cutoffDate);
         existing.add(invoice);
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
 
         // Note that we don't really need the billing events except to fetch Plan info in AccountInvoicesExp#filterProposedItems
         // so we don't need to explicitly add the CANCEL billing event
@@ -171,7 +171,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         invoice.addInvoiceItem(newItem);
         existing.add(invoice);
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
 
         final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ARREAR, SubscriptionBaseTransitionType.CREATE));
@@ -213,7 +213,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         final Invoice invoice = createInvoice(cutoffDate);
         existing.add(invoice);
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
 
         final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ARREAR, SubscriptionBaseTransitionType.CREATE));
@@ -259,7 +259,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         invoice.addInvoiceItem(newItem);
         existing.add(invoice);
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
 
         final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ARREAR, SubscriptionBaseTransitionType.CREATE));
@@ -301,7 +301,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
         test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
         Assert.assertEquals(proposedItems.size(), 1);
         // New proposed item
@@ -345,7 +345,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
 
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
         test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
         Assert.assertEquals(proposedItems.size(), 0);
     }
@@ -381,7 +381,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
         test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
         Assert.assertEquals(proposedItems.size(), 2);
         // Latest existing (P1M) - this would be filtered out by the tree later on
@@ -422,7 +422,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         final DefaultBillingEventSet billingEvents = new DefaultBillingEventSet(false, false, false);
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
         test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
         Assert.assertEquals(proposedItems.size(), 2);
         // Latest existing (P1M) - this would be regenerated, we would catch up for one period
@@ -468,7 +468,7 @@ public class TestInvoiceOptimizerExp extends InvoiceTestSuiteNoDB {
         billingEvents.add(createBillingEvent(startDate, BillingMode.IN_ADVANCE, SubscriptionBaseTransitionType.CREATE));
 
 
-        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, null, existing);
+        final AccountInvoicesExp test = new AccountInvoicesExp(cutoffDate, existing);
         test.filterProposedItems(proposedItems, billingEvents, internalCallContext);
         Assert.assertEquals(proposedItems.size(), 1);
         // Latest existing (P1M)

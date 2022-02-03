@@ -104,35 +104,7 @@ where <accountRecordIdField("t.")> = :accountRecordId
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
 ;
->>
-
-
-getBlockingActiveForAccount() ::= <<
-select
-<allTableFields("bs1.")>
-from
-blocking_states bs1
-join (
-  select
-   service
-  , blockable_id
-  , count(*)
-  from
-  blocking_states
-  where 1=1
-  and <accountRecordIdField("")> = :accountRecordId
-  <AND_CHECK_TENANT("")>
-  and block_billing = '1'
-  group by service, blockable_id
-  having count(*) > 0) tmp
-on bs1.service = tmp.service
-   and bs1.blockable_id = tmp.blockable_id
-where 1=1
-and <accountRecordIdField("bs1.")> = :accountRecordId
-<AND_CHECK_TENANT("bs1.")>
-order by bs1.service, bs1.blockable_id, bs1.block_billing
-;
->>
+ >>
 
 getBlockingHistoryForService() ::= <<
 select

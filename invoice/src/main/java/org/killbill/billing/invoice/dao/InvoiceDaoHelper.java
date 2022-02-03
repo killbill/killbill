@@ -44,6 +44,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.CounterMappings;
+import org.killbill.billing.util.dao.CounterMappingsMapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
@@ -289,7 +290,7 @@ public class InvoiceDaoHelper {
 
     private void setInvoiceItemsWithinTransaction(final InvoiceModelDao invoice, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-        final List<InvoiceItemModelDao> invoiceItems = invoiceItemSqlDao.getInvoiceItemsForInvoices(ImmutableList.of(invoice.getId()), context);
+        final List<InvoiceItemModelDao> invoiceItems = invoiceItemSqlDao.getInvoiceItemsByInvoice(invoice.getId().toString(), context);
         // Make sure to set invoice items to a non-null value
         final List<InvoiceItemModelDao> invoiceItemsForInvoice = MoreObjects.firstNonNull(invoiceItems, ImmutableList.<InvoiceItemModelDao>of());
         log.debug("Found items={} for invoice={}", invoiceItemsForInvoice, invoice);
@@ -299,12 +300,7 @@ public class InvoiceDaoHelper {
 
     private void setInvoiceItemsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final InvoiceItemSqlDao invoiceItemSqlDao = entitySqlDaoWrapperFactory.become(InvoiceItemSqlDao.class);
-        final List<InvoiceItemModelDao> invoiceItemsForAccount = invoiceItemSqlDao.getInvoiceItemsForInvoices(ImmutableSet.copyOf(Iterables.transform(invoices, new Function<InvoiceModelDao, UUID>() {
-            @Override
-            public UUID apply(final InvoiceModelDao invoiceModelDao) {
-                return invoiceModelDao.getId();
-            }
-        })), context);
+        final List<InvoiceItemModelDao> invoiceItemsForAccount = invoiceItemSqlDao.getByAccountRecordId(context);
 
         final Map<UUID, List<InvoiceItemModelDao>> invoiceItemsPerInvoiceId = new HashMap<UUID, List<InvoiceItemModelDao>>();
         for (final InvoiceItemModelDao item : invoiceItemsForAccount) {
@@ -339,12 +335,7 @@ public class InvoiceDaoHelper {
 
     private void setInvoicePaymentsWithinTransaction(final Iterable<InvoiceModelDao> invoices, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final InvoicePaymentSqlDao invoicePaymentSqlDao = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
-        final List<InvoicePaymentModelDao> invoicePaymentsForAccount = invoicePaymentSqlDao.getPaymentsForInvoices(ImmutableSet.copyOf(Iterables.transform(invoices, new Function<InvoiceModelDao, UUID>() {
-            @Override
-            public UUID apply(final InvoiceModelDao invoiceModelDao) {
-                return invoiceModelDao.getId();
-            }
-        })), context);
+        final List<InvoicePaymentModelDao> invoicePaymentsForAccount = invoicePaymentSqlDao.getByAccountRecordId(context);
 
         final Map<UUID, List<InvoicePaymentModelDao>> invoicePaymentsPerInvoiceId = new HashMap<UUID, List<InvoicePaymentModelDao>>();
         for (final InvoicePaymentModelDao invoicePayment : invoicePaymentsForAccount) {

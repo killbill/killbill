@@ -107,7 +107,7 @@ public class RawUsageOptimizer {
         // because the optimization would prevent pulling enough (old) usage records.
         //
         final Map<BillingPeriod, LocalDate> perBillingPeriodMostRecentConsumableInArrearItemEndDate;
-        if (config.isUsageZeroAmountDisabled(internalCallContext)) {
+        if (config.isUsageZeroAmountDisabled()) {
             perBillingPeriodMostRecentConsumableInArrearItemEndDate = getBillingPeriodMinDate2(knownUsageBillingPeriod, targetDate);
         } else {
             perBillingPeriodMostRecentConsumableInArrearItemEndDate = getBillingPeriodMinDate1(knownUsageBillingPeriod, existingUsageItems, knownUsage);

@@ -57,7 +57,7 @@ public class InvoiceOptimizerNoop extends InvoiceOptimizerBase {
         for (final InvoiceModelDao invoiceModelDao : invoicesByAccount) {
             existingInvoices.add(new DefaultInvoice(invoiceModelDao));
         }
-        return new AccountInvoices(null, null, existingInvoices);
+        return new AccountInvoices(null, existingInvoices);
     }
 
     @Override
