@@ -174,7 +174,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         testListener.pushExpectedEvent(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
-        subscriptionInternalApi.setChargedThroughDate(entitlement.getId(), clock.getUTCNow().plusMonths(1), internalCallContext);
+        setChargedThroughDate(entitlement.getId(), clock.getUTCNow().plusMonths(1), internalCallContext);
 
         final LocalDate entitlementCancelledDate = clock.getToday(account.getTimeZone());
         testListener.pushExpectedEvent(NextEvent.BLOCK);
@@ -569,7 +569,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         testListener.pushExpectedEvent(NextEvent.PHASE);
         clock.addDays(32);
         // Set manually since no invoice
-        subscriptionInternalApi.setChargedThroughDate(baseEntitlement.getId(), ctd, internalCallContext);
+        setChargedThroughDate(baseEntitlement.getId(), ctd, internalCallContext);
         assertListenerStatus();
 
         // Transfer bundle to dest account

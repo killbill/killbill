@@ -275,10 +275,8 @@ public class TestAccountTimeline extends TestJaxrsBase {
                 verifyAuditLog(subscriptionEvent2AuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
             } else {
                 // Audits for bundles
-                Assert.assertEquals(bundleAuditLogs.size(), 3);
+                Assert.assertEquals(bundleAuditLogs.size(), 1);
                 verifyAuditLog(bundleAuditLogs.get(0), ChangeType.INSERT, reason, comment, createdBy, startTime, endTime);
-                verifyAuditLog(bundleAuditLogs.get(1), ChangeType.UPDATE, null, null, TRANSITION, startTime, endTime);
-                verifyAuditLog(bundleAuditLogs.get(2), ChangeType.UPDATE, null, null, TRANSITION, startTime, endTime);
 
                 // Audits for subscriptions
                 Assert.assertEquals(subscriptionAuditLogs.size(), 3);

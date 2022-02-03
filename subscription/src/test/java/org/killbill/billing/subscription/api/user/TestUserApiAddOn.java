@@ -104,11 +104,11 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime now = clock.getUTCNow();
         final Duration aoCtd = testUtil.getDurationMonth(1);
         final DateTime newAOChargedThroughDate = TestSubscriptionHelper.addDuration(now, aoCtd);
-        subscriptionInternalApi.setChargedThroughDate(aoSubscription.getId(), newAOChargedThroughDate, internalCallContext);
+        setChargedThroughDate(aoSubscription.getId(), newAOChargedThroughDate, internalCallContext);
 
         final Duration bpCtd = testUtil.getDurationMonth(11);
         final DateTime newBPChargedThroughDate = TestSubscriptionHelper.addDuration(now, bpCtd);
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newBPChargedThroughDate, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), newBPChargedThroughDate, internalCallContext);
 
         baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext);
@@ -179,7 +179,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final Duration ctd = testUtil.getDurationMonth(1);
         // Why not just use clock.getUTCNow().plusMonths(1) ?
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(now, ctd);
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
         baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
         // FUTURE CANCELLATION
@@ -233,7 +233,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final Duration ctd = testUtil.getDurationMonth(1);
         // Why not just use clock.getUTCNow().plusMonths(1) ?
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(now, ctd);
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
         baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
         // FUTURE CANCELLATION
@@ -296,7 +296,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime now = clock.getUTCNow();
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(now, ctd);
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
         baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
         // CHANGE IMMEDIATELY WITH TO BP WITH NON INCLUDED ADDON
@@ -355,7 +355,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime now = clock.getUTCNow();
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(now, ctd);
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), newChargedThroughDate, internalCallContext);
         baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
 
         // CHANGE IMMEDIATELY WITH TO BP WITH NON AVAILABLE ADDON

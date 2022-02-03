@@ -83,7 +83,7 @@ public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBaseBundle getBundleFromId(UUID id, InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public void setChargedThroughDate(UUID subscriptionId, DateTime chargedThruDate, InternalCallContext context) throws SubscriptionBaseApiException;
+    public void setChargedThroughDates(Map<DateTime, List<UUID>> chargeThroughDates, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(SubscriptionBase subscription, InternalTenantContext context);
 

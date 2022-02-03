@@ -185,7 +185,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         bundles.add(new DefaultSubscriptionBaseBundle(bundle.getId(),
                                                       MoreObjects.firstNonNull(bundle.getExternalKey(), UUID.randomUUID().toString()),
                                                       bundle.getAccountId(),
-                                                      bundle.getLastSysUpdateDate(),
                                                       bundle.getOriginalCreatedDate(),
                                                       bundle.getCreatedDate(),
                                                       bundle.getUpdatedDate()));
@@ -340,7 +339,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         return subscription;
     }
 
-    @Override
     public void updateChargedThroughDate(final DefaultSubscriptionBase subscription, final InternalCallContext context) {
         boolean found = false;
         final Iterator<DefaultSubscriptionBase> it = subscriptions.iterator();
@@ -355,6 +353,11 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         if (found) {
             subscriptions.add(subscription);
         }
+    }
+
+    @Override
+    public void updateChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context) {
+
     }
 
     @Override

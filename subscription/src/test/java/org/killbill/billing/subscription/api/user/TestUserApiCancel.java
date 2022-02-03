@@ -122,7 +122,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
-        subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
+        setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         assertEquals(subscription.getLastActiveProduct().getName(), prod);
@@ -230,7 +230,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
-        subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
+        setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         // CANCEL EOT
@@ -306,7 +306,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
-        subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
+        setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         assertEquals(subscription.getLastActiveProduct().getName(), prod);
@@ -373,7 +373,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         // Artificially set the CTD
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(clock.getUTCNow(), ctd);
-        subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
+        setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         // Move ahead a bit abd cancel START_OF_TERM
@@ -554,7 +554,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         // SET CTD + RE READ SUBSCRIPTION + CHANGE PLAN
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
-        subscriptionInternalApi.setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
+        setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
 
         assertEquals(subscription.getLastActiveProduct().getName(), prod);
