@@ -40,7 +40,6 @@ import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
@@ -85,7 +84,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         final boolean blockChange = true;
         final boolean blockEntitlement = false;
-        final boolean blockBilling = false;
+        final boolean blockBilling = true;
 
         final Account account = createAccount(getAccountData(7));
 
@@ -102,7 +101,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         blockingInternalApi.setBlockingState(state2, internalCallContext);
         assertListenerStatus();
 
-        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAllForAccount(catalog, internalCallContext);
+        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingActiveForAccount(catalog, null, internalCallContext);
         final List<BlockingState> history = ImmutableList.<BlockingState>copyOf(Collections2.<BlockingState>filter(blockingAll,
                                                                                                                    new Predicate<BlockingState>() {
                                                                                                                        @Override
@@ -125,7 +124,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         final boolean blockChange = false;
         final boolean blockEntitlement = true;
-        final boolean blockBilling = false;
+        final boolean blockBilling = true;
 
         final Account account = createAccount(getAccountData(7));
 
@@ -173,7 +172,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
 
-        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingAllForAccount(catalog, internalCallContext);
+        final List<BlockingState> blockingAll = blockingInternalApi.getBlockingActiveForAccount(catalog, null, internalCallContext);
         final List<BlockingState> history = ImmutableList.<BlockingState>copyOf(Collections2.<BlockingState>filter(blockingAll,
                                                                                                                    new Predicate<BlockingState>() {
                                                                                                                        @Override
