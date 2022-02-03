@@ -81,7 +81,7 @@ public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
               i.getRate(),
               i.getCurrency(),
               i.getLinkedItemId(),
-              i.getQuantity() == null ? null : BigDecimal.valueOf(i.getQuantity()), /* FIXME-1469 : API backward compat */
+              i.getQuantity(),
               i.getItemDetails(),
               i.getInvoiceItemType());
     }

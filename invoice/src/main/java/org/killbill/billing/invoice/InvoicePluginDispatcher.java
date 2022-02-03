@@ -17,7 +17,6 @@
 
 package org.killbill.billing.invoice;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -274,10 +273,7 @@ public class InvoicePluginDispatcher {
                                           immutableField("rate", existingItem, existingItem != null ? existingItem.getRate() : null, additionalInvoiceItem.getRate(), invoicePlugin),
                                           immutableField("currency", existingItem, existingItem != null ? existingItem.getCurrency() : null, additionalInvoiceItem.getCurrency(), invoicePlugin),
                                           immutableField("linkedItemId", existingItem, existingItem != null ? existingItem.getLinkedItemId() : null, additionalInvoiceItem.getLinkedItemId(), invoicePlugin),
-                                          immutableField("quantity", existingItem,
-                                                         (existingItem == null || existingItem.getQuantity() == null) ? null : BigDecimal.valueOf(existingItem.getQuantity()) /* FIXME-1469 : API backward compat*/,
-                                                         additionalInvoiceItem.getQuantity() == null ? null : BigDecimal.valueOf(additionalInvoiceItem.getQuantity())/* FIXME-1469 : API backward compat */,
-                                                         invoicePlugin),
+                                          immutableField("quantity", existingItem, (existingItem == null ? null : existingItem.getQuantity()), additionalInvoiceItem.getQuantity() == null ? null : additionalInvoiceItem.getQuantity(), invoicePlugin),
                                           mutableField("itemDetails", existingItem != null ? existingItem.getItemDetails() : null, additionalInvoiceItem.getItemDetails(), invoicePlugin),
                                           immutableField("invoiceItemType", existingItem, existingItem != null ? existingItem.getInvoiceItemType() : null, additionalInvoiceItem.getInvoiceItemType(), invoicePlugin));
         switch (tmp.getInvoiceItemType()) {

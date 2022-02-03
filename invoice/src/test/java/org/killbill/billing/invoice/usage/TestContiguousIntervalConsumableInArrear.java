@@ -89,11 +89,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                                                                                                                                                        BillingPeriod.MONTHLY,
                                                                                                                                                        Collections.<Usage>emptyList(), catalogEffectiveDate));
 
-        final UsageConsumableInArrearTierUnitAggregate detail1 = new UsageConsumableInArrearTierUnitAggregate(3, "FOO", new BigDecimal("0.50"), 1L, BigDecimal.valueOf(700L));
-        final UsageConsumableInArrearTierUnitAggregate detail2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, 1L, BigDecimal.valueOf(500L));
-        final UsageConsumableInArrearTierUnitAggregate detail3 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, 1L, BigDecimal.valueOf(10L));
-        final UsageConsumableInArrearTierUnitAggregate detail4 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, 1L, BigDecimal.valueOf(50L));
-        final UsageConsumableInArrearTierUnitAggregate detail5 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, 1L, BigDecimal.valueOf(100L));
+        final UsageConsumableInArrearTierUnitAggregate detail1 = new UsageConsumableInArrearTierUnitAggregate(3, "FOO", new BigDecimal("0.50"), BigDecimal.ONE, BigDecimal.valueOf(700L));
+        final UsageConsumableInArrearTierUnitAggregate detail2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, BigDecimal.ONE, BigDecimal.valueOf(500L));
+        final UsageConsumableInArrearTierUnitAggregate detail3 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, BigDecimal.ONE, BigDecimal.valueOf(10L));
+        final UsageConsumableInArrearTierUnitAggregate detail4 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.ONE, BigDecimal.ONE, BigDecimal.valueOf(50L));
+        final UsageConsumableInArrearTierUnitAggregate detail5 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.TEN, BigDecimal.ONE, BigDecimal.valueOf(100L));
 
         final List<UsageConsumableInArrearTierUnitAggregate> existingUsage = ImmutableList.of(detail1, detail2, detail3, detail4, detail5);
 
@@ -109,11 +109,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final List<UsageConsumableInArrearTierUnitAggregate> aggregateDetails = intervalConsumableInArrear.getBilledDetailsForUnitType(existingItems, "FOO");
         assertEquals(aggregateDetails.size(), 3);
         assertEquals(aggregateDetails.get(0).getTier(), 1);
-        assertEquals(aggregateDetails.get(0).getQuantity().intValue(), 110);
+        assertEquals(aggregateDetails.get(0).getQuantity(), BigDecimal.valueOf(110));
         assertEquals(aggregateDetails.get(1).getTier(), 2);
-        assertEquals(aggregateDetails.get(1).getQuantity().intValue(), 550);
+        assertEquals(aggregateDetails.get(1).getQuantity(), BigDecimal.valueOf(550));
         assertEquals(aggregateDetails.get(2).getTier(), 3);
-        assertEquals(aggregateDetails.get(2).getQuantity().intValue(), 700);
+        assertEquals(aggregateDetails.get(2).getQuantity(), BigDecimal.valueOf(700));
 
     }
 
@@ -181,8 +181,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         List<UsageConsumableInArrearTierUnitAggregate> result = intervalConsumableInArrear.computeToBeBilledConsumableInArrear(null, null, new DefaultRolledUpUnit("unit", BigDecimal.valueOf(111L)), ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of());
         assertEquals(result.size(), 3);
         // 111 = 10 (tier1) + 100 (tier2) + 1 (tier3) => 10 * 1.5 + 100 * 1 + 1 * 0.5 = 115.5
-        assertEquals(result.get(0).getAmount(), new BigDecimal("15.0"));
-        assertEquals(result.get(1).getAmount(), new BigDecimal("100.0"));
+        assertEquals(result.get(0).getAmount(), new BigDecimal("15.00"));
+        assertEquals(result.get(1).getAmount(), new BigDecimal("100.00"));
         assertEquals(result.get(2).getAmount(), new BigDecimal("0.5"));
     }
 
@@ -208,7 +208,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 2);
 
         // 5000 = 1000 (tier1) + 4325 (tier2) => 10 + 5 = 15
-        assertEquals(result.get(0).getAmount(), new BigDecimal("10"));
+        assertEquals(result.get(0).getAmount(), new BigDecimal("10.0"));
         assertEquals(result.get(1).getAmount(), new BigDecimal("5"));
     }
 
@@ -234,7 +234,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 2);
 
         // 5000 = 1000 (tier1) + 4325 (tier2) => 10 + 5 = 15
-        assertEquals(result.get(0).getAmount(), new BigDecimal("10"));
+        assertEquals(result.get(0).getAmount(), new BigDecimal("10.0"));
         assertEquals(result.get(1).getAmount(), new BigDecimal("5"));
     }
 
@@ -471,25 +471,25 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         Assert.assertEquals(rolledUpUsage.get(0).getEnd().compareTo(t1), 0);
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getUnitType(), "unit");
-        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount(), (Long) BigDecimal.valueOf(10L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount(), BigDecimal.valueOf(10L));
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getUnitType(), "unit2");
-        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getAmount(), (Long) BigDecimal.valueOf(0L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getAmount(), BigDecimal.valueOf(0L));
 
         Assert.assertEquals(rolledUpUsage.get(1).getStart().compareTo(t1), 0);
         Assert.assertEquals(rolledUpUsage.get(1).getEnd().compareTo(t2), 0);
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getUnitType(), "unit");
-        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount(), (Long) BigDecimal.valueOf(0L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount(), BigDecimal.valueOf(0L));
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getUnitType(), "unit2");
-        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getAmount(), (Long) BigDecimal.valueOf(0L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getAmount(), BigDecimal.valueOf(0L));
 
         Assert.assertEquals(rolledUpUsage.get(2).getStart().compareTo(t2), 0);
         Assert.assertEquals(rolledUpUsage.get(2).getEnd().compareTo(t3), 0);
         Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getUnitType(), "unit");
-        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getAmount(), (Long) BigDecimal.valueOf(20L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getAmount(), BigDecimal.valueOf(20L));
         Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(1).getUnitType(), "unit2");
-        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(1).getAmount(), (Long) BigDecimal.valueOf(21L).longValue()); // FIXME-1469 change to correct BigDecimal implementation
+        Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(1).getAmount(), BigDecimal.valueOf(21L));
     }
 
     @Test(groups = "fast")
@@ -535,13 +535,13 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("198")), 0);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 99);
+        assertEquals(itemDetails.get(0).getQuantity(), BigDecimal.valueOf(99));
         assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("2.0")), 0);
         // FOO: 5 * 1 = 5
         assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(1).getTier(), 1);
         assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(1).getQuantity(), BigDecimal.valueOf(5));
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(BigDecimal.ONE), 0);
 
         // Case 2
@@ -560,19 +560,19 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("200.0")), 0);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 100);
+        assertEquals(itemDetails.get(0).getQuantity(), new BigDecimal("100.0"));
         assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("2.0")), 0);
         // BAR: 1 * 20 = 20
         assertEquals(itemDetails.get(1).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(1).getTier(), 2);
         assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("20.0")), 0);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 1);
+        assertEquals(itemDetails.get(1).getQuantity(), BigDecimal.valueOf(1));
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("20.0")), 0);
         // FOO: 5 * 1 = 5
         assertEquals(itemDetails.get(2).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(2).getTier(), 1);
         assertEquals(itemDetails.get(2).getAmount().compareTo(new BigDecimal("5")), 0);
-        assertEquals(itemDetails.get(2).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(2).getQuantity(), BigDecimal.valueOf(5));
         assertEquals(itemDetails.get(2).getTierPrice().compareTo(BigDecimal.ONE), 0);
 
         // Case 3
@@ -590,31 +590,31 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("200.0")), 0);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 100);
+        assertEquals(itemDetails.get(0).getQuantity(), BigDecimal.valueOf(100.0d));
         assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("2.0")), 0);
         // BAR: 1 * 20 = 20
         assertEquals(itemDetails.get(1).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(1).getTier(), 2);
         assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("20.0")), 0);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 1);
+        assertEquals(itemDetails.get(1).getQuantity(), BigDecimal.valueOf(1));
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("20.0")), 0);
         // FOO: 10 * 1 = 10
         assertEquals(itemDetails.get(2).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(2).getTier(), 1);
         assertEquals(itemDetails.get(2).getAmount().compareTo(BigDecimal.TEN), 0);
-        assertEquals(itemDetails.get(2).getQuantity().intValue(), 10);
+        assertEquals(itemDetails.get(2).getQuantity(), BigDecimal.valueOf(10.0d));
         assertEquals(itemDetails.get(2).getTierPrice().compareTo(BigDecimal.ONE), 0);
         // FOO: 50 * 10 = 500
         assertEquals(itemDetails.get(3).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(3).getTier(), 2);
         assertEquals(itemDetails.get(3).getAmount().compareTo(new BigDecimal("500")), 0);
-        assertEquals(itemDetails.get(3).getQuantity().intValue(), 50);
+        assertEquals(itemDetails.get(3).getQuantity(), BigDecimal.valueOf(50.0d));
         assertEquals(itemDetails.get(3).getTierPrice().compareTo(BigDecimal.TEN), 0);
         // FOO: 15 * 100 = 1500
         assertEquals(itemDetails.get(4).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(4).getTier(), 3);
         assertEquals(itemDetails.get(4).getAmount().compareTo(new BigDecimal("1500")), 0);
-        assertEquals(itemDetails.get(4).getQuantity().intValue(), 15);
+        assertEquals(itemDetails.get(4).getQuantity(), BigDecimal.valueOf(15));
         assertEquals(itemDetails.get(4).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
     }
 
@@ -630,11 +630,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 2);
         // BAR: 99 * 2 = 198
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("198")), 0);
-        assertEquals(result.get(0).getQuantity().intValue(), 99);
+        assertEquals(result.get(0).getQuantity(), BigDecimal.valueOf(99));
         assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.0")), 0);
         // FOO: 5 * 1 = 5
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
-        assertEquals(result.get(1).getQuantity().intValue(), 5);
+        assertEquals(result.get(1).getQuantity(), BigDecimal.valueOf(5));
         assertEquals(result.get(1).getRate().compareTo(BigDecimal.ONE), 0);
 
         // Case 2
@@ -646,15 +646,15 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 3);
         // BAR: 100 * 2 = 200
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("200.0")), 0);
-        assertEquals(result.get(0).getQuantity().intValue(), 100);
+        assertEquals(result.get(0).getQuantity(), BigDecimal.valueOf(100.0d));
         assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.0")), 0);
         // BAR: 1 * 20 = 20
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("20.0")), 0);
-        assertEquals(result.get(1).getQuantity().intValue(), 1);
+        assertEquals(result.get(1).getQuantity(), BigDecimal.valueOf(1));
         assertEquals(result.get(1).getRate().compareTo(new BigDecimal("20.0")), 0);
         // FOO: 5 * 1 = 5
         assertEquals(result.get(2).getAmount().compareTo(new BigDecimal("5")), 0);
-        assertEquals(result.get(2).getQuantity().intValue(), 5);
+        assertEquals(result.get(2).getQuantity(), BigDecimal.valueOf(5));
         assertEquals(result.get(2).getRate().compareTo(BigDecimal.ONE), 0);
 
         // Case 3
@@ -666,23 +666,23 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 5);
         // BAR: 100 * 2 = 200
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("200.0")), 0);
-        assertEquals(result.get(0).getQuantity().intValue(), 100);
+        assertEquals(result.get(0).getQuantity(), BigDecimal.valueOf(100.0d));
         assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.0")), 0);
         // BAR: 1 * 20 = 20
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("20.0")), 0);
-        assertEquals(result.get(1).getQuantity().intValue(), 1);
+        assertEquals(result.get(1).getQuantity(), BigDecimal.valueOf(1));
         assertEquals(result.get(1).getRate().compareTo(new BigDecimal("20.0")), 0);
         // FOO: 10 * 1 = 10
         assertEquals(result.get(2).getAmount().compareTo(BigDecimal.TEN), 0);
-        assertEquals(result.get(2).getQuantity().intValue(), 10);
+        assertEquals(result.get(2).getQuantity(), BigDecimal.valueOf(10.0d));
         assertEquals(result.get(2).getRate().compareTo(BigDecimal.ONE), 0);
         // FOO: 50 * 10 = 500
         assertEquals(result.get(3).getAmount().compareTo(new BigDecimal("500")), 0);
-        assertEquals(result.get(3).getQuantity().intValue(), 50);
+        assertEquals(result.get(3).getQuantity(), BigDecimal.valueOf(50.0d));
         assertEquals(result.get(3).getRate().compareTo(BigDecimal.TEN), 0);
         // FOO: 15 * 100 = 1500
         assertEquals(result.get(4).getAmount().compareTo(new BigDecimal("1500")), 0);
-        assertEquals(result.get(4).getQuantity().intValue(), 15);
+        assertEquals(result.get(4).getQuantity(), BigDecimal.valueOf(15));
         assertEquals(result.get(4).getRate().compareTo(new BigDecimal("100.0")), 0);
     }
 
@@ -704,13 +704,13 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("198")), 0);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 99);
+        assertEquals(itemDetails.get(0).getQuantity(), BigDecimal.valueOf(99));
         assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("2.0")), 0);
         // FOO: 5 * 1 = 5
         assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(1).getTier(), 1);
         assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(1).getQuantity(), BigDecimal.valueOf(5));
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(BigDecimal.ONE), 0);
 
         // Case 2
@@ -729,13 +729,13 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 2);
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("2020.0")), 0);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 101);
+        assertEquals(itemDetails.get(0).getQuantity(), BigDecimal.valueOf(101));
         assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("20.0")), 0);
         // FOO: 5 * 1 = 5
         assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(1).getTier(), 1);
         assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 5);
+        assertEquals(itemDetails.get(1).getQuantity(), BigDecimal.valueOf(5));
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(BigDecimal.ONE), 0);
 
         // Case 3
@@ -753,13 +753,13 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 2);
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("2020.0")), 0);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 101);
+        assertEquals(itemDetails.get(0).getQuantity(), BigDecimal.valueOf(101));
         assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("20.0")), 0);
         // FOO: 76 * 100 = 7500
         assertEquals(itemDetails.get(1).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(1).getTier(), 3);
         assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("7600")), 0);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 76);
+        assertEquals(itemDetails.get(1).getQuantity(), BigDecimal.valueOf(76));
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("100.0")), 0);
     }
 
@@ -775,11 +775,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 2);
         // BAR: 99 * 2 = 198
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("198")), 0);
-        assertEquals(result.get(0).getQuantity().intValue(), 99);
+        assertEquals(result.get(0).getQuantity(), BigDecimal.valueOf(99));
         assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.0")), 0);
         // FOO: 5 * 1 = 5
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
-        assertEquals(result.get(1).getQuantity().intValue(), 5);
+        assertEquals(result.get(1).getQuantity(), BigDecimal.valueOf(5));
         assertEquals(result.get(1).getRate().compareTo(BigDecimal.ONE), 0);
 
         // Case 2
@@ -791,11 +791,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 2);
         // BAR: 101 * 20 = 2020
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2020.0")), 0);
-        assertEquals(result.get(0).getQuantity().intValue(), 101);
+        assertEquals(result.get(0).getQuantity(), BigDecimal.valueOf(101));
         assertEquals(result.get(0).getRate().compareTo(new BigDecimal("20.0")), 0);
         // FOO: 5 * 1 = 5
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("5")), 0);
-        assertEquals(result.get(1).getQuantity().intValue(), 5);
+        assertEquals(result.get(1).getQuantity(), BigDecimal.valueOf(5));
         assertEquals(result.get(1).getRate().compareTo(BigDecimal.ONE), 0);
 
         // Case 3
@@ -807,11 +807,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(result.size(), 2);
         // BAR: 101 * 20 = 2020
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("2020.0")), 0);
-        assertEquals(result.get(0).getQuantity().intValue(), 101);
+        assertEquals(result.get(0).getQuantity(), BigDecimal.valueOf(101));
         assertEquals(result.get(0).getRate().compareTo(new BigDecimal("20.0")), 0);
         // FOO: 76 * 100 = 7500
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("7600")), 0);
-        assertEquals(result.get(1).getQuantity().intValue(), 76);
+        assertEquals(result.get(1).getQuantity(), BigDecimal.valueOf(76));
         assertEquals(result.get(1).getRate().compareTo(new BigDecimal("100.0")), 0);
     }
 
@@ -824,11 +824,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // FOO : 10 (tier 1) + 40 (tier 2) = 50
         final BigDecimal existingFooQuantity1 = BigDecimal.valueOf(10L);
         final BigDecimal existingFooQuantity2 = BigDecimal.valueOf(40L);
-        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, 1L, existingFooQuantity1, new BigDecimal("10.00"));
-        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.TEN, 1L, existingFooQuantity2, new BigDecimal("400.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, BigDecimal.ONE, existingFooQuantity1, new BigDecimal("10.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.TEN, BigDecimal.ONE, existingFooQuantity2, new BigDecimal("400.00"));
         // BAR : 10 (tier 1) + 40 (tier 2)
         final BigDecimal existingBarUsageQty1 = BigDecimal.valueOf(80L);
-        final UsageConsumableInArrearTierUnitAggregate existingBarUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "BAR", new BigDecimal("2.00"), 1L, existingBarUsageQty1, new BigDecimal("160.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingBarUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "BAR", new BigDecimal("2.00"), BigDecimal.ONE, existingBarUsageQty1, new BigDecimal("160.00"));
 
         final List<UsageConsumableInArrearTierUnitAggregate> existingUsage = ImmutableList.of(existingFooUsageTier1, existingFooUsageTier2, existingBarUsageTier1);
 
@@ -860,37 +860,37 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // BAR item detail
         assertEquals(itemDetails.get(0).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(0).getTier(), 1);
-        assertEquals(itemDetails.get(0).getTierBlockSize(), 1);
-        assertEquals(itemDetails.get(0).getQuantity().intValue(), 20);
+        assertEquals(itemDetails.get(0).getTierBlockSize(), new BigDecimal("1.0"));
+        assertEquals(itemDetails.get(0).getQuantity(), new BigDecimal("20.0"));
         assertEquals(itemDetails.get(0).getTierPrice().compareTo(new BigDecimal("2.00")), 0);
         assertEquals(itemDetails.get(0).getAmount().compareTo(new BigDecimal("40.00")), 0);
 
         assertEquals(itemDetails.get(1).getTierUnit(), "BAR");
         assertEquals(itemDetails.get(1).getTier(), 2);
-        assertEquals(itemDetails.get(1).getTierBlockSize(), 1);
-        assertEquals(itemDetails.get(1).getQuantity().intValue(), 100);
+        assertEquals(itemDetails.get(1).getTierBlockSize(), new BigDecimal("1.0"));
+        assertEquals(itemDetails.get(1).getQuantity(), new BigDecimal("100"));
         assertEquals(itemDetails.get(1).getTierPrice().compareTo(new BigDecimal("20.00")), 0);
         assertEquals(itemDetails.get(1).getAmount().compareTo(new BigDecimal("2000.00")), 0);
 
         // FOO item detail
         assertEquals(itemDetails.get(2).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(2).getTier(), 1);
-        assertEquals(itemDetails.get(2).getTierBlockSize(), 1);
-        assertEquals(itemDetails.get(2).getQuantity().intValue(), 0);
+        assertEquals(itemDetails.get(2).getTierBlockSize(), new BigDecimal("1.0"));
+        assertEquals(itemDetails.get(2).getQuantity(), BigDecimal.valueOf(0.0d));
         assertEquals(itemDetails.get(2).getTierPrice().compareTo(new BigDecimal("1.00")), 0);
         assertEquals(itemDetails.get(2).getAmount().compareTo(new BigDecimal("0.00")), 0);
 
         assertEquals(itemDetails.get(3).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(3).getTier(), 2);
-        assertEquals(itemDetails.get(3).getTierBlockSize(), 1);
-        assertEquals(itemDetails.get(3).getQuantity().intValue(), 10);
+        assertEquals(itemDetails.get(3).getTierBlockSize(), new BigDecimal("1.0"));
+        assertEquals(itemDetails.get(3).getQuantity(), BigDecimal.valueOf(10.0d));
         assertEquals(itemDetails.get(3).getTierPrice().compareTo(new BigDecimal("10.00")), 0);
         assertEquals(itemDetails.get(3).getAmount().compareTo(new BigDecimal("100.00")), 0);
 
         assertEquals(itemDetails.get(4).getTierUnit(), "FOO");
         assertEquals(itemDetails.get(4).getTier(), 3);
-        assertEquals(itemDetails.get(4).getTierBlockSize(), 1);
-        assertEquals(itemDetails.get(4).getQuantity().intValue(), 10);
+        assertEquals(itemDetails.get(4).getTierBlockSize(), new BigDecimal("1.0"));
+        assertEquals(itemDetails.get(4).getQuantity(), BigDecimal.valueOf(10));
         assertEquals(itemDetails.get(4).getTierPrice().compareTo(new BigDecimal("100.00")), 0);
         assertEquals(itemDetails.get(4).getAmount().compareTo(new BigDecimal("1000.00")), 0);
     }
@@ -921,15 +921,15 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // FOO : 10 (tier 1) + 40 (tier 2) = 50
         final BigDecimal existingFooUsageAmount1 = BigDecimal.valueOf(10L);
         final BigDecimal existingFooUsageAmount2 = BigDecimal.valueOf(40L);
-        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, 1L, existingFooUsageAmount1, new BigDecimal("10.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "FOO", BigDecimal.ONE, BigDecimal.ONE, existingFooUsageAmount1, new BigDecimal("10.00"));
         final String usageInArrearDetail1 = objectMapper.writeValueAsString(existingFooUsageTier1);
 
-        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.TEN, 1L, existingFooUsageAmount2, new BigDecimal("400.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingFooUsageTier2 = new UsageConsumableInArrearTierUnitAggregate(2, "FOO", BigDecimal.TEN, BigDecimal.ONE, existingFooUsageAmount2, new BigDecimal("400.00"));
         final String usageInArrearDetail2 = objectMapper.writeValueAsString(existingFooUsageTier2);
 
         // BAR : 10 (tier 1) + 40 (tier 2)
         final BigDecimal existingBarUsageAmount1 = BigDecimal.valueOf(80L);
-        final UsageConsumableInArrearTierUnitAggregate existingBarUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "BAR", new BigDecimal("2.00"), 1L, existingBarUsageAmount1, new BigDecimal("160.00"));
+        final UsageConsumableInArrearTierUnitAggregate existingBarUsageTier1 = new UsageConsumableInArrearTierUnitAggregate(1, "BAR", new BigDecimal("2.00"), BigDecimal.ONE, existingBarUsageAmount1, new BigDecimal("160.00"));
         final String usageInArrearDetail3 = objectMapper.writeValueAsString(existingBarUsageTier1);
 
         // Same as previous example bu instead of creating JSON we create one item per type/tier
@@ -948,42 +948,42 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final UsageConsumableInArrearTierUnitAggregate resultUsageInArrearDetail0 = objectMapper.readValue(result.get(0).getItemDetails(), new TypeReference<UsageConsumableInArrearTierUnitAggregate>() {});
         assertEquals(resultUsageInArrearDetail0.getTierUnit(), "BAR");
         assertEquals(resultUsageInArrearDetail0.getTier(), 1);
-        assertEquals(resultUsageInArrearDetail0.getQuantity().intValue(), 20);
+        assertEquals(resultUsageInArrearDetail0.getQuantity(), BigDecimal.valueOf(20.0d));
         assertEquals(resultUsageInArrearDetail0.getTierPrice().compareTo(new BigDecimal("2.00")), 0);
 
         assertEquals(result.get(0).getRate().compareTo(new BigDecimal("2.00")), 0);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("40.00")), 0);
-        assertEquals(result.get(0).getQuantity().intValue(), 20);
+        assertEquals(result.get(0).getQuantity(), BigDecimal.valueOf(20.0d));
 
         final UsageConsumableInArrearTierUnitAggregate resultUsageInArrearDetail1 = objectMapper.readValue(result.get(1).getItemDetails(), new TypeReference<UsageConsumableInArrearTierUnitAggregate>() {});
         assertEquals(resultUsageInArrearDetail1.getTierUnit(), "BAR");
         assertEquals(resultUsageInArrearDetail1.getTier(), 2);
-        assertEquals(resultUsageInArrearDetail1.getQuantity().intValue(), 100);
+        assertEquals(resultUsageInArrearDetail1.getQuantity(), BigDecimal.valueOf(100));
         assertEquals(resultUsageInArrearDetail1.getTierPrice().compareTo(new BigDecimal("20.00")), 0);
 
         assertEquals(result.get(1).getRate().compareTo(new BigDecimal("20.00")), 0);
         assertEquals(result.get(1).getAmount().compareTo(new BigDecimal("2000.00")), 0);
-        assertEquals(result.get(1).getQuantity().intValue(), 100);
+        assertEquals(result.get(1).getQuantity(), BigDecimal.valueOf(100));
 
         final UsageConsumableInArrearTierUnitAggregate resultUsageInArrearDetail2 = objectMapper.readValue(result.get(2).getItemDetails(), new TypeReference<UsageConsumableInArrearTierUnitAggregate>() {});
         assertEquals(resultUsageInArrearDetail2.getTierUnit(), "FOO");
         assertEquals(resultUsageInArrearDetail2.getTier(), 2);
-        assertEquals(resultUsageInArrearDetail2.getQuantity().intValue(), 10);
+        assertEquals(resultUsageInArrearDetail2.getQuantity(), BigDecimal.valueOf(10.0d));
         assertEquals(resultUsageInArrearDetail2.getTierPrice().compareTo(new BigDecimal("10.00")), 0);
 
         assertEquals(result.get(2).getRate().compareTo(new BigDecimal("10.00")), 0);
         assertEquals(result.get(2).getAmount().compareTo(new BigDecimal("100.00")), 0);
-        assertEquals(result.get(2).getQuantity().intValue(), 10);
+        assertEquals(result.get(2).getQuantity(), BigDecimal.valueOf(10.0d));
 
         final UsageConsumableInArrearTierUnitAggregate resultUsageInArrearDetail3 = objectMapper.readValue(result.get(3).getItemDetails(), new TypeReference<UsageConsumableInArrearTierUnitAggregate>() {});
         assertEquals(resultUsageInArrearDetail3.getTierUnit(), "FOO");
         assertEquals(resultUsageInArrearDetail3.getTier(), 3);
-        assertEquals(resultUsageInArrearDetail3.getQuantity().intValue(), 10);
+        assertEquals(resultUsageInArrearDetail3.getQuantity(), BigDecimal.valueOf(10));
         assertEquals(resultUsageInArrearDetail3.getTierPrice().compareTo(new BigDecimal("100.00")), 0);
 
         assertEquals(result.get(3).getRate().compareTo(new BigDecimal("100.00")), 0);
         assertEquals(result.get(3).getAmount().compareTo(new BigDecimal("1000.00")), 0);
-        assertEquals(result.get(3).getQuantity().intValue(), 10);
+        assertEquals(result.get(3).getQuantity(), BigDecimal.valueOf(10));
 
     }
 
@@ -1018,9 +1018,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final List<RolledUpUsageWithMetadata> unsortedRolledUpUsage = intervalConsumableInArrear.getRolledUpUsage().getUsage();
         assertEquals(unsortedRolledUpUsage.size(), 2);
         assertEquals(unsortedRolledUpUsage.get(0).getRolledUpUnits().size(), 1);
-        assertEquals(unsortedRolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 0L);
+        assertEquals(unsortedRolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount(), BigDecimal.ZERO);
         assertEquals(unsortedRolledUpUsage.get(1).getRolledUpUnits().size(), 1);
-        assertEquals(unsortedRolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount().longValue(), 0L);
+        assertEquals(unsortedRolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount(), BigDecimal.ZERO);
     }
 
     @Test(groups = "fast")
@@ -1062,7 +1062,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(rolledUpUsage.get(0).getEnd().compareTo(t1), 0);
         assertEquals(rolledUpUsage.get(0).getRolledUpUnits().size(), 1);
         assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getUnitType(), "unit");
-        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 22L);
+        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount(), new BigDecimal("22"));
     }
 
     @Test(groups = "fast")
@@ -1109,7 +1109,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         assertEquals(rolledUpUsage.get(0).getEnd().compareTo(t1), 0);
         assertEquals(rolledUpUsage.get(0).getRolledUpUnits().size(), 1);
         assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getUnitType(), "unit");
-        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 22L);
+        assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount(), new BigDecimal("22"));
     }
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/1124")

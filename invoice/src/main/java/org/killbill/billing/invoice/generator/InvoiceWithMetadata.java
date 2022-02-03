@@ -96,9 +96,7 @@ public class InvoiceWithMetadata {
                     public boolean apply(final InvoiceItem invoiceItem) {
                         return invoiceItem.getInvoiceItemType() != InvoiceItemType.USAGE ||
                                invoiceItem.getAmount().compareTo(BigDecimal.ZERO) != 0 ||
-                                /* FIXME-1469 : API backward compat */
-                               // (invoiceItem.getQuantity() != null &&  invoiceItem.getQuantity().compareTo(BigDecimal.ZERO) > 0);
-                               (invoiceItem.getQuantity() != null &&  invoiceItem.getQuantity() > 0);
+                               (invoiceItem.getQuantity() != null &&  invoiceItem.getQuantity().compareTo(BigDecimal.ZERO) > 0);
                     }
                 });
                 final ImmutableList<InvoiceItem> filteredItems = ImmutableList.copyOf(resultingItems);
@@ -116,7 +114,7 @@ public class InvoiceWithMetadata {
     }
 
 
-    public static  final Map<UUID, DateTime> computeChargedThroughDates(final Invoice invoice, final InternalCallContext context)  {
+    public static Map<UUID, DateTime> computeChargedThroughDates(final Invoice invoice, final InternalCallContext context)  {
         final Map<UUID, DateTime> chargedThroughDates;
         if (invoice != null &&
             invoice.getStatus() == InvoiceStatus.COMMITTED) /* See https://github.com/killbill/killbill/issues/1296 */ {

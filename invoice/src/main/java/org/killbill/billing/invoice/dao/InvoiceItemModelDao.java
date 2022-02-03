@@ -104,7 +104,7 @@ public class InvoiceItemModelDao extends EntityModelDaoBase implements EntityMod
         this(invoiceItem.getId(), invoiceItem.getCreatedDate(), invoiceItem.getInvoiceItemType(), invoiceItem.getInvoiceId(), invoiceItem.getAccountId(), invoiceItem.getChildAccountId(), invoiceItem.getBundleId(),
              invoiceItem.getSubscriptionId(), invoiceItem.getDescription(), invoiceItem.getProductName(), invoiceItem.getPlanName(), invoiceItem.getPhaseName(), invoiceItem.getUsageName(), invoiceItem.getCatalogEffectiveDate(),
              invoiceItem.getStartDate(), invoiceItem.getEndDate(),
-             invoiceItem.getAmount(), invoiceItem.getRate(), invoiceItem.getCurrency(), invoiceItem.getLinkedItemId(), (invoiceItem.getQuantity() == null ? null : BigDecimal.valueOf(invoiceItem.getQuantity())/* FIXME-1469 : API backward compat */), invoiceItem.getItemDetails());
+             invoiceItem.getAmount(), invoiceItem.getRate(), invoiceItem.getCurrency(), invoiceItem.getLinkedItemId(), invoiceItem.getQuantity(), invoiceItem.getItemDetails());
     }
 
     public InvoiceItemType getType() {

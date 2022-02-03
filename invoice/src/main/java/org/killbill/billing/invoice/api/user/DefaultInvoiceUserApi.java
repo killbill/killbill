@@ -146,7 +146,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                 creditItem.getAmount().negate(),
                                                 creditItem.getRate(),
                                                 creditItem.getCurrency(),
-                                                creditItem.getQuantity() == null ? null : BigDecimal.valueOf(creditItem.getQuantity()), /* FIXME-1469 : API backward compat */
+                                                creditItem.getQuantity(),
                                                 creditItem.getItemDetails());
             }
         });
@@ -614,7 +614,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                            inputItem.getRate(),
                                                                            accountCurrency,
                                                                            inputItem.getLinkedItemId(),
-                                                                           inputItem.getQuantity() == null ? null : BigDecimal.valueOf(inputItem.getQuantity()), /* FIXME-1469 : API backward compat */
+                                                                           inputItem.getQuantity(),
                                                                            inputItem.getItemDetails());
 
                             break;
@@ -630,7 +630,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                                       inputItem.getAmount().negate(),
                                                                       inputItem.getRate(),
                                                                       inputItem.getCurrency(),
-                                                                      inputItem.getQuantity() == null ? null : BigDecimal.valueOf(inputItem.getQuantity()), /* FIXME-1469 : API backward compat */
+                                                                      inputItem.getQuantity(),
                                                                       inputItem.getItemDetails());
                             break;
                         case TAX:

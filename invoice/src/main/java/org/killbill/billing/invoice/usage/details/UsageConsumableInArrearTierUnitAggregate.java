@@ -27,10 +27,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierUnitDetail {
 
-    private final long tierBlockSize;
+    private final BigDecimal tierBlockSize;
     private BigDecimal amount;
 
-    public UsageConsumableInArrearTierUnitAggregate(int tier, String tierUnit, BigDecimal tierPrice, Long tierBlockSize, BigDecimal quantity) {
+    public UsageConsumableInArrearTierUnitAggregate(int tier, String tierUnit, BigDecimal tierPrice, BigDecimal tierBlockSize, BigDecimal quantity) {
         this(tier, tierUnit, tierPrice, tierBlockSize, quantity, computeAmount(tierPrice, quantity));
     }
 
@@ -38,7 +38,7 @@ public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierU
     public UsageConsumableInArrearTierUnitAggregate(@JsonProperty("tier") int tier,
                                                     @JsonProperty("tierUnit") String tierUnit,
                                                     @JsonProperty("tierPrice") BigDecimal tierPrice,
-                                                    @JsonProperty("tierBlockSize") Long tierBlockSize,
+                                                    @JsonProperty("tierBlockSize") BigDecimal tierBlockSize,
                                                     @JsonProperty("quantity") BigDecimal quantity,
                                                     @JsonProperty("amount") BigDecimal amount) {
         super(tier, tierUnit, tierPrice, quantity);
@@ -70,7 +70,7 @@ public class UsageConsumableInArrearTierUnitAggregate extends UsageInArrearTierU
         this.amount = amount;
     }
 
-    public long getTierBlockSize() {
+    public BigDecimal getTierBlockSize() {
         return tierBlockSize;
     }
 
