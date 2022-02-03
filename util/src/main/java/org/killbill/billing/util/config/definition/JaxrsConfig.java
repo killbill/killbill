@@ -49,4 +49,9 @@ public interface JaxrsConfig extends KillbillConfig {
     @DefaultNull
     @Description("Base host address to use for redirect URLs")
     String getJaxrsLocationHost();
+
+    @Config("org.killbill.jaxrs.get.ro")
+    @Default("true")
+    @Description("Whether GET calls should leverage the read-only database connection")
+    boolean shouldGETUseROConnection();
 }
