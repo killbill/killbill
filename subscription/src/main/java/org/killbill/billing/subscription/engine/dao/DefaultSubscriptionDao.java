@@ -506,21 +506,19 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         return result;
     }
 
-    @Override
-    public void updateChargedThroughDate(final DefaultSubscriptionBase subscription, final InternalCallContext context) {
 
-        final Date ctd = (subscription.getChargedThroughDate() != null) ? subscription.getChargedThroughDate().toDate() : null;
+    @Override
+    public void updateChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context) {
+
         final InternalCallContext contextWithUpdatedDate = contextWithUpdatedDate(context);
 
         transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionSqlDao transactionalDao = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class);
-                transactionalDao.updateChargedThroughDate(subscription.getId().toString(), ctd, contextWithUpdatedDate);
-
-                final BundleSqlDao bundleSqlDao = entitySqlDaoWrapperFactory.become(BundleSqlDao.class);
-                final String bundleId = subscription.getBundleId().toString();
-                bundleSqlDao.updateBundleLastSysTime(bundleId, context.getCreatedDate().toDate(), contextWithUpdatedDate);
+                for (final Map.Entry<DateTime, List<UUID>>  kv : chargeThroughDates.entrySet()) {
+                    transactionalDao.updateChargedThroughDates(kv.getValue(), kv.getKey().toDate(), contextWithUpdatedDate);
+                }
                 return null;
             }
         });
