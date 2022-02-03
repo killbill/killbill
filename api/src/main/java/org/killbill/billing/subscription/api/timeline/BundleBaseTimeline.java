@@ -27,10 +27,6 @@ import org.killbill.billing.util.entity.Entity;
  */
 public interface BundleBaseTimeline extends Entity {
 
-    /**
-     * @return a unique viewId to identify whether two calls who display the same view or a different view
-     */
-    String getViewId();
 
     /**
      * @return the unique id for the {@SubscriptionBundle}

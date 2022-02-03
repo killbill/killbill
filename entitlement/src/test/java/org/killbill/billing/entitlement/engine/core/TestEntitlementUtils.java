@@ -103,7 +103,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(baseEffectiveEOTCancellationOrChangeDateTime.toLocalDate(), new LocalDate(2013, 10, 7));
         baseEffectiveCancellationOrChangeDate = baseEffectiveEOTCancellationOrChangeDateTime.toLocalDate();
         // Set manually since no invoice
-        subscriptionInternalApi.setChargedThroughDate(baseEntitlement.getId(), baseEffectiveEOTCancellationOrChangeDateTime, internalCallContext);
+        setChargedThroughDate(baseEntitlement.getId(), baseEffectiveEOTCancellationOrChangeDateTime, internalCallContext);
     }
 
     @Test(groups = "slow", description = "Verify add-ons blocking states are added for EOT cancellations")

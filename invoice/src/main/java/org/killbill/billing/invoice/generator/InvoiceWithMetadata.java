@@ -18,7 +18,10 @@
 package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -48,7 +51,7 @@ public class InvoiceWithMetadata {
 
     private DefaultInvoice invoice;
     private final Set<TrackingRecordId> trackingIds;
-    private final Map<UUID, DateTime> chargedThroughDates;
+    private final Map<DateTime, List<UUID>> chargedThroughDates;
     private final boolean filterZeroUsageItems;
 
     public InvoiceWithMetadata(final DefaultInvoice originalInvoice,
@@ -114,7 +117,7 @@ public class InvoiceWithMetadata {
     }
 
 
-    public static  final Map<UUID, DateTime> computeChargedThroughDates(final Invoice invoice, final InternalCallContext context)  {
+    public static Map<DateTime, List<UUID>> computeChargedThroughDates(final Invoice invoice, final InternalCallContext context)  {
         final Map<UUID, DateTime> chargedThroughDates;
         if (invoice != null &&
             invoice.getStatus() == InvoiceStatus.COMMITTED) /* See https://github.com/killbill/killbill/issues/1296 */ {
@@ -141,7 +144,17 @@ public class InvoiceWithMetadata {
         } else {
             chargedThroughDates = ImmutableMap.of();
         }
-        return chargedThroughDates;
+
+        final Map<DateTime, List<UUID>> perDateCTDs = new HashMap<>();
+        for (final Map.Entry<UUID,DateTime>  kv : chargedThroughDates.entrySet()) {
+            if (kv.getValue() != null) {
+                if (!perDateCTDs.containsKey(kv.getValue())) {
+                    perDateCTDs.put(kv.getValue(), new ArrayList<>());
+                }
+                perDateCTDs.get(kv.getValue()).add(kv.getKey());
+            }
+        }
+        return perDateCTDs;
     }
 
     private boolean hasItemsForSubscription(final UUID subscriptionId, final InvoiceItemType invoiceItemType) {
@@ -168,7 +181,7 @@ public class InvoiceWithMetadata {
         return trackingIds;
     }
 
-    public Map<UUID, DateTime>  getChargeThroughDates() {
+    public Map<DateTime, List<UUID>>  getChargeThroughDates() {
         return chargedThroughDates;
     }
 
