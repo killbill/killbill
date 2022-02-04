@@ -224,8 +224,9 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             // We generate an entry if we consumed anything on this tier or if this is the first tier to also support $0 Usage item
             if (hasPreviousUsage) {
                 final Long previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : 0;
-                // Be lenient for dryRun use cases as we could have plugin optimizations not returning full usage data
-                if (!isDryRun) {
+                // Be lenient for dryRun use cases (as we could have plugin optimizations not returning full usage data) or unless configured.
+                if (!isDryRun &&
+                    !invoiceConfig.isUsageMissingLenient(internalTenantContext)) {
                     if (tierNum < lastPreviousUsageTier) {
                         Preconditions.checkState(nbUsedTierBlocks == previousUsageQuantity, String.format("Expected usage for subscription='%s', targetDate='%s', startDt='%s', endDt='%s', tier='%d', unit='%s' to be full, instead found units='[%d/%d]'",
                                                                                                           getSubscriptionId(), targetDate, startDate, endDate, tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
