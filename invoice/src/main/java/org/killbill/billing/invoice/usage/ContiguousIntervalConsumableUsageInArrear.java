@@ -226,7 +226,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             if (hasPreviousUsage) {
                 final BigDecimal previousUsageQuantity = tierNum <= lastPreviousUsageTier ? previousUsage.get(tierNum - 1).getQuantity() : BigDecimal.ZERO;
                 // Be lenient for dryRun use cases as we could have plugin optimizations not returning full usage data
-                if (!isDryRun) {
+                if (!isDryRun &&
+                    !invoiceConfig.isUsageMissingLenient(internalTenantContext)) {
                     if (tierNum < lastPreviousUsageTier) {
                         Preconditions.checkState(nbUsedTierBlocks.compareTo(previousUsageQuantity) == 0, String.format("Expected usage for subscription='%s', targetDate='%s', startDt='%s', endDt='%s', tier='%s', unit='%s' to be full, instead found units='[%s/%s]'",
                                                                                                           getSubscriptionId(), targetDate, startDate, endDate, tierNum, tieredBlock.getUnit().getName(), nbUsedTierBlocks, previousUsageQuantity));
