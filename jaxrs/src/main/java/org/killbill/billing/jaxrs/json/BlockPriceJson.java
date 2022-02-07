@@ -30,17 +30,17 @@ public class BlockPriceJson {
 
     private String unitName;
 
-    private Double size;
+    private BigDecimal size;
 
     private BigDecimal price;
 
-    private Double max;
+    private BigDecimal max;
 
     public BigDecimal getPrice() {
         return price;
     }
 
-    public Double getSize() {
+    public BigDecimal getSize() {
         return size;
     }
 
@@ -48,15 +48,15 @@ public class BlockPriceJson {
         return unitName;
     }
 
-    public Double getMax() {
+    public BigDecimal getMax() {
         return max;
     }
 
     @JsonCreator
     public BlockPriceJson(@Nullable @JsonProperty("unitName") final String unitName,
-                          @Nullable @JsonProperty("size") final Double size,
+                          @Nullable @JsonProperty("size") final BigDecimal size,
                           @Nullable @JsonProperty("price") final BigDecimal price,
-                          @Nullable @JsonProperty("max") final Double max) {
+                          @Nullable @JsonProperty("max") final BigDecimal max) {
         this.unitName = unitName;
         this.size = size;
         this.price = price;

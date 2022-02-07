@@ -130,12 +130,10 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
                             final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
                             for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
                                 String unitName = blockDef.getUnitName();
-                                Double max = blockDef.getMax();
-                                Double size = blockDef.getSize();
                                 for (TieredBlock curTieredBlock : curTieredBlocks) {
                                     if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                        Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                        Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                        blockDef.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                                        blockDef.getMax().compareTo(curTieredBlock.getMax()) == 0) {
                                         return true;
                                     }
                                 }

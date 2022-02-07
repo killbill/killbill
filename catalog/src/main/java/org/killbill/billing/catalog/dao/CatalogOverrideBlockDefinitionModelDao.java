@@ -28,8 +28,8 @@ public class CatalogOverrideBlockDefinitionModelDao {
     private String currency;
     private BigDecimal price;
     private String blockType;
-    private double bsize;
-    private double max;
+    private double bsize; // FIXME-1469 Catalog: Should we change this as well
+    private double max; // FIXME-1469 Catalog: Should we change this as well
     private DateTime effectiveDate;
     private DateTime createdDate;
     private String createdBy;

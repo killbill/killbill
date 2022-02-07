@@ -17,6 +17,7 @@
 
 package org.killbill.billing.catalog.caching;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -177,13 +178,13 @@ public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
                     final List<CatalogOverrideBlockDefinitionModelDao> blockDefs = overrideDao.getOverriddenTierBlocks(input.getRecordId(), context);
                     for (CatalogOverrideBlockDefinitionModelDao blockDef : blockDefs) {
                         String unitName = blockDef.getParentUnitName();
-                        Double max = blockDef.getMax();
-                        Double size = blockDef.getSize();
+                        BigDecimal max = BigDecimal.valueOf(blockDef.getMax());
+                        BigDecimal size = BigDecimal.valueOf(blockDef.getSize());
 
-                        for (TieredBlock curTieredBlock : curTieredBlocks) {
+                        for (final TieredBlock curTieredBlock : curTieredBlocks) {
                             if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                size.compareTo(curTieredBlock.getSize()) == 0 &&
+                                max.compareTo(curTieredBlock.getMax()) == 0) {
                                 return true;
                             }
                         }
@@ -211,15 +212,17 @@ public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
             final CatalogOverrideBlockDefinitionModelDao overriddenTierBlock = Iterables.tryFind(blockDefs, new Predicate<CatalogOverrideBlockDefinitionModelDao>() {
                 @Override
                 public boolean apply(final CatalogOverrideBlockDefinitionModelDao input) {
+                    final BigDecimal inputSize = BigDecimal.valueOf(input.getSize());
+                    final BigDecimal inputMax = BigDecimal.valueOf(input.getMax());
                     return (input.getParentUnitName().equals(curTieredBlock.getUnit().getName()) &&
-                            Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
-                            Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
+                            inputSize.compareTo(curTieredBlock.getSize()) == 0 &&
+                            inputMax.compareTo(curTieredBlock.getMax()) == 0);
 
                 }
             }).orNull();
 
             if (overriddenTierBlock != null) {
-                blockPriceOverrides.add(new DefaultTieredBlockPriceOverride(overriddenTierBlock.getParentUnitName(), overriddenTierBlock.getSize(), overriddenTierBlock.getPrice(), Currency.valueOf(overriddenTierBlock.getCurrency()), overriddenTierBlock.getMax()));
+                blockPriceOverrides.add(new DefaultTieredBlockPriceOverride(overriddenTierBlock.getParentUnitName(), BigDecimal.valueOf(overriddenTierBlock.getSize()), overriddenTierBlock.getPrice(), Currency.valueOf(overriddenTierBlock.getCurrency()), BigDecimal.valueOf(overriddenTierBlock.getMax())));
             }
         }
         return blockPriceOverrides;

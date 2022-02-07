@@ -17,7 +17,6 @@
 
 package org.killbill.billing.catalog.plugin;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -515,8 +514,8 @@ public class StandaloneCatalogMapper {
         if (input != null) {
             result = new DefaultLimit();
             result.setUnit(toDefaultUnit(input.getUnit()));
-            result.setMax(input.getMax());
-            result.setMin(input.getMin());
+            result.setMax(input.getMax().doubleValue());
+            result.setMin(input.getMin().doubleValue());
         }
         return result;
     }

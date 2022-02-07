@@ -52,13 +52,13 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     private DefaultUnit unit;
 
     @XmlElement(required = true)
-    private double size;
+    private BigDecimal size;
 
     @XmlElement(required = true)
     private DefaultInternationalPrice prices;
 
     @XmlElement(required = false)
-    private Double minTopUpCredit;
+    private BigDecimal minTopUpCredit;
 
     // Not defined in catalog
     private PlanPhase phase;
@@ -74,7 +74,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public Double getSize() {
+    public BigDecimal getSize() {
         return size;
     }
 
@@ -84,7 +84,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public Double getMinTopUpCredit() throws CatalogApiException {
+    public BigDecimal getMinTopUpCredit() throws CatalogApiException {
         if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(minTopUpCredit) && type != BlockType.TOP_UP) {
             throw new CatalogApiException(ErrorCode.CAT_NOT_TOP_UP_BLOCK, phase.getName());
         }
@@ -108,7 +108,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     public DefaultBlock() {
     }
 
-    public DefaultBlock(final DefaultUnit unit, final double size, final DefaultInternationalPrice prices, final BigDecimal overriddenPrice, Currency currency) {
+    public DefaultBlock(final DefaultUnit unit, final BigDecimal size, final DefaultInternationalPrice prices, final BigDecimal overriddenPrice, Currency currency) {
         this.unit = unit;
         this.size = size;
         this.prices = prices != null ? new DefaultInternationalPrice(prices, overriddenPrice, currency) : null;
@@ -135,7 +135,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         return this;
     }
 
-    public DefaultBlock setSize(final double size) {
+    public DefaultBlock setSize(final BigDecimal size) {
         this.size = size;
         return this;
     }
@@ -161,7 +161,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
 
         final DefaultBlock that = (DefaultBlock) o;
 
-        if (Double.compare(that.size, size) != 0) {
+        if (size.compareTo(size) != 0) {
             return false;
         }
         if (type != that.type) {
@@ -185,7 +185,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         final long temp;
         result = type != null ? type.hashCode() : 0;
         result = 31 * result + (unit != null ? unit.hashCode() : 0);
-        temp = Double.doubleToLongBits(size);
+        temp = Double.doubleToLongBits(size.doubleValue());
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (prices != null ? prices.hashCode() : 0);
         result = 31 * result + (minTopUpCredit != null ? minTopUpCredit.hashCode() : 0);
@@ -199,11 +199,11 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
             out.writeUTF(type.name());
         }
         out.writeObject(unit);
-        out.writeDouble(size);
+        out.writeObject(size);
         out.writeObject(prices);
         out.writeBoolean(minTopUpCredit != null);
         if (minTopUpCredit != null) {
-            out.writeDouble(minTopUpCredit);
+            out.writeObject(minTopUpCredit);
         }
     }
 
@@ -211,8 +211,8 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         this.type = in.readBoolean() ? BlockType.valueOf(in.readUTF()) : null;
         this.unit = (DefaultUnit) in.readObject();
-        this.size = in.readDouble();
+        this.size = (BigDecimal) in.readObject();
         this.prices = (DefaultInternationalPrice) in.readObject();
-        this.minTopUpCredit = in.readBoolean() ? in.readDouble() : null;
+        this.minTopUpCredit = in.readBoolean() ? (BigDecimal) in.readObject() : null;
     }
 }

@@ -211,13 +211,13 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
 
         for (final TieredBlock tieredBlock : tieredBlocks) {
             tierNum++;
-            final BigDecimal blockTierSize = BigDecimal.valueOf(tieredBlock.getSize());
-            final BigDecimal blockTierMax = BigDecimal.valueOf(tieredBlock.getMax());
+            final BigDecimal blockTierSize = tieredBlock.getSize();
+            final BigDecimal blockTierMax = tieredBlock.getMax();
             final long tmp = remainingUnits.longValue() / blockTierSize.longValue() + (remainingUnits.longValue() % blockTierSize.longValue() == 0 ? 0 : 1);
             BigDecimal nbUsedTierBlocks;
-            if (tieredBlock.getMax() != (double) -1 && tmp > blockTierMax.longValue()) {
-                nbUsedTierBlocks = BigDecimal.valueOf(tieredBlock.getMax());
-                remainingUnits = remainingUnits.subtract(BigDecimal.valueOf(tieredBlock.getMax() * blockTierSize.longValue()));
+            if (tieredBlock.getMax().compareTo(new BigDecimal("-1")) != 0 && tmp > blockTierMax.longValue()) {
+                nbUsedTierBlocks = tieredBlock.getMax();
+                remainingUnits = remainingUnits.subtract(blockTierMax.multiply(blockTierSize));
             } else {
                 nbUsedTierBlocks = BigDecimal.valueOf(tmp);
                 remainingUnits = BigDecimal.ZERO;
@@ -253,8 +253,8 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         // Loop through all tier block
         for (final TieredBlock tieredBlock : tieredBlocks) {
             tierNum++;
-            final BigDecimal blockTierMax = BigDecimal.valueOf(tieredBlock.getMax());
-            final BigDecimal blockTierSize = BigDecimal.valueOf(tieredBlock.getSize());
+            final BigDecimal blockTierMax = tieredBlock.getMax();
+            final BigDecimal blockTierSize = tieredBlock.getSize();
             final BigDecimal[] divRemaining =  remainingUnits.divideAndRemainder(blockTierSize);
             final BigDecimal tmp =  (divRemaining[1].compareTo(BigDecimal.ZERO) == 0) ? divRemaining[0] : divRemaining[0].add(BigDecimal.ONE);
             if (tmp.compareTo(blockTierMax) > 0) { /* Includes the case where max is unlimited (-1) */
