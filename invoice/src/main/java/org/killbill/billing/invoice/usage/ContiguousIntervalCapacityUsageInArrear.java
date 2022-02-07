@@ -74,7 +74,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
         final BigDecimal amountToBill = toBeBilledUsage.subtract(billedUsage);
 
         if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
-            if (isDryRun) {
+            if (isDryRun || invoiceConfig.isUsageMissingLenient(internalTenantContext)) {
                 return;
             } else {
                 throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
