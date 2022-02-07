@@ -965,12 +965,12 @@ public class InvoiceDispatcher {
     }
 
     public void setChargedThroughDates(final Invoice invoice, final InternalCallContext context) throws InvoiceApiException {
-        final Map<UUID, DateTime> chargeThroughDates = InvoiceWithMetadata.computeChargedThroughDates(invoice, context);
+        final Map<DateTime, List<UUID>> chargeThroughDates = InvoiceWithMetadata.computeChargedThroughDates(invoice, context);
         setChargedThroughDates(chargeThroughDates, context);
     }
 
     // TODO we should revisit this logic of swallowing the exception here -- especially in a use case where we use a catalog plugin
-    private void setChargedThroughDatesNoExceptions(final Map<UUID, DateTime> chargeThroughDates, final InternalCallContext context) {
+    private void setChargedThroughDatesNoExceptions(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context) {
         try {
             setChargedThroughDates(chargeThroughDates, context);
         } catch (final InvoiceApiException e) {
@@ -978,14 +978,9 @@ public class InvoiceDispatcher {
         }
     }
 
-    private void setChargedThroughDates(final Map<UUID, DateTime> chargeThroughDates, final InternalCallContext context) throws InvoiceApiException {
+    private void setChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context) throws InvoiceApiException {
         try {
-            for (final Entry<UUID, DateTime> entry : chargeThroughDates.entrySet()) {
-                if (entry.getKey() != null) {
-                    final DateTime chargeThroughDate = entry.getValue();
-                    subscriptionApi.setChargedThroughDate(entry.getKey(), chargeThroughDate, context);
-                }
-            }
+            subscriptionApi.setChargedThroughDates(chargeThroughDates, context);
         } catch (final SubscriptionBaseApiException e) {
             throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, "Failed to set chargedThroughDates", e);
         }
