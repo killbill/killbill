@@ -24,14 +24,14 @@ import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 
 public class DefaultTieredBlockPriceOverride extends DefaultBlockPriceOverride implements TieredBlockPriceOverride {
 
-    private Double max;
+    private BigDecimal max;
 
     @Override
-    public Double getMax() {
+    public BigDecimal getMax() {
         return max;
     }
 
-    public DefaultTieredBlockPriceOverride(String unitName, Double size, BigDecimal price, Currency currency, Double max) {
+    public DefaultTieredBlockPriceOverride(String unitName, BigDecimal size, BigDecimal price, Currency currency, BigDecimal max) {
         super(unitName, size, price, currency);
         this.max = max;
     }

@@ -204,7 +204,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
 
         final List<TieredBlockPriceOverride> tieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
-        tieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new Double("1"), new BigDecimal("0.75"), Currency.USD, new Double("10000")));
+        tieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new BigDecimal("1"), new BigDecimal("0.75"), Currency.USD, new BigDecimal("10000")));
 
         final List<TierPriceOverride> tierPriceOverrides = new ArrayList<TierPriceOverride>();
         tierPriceOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides));
@@ -250,8 +250,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                         public boolean apply(final TieredBlockPriceOverride input) {
 
                             return input.getUnitName().equals(initialTieredBlock.getUnit().getName()) &&
-                                   Double.compare(input.getSize(), initialTieredBlock.getSize()) == 0 &&
-                                   Double.compare(input.getMax(), initialTieredBlock.getMax()) == 0;
+                                   input.getSize().compareTo(initialTieredBlock.getSize()) == 0 &&
+                                   input.getMax().compareTo(initialTieredBlock.getMax()) == 0;
                         }
                     }).orNull();
 
@@ -273,10 +273,10 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
 
         final List<TieredBlockPriceOverride> tieredBlockPriceOverrides1 = new ArrayList<TieredBlockPriceOverride>();
-        tieredBlockPriceOverrides1.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new Double("1"), new BigDecimal("1.5"), Currency.USD, new Double("5")));
+        tieredBlockPriceOverrides1.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new BigDecimal("1"), new BigDecimal("1.5"), Currency.USD, new BigDecimal("5")));
 
         final List<TieredBlockPriceOverride> tieredBlockPriceOverrides2 = new ArrayList<TieredBlockPriceOverride>();
-        tieredBlockPriceOverrides2.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new Double("1"), new BigDecimal("0.75"), Currency.USD, new Double("10000")));
+        tieredBlockPriceOverrides2.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new BigDecimal("1"), new BigDecimal("0.75"), Currency.USD, new BigDecimal("10000")));
 
         final List<TierPriceOverride> tierPriceOverrides = new ArrayList<TierPriceOverride>();
         tierPriceOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides1));
@@ -350,8 +350,8 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                         public boolean apply(final TieredBlockPriceOverride input) {
 
                             return input.getUnitName().equals(initialTieredBlock.getUnit().getName()) &&
-                                   Double.compare(input.getSize(), initialTieredBlock.getSize()) == 0 &&
-                                   Double.compare(input.getMax(), initialTieredBlock.getMax()) == 0;
+                                   input.getSize().compareTo(initialTieredBlock.getSize()) == 0 &&
+                                   input.getMax().compareTo(initialTieredBlock.getMax()) == 0;
                         }
                     }).orNull();
 

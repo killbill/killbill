@@ -22,6 +22,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.math.BigDecimal;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -40,9 +41,19 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     @XmlIDREF
     private DefaultUnit unit;
 
+    /**
+     * FIXME-1469 Catalog: This is need to be converted to BigDecimal. However, if we do, then TestXmlReader.testCatalogLoad()
+     *   will fails. It is because in some XML (test file), max and or min value is not set, and lead to null value.
+     *   However in {@link #readExternal(ObjectInput)} method, if we use {@link ObjectInput#readDouble()} it will return
+     *   "-1" if there's no value from XML file (null). On the other side, if we use {@link ObjectInput#readObject()}
+     *   it will simply return "0". Now where is the "-1" come from?
+     */
     @XmlElement(required = false)
     private Double max;
 
+    /**
+     * FIXME-1469 Catalog: see comment on {@link #max}
+     */
     @XmlElement(required = false)
     private Double min;
 
@@ -52,20 +63,20 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public Double getMax() {
-        return max;
+    public BigDecimal getMax() {
+        return new BigDecimal(max);
     }
 
     @Override
-    public Double getMin() {
-        return min;
+    public BigDecimal getMin() {
+        return new BigDecimal(min);
     }
 
     @Override
     public ValidationErrors validate(StandaloneCatalog root, ValidationErrors errors) {
         if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(max) &&
             !CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(min) &&
-            max.doubleValue() < min.doubleValue()) {
+            max < min) {
             errors.add(new ValidationError("max must be greater than min", Limit.class, ""));
         }
         return errors;
@@ -134,16 +145,16 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public int hashCode() {
         int result = unit != null ? unit.hashCode() : 0;
-        result = 31 * result + max.hashCode();
-        result = 31 * result + min.hashCode();
+        result = 31 * result + (max != null ? max.hashCode() : 0);
+        result = 31 * result + (min != null ? min.hashCode() : 0);
         return result;
     }
 
     @Override
     public void writeExternal(final ObjectOutput out) throws IOException {
         out.writeObject(unit);
-        out.writeDouble(max);
-        out.writeDouble(min);
+        out.writeObject(max);
+        out.writeObject(min);
     }
 
     @Override
