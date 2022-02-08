@@ -538,6 +538,29 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             }
         });
     }
+    
+    @Override //TODO_1533 - Similar to createNextPhaseEvent for now, will make modifications as required in the future
+    public void createExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhaseEvent, final Boolean phaseEventCreated, final InternalCallContext context) {
+        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
+            @Override
+            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+                final UUID subscriptionId = subscription.getId();
+                cancelNextPhaseEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
+                createAndRefresh(transactional, new SubscriptionEventModelDao(nextPhaseEvent), context);
+                recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
+                                                        nextPhaseEvent.getEffectiveDate(),
+                                                        new SubscriptionNotificationKey(nextPhaseEvent.getId()), context);
+
+                // Notify the Bus
+                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseEvent, SubscriptionBaseTransitionType.EXPIRED, 0, context);
+                if(!phaseEventCreated)//TODO_1533: I'm not completely sure passing the phaseEventCreated flag as a parameter to this method and using it like this is required. The only condition I can think of where this would be required is when there is a a phase following the FIXEDTERM case (to prevent the bus event from being triggered twice). So, I'm thinking it is better to keep this code just to be on the safe side. If this is a common scenario, I will write a test for this.
+                	notifyBusOfEffectiveImmediateChange(entitySqlDaoWrapperFactory, subscription, readyPhaseEvent, 0, context);
+
+                return null;
+            }
+        });
+    }
 
     @Override
     public SubscriptionBaseEvent getEventById(final UUID eventId, final InternalTenantContext context) {

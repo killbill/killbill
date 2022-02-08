@@ -61,6 +61,7 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
+import org.killbill.billing.subscription.events.expired.ExpiredEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
@@ -926,6 +927,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                             .getApiEventType().toString()));
                     }
                     break;
+                case EXPIRED:
+                	final ExpiredEvent expiredEvent = (ExpiredEvent) cur; //TODO_1533 - Added temporarily to prevent exception while running tests, actual code will come later
+                	break;
                 default:
                     throw new SubscriptionBaseError(String.format(
                             "Unexpected Event type = %s", cur.getType()));

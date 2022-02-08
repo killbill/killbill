@@ -534,7 +534,67 @@
                 </recurring>
             </finalPhase>
         </plan>
-
+  		<plan name="pistol-monthly-discount-and-fixedterm">
+            <product>Pistol</product>
+            <initialPhases>
+                <phase type="TRIAL">
+                    <duration>
+                        <unit>DAYS</unit>
+                        <number>30</number>
+                    </duration>
+                    <fixed>
+                        <fixedPrice>
+                        </fixedPrice>
+                    </fixed>
+                </phase>
+                <phase type="DISCOUNT">
+                    <duration>
+                        <unit>MONTHS</unit>
+                        <number>6</number>
+                    </duration>
+                    <recurring>
+                        <billingPeriod>MONTHLY</billingPeriod>
+                        <recurringPrice>
+                            <price>
+                                <currency>USD</currency>
+                                <value>9.95</value>
+                            </price>
+                            <price>
+                                <currency>EUR</currency>
+                                <value>9.95</value>
+                            </price>
+                            <price>
+                                <currency>GBP</currency>
+                                <value>9.95</value>
+                            </price>
+                        </recurringPrice>
+                    </recurring>
+                </phase>
+            </initialPhases>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>12</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>199.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>        
         <plan name="shotgun-monthly" prettyName="Shotgun Monthly">
             <product>Shotgun</product>
             <initialPhases>
@@ -758,6 +818,27 @@
                 </recurring>
             </finalPhase>
         </plan>
+	    <plan name="pistol-biennial-fixedterm">
+			<product>Pistol</product>
+			<recurringBillingMode>IN_ADVANCE</recurringBillingMode>
+			<initialPhases>
+			</initialPhases>
+			<finalPhase type="FIXEDTERM">
+				<duration>
+					<unit>MONTHS</unit>
+					<number>36</number>
+				</duration>
+				<recurring>
+					<billingPeriod>BIENNIAL</billingPeriod>
+					<recurringPrice>
+						<price>
+							<currency>USD</currency>
+							<value>40</value>
+						</price>
+					</recurringPrice>
+				</recurring>
+			</finalPhase>
+		</plan>        
         <plan name="pistol-annual-gunclub-discount">
             <product>Pistol</product>
             <initialPhases>
@@ -1504,7 +1585,9 @@
         </childPriceList>
         <childPriceList name="fixedTerm">
             <plans>
-                <plan>pistol-monthly-fixedterm</plan>
+            	<plan>pistol-monthly-fixedterm</plan>
+                <plan>pistol-biennial-fixedterm</plan>
+                <plan>pistol-monthly-discount-and-fixedterm</plan>
             </plans>
         </childPriceList>
         <childPriceList name="notrial">

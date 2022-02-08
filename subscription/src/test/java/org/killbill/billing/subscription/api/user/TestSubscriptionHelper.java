@@ -138,8 +138,8 @@ public class TestSubscriptionHelper {
 
         };
     }
-
-    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final LocalDate requestedDate)
+    
+     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final LocalDate requestedDate)
             throws SubscriptionBaseApiException {
         return createSubscription(bundle, productName, term, planSet, null, requestedDate);
     }
@@ -150,15 +150,20 @@ public class TestSubscriptionHelper {
     }
 
     public DefaultSubscriptionBase createSubscription(final boolean noEvents, final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet) throws SubscriptionBaseApiException {
-        return createSubscription(noEvents, bundle, productName, term, planSet, null, null);
+        return createSubscription(noEvents, bundle, productName, term, planSet, null, null,null);
     }
 
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
             throws SubscriptionBaseApiException {
-        return createSubscription(false, bundle, productName, term, planSet, phaseType, requestedDate);
+        return createSubscription(false, bundle, productName, term, planSet, phaseType, requestedDate,null);
     }
+    
+    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String planName)
+            throws SubscriptionBaseApiException {
+        return createSubscription(false, bundle, null, null, null, null, null,planName);
+    }        
 
-    private DefaultSubscriptionBase createSubscription(final boolean noEvents, @Nullable final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
+    private DefaultSubscriptionBase createSubscription(final boolean noEvents, @Nullable final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate, final String planName)
             throws SubscriptionBaseApiException {
 
         final VersionedCatalog catalog;
@@ -193,7 +198,10 @@ public class TestSubscriptionHelper {
         final ImmutableList<EntitlementSpecifier> entitlementSpecifiers = ImmutableList.<EntitlementSpecifier>of(new EntitlementSpecifier() {
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-                return new PlanPhaseSpecifier(productName, term, planSet, phaseType);
+            	if(planName == null)
+            		return new PlanPhaseSpecifier(productName, term, planSet, phaseType);
+            	else
+            		return new PlanPhaseSpecifier(planName);
             }
 
             @Override

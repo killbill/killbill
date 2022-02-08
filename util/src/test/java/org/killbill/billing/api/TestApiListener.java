@@ -140,7 +140,8 @@ public class TestApiListener {
         TAG,
         TAG_DEFINITION,
         CUSTOM_FIELD,
-        BCD_CHANGE
+        BCD_CHANGE,
+        EXPIRED
     }
 
     @Subscribe
@@ -196,6 +197,11 @@ public class TestApiListener {
                 assertEqualsNicely(NextEvent.BCD_CHANGE);
                 notifyIfStackEmpty();
                 break;
+            case EXPIRED:
+                assertEqualsNicely(NextEvent.EXPIRED);
+                notifyIfStackEmpty();
+                break;
+            	
             default:
                 throw new RuntimeException("Unexpected event type " + eventEffective.getRequestedTransitionTime());
         }

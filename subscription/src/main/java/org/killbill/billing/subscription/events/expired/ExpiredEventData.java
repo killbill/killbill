@@ -17,7 +17,10 @@
 
  package org.killbill.billing.subscription.events.expired;
 
- import org.killbill.billing.subscription.events.EventBase;
+ import java.util.UUID;
+
+import org.joda.time.DateTime;
+import org.killbill.billing.subscription.events.EventBase;
 
  public class ExpiredEventData extends EventBase implements ExpiredEvent {
 
@@ -29,5 +32,12 @@
      public EventType getType() {
          return EventType.EXPIRED;
      }
+     
+     public static ExpiredEvent createExpiredEvent(final UUID subscriptionId, final DateTime effectiveDate) {
+         return new ExpiredEventData(new ExpiredEventBuilder()
+                                            .setSubscriptionId(subscriptionId)
+                                            .setEffectiveDate(effectiveDate)
+                                           );
+     }     
 
  }
