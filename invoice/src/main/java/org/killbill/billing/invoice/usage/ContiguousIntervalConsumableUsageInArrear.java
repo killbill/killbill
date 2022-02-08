@@ -86,7 +86,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
         final BigDecimal amountToBill = (usage.getTierBlockPolicy() == TierBlockPolicy.ALL_TIERS && areAllBilledItemsWithDetails) ? toBeBilledUsage : toBeBilledUsage.subtract(billedUsage);
 
         if (amountToBill.compareTo(BigDecimal.ZERO) < 0) {
-            if (isDryRun) {
+            if (isDryRun || invoiceConfig.isUsageMissingLenient(internalTenantContext)) {
                 return;
             } else {
                 throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
