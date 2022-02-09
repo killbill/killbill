@@ -204,8 +204,8 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         testUtil.printEvents(events);
         assertTrue(events.size() == 1);
         assertTrue(events.get(0) instanceof PhaseEvent);
-        final DateTime nextPhaseChange = ((PhaseEvent) events.get(0)).getEffectiveDate();
-        final DateTime nextExpectedPhaseChange = TestSubscriptionHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration()); 
+        final DateTime nextPhaseChange = events.get(0).getEffectiveDate();
+        final DateTime nextExpectedPhaseChange = TestSubscriptionHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration());
         assertEquals(nextPhaseChange, nextExpectedPhaseChange);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -217,12 +217,12 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
 
         assertListenerStatus();
     }
-    
-    @Test(groups = "slow",description = "https://github.com/killbill/killbill/issues/1533")
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
     public void testCreateSubscriptionWithOnlyFixedTermPhase() throws SubscriptionBaseApiException {
         final String planName = "pistol-biennial-fixedterm";
 
-        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle,planName);
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, planName);
         assertNotNull(subscription);
 
         final Plan currentPlan = subscription.getCurrentPlan();
@@ -240,7 +240,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         testUtil.printEvents(events);
         assertTrue(events.size() == 1);
         assertTrue(events.get(0) instanceof ExpiredEvent);
-        final DateTime expiryDate = ((ExpiredEvent) events.get(0)).getEffectiveDate();
+        final DateTime expiryDate = events.get(0).getEffectiveDate();
         final DateTime expectedExpiryDate = TestSubscriptionHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration());
         assertEquals(expiryDate, expectedExpiryDate);
 
@@ -249,21 +249,21 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(36));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
-    } 
-    
-    @Test(groups = "slow",description = "https://github.com/killbill/killbill/issues/1533")
-    public void testSimpleSubscriptionTransitioningToFixedTerm() throws SubscriptionBaseApiException {
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
+    public void testCreateSubscriptionTransitioningToFixedTerm() throws SubscriptionBaseApiException {
         final String planName = "pistol-monthly-fixedterm";
 
         // CREATE SUBSCRIPTION
-        DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, planName);
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, planName);
         assertNotNull(subscription);
 
         PlanPhase currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
         assertListenerStatus();
-        
+
         List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
         assertNotNull(events);
         testUtil.printEvents(events);
@@ -278,27 +278,26 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM);
-        
+
         events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
         assertNotNull(events);
         testUtil.printEvents(events);
         assertTrue(events.size() == 1);
-        assertTrue(events.get(0) instanceof ExpiredEvent);      
-        final DateTime expiryDate = ((ExpiredEvent) events.get(0)).getEffectiveDate();
-        final DateTime expectedExpiryDate = TestSubscriptionHelper.addDuration(subscription.getStartDate().plusDays(30), currentPhase.getDuration()); 
+        assertTrue(events.get(0) instanceof ExpiredEvent);
+        final DateTime expiryDate = events.get(0).getEffectiveDate();
+        final DateTime expectedExpiryDate = TestSubscriptionHelper.addDuration(subscription.getStartDate().plusDays(30), currentPhase.getDuration());
         assertEquals(expiryDate, expectedExpiryDate);
-        
-        
+
         //MOVE PAST FIXEDTERM PHASE
         testListener.pushExpectedEvents(NextEvent.EXPIRED);
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(12));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
-    }    
-    
-    @Test(groups = "slow",description = "https://github.com/killbill/killbill/issues/1533")
-    public void testSimpleSubscriptionWithMultiplePhasesTransitioningToFixedTerm() throws SubscriptionBaseApiException {
-    	 final String planName = "pistol-monthly-discount-and-fixedterm";
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
+    public void testCreateSubscriptionWithMultiplePhasesTransitioningToFixedTerm() throws SubscriptionBaseApiException {
+        final String planName = "pistol-monthly-discount-and-fixedterm";
         // CREATE SUBSCRIPTION
         DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, planName);
         assertNotNull(subscription);
@@ -307,7 +306,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
         assertListenerStatus();
-        
+
         List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
         assertNotNull(events);
         testUtil.printEvents(events);
@@ -322,41 +321,89 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
-        
+
         events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
         assertNotNull(events);
         testUtil.printEvents(events);
         assertTrue(events.size() == 1);
-        assertTrue(events.get(0) instanceof PhaseEvent);     
-        
+        assertTrue(events.get(0) instanceof PhaseEvent);
+
         //MOVE TO FIXEDTERM PHASE
         testListener.pushExpectedEvents(NextEvent.PHASE);
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
-        
+
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext); //TODO_1533: Why is it necessary to reread subscription here? Without this, the phase is still DISCOUNT, so test fails
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
-        assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM); 
-        
+        assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM);
+
         events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
         assertNotNull(events);
         testUtil.printEvents(events);
         assertTrue(events.size() == 1);
-        assertTrue(events.get(0) instanceof ExpiredEvent);      
-        final DateTime expiryDate = ((ExpiredEvent) events.get(0)).getEffectiveDate();
-        final DateTime expectedExpiryDate = TestSubscriptionHelper.addDuration(subscription.getStartDate().plusDays(30).plusMonths(6), currentPhase.getDuration()); 
+        assertTrue(events.get(0) instanceof ExpiredEvent);
+        final DateTime expiryDate = events.get(0).getEffectiveDate();
+        final DateTime expectedExpiryDate = TestSubscriptionHelper.addDuration(subscription.getStartDate().plusDays(30).plusMonths(6), currentPhase.getDuration());
         assertEquals(expiryDate, expectedExpiryDate);
-        
-        
+
         //MOVE PAST FIXEDTERM PHASE
         testListener.pushExpectedEvents(NextEvent.EXPIRED);
         it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(12));
         clock.addDeltaFromReality(it.toDurationMillis());
-        assertListenerStatus();        
-    }        
-        
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
+    public void testCreateSubscriptionWithFixedTermInBetween() throws SubscriptionBaseApiException {
+        final String planName = "pistol-monthly-fixedterm-and-evergreen";
+        // CREATE SUBSCRIPTION
+        DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, planName);
+        assertNotNull(subscription);
+
+        PlanPhase currentPhase = subscription.getCurrentPhase();
+        assertNotNull(currentPhase);
+        assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
+        assertListenerStatus();
+
+        List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
+        assertNotNull(events);
+        testUtil.printEvents(events);
+        assertTrue(events.size() == 1);
+        assertTrue(events.get(0) instanceof PhaseEvent);
+
+        // MOVE TO FIXEDTERM PHASE
+        testListener.pushExpectedEvents(NextEvent.PHASE);
+        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusDays(31));
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertListenerStatus();
+        currentPhase = subscription.getCurrentPhase();
+        assertNotNull(currentPhase);
+        assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM);
+
+        events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
+        assertNotNull(events);
+        testUtil.printEvents(events);
+        assertTrue(events.size() == 1);
+        assertTrue(events.get(0) instanceof PhaseEvent);
+
+        //MOVE TO EVERGREEN PHASE
+        testListener.pushExpectedEvents(NextEvent.PHASE);
+        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertListenerStatus();
+
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext); //TODO_1533: Why is it necessary to reread subscription here? Without this, the phase is still DISCOUNT, so test fails
+        currentPhase = subscription.getCurrentPhase();
+        assertNotNull(currentPhase);
+        assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
+
+        events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
+        assertNotNull(events);
+        testUtil.printEvents(events);
+        assertTrue(events.size() == 0);
+    }
 
     @Test(groups = "slow")
     public void testSimpleSubscriptionThroughPhases() throws SubscriptionBaseApiException {
@@ -430,8 +477,6 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.ACTIVE);
     }
-
-
 
     @Test(groups = "slow")
     public void testCreateSubscriptionWithBCD() throws SubscriptionBaseApiException {

@@ -80,7 +80,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     // Event apis
     void createNextPhaseEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
     
-    void createExpiredEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, Boolean phaseEventCreated, InternalCallContext context);
+    void createExpiredEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
 
     SubscriptionBaseEvent getEventById(UUID eventId, InternalTenantContext context);
 

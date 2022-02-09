@@ -514,18 +514,17 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         if (nextPhaseEvent != null) {
             events.add(nextPhaseEvent);
+        } else if (currentPhase.getPhase().getPhaseType() == PhaseType.FIXEDTERM) {
+            final DateTime fixedTermExpiryDate = currentPhase.getPhase().getDuration().addToDateTime(effectiveDate);
+            final SubscriptionBaseEvent expiredEvent = new ExpiredEventData(new ExpiredEventBuilder()
+                                                                                    .setSubscriptionId(subscriptionId)
+                                                                                    .setEffectiveDate(fixedTermExpiryDate)
+                                                                                    .setActive(true));
+            events.add(expiredEvent);
         }
-        if(nextTimedPhase == null && currentPhase.getPhase().getPhaseType() == PhaseType.FIXEDTERM) {
-        	final DateTime fixedTermExpiryDate = currentPhase.getPhase().getDuration().addToDateTime(effectiveDate);
-        	final SubscriptionBaseEvent expiredEvent = new ExpiredEventData(new ExpiredEventBuilder()
-        																			.setSubscriptionId(subscriptionId)
-        																			.setEffectiveDate(fixedTermExpiryDate) 
-        																			.setActive(true));
-        	events.add(expiredEvent);
-        }       
         return events;
     }
-
+    
     @Override
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(final DefaultSubscriptionBase subscription, final Plan newPlan,
                                                              final String newPriceList, final DateTime effectiveDate,

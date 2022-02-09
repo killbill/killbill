@@ -204,7 +204,6 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     }
 
     private boolean onPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionCatalog catalog, final InternalCallContext context) {
-    	boolean phaseEventCreated = false; 
         try {
             final TimedPhase nextTimedPhase = planAligner.getNextTimedPhase(subscription, readyPhaseEvent.getEffectiveDate(), catalog, context);
             final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
@@ -213,20 +212,18 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                                               null;
             if (nextPhaseEvent != null) {
                 dao.createNextPhaseEvent(subscription, readyPhaseEvent, nextPhaseEvent, context);
-                phaseEventCreated = true;
+                return true;
+            } else if (subscription.getCurrentPhase().getPhaseType() == PhaseType.FIXEDTERM) {
+                final DateTime fixedTermExpiryDate = subscription.getCurrentPhase().getDuration().addToDateTime(readyPhaseEvent.getEffectiveDate()); //TODO_1533 - is there any better way to do this? This requires handling CatalogApiException
+                final ExpiredEvent expiredEvent = ExpiredEventData.createExpiredEvent(subscription.getId(), fixedTermExpiryDate);
+                dao.createExpiredEvent(subscription, readyPhaseEvent, expiredEvent, context);
+                return true;
             }
-            
-            if(subscription.getCurrentPhase().getPhaseType() == PhaseType.FIXEDTERM) { 
-            	final DateTime fixedTermExpiryDate = subscription.getCurrentPhase().getDuration().addToDateTime(readyPhaseEvent.getEffectiveDate()); //TODO_1533 - is there any better way to do this? This requires handling CatalogApiException 
-            	final ExpiredEvent expiredEvent = ExpiredEventData.createExpiredEvent(subscription.getId(), fixedTermExpiryDate); 
-            	dao.createExpiredEvent(subscription, readyPhaseEvent, expiredEvent, phaseEventCreated, context);
-            	phaseEventCreated = true;
-            }
-            
-        } catch (final SubscriptionBaseError|CatalogApiException e) { 
+
+        } catch (final SubscriptionBaseError | CatalogApiException e) {
             log.warn("Error inserting next phase for subscriptionId='{}'", subscription.getId(), e);
         }
-        return phaseEventCreated;
+        return false;
     }
 
     private boolean onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final SubscriptionCatalog fullCatalog, final CallContext context) throws CatalogApiException {
