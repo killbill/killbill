@@ -539,7 +539,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         });
     }
     
-    @Override //TODO_1533 - Similar to createNextPhaseEvent for now, will make modifications as required in the future
+    @Override //TODO_1533 - Similar to createNextPhaseEvent for now, will combine with createNextPhaseEvent if possible 
     public void createExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhaseEvent, final InternalCallContext context) {
         transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
