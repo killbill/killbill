@@ -310,14 +310,14 @@ public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
         CatalogOverrideBlockDefinitionModelDao result = sqlDao.getByAttributes(tieredBlockPriceOverride.getUnitName(),
                 currency, tieredBlockPriceOverride.getPrice(),
-                tieredBlockPriceOverride.getMax().doubleValue(), // FIXME-1469 Catalog
-                tieredBlockPriceOverride.getSize().doubleValue(), // FIXME-1469 Catalog
+                tieredBlockPriceOverride.getMax(),
+                tieredBlockPriceOverride.getSize(),
                 context);
         if (result == null) {
             final CatalogOverrideBlockDefinitionModelDao blockDef = new CatalogOverrideBlockDefinitionModelDao(
                     tieredBlockPriceOverride.getUnitName(), currency, tieredBlockPriceOverride.getPrice(),
-                    tieredBlockPriceOverride.getSize().doubleValue(), // FIXME-1469 Catalog
-                    tieredBlockPriceOverride.getMax().doubleValue(), // FIXME-1469 Catalog
+                    tieredBlockPriceOverride.getSize(),
+                    tieredBlockPriceOverride.getMax(),
                     catalogEffectiveDate);
             final Long recordId = sqlDao.create(blockDef, context);
             result = sqlDao.getByRecordId(recordId, context);

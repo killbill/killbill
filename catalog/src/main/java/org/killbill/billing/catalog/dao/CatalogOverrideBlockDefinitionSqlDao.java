@@ -48,8 +48,8 @@ public interface CatalogOverrideBlockDefinitionSqlDao extends Transactional<Cata
     public CatalogOverrideBlockDefinitionModelDao getByAttributes(@Bind("parentUnitName") final String parentUnitName,
                                                                   @Bind("currency") final String currency,
                                                                   @Bind("price") final BigDecimal price,
-                                                                  @Bind("max") final double max,
-                                                                  @Bind("size") final double size,
+                                                                  @Bind("max") final BigDecimal max,
+                                                                  @Bind("size") final BigDecimal size,
                                                                   @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
