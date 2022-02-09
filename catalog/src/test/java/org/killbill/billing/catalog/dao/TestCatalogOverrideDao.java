@@ -149,8 +149,8 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final CatalogOverrideBlockDefinitionModelDao curTieredBlock =  tierBlocks.get(0);
         assertEquals(curTieredBlock.getParentUnitName(),tieredBlockPriceOverride.getUnitName());
         assertEquals(curTieredBlock.getPrice().compareTo(tieredBlockPriceOverride.getPrice()), 0);
-        assertEquals(curTieredBlock.getSize(), tieredBlockPriceOverride.getSize());
-        assertEquals(curTieredBlock.getMax(), tieredBlockPriceOverride.getMax());
+        assertEquals(curTieredBlock.getSize().compareTo(tieredBlockPriceOverride.getSize()), 0);
+        assertEquals(curTieredBlock.getMax().compareTo(tieredBlockPriceOverride.getMax()), 0);
     }
 
     @Test(groups = "slow")
@@ -204,8 +204,8 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final CatalogOverrideBlockDefinitionModelDao curTieredBlock =  tierBlocks.get(0);
         assertEquals(curTieredBlock.getParentUnitName(),tieredBlockPriceOverride.getUnitName());
         assertEquals(curTieredBlock.getPrice().compareTo(tieredBlockPriceOverride.getPrice()), 0);
-        assertEquals(curTieredBlock.getSize(), tieredBlockPriceOverride.getSize());
-        assertEquals(curTieredBlock.getMax(), tieredBlockPriceOverride.getMax());
+        assertEquals(curTieredBlock.getSize().compareTo(tieredBlockPriceOverride.getSize()), 0);
+        assertEquals(curTieredBlock.getMax().compareTo(tieredBlockPriceOverride.getMax()), 0);
     }
 
 }
