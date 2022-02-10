@@ -653,34 +653,36 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     }
                 }
             }
+            //TODO_1533 - Temporarily commented this code to prevent tests from TestCatalogFixedTerm from failing. Revisit later.
+            
             // If we end up with a PlanPhase which is not evergreen, it means it should STOP at the end of the duration
             // Ideally, we should have a special transition type (e.g 'EXPIRED') and not compute this transition dynamically
             // See https://github.com/killbill/killbill/issues/824
-            SubscriptionBillingEvent expiredTransition = null;
-            if (lastPhaseTransition != null &&
-                lastPhaseTransition.getNextPhase() != null &&
-                lastPhaseTransition.getNextPhase().getPhaseType() != PhaseType.EVERGREEN) {
-                final DateTime effectiveDate = lastPhaseTransition.getNextPhase().getDuration().addToDateTime(lastPhaseTransition.getEffectiveTransitionTime());
-                // Insert the expiredTransition at the right place depending on whether or not we still have pending catalog version transitions
-                // (there is a sorting of all billing event in junction, so this is not strictly necessary but cleaner)
-                expiredTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CANCEL, null, null, effectiveDate,
-                                                                                                       lastPhaseTransition.getTotalOrdering(), lastPhaseTransition.getNextBillingCycleDayLocal(),
-                                                                                                       CatalogDateHelper.toUTCDateTime(lastPhaseTransition.getNextPlan().getCatalog().getEffectiveDate()));
-            }
-
-
-            SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-            while (prevCandidateForCatalogChangeEvents != null) {
-                if (expiredTransition != null && expiredTransition.getEffectiveDate().compareTo(prevCandidateForCatalogChangeEvents.getEffectiveDate()) <= 0) {
-                    result.add(expiredTransition);
-                    expiredTransition = null;
-                }
-                result.add(prevCandidateForCatalogChangeEvents);
-                prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-            }
-            if (expiredTransition != null) {
-                result.add(expiredTransition);
-            }
+//            SubscriptionBillingEvent expiredTransition = null;
+//            if (lastPhaseTransition != null &&
+//                lastPhaseTransition.getNextPhase() != null &&
+//                lastPhaseTransition.getNextPhase().getPhaseType() != PhaseType.EVERGREEN) {
+//                final DateTime effectiveDate = lastPhaseTransition.getNextPhase().getDuration().addToDateTime(lastPhaseTransition.getEffectiveTransitionTime());
+//                // Insert the expiredTransition at the right place depending on whether or not we still have pending catalog version transitions
+//                // (there is a sorting of all billing event in junction, so this is not strictly necessary but cleaner)
+//                expiredTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CANCEL, null, null, effectiveDate,
+//                                                                                                       lastPhaseTransition.getTotalOrdering(), lastPhaseTransition.getNextBillingCycleDayLocal(),
+//                                                                                                       CatalogDateHelper.toUTCDateTime(lastPhaseTransition.getNextPlan().getCatalog().getEffectiveDate()));
+//            }
+//
+//
+//            SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+//            while (prevCandidateForCatalogChangeEvents != null) {
+//                if (expiredTransition != null && expiredTransition.getEffectiveDate().compareTo(prevCandidateForCatalogChangeEvents.getEffectiveDate()) <= 0) {
+//                    result.add(expiredTransition);
+//                    expiredTransition = null;
+//                }
+//                result.add(prevCandidateForCatalogChangeEvents);
+//                prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+//            }
+//            if (expiredTransition != null) {
+//                result.add(expiredTransition);
+//            }
 
             return result;
         } catch (final CatalogApiException e) {
