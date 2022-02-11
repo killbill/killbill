@@ -514,8 +514,8 @@ public class StandaloneCatalogMapper {
         if (input != null) {
             result = new DefaultLimit();
             result.setUnit(toDefaultUnit(input.getUnit()));
-            result.setMax(input.getMax().doubleValue());
-            result.setMin(input.getMin().doubleValue());
+            result.setMax(input.getMax());
+            result.setMin(input.getMin());
         }
         return result;
     }

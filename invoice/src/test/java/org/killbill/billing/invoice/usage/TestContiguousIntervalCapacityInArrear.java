@@ -68,7 +68,7 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         final LocalDate endDate = new LocalDate(2014, 04, 20);
 
         final DefaultUnit unit = new DefaultUnit().setName("unit");
-        final DefaultLimit limit = new DefaultLimit().setUnit(unit).setMax((double) 100);
+        final DefaultLimit limit = new DefaultLimit().setUnit(unit).setMax(BigDecimal.valueOf(100));
 
         final DefaultTier tier = createDefaultTierWithLimits(BigDecimal.TEN, limit);
 
@@ -111,20 +111,20 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         final DefaultUnit unit2 = new DefaultUnit().setName("unit2");
         final DefaultUnit unit3 = new DefaultUnit().setName("unit3");
 
-        final DefaultLimit limit1_1 = new DefaultLimit().setUnit(unit1).setMax((double) 100).setMin((double) -1);
-        final DefaultLimit limit1_2 = new DefaultLimit().setUnit(unit2).setMax((double) 1000).setMin((double) -1);
-        final DefaultLimit limit1_3 = new DefaultLimit().setUnit(unit3).setMax((double) 50).setMin((double) -1);
+        final DefaultLimit limit1_1 = new DefaultLimit().setUnit(unit1).setMax(BigDecimal.valueOf(100)).setMin(BigDecimal.valueOf(-1));
+        final DefaultLimit limit1_2 = new DefaultLimit().setUnit(unit2).setMax(BigDecimal.valueOf(1000)).setMin(BigDecimal.valueOf(-1));
+        final DefaultLimit limit1_3 = new DefaultLimit().setUnit(unit3).setMax(BigDecimal.valueOf(50)).setMin(BigDecimal.valueOf(-1));
         final DefaultTier tier1 = createDefaultTierWithLimits(BigDecimal.TEN, limit1_1, limit1_2, limit1_3);
 
-        final DefaultLimit limit2_1 = new DefaultLimit().setUnit(unit1).setMax((double) 200).setMin((double) -1);
-        final DefaultLimit limit2_2 = new DefaultLimit().setUnit(unit2).setMax((double) 2000).setMin((double) -1);
-        final DefaultLimit limit2_3 = new DefaultLimit().setUnit(unit3).setMax((double) 100).setMin((double) -1);
+        final DefaultLimit limit2_1 = new DefaultLimit().setUnit(unit1).setMax(BigDecimal.valueOf(200)).setMin(BigDecimal.valueOf(-1));
+        final DefaultLimit limit2_2 = new DefaultLimit().setUnit(unit2).setMax(BigDecimal.valueOf(2000)).setMin(BigDecimal.valueOf(-1));
+        final DefaultLimit limit2_3 = new DefaultLimit().setUnit(unit3).setMax(BigDecimal.valueOf(100)).setMin(BigDecimal.valueOf(-1));
         final DefaultTier tier2 = createDefaultTierWithLimits(new BigDecimal("20.0"), limit2_1, limit2_2, limit2_3);
 
         // Don't define any max for last tier to allow any number
-        final DefaultLimit limit3_1 = new DefaultLimit().setUnit(unit1).setMin((double) -1).setMax((double) -1);
-        final DefaultLimit limit3_2 = new DefaultLimit().setUnit(unit2).setMin((double) -1).setMax((double) -1);
-        final DefaultLimit limit3_3 = new DefaultLimit().setUnit(unit3).setMax((double) -1).setMin((double) -1);
+        final DefaultLimit limit3_1 = new DefaultLimit().setUnit(unit1).setMin(BigDecimal.valueOf(-1)).setMax(BigDecimal.valueOf(-1));
+        final DefaultLimit limit3_2 = new DefaultLimit().setUnit(unit2).setMin(BigDecimal.valueOf(-1)).setMax(BigDecimal.valueOf(-1));
+        final DefaultLimit limit3_3 = new DefaultLimit().setUnit(unit3).setMax(BigDecimal.valueOf(-1)).setMin(BigDecimal.valueOf(-1));
         final DefaultTier tier3 = createDefaultTierWithLimits(new BigDecimal("30.0"), limit3_1, limit3_2, limit3_3);
 
         final DefaultUsage usage = createCapacityInArrearUsage(usageName, BillingPeriod.MONTHLY, tier1, tier2, tier3);
@@ -192,10 +192,10 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit2", BigDecimal.valueOf(20L), "tracking-5"));
 
         final DefaultUnit unit1 = new DefaultUnit().setName("unit1");
-        final DefaultLimit limit1 = new DefaultLimit().setUnit(unit1).setMax((double) -1);
+        final DefaultLimit limit1 = new DefaultLimit().setUnit(unit1).setMax(BigDecimal.valueOf(-1));
 
         final DefaultUnit unit2 = new DefaultUnit().setName("unit2");
-        final DefaultLimit limit2 = new DefaultLimit().setUnit(unit2).setMax((double) -1);
+        final DefaultLimit limit2 = new DefaultLimit().setUnit(unit2).setMax(BigDecimal.valueOf(-1));
 
         final DefaultTier tier = createDefaultTierWithLimits(BigDecimal.TEN, limit1, limit2);
 
@@ -383,16 +383,16 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         final DefaultUnit unitFoo = new DefaultUnit().setName("FOO");
         final DefaultUnit unitBar = new DefaultUnit().setName("BAR");
 
-        final DefaultLimit unitFooLimitTier1 = new DefaultLimit().setUnit(unitFoo).setMax((double) 10);
-        final DefaultLimit unitBarLimitTier1 = new DefaultLimit().setUnit(unitBar).setMax((double) 100);
+        final DefaultLimit unitFooLimitTier1 = new DefaultLimit().setUnit(unitFoo).setMax(BigDecimal.valueOf(10));
+        final DefaultLimit unitBarLimitTier1 = new DefaultLimit().setUnit(unitBar).setMax(BigDecimal.valueOf(100));
         final DefaultTier tier1 = createDefaultTierWithLimits(BigDecimal.ONE, unitFooLimitTier1, unitBarLimitTier1);
 
-        final DefaultLimit unitFooLimitTier2 = new DefaultLimit().setUnit(unitFoo).setMax((double) 50);
-        final DefaultLimit unitBarLimitTier2 = new DefaultLimit().setUnit(unitBar).setMax((double) 500);
+        final DefaultLimit unitFooLimitTier2 = new DefaultLimit().setUnit(unitFoo).setMax(BigDecimal.valueOf(50));
+        final DefaultLimit unitBarLimitTier2 = new DefaultLimit().setUnit(unitBar).setMax(BigDecimal.valueOf(500));
         final DefaultTier tier2 = createDefaultTierWithLimits(BigDecimal.TEN, unitFooLimitTier2, unitBarLimitTier2);
 
-        final DefaultLimit unitFooLimitTier3 = new DefaultLimit().setUnit(unitFoo).setMax((double) 75);
-        final DefaultLimit unitBarLimitTier3 = new DefaultLimit().setUnit(unitBar).setMax((double) 750);
+        final DefaultLimit unitFooLimitTier3 = new DefaultLimit().setUnit(unitFoo).setMax(BigDecimal.valueOf(75));
+        final DefaultLimit unitBarLimitTier3 = new DefaultLimit().setUnit(unitBar).setMax(BigDecimal.valueOf(750));
         final DefaultTier tier3 = createDefaultTierWithLimits(new BigDecimal("100.0"), unitFooLimitTier3, unitBarLimitTier3);
 
         final DefaultUsage usage = createCapacityInArrearUsage(usageName, BillingPeriod.MONTHLY, tier1, tier2, tier3);
