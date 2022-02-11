@@ -127,7 +127,6 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
                 // We ignore the min and only look at the max Limit as the tiers should be contiguous.
                 // Specifying a -1 value for last max tier will make the validation works
                 if (tierLimit.getMax().compareTo(new BigDecimal("-1")) != 0 && ro.getAmount().compareTo(tierLimit.getMax())> 0) {
-                // if (tierLimit.getMax() != (double) -1 && ro.getAmount().doubleValue() > tierLimit.getMax()) {
                     complies = false;
                 } else {
                     allUnitAmountToZero = ro.getAmount().compareTo(BigDecimal.ZERO) <= 0 && allUnitAmountToZero;

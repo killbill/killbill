@@ -53,7 +53,7 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Ext
         setType(BlockType.TIERED);
     }
 
-    public DefaultTieredBlock(TieredBlock in, TieredBlockPriceOverride override, Currency currency) {
+    public DefaultTieredBlock(final TieredBlock in, final TieredBlockPriceOverride override, final Currency currency) {
         super((DefaultUnit) in.getUnit(), in.getSize(), (DefaultInternationalPrice) in.getPrice(), override.getPrice(), currency);
         this.max = in.getMax();
         setType(BlockType.TIERED);
@@ -91,7 +91,7 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Ext
     public int hashCode() {
         int result = super.hashCode();
         final long temp;
-        temp = Double.doubleToLongBits(max.doubleValue());
+        temp = max.hashCode();
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
     }
