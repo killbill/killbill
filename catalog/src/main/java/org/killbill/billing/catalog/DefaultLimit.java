@@ -23,16 +23,20 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.killbill.billing.catalog.api.Limit;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
+
+import static org.killbill.billing.catalog.CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements Limit, Externalizable {
@@ -41,21 +45,25 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     @XmlIDREF
     private DefaultUnit unit;
 
-    /**
-     * FIXME-1469 Catalog: This is need to be converted to BigDecimal. However, if we do, then TestXmlReader.testCatalogLoad()
-     *   will fails. It is because in some XML (test file), max and or min value is not set, and lead to null value.
-     *   However in {@link #readExternal(ObjectInput)} method, if we use {@link ObjectInput#readDouble()} it will return
-     *   "-1" if there's no value from XML file (null). On the other side, if we use {@link ObjectInput#readObject()}
-     *   it will simply return "0". Now where is the "-1" come from?
-     */
     @XmlElement(required = false)
-    private Double max;
+    private BigDecimal max;
+
+    @XmlElement(required = false)
+    private BigDecimal min;
 
     /**
-     * FIXME-1469 Catalog: see comment on {@link #max}
+     * True if {@link #max} is not null and not contains default value (-1) defined in
+     * {@link CatalogSafetyInitializer#DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE}
      */
-    @XmlElement(required = false)
-    private Double min;
+    @XmlTransient
+    private boolean maxHasValue;
+
+    /**
+     * True if {@link #min} is not null and not contains default value (-1) defined in
+     * {@link CatalogSafetyInitializer#DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE}
+     */
+    @XmlTransient
+    private boolean minHasValue;
 
     @Override
     public DefaultUnit getUnit() {
@@ -64,19 +72,17 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
 
     @Override
     public BigDecimal getMax() {
-        return new BigDecimal(max);
+        return max;
     }
 
     @Override
     public BigDecimal getMin() {
-        return new BigDecimal(min);
+        return min;
     }
 
     @Override
-    public ValidationErrors validate(StandaloneCatalog root, ValidationErrors errors) {
-        if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(max) &&
-            !CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(min) &&
-            max < min) {
+    public ValidationErrors validate(final StandaloneCatalog root, final ValidationErrors errors) {
+        if (maxHasValue && minHasValue && max.compareTo(min) < 0) {
             errors.add(new ValidationError("max must be greater than min", Limit.class, ""));
         }
         return errors;
@@ -86,21 +92,18 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     public void initialize(final StandaloneCatalog catalog) {
         super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+        maxHasValue = max != null && max.compareTo(DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE) != 0;
+        minHasValue = min != null && min.compareTo(DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE) != 0;
     }
 
     @Override
-    public boolean compliesWith(double value) {
-        if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(max)) {
-            if (value > max.doubleValue()) {
+    public boolean compliesWith(final BigDecimal value) {
+        if (maxHasValue && value.compareTo(max) > 0) {
+            if (value.compareTo(max) > 0) {
                 return false;
             }
         }
-        if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(min)) {
-            if (value < min.doubleValue()) {
-                return false;
-            }
-        }
-        return true;
+        return !minHasValue || value.compareTo(min) <= 0;
     }
 
     public DefaultLimit setUnit(final DefaultUnit unit) {
@@ -108,12 +111,12 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
         return this;
     }
 
-    public DefaultLimit setMax(final Double max) {
+    public DefaultLimit setMax(final BigDecimal max) {
         this.max = max;
         return this;
     }
 
-    public DefaultLimit setMin(final Double min) {
+    public DefaultLimit setMin(final BigDecimal min) {
         this.min = min;
         return this;
     }
@@ -135,11 +138,7 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
         if (!min.equals(that.min)) {
             return false;
         }
-        if (unit != null ? !unit.equals(that.unit) : that.unit != null) {
-            return false;
-        }
-
-        return true;
+        return Objects.equals(unit, that.unit);
     }
 
     @Override
@@ -160,7 +159,7 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         this.unit = (DefaultUnit) in.readObject();
-        this.max = in.readDouble();
-        this.min = in.readDouble();
+        this.max = BigDecimal.valueOf(in.readDouble());
+        this.min = BigDecimal.valueOf(in.readDouble());
     }
 }
