@@ -65,6 +65,8 @@ import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
 import org.killbill.billing.subscription.events.bcd.BCDEventData;
+import org.killbill.billing.subscription.events.expired.ExpiredEventBuilder;
+import org.killbill.billing.subscription.events.expired.ExpiredEventData;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.events.user.ApiEvent;
@@ -493,6 +495,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 .setFromDisk(true);
         final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
 
+        final TimedPhase currentPhase = curAndNextPhases[0];
         final TimedPhase nextTimedPhase = curAndNextPhases[1];
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                           PhaseEventData.createNextPhaseEvent(subscriptionId, nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
@@ -511,10 +514,17 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         if (nextPhaseEvent != null) {
             events.add(nextPhaseEvent);
+        } else if (currentPhase.getPhase().getPhaseType() == PhaseType.FIXEDTERM) {
+            final DateTime fixedTermExpiryDate = currentPhase.getPhase().getDuration().addToDateTime(effectiveDate);
+            final SubscriptionBaseEvent expiredEvent = new ExpiredEventData(new ExpiredEventBuilder()
+                                                                                    .setSubscriptionId(subscriptionId)
+                                                                                    .setEffectiveDate(fixedTermExpiryDate)
+                                                                                    .setActive(true));
+            events.add(expiredEvent);
         }
         return events;
     }
-
+    
     @Override
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(final DefaultSubscriptionBase subscription, final Plan newPlan,
                                                              final String newPriceList, final DateTime effectiveDate,

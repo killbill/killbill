@@ -26,7 +26,9 @@ public class ExpiredEventBuilder extends EventBaseBuilder<ExpiredEventBuilder> {
         super();
     }
 
-    //TODO_1533: Check if other constructors are required as defined in PhaseEventBuilder
+    public ExpiredEventBuilder(final EventBaseBuilder<?> base) {
+        super(base);
+    }    
 
     @Override
     public SubscriptionBaseEvent build() {

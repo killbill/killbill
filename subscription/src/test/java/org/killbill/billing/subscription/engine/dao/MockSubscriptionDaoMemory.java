@@ -546,4 +546,11 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         return null;
     }
 
+	@Override
+	public void createExpiredEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent,
+			SubscriptionBaseEvent nextPhase, InternalCallContext context) {
+		// TODO_1533 added stub to prevent compilation error
+		
+	}
+
 }
