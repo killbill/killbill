@@ -54,7 +54,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         return getConfigSource(null, allExtraProperties);
     }
 
-    @Test(groups = "slow", enabled=false) //TODO_1533 - Disabled temporarily to prevent tests from failing, revisit later
+    @Test(groups = "slow")
     public void testWithChangeAcrossCatalogs() throws Exception {
         // 30 days month
         clock.setDay(new LocalDate(2016, 4, 1));
@@ -158,7 +158,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
     }
 
     // We are not using catalog versions in this test but testing the overridden value of 'readMaxRawUsagePreviousPeriod = 0'
-    @Test(groups = "slow", enabled=false) //TODO_1533 - Disabled temporarily to prevent tests from failing, revisit later
+    @Test(groups = "slow")
     public void testWithRemovedData() throws Exception {
         // 30 days month
         clock.setDay(new LocalDate(2016, 4, 1));

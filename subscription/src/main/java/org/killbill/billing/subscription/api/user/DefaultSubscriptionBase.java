@@ -669,17 +669,17 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 //                                                                                                       lastPhaseTransition.getTotalOrdering(), lastPhaseTransition.getNextBillingCycleDayLocal(),
 //                                                                                                       CatalogDateHelper.toUTCDateTime(lastPhaseTransition.getNextPlan().getCatalog().getEffectiveDate()));
 //            }
-//
-//
-//            SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-//            while (prevCandidateForCatalogChangeEvents != null) {
+
+
+            SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+            while (prevCandidateForCatalogChangeEvents != null) {
 //                if (expiredTransition != null && expiredTransition.getEffectiveDate().compareTo(prevCandidateForCatalogChangeEvents.getEffectiveDate()) <= 0) {
 //                    result.add(expiredTransition);
 //                    expiredTransition = null;
 //                }
-//                result.add(prevCandidateForCatalogChangeEvents);
-//                prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-//            }
+                result.add(prevCandidateForCatalogChangeEvents);
+                prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
+            }
 //            if (expiredTransition != null) {
 //                result.add(expiredTransition);
 //            }
