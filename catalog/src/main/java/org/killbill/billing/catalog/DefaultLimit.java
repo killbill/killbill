@@ -99,9 +99,7 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public boolean compliesWith(final BigDecimal value) {
         if (maxHasValue && value.compareTo(max) > 0) {
-            if (value.compareTo(max) > 0) {
-                return false;
-            }
+            return false;
         }
         return !minHasValue || value.compareTo(min) <= 0;
     }
@@ -159,7 +157,7 @@ public class DefaultLimit extends ValidatingConfig<StandaloneCatalog> implements
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         this.unit = (DefaultUnit) in.readObject();
-        this.max = BigDecimal.valueOf(in.readDouble());
-        this.min = BigDecimal.valueOf(in.readDouble());
+        this.max = (BigDecimal) in.readObject();
+        this.min = (BigDecimal) in.readObject();
     }
 }

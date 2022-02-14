@@ -247,7 +247,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         dfs.setInternationalCurrencySymbol(currencyUnit.getCode());
 
         try {
-            Currency currency = Currency.fromCode(invoiceCurrencyCode);
+            final Currency currency = Currency.fromCode(invoiceCurrencyCode);
             dfs.setCurrencySymbol(currency.getSymbol());
         } catch (final IllegalArgumentException e) {
             dfs.setCurrencySymbol(currencyUnit.getSymbol(locale));
@@ -257,7 +257,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         numberFormatter.setMinimumFractionDigits(currencyUnit.getDecimalPlaces());
         numberFormatter.setMaximumFractionDigits(currencyUnit.getDecimalPlaces());
 
-        return numberFormatter.format(amount.doubleValue());
+        return numberFormatter.format(amount);
     }
 
     @Override

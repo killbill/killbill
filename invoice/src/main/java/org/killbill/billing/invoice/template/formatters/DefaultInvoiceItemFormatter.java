@@ -79,7 +79,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     public String getFormattedAmount() {
         final NumberFormat number = NumberFormat.getCurrencyInstance(locale);
         number.setCurrency(java.util.Currency.getInstance(item.getCurrency().toString()));
-        return number.format(getAmount().doubleValue());
+        return number.format(getAmount());
     }
 
     @Override
