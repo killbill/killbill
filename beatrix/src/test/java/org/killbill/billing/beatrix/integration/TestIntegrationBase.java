@@ -1264,6 +1264,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         }
 
         @Override
+        public boolean isUsageMissingLenient() {
+            return defaultInvoiceConfig.isUsageMissingLenient();
+        }
+
+        @Override
+        public boolean isUsageMissingLenient(final InternalTenantContext tenantContext) {
+            return defaultInvoiceConfig.isUsageMissingLenient();
+        }
+
+        @Override
         public int getMaxDailyNumberOfItemsSafetyBound() {
             return defaultInvoiceConfig.getMaxDailyNumberOfItemsSafetyBound();
         }

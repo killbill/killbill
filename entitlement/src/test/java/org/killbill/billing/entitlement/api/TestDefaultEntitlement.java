@@ -221,7 +221,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         // Go to 2013-09-08
         clock.addDays(32);
         // Set manually since no invoice
-        subscriptionInternalApi.setChargedThroughDate(entitlement.getId(), ctd, internalCallContext);
+        setChargedThroughDate(entitlement.getId(), ctd, internalCallContext);
         assertListenerStatus();
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
@@ -264,7 +264,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.PHASE);
         clock.addDays(32);
         // Set manually since no invoice
-        subscriptionInternalApi.setChargedThroughDate(entitlement.getId(), ctd, internalCallContext);
+        setChargedThroughDate(entitlement.getId(), ctd, internalCallContext);
         assertListenerStatus();
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);

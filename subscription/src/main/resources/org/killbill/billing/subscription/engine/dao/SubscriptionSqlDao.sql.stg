@@ -61,3 +61,14 @@ where id = :id
 <AND_CHECK_TENANT("")>
 ;
 >>
+
+updateChargedThroughDates() ::= <<
+update <tableName()>
+set
+charged_through_date = :chargedThroughDate
+, updated_by = :createdBy
+, updated_date = :updatedDate
+where <idField("")> in (<ids>)
+<AND_CHECK_TENANT("")>
+;
+>>

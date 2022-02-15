@@ -347,19 +347,10 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         return result;
     }
 
+
     @Override
-    public void setChargedThroughDate(final UUID subscriptionId, final DateTime chargedThruDate, final InternalCallContext context) throws SubscriptionBaseApiException {
-        try {
-
-            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(subscriptionId, catalog, context);
-            final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
-                    .setChargedThroughDate(chargedThruDate);
-
-            dao.updateChargedThroughDate(new DefaultSubscriptionBase(builder), context);
-        } catch (final CatalogApiException e) {
-            throw new SubscriptionBaseApiException(e);
-        }
+    public void setChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, InternalCallContext context) throws SubscriptionBaseApiException {
+            dao.updateChargedThroughDates(chargeThroughDates, context);
     }
 
     @Override
