@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -75,7 +79,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
     // Update
-    void updateChargedThroughDate(DefaultSubscriptionBase subscription, InternalCallContext context);
+    void updateChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context);
 
     // Event apis
     void createNextPhaseEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);

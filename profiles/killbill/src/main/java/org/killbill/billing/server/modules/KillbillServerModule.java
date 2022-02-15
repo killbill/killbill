@@ -45,6 +45,7 @@ import org.killbill.billing.server.notifications.PushNotificationRetryService;
 import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
+import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.config.definition.NotificationConfig;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.features.KillbillFeatures;
@@ -182,8 +183,12 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new ExportModule(configSource));
         install(new GlobalLockerModule(configSource));
         install(new KillBillShiroAopModule(configSource));
-        install(new KillbillApiAopModule());
-        install(new JaxRSAopModule());
+
+        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final JaxrsConfig jaxrsConfig = factory.build(JaxrsConfig.class);
+        install(new KillbillApiAopModule(jaxrsConfig));
+        install(new JaxRSAopModule(jaxrsConfig));
+
         install(new KillBillShiroWebModule(servletContext, skifeConfigSource));
         install(new NonEntityDaoModule(configSource));
         install(new PaymentModule(configSource));
