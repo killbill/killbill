@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 
@@ -41,6 +44,7 @@ import org.killbill.billing.control.plugin.api.PriorPaymentControlResult;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.Payment;
+import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -61,6 +65,9 @@ import static org.awaitility.Awaitility.await;
 public class TestPaymentWithControl extends TestIntegrationBase {
 
     private static final String TEST_PAYMENT_WITH_CONTROL = "TestPaymentWithControl";
+
+    final Semaphore sem = new Semaphore(1);
+    final AtomicLong controlPluginSleep = new AtomicLong(0);
 
     private TestPaymentControlPluginApi testPaymentControlWithControl;
     private List<PluginProperty> properties;
@@ -109,7 +116,6 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         };
 
         properties.add(new PluginProperty("name", TEST_PAYMENT_WITH_CONTROL, false));
-
     }
 
     @BeforeMethod(groups = "slow")
@@ -296,6 +302,54 @@ public class TestPaymentWithControl extends TestIntegrationBase {
         });
     }
 
+    @Test(groups = "slow")
+    public void testJanitorRaceCondition() throws Exception {
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+
+        testPaymentControlWithControl.setWithSemaphore(true);
+        sem.acquire();
+        controlPluginSleep.set(5000);
+
+        final AtomicBoolean isPaymentDone = new AtomicBoolean(false);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    busHandler.pushExpectedEvents(NextEvent.PAYMENT);
+                    paymentApi.createAuthorizationWithPaymentControl(account,
+                                                                     null,
+                                                                     null,
+                                                                     BigDecimal.ONE,
+                                                                     account.getCurrency(),
+                                                                     null,
+                                                                     null,
+                                                                     null,
+                                                                     properties,
+                                                                     paymentOptions,
+                                                                     callContext);
+                    assertListenerStatus();
+                    isPaymentDone.set(true);
+                } catch (final PaymentApiException e) {
+                    Assert.fail(e.toString());
+                }
+            }
+        }).start();
+
+        sem.acquire();
+        // The first payment is now sleeping in the onSuccessCall control plugin
+        paymentApi.getAccountPayments(account.getId(), true, true, null, callContext);
+
+        await().atMost(10, SECONDS)
+               .until(new Callable<Boolean>() {
+                   @Override
+                   public Boolean call() {
+                       return isPaymentDone.get();
+                   }
+               });
+        Assert.assertEquals(testPaymentControlWithControl.getCalls().size(), 1);
+        Assert.assertEquals(testPaymentControlWithControl.getCalls().get(TransactionType.AUTHORIZE.toString()), Integer.valueOf(2));
+    }
 
     public class TestPaymentControlPluginApi implements PaymentControlPluginApi {
 
@@ -303,6 +357,7 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
         private UUID adjustedPaymentMethodId = null;
         private DateTime nextRetryDate = null;
+        private boolean withSemaphore = false;
 
         public TestPaymentControlPluginApi() {
             calls = new HashMap<String, Integer>();
@@ -323,6 +378,10 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
         public void setNextRetryDate(final DateTime nextRetryDate) {
             this.nextRetryDate = nextRetryDate;
+        }
+
+        public void setWithSemaphore(final boolean withSemaphore) {
+            this.withSemaphore = withSemaphore;
         }
 
         @Override
@@ -359,6 +418,17 @@ public class TestPaymentWithControl extends TestIntegrationBase {
 
         @Override
         public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> properties) throws PaymentControlApiException {
+            if (withSemaphore) {
+                sem.release();
+            }
+
+            try {
+                Thread.sleep(controlPluginSleep.get());
+                controlPluginSleep.set(0);
+            } catch (final InterruptedException e) {
+                Assert.fail(e.toString());
+            }
+
             final PluginProperty nameProperty = Iterables.tryFind(properties, new Predicate<PluginProperty>() {
                 @Override
                 public boolean apply(final PluginProperty input) {
@@ -366,8 +436,8 @@ public class TestPaymentWithControl extends TestIntegrationBase {
                 }
             }).orNull();
             if (nameProperty != null && nameProperty.getValue().equals(TEST_PAYMENT_WITH_CONTROL)) {
-                final Integer result = calls.get(paymentControlContext.getTransactionType());
-                calls.put(paymentControlContext.getTransactionType().toString(), result == null ? new Integer(1) : new Integer(result.intValue() + 1));
+                final Integer result = calls.get(paymentControlContext.getTransactionType().toString());
+                calls.put(paymentControlContext.getTransactionType().toString(), result == null ? Integer.valueOf(1) : Integer.valueOf(result + 1));
             }
             return new OnSuccessPaymentControlResult() {
                 @Override
