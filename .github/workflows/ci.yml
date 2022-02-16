@@ -8,3 +8,4 @@ on:
 jobs:
   ci:
     uses: killbill/gh-actions-shared/.github/workflows/ci.yml@main
+
