@@ -498,10 +498,10 @@ public abstract class ContiguousIntervalUsageInArrear {
                             // We have found some reported usage with a unit type that hasn't been handled by any ContiguousIntervalUsageInArrear
                             if (invoiceConfig.shouldParkAccountsWithUnknownUsage(internalTenantContext)) {
                                 throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR,
-                                                              String.format("ILLEGAL INVOICING STATE: unit type %s is not defined in the catalog",
-                                                                            unitType));
+                                                              String.format("ILLEGAL INVOICING STATE: unit type %s is not defined in the catalog effective Date %s for subscription %s)",
+                                                                            unitType, curTransition.getTargetBillingEvent().getCatalogEffectiveDate(), curTransition.getTargetBillingEvent().getSubscriptionId()));
                             } else {
-                                log.warn("Ignoring unit type {} (not defined in the catalog)", unitType);
+                                log.warn("Ignoring unit type {} for subscription {} (not defined in the catalog effective Date {})", unitType, curTransition.getTargetBillingEvent().getSubscriptionId(), curTransition.getTargetBillingEvent().getCatalogEffectiveDate());
                                 // Make sure to remove the associated tracking ids
                                 final Iterator<TrackingRecordId> itr = trackingIds.iterator();
                                 while (itr.hasNext()) {
