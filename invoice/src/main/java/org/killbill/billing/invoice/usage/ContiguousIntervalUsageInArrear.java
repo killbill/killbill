@@ -274,11 +274,10 @@ public abstract class ContiguousIntervalUsageInArrear {
      * @throws CatalogApiException
      */
     public UsageInArrearItemsAndNextNotificationDate computeMissingItemsAndNextNotificationDate(final List<InvoiceItem> existingUsage) throws CatalogApiException, InvoiceApiException {
-
         Preconditions.checkState(isBuilt.get());
 
         if (transitionTimes.size() < 2) {
-            return new UsageInArrearItemsAndNextNotificationDate(ImmutableList.<InvoiceItem>of(), ImmutableSet.of(), computeNextNotificationDate());
+            return new UsageInArrearItemsAndNextNotificationDate(ImmutableList.of(), ImmutableSet.of(), computeNextNotificationDate());
         }
 
         final List<InvoiceItem> result = Lists.newLinkedList();
@@ -439,9 +438,9 @@ public abstract class ContiguousIntervalUsageInArrear {
             if (prevDate != null) {
 
                 // Allocate and initialize new perRangeUnitToAmount for this interval and populate with rawSubscriptionUsage items
-                final Map<String, Long> perRangeUnitToAmount = new HashMap<String, Long>();
+                final Map<String, BigDecimal> perRangeUnitToAmount = new HashMap<>();
                 for (String unitType : unitTypes) {
-                    perRangeUnitToAmount.put(unitType, 0L);
+                    perRangeUnitToAmount.put(unitType, BigDecimal.ZERO);
                 }
 
                 // Start consuming prevRawUsage element if it exists and falls into the range
@@ -454,8 +453,8 @@ public abstract class ContiguousIntervalUsageInArrear {
 
                     if (prevRawUsage.getDate().compareTo(prevDate) >= 0 &&
                         (prevRawUsage.getDate().compareTo(curDate) < 0 || isUsageForCancellationDay)) {
-                        final Long currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
-                        final Long updatedAmount = computeUpdatedAmount(currentAmount, prevRawUsage.getAmount());
+                        final BigDecimal currentAmount = perRangeUnitToAmount.get(prevRawUsage.getUnitType());
+                        final BigDecimal updatedAmount = computeUpdatedAmount(currentAmount, prevRawUsage.getAmount());
                         perRangeUnitToAmount.put(prevRawUsage.getUnitType(), updatedAmount);
                         trackingIds.add(new TrackingRecordId(prevRawUsage.getTrackingId(), invoiceId, prevRawUsage.getSubscriptionId(), prevRawUsage.getUnitType(), prevRawUsage.getDate()));
                         prevRawUsage = null;
@@ -481,8 +480,8 @@ public abstract class ContiguousIntervalUsageInArrear {
                             break;
                         }
 
-                        final Long currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
-                        final Long updatedAmount = computeUpdatedAmount(currentAmount, curRawUsage.getAmount());
+                        final BigDecimal currentAmount = perRangeUnitToAmount.get(curRawUsage.getUnitType());
+                        final BigDecimal updatedAmount = computeUpdatedAmount(currentAmount, curRawUsage.getAmount());
                         perRangeUnitToAmount.put(curRawUsage.getUnitType(), updatedAmount);
                         trackingIds.add(new TrackingRecordId(curRawUsage.getTrackingId(), invoiceId, curRawUsage.getSubscriptionId(), curRawUsage.getUnitType(), curRawUsage.getDate()));
                     }
@@ -491,7 +490,7 @@ public abstract class ContiguousIntervalUsageInArrear {
                 // If we did find some usage for that date range, let's populate the result
                 if (!perRangeUnitToAmount.isEmpty()) {
                     final List<RolledUpUnit> rolledUpUnits = new ArrayList<RolledUpUnit>(perRangeUnitToAmount.size());
-                    for (final Entry<String, Long> entry : perRangeUnitToAmount.entrySet()) {
+                    for (final Entry<String, BigDecimal> entry : perRangeUnitToAmount.entrySet()) {
                         final String unitType = entry.getKey();
                         // Sanity check: https://github.com/killbill/killbill/issues/1275
                         if (!allSeenUnitTypes.get(curTransition.getTargetBillingEvent()).contains(unitType)) {
@@ -534,7 +533,7 @@ public abstract class ContiguousIntervalUsageInArrear {
         final LocalDate endDate = endTransition.getDate();
         for (String unitType : unitTypes) {
             final List<RolledUpUnit> emptyRolledUptUnits = new ArrayList<RolledUpUnit>();
-            emptyRolledUptUnits.add(new DefaultRolledUpUnit(unitType, 0L));
+            emptyRolledUptUnits.add(new DefaultRolledUpUnit(unitType, BigDecimal.ZERO));
             final DefaultRolledUpUsageWithMetadata defaultForUnit = new DefaultRolledUpUsageWithMetadata(getSubscriptionId(), startDate, endDate, emptyRolledUptUnits,
                                                                                                          initialTransition.getTargetBillingEvent().getCatalogEffectiveDate());
             result.add(defaultForUnit);
@@ -549,15 +548,14 @@ public abstract class ContiguousIntervalUsageInArrear {
      * @param newAmount
      * @return
      */
-    private Long computeUpdatedAmount(@Nullable Long currentAmount, @Nullable Long newAmount) {
-
-        currentAmount = currentAmount == null ? (Long) 0L : currentAmount;
-        newAmount = newAmount == null ? (Long) 0L : newAmount;
+    private BigDecimal computeUpdatedAmount(@Nullable BigDecimal currentAmount, @Nullable BigDecimal newAmount) {
+        currentAmount = currentAmount == null ? BigDecimal.ZERO : currentAmount;
+        newAmount = newAmount == null ? BigDecimal.ZERO : newAmount;
 
         if (usage.getUsageType() == UsageType.CAPACITY) {
-            return Math.max(currentAmount, newAmount);
+            return currentAmount.max(newAmount);
         } else /* UsageType.CONSUMABLE */ {
-            return currentAmount + newAmount;
+            return currentAmount.add(newAmount);
         }
     }
 

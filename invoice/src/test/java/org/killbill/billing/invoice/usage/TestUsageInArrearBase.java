@@ -173,14 +173,14 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
     protected DefaultTieredBlock createDefaultTieredBlock(final String unit, final int size, final int max, final BigDecimal price) {
         final DefaultTieredBlock block = new DefaultTieredBlock();
         block.setUnit(new DefaultUnit().setName(unit));
-        block.setSize(new Double(size));
+        block.setSize(BigDecimal.valueOf(size));
 
         final DefaultPrice[] prices = new DefaultPrice[1];
         prices[0] = new DefaultPrice();
         prices[0].setCurrency(currency).setValue(price);
 
         block.setPrice(new DefaultInternationalPrice().setPrices(prices));
-        block.setMax(new Double(max));
+        block.setMax(new BigDecimal(max));
         return block;
     }
 

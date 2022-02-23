@@ -17,14 +17,16 @@
 
 package org.killbill.billing.usage.api.user;
 
+import java.math.BigDecimal;
+
 import org.killbill.billing.usage.api.RolledUpUnit;
 
 public class DefaultRolledUpUnit implements RolledUpUnit {
 
     private final String unitType;
-    private final Long amount;
+    private final BigDecimal amount;
 
-    public DefaultRolledUpUnit(final String unitType, final Long amount) {
+    public DefaultRolledUpUnit(final String unitType, final BigDecimal amount) {
         this.unitType = unitType;
         this.amount = amount;
     }
@@ -35,7 +37,7 @@ public class DefaultRolledUpUnit implements RolledUpUnit {
     }
 
     @Override
-    public Long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 }

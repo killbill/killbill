@@ -24,6 +24,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -78,7 +79,7 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
 
     public DefaultPrice setValue(final BigDecimal value) {
         if (value == null) {
-            this.value = value;
+            this.value = null;
             return this;
         }
 
@@ -121,11 +122,7 @@ public class DefaultPrice extends ValidatingConfig<StandaloneCatalog> implements
         if (currency != that.currency) {
             return false;
         }
-        if (value != null ? !value.equals(that.value) : that.value != null) {
-            return false;
-        }
-
-        return true;
+        return Objects.equals(value, that.value);
     }
 
     @Override
