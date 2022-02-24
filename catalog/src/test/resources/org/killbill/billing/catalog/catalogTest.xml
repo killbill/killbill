@@ -534,6 +534,32 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="pistol-monthly-fixedterm-no-trial">
+            <product>Pistol</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>12</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
   		<plan name="pistol-monthly-discount-and-fixedterm">
             <product>Pistol</product>
             <initialPhases>
@@ -1449,6 +1475,90 @@
                 </recurring>
             </finalPhase>
         </plan>
+     	<plan name="refurbish-maintenance-6-months">
+            <product>Refurbish-Maintenance</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>6</number>
+                </duration>
+                <fixed>
+                    <fixedPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>599.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>599.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>599.95</value>
+                        </price>
+                    </fixedPrice>
+                </fixed>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>199.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan> 
+     	<plan name="refurbish-maintenance-15-months">
+            <product>Refurbish-Maintenance</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>15</number>
+                </duration>
+                <fixed>
+                    <fixedPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>599.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>599.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>599.95</value>
+                        </price>
+                    </fixedPrice>
+                </fixed>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>199.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>199.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>        
         <plan name="bullets-usage-in-arrear" prettyName="Bullet Monthly Plan">
             <product>Bullets</product>
             <finalPhase type="EVERGREEN" prettyName="Bullet Monthly Plan Evergreen">
@@ -1623,6 +1733,8 @@
                 <plan>extra-ammo-monthly</plan>
                 <plan>holster-monthly-regular</plan>
                 <plan>refurbish-maintenance</plan>
+                <plan>refurbish-maintenance-6-months</plan>
+                <plan>refurbish-maintenance-15-months</plan>
                 <plan>bullets-usage-in-arrear</plan>
                 <plan>holster-monthly-special</plan>
             </plans>
@@ -1650,6 +1762,7 @@
                 <plan>pistol-biennial-fixedterm</plan>
                 <plan>pistol-monthly-discount-and-fixedterm</plan>
                 <plan>pistol-monthly-fixedterm-and-evergreen</plan>
+                <plan>pistol-monthly-fixedterm-no-trial</plan>
             </plans>
         </childPriceList>
         <childPriceList name="notrial">

@@ -295,7 +295,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             BillingAlignment alignment = null;
             for (final SubscriptionBillingEvent transition : billingTransitions) {
 
-                if (transition.getType() != SubscriptionBaseTransitionType.CANCEL) {
+                if (transition.getType() != SubscriptionBaseTransitionType.CANCEL && transition.getType() != SubscriptionBaseTransitionType.EXPIRED) { //TODO_1533 Added to prevent NPE while running TestCatalogFixedTerm tests after notification processing changes, revisit
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(transition.getPlan().getName(), transition.getPlanPhase().getPhaseType());
                     alignment = subscription.getBillingAlignment(spec, transition.getEffectiveDate(), catalog);
 
