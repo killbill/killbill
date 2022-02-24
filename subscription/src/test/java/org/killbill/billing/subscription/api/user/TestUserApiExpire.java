@@ -251,6 +251,44 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         testUtil.printEvents(events);
         assertTrue(events.size() == 0);
     }
+    
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1533")
+    public void testCreateStandAloneSubscriptionWithOnlyFixedTermPhase() throws SubscriptionBaseApiException {
+        final String planName = "knife-monthly-fixedterm";
+
+        DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, planName);
+        assertNotNull(subscription);
+        assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+
+        final Plan currentPlan = subscription.getCurrentPlan();
+        assertNotNull(currentPlan);
+        assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.STANDALONE);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
+
+        final PlanPhase currentPhase = subscription.getCurrentPhase();
+        assertNotNull(currentPhase);
+        assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM);
+        assertListenerStatus();
+
+        final List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
+        assertNotNull(events);
+        testUtil.printEvents(events);
+        assertTrue(events.size() == 1);
+        assertTrue(events.get(0) instanceof ExpiredEvent);
+        final DateTime expiryDate = events.get(0).getEffectiveDate();
+        final DateTime expectedExpiryDate = TestSubscriptionHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration());
+        assertEquals(expiryDate, expectedExpiryDate);
+
+        //MOVE PAST FIXEDTERM PHASE
+        testListener.pushExpectedEvent(NextEvent.EXPIRED);
+        final Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(6));
+        clock.addDeltaFromReality(it.toDurationMillis());
+        assertListenerStatus();
+
+        // REFETCH SUBSCRIPTION AND CHECK THAT IT IS EXPIRED
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        assertEquals(subscription.getState(), EntitlementState.EXPIRED);
+    }    
 
     @Test(groups = "slow")
     public void testCreateFixedTermBPWithFixedTermAddonAddOnExpiryBeforeBasePlan() throws SubscriptionBaseApiException {

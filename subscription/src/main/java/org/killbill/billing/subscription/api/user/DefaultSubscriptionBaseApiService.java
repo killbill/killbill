@@ -680,7 +680,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final List<DefaultSubscriptionBase> subscriptionsToBeExpired = computeAddOnsToExpire(expireEvents, subscription.getBundleId(), event.getEffectiveDate(), catalog, internalCallContext);
             dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext); //TODO_1533, not renamed this method to cancelOrExpireSubscriptionsOnBasePlanEvent as there are many other methods in the DAO.
             return subscriptionsToBeExpired.size();
-        } else if (subscription.getCategory() == ProductCategory.ADD_ON) {
+        } else if (subscription.getCategory() == ProductCategory.STANDALONE || subscription.getCategory() == ProductCategory.ADD_ON) {
             final List<SubscriptionBaseEvent> expireEvents = new LinkedList<SubscriptionBaseEvent>();
             final List<DefaultSubscriptionBase> subscriptionsToBeExpired = new LinkedList<DefaultSubscriptionBase>();
             dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext);

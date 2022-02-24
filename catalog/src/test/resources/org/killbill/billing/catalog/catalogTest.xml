@@ -237,6 +237,33 @@
                 </recurring>
             </finalPhase>
         </plan>
+        <plan name="knife-monthly-fixedterm">
+            <product>Knife</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>6</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        
         <plan name="blowdart-monthly-notrial">
             <product>Blowdart</product>
             <finalPhase type="EVERGREEN">
@@ -1763,6 +1790,7 @@
                 <plan>pistol-monthly-discount-and-fixedterm</plan>
                 <plan>pistol-monthly-fixedterm-and-evergreen</plan>
                 <plan>pistol-monthly-fixedterm-no-trial</plan>
+                <plan>knife-monthly-fixedterm</plan>
             </plans>
         </childPriceList>
         <childPriceList name="notrial">
