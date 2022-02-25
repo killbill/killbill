@@ -661,7 +661,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             final List<SubscriptionBaseEvent> cancelEvents = new LinkedList<SubscriptionBaseEvent>();
             final List<DefaultSubscriptionBase> subscriptionsToBeCancelled = computeAddOnsToCancel(cancelEvents, baseProduct, subscription.getBundleId(), event.getEffectiveDate(), catalog, internalCallContext);
-            dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeCancelled, cancelEvents, catalog, internalCallContext);
+            dao.cancelOrExpireSubscriptionOnNotification(subscription, event, subscriptionsToBeCancelled, cancelEvents, catalog, internalCallContext);
 
             return subscriptionsToBeCancelled.size();
         } else {
@@ -677,12 +677,12 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         if (subscription.getCategory() == ProductCategory.BASE) {
             final List<SubscriptionBaseEvent> expireEvents = new LinkedList<SubscriptionBaseEvent>();
             final List<DefaultSubscriptionBase> subscriptionsToBeExpired = computeAddOnsToExpire(expireEvents, subscription.getBundleId(), event.getEffectiveDate(), catalog, internalCallContext);
-            dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext); //TODO_1533, not renamed this method to cancelOrExpireSubscriptionsOnBasePlanEvent as there are many other methods in the DAO.
+            dao.cancelOrExpireSubscriptionOnNotification(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext); //TODO_1533, not renamed this method to cancelOrExpireSubscriptionsOnBasePlanEvent as there are many other methods in the DAO.
             return subscriptionsToBeExpired.size();
         } else { //ADD_ON and STANDALONE products
             final List<SubscriptionBaseEvent> expireEvents = new LinkedList<SubscriptionBaseEvent>();
             final List<DefaultSubscriptionBase> subscriptionsToBeExpired = new LinkedList<DefaultSubscriptionBase>();
-            dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext);
+            dao.cancelOrExpireSubscriptionOnNotification(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext);
             return 1;
         } 
     }
