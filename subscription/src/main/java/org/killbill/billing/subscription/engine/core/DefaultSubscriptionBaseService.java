@@ -185,6 +185,9 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 eventSent = onBasePlanEvent(subscription, event, catalog, callContext);
             } else if (event.getType() == EventType.BCD_UPDATE) {
                 eventSent = false;
+            } else if (event.getType() == EventType.EXPIRED) {
+                final CallContext callContext = internalCallContextFactory.createCallContext(context);
+                eventSent = onExpiryEvent(subscription, event, catalog, callContext);
             }
 
             if (!eventSent) {
@@ -228,6 +231,11 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
 
     private boolean onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final SubscriptionCatalog fullCatalog, final CallContext context) throws CatalogApiException {
         apiService.handleBasePlanEvent(baseSubscription, event, fullCatalog, context);
+        return true;
+    }
+
+    private boolean onExpiryEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final SubscriptionCatalog fullCatalog, final CallContext context) throws CatalogApiException {
+        apiService.handleExpiredEvent(baseSubscription, event, fullCatalog, context);
         return true;
     }
 }

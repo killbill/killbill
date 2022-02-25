@@ -368,7 +368,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public Plan getLastActivePlan() {
-        if (getState() == EntitlementState.CANCELLED) {
+        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { 
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan();
         } else if (getState() == EntitlementState.PENDING) {
@@ -381,7 +381,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public PlanPhase getLastActivePhase() {
-        if (getState() == EntitlementState.CANCELLED) {
+        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { 
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPhase();
         } else if (getState() == EntitlementState.PENDING) {
@@ -930,7 +930,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     }
                     break;
                 case EXPIRED:
-                	final ExpiredEvent expiredEvent = (ExpiredEvent) cur; //TODO_1533 - Added temporarily to prevent exception while running tests, actual code will come later
+                    nextState = EntitlementState.EXPIRED; 
+                    nextPlanName = null;
+                    nextPhaseName = null;
                 	break;
                 default:
                     throw new SubscriptionBaseError(String.format(

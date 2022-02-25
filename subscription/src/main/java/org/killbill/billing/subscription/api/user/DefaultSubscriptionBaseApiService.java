@@ -63,6 +63,7 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
 import org.killbill.billing.subscription.events.bcd.BCDEventData;
 import org.killbill.billing.subscription.events.expired.ExpiredEventBuilder;
@@ -524,7 +525,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         }
         return events;
     }
-    
+
     @Override
     public List<SubscriptionBaseEvent> getEventsOnChangePlan(final DefaultSubscriptionBase subscription, final Plan newPlan,
                                                              final String newPriceList, final DateTime effectiveDate,
@@ -667,6 +668,47 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             dao.notifyOnBasePlanEvent(subscription, event, catalog, internalCallContext);
             return 0;
         }
+    }
+
+    @Override
+    public int handleExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final SubscriptionCatalog catalog, final CallContext context) throws CatalogApiException {
+
+        final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
+        if (subscription.getCategory() == ProductCategory.BASE) {
+            final List<SubscriptionBaseEvent> expireEvents = new LinkedList<SubscriptionBaseEvent>();
+            final List<DefaultSubscriptionBase> subscriptionsToBeExpired = computeAddOnsToExpire(expireEvents, subscription.getBundleId(), event.getEffectiveDate(), catalog, internalCallContext);
+            dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext); //TODO_1533, not renamed this method to cancelOrExpireSubscriptionsOnBasePlanEvent as there are many other methods in the DAO.
+            return subscriptionsToBeExpired.size();
+        } else { //ADD_ON and STANDALONE products
+            final List<SubscriptionBaseEvent> expireEvents = new LinkedList<SubscriptionBaseEvent>();
+            final List<DefaultSubscriptionBase> subscriptionsToBeExpired = new LinkedList<DefaultSubscriptionBase>();
+            dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext);
+            return 1;
+        } 
+    }
+
+    private List<DefaultSubscriptionBase> computeAddOnsToExpire(final Collection<SubscriptionBaseEvent> expireEvents, final UUID bundleId, final DateTime effectiveDate, final SubscriptionCatalog catalog, final InternalCallContext internalCallContext) throws CatalogApiException {
+
+        final List<DefaultSubscriptionBase> subscriptionsToBeExpired = new ArrayList<DefaultSubscriptionBase>();
+
+        final List<DefaultSubscriptionBase> subscriptions = dao.getSubscriptions(bundleId, ImmutableList.<SubscriptionBaseEvent>of(), catalog, internalCallContext);
+
+        for (final SubscriptionBase subscription : subscriptions) {
+            final DefaultSubscriptionBase cur = (DefaultSubscriptionBase) subscription;
+            if (cur.getCategory() != ProductCategory.ADD_ON || cur.getState() == EntitlementState.CANCELLED || cur.getState() == EntitlementState.EXPIRED) {
+                continue;
+            }
+
+            final SubscriptionBaseEvent expiredEvent = new ExpiredEventData(new ExpiredEventBuilder()
+                                                                                    .setSubscriptionId(cur.getId())
+                                                                                    .setEffectiveDate(effectiveDate)
+                                                                                    .setActive(true));
+
+            expireEvents.add(expiredEvent);
+            subscriptionsToBeExpired.add(cur);
+        }
+        return subscriptionsToBeExpired;
+
     }
 
     private List<DefaultSubscriptionBase> computeAddOnsToCancel(final Collection<SubscriptionBaseEvent> cancelEvents, final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final SubscriptionCatalog catalog, final InternalCallContext internalCallContext) throws CatalogApiException {
