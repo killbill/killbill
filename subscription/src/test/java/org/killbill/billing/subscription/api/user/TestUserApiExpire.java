@@ -1,6 +1,4 @@
 /*
- * Copyright 2010-2022 Ning, Inc.
- * Copyright 2014-2022 Groupon, Inc
  * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0

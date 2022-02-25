@@ -368,7 +368,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public Plan getLastActivePlan() {
-        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { //TODO_1533 added this to prevent tests in TestCatalogFixedTerm from failing after notification processing changes, revisit later
+        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { 
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan();
         } else if (getState() == EntitlementState.PENDING) {
@@ -381,7 +381,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public PlanPhase getLastActivePhase() {
-        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { //TODO_1533 added this to prevent tests in TestCatalogFixedTerm from failing after notification processing changes, revisit later
+        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { 
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPhase();
         } else if (getState() == EntitlementState.PENDING) {
@@ -929,7 +929,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                             .getApiEventType().toString()));
                     }
                     break;
-                case EXPIRED://TODO_1533 - See if anything else needs to be done here
+                case EXPIRED:
                     nextState = EntitlementState.EXPIRED; 
                     nextPlanName = null;
                     nextPhaseName = null;

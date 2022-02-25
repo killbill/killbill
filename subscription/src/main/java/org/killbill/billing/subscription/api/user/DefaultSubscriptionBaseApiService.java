@@ -674,21 +674,17 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     public int handleExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final SubscriptionCatalog catalog, final CallContext context) throws CatalogApiException {
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
-        if (event.getType() == EventType.EXPIRED && subscription.getCategory() == ProductCategory.BASE) {
-
+        if (subscription.getCategory() == ProductCategory.BASE) {
             final List<SubscriptionBaseEvent> expireEvents = new LinkedList<SubscriptionBaseEvent>();
             final List<DefaultSubscriptionBase> subscriptionsToBeExpired = computeAddOnsToExpire(expireEvents, subscription.getBundleId(), event.getEffectiveDate(), catalog, internalCallContext);
             dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext); //TODO_1533, not renamed this method to cancelOrExpireSubscriptionsOnBasePlanEvent as there are many other methods in the DAO.
             return subscriptionsToBeExpired.size();
-        } else if (subscription.getCategory() == ProductCategory.STANDALONE || subscription.getCategory() == ProductCategory.ADD_ON) {
+        } else { //ADD_ON and STANDALONE products
             final List<SubscriptionBaseEvent> expireEvents = new LinkedList<SubscriptionBaseEvent>();
             final List<DefaultSubscriptionBase> subscriptionsToBeExpired = new LinkedList<DefaultSubscriptionBase>();
             dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext);
             return 1;
-        } else {
-            dao.notifyOnBasePlanEvent(subscription, event, catalog, internalCallContext);
-            return 0;
-        }
+        } 
     }
 
     private List<DefaultSubscriptionBase> computeAddOnsToExpire(final Collection<SubscriptionBaseEvent> expireEvents, final UUID bundleId, final DateTime effectiveDate, final SubscriptionCatalog catalog, final InternalCallContext internalCallContext) throws CatalogApiException {
