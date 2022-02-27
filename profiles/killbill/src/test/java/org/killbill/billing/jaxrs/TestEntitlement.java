@@ -860,7 +860,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        verifyChargedThroughDate(entitlementJson.getSubscriptionId(), new LocalDate("2012-05-24"));
+        verifyChargedThroughDate(entitlementJson.getSubscriptionId(), new LocalDate("2012-03-25"));
         Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate().minusMonths(1));
         Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
