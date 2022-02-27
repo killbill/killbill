@@ -1420,7 +1420,7 @@ public class TestEntitlement extends TestJaxrsBase {
     private void verifyChargedThroughDate(final UUID subscriptionId, final LocalDate ctd) {
         // The call completion may return after the INVOICE event was received and prior the CTD was updated as it
         // done outside and after the transaction: See https://github.com/killbill/killbill/blob/killbill-0.22.27/invoice/src/main/java/org/killbill/billing/invoice/api/user/DefaultInvoiceUserApi.java#L686
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 final Subscription refreshedSubscription = subscriptionApi.getSubscription(subscriptionId, requestOptions);
