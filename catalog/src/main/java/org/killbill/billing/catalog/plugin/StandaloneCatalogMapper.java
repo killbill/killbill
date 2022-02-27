@@ -17,7 +17,6 @@
 
 package org.killbill.billing.catalog.plugin;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

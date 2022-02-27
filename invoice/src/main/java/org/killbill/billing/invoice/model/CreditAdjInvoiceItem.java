@@ -44,7 +44,7 @@ public class CreditAdjInvoiceItem extends AdjInvoiceItem {
     }
 
     public CreditAdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, final LocalDate date,
-                                @Nullable final String description, final BigDecimal amount, @Nullable final BigDecimal rate, final Currency currency, @Nullable final Integer quantity, @Nullable final String itemDetails) {
+                                @Nullable final String description, final BigDecimal amount, @Nullable final BigDecimal rate, final Currency currency, @Nullable final BigDecimal quantity, @Nullable final String itemDetails) {
         super(id, createdDate, invoiceId, accountId, date, date, description, amount, rate, currency, null, quantity, itemDetails, InvoiceItemType.CREDIT_ADJ);
     }
 

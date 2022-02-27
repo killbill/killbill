@@ -18,14 +18,12 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.joda.time.Seconds;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -54,7 +52,7 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
                                   @Nullable final UUID subscriptionId, @Nullable final String description,
                                   @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final DateTime catalogEffectiveDate,
                                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId,
-                                  @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+                                  @Nullable final BigDecimal quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
         this(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, usageName, catalogEffectiveDate, null, null, null, null, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails, invoiceItemType);
     }
 
@@ -63,7 +61,7 @@ public class InvoiceItemCatalogBase extends InvoiceItemBase implements InvoiceIt
                                   @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, @Nullable final DateTime catalogEffectiveDate,
                                   @Nullable final String prettyProductName, @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,
                                   final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final UUID linkedItemId,
-                                  @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+                                  @Nullable final BigDecimal quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
         super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, linkedItemId, quantity, itemDetails, invoiceItemType);
         this.productName = productName;
         this.planName = planName;

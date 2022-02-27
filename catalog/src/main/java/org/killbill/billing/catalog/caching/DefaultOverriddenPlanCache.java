@@ -17,6 +17,7 @@
 
 package org.killbill.billing.catalog.caching;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -177,13 +178,11 @@ public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
                     final List<CatalogOverrideBlockDefinitionModelDao> blockDefs = overrideDao.getOverriddenTierBlocks(input.getRecordId(), context);
                     for (CatalogOverrideBlockDefinitionModelDao blockDef : blockDefs) {
                         String unitName = blockDef.getParentUnitName();
-                        Double max = blockDef.getMax();
-                        Double size = blockDef.getSize();
 
-                        for (TieredBlock curTieredBlock : curTieredBlocks) {
+                        for (final TieredBlock curTieredBlock : curTieredBlocks) {
                             if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                blockDef.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                                blockDef.getMax().compareTo(curTieredBlock.getMax()) == 0) {
                                 return true;
                             }
                         }
@@ -212,8 +211,8 @@ public class DefaultOverriddenPlanCache implements OverriddenPlanCache {
                 @Override
                 public boolean apply(final CatalogOverrideBlockDefinitionModelDao input) {
                     return (input.getParentUnitName().equals(curTieredBlock.getUnit().getName()) &&
-                            Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
-                            Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
+                            input.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                            input.getMax().compareTo(curTieredBlock.getMax()) == 0);
 
                 }
             }).orNull();
