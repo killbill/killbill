@@ -77,12 +77,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>1.21</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.osgi</groupId>
-                        <artifactId>org.osgi.core</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <!-- log4jdbc-log4j2-jdbc4 still pulls 2.0-beta8 -->
