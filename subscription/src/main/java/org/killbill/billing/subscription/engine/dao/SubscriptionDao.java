@@ -92,7 +92,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(List<SubscriptionBaseWithAddOns> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final SubscriptionCatalog catalog, InternalCallContext context);
 
-    void cancelSubscriptionsOnBasePlanEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, InternalCallContext context);
+    void cancelOrExpireSubscriptionOnNotification(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelOrExpireEvents, final SubscriptionCatalog catalog, InternalCallContext context);
 
     void notifyOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final SubscriptionCatalog catalog, final InternalCallContext context);
 
