@@ -860,7 +860,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
-        verifyChargedThroughDate(entitlementJson.getSubscriptionId(), new LocalDate("2012-03-25"));
+        verifyChargedThroughDate(entitlementJson.getSubscriptionId(), new LocalDate("2012-05-24"));
         Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate().minusMonths(1));
         Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
@@ -1420,7 +1420,7 @@ public class TestEntitlement extends TestJaxrsBase {
     private void verifyChargedThroughDate(final UUID subscriptionId, final LocalDate ctd) {
         // The call completion may return after the INVOICE event was received and prior the CTD was updated as it
         // done outside and after the transaction: See https://github.com/killbill/killbill/blob/killbill-0.22.27/invoice/src/main/java/org/killbill/billing/invoice/api/user/DefaultInvoiceUserApi.java#L686
-        Awaitility.await().atMost(60, TimeUnit.SECONDS).until(new Callable<Boolean>() {
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 final Subscription refreshedSubscription = subscriptionApi.getSubscription(subscriptionId, requestOptions);
