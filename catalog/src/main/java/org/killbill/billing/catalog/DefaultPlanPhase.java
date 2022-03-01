@@ -22,6 +22,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.math.BigDecimal;
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
@@ -131,7 +132,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     }
 
     @Override
-    public boolean compliesWithLimits(final String unit, final double value) {
+    public boolean compliesWithLimits(final String unit, final BigDecimal value) {
         // First check usage section
         for (DefaultUsage usage : usages) {
             if (!usage.compliesWithLimits(unit, value)) {

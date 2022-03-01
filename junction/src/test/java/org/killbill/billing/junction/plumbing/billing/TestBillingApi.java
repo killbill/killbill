@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -37,7 +38,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.InternationalPrice;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
@@ -111,9 +111,9 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         Mockito.when(subscriptionInternalApi.getBundlesForAccount(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundles);
         Mockito.when(subscriptionInternalApi.getSubscriptionsForBundle(Mockito.<UUID>any(), Mockito.<DryRunArguments>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscriptions);
-        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(Mockito.<VersionedCatalog>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<UUID, List<SubscriptionBase>>builder()
-                                                                                                                                                          .put(bunId, subscriptions)
-                                                                                                                                                          .build());
+        Mockito.when(subscriptionInternalApi.getSubscriptionsForAccount(Mockito.<VersionedCatalog>any(), Mockito.<LocalDate>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableMap.<UUID, List<SubscriptionBase>>builder()
+                                                                                                                                                                                                 .put(bunId, subscriptions)
+                                                                                                                                                                                                 .build());
         Mockito.when(subscriptionInternalApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         Mockito.when(subscriptionInternalApi.getBundleFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(bundle);
         Mockito.when(subscriptionInternalApi.getBaseSubscription(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
@@ -134,7 +134,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testBillingEventsEmpty() throws AccountApiException, CatalogApiException, SubscriptionBaseApiException {
-        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L, 0L), null, internalCallContext);
+        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(new UUID(0L, 0L), null, null, internalCallContext);
         Assert.assertEquals(events.size(), 0);
     }
 
@@ -147,7 +147,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final Account account = createAccount(10);
 
-        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
+        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext);
         checkFirstEvent(events, nextPlan, account.getBillCycleDayLocal(), subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString());
     }
 
@@ -162,7 +162,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         ((MockSubscription) subscription).setBillingAlignment(BillingAlignment.SUBSCRIPTION);
 
 
-        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
+        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext);
         // The expected BCD is when the subscription started since we skip the trial phase
         checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString());
     }
@@ -175,7 +175,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         final Account account = createAccount(32);
 
-        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
+        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext);
         // The expected BCD is the account BCD (account aligned by default)
         checkFirstEvent(events, nextPlan, 32, subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString());
     }
@@ -192,7 +192,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         ((MockSubscription) subscription).setBillingAlignment(BillingAlignment.BUNDLE);
 
 
-        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
+        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext);
         // The expected BCD is when the subscription started
         checkFirstEvent(events, nextPlan, subscription.getStartDate().getDayOfMonth(), subId, now, nextPhase, SubscriptionBaseTransitionType.CREATE.toString());
     }
@@ -209,7 +209,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
         final BlockingState blockingState2 = new DefaultBlockingState(bunId, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2));
         blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(blockingState1, Optional.<UUID>absent(), blockingState2, Optional.<UUID>absent()), internalCallContext);
 
-        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
+        final SortedSet<BillingEvent> events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext);
 
         Assert.assertEquals(events.size(), 3);
         final Iterator<BillingEvent> it = events.iterator();
@@ -229,7 +229,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         tagInternalApi.addTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), internalCallContext);
 
-        final BillingEventSet events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
+        final BillingEventSet events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext);
 
         assertEquals(events.isAccountAutoInvoiceOff(), true);
         assertEquals(events.size(), 1);
@@ -245,7 +245,7 @@ public class TestBillingApi extends JunctionTestSuiteNoDB {
 
         tagInternalApi.addTag(bunId, ObjectType.BUNDLE, ControlTagType.AUTO_INVOICING_OFF.getId(), internalCallContext);
 
-        final BillingEventSet events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext);
+        final BillingEventSet events = billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext);
 
         assertEquals(events.getSubscriptionIdsWithAutoInvoiceOff().size(), 1);
         assertEquals(events.getSubscriptionIdsWithAutoInvoiceOff().get(0), subId);

@@ -19,7 +19,6 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -53,7 +52,7 @@ public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
                                 final String productName, final String planName, final String phaseName, final DateTime catalogEffectiveDate,
                                 final String prettyProductName, final String prettyPlanName, final String prettyPhaseName,
                                 @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
-                                final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final Integer quantity, @Nullable final String itemDetails) {
+                                final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final BigDecimal quantity, @Nullable final String itemDetails) {
         super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, null, quantity, itemDetails, InvoiceItemType.RECURRING);
 
     }

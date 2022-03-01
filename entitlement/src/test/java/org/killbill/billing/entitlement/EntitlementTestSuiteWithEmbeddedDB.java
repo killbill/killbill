@@ -38,6 +38,7 @@ import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.api.TestApiListener;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
@@ -57,6 +58,7 @@ import org.killbill.billing.security.Permission;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -71,6 +73,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -296,6 +300,11 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
         refreshCallContext(account.getId());
 
         return account;
+    }
+
+    protected void setChargedThroughDate(final UUID entitlementId, final DateTime ctd, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException {
+        final Map<DateTime, List<UUID>> chargeThroughDates = ImmutableMap.of(ctd, ImmutableList.of(entitlementId));
+        subscriptionInternalApi.setChargedThroughDates(chargeThroughDates, internalCallContext);
     }
 
     @Override

@@ -417,6 +417,81 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         checkNothingToInvoice(account.getId(), new LocalDate(2021, 7, 1), false);
     }
 
+    @Test(groups = "slow")
+    public void testRecurringInArrear5() throws Exception {
+
+        // If we want to catch the early cancelation, we need to set at least P1m (if not this is ignored)
+        invoiceConfig.setMaxRawUsagePreviousPeriod(0);
+        invoiceConfig.setZeroAmountUsageDisabled(true);
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+
+        clock.setTime(new DateTime("2020-01-01T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        assertNotNull(account);
+
+        // Don't allow system generated invoices
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        // Reuse invoice until committed
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2020-02-01
+        clock.addMonths(1);
+
+        // Bill run on the 2020-02-01 with targetDate end of month (EOM)
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 2, 28), callContext);
+
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 1;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        // 2020-02-15
+        clock.addDays(14);
+
+        // Cancel in the past (previous period)
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 2, 15), true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2020-03-01
+        clock.addMonths(1);
+
+        // Bill run on the 2020-02-01 with targetDate end of month (EOM)
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 3, 31), callContext);
+
+        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 1;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 2, 1), new LocalDate(2020, 2, 15), InvoiceItemType.RECURRING, new BigDecimal("48.28")));
+
+        checkNothingToInvoice(account.getId(), new LocalDate(2020, 3, 1), false);
+
+    }
+
     //
     //  Usage tests as maxInvoiceLimit also affects USAGE generation -- we only have a partial view of existing invoices.
     //  Both maxInvoiceLimit and readMaxRawUsagePreviousPeriod need to be in sync
@@ -440,8 +515,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // AO subscription
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2021, 4, 1), 99L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2021, 4, 15), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2021, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2021, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // 2020-05-01
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -463,8 +538,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
 
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2021, 6, 1), 50L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), 300L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2021, 6, 1), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), BigDecimal.valueOf(300L), callContext);
 
         // We have 2 conflicting properties (on purpose) for this test that will lead to re-invoice the usage on month 2021-04-01 -> 2021-05-01:
         // - org.killbill.invoice.maxInvoiceLimit= 1 -> meaning usage code does not see such invoice
@@ -505,8 +580,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // AO subscription
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2021, 4, 1), 99L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2021, 4, 15), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2021, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2021, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // 2020-05-01
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -528,8 +603,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
 
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2021, 6, 1), 50L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), 300L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2021, 6, 1), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), BigDecimal.valueOf(300L), callContext);
 
         // 2020-07-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -541,8 +616,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
 
 
-        recordUsageData(aoSubscription.getId(), "tracking-5", "bullets", new LocalDate(2021, 7, 2), 40L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-6", "bullets", new LocalDate(2021, 7, 18), 310L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-5", "bullets", new LocalDate(2021, 7, 2), BigDecimal.valueOf(40L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-6", "bullets", new LocalDate(2021, 7, 18), BigDecimal.valueOf(310L), callContext);
 
         // 2020-08-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -806,7 +881,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         //
         // To make it simpler we keep both cuttoffDt on the same value, but we could set any value, e.g P1m, P2m, ...
         // So, for bill run= Feb 1st -> invoice cuttOffDt = Jan 1st
-        invoiceConfig.setMaxInvoiceLimit(new Period("P0m"));
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
 
         clock.setTime(new DateTime("2021-01-15T3:56:02"));
 
@@ -837,13 +912,13 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         assertListenerStatus();
 
         // Generate some usage data for past months
-        recordUsageData(sub2.getId(), "tracking-old-1", "hours", new LocalDate(2020, 9, 19), 1L, callContext);
-        recordUsageData(sub2.getId(), "tracking-old-2", "hours", new LocalDate(2020, 10, 19), 1L, callContext);
-        recordUsageData(sub2.getId(), "tracking-old-3", "hours", new LocalDate(2020, 11, 19), 1L, callContext);
-        recordUsageData(sub2.getId(), "tracking-old-4", "hours", new LocalDate(2020, 12, 19), 1L, callContext);
+        recordUsageData(sub2.getId(), "tracking-old-1", "hours", new LocalDate(2020, 9, 19), BigDecimal.valueOf(1L), callContext);
+        recordUsageData(sub2.getId(), "tracking-old-2", "hours", new LocalDate(2020, 10, 19), BigDecimal.valueOf(1L), callContext);
+        recordUsageData(sub2.getId(), "tracking-old-3", "hours", new LocalDate(2020, 11, 19), BigDecimal.valueOf(1L), callContext);
+        recordUsageData(sub2.getId(), "tracking-old-4", "hours", new LocalDate(2020, 12, 19), BigDecimal.valueOf(1L), callContext);
 
         // Generate usage data for this month
-        recordUsageData(sub2.getId(), "tracking-1", "hours", new LocalDate(2021, 1, 19), 1L, callContext);
+        recordUsageData(sub2.getId(), "tracking-1", "hours", new LocalDate(2021, 1, 19), BigDecimal.valueOf(1L), callContext);
 
         // 2021-02-01
         // (Hum... Interestingly, there is no future notification set on the 1st although sub2#BCD is the 1st...)
@@ -856,7 +931,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
             public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 2;
+                return invoice.getInvoiceItems().size() == 3;
             }
         }, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -867,6 +942,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // However, with our aggressive cuttoffDt, we only see what we would normally expect to see on this invoice if we had invoiced up to this point
         // (The catchup invoice already contains everything it should have and nothing more)
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 12, 15), new LocalDate(2021, 1, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 15), new LocalDate(2021, 2, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 1, 1), new LocalDate(2021, 2, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
 
@@ -876,13 +952,13 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         Thread.sleep(1000);
 
 
-        recordUsageData(sub2.getId(), "tracking-2-a", "hours", new LocalDate(2021, 2, 15), 1L, callContext);
+        recordUsageData(sub2.getId(), "tracking-2-a", "hours", new LocalDate(2021, 2, 15), BigDecimal.valueOf(1L), callContext);
 
         // 2021-03-01
         clock.addDays(14);
         Thread.sleep(1000);
 
-        recordUsageData(sub2.getId(), "tracking-2-b", "hours", new LocalDate(2021, 2, 25), 1L, callContext);
+        recordUsageData(sub2.getId(), "tracking-2-b", "hours", new LocalDate(2021, 2, 25), BigDecimal.valueOf(1L), callContext);
 
 
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), callContext);
@@ -908,7 +984,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         Thread.sleep(1000);
 
 
-        recordUsageData(sub2.getId(), "tracking-3", "hours", new LocalDate(2021, 3, 15), 1L, callContext);
+        recordUsageData(sub2.getId(), "tracking-3", "hours", new LocalDate(2021, 3, 15), BigDecimal.valueOf(1L), callContext);
 
         // 2021-04-01
         clock.addDays(17);
@@ -937,7 +1013,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addDays(14);
         Thread.sleep(1000);
 
-        recordUsageData(sub2.getId(), "tracking-4", "hours", new LocalDate(2021, 4, 15), 1L, callContext);
+        recordUsageData(sub2.getId(), "tracking-4", "hours", new LocalDate(2021, 4, 15), BigDecimal.valueOf(1L), callContext);
 
         // 2021-05-01
         clock.addDays(16);

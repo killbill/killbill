@@ -16,8 +16,10 @@
 
 package org.killbill.billing.subscription.engine.dao;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -31,7 +33,7 @@ import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-
+import org.skife.jdbi.v2.unstable.BindIn;
 
 @KillBillSqlDaoStringTemplate
 public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao, SubscriptionBase> {
@@ -44,9 +46,21 @@ public interface SubscriptionSqlDao extends EntitySqlDao<SubscriptionModelDao, S
     public List<SubscriptionModelDao> getSubscriptionsFromBundleId(@Bind("bundleId") String bundleId,
                                                                    @SmartBindBean final InternalTenantContext context);
 
+
+    @SqlQuery
+    public List<SubscriptionModelDao> getActiveByAccountRecordId(@Bind("cutoffDt") Date cutoffDt,
+                                                                 @SmartBindBean final InternalTenantContext context);
+
     @SqlUpdate
     @Audited(ChangeType.UPDATE)
-    public void updateChargedThroughDate(@Bind("id") String id, @Bind("chargedThroughDate") Date chargedThroughDate,
+    public void updateChargedThroughDate(@Bind("id") String id,
+                                         @Bind("chargedThroughDate") Date chargedThroughDate,
+                                         @SmartBindBean final InternalCallContext context);
+
+    @SqlUpdate
+    @Audited(ChangeType.UPDATE)
+    public void updateChargedThroughDates(@BindIn("ids") final Collection<UUID> ids,
+                                         @Bind("chargedThroughDate") Date chargedThroughDate,
                                          @SmartBindBean final InternalCallContext context);
 
 }

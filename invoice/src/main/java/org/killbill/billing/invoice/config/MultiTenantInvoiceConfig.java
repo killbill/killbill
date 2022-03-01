@@ -85,6 +85,20 @@ public class MultiTenantInvoiceConfig extends MultiTenantConfigBase implements I
     }
 
     @Override
+    public boolean isUsageMissingLenient() {
+        return staticConfig.isUsageMissingLenient();
+    }
+
+    @Override
+    public boolean isUsageMissingLenient(final InternalTenantContext tenantContext) {
+        final String result = getStringTenantConfig("isUsageMissingLenient", tenantContext);
+        if (result != null) {
+            return Boolean.parseBoolean(result);
+        }
+        return isUsageMissingLenient();
+    }
+
+    @Override
     public int getMaxDailyNumberOfItemsSafetyBound() {
         return staticConfig.getMaxDailyNumberOfItemsSafetyBound();
     }

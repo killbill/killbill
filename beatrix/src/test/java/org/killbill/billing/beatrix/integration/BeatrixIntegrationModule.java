@@ -50,6 +50,7 @@ import org.killbill.billing.subscription.glue.DefaultSubscriptionModule;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
 import org.killbill.billing.usage.glue.UsageModule;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
+import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.email.templates.TemplateModule;
 import org.killbill.billing.util.features.KillbillFeatures;
@@ -71,6 +72,7 @@ import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
+import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.common.base.MoreObjects;
 
@@ -127,7 +129,10 @@ public class BeatrixIntegrationModule extends KillBillModule {
         install(new BroadcastModule(configSource));
         install(new KillBillShiroModuleOnlyIniRealm(configSource));
         install(new BeatrixModule(configSource));
-        install(new KillbillApiAopModule());
+
+        final ConfigurationObjectFactory factory = new ConfigurationObjectFactory(skifeConfigSource);
+        final JaxrsConfig jaxrsConfig = factory.build(JaxrsConfig.class);
+        install(new KillbillApiAopModule(jaxrsConfig));
 
         bind(AccountChecker.class).asEagerSingleton();
         bind(SubscriptionChecker.class).asEagerSingleton();

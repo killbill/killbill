@@ -19,6 +19,7 @@ package org.killbill.billing.catalog;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -35,15 +36,15 @@ public class CatalogSafetyInitializer {
 
     public static final Integer DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE = -1;
     public static final Double DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE = (double) -1;
+    public static final BigDecimal DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE = new BigDecimal("-1");
 
-    private static final Map<Class, LinkedList<Field>> perCatalogClassNonRequiredFields = new HashMap<Class, LinkedList<Field>>();
+    private static final Map<Class<?>, LinkedList<Field>> perCatalogClassNonRequiredFields = new HashMap<>();
 
     //
     // Ensure that all uninitialized arrays for which there is neither a 'required' XmlElementWrapper or XmlElement annotation
     // end up initialized with a default zero length array (allowing to safely get the length and iterate over (0) element.
     //
     public static void initializeNonRequiredNullFieldsWithDefaultValue(final Object obj) {
-
         LinkedList<Field> fields = perCatalogClassNonRequiredFields.get(obj.getClass());
         if (fields == null) {
             fields = initializeNonRequiredFields(obj.getClass());
@@ -66,6 +67,8 @@ public class CatalogSafetyInitializer {
                         initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_INTEGER_FIELD_VALUE);
                     } else if (Double.class.equals(f.getType())) {
                         initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE);
+                    } else if (BigDecimal.class.equals(f.getType())) {
+                        initializeFieldWithValue(obj, f, DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE);
                     }
                 }
             }
@@ -79,7 +82,7 @@ public class CatalogSafetyInitializer {
     // For each type of catalog object we keep the 'Field' associated to non required attribute fields
     private static LinkedList<Field> initializeNonRequiredFields(final Class<?> aClass) {
 
-        final LinkedList<Field> result = new LinkedList();
+        final LinkedList<Field> result = new LinkedList<>();
         final Field[] fields = aClass.getDeclaredFields();
         for (final Field f : fields) {
             if (f.getType().isArray()) {
@@ -106,6 +109,8 @@ public class CatalogSafetyInitializer {
                 } else if (Integer.class.equals(f.getType())) {
                     result.add(f);
                 } else if (Double.class.equals(f.getType())) {
+                    result.add(f);
+                } else if (BigDecimal.class.equals(f.getType())) {
                     result.add(f);
                 }
             }
@@ -137,7 +142,7 @@ public class CatalogSafetyInitializer {
     private static Object[] getZeroLengthArrayInitializer(final Field f) throws ClassNotFoundException {
         // Yack... type erasure, why?
         final String arrayClassName = f.getType().getCanonicalName();
-        final Class type = Class.forName(arrayClassName.substring(0, arrayClassName.length() - 2));
+        final Class<?> type = Class.forName(arrayClassName.substring(0, arrayClassName.length() - 2));
         return (Object[]) Array.newInstance(type, 0);
     }
 }

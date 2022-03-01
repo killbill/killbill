@@ -27,11 +27,8 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.VersionedCatalog;
-import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEvent;
@@ -44,8 +41,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import static org.testng.Assert.assertNotNull;
 
 public class TestCatalogWithEvents extends TestIntegrationBase {
 
@@ -72,8 +67,8 @@ public class TestCatalogWithEvents extends TestIntegrationBase {
         final UUID subscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), clock.getUTCToday(), clock.getUTCToday(), false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        recordUsageData(subscriptionId, "t1", "liter", new LocalDate(2020, 1, 1), 10L, callContext);
-        recordUsageData(subscriptionId, "t2", "liter", new LocalDate(2020, 1, 23), 10L, callContext);
+        recordUsageData(subscriptionId, "t1", "liter", new LocalDate(2020, 1, 1), BigDecimal.valueOf(10L), callContext);
+        recordUsageData(subscriptionId, "t2", "liter", new LocalDate(2020, 1, 23), BigDecimal.valueOf(10L), callContext);
 
         // 2020-2-1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);

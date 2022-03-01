@@ -825,8 +825,8 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         assertNull(bpSubscription.getSubscriptionBase().getChargedThroughDate());
 
         // Record usage for first month
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 5), 100L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 5), BigDecimal.valueOf(100L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // 2012-05-01
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -855,8 +855,8 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 5), InvoiceItemType.USAGE, BigDecimal.ZERO));
 
         // Record usage for second month
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2012, 5, 5), 100L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2012, 6, 4), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2012, 5, 5), BigDecimal.valueOf(100L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2012, 6, 4), BigDecimal.valueOf(100L), callContext);
 
         // 2012-06-01
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);

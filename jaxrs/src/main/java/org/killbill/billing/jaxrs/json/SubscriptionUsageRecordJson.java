@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +29,6 @@ import org.killbill.billing.usage.api.UsageRecord;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
@@ -101,11 +101,11 @@ public class SubscriptionUsageRecordJson {
     public static class UsageRecordJson {
 
         private final LocalDate recordDate;
-        private final Long amount;
+        private final BigDecimal amount;
 
         @JsonCreator
         public UsageRecordJson(@JsonProperty("recordDate") final LocalDate recordDate,
-                               @JsonProperty("amount") final Long amount) {
+                               @JsonProperty("amount") final BigDecimal amount) {
             this.recordDate = recordDate;
             this.amount = amount;
         }
@@ -114,7 +114,7 @@ public class SubscriptionUsageRecordJson {
             return recordDate;
         }
 
-        public Long getAmount() {
+        public BigDecimal getAmount() {
             return amount;
         }
 
@@ -130,7 +130,6 @@ public class SubscriptionUsageRecordJson {
                 return input.toUnitUsageRecord();
             }
         }));
-        final SubscriptionUsageRecord result = new SubscriptionUsageRecord(subscriptionId, trackingId, tmp);
-        return result;
+        return new SubscriptionUsageRecord(subscriptionId, trackingId, tmp);
     }
 }
