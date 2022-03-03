@@ -16,6 +16,7 @@
 
 package org.killbill.billing.usage.dao;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -26,19 +27,17 @@ import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-import com.google.common.base.Strings;
-
 public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
     private UUID subscriptionId;
     private String unitType;
     private LocalDate recordDate;
-    private Long amount;
+    private BigDecimal amount;
     private String trackingId;
 
     public RolledUpUsageModelDao() { /* For the DAO mapper */ }
 
-    public RolledUpUsageModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount, final String trackingId) {
+    public RolledUpUsageModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final UUID subscriptionId, final String unitType, final LocalDate recordDate, final BigDecimal amount, final String trackingId) {
         super(id, createdDate, updatedDate);
         this.subscriptionId = subscriptionId;
         this.unitType = unitType;
@@ -47,7 +46,7 @@ public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityM
         this.trackingId = trackingId;
     }
 
-    public RolledUpUsageModelDao(final UUID subscriptionId, final String unitType, final LocalDate recordDate, final Long amount, final String trackingId) {
+    public RolledUpUsageModelDao(final UUID subscriptionId, final String unitType, final LocalDate recordDate, final BigDecimal amount, final String trackingId) {
         this(UUIDs.randomUUID(), null, null, subscriptionId, unitType, recordDate, amount, trackingId);
     }
 
@@ -67,7 +66,7 @@ public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityM
         this.recordDate = recordDate;
     }
 
-    public Long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
@@ -79,7 +78,7 @@ public class RolledUpUsageModelDao extends EntityModelDaoBase implements EntityM
         this.unitType = unitType;
     }
 
-    public void setAmount(final Long amount) {
+    public void setAmount(final BigDecimal amount) {
         this.amount = amount;
     }
 

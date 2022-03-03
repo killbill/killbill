@@ -18,7 +18,6 @@ package org.killbill.billing.invoice.template.formatters;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
-import java.util.Date;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.UUID;
@@ -80,7 +79,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     public String getFormattedAmount() {
         final NumberFormat number = NumberFormat.getCurrencyInstance(locale);
         number.setCurrency(java.util.Currency.getInstance(item.getCurrency().toString()));
-        return number.format(getAmount().doubleValue());
+        return number.format(getAmount());
     }
 
     @Override
@@ -204,7 +203,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
-    public Integer getQuantity() { return item.getQuantity(); }
+    public BigDecimal getQuantity() { return item.getQuantity(); }
 
     @Override
     public String getItemDetails() { return item.getItemDetails(); }

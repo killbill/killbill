@@ -51,6 +51,20 @@ where bundle_id = :bundleId
 ;
 >>
 
+getActiveByAccountRecordId() ::= <<
+select
+<allTableFields("s.")>
+from subscriptions s
+left join subscription_events se on se.subscription_id = s.id and se.user_type = 'CANCEL' and se.is_active
+where
+(se.id IS NULL or se.effective_date \> :cutoffDt)
+and <accountRecordIdField("s.")> = :accountRecordId
+<AND_CHECK_TENANT("s.")>
+<defaultOrderBy("s.")>
+;
+>>
+
+
 updateChargedThroughDate() ::= <<
 update <tableName()>
 set
@@ -58,6 +72,17 @@ charged_through_date = :chargedThroughDate
 , updated_by = :createdBy
 , updated_date = :updatedDate
 where id = :id
+<AND_CHECK_TENANT("")>
+;
+>>
+
+updateChargedThroughDates() ::= <<
+update <tableName()>
+set
+charged_through_date = :chargedThroughDate
+, updated_by = :createdBy
+, updated_date = :updatedDate
+where <idField("")> in (<ids>)
 <AND_CHECK_TENANT("")>
 ;
 >>

@@ -21,6 +21,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -130,12 +131,10 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
                             final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
                             for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
                                 String unitName = blockDef.getUnitName();
-                                Double max = blockDef.getMax();
-                                Double size = blockDef.getSize();
                                 for (TieredBlock curTieredBlock : curTieredBlocks) {
                                     if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                        Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                        Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                        blockDef.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                                        blockDef.getMax().compareTo(curTieredBlock.getMax()) == 0) {
                                         return true;
                                     }
                                 }
@@ -182,7 +181,7 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public boolean compliesWithLimits(final String unit, final double value) {
+    public boolean compliesWithLimits(final String unit, final BigDecimal value) {
         final Limit limit = findLimit(unit);
         if (limit != null && !limit.compliesWith(value)) {
             return false;

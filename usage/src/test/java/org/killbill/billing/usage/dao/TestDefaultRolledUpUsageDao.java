@@ -17,6 +17,7 @@
 
 package org.killbill.billing.usage.dao;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -38,8 +39,8 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final String unitType = "foo";
         final LocalDate startDate = new LocalDate(2013, 1, 1);
         final LocalDate endDate = new LocalDate(2013, 2, 1);
-        final Long amount1 = 10L;
-        final Long amount2 = 5L;
+        final BigDecimal amount1 = BigDecimal.valueOf(10L);
+        final BigDecimal amount2 = BigDecimal.valueOf(5L);
 
         RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType, startDate, amount1, UUID.randomUUID().toString());
         RolledUpUsageModelDao usage2 = new RolledUpUsageModelDao(subscriptionId, unitType, endDate.minusDays(1), amount2, UUID.randomUUID().toString());
@@ -67,9 +68,9 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final String unitType2 = "bar";
         final LocalDate startDate = new LocalDate(2013, 1, 1);
         final LocalDate endDate = new LocalDate(2013, 2, 1);
-        final Long amount1 = 10L;
-        final Long amount2 = 5L;
-        final Long amount3 = 13L;
+        final BigDecimal amount1 = BigDecimal.valueOf(10L);
+        final BigDecimal amount2 = BigDecimal.valueOf(5L);
+        final BigDecimal amount3 = BigDecimal.valueOf(13L);
 
         RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate, amount1, UUID.randomUUID().toString());
         RolledUpUsageModelDao usage2 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate.plusDays(1), amount2, UUID.randomUUID().toString());
@@ -102,8 +103,9 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final String unitType = "foo";
         final LocalDate startDate = new LocalDate(2013, 1, 1);
         final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final BigDecimal amount = BigDecimal.valueOf(9L);
 
-        RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType, endDate, 9L, UUID.randomUUID().toString());
+        RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType, endDate, amount, UUID.randomUUID().toString());
         List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
         usages.add(usage1);
         rolledUpUsageDao.record(usages, internalCallContext);
@@ -119,9 +121,9 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final String unitType2 = "bar";
         final LocalDate startDate = new LocalDate(2013, 1, 1);
         final LocalDate endDate = new LocalDate(2013, 2, 1);
-        final Long amount1 = 10L;
-        final Long amount2 = 5L;
-        final Long amount3 = 13L;
+        final BigDecimal amount1 = BigDecimal.valueOf(10L);
+        final BigDecimal amount2 = BigDecimal.valueOf(5L);
+        final BigDecimal amount3 = BigDecimal.valueOf(13L);
 
         RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate, amount1, UUID.randomUUID().toString());
         RolledUpUsageModelDao usage2 = new RolledUpUsageModelDao(subscriptionId, unitType1, startDate.plusDays(1), amount2, UUID.randomUUID().toString());
@@ -151,9 +153,9 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final String unitType2 = "bar";
         final LocalDate startDate = new LocalDate(2013, 1, 1);
         final LocalDate endDate = new LocalDate(2013, 2, 1);
-        final Long amount1 = 10L;
-        final Long amount2 = 5L;
-        final Long amount3 = 13L;
+        final BigDecimal amount1 = BigDecimal.valueOf(10L);
+        final BigDecimal amount2 = BigDecimal.valueOf(5L);
+        final BigDecimal amount3 = BigDecimal.valueOf(13L);
 
         String trackingId = UUIDs.randomUUID().toString();
 

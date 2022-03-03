@@ -20,8 +20,6 @@ package org.killbill.billing.catalog.override;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -172,14 +170,12 @@ public class DefaultPriceOverride implements PriceOverride {
                     if (input.getTieredBlockPriceOverrides() != null) {
                         for (TieredBlockPriceOverride blockPriceOverride : input.getTieredBlockPriceOverrides()) {
                             String unitName = blockPriceOverride.getUnitName();
-                            Double max = blockPriceOverride.getMax();
-                            Double size = blockPriceOverride.getSize();
 
                             for (int i = 0; i < curTier.getTieredBlocks().length; i++) {
                                 TieredBlock curTieredBlock = curTier.getTieredBlocks()[i];
                                 if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                    Double.compare(size, curTieredBlock.getSize()) == 0 &&
-                                    Double.compare(max, curTieredBlock.getMax()) == 0) {
+                                    blockPriceOverride.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                                    blockPriceOverride.getMax().compareTo(curTieredBlock.getMax()) == 0) {
                                     return true;
                                 }
                             }
@@ -211,8 +207,8 @@ public class DefaultPriceOverride implements PriceOverride {
                 public boolean apply(final TieredBlockPriceOverride input) {
                     return input.getUnitName() != null && input.getSize() != null && input.getMax() != null &&
                            (input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
-                            Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
-                            Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
+                            input.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                            input.getMax().compareTo(curTieredBlock.getMax()) == 0);
                 }
             }).orNull();
 

@@ -53,10 +53,10 @@ tableValues() ::= <<
 , :createdDate
 >>
 
-getInvoiceItemsByInvoice() ::= <<
+getInvoiceItemsForInvoices() ::= <<
   SELECT <allTableFields("")>
   FROM <tableName()>
-  WHERE invoice_id = :invoiceId
+  WHERE invoice_id in (<invoiceIds>)
   <AND_CHECK_TENANT("")>
   <defaultOrderBy("")>
   ;

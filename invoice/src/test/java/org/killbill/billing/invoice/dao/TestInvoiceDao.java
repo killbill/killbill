@@ -1257,7 +1257,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final BillingEventSet events = new MockBillingEventSet();
         events.add(event1);
 
-        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, targetDate, Currency.USD, null, context);
+        final InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(null, null, invoiceList), null, targetDate, Currency.USD, null, context);
         final Invoice invoice1 = invoiceWithMetadata1.getInvoice();
         assertEquals(invoice1.getBalance(), KillBillMoney.of(TEN, invoice1.getCurrency()));
         invoiceList.add(invoice1);
@@ -1276,7 +1276,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         // second invoice should be for one half (14/28 days) the difference between the rate plans
         // this is a temporary state, since it actually contains an adjusting item that properly belong to invoice 1
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, targetDate, Currency.USD, null, context);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, null, invoiceList), null, targetDate, Currency.USD, null, context);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
 
         assertEquals(invoice2.getBalance(), KillBillMoney.of(FIVE, invoice2.getCurrency()));
@@ -1369,7 +1369,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                        "testEvent2", 2L, SubscriptionBaseTransitionType.PHASE);
         events.add(event2);
 
-        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, new LocalDate(effectiveDate2), Currency.USD, null, context);
+        final InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, null, invoiceList), null, new LocalDate(effectiveDate2), Currency.USD, null, context);
         final Invoice invoice2 = invoiceWithMetadata2.getInvoice();
         assertNotNull(invoice2);
         assertEquals(invoice2.getNumberOfItems(), 1);
@@ -1380,7 +1380,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         //invoiceUtil.createInvoice(invoice2, invoice2.getTargetDate().getDayOfMonth(), callcontext);
 
         final DateTime effectiveDate3 = effectiveDate2.plusMonths(1);
-        final InvoiceWithMetadata invoiceWithMetadata3 = generator.generateInvoice(account, events, new AccountInvoices(null, invoiceList), null, new LocalDate(effectiveDate3), Currency.USD, null, context);
+        final InvoiceWithMetadata invoiceWithMetadata3 = generator.generateInvoice(account, events, new AccountInvoices(null, null, invoiceList), null, new LocalDate(effectiveDate3), Currency.USD, null, context);
         final Invoice invoice3 = invoiceWithMetadata3.getInvoice();
         assertNotNull(invoice3);
         assertEquals(invoice3.getNumberOfItems(), 1);
@@ -1504,7 +1504,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                        BillingPeriod.MONTHLY, 31, BillingMode.IN_ADVANCE,
                                                                        "new-event", 1L, SubscriptionBaseTransitionType.CREATE);
         events.add(event1);
-        final InvoiceWithMetadata newInvoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(null, invoices), null, targetDate, Currency.USD, null, context);
+        final InvoiceWithMetadata newInvoiceWithMetadata = generator.generateInvoice(account, events, new AccountInvoices(null, null, invoices), null, targetDate, Currency.USD, null, context);
         final Invoice newInvoice = newInvoiceWithMetadata.getInvoice();
         invoiceUtil.createInvoice(newInvoice, context);
 
@@ -1546,7 +1546,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                        "testEvent1", 1L, SubscriptionBaseTransitionType.CHANGE);
         events.add(event1);
 
-        InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(null, invoices), null, new LocalDate(targetDate1), Currency.USD, null, context);
+        InvoiceWithMetadata invoiceWithMetadata1 = generator.generateInvoice(account, events, new AccountInvoices(null, null, invoices), null, new LocalDate(targetDate1), Currency.USD, null, context);
         Invoice invoice1 = invoiceWithMetadata1.getInvoice();
         invoices.add(invoice1);
         invoiceUtil.createInvoice(invoice1, context);
@@ -1558,7 +1558,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                        BillingPeriod.MONTHLY, 31, BillingMode.IN_ADVANCE,
                                                                        "testEvent2", 2L, SubscriptionBaseTransitionType.CHANGE);
         events.add(event2);
-        InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, invoices), null, new LocalDate(targetDate2), Currency.USD, null, context);
+        InvoiceWithMetadata invoiceWithMetadata2 = generator.generateInvoice(account, events, new AccountInvoices(null, null, invoices), null, new LocalDate(targetDate2), Currency.USD, null, context);
         Invoice invoice2 = invoiceWithMetadata2.getInvoice();
         invoiceUtil.createInvoice(invoice2, context);
         invoice2 = new DefaultInvoice(invoiceDao.getById(invoice2.getId(), context));

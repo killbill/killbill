@@ -46,7 +46,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testOverrideLastPhase() throws Exception {
 
-        final StandaloneCatalog catalog = getCatalog("SpyCarBasic.xml");;
+        final StandaloneCatalog catalog = getCatalog("SpyCarBasic.xml");
         final Plan plan = catalog.findPlan("standard-monthly");
 
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
@@ -109,7 +109,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
 
         List<TieredBlockPriceOverride> tieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
-        DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("gallons", new Double("1"), new BigDecimal(4), Currency.USD, new Double("100"));
+        DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("gallons", new BigDecimal("1"), new BigDecimal(4), Currency.USD, new BigDecimal("100"));
         tieredBlockPriceOverrides.add(tieredBlockPriceOverride);
 
         List<TierPriceOverride> tierPriceOverrides = new ArrayList<TierPriceOverride>();
@@ -149,8 +149,8 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final CatalogOverrideBlockDefinitionModelDao curTieredBlock =  tierBlocks.get(0);
         assertEquals(curTieredBlock.getParentUnitName(),tieredBlockPriceOverride.getUnitName());
         assertEquals(curTieredBlock.getPrice().compareTo(tieredBlockPriceOverride.getPrice()), 0);
-        assertEquals(curTieredBlock.getSize(), (double) tieredBlockPriceOverride.getSize());
-        assertEquals(curTieredBlock.getMax(), (double) tieredBlockPriceOverride.getMax());
+        assertEquals(curTieredBlock.getSize().compareTo(tieredBlockPriceOverride.getSize()), 0);
+        assertEquals(curTieredBlock.getMax().compareTo(tieredBlockPriceOverride.getMax()), 0);
     }
 
     @Test(groups = "slow")
@@ -162,7 +162,7 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final PlanPhasePriceOverride[] resolvedOverrides = new PlanPhasePriceOverride[plan.getAllPhases().length];
 
         List<TieredBlockPriceOverride> tieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
-        DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("chocolate-videos", new Double("1"), new BigDecimal(0.75), Currency.USD, new Double("10000"));
+        DefaultTieredBlockPriceOverride tieredBlockPriceOverride = new DefaultTieredBlockPriceOverride("chocolate-videos", new BigDecimal("1"), new BigDecimal(0.75), Currency.USD, new BigDecimal("10000"));
         tieredBlockPriceOverrides.add(tieredBlockPriceOverride);
 
         List<TierPriceOverride> tierPriceOverrides = new ArrayList<TierPriceOverride>();
@@ -204,8 +204,8 @@ public class TestCatalogOverrideDao extends CatalogTestSuiteWithEmbeddedDB {
         final CatalogOverrideBlockDefinitionModelDao curTieredBlock =  tierBlocks.get(0);
         assertEquals(curTieredBlock.getParentUnitName(),tieredBlockPriceOverride.getUnitName());
         assertEquals(curTieredBlock.getPrice().compareTo(tieredBlockPriceOverride.getPrice()), 0);
-        assertEquals(curTieredBlock.getSize(), (double) tieredBlockPriceOverride.getSize());
-        assertEquals(curTieredBlock.getMax(), (double) tieredBlockPriceOverride.getMax());
+        assertEquals(curTieredBlock.getSize().compareTo(tieredBlockPriceOverride.getSize()), 0);
+        assertEquals(curTieredBlock.getMax().compareTo(tieredBlockPriceOverride.getMax()), 0);
     }
 
 }

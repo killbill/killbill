@@ -68,8 +68,8 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         // Record known usage for April
-        recordUsageData(bpSubscription.getId(), "tracking-1", "server-hourly-type-1", new LocalDate(2012, 4, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-2", "bandwidth-type-1", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-1", "server-hourly-type-1", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-2", "bandwidth-type-1", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
@@ -87,8 +87,8 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         invoiceConfig.setShouldParkAccountsWithUnknownUsage(true);
 
         // Record known consumable usage but unknown capacity usage for May
-        recordUsageData(bpSubscription.getId(), "tracking-3", "server-hourly-type-1", new LocalDate(2012, 5, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-4", "bandwidth-type-2", new LocalDate(2012, 5, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-3", "server-hourly-type-1", new LocalDate(2012, 5, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-4", "bandwidth-type-2", new LocalDate(2012, 5, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.TAG);
         clock.addMonths(1);
@@ -118,8 +118,8 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
 
         // Record known capacity usage but unknown consumable usage for June
-        recordUsageData(bpSubscription.getId(), "tracking-5", "server-hourly-type-2", new LocalDate(2012, 6, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-6", "bandwidth-type-1", new LocalDate(2012, 6, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-5", "server-hourly-type-2", new LocalDate(2012, 6, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-6", "bandwidth-type-1", new LocalDate(2012, 6, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.TAG);
         clock.addMonths(1);
@@ -153,8 +153,8 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         invoiceConfig.setShouldParkAccountsWithUnknownUsage(false);
 
         // Record unknown usage for July
-        recordUsageData(bpSubscription.getId(), "tracking-7", "server-hourly-type-3", new LocalDate(2012, 4, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-8", "bandwidth-type-3", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-7", "server-hourly-type-3", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-8", "bandwidth-type-3", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
@@ -179,7 +179,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         assertListenerStatus();
 
         // Record unknown usage for August (the unit has been retired)
-        recordUsageData(bpSubscription.getId(), "tracking-9", "server-hourly-type-1", new LocalDate(2012, 8, 1), 99L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-9", "server-hourly-type-1", new LocalDate(2012, 8, 1), BigDecimal.valueOf(99L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.TAG);
         clock.addMonths(1);
@@ -189,8 +189,8 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
 
         // Record retroactively additional known usage for August
-        recordUsageData(bpSubscription.getId(), "tracking-10", "server-hourly-type-2", new LocalDate(2012, 8, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-11", "bandwidth-type-2", new LocalDate(2012, 8, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-10", "server-hourly-type-2", new LocalDate(2012, 8, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-11", "bandwidth-type-2", new LocalDate(2012, 8, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         entitlementApi.pause(bpSubscription.getBundleId(), new LocalDate(2012, 8, 1), ImmutableList.<PluginProperty>of(), callContext);
@@ -239,8 +239,8 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         // Record known usage for April
-        recordUsageData(bpSubscription.getId(), "tracking-1", "server-hourly-type-1", new LocalDate(2012, 4, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-2", "bandwidth-type-1", new LocalDate(2012, 4, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-1", "server-hourly-type-1", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-2", "bandwidth-type-1", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
@@ -253,8 +253,8 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
 
         // Record known usage for May
-        recordUsageData(bpSubscription.getId(), "tracking-3", "server-hourly-type-1", new LocalDate(2012, 5, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-4", "bandwidth-type-1", new LocalDate(2012, 5, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-3", "server-hourly-type-1", new LocalDate(2012, 5, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-4", "bandwidth-type-1", new LocalDate(2012, 5, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
@@ -267,8 +267,8 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
 
         // Record known usage for June
-        recordUsageData(bpSubscription.getId(), "tracking-5", "server-hourly-type-1", new LocalDate(2012, 6, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-6", "bandwidth-type-1", new LocalDate(2012, 6, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-5", "server-hourly-type-1", new LocalDate(2012, 6, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-6", "bandwidth-type-1", new LocalDate(2012, 6, 15), BigDecimal.valueOf(100L), callContext);
 
         // Trigger a future change plan on the same plan, to force the new catalog version at the next billing cycle (Catalog-v4.xml)
         bpSubscription.changePlanWithDate(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("server-monthly")), new LocalDate("2012-07-01"), null, callContext);
@@ -286,8 +286,8 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-5", "tracking-6"), internalCallContext);
 
         // Record known and unknown usage for July (server-hourly-type-1 doesn't exist anymore)
-        recordUsageData(bpSubscription.getId(), "tracking-7", "server-hourly-type-1", new LocalDate(2012, 7, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-8", "bandwidth-type-1", new LocalDate(2012, 7, 15), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-7", "server-hourly-type-1", new LocalDate(2012, 7, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-8", "bandwidth-type-1", new LocalDate(2012, 7, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.TAG);
         clock.addMonths(1);
@@ -313,9 +313,9 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
 
         // Record known and unknown usage for April
-        recordUsageData(bpSubscription.getId(), "tracking-1", "server-hourly-type-1", new LocalDate(2012, 4, 1), 99L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-2", "bandwidth-type-1", new LocalDate(2012, 4, 15), 100L, callContext);
-        recordUsageData(bpSubscription.getId(), "tracking-3", "server-hourly-type-2", new LocalDate(2012, 4, 20), 100L, callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-1", "server-hourly-type-1", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-2", "bandwidth-type-1", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
+        recordUsageData(bpSubscription.getId(), "tracking-3", "server-hourly-type-2", new LocalDate(2012, 4, 20), BigDecimal.valueOf(100L), callContext);
 
         // Strict mode if off by default
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);

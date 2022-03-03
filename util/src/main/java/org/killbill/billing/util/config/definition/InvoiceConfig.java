@@ -72,6 +72,16 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("Whether we disable writing $0 usage amounts")
     boolean isUsageZeroAmountDisabled(@Param("dummy") final InternalTenantContext tenantContext);
 
+    @Config("org.killbill.invoice.usage.missing.lenient")
+    @Default("false")
+    @Description("Whether we fail invoice when we discover missing past usage records")
+    boolean isUsageMissingLenient();
+
+    @Config("org.killbill.invoice.usage.missing.lenient")
+    @Default("false")
+    @Description("Whether we fail invoice when we discover missing past usage records")
+    boolean isUsageMissingLenient(@Param("dummy") final InternalTenantContext tenantContext);
+
     @Config("org.killbill.invoice.maxDailyNumberOfItemsSafetyBound")
     @Default("15")
     @Description("Maximum daily number of invoice items to generate for a subscription id")

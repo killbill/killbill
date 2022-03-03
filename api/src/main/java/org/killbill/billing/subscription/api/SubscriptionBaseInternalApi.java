@@ -30,7 +30,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.EntitlementAOStatusDryRun;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
@@ -74,8 +73,7 @@ public interface SubscriptionBaseInternalApi {
     public List<SubscriptionBase> getSubscriptionsForBundle(UUID bundleId, DryRunArguments dryRunArguments, InternalTenantContext context)
             throws SubscriptionBaseApiException;
 
-    // TODO_CATALOG revisit which apis should take a Catalog
-    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(VersionedCatalog catalog, final InternalTenantContext context) throws SubscriptionBaseApiException;
+    public Map<UUID, List<SubscriptionBase>> getSubscriptionsForAccount(VersionedCatalog catalog, final LocalDate cutoffDt,  InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
@@ -85,7 +83,7 @@ public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBaseBundle getBundleFromId(UUID id, InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public void setChargedThroughDate(UUID subscriptionId, DateTime chargedThruDate, InternalCallContext context) throws SubscriptionBaseApiException;
+    public void setChargedThroughDates(Map<DateTime, List<UUID>> chargeThroughDates, InternalCallContext context) throws SubscriptionBaseApiException;
 
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(SubscriptionBase subscription, InternalTenantContext context);
 
