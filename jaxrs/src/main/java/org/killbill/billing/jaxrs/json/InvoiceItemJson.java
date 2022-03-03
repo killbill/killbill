@@ -17,7 +17,6 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -65,7 +64,7 @@ public class InvoiceItemJson extends JsonBase {
     private final BigDecimal amount;
     private final BigDecimal rate;
     private final Currency currency;
-    private final Integer quantity;
+    private final BigDecimal quantity;
     private final String itemDetails;
     private final DateTime catalogEffectiveDate;
     private List<InvoiceItemJson> childItems;
@@ -93,7 +92,7 @@ public class InvoiceItemJson extends JsonBase {
                            @JsonProperty("amount") final BigDecimal amount,
                            @JsonProperty("rate") final  BigDecimal rate,
                            @JsonProperty("currency") final Currency currency,
-                           @JsonProperty("quantity") final Integer quantity,
+                           @JsonProperty("quantity") final BigDecimal quantity,
                            @JsonProperty("itemDetails") final String itemDetails,
                            @JsonProperty("catalogEffectiveDate") final DateTime catalogEffectiveDate,
                            @JsonProperty("childItems") final List<InvoiceItemJson> childItems,
@@ -259,7 +258,7 @@ public class InvoiceItemJson extends JsonBase {
             }
 
             @Override
-            public Integer getQuantity() { return quantity; }
+            public BigDecimal getQuantity() { return quantity; }
 
             @Override
             public String getItemDetails() { return itemDetails; }
@@ -389,7 +388,7 @@ public class InvoiceItemJson extends JsonBase {
         return catalogEffectiveDate;
     }
 
-    public Integer getQuantity() { return quantity; }
+    public BigDecimal getQuantity() { return quantity; }
 
     public String getItemDetails() { return itemDetails; }
 

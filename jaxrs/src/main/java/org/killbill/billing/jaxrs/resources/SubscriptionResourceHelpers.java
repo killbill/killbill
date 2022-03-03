@@ -117,7 +117,7 @@ public class SubscriptionResourceHelpers {
                         }
 
                         @Override
-                        public Double getSize() {
+                        public BigDecimal getSize() {
                             return block.getSize();
                         }
 
@@ -132,7 +132,7 @@ public class SubscriptionResourceHelpers {
                         }
 
                         @Override
-                        public Double getMax() {
+                        public BigDecimal getMax() {
                             return block.getMax();
                         }
                     });

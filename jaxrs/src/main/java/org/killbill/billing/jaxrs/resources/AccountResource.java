@@ -1674,7 +1674,7 @@ public class AccountResource extends JaxRsResourceBase {
                 return null;
             }
             @Override
-            public Integer getQuantity() {
+            public BigDecimal getQuantity() {
                 return null;
             }
             @Override
