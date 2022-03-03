@@ -77,8 +77,8 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.MetricTag;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.MetricTag;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
