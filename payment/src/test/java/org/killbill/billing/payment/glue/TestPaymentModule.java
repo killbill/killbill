@@ -38,6 +38,8 @@ import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.EventModule;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
@@ -80,5 +82,6 @@ public class TestPaymentModule extends PaymentModule {
 
         installExternalApis();
         bind(TestPaymentHelper.class).asEagerSingleton();
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }

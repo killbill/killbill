@@ -22,6 +22,8 @@ import org.killbill.billing.mock.glue.MockAccountModule;
 import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 import org.mockito.Mockito;
 
 public class TestUtilModule extends KillBillModule {
@@ -46,5 +48,7 @@ public class TestUtilModule extends KillBillModule {
         install(new EventModule(configSource));
         install(new MockTenantModule(configSource));
         installHacks();
+
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }

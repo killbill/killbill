@@ -56,7 +56,7 @@ public class TestCredit extends TestJaxrsBase {
         credit.setAccountId(accountJson.getAccountId());
         credit.setAmount(creditAmount);
         credit.setDescription("description");
-        credit.setQuantity(5);
+        credit.setQuantity(new BigDecimal("5"));
         credit.setRate(BigDecimal.TEN);
         credit.setItemDetails("itemDetails");
 
@@ -74,7 +74,7 @@ public class TestCredit extends TestJaxrsBase {
         assertEquals(createdCredits.get(0).getAmount().compareTo(creditAmount), 0);
         assertEquals(createdCredits.get(0).getStartDate().compareTo(effectiveDate.toLocalDate()), 0);
         assertEquals(createdCredits.get(0).getDescription().compareTo("description"), 0);
-        assertEquals(createdCredits.get(0).getQuantity().compareTo(5), 0);
+        assertEquals(createdCredits.get(0).getQuantity().compareTo(new BigDecimal("5")), 0);
         assertEquals(createdCredits.get(0).getRate().compareTo(BigDecimal.TEN), 0);
         assertEquals(createdCredits.get(0).getItemDetails().compareTo("itemDetails"), 0);
     }

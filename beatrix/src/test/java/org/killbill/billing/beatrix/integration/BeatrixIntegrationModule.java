@@ -72,6 +72,8 @@ import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TagStoreModule;
 import org.killbill.clock.Clock;
 import org.killbill.clock.ClockMock;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.common.base.MoreObjects;
@@ -142,6 +144,8 @@ public class BeatrixIntegrationModule extends KillBillModule {
         bind(AuditChecker.class).asEagerSingleton();
         bind(TestApiListener.class).asEagerSingleton();
         bind(TestDBRouterAPI.class).asEagerSingleton();
+
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 
     private final class DefaultInvoiceModuleWithSwitchRepairLogic extends DefaultInvoiceModule {

@@ -23,6 +23,8 @@ import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.EventModule;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 
 public class TestTenantModule extends DefaultTenantModule {
 
@@ -38,5 +40,7 @@ public class TestTenantModule extends DefaultTenantModule {
         install(new ConfigModule(configSource));
         install(new EventModule(configSource));
         install(new CallContextModule(configSource));
+
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }

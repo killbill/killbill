@@ -21,6 +21,8 @@ package org.killbill.billing.jaxrs.glue;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.killbill.billing.util.jackson.ObjectMapper;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 
 public class TestJaxrsModule extends KillBillModule {
 
@@ -35,5 +37,7 @@ public class TestJaxrsModule extends KillBillModule {
     @Override
     protected void configure() {
         installObjectMapper();
+
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }
