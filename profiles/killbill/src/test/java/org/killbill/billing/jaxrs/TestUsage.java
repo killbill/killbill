@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.killbill.billing.ErrorCode;
