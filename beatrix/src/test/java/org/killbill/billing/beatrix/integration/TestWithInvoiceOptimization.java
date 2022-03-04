@@ -268,13 +268,21 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
+        // Create another subscription so we keep having something to invoice after cancellation of the first one
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
+        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
         // 2020-02-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
 
         // Cancel in the past (previous period)
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
@@ -282,13 +290,28 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 28), true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        // Verify the system does not generate anything (subscription was canceled)
+
         // 2020-03-01
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
-        checkNothingToInvoice(account.getId(), new LocalDate(2020, 3, 1), false);
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 3, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("-12.90")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 2, 1), new LocalDate(2020, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+
+        // 2020-04-01
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        checkNothingToInvoice(account.getId(), new LocalDate(2020, 4, 1), false);
 
     }
 
@@ -492,7 +515,9 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
     }
 
-    //
+
+
+        //
     //  Usage tests as maxInvoiceLimit also affects USAGE generation -- we only have a partial view of existing invoices.
     //  Both maxInvoiceLimit and readMaxRawUsagePreviousPeriod need to be in sync
     //
@@ -1036,6 +1061,129 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 15), new LocalDate(2021, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
 
+
+
+    }
+
+
+    @Test(groups = "slow")
+    public void testBillRunInArrearWithPastCancelation() throws Exception {
+
+        invoiceConfig.setMaxRawUsagePreviousPeriod(0);
+        invoiceConfig.setZeroAmountUsageDisabled(true);
+        invoiceConfig.setMaxInvoiceLimit(new Period("P1m"));
+
+        clock.setTime(new DateTime("2020-01-01T3:56:02"));
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        assertNotNull(account);
+
+        // Don't allow system generated invoices
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        // Reuse invoice until committed
+        add_AUTO_INVOICING_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+        add_AUTO_INVOICING_REUSE_DRAFT_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // Create another subscription so we keep having something to invoice after cancellation of the first one
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2020-02-01
+        clock.addMonths(1);
+
+
+        // Bill run on the 2020-02-01 with targetDate end of month (EOM)
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 2, 28), callContext);
+
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 2;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+
+
+        // Cancel (full repair)
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 1), true, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        // 2020-03-01
+        clock.addMonths(1);
+
+        // Bill run on the 2020-03-01 with targetDate end of month (EOM)
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 3, 31), callContext);
+
+        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 2;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-100.00")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 2, 1), new LocalDate(2020, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+        // 2020-04-01
+        clock.addMonths(1);
+
+        // Bill run on the 2020-03-01 with targetDate end of month (EOM)
+        //
+        // We verify that with invoice optimization ON, only the last invoice will be 'seen' and although it contains a 'dangling' REPAIR_ADJ
+        // this is correctly handled by the system -- InvoicePruner correctly discards such item prior we enter the tree.
+        //
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 4, 30), callContext);
+
+        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 1;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
+
+
+        // 2020-05-01
+        clock.addMonths(1);
+
+        // Bill run on the 2020-03-01 with targetDate end of month (EOM)
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 5, 31), callContext);
+
+        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
+            @Override
+            public Boolean apply(final Invoice invoice) {
+                return invoice.getInvoiceItems().size() == 1;
+            }
+        }, 10);
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.commitInvoice(invoice.getId(), callContext);
+        assertListenerStatus();
+
+        invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2020, 4, 1), new LocalDate(2020, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
 
     }
