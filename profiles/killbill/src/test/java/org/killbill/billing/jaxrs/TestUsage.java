@@ -93,11 +93,11 @@ public class TestUsage extends TestJaxrsBase {
         clock.addDays(1);
 
         final UsageRecord usageRecord1 = new UsageRecord();
-        usageRecord1.setAmount(10L);
+        usageRecord1.setAmount(BigDecimal.TEN);
         usageRecord1.setRecordDate(clock.getUTCToday().minusDays(1));
 
         final UsageRecord usageRecord2 = new UsageRecord();
-        usageRecord2.setAmount(5L);
+        usageRecord2.setAmount(new BigDecimal("5"));
         usageRecord2.setRecordDate(clock.getUTCToday());
 
         final UnitUsageRecord unitUsageRecord = new UnitUsageRecord();
@@ -116,25 +116,25 @@ public class TestUsage extends TestJaxrsBase {
         Assert.assertEquals(retrievedUsage1.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage1.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
         // endDate is excluded
-        Assert.assertEquals((long) retrievedUsage1.getRolledUpUnits().get(0).getAmount(), 10);
+        Assert.assertEquals(retrievedUsage1.getRolledUpUnits().get(0).getAmount(), BigDecimal.TEN);
 
         final RolledUpUsage retrievedUsage2 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(1), requestOptions);
         Assert.assertEquals(retrievedUsage2.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage2.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage2.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
-        Assert.assertEquals((long) retrievedUsage2.getRolledUpUnits().get(0).getAmount(), 15);
+        Assert.assertEquals(retrievedUsage2.getRolledUpUnits().get(0).getAmount(), new BigDecimal("15"));
 
         final RolledUpUsage retrievedUsage3 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday(), clock.getUTCToday().plusDays(1), requestOptions);
         Assert.assertEquals(retrievedUsage3.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage3.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage3.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
-        Assert.assertEquals((long) retrievedUsage3.getRolledUpUnits().get(0).getAmount(), 5);
+        Assert.assertEquals(retrievedUsage3.getRolledUpUnits().get(0).getAmount(), new BigDecimal("5"));
 
         final RolledUpUsage retrievedUsage4 = usageApi.getAllUsage(addOnSubscriptionId, clock.getUTCToday(), clock.getUTCToday().plusDays(1), requestOptions);
         Assert.assertEquals(retrievedUsage4.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().get(0).getUnitType(), "bullets");
-        Assert.assertEquals((long) retrievedUsage4.getRolledUpUnits().get(0).getAmount(), 5);
+        Assert.assertEquals(retrievedUsage4.getRolledUpUnits().get(0).getAmount(), new BigDecimal("5"));
 
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
                                            ExtBusEventType.INVOICE_CREATION,
@@ -197,7 +197,7 @@ public class TestUsage extends TestJaxrsBase {
                                                                       }).getSubscriptionId();
 
         final UsageRecord usageRecord1 = new UsageRecord();
-        usageRecord1.setAmount(10L);
+        usageRecord1.setAmount(BigDecimal.TEN);
         usageRecord1.setRecordDate(clock.getUTCToday().minusDays(1));
 
         final UnitUsageRecord unitUsageRecord = new UnitUsageRecord();
