@@ -91,7 +91,8 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
         final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
 
-        final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices.getInvoices());
+
+        final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices);
         final Set<UUID> toBeIgnored = invoicePruner.getFullyRepairedItemsClosure();
         final AccountItemTree accountItemTree = new AccountItemTree(account.getId(), invoiceId);
         for (final Invoice invoice : existingInvoices.getInvoices()) {

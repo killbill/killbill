@@ -68,9 +68,9 @@ public class TestUsage extends TestJaxrsBase {
 
     private static UUID findSubscriptionIdByProductCategory(final List<Subscription> subscriptions, final ProductCategory category) {
         return subscriptions.stream()
-                .filter(subscription -> subscription.getProductCategory().equals(category))
-                .findFirst().orElseThrow(() -> new RuntimeException("Cannot find subscriptionId in TestUsage"))
-                .getSubscriptionId();
+                            .filter(subscription -> subscription.getProductCategory().equals(category))
+                            .findFirst().orElseThrow(() -> new RuntimeException("Cannot find subscriptionId in TestUsage"))
+                            .getSubscriptionId();
     }
 
     private static InvoiceItem findInvoiceItemByUsage(final Invoices invoices, final InvoiceItemType invoiceItemType) {
