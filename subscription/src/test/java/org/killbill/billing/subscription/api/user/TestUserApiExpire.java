@@ -725,55 +725,6 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
 
     }
 
-    @Test(groups = "slow")
-    public void testChangePlanFromEverGreenToFixedTerm() throws SubscriptionBaseApiException {
-
-        //CREATE SUBSCRIPTION TO PLAN WITH EVERGREEN PHASE
-        final String planName = "pistol-monthly-notrial";
-
-        DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, planName);
-        assertNotNull(subscription);
-        assertEquals(subscription.getState(), EntitlementState.ACTIVE);
-
-        PlanPhase currentPhase = subscription.getCurrentPhase();
-        assertNotNull(currentPhase);
-        assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
-
-        //MOVE CLOCK BY 2 MONTHS
-        Interval it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(2));
-        clock.addDeltaFromReality(it.toDurationMillis());
-        assertEquals(subscription.getState(), EntitlementState.ACTIVE);
-
-        //CHANGE TO PLAN WITH FIXEDTERM PHASE AND VERIFY THAT EXPIRED EVENT IS PRESENT
-        testListener.pushExpectedEvent(NextEvent.CHANGE);
-        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("pistol-monthly-fixedterm-no-trial");
-        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
-        assertListenerStatus();
-
-        currentPhase = subscription.getCurrentPhase();
-        assertNotNull(currentPhase);
-        assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM);
-
-        final List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(subscription.getId(), internalCallContext);
-        assertNotNull(events);
-        testUtil.printEvents(events);
-        assertTrue(events.size() == 1);
-        assertTrue(events.get(0) instanceof ExpiredEvent);
-        final DateTime expiryDate = events.get(0).getEffectiveDate();
-        // SINCE THE CATALOG IS CONFIGURED TO USE START_OF_SUBSCRIPTION ALIGNMENT, THE FIXEDTERM PHASE STARTS ON THE DAY THE SUBSCRIPTION IS CREATED AND EXPIRY DATE IS CALCULATED ACCORDINGLY
-        final DateTime expectedExpiryDate = TestSubscriptionHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration());
-        assertEquals(expiryDate, expectedExpiryDate);
-
-        //MOVE PAST FIXEDTERM PHASE
-        testListener.pushExpectedEvent(NextEvent.EXPIRED);
-        it = new Interval(clock.getUTCNow(), clock.getUTCNow().plusMonths(12));
-        clock.addDeltaFromReality(it.toDurationMillis());
-        assertListenerStatus();
-
-        // REFETCH SUBSCRIPTION AND CHECK THAT IT IS EXPIRED
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
-        assertEquals(subscription.getState(), EntitlementState.EXPIRED);
-    }
 
     @Test(groups = "slow")
     public void testChangePlanFromFixedTermToEverGreenBeforeExpiry() throws SubscriptionBaseApiException {
@@ -1016,7 +967,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
     public void testChangePlanFromEverGreenToFixedTermWithChangeOfPlanAlignment() throws SubscriptionBaseApiException {
 
         //CREATE SUBSCRIPTION TO PLAN WITH EVERGREEN PHASE
-        final String planName = "blowdart-monthly-notrial";
+        final String planName = "pistol-monthly-notrial";
 
         DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, planName);
         assertNotNull(subscription);

@@ -164,8 +164,8 @@
                 <alignment>CHANGE_OF_PLAN</alignment>
             </changeAlignmentCase>
             <changeAlignmentCase>
-                <fromProduct>Blowdart</fromProduct>
-                <toProduct>Pistol</toProduct>
+                <fromPriceList>notrial</fromPriceList>
+                <toPriceList>fixedTerm</toPriceList>
                 <alignment>CHANGE_OF_PLAN</alignment>
             </changeAlignmentCase>
             <changeAlignmentCase>
