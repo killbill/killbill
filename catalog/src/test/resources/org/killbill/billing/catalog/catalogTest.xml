@@ -164,6 +164,11 @@
                 <alignment>CHANGE_OF_PLAN</alignment>
             </changeAlignmentCase>
             <changeAlignmentCase>
+                <fromPriceList>notrial</fromPriceList>
+                <toPriceList>fixedTerm</toPriceList>
+                <alignment>CHANGE_OF_PLAN</alignment>
+            </changeAlignmentCase>
+            <changeAlignmentCase>
                 <alignment>START_OF_SUBSCRIPTION</alignment>
             </changeAlignmentCase>
         </changeAlignment>
@@ -541,6 +546,32 @@
                 <duration>
                     <unit>MONTHS</unit>
                     <number>12</number>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>29.95</value>
+                        </price>
+                        <price>
+                            <currency>USD</currency>
+                            <value>29.95</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>
+        <plan name="pistol-monthly-fixedterm-no-trial-8-months">
+            <product>Pistol</product>
+            <finalPhase type="FIXEDTERM">
+                <duration>
+                    <unit>MONTHS</unit>
+                    <number>8</number>
                 </duration>
                 <recurring>
                     <billingPeriod>MONTHLY</billingPeriod>
@@ -1790,6 +1821,7 @@
                 <plan>pistol-monthly-discount-and-fixedterm</plan>
                 <plan>pistol-monthly-fixedterm-and-evergreen</plan>
                 <plan>pistol-monthly-fixedterm-no-trial</plan>
+                <plan>pistol-monthly-fixedterm-no-trial-8-months</plan>
                 <plan>knife-monthly-fixedterm</plan>
             </plans>
         </childPriceList>

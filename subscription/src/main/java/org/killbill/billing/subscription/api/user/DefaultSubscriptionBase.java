@@ -266,6 +266,24 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
         return null;
     }
+    
+    @Override
+    public DateTime getFutureExpiryDate() {
+        if (transitions == null) {
+            return null;
+        }
+
+        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
+                clock, transitions, Order.ASC_FROM_PAST,
+                Visibility.ALL, TimeLimit.FUTURE_ONLY);
+        while (it.hasNext()) {
+            final SubscriptionBaseTransition cur = it.next();
+            if (cur.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED) {
+                return cur.getEffectiveTransitionTime();
+            }
+        }
+        return null;
+    }    
 
     @Override
     public boolean cancel(final CallContext context) throws SubscriptionBaseApiException {
