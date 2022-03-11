@@ -43,6 +43,7 @@ import org.killbill.billing.util.UUIDs;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -149,8 +150,13 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         return invoiceItems.add(item);
     }
 
-    public boolean removeInvoiceItem(final  InvoiceItem item) {
-        return invoiceItems.remove(item);
+    public boolean removeInvoiceItemIfExists(final InvoiceItem item) {
+        return invoiceItems.removeIf(new Predicate<InvoiceItem>() {
+            @Override
+            public boolean apply(final InvoiceItem cur) {
+                return cur.getId().equals(item.getId());
+            }
+        });
     }
 
     @Override
