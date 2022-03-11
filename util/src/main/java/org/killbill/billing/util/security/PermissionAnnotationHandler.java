@@ -20,21 +20,18 @@ package org.killbill.billing.util.security;
  */
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.shiro.aop.MethodInvocation;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.authz.aop.AuthorizingAnnotationHandler;
 
-import org.killbill.billing.security.Permission;
 import org.killbill.billing.security.RequiresPermissions;
 import org.killbill.billing.security.SecurityApiException;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.callcontext.DefaultTenantContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-
-import com.google.common.collect.ImmutableList;
 
 public class PermissionAnnotationHandler extends AuthorizingAnnotationHandler {
 
@@ -55,8 +52,9 @@ public class PermissionAnnotationHandler extends AuthorizingAnnotationHandler {
 
         final RequiresPermissions requiresPermissions = (RequiresPermissions) annotation;
         try {
-            securityApi.checkCurrentUserPermissions(ImmutableList.<Permission>copyOf(requiresPermissions.value()), requiresPermissions.logical(), context);
-        } catch (SecurityApiException e) {
+
+            securityApi.checkCurrentUserPermissions(List.of(requiresPermissions.value()), requiresPermissions.logical(), context);
+        } catch (final SecurityApiException e) {
             if (e.getCause() != null && e.getCause() instanceof AuthorizationException) {
                 throw (AuthorizationException) e.getCause();
             } else if (e.getCause() != null) {

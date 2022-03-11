@@ -20,12 +20,9 @@ package org.killbill.billing.util.nodes;
 import java.io.IOException;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.killbill.CreatorName;
 import org.killbill.billing.broadcast.BroadcastApi;
 import org.killbill.billing.osgi.api.PluginInfo;
-import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
@@ -37,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -80,12 +76,7 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
     @Override
     public NodeInfo getCurrentNodeInfo() {
         final List<NodeInfoModelDao> allNodes = nodeInfoDao.getAll();
-        final NodeInfoModelDao current = Iterables.find(allNodes, new Predicate<NodeInfoModelDao>() {
-            @Override
-            public boolean apply(final NodeInfoModelDao input) {
-                return input.getNodeName().equals(CreatorName.get());
-            }
-        });
+        final NodeInfoModelDao current = Iterables.find(allNodes, input -> input.getNodeName().equals(CreatorName.get()));
         return nodeTransfomer.apply(current);
     }
 
@@ -129,12 +120,7 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
                                                                             nodeInfoJson.getPluginApiVersion(),
                                                                             nodeInfoJson.getCommonVersion(),
                                                                             nodeInfoJson.getPlatformVersion(),
-                                                                            ImmutableList.copyOf(Iterables.transform(pluginInfos, new Function<PluginInfo, PluginInfoModelJson>() {
-                                                                                @Override
-                                                                                public PluginInfoModelJson apply(final PluginInfo input) {
-                                                                                    return new PluginInfoModelJson(input);
-                                                                                }
-                                                                            })));
+                                                                            ImmutableList.copyOf(Iterables.transform(pluginInfos, PluginInfoModelJson::new)));
 
         final String nodeInfoValue = mapper.serializeNodeInfo(updatedNodeInfoJson);
         return nodeInfoValue;

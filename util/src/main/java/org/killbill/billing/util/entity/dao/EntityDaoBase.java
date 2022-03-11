@@ -42,7 +42,6 @@ import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Orderi
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 
 public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
@@ -115,7 +114,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
 
 
     protected EntitySqlDaoTransactionWrapper<M> getCreateEntitySqlDaoTransactionWrapper(final M entity, final InternalCallContext context) {
-        final EntitySqlDaoTransactionWrapper<List<M>> entityWrapperList = getCreateEntitySqlDaoTransactionWrapper(ImmutableList.<M>of(entity), context);
+        final EntitySqlDaoTransactionWrapper<List<M>> entityWrapperList = getCreateEntitySqlDaoTransactionWrapper(List.of(entity), context);
         return new EntitySqlDaoTransactionWrapper<M>() {
             @Override
             public M inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {

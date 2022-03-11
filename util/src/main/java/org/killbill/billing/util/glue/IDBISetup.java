@@ -53,7 +53,7 @@ public class IDBISetup {
     public static final String MAIN_RO_IDBI_NAMED = MAIN_RO_DATA_SOURCE_ID;
 
     public static List<? extends ResultSetMapperFactory> mapperFactoriesToRegister() {
-        final Builder<ResultSetMapperFactory> builder = ImmutableList.<ResultSetMapperFactory>builder();
+        final Builder<ResultSetMapperFactory> builder = ImmutableList.builder();
         builder.add(new LowerToCamelBeanMapperFactory(SessionModelDao.class));
         builder.add(new LowerToCamelBeanMapperFactory(BroadcastModelDao.class));
         builder.add(new LowerToCamelBeanMapperFactory(NodeInfoModelDao.class));

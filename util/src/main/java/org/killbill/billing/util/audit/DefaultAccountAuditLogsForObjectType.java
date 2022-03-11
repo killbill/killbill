@@ -16,6 +16,7 @@
 
 package org.killbill.billing.util.audit;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -24,12 +25,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.util.api.AuditLevel;
-import org.killbill.billing.util.customfield.ShouldntHappenException;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterators;
 
 public class DefaultAccountAuditLogsForObjectType implements AccountAuditLogsForObjectType {
 
@@ -39,7 +34,7 @@ public class DefaultAccountAuditLogsForObjectType implements AccountAuditLogsFor
     private final Iterator<AuditLog> allAuditLogsForObjectType;
 
     public DefaultAccountAuditLogsForObjectType(final AuditLevel auditLevel) {
-        this(auditLevel, ImmutableSet.<AuditLog>of().iterator());
+        this(auditLevel, Collections.emptyIterator());
     }
 
     public DefaultAccountAuditLogsForObjectType(final AuditLevel auditLevel, final Iterator<AuditLog> allAuditLogsForObjectType) {
@@ -103,11 +98,7 @@ public class DefaultAccountAuditLogsForObjectType implements AccountAuditLogsFor
 
         final DefaultAccountAuditLogsForObjectType that = (DefaultAccountAuditLogsForObjectType) o;
 
-        if (!auditLogsCache.equals(that.auditLogsCache)) {
-            return false;
-        }
-
-        return true;
+        return auditLogsCache.equals(that.auditLogsCache);
     }
 
     @Override

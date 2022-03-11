@@ -16,6 +16,7 @@
 
 package org.killbill.billing.util.audit;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -26,10 +27,8 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.dao.TableName;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
@@ -40,7 +39,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
     private final Map<ObjectType, DefaultAccountAuditLogsForObjectType> auditLogsCache = new HashMap<ObjectType, DefaultAccountAuditLogsForObjectType>();
 
     public DefaultAccountAuditLogs(final UUID accountId) {
-        this(accountId, AuditLevel.NONE, ImmutableSet.<AuditLog>of().iterator());
+        this(accountId, AuditLevel.NONE, Collections.emptyIterator());
     }
 
     public DefaultAccountAuditLogs(final UUID accountId, final AuditLevel auditLevel, final Iterator<AuditLog> accountAuditLogsOrderedByTableName) {
@@ -171,7 +170,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         protected AuditLog computeNext() {
             while (accountAuditLogs.hasNext()) {
                 final AuditLog element = accountAuditLogs.next();
-                if (predicate.apply(element)) {
+                if (objectType.equals(element.getAuditedObjectType())) {
 
                     if (iteratorState == IteratorState.EXPECT_MORE) {
                         final TableName tableName = TableName.fromObjectType(element.getAuditedObjectType());
@@ -200,12 +199,5 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
             return endOfData();
         }
-
-        private final Predicate<AuditLog> predicate = new Predicate<AuditLog>() {
-            @Override
-            public boolean apply(final AuditLog auditLog) {
-                return objectType.equals(auditLog.getAuditedObjectType());
-            }
-        };
     }
 }

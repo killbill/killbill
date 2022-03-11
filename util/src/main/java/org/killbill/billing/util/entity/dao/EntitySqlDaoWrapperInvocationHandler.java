@@ -28,6 +28,7 @@ import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -66,7 +67,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Iterables;
 
@@ -417,7 +417,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             // Assume the first argument of type Entity is our type of Entity (type U here)
             // This is true for e.g. create calls
             if (arg instanceof Entity) {
-                return ImmutableList.<String>of(((Entity) arg).getId().toString());
+                return List.of(((Entity) arg).getId().toString());
             }
 
             // For Batch calls, the first argument will be of type List<Entity>
@@ -430,13 +430,13 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
             for (final Annotation annotation : parameterAnnotations[i]) {
                 if (arg instanceof String && Bind.class.equals(annotation.annotationType()) && ("id").equals(((Bind) annotation).value())) {
-                    return ImmutableList.<String>of((String) arg);
+                    return List.of((String) arg);
                 } else if (arg instanceof Collection && BindIn.class.equals(annotation.annotationType()) && ("ids").equals(((BindIn) annotation).value())) {
-                    return ImmutableList.<String>copyOf((Collection) arg);
+                    return List.copyOf((Collection) arg);
                 }
             }
         }
-        return ImmutableList.<String>of();
+        return Collections.emptyList();
     }
 
     private Annotation[][] getAnnotations(final Method method) {
@@ -526,7 +526,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                               final InternalCallContext context) {
         final TableName destinationTableName = MoreObjects.firstNonNull(tableName.getHistoryTableName(), tableName);
 
-        final Collection<EntityAudit> audits = new LinkedList<EntityAudit>();
+        final Collection<EntityAudit> audits = new LinkedList<>();
         for (final Long auditTargetRecordId : auditTargetRecordIds) {
             final EntityAudit audit = new EntityAudit(destinationTableName, auditTargetRecordId, changeType, context.getCreatedDate());
             audits.add(audit);

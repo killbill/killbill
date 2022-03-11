@@ -31,6 +31,13 @@ import com.google.common.base.Joiner;
 
 public class TagDefinitionModelDao extends EntityModelDaoBase implements EntityModelDao<TagDefinition> {
 
+    /**
+     * FIXME-1615 : We can use String Joiner here, but:
+     * 1. it only accept string, so we need to do things like
+     *    tag.getApplicableObjectTypes().stream().map( ... ).collect() (see line 58)
+     * 2. as this is in several places, maybe we need a utility classes dedicated for this
+     * 3. And lead to, "Can't we just use Google's Joiner?")
+     */
     private static final Joiner JOINER = Joiner.on(",");
     private String name;
     private String applicableObjectTypes;

@@ -44,11 +44,11 @@ public class DefaultPagination<T> implements Pagination<T>, Closeable {
     }
 
     public static <T> Pagination<T> build(final Long offset, final Long limit, final Integer maxNbRecords, final Collection<T> elements) {
-        final List<T> allResults = ImmutableList.<T>copyOf(elements);
+        final List<T> allResults = List.<T>copyOf(elements);
 
         final List<T> results;
         if (offset >= allResults.size()) {
-            results = ImmutableList.<T>of();
+            results = List.<T>of();
         } else if (offset + limit > allResults.size()) {
             results = allResults.subList(offset.intValue(), allResults.size());
         } else {
@@ -157,6 +157,8 @@ public class DefaultPagination<T> implements Pagination<T>, Closeable {
         if (currentOffset != null ? !currentOffset.equals(that.currentOffset) : that.currentOffset != null) {
             return false;
         }
+        // FIXME-1615 : I think If iterator is really needed here, then Guava ImmutableList.copyOf() does a good job
+        // to handle iterator.
         if (delegateIterator != null ? !ImmutableList.<T>copyOf(delegateIterator).equals(ImmutableList.<T>copyOf(that.delegateIterator)) : that.delegateIterator != null) {
             return false;
         }
