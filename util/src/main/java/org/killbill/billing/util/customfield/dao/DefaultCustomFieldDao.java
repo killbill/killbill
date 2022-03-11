@@ -117,7 +117,7 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
     @Override
     public void updateCustomFields(final Iterable<CustomFieldModelDao> customFieldIds, final InternalCallContext context) throws CustomFieldApiException {
-        transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
+        transactionalSqlDao.execute(false, CustomFieldApiException.class, entitySqlDaoWrapperFactory -> {
             final CustomFieldSqlDao sqlDao = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
 
             for (final CustomFieldModelDao cur : customFieldIds) {

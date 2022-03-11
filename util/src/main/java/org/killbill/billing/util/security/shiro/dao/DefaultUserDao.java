@@ -33,8 +33,10 @@ import org.killbill.billing.security.SecurityApiException;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 import org.killbill.clock.Clock;
+import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
+import org.skife.jdbi.v2.TransactionStatus;
 
 public class DefaultUserDao implements UserDao {
 
@@ -71,16 +73,22 @@ public class DefaultUserDao implements UserDao {
                                                            password, salt.toBase64(), securityConfig.getShiroNbHashIterations()).toBase64();
 
         final DateTime createdDate = clock.getUTCNow();
-        inTransactionWithExceptionHandling((handle, status) -> {
-            final UserRolesSqlDao userRolesSqlDao = handle.attach(UserRolesSqlDao.class);
-            for (final String role : roles) {
-                userRolesSqlDao.create(new UserRolesModelDao(username, role, createdDate, createdBy));
-            }
+        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
+            @Override
+            public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
+                final UserRolesSqlDao userRolesSqlDao = handle.attach(UserRolesSqlDao.class);
+                for (final String role : roles) {
+                    userRolesSqlDao.create(new UserRolesModelDao(username, role, createdDate, createdBy));
+                }
 
-            final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
-            validateUser(username, usersSqlDao);
-            usersSqlDao.create(new UserModelDao(username, hashedPasswordBase64, salt.toBase64(), createdDate, createdBy));
-            return null;
+                final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
+                final UserModelDao userModelDao = usersSqlDao.getByUsername(username);
+                if (userModelDao != null) {
+                    throw new SecurityApiException(ErrorCode.SECURITY_USER_ALREADY_EXISTS, username);
+                }
+                usersSqlDao.create(new UserModelDao(username, hashedPasswordBase64, salt.toBase64(), createdDate, createdBy));
+                return null;
+            }
         });
     }
 
@@ -119,15 +127,14 @@ public class DefaultUserDao implements UserDao {
             final Iterable<RolesPermissionsModelDao> toBeDeleted = existingPermissions.isEmpty() ?
                                                                    existingPermissions :
                                                                    existingPermissions.stream()
-                                                                                      .filter(input -> permissions.contains(input.getPermission()))
-                                                                                      .collect(Collectors.toList());
+                                                                           .filter(input -> !permissions.contains(input.getPermission()))
+                                                                           .collect(Collectors.toList());
 
-            final Iterable<String> toBeAdded = (Iterable<String>) permissions
-                    .stream()
-                    .filter(input -> existingPermissions.stream().noneMatch(e -> e.getPermission().equals(input)))
-                    .iterator();
+            final List<String> toBeAdded = permissions.stream()
+                    .filter(s -> existingPermissions.stream().noneMatch(e -> e.getPermission().equals(s)))
+                    .collect(Collectors.toList());
 
-            for (RolesPermissionsModelDao d : toBeDeleted) {
+            for (final RolesPermissionsModelDao d : toBeDeleted) {
                 rolesPermissionsSqlDao.unactiveEvent(d.getRecordId(), createdDate, createdBy);
             }
 
