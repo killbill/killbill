@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,9 +50,7 @@ import org.killbill.billing.security.SecurityApiException;
 import org.killbill.billing.security.api.SecurityApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.security.shiro.dao.RolesPermissionsModelDao;
 import org.killbill.billing.util.security.shiro.dao.UserDao;
-import org.killbill.billing.util.security.shiro.dao.UserRolesModelDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,7 +224,9 @@ public class DefaultSecurityApi implements SecurityApi {
 
     @Override
     public List<String> getUserRoles(final String username, final TenantContext tenantContext) throws SecurityApiException {
-        return userDao.getUserRoles(username).stream().map(UserRolesModelDao::getRoleName).collect(Collectors.toList());
+        return userDao.getUserRoles(username).stream()
+                .map(input -> input == null ? null : input.getRoleName())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -244,7 +243,9 @@ public class DefaultSecurityApi implements SecurityApi {
 
     @Override
     public List<String> getRoleDefinition(final String role, final TenantContext tenantContext) {
-        return userDao.getRoleDefinition(role).stream().map(RolesPermissionsModelDao::getPermission).collect(Collectors.toList());
+        return userDao.getRoleDefinition(role).stream()
+                .map(input -> input == null ? null : input.getPermission())
+                .collect(Collectors.toList());
     }
 
     private List<String> sanitizePermissions(final List<String> permissionsRaw) throws SecurityApiException {
@@ -252,8 +253,7 @@ public class DefaultSecurityApi implements SecurityApi {
             return Collections.emptyList();
         }
         final Collection<String> permissions = permissionsRaw.stream()
-                .filter(Objects::nonNull)
-                .map(Strings::emptyToNull)
+                .filter(permission -> permission != null && !permission.isEmpty())
                 .collect(Collectors.toList());
 
         final Map<String, Set<String>> groupToValues = new HashMap<>();
