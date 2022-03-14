@@ -144,8 +144,6 @@ public class KillBillShiroModule extends ShiroModule {
         //super.bindSecurityManager(bind);
         bind.toInstance(defaultSecurityManager);
 
-        // FIXME-1615 : Intellij report there' duplicate line like this, which is in KillBillShiroWebModule line 86.
-        // FIXME-1615 : So question is, should we extract this to class/utility method? If yes, where?
         final RedisCacheConfig redisCacheConfig = new ConfigurationObjectFactory(new ConfigSource() {
             @Override
             public String getString(final String propertyName) {

@@ -157,8 +157,7 @@ public class DefaultPagination<T> implements Pagination<T>, Closeable {
         if (currentOffset != null ? !currentOffset.equals(that.currentOffset) : that.currentOffset != null) {
             return false;
         }
-        // FIXME-1615 : I think If iterator is really needed here, then Guava ImmutableList.copyOf() does a good job
-        // to handle iterator.
+        // FIXME-1615 : We will replace ImmutableList.copyOf(iterator) with our own.
         if (delegateIterator != null ? !ImmutableList.<T>copyOf(delegateIterator).equals(ImmutableList.<T>copyOf(that.delegateIterator)) : that.delegateIterator != null) {
             return false;
         }
