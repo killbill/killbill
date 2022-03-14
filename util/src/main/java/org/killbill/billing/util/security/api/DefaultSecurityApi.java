@@ -226,7 +226,7 @@ public class DefaultSecurityApi implements SecurityApi {
     public List<String> getUserRoles(final String username, final TenantContext tenantContext) throws SecurityApiException {
         return userDao.getUserRoles(username).stream()
                 .map(input -> input == null ? null : input.getRoleName())
-                .collect(Collectors.toList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -245,7 +245,7 @@ public class DefaultSecurityApi implements SecurityApi {
     public List<String> getRoleDefinition(final String role, final TenantContext tenantContext) {
         return userDao.getRoleDefinition(role).stream()
                 .map(input -> input == null ? null : input.getPermission())
-                .collect(Collectors.toList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private List<String> sanitizePermissions(final List<String> permissionsRaw) throws SecurityApiException {
@@ -254,7 +254,7 @@ public class DefaultSecurityApi implements SecurityApi {
         }
         final Collection<String> permissions = permissionsRaw.stream()
                 .filter(permission -> permission != null && !permission.isEmpty())
-                .collect(Collectors.toList());
+                .collect(Collectors.toUnmodifiableList());
 
         final Map<String, Set<String>> groupToValues = new HashMap<>();
         for (final String curPerm : permissions) {

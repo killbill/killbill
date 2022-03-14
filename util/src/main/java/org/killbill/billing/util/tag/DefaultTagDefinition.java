@@ -159,7 +159,7 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
         return Arrays.stream(input.split(","))
                      .filter(s -> !s.isEmpty())
                      .map(s -> ObjectType.valueOf(s.trim()))
-                     .collect(Collectors.toList());
+                     .collect(Collectors.toUnmodifiableList());
     }
 
 }

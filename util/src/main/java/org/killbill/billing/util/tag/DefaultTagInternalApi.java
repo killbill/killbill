@@ -39,8 +39,7 @@ public class DefaultTagInternalApi implements TagInternalApi {
     private final TagDefinitionDao tagDefinitionDao;
 
     @Inject
-    public DefaultTagInternalApi(final TagDao tagDao,
-                                 final TagDefinitionDao tagDefinitionDao) {
+    public DefaultTagInternalApi(final TagDao tagDao, final TagDefinitionDao tagDefinitionDao) {
         this.tagDao = tagDao;
         this.tagDefinitionDao = tagDefinitionDao;
     }
@@ -48,9 +47,9 @@ public class DefaultTagInternalApi implements TagInternalApi {
     @Override
     public List<TagDefinition> getTagDefinitions(final InternalTenantContext context) {
         final List<TagDefinition> result = tagDefinitionDao.getTagDefinitions(true, context).stream()
-                                                           .map(modelDao -> new DefaultTagDefinition(modelDao, TagModelDaoHelper.isControlTag(modelDao.getName())))
-                                                           .collect(Collectors.toList());
-        return List.copyOf(result);
+                .map(modelDao -> new DefaultTagDefinition(modelDao, TagModelDaoHelper.isControlTag(modelDao.getName())))
+                .collect(Collectors.toUnmodifiableList());
+        return result;
     }
 
     @Override
@@ -90,11 +89,11 @@ public class DefaultTagInternalApi implements TagInternalApi {
 
     private List<Tag> toTagList(final List<TagModelDao> input) {
         final List<Tag> result = input.stream()
-                                      .map(modelDao -> TagModelDaoHelper.isControlTag(modelDao.getTagDefinitionId()) ?
-                                                       new DefaultControlTag(ControlTagType.getTypeFromId(modelDao.getTagDefinitionId()), modelDao.getObjectType(), modelDao.getObjectId(), modelDao.getCreatedDate()) :
-                                                       new DescriptiveTag(modelDao.getTagDefinitionId(), modelDao.getObjectType(), modelDao.getObjectId(), modelDao.getCreatedDate()))
-                                      .collect(Collectors.toList());
-        return List.copyOf(result);
+                .map(modelDao -> TagModelDaoHelper.isControlTag(modelDao.getTagDefinitionId()) ?
+                                 new DefaultControlTag(ControlTagType.getTypeFromId(modelDao.getTagDefinitionId()), modelDao.getObjectType(), modelDao.getObjectId(), modelDao.getCreatedDate()) :
+                                 new DescriptiveTag(modelDao.getTagDefinitionId(), modelDao.getObjectType(), modelDao.getObjectId(), modelDao.getCreatedDate()))
+                .collect(Collectors.toUnmodifiableList());
+        return result;
     }
 
 

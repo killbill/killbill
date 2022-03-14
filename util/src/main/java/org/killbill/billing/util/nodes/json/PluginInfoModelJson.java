@@ -69,7 +69,7 @@ public class PluginInfoModelJson {
              input.getServices()
                   .stream()
                   .map(serviceInfo -> new PluginServiceInfoModelJson(serviceInfo.getServiceTypeName(), serviceInfo.getRegistrationName()))
-                  .collect(Collectors.toSet())
+                  .collect(Collectors.toUnmodifiableSet())
             );
     }
 

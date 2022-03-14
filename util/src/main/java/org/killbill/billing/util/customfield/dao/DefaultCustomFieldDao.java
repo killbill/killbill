@@ -79,24 +79,29 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
     @Override
     public List<CustomFieldModelDao> getCustomFieldsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory
-                .become(CustomFieldSqlDao.class)
-                .getCustomFieldsForObject(objectId, objectType, context));
+        List<CustomFieldModelDao> result = transactionalSqlDao
+                .execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory
+                        .become(CustomFieldSqlDao.class)
+                        .getCustomFieldsForObject(objectId, objectType, context));
+        return List.copyOf(result);
     }
 
     @Override
     public List<CustomFieldModelDao>
     getCustomFieldsForAccountType(final ObjectType objectType, final InternalTenantContext context) {
-        return getCustomFieldsForAccount(context).stream()
+        final List<CustomFieldModelDao> allFields = getCustomFieldsForAccount(context);
+        return allFields.stream()
                 .filter(customFieldModelDao -> customFieldModelDao.getObjectType() == objectType)
-                .collect(Collectors.toList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public List<CustomFieldModelDao> getCustomFieldsForAccount(final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory
-                .become(CustomFieldSqlDao.class)
-                .getByAccountRecordId(context));
+        final List<CustomFieldModelDao> result = transactionalSqlDao
+                .execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory
+                        .become(CustomFieldSqlDao.class)
+                        .getByAccountRecordId(context));
+        return List.copyOf(result);
     }
 
     @Override

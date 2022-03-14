@@ -19,6 +19,7 @@ package org.killbill.billing.util.nodes;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginInfo;
@@ -28,8 +29,6 @@ import org.killbill.billing.osgi.api.PluginServiceInfo;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginServiceInfoModelJson;
-
-import com.google.common.collect.Iterables;
 
 public class DefaultNodeInfo implements NodeInfo {
 
@@ -78,19 +77,20 @@ public class DefaultNodeInfo implements NodeInfo {
     private static Set<PluginServiceInfo> toPluginServiceInfo(final Set<PluginServiceInfoModelJson> services) {
         return services.stream()
                 .map(input -> new DefaultPluginServiceInfo(input.getServiceTypeName(), input.getRegistrationName()))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     private static Iterable<PluginInfo> toPluginInfo(final Iterable<PluginInfoModelJson> plugins) {
-        return Iterables.transform(plugins, input -> new DefaultPluginInfo(
-                input.getPluginKey(),
-                input.getBundleSymbolicName(),
-                input.getPluginName(),
-                input.getVersion(),
-                input.getState(),
-                input.isSelectedForStart(),
-                toPluginServiceInfo(input.getServices())
-        ));
+        return StreamSupport.stream(plugins.spliterator(), false)
+                            .map(input -> new DefaultPluginInfo(
+                                    input.getPluginKey(),
+                                    input.getBundleSymbolicName(),
+                                    input.getPluginName(),
+                                    input.getVersion(),
+                                    input.getState(),
+                                    input.isSelectedForStart(),
+                                    toPluginServiceInfo(input.getServices())
+                            )).collect(Collectors.toUnmodifiableList());
     }
 
     @Override
