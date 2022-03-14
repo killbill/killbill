@@ -55,17 +55,14 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
     private final PluginsInfoApi pluginInfoApi;
     private final Clock clock;
     private final NodeInfoMapper mapper;
-    // FIXME-1615 : never used?
-    private final KillbillNodesApi nodesApi;
 
     private ScheduledExecutorService nodeInfoExecutor;
     private volatile boolean isStopped;
 
     @Inject
-    public DefaultKillbillNodesService(final NodeInfoDao nodeInfoDao, final PluginsInfoApi pluginInfoApi, final KillbillNodesApi nodesApi, final Clock clock, final NodeInfoMapper mapper) {
+    public DefaultKillbillNodesService(final NodeInfoDao nodeInfoDao, final PluginsInfoApi pluginInfoApi, final Clock clock, final NodeInfoMapper mapper) {
         this.nodeInfoDao = nodeInfoDao;
         this.pluginInfoApi = pluginInfoApi;
-        this.nodesApi = nodesApi;
         this.clock = clock;
         this.mapper = mapper;
         this.isStopped = false;
