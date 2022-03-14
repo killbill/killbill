@@ -39,6 +39,7 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
@@ -116,15 +117,22 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
         if (!customFields.isEmpty()) {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(customFields.get(0).getObjectId(), customFields.get(0).getObjectType(), context);
             final Iterable<CustomFieldModelDao> transformed = customFields.stream()
-                    .map(input -> {
-                        if (input.getId() != null) {
-                            return new CustomFieldModelDao(input.getId(), context.getCreatedDate(), context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
-                        } else {
-                            return new CustomFieldModelDao(context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
-                        }
-                    })
+                    .map(input -> createCustomFieldModelDao(input, context, false))
                     .collect(Collectors.toList());
             ((DefaultCustomFieldDao) customFieldDao).create(transformed, internalCallContext);
+        }
+    }
+
+    private static CustomFieldModelDao createCustomFieldModelDao(final CustomField input, final CallContext context, final boolean validateCustomFieldId) {
+        if (validateCustomFieldId && input.getId() == null) {
+            Preconditions.checkNotNull(input.getId(), "createCustomFieldModelDao() input.getId(). This likely happens in updating custom field, where ID is required.");
+        }
+        // Respect user-specified ID for #addCustomFields()
+        // TODO See https://github.com/killbill/killbill/issues/35
+        if (input.getId() != null) {
+            return new CustomFieldModelDao(input.getId(), context.getCreatedDate(), context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
+        } else {
+            return new CustomFieldModelDao(context.getCreatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType());
         }
     }
 
@@ -133,7 +141,7 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
         if (!customFields.isEmpty()) {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(customFields.get(0).getObjectId(), customFields.get(0).getObjectType(), context);
             final Iterable<CustomFieldModelDao> customFieldIds = customFields.stream()
-                    .map(input -> new CustomFieldModelDao(input.getId(), internalCallContext.getCreatedDate(), internalCallContext.getUpdatedDate(), input.getFieldName(), input.getFieldValue(), input.getObjectId(), input.getObjectType()))
+                    .map(input -> createCustomFieldModelDao(input, context, true))
                     .collect(Collectors.toList());
             customFieldDao.updateCustomFields(customFieldIds, internalCallContext);
 
