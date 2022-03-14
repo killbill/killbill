@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 // FIXME-1615 : This one needed for CacheController
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 
 public class KillBillCacheController<K, V> implements CacheController<K, V> {
 
@@ -124,8 +123,7 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
 
     @Override
     public int size() {
-        // FIXME-1615 : Dont know what to do to replace Iterables.size().
-        return Iterables.size(cache);
+        return (int) StreamSupport.stream(cache.spliterator(), false).count();
     }
 
     @Override
