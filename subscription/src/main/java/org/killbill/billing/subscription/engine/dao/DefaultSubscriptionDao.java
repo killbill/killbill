@@ -538,10 +538,11 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                         new SubscriptionNotificationKey(nextPhaseOrExpiredEvent.getId()), context);
 
                 // Notify the Bus
-                if (nextPhaseOrExpiredEvent.getType() == EventType.PHASE)
-                	notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseOrExpiredEvent, SubscriptionBaseTransitionType.PHASE, 0, context);
-                else
-                	notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseOrExpiredEvent, SubscriptionBaseTransitionType.EXPIRED, 0, context);
+                if (nextPhaseOrExpiredEvent.getType() == EventType.PHASE) {
+                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseOrExpiredEvent, SubscriptionBaseTransitionType.PHASE, 0, context);
+                } else {
+                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseOrExpiredEvent, SubscriptionBaseTransitionType.EXPIRED, 0, context);
+                }
                 notifyBusOfEffectiveImmediateChange(entitySqlDaoWrapperFactory, subscription, readyPhaseEvent, 0, context);
 
                 return null;
