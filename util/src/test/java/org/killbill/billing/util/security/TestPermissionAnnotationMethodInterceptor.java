@@ -31,6 +31,8 @@ import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.KillBillShiroAopModule;
 import org.killbill.billing.util.glue.TestSecurityModuleNoDB;
 import org.killbill.billing.util.glue.TestUtilModuleNoDB.ShiroModuleNoDB;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
@@ -90,6 +92,7 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
                                                                bind(IDBI.class).annotatedWith(Names.named(MAIN_RO_DATA_SOURCE_ID)).toInstance(Mockito.mock(IDBI.class));
                                                                bind(TenantInternalApi.class).toInstance(Mockito.mock(TenantInternalApi.class));
                                                                bind(NonEntityDao.class).toInstance(Mockito.mock(NonEntityDao.class));
+                                                               bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
                                                            }
                                                        });
         final AopTester aopedTester = injector.getInstance(AopTester.class);
@@ -122,6 +125,7 @@ public class TestPermissionAnnotationMethodInterceptor extends UtilTestSuiteNoDB
                                                                bind(IAopTester.class).to(AopTesterImpl.class).asEagerSingleton();
                                                                bind(TenantInternalApi.class).toInstance(Mockito.mock(TenantInternalApi.class));
                                                                bind(NonEntityDao.class).toInstance(Mockito.mock(NonEntityDao.class));
+                                                               bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
                                                            }
                                                        });
         final IAopTester aopedTester = injector.getInstance(IAopTester.class);
