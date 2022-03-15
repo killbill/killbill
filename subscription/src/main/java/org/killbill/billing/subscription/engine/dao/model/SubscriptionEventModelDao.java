@@ -214,7 +214,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         } else if (src.getEventType() == EventType.BCD_UPDATE) {
             result = (new BCDEventBuilder(base).setBillCycleDayLocal(src.getBillingCycleDayLocal())).build();
         } else if (src.getEventType() == EventType.EXPIRED) {
-        	result = (new ExpiredEventBuilder(base)).build(); //TODO_1533: Added in order for tests in TestUserApiCreate to pass, find out if any fields need to be set here and make modifications as required
+        	result = (new ExpiredEventBuilder(base)).build(); 
         } else {
             throw new SubscriptionBaseError(String.format("Can't figure out event %s", src.getEventType()));
         }

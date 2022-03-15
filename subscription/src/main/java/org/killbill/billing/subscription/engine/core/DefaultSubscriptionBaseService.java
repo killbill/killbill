@@ -214,12 +214,12 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                                                                                   nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                               null;
             if (nextPhaseEvent != null) {
-                dao.createNextPhaseEvent(subscription, readyPhaseEvent, nextPhaseEvent, context);
+                dao.createNextPhaseOrExpiredEvent(subscription, readyPhaseEvent, nextPhaseEvent, context);
                 return true;
             } else if (subscription.getCurrentPhase().getPhaseType() == PhaseType.FIXEDTERM) {
-                final DateTime fixedTermExpiryDate = subscription.getCurrentPhase().getDuration().addToDateTime(readyPhaseEvent.getEffectiveDate()); //TODO_1533 - is there any better way to do this? This requires handling CatalogApiException
+                final DateTime fixedTermExpiryDate = subscription.getCurrentPhase().getDuration().addToDateTime(readyPhaseEvent.getEffectiveDate()); 
                 final ExpiredEvent expiredEvent = ExpiredEventData.createExpiredEvent(subscription.getId(), fixedTermExpiryDate);
-                dao.createExpiredEvent(subscription, readyPhaseEvent, expiredEvent, context);
+                dao.createNextPhaseOrExpiredEvent(subscription, readyPhaseEvent, expiredEvent, context);
                 return true;
             }
 

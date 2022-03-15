@@ -321,7 +321,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhase, final InternalCallContext context) {
+    public void createNextPhaseOrExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhase, final InternalCallContext context) {
         cancelNextPhaseEvent(subscription.getId(), null, context);
         insertEvent(nextPhase, context);
         notifyBusOfEffectiveImmediateChange(subscription, readyPhaseEvent, 0, context);
@@ -554,12 +554,5 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     public List<AuditLogWithHistory> getSubscriptionEventAuditLogsWithHistoryForId(final UUID eventId, final AuditLevel auditLevel, final InternalTenantContext context) {
         return null;
     }
-
-	@Override
-	public void createExpiredEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent,
-			SubscriptionBaseEvent nextPhase, InternalCallContext context) {
-		// TODO_1533 added stub to prevent compilation error
-		
-	}
 
 }

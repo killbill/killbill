@@ -173,7 +173,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext); //TODO_1533: Why is it necessary to reread subscription here? Without this, the phase is still DISCOUNT, so test fails
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext); 
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM);
