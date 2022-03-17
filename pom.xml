@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.145.2</version>
+        <version>0.145.3-8adc2ba-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.23.0-SNAPSHOT</version>
@@ -73,12 +73,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>1.21</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.osgi</groupId>
-                        <artifactId>org.osgi.core</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <!-- log4jdbc-log4j2-jdbc4 still pulls 2.0-beta8 -->

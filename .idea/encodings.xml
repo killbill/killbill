@@ -5,17 +5,21 @@
     <file url="file://$PROJECT_DIR$/account/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/account/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/api/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/beatrix/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/beatrix/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/catalog/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/catalog/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/currency/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/currency/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/entitlement/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/entitlement/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/invoice/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/invoice/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/jaxrs/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jaxrs/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/junction/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/junction/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/overdue/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/overdue/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/payment/src/main/java" charset="UTF-8" />
@@ -23,6 +27,11 @@
     <file url="file://$PROJECT_DIR$/profiles/killbill/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/profiles/killbill/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/profiles/killpay/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/profiles/killpay/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/profiles/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/profiles/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/subscription/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/subscription/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/tenant/src/main/java" charset="UTF-8" />
