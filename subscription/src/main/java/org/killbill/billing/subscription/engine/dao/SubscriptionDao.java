@@ -87,9 +87,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     void updateChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context);
 
     // Event apis
-    void createNextPhaseEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
-    
-    void createExpiredEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
+    void createNextPhaseOrExpiredEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
 
     SubscriptionBaseEvent getEventById(UUID eventId, InternalTenantContext context);
 

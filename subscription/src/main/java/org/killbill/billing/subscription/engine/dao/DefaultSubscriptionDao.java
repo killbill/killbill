@@ -524,49 +524,31 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         });
     }
 
-    @Override
-    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhaseEvent, final InternalCallContext context) {
+    @Override 
+    public void createNextPhaseOrExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhaseOrExpiredEvent, final InternalCallContext context) {
         transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
                 final UUID subscriptionId = subscription.getId();
                 cancelNextPhaseEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
-                createAndRefresh(transactional, new SubscriptionEventModelDao(nextPhaseEvent), context);
+                createAndRefresh(transactional, new SubscriptionEventModelDao(nextPhaseOrExpiredEvent), context);
                 recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                        nextPhaseEvent.getEffectiveDate(),
-                                                        new SubscriptionNotificationKey(nextPhaseEvent.getId()), context);
+                                                        nextPhaseOrExpiredEvent.getEffectiveDate(),
+                                                        new SubscriptionNotificationKey(nextPhaseOrExpiredEvent.getId()), context);
 
                 // Notify the Bus
-                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseEvent, SubscriptionBaseTransitionType.PHASE, 0, context);
+                if (nextPhaseOrExpiredEvent.getType() == EventType.PHASE) {
+                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseOrExpiredEvent, SubscriptionBaseTransitionType.PHASE, 0, context);
+                } else {
+                    notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseOrExpiredEvent, SubscriptionBaseTransitionType.EXPIRED, 0, context);
+                }
                 notifyBusOfEffectiveImmediateChange(entitySqlDaoWrapperFactory, subscription, readyPhaseEvent, 0, context);
 
                 return null;
             }
         });
-    }
-    
-    @Override //TODO_1533 - Similar to createNextPhaseEvent for now, will combine with createNextPhaseEvent if possible 
-    public void createExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhaseEvent, final InternalCallContext context) {
-        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-                final UUID subscriptionId = subscription.getId();
-                cancelNextPhaseEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, context);
-                createAndRefresh(transactional, new SubscriptionEventModelDao(nextPhaseEvent), context);
-                recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
-                                                        nextPhaseEvent.getEffectiveDate(),
-                                                        new SubscriptionNotificationKey(nextPhaseEvent.getId()), context);
-
-                // Notify the Bus
-                notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, nextPhaseEvent, SubscriptionBaseTransitionType.EXPIRED, 0, context);
-                notifyBusOfEffectiveImmediateChange(entitySqlDaoWrapperFactory, subscription, readyPhaseEvent, 0, context);
-
-                return null;
-            }
-        });
-    }
+    }    
 
     @Override
     public SubscriptionBaseEvent getEventById(final UUID eventId, final InternalTenantContext context) {

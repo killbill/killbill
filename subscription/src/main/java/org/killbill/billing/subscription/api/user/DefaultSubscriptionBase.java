@@ -965,7 +965,6 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
     }
 
-    //TODO_1533 - Does this method need to be modified for expired?
     // Skip any event after a CANCEL event:
     //
     //  * DefaultSubscriptionDao#buildBundleSubscriptions may have added an out-of-order cancellation event (https://github.com/killbill/killbill/issues/897)
