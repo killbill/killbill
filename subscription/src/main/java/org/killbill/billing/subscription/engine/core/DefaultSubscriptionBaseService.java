@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
@@ -39,6 +40,8 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
+import org.killbill.billing.subscription.events.expired.ExpiredEvent;
+import org.killbill.billing.subscription.events.expired.ExpiredEventData;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
@@ -182,6 +185,9 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                 eventSent = onBasePlanEvent(subscription, event, catalog, callContext);
             } else if (event.getType() == EventType.BCD_UPDATE) {
                 eventSent = false;
+            } else if (event.getType() == EventType.EXPIRED) {
+                final CallContext callContext = internalCallContextFactory.createCallContext(context);
+                eventSent = onExpiryEvent(subscription, event, catalog, callContext);
             }
 
             if (!eventSent) {
@@ -208,18 +214,28 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                                                                                   nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
                                               null;
             if (nextPhaseEvent != null) {
-                dao.createNextPhaseEvent(subscription, readyPhaseEvent, nextPhaseEvent, context);
+                dao.createNextPhaseOrExpiredEvent(subscription, readyPhaseEvent, nextPhaseEvent, context);
+                return true;
+            } else if (subscription.getCurrentPhase().getPhaseType() == PhaseType.FIXEDTERM) {
+                final DateTime fixedTermExpiryDate = subscription.getCurrentPhase().getDuration().addToDateTime(readyPhaseEvent.getEffectiveDate()); 
+                final ExpiredEvent expiredEvent = ExpiredEventData.createExpiredEvent(subscription.getId(), fixedTermExpiryDate);
+                dao.createNextPhaseOrExpiredEvent(subscription, readyPhaseEvent, expiredEvent, context);
                 return true;
             }
-        } catch (final SubscriptionBaseError e) {
+
+        } catch (final SubscriptionBaseError | CatalogApiException e) {
             log.warn("Error inserting next phase for subscriptionId='{}'", subscription.getId(), e);
         }
-
         return false;
     }
 
     private boolean onBasePlanEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final SubscriptionCatalog fullCatalog, final CallContext context) throws CatalogApiException {
         apiService.handleBasePlanEvent(baseSubscription, event, fullCatalog, context);
+        return true;
+    }
+
+    private boolean onExpiryEvent(final DefaultSubscriptionBase baseSubscription, final SubscriptionBaseEvent event, final SubscriptionCatalog fullCatalog, final CallContext context) throws CatalogApiException {
+        apiService.handleExpiredEvent(baseSubscription, event, fullCatalog, context);
         return true;
     }
 }

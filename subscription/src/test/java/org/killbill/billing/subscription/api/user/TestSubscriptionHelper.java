@@ -99,6 +99,39 @@ public class TestSubscriptionHelper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
+    public static DateTime addOrRemoveDuration(final DateTime input, final List<Duration> durations, final boolean add) {
+        DateTime result = input;
+        for (final Duration cur : durations) {
+            switch (cur.getUnit()) {
+                case DAYS:
+                    result = add ? result.plusDays(cur.getNumber()) : result.minusDays(cur.getNumber());
+                    break;
+
+                case MONTHS:
+                    result = add ? result.plusMonths(cur.getNumber()) : result.minusMonths(cur.getNumber());
+                    break;
+
+                case YEARS:
+                    result = add ? result.plusYears(cur.getNumber()) : result.minusYears(cur.getNumber());
+                    break;
+                case UNLIMITED:
+                default:
+                    throw new RuntimeException("Trying to move to unlimited time period");
+            }
+        }
+        return result;
+    }
+
+    public static DateTime addDuration(final DateTime input, final List<Duration> durations) {
+        return addOrRemoveDuration(input, durations, true);
+    }
+
+    public static DateTime addDuration(final DateTime input, final Duration duration) {
+        final List<Duration> list = new ArrayList<Duration>();
+        list.add(duration);
+        return addOrRemoveDuration(input, list, true);
+    }
+
     public DryRunArguments createDryRunArguments(final UUID subscriptionId, final UUID bundleId, final EntitlementSpecifier spec, final LocalDate requestedDate, final SubscriptionEventType type, final BillingActionPolicy billingActionPolicy) {
         return new DryRunArguments() {
             @Override
@@ -150,24 +183,28 @@ public class TestSubscriptionHelper {
     }
 
     public DefaultSubscriptionBase createSubscription(final boolean noEvents, final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet) throws SubscriptionBaseApiException {
-        return createSubscription(noEvents, bundle, productName, term, planSet, null, null);
+        return createSubscription(noEvents, bundle, productName, term, planSet, null, null, null);
     }
 
     public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
             throws SubscriptionBaseApiException {
-        return createSubscription(false, bundle, productName, term, planSet, phaseType, requestedDate);
+        return createSubscription(false, bundle, productName, term, planSet, phaseType, null, requestedDate);
     }
 
-    private DefaultSubscriptionBase createSubscription(final boolean noEvents, @Nullable final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final LocalDate requestedDate)
+    public DefaultSubscriptionBase createSubscription(final SubscriptionBaseBundle bundle, final String planName)
+            throws SubscriptionBaseApiException {
+        return createSubscription(false, bundle, null, null, null, null, planName, null);
+    }
+
+    private DefaultSubscriptionBase createSubscription(final boolean noEvents, @Nullable final SubscriptionBaseBundle bundle, final String productName, final BillingPeriod term, final String planSet, final PhaseType phaseType, final String planName, final LocalDate requestedDate)
             throws SubscriptionBaseApiException {
 
         final VersionedCatalog catalog;
         try {
             catalog = catalogInternalApi.getFullCatalog(true, true, internalCallContext);
-        } catch (CatalogApiException e) {
+        } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
-
 
         // Make sure the right account information is used
         final InternalCallContext internalCallContext = bundle == null ? this.internalCallContext : internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
@@ -193,7 +230,11 @@ public class TestSubscriptionHelper {
         final ImmutableList<EntitlementSpecifier> entitlementSpecifiers = ImmutableList.<EntitlementSpecifier>of(new EntitlementSpecifier() {
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
-                return new PlanPhaseSpecifier(productName, term, planSet, phaseType);
+                if (planName == null) {
+                    return new PlanPhaseSpecifier(productName, term, planSet, phaseType);
+                } else {
+                    return new PlanPhaseSpecifier(planName);
+                }
             }
 
             @Override
@@ -211,7 +252,7 @@ public class TestSubscriptionHelper {
                 return null;
             }
         });
-        final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle == null ||!bundleExists ? null : bundle.getId(),
+        final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle == null || !bundleExists ? null : bundle.getId(),
                                                                                                                                 bundle == null ? null : bundle.getExternalKey(),
                                                                                                                                 entitlementSpecifiers,
                                                                                                                                 requestedDate,
@@ -282,10 +323,12 @@ public class TestSubscriptionHelper {
             public DateTime addToDateTime(final DateTime dateTime) {
                 return null;
             }
+
             @Override
             public LocalDate addToLocalDate(final LocalDate localDate) {
                 return null;
             }
+
             @Override
             public Period toJodaPeriod() {
                 throw new UnsupportedOperationException();
@@ -304,38 +347,5 @@ public class TestSubscriptionHelper {
         for (final SubscriptionBaseEvent cur : events) {
             log.debug("Inspect event " + cur);
         }
-    }
-
-    public static DateTime addOrRemoveDuration(final DateTime input, final List<Duration> durations, final boolean add) {
-        DateTime result = input;
-        for (final Duration cur : durations) {
-            switch (cur.getUnit()) {
-                case DAYS:
-                    result = add ? result.plusDays(cur.getNumber()) : result.minusDays(cur.getNumber());
-                    break;
-
-                case MONTHS:
-                    result = add ? result.plusMonths(cur.getNumber()) : result.minusMonths(cur.getNumber());
-                    break;
-
-                case YEARS:
-                    result = add ? result.plusYears(cur.getNumber()) : result.minusYears(cur.getNumber());
-                    break;
-                case UNLIMITED:
-                default:
-                    throw new RuntimeException("Trying to move to unlimited time period");
-            }
-        }
-        return result;
-    }
-
-    public static DateTime addDuration(final DateTime input, final List<Duration> durations) {
-        return addOrRemoveDuration(input, durations, true);
-    }
-
-    public static DateTime addDuration(final DateTime input, final Duration duration) {
-        final List<Duration> list = new ArrayList<Duration>();
-        list.add(duration);
-        return addOrRemoveDuration(input, list, true);
     }
 }
