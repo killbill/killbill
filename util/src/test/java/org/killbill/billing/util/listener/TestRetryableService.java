@@ -49,12 +49,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
+import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
 
     private static final String TEST_LISTENER = "TestListener";
-    private static final ImmutableList<Period> RETRY_SCHEDULE = ImmutableList.<Period>of(Period.hours(1), Period.days(1));
+    private static final List<Period> RETRY_SCHEDULE = List.of(Period.hours(1), Period.days(1));
 
     private ControlTagCreationInternalEvent event;
     private TestListener testListener;
@@ -176,7 +176,7 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
 
     private List<NotificationEventWithMetadata> getFutureRetryableEvents() throws NoSuchNotificationQueue {
         final NotificationQueue notificationQueue = queueService.getNotificationQueue(RetryableService.RETRYABLE_SERVICE_NAME, TEST_LISTENER);
-        return ImmutableList.<NotificationEventWithMetadata>copyOf(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
+        return iterableToList(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
     }
 
     private final class TestListener extends RetryableService {

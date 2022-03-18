@@ -128,11 +128,11 @@ public class DefaultUserDao implements UserDao {
                                                                    existingPermissions :
                                                                    existingPermissions.stream()
                                                                            .filter(input -> !permissions.contains(input.getPermission()))
-                                                                           .collect(Collectors.toList());
+                                                                           .collect(Collectors.toUnmodifiableList());
 
             final List<String> toBeAdded = permissions.stream()
                     .filter(s -> existingPermissions.stream().noneMatch(e -> e.getPermission().equals(s)))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toUnmodifiableList());
 
             for (final RolesPermissionsModelDao d : toBeDeleted) {
                 rolesPermissionsSqlDao.unactiveEvent(d.getRecordId(), createdDate, createdBy);

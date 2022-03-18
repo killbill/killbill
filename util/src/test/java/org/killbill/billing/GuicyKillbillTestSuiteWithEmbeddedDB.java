@@ -30,6 +30,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -48,7 +49,7 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import com.google.common.collect.ImmutableMap;
+// FIXME-1615 : Can we change this to javax.inject.Inject?
 import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.CacheModule.REDIS_CACHE_CLIENT;
@@ -90,7 +91,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         }
 
         // Hack to configure log4jdbc -- properties used by tests will be properly setup in @BeforeClass
-        getConfigSource(ImmutableMap.<String, String>of());
+        getConfigSource(Collections.emptyMap());
         DBTestingHelper.get().start();
     }
 

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -40,8 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+
+import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class DefaultKillbillNodesService implements KillbillNodesService {
 
@@ -83,7 +84,7 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
         try {
             // Compute a first version early on before plugins were installed to at least provide info about Kill Bill component versions
             createBootNodeInfo(true);
-        } catch (JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             logger.error("Failed to create bootNodeInfo", e);
         }
     }
@@ -112,7 +113,7 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
             // In tests, the service is created once and re-used.
             this.isStopped = false;
             logger.info("Created nodeInfo for {}", CreatorName.get());
-        } catch (JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             logger.error("Failed to create bootNodeInfo", e);
         }
     }
@@ -144,7 +145,7 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
 
         final DateTime bootTime = clock.getUTCNow();
         final Iterable<PluginInfo> rawPluginInfo = skipPlugins ? Collections.emptyList() : pluginInfoApi.getPluginsInfo();
-        final List<PluginInfo> pluginInfo = rawPluginInfo.iterator().hasNext() ? ImmutableList.copyOf(rawPluginInfo) : Collections.emptyList();
+        final List<PluginInfo> pluginInfo = rawPluginInfo.iterator().hasNext() ? iterableToList(rawPluginInfo) : Collections.emptyList();
         final String kbVersion = org.killbill.billing.util.nodes.KillbillVersions.getKillbillVersion();
         final String kbApiVersion  = org.killbill.billing.util.nodes.KillbillVersions.getApiVersion();
         final String kbPluginApiVersion  = org.killbill.billing.util.nodes.KillbillVersions.getPluginApiVersion();
@@ -153,7 +154,7 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
 
 
         final NodeInfoModelJson nodeInfo = new NodeInfoModelJson(CreatorName.get(), bootTime, bootTime, kbVersion, kbApiVersion, kbPluginApiVersion, kbCommonVersion, kbPlatformVersion,
-             ImmutableList.copyOf(Iterables.transform(pluginInfo, PluginInfoModelJson::new)));
+             pluginInfo.stream().map(PluginInfoModelJson::new).collect(Collectors.toUnmodifiableList()));
 
         final String nodeInfoValue = mapper.serializeNodeInfo(nodeInfo);
         final NodeInfoModelDao bootNodeInfo = new NodeInfoModelDao(CreatorName.get(), clock.getUTCNow(), nodeInfoValue);

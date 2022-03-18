@@ -51,7 +51,7 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
     public List<K> getKeys() {
         return StreamSupport.stream(cache.spliterator(), false)
                      .map(Entry::getKey)
-                     .collect(Collectors.toList());
+                     .collect(Collectors.toUnmodifiableList());
     }
 
     @Override

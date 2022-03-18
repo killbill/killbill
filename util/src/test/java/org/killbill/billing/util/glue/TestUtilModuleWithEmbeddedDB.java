@@ -34,7 +34,6 @@ import org.killbill.clock.ClockMock;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.mockito.Mockito;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
@@ -73,7 +72,7 @@ public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {
         final Realm iniRealm = new IniRealm(ini);
         final Realm killBillJdbcRealm = new KillBillJdbcRealm(embeddedDB.getDataSource(), securityConfig);
 
-        return ImmutableSet.<Realm>of(iniRealm, killBillJdbcRealm);
+        return Set.of(iniRealm, killBillJdbcRealm);
     }
 
     private final class SecurityModuleWithNoSecurityManager extends SecurityModule {

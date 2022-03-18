@@ -17,9 +17,11 @@
 package org.killbill.billing.util.audit.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -31,15 +33,12 @@ import org.killbill.billing.util.audit.DefaultAccountAuditLogsForObjectType;
 import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.dao.TableName;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-
 public class MockAuditDao implements AuditDao {
 
-    private final Map<TableName, Map<UUID, List<AuditLog>>> auditLogsForTables = new HashMap<TableName, Map<UUID, List<AuditLog>>>();
+    private final Map<TableName, Map<UUID, List<AuditLog>>> auditLogsForTables = new HashMap<>();
 
     public synchronized void addAuditLogForId(final TableName tableName, final UUID objectId, final AuditLog auditLog) {
-        addAuditLogsForId(tableName, objectId, ImmutableList.<AuditLog>of(auditLog));
+        addAuditLogsForId(tableName, objectId, List.of(auditLog));
     }
 
     public synchronized void addAuditLogsForId(final TableName tableName, final UUID objectId, final List<AuditLog> auditLogs) {
@@ -68,17 +67,17 @@ public class MockAuditDao implements AuditDao {
     public List<AuditLog> getAuditLogsForId(final TableName tableName, final UUID objectId, final AuditLevel auditLevel, final InternalTenantContext context) {
         final Map<UUID, List<AuditLog>> auditLogsForTableName = auditLogsForTables.get(tableName);
         if (auditLogsForTableName == null) {
-            return ImmutableList.<AuditLog>of();
+            return Collections.emptyList();
         }
 
         final List<AuditLog> auditLogsForObjectId = auditLogsForTableName.get(objectId);
-        final List<AuditLog> allAuditLogs = MoreObjects.firstNonNull(auditLogsForObjectId, ImmutableList.<AuditLog>of());
+        final List<AuditLog> allAuditLogs = Objects.requireNonNullElse(auditLogsForObjectId, Collections.emptyList());
         if (AuditLevel.FULL.equals(auditLevel)) {
             return allAuditLogs;
-        } else if (AuditLevel.MINIMAL.equals(auditLevel) && allAuditLogs.size() > 0) {
-            return ImmutableList.<AuditLog>of(allAuditLogs.get(0));
+        } else if (AuditLevel.MINIMAL.equals(auditLevel) && !allAuditLogs.isEmpty()) {
+            return List.of(allAuditLogs.get(0));
         } else if (AuditLevel.NONE.equals(auditLevel)) {
-            return ImmutableList.<AuditLog>of();
+            return Collections.emptyList();
         } else {
             return allAuditLogs;
         }

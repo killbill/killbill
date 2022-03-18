@@ -41,6 +41,7 @@ import org.killbill.billing.util.audit.DefaultAuditLog;
 import org.killbill.billing.util.audit.DefaultAuditLogWithHistory;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.collect.CollectionTransformer;
 import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -52,7 +53,6 @@ import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
-import com.google.common.collect.Iterators;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
@@ -101,9 +101,9 @@ public class DefaultAuditDao implements AuditDao {
     }
 
     private Iterator<AuditLog> buildAuditLogsFromModelDao(final Iterator<AuditLogModelDao> auditLogsForAccountRecordId, final InternalTenantContext tenantContext) {
-        final Map<TableName, Map<Long, UUID>> recordIdIdsCache = new HashMap<TableName, Map<Long, UUID>>();
-        final Map<TableName, Map<Long, UUID>> historyRecordIdIdsCache = new HashMap<TableName, Map<Long, UUID>>();
-        return Iterators.<AuditLogModelDao, AuditLog>transform(auditLogsForAccountRecordId, input -> {
+        final Map<TableName, Map<Long, UUID>> recordIdIdsCache = new HashMap<>();
+        final Map<TableName, Map<Long, UUID>> historyRecordIdIdsCache = new HashMap<>();
+        return CollectionTransformer.transformIterator(auditLogsForAccountRecordId, input -> {
             final TableName originalTableNameForHistoryTableName = findTableNameForHistoryTableName(input.getTableName());
             final NonEntitySqlDao nonEntitySqlDao = dbRouter.onDemand(true);
             final ObjectType objectType;
@@ -177,7 +177,7 @@ public class DefaultAuditDao implements AuditDao {
             final List<AuditLogModelDao> result = entitySqlDaoWrapperFactory
                     .become(EntitySqlDao.class)
                     .getAuditLogsViaHistoryForTargetRecordId(historyTableName.name(), historyTableName.getTableName().toLowerCase(), targetRecordId, context);
-            return List.copyOf(result.stream().map(transformAndFilterAuditLogDaoToModel(objectHistory, tableName, objectId)).collect(Collectors.toList()));
+            return result.stream().map(transformAndFilterAuditLogDaoToModel(objectHistory, tableName, objectId)).collect(Collectors.toUnmodifiableList());
         });
     }
 
@@ -229,7 +229,7 @@ public class DefaultAuditDao implements AuditDao {
     private static List<AuditLog> buildAuditLogsFromModelDao(final List<AuditLogModelDao> auditLogsForAccountRecordId, final ObjectType objectType, final UUID auditedEntityId) {
         return auditLogsForAccountRecordId.stream()
                 .map(input -> new DefaultAuditLog(input, objectType, auditedEntityId))
-                .collect(Collectors.toList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static List<AuditLog> filterAuditLogs(final AuditLevel auditLevel, final List<AuditLog> auditLogs) {

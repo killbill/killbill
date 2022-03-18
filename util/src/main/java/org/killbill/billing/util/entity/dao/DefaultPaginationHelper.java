@@ -18,21 +18,22 @@ package org.killbill.billing.util.entity.dao;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Objects;
+import java.util.stream.StreamSupport;
 
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // FIXME-1615 : Used in method parameters, and the methods use in several modules
 import com.google.common.base.Function;
-import com.google.common.base.Predicates;
+
+// FIXME-1615 : Can we have better approach to close connection?
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
 
 public class DefaultPaginationHelper {
 
@@ -63,7 +64,7 @@ public class DefaultPaginationHelper {
                     ImmutableList.<E>copyOf(pages);
                 } else {
                     pages = entityPaginationBuilder.build(firstSearch ? offset : 0L, limit - allResults.size(), pluginName);
-                    allResults.addAll(ImmutableList.<E>copyOf(pages));
+                    pages.forEach(allResults::add);
                 }
                 // Make sure not to start at 0 for subsequent plugins if previous ones didn't yield any result
                 firstSearch = allResults.isEmpty();
@@ -93,10 +94,7 @@ public class DefaultPaginationHelper {
                                                                                                           final Function<O, E> function) throws T {
         final Pagination<O> modelsDao = sourcePaginationBuilder.build();
 
-        return new DefaultPagination<E>(modelsDao,
-                                        limit,
-                                        Iterators.<E>filter(Iterators.<O, E>transform(modelsDao.iterator(), function),
-                                                            Predicates.<E>notNull()));
+        return new DefaultPagination<E>(modelsDao, limit, StreamSupport.stream(modelsDao.spliterator(), false).map(function).filter(Objects::nonNull).iterator());
     }
 
     public static <E extends Entity, O, T extends BillingExceptionBase> Pagination<E> getEntityPaginationNoException(final Long limit,

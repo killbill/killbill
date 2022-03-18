@@ -19,6 +19,7 @@ package org.killbill.billing.util.optimizer;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BusInternalEvent;
+import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -27,7 +28,6 @@ import org.killbill.bus.api.BusEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 public class BusDispatcherOptimizerOn implements BusDispatcherOptimizer{
@@ -38,7 +38,7 @@ public class BusDispatcherOptimizerOn implements BusDispatcherOptimizer{
     private final InternalCallContextFactory internalCallContextFactory;
 
     @Inject
-    public BusDispatcherOptimizerOn(EventConfig eventConfig, final InternalCallContextFactory internalCallContextFactory) {
+    public BusDispatcherOptimizerOn(final EventConfig eventConfig, final InternalCallContextFactory internalCallContextFactory) {
         this.eventConfig = eventConfig;
         this.internalCallContextFactory = internalCallContextFactory;
     }

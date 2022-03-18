@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -38,8 +39,10 @@ import org.killbill.billing.util.customfield.dao.DefaultCustomFieldDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
+// FIXME-1615 : Needed for DefaultPaginationHelper
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
+
+// FIXME-1615 : Can we replace this with javax-inject https://jcp.org/en/jsr/detail?id=330 ?
 import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
@@ -152,8 +155,8 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     public void removeCustomFields(final List<CustomField> customFields, final CallContext context) throws CustomFieldApiException {
         if (!customFields.isEmpty()) {
             final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(customFields.get(0).getObjectId(), customFields.get(0).getObjectType(), context);
-            final Iterable<UUID> curstomFieldIds = customFields.stream().map(CustomField::getId).collect(Collectors.toList());
-            customFieldDao.deleteCustomFields(curstomFieldIds, internalCallContext);
+            final Iterable<UUID> customFieldIds = customFields.stream().map(CustomField::getId).collect(Collectors.toUnmodifiableList());
+            customFieldDao.deleteCustomFields(customFieldIds, internalCallContext);
         }
     }
 
@@ -178,6 +181,6 @@ public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
     }
 
     private List<CustomField> withCustomFieldsTransform(final Collection<CustomFieldModelDao> input) {
-        return List.copyOf(input.stream().map(CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION).collect(Collectors.toList()));
+        return input.stream().map(CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION).collect(Collectors.toUnmodifiableList());
     }
 }

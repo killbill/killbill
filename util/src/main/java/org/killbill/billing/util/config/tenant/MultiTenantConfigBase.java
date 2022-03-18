@@ -61,26 +61,23 @@ public abstract class MultiTenantConfigBase {
 
     protected List<TimeSpan> convertToListTimeSpan(final String value, final String methodName) {
         final Method method = getConfigStaticMethodWithChecking(methodName);
-        final List<TimeSpan> tokens = getTokens(method, value).stream()
+        return getTokens(method, value).stream()
                 .map(TIME_SPAN_CONVERTER)
-                .collect(Collectors.toList());
-        return List.copyOf(tokens);
+                .collect(Collectors.toUnmodifiableList());
     }
 
     protected List<BusInternalEventType> convertToListBusInternalEventType(final String value, final String methodName) {
         final Method method = getConfigStaticMethodWithChecking(methodName);
-        final List<BusInternalEventType> tokens = getTokens(method, value).stream()
+        return getTokens(method, value).stream()
                 .map(BUS_EVENT_TYPE_CONVERTER)
-                .collect(Collectors.toList());
-        return List.copyOf(tokens);
+                .collect(Collectors.toUnmodifiableList());
     }
 
     protected List<Integer> convertToListInteger(final String value, final String methodName) {
         final Method method = getConfigStaticMethodWithChecking(methodName);
-        final List<Integer> tokens = getTokens(method, value).stream()
+        return getTokens(method, value).stream()
                 .map(INT_CONVERTER)
-                .collect(Collectors.toList());
-        return List.copyOf(tokens);
+                .collect(Collectors.toUnmodifiableList());
     }
 
     protected String getStringTenantConfig(final String methodName, final InternalTenantContext tenantContext) {

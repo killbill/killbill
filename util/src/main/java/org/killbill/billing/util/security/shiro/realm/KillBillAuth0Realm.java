@@ -60,17 +60,20 @@ import org.asynchttpclient.DefaultAsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig.Builder;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
+import org.killbill.billing.util.Strings;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
+
+// FIXME-1615 : Cache: should discuss this.
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+
+// FIXME-1615 : Should we change to JSR-330 javax.inject.Inject ?
 import com.google.inject.Inject;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Clock;

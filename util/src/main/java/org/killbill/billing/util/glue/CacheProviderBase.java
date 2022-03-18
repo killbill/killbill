@@ -21,11 +21,12 @@ import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.Configuration;
 
+import org.killbill.billing.util.Preconditions;
+
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jcache.JCacheGaugeSet;
-import com.google.common.base.Preconditions;
 
 abstract class CacheProviderBase {
 

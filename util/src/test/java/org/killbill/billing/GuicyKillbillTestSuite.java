@@ -34,6 +34,7 @@ import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.callcontext.MutableInternalCallContext;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.glue.RedissonCacheClientProvider;
 import org.killbill.clock.Clock;
@@ -57,8 +58,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Listeners;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import redis.embedded.RedisServer;
 
 import static org.testng.ITestResult.CREATED;

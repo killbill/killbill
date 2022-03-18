@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 
+import org.killbill.billing.util.Joiner;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -27,17 +28,8 @@ import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.TagDefinition;
 
-import com.google.common.base.Joiner;
-
 public class TagDefinitionModelDao extends EntityModelDaoBase implements EntityModelDao<TagDefinition> {
 
-    /**
-     * FIXME-1615 : We can use String Joiner here, but:
-     * 1. it only accept string, so we need to do things like
-     *    tag.getApplicableObjectTypes().stream().map( ... ).collect() (see line 58)
-     * 2. as this is in several places, maybe we need a utility classes dedicated for this
-     * 3. And lead to, "Can't we just use Google's Joiner?")
-     */
     private static final Joiner JOINER = Joiner.on(",");
     private String name;
     private String applicableObjectTypes;
@@ -46,7 +38,7 @@ public class TagDefinitionModelDao extends EntityModelDaoBase implements EntityM
 
     public TagDefinitionModelDao() { /* For the DAO mapper */ }
 
-    public TagDefinitionModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String name, final String description, String applicableObjectTypes) {
+    public TagDefinitionModelDao(final UUID id, final DateTime createdDate, final DateTime updatedDate, final String name, final String description, final String applicableObjectTypes) {
         super(id, createdDate, updatedDate);
         this.name = name;
         this.description = description;
@@ -58,7 +50,7 @@ public class TagDefinitionModelDao extends EntityModelDaoBase implements EntityM
         this(tag.getId(), null, null, tag.name(), tag.getDescription(), JOINER.join(tag.getApplicableObjectTypes()));
     }
 
-    public TagDefinitionModelDao(final DateTime createdDate, final String name, final String description, String applicableObjectTypes) {
+    public TagDefinitionModelDao(final DateTime createdDate, final String name, final String description, final String applicableObjectTypes) {
         this(UUIDs.randomUUID(), createdDate, createdDate, name, description, applicableObjectTypes);
     }
 

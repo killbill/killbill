@@ -34,12 +34,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
@@ -65,11 +67,6 @@ import org.skife.jdbi.v2.unstable.BindIn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.Iterables;
-
 /**
  * Wraps an instance of EntitySqlDao, performing extra work around each method (Sql query)
  *
@@ -88,6 +85,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private final Handle handle;
 
     private final CacheControllerDispatcher cacheControllerDispatcher;
+    // FIXME-1615 : Do we use this? I don't think so.
     private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Profiling<Object, Throwable> prof;
@@ -297,7 +295,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
             if (!reHydratedEntities.isEmpty()) {
                 Preconditions.checkState(reHydratedEntities.size() == 1, "Invalid number of entities: %s", reHydratedEntities);
-                return Iterables.<M>getFirst(reHydratedEntities, null);
+                return reHydratedEntities.stream().findFirst().orElse(null);
             } else {
                 // Updated entity not retrieved yet, we have to go back to the database
                 final M entity = sqlDao.getByRecordId(entityRecordIds.get(0), context);
@@ -422,9 +420,9 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
             // For Batch calls, the first argument will be of type List<Entity>
             if (arg instanceof Iterable) {
-                final Builder<String> entityIds = extractEntityIdsFromBatchArgument((Iterable) arg);
+                final List<String> entityIds = extractEntityIdsFromBatchArgument((Iterable<?>) arg);
                 if (entityIds != null) {
-                    return entityIds.build();
+                    return entityIds;
                 }
             }
 
@@ -452,9 +450,9 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         return parameterAnnotations;
     }
 
-    private Builder<String> extractEntityIdsFromBatchArgument(final Iterable arg) {
-        final Iterator iterator = arg.iterator();
-        final Builder<String> entityIds = new Builder<String>();
+    private List<String> extractEntityIdsFromBatchArgument(final Iterable<?> arg) {
+        final Iterator<?> iterator = arg.iterator();
+        final List<String> entityIds = new ArrayList<>();
         while (iterator.hasNext()) {
             final Object object = iterator.next();
             if (!(object instanceof Entity)) {
@@ -524,7 +522,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                               final TableName tableName,
                               final ChangeType changeType,
                               final InternalCallContext context) {
-        final TableName destinationTableName = MoreObjects.firstNonNull(tableName.getHistoryTableName(), tableName);
+        final TableName destinationTableName = Objects.requireNonNullElse(tableName.getHistoryTableName(), tableName);
 
         final Collection<EntityAudit> audits = new LinkedList<>();
         for (final Long auditTargetRecordId : auditTargetRecordIds) {

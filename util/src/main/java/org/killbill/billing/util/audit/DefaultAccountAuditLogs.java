@@ -16,6 +16,7 @@
 
 package org.killbill.billing.util.audit;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,16 +26,15 @@ import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.collect.AbstractIterator;
 import org.killbill.billing.util.dao.TableName;
-
-import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.ImmutableList;
 
 public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
     private final UUID accountId;
     private final AuditLevel auditLevel;
-    private final List<AuditLog> accountAuditLogs;
+    // FIXME-1615 : This was List. Confirm is it ok to change to Iterator? (because the ctor param is Iterator as well)
+    private final Iterator<AuditLog> accountAuditLogs;
 
     private final Map<ObjectType, DefaultAccountAuditLogsForObjectType> auditLogsCache = new HashMap<ObjectType, DefaultAccountAuditLogsForObjectType>();
 
@@ -46,7 +46,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         this.accountId = accountId;
         this.auditLevel = auditLevel;
         // TODO pierre - lame, we should be smarter to avoid loading all entries in memory. It's a bit tricky though...
-        this.accountAuditLogs = ImmutableList.<AuditLog>copyOf(accountAuditLogsOrderedByTableName);
+        this.accountAuditLogs = accountAuditLogsOrderedByTableName;
     }
 
     public void close() {
@@ -127,7 +127,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
     @Override
     public AccountAuditLogsForObjectType getAuditLogs(final ObjectType objectType) {
         if (auditLogsCache.get(objectType) == null) {
-            auditLogsCache.put(objectType, new DefaultAccountAuditLogsForObjectType(auditLevel, new ObjectTypeFilter(objectType, accountAuditLogs.iterator())));
+            auditLogsCache.put(objectType, new DefaultAccountAuditLogsForObjectType(auditLevel, new ObjectTypeFilter(objectType, accountAuditLogs)));
         }
 
         // Should never be null
@@ -136,7 +136,9 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
     @Override
     public List<AuditLog> getAuditLogs() {
-        return accountAuditLogs;
+        final List<AuditLog> result = new ArrayList<>();
+        accountAuditLogs.forEachRemaining(result::add);
+        return result;
     }
 
     private enum IteratorState {
@@ -146,7 +148,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         DONE
     }
 
-    private final class ObjectTypeFilter extends AbstractIterator<AuditLog> {
+    private static final class ObjectTypeFilter extends AbstractIterator<AuditLog> {
 
         // For the transition between 0_20 to 0_22 we may end up with audit logs entries that are either
         // using history table (new 0_22 behavior) or not. To keep our optimization and avoiding going through all entries

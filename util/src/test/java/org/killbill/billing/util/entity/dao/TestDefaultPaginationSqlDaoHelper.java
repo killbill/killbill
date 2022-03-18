@@ -33,8 +33,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbeddedDB {
 
     private List<KombuchaModelDao> kombuchas;
@@ -46,11 +44,11 @@ public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbedded
             return;
         }
 
-        kombuchas = ImmutableList.<KombuchaModelDao>of(new DefaultKombuchaModelDao("jasmin", "cordyceps", "white", internalCallContext),
-                                                       new DefaultKombuchaModelDao("ginger", "reishi", "brown", internalCallContext),
-                                                       new DefaultKombuchaModelDao("English breakfast", "lion's mane", "white", internalCallContext),
-                                                       // Duplicate tea on purpose
-                                                       new DefaultKombuchaModelDao("ginger", "chaga", "white", internalCallContext));
+        kombuchas = List.of(new DefaultKombuchaModelDao("jasmin", "cordyceps", "white", internalCallContext),
+                            new DefaultKombuchaModelDao("ginger", "reishi", "brown", internalCallContext),
+                            new DefaultKombuchaModelDao("English breakfast", "lion's mane", "white", internalCallContext),
+                            // Duplicate tea on purpose
+                            new DefaultKombuchaModelDao("ginger", "chaga", "white", internalCallContext));
         transactionalSqlDao = new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory);
     }
 

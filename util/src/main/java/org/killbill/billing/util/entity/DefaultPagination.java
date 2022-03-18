@@ -26,7 +26,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.ImmutableList;
+import static org.killbill.billing.util.collect.CollectionTransformer.*;
 
 // Assumes the original offset starts at zero.
 public class DefaultPagination<T> implements Pagination<T>, Closeable {
@@ -157,12 +157,7 @@ public class DefaultPagination<T> implements Pagination<T>, Closeable {
         if (currentOffset != null ? !currentOffset.equals(that.currentOffset) : that.currentOffset != null) {
             return false;
         }
-        // FIXME-1615 : We will replace ImmutableList.copyOf(iterator) with our own.
-        if (delegateIterator != null ? !ImmutableList.<T>copyOf(delegateIterator).equals(ImmutableList.<T>copyOf(that.delegateIterator)) : that.delegateIterator != null) {
-            return false;
-        }
-
-        return true;
+        return delegateIterator != null ? iteratorToList(delegateIterator).equals(iteratorToList(that.delegateIterator)) : that.delegateIterator == null;
     }
 
     @Override

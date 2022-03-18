@@ -48,14 +48,13 @@ import org.killbill.billing.security.Logical;
 import org.killbill.billing.security.Permission;
 import org.killbill.billing.security.SecurityApiException;
 import org.killbill.billing.security.api.SecurityApi;
+import org.killbill.billing.util.Strings;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.security.shiro.dao.UserDao;
 import org.killbill.billing.util.security.shiro.realm.KillBillJdbcRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Strings;
 
 public class DefaultSecurityApi implements SecurityApi {
 

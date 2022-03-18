@@ -22,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +48,7 @@ import org.asynchttpclient.DefaultAsyncHttpClient;
 import org.asynchttpclient.DefaultAsyncHttpClientConfig.Builder;
 import org.asynchttpclient.ListenableFuture;
 import org.asynchttpclient.Response;
+import org.killbill.billing.util.Strings;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,10 +56,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+
 import com.google.inject.Inject;
 
 public class KillBillOktaRealm extends AuthorizingRealm {
@@ -65,9 +64,8 @@ public class KillBillOktaRealm extends AuthorizingRealm {
     private static final Logger log = LoggerFactory.getLogger(KillBillOktaRealm.class);
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final int DEFAULT_TIMEOUT_SECS = 15;
-    private static final Splitter SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
 
-    private final Map<String, Collection<String>> permissionsByGroup = Maps.newLinkedHashMap();
+    private final Map<String, Collection<String>> permissionsByGroup = new LinkedHashMap<>();
 
     private final SecurityConfig securityConfig;
     private final AsyncHttpClient httpClient;
@@ -83,7 +81,7 @@ public class KillBillOktaRealm extends AuthorizingRealm {
             ini.load(securityConfig.getShiroOktaPermissionsByGroup().replace("\\n", "\n"));
             for (final Section section : ini.getSections()) {
                 for (final String role : section.keySet()) {
-                    final Collection<String> permissions = ImmutableList.<String>copyOf(SPLITTER.split(section.get(role)));
+                    final Collection<String> permissions = Strings.split(section.get(role), ",");
                     permissionsByGroup.put(role, permissions);
                 }
             }
@@ -117,8 +115,8 @@ public class KillBillOktaRealm extends AuthorizingRealm {
     private boolean doAuthenticate(final UsernamePasswordToken upToken) {
         final BoundRequestBuilder builder = httpClient.preparePost(securityConfig.getShiroOktaUrl() + "/api/v1/authn");
         try {
-            final ImmutableMap<String, String> body = ImmutableMap.<String, String>of("username", upToken.getUsername(),
-                                                                                      "password", String.valueOf(upToken.getPassword()));
+            final Map<String, String> body = Map.of("username", upToken.getUsername(),
+                                                    "password", String.valueOf(upToken.getPassword()));
             builder.setBody(mapper.writeValueAsString(body));
         } catch (final JsonProcessingException e) {
             log.warn("Error while generating Okta payload");

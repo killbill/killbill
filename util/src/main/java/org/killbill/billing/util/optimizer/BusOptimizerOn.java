@@ -24,6 +24,7 @@ import javax.inject.Inject;
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BusInternalEvent;
+import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.EventConfig;
 import org.killbill.bus.api.BusEvent;
@@ -32,13 +33,12 @@ import org.killbill.bus.api.PersistentBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
 public class BusOptimizerOn implements BusOptimizer {
 
     private static final Logger logger = LoggerFactory.getLogger(BusOptimizerOn.class);
 
     private final PersistentBus delegate;
+    // FIXME-1615 : Do we use this?
     private final InternalCallContextFactory internalCallContextFactory;
     private final EventConfig eventConfig;
 
