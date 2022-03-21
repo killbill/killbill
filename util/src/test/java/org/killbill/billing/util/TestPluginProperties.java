@@ -18,20 +18,20 @@
 package org.killbill.billing.util;
 
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.billing.util.collect.Maps;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestPluginProperties extends UtilTestSuiteNoDB {
 
-    private final List<PluginProperty> pluginProperties1 = PluginProperties.buildPluginProperties(Maps.of("foo", "bar", "baz", 12L));
-    private final List<PluginProperty> pluginProperties2 = PluginProperties.buildPluginProperties(Maps.of("foo", "override", "baz2", "something else"));
+    private final List<PluginProperty> pluginProperties1 = PluginProperties.buildPluginProperties(mapOf("foo", "bar", "baz", 12L));
+    private final List<PluginProperty> pluginProperties2 = PluginProperties.buildPluginProperties(mapOf("foo", "override", "baz2", "something else"));
 
     @Test(groups = "fast")
     public void testMerge() throws Exception {
@@ -84,6 +84,14 @@ public class TestPluginProperties extends UtilTestSuiteNoDB {
         return StreamSupport.stream(pluginProperties.spliterator(), false)
                             .sorted(Comparator.comparing(PluginProperty::getKey))
                             .collect(Collectors.toUnmodifiableList());
-
     }
+
+    /** needed because {@link Map#of()} not maintaining insertion order. */
+    private static <K, V> Map<K, V> mapOf(final K k1, final V v1, final K k2, final V v2) {
+        final Map<K, V> result = new LinkedHashMap<>();
+        result.put(k1, v1);
+        result.put(k2, v2);
+        return result;
+    }
+
 }
