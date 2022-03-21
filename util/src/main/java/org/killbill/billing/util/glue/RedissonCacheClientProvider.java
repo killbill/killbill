@@ -18,6 +18,7 @@
 package org.killbill.billing.util.glue;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.RedisCacheConfig;
@@ -26,10 +27,6 @@ import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.Codec;
 import org.redisson.codec.SerializationCodec;
 import org.redisson.config.Config;
-
-// FIXME-1615 : Any specifics reason why use Guava's Provider instead of JSR-330 Provider?
-// FIXME-1615 : We already use javax.inject.Inject for constructor injection here
-import com.google.inject.Provider;
 
 public class RedissonCacheClientProvider implements Provider<RedissonClient> {
 

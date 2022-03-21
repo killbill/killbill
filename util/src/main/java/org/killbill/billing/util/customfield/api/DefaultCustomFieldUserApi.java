@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.util.Preconditions;
@@ -41,9 +43,6 @@ import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePagina
 
 // FIXME-1615 : Needed for DefaultPaginationHelper
 import com.google.common.base.Function;
-
-// FIXME-1615 : Can we replace this with javax-inject https://jcp.org/en/jsr/detail?id=330 ?
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 

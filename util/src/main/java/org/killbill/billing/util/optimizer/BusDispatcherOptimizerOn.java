@@ -17,6 +17,8 @@
 
 package org.killbill.billing.util.optimizer;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.util.Preconditions;
@@ -27,8 +29,6 @@ import org.killbill.billing.util.config.definition.EventConfig;
 import org.killbill.bus.api.BusEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
 
 public class BusDispatcherOptimizerOn implements BusDispatcherOptimizer{
 

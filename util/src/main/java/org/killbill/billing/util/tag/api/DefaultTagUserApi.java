@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -52,9 +54,6 @@ import org.killbill.billing.util.tag.dao.TagModelDaoHelper;
 
 // FIXME-1615 : should replaced when working with DefaultPaginationHelper.getEntityPaginationNoException()
 import com.google.common.base.Function;
-
-// FIXME-1615 : Should we replace this by JSR-330 annotation?
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 

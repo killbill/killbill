@@ -21,14 +21,13 @@ package org.killbill.billing.util.validation.dao;
 import java.util.List;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.killbill.billing.util.entity.dao.DBRouter;
 import org.killbill.billing.util.validation.DefaultColumnInfo;
 import org.skife.jdbi.v2.IDBI;
-
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 

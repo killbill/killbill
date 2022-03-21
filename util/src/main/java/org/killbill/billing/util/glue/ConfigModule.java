@@ -21,11 +21,8 @@ import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.config.ConfigKillbillService;
 import org.killbill.billing.util.config.DefaultConfigKillbillService;
-import org.killbill.billing.util.config.definition.EventConfig;
-import org.killbill.billing.util.config.definition.MultiTenantEventConfig;
 import org.killbill.billing.util.config.tenant.CacheConfig;
 import org.killbill.billing.util.config.tenant.PerTenantConfigInvalidationCallback;
-import org.skife.config.ConfigurationObjectFactory;
 
 import com.google.inject.name.Names;
 

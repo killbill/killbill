@@ -19,6 +19,7 @@ package org.killbill.billing.util.glue;
 
 import javax.cache.CacheManager;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.apache.shiro.mgt.DefaultSecurityManager;
@@ -27,7 +28,6 @@ import org.apache.shiro.mgt.SubjectDAO;
 import org.redisson.api.RedissonClient;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.inject.name.Named;
 
 import static org.killbill.billing.util.glue.CacheModule.REDIS_CACHE_CLIENT;
 

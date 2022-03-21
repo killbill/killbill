@@ -18,6 +18,9 @@
 
 package org.killbill.billing;
 
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.test.PlatformDBTestingHelper;
 import org.killbill.billing.platform.test.config.TestKillbillConfigSource;
@@ -34,9 +37,8 @@ import org.killbill.billing.util.optimizer.BusOptimizerOn;
 import org.killbill.clock.ClockMock;
 import org.skife.jdbi.v2.IDBI;
 
+// FIXME-1615 : Should discuss
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 public class GuicyKillbillTestWithEmbeddedDBModule extends GuicyKillbillTestModule {
 
