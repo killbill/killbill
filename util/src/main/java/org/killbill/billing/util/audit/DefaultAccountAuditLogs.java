@@ -16,7 +16,6 @@
 
 package org.killbill.billing.util.audit;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,16 +24,18 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
+import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.collect.AbstractIterator;
 import org.killbill.billing.util.dao.TableName;
+
+import static org.killbill.billing.util.collect.CollectionTransformer.iteratorToList;
 
 public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
     private final UUID accountId;
     private final AuditLevel auditLevel;
-    // FIXME-1615 : This was List. Confirm is it ok to change to Iterator? (because the ctor param is Iterator as well)
-    private final Iterator<AuditLog> accountAuditLogs;
+    private final List<AuditLog> accountAuditLogs;
 
     private final Map<ObjectType, DefaultAccountAuditLogsForObjectType> auditLogsCache = new HashMap<ObjectType, DefaultAccountAuditLogsForObjectType>();
 
@@ -46,7 +47,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         this.accountId = accountId;
         this.auditLevel = auditLevel;
         // TODO pierre - lame, we should be smarter to avoid loading all entries in memory. It's a bit tricky though...
-        this.accountAuditLogs = accountAuditLogsOrderedByTableName;
+        this.accountAuditLogs = iteratorToList(accountAuditLogsOrderedByTableName);
     }
 
     public void close() {
@@ -127,7 +128,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
     @Override
     public AccountAuditLogsForObjectType getAuditLogs(final ObjectType objectType) {
         if (auditLogsCache.get(objectType) == null) {
-            auditLogsCache.put(objectType, new DefaultAccountAuditLogsForObjectType(auditLevel, new ObjectTypeFilter(objectType, accountAuditLogs)));
+            auditLogsCache.put(objectType, new DefaultAccountAuditLogsForObjectType(auditLevel, new ObjectTypeFilter(objectType, accountAuditLogs.iterator())));
         }
 
         // Should never be null
@@ -136,9 +137,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
     @Override
     public List<AuditLog> getAuditLogs() {
-        final List<AuditLog> result = new ArrayList<>();
-        accountAuditLogs.forEachRemaining(result::add);
-        return result;
+        return accountAuditLogs;
     }
 
     private enum IteratorState {
@@ -176,6 +175,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
                     if (iteratorState == IteratorState.EXPECT_MORE) {
                         final TableName tableName = TableName.fromObjectType(element.getAuditedObjectType());
+                        Preconditions.checkNotNull(tableName, "tableName in ObjectTypeFilter#computeNext() is null");
                         iteratorState = tableName.hasHistoryTable() ? IteratorState.FIRST_OBJECT_TYPE_SEEN : IteratorState.FIRST_OBJECT_HISTORY_TYPE_SEEN;
                     }
 
