@@ -40,6 +40,7 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.realm.Realm;
+import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.killbill.billing.ErrorCode;
@@ -87,7 +88,10 @@ public class DefaultSecurityApi implements SecurityApi {
 
         final Subject currentUser = SecurityUtils.getSubject();
         if (currentUser.isAuthenticated()) {
-            logout();
+            try {
+                logout();
+            } catch (final UnknownSessionException swallowme) {
+            }
         }
 
         // Workaround for https://issues.apache.org/jira/browse/SHIRO-510
