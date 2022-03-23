@@ -20,6 +20,7 @@ package org.killbill.billing.subscription.api.transfer;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -175,7 +176,8 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
     @Override
     public SubscriptionBaseBundle transferBundle(final UUID sourceAccountId, final UUID destAccountId,
-                                                 final String bundleKey, final DateTime transferDate, final boolean transferAddOn,
+                                                 final String bundleKey, final Map<UUID, String> subExtKeysMap,
+                                                 final DateTime transferDate, final boolean transferAddOn,
                                                  final boolean cancelImmediately, final CallContext context) throws SubscriptionBaseTransferApiException {
         final InternalCallContext fromInternalCallContext = internalCallContextFactory.createInternalCallContext(sourceAccountId, context);
         final InternalCallContext toInternalCallContext = internalCallContextFactory.createInternalCallContext(destAccountId, context);
@@ -242,11 +244,15 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                     bundleStartdate = oldSubscription.getStartDate();
                 }
 
+
+                // Use any key provided from the map subExtKeysMap
+                final String subExtKey = subExtKeysMap.get(oldSubscription.getId());
                 // Create the new subscription for the new bundle on the new account
                 final DefaultSubscriptionBase defaultSubscriptionBase = createSubscriptionForApiUse(new SubscriptionBuilder()
                                                                                                             .setId(UUIDs.randomUUID())
                                                                                                             .setBundleId(subscriptionBundleData.getId())
                                                                                                             .setBundleExternalKey(subscriptionBundleData.getExternalKey())
+                                                                                                            .setExternalKey(subExtKey)
                                                                                                             .setCategory(productCategory)
                                                                                                             .setBundleStartDate(effectiveTransferDate)
                                                                                                             .setAlignStartDate(subscriptionAlignStartDate),
