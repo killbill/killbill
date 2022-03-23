@@ -484,6 +484,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     private void checkInvoiceDescriptions(final Invoice invoice) {
         for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+            if (invoiceItem.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
+                // CBA_ABJ will be recomputed and recreated after we come back from the plugin
+                continue;
+            }
             assertEquals(invoiceItem.getDescription(), String.format("[plugin] %s", invoiceItem.getId()));
         }
     }
