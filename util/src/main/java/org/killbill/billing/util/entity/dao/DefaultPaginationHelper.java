@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 import org.killbill.billing.BillingExceptionBase;
+import org.killbill.billing.util.collect.CollectionTransformer;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
@@ -31,9 +32,6 @@ import org.slf4j.LoggerFactory;
 
 // FIXME-1615 : Used in method parameters, and the methods use in several modules
 import com.google.common.base.Function;
-
-// FIXME-1615 : Can we have better approach to close connection?
-import com.google.common.collect.ImmutableList;
 
 public class DefaultPaginationHelper {
 
@@ -60,8 +58,7 @@ public class DefaultPaginationHelper {
                 if (allResults.size() >= limit) {
                     // We have enough results, we just keep going (limit 1) to get the stats
                     pages = entityPaginationBuilder.build(firstSearch ? offset : 0L, 1L, pluginName);
-                    // Required to close database connections
-                    ImmutableList.<E>copyOf(pages);
+                    closeDatabaseConnection(pages);
                 } else {
                     pages = entityPaginationBuilder.build(firstSearch ? offset : 0L, limit - allResults.size(), pluginName);
                     pages.forEach(allResults::add);
@@ -105,5 +102,12 @@ public class DefaultPaginationHelper {
         } catch (final BillingExceptionBase e) {
             throw new ShouldntHappenException("No exception expected" + e);
         }
+    }
+
+    /**
+     * Iterate all element to avoid memory leak.
+     */
+    private static void closeDatabaseConnection(final Iterable<?> page) {
+        CollectionTransformer.iterableToList(page);
     }
 }
