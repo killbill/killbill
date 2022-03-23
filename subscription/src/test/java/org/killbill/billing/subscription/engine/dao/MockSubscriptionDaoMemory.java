@@ -28,7 +28,10 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -182,7 +185,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         bundles.add(new DefaultSubscriptionBaseBundle(bundle.getId(),
                                                       MoreObjects.firstNonNull(bundle.getExternalKey(), UUID.randomUUID().toString()),
                                                       bundle.getAccountId(),
-                                                      bundle.getLastSysUpdateDate(),
                                                       bundle.getOriginalCreatedDate(),
                                                       bundle.getCreatedDate(),
                                                       bundle.getUpdatedDate()));
@@ -263,7 +265,12 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, final InternalTenantContext context) {
+    public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, final LocalDate cutoffDt, final InternalTenantContext context) {
+        return getSubscriptionsFromAccountId(null, context);
+    }
+
+    @Override
+    public Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsFromAccountId(@Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
         final Map<UUID, List<DefaultSubscriptionBase>> results = new HashMap<UUID, List<DefaultSubscriptionBase>>();
         for (final DefaultSubscriptionBase cur : subscriptions) {
             if (results.get(cur.getBundleId()) == null) {
@@ -314,7 +321,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void createNextPhaseEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhase, final InternalCallContext context) {
+    public void createNextPhaseOrExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent readyPhaseEvent, final SubscriptionBaseEvent nextPhase, final InternalCallContext context) {
         cancelNextPhaseEvent(subscription.getId(), null, context);
         insertEvent(nextPhase, context);
         notifyBusOfEffectiveImmediateChange(subscription, readyPhaseEvent, 0, context);
@@ -332,7 +339,6 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         return subscription;
     }
 
-    @Override
     public void updateChargedThroughDate(final DefaultSubscriptionBase subscription, final InternalCallContext context) {
         boolean found = false;
         final Iterator<DefaultSubscriptionBase> it = subscriptions.iterator();
@@ -350,9 +356,12 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public void cancelSubscriptionsOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, final InternalCallContext context) {
+    public void cancelOrExpireSubscriptionOnNotification(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final List<DefaultSubscriptionBase> subscriptions, final List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, final InternalCallContext context) {
         cancelSubscriptions(subscriptions, cancelEvents, catalog, context);
         notifyBusOfEffectiveImmediateChange(subscription, event, subscriptions.size(), context);
+	}
+    public void updateChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context) {
+
     }
 
     @Override

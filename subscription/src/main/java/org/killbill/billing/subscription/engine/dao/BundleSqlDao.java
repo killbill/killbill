@@ -52,12 +52,6 @@ public interface BundleSqlDao extends EntitySqlDao<SubscriptionBundleModelDao, S
                                         @Define("prefix") final String prefix,
                                         @SmartBindBean final InternalCallContext context);
 
-    @SqlUpdate
-    @Audited(ChangeType.UPDATE)
-    public void updateBundleLastSysTime(@Bind("id") String id,
-                                        @Bind("lastSysUpdateDate") Date lastSysUpdate,
-                                        @SmartBindBean final InternalCallContext context);
-
     @SqlQuery
     public SubscriptionBundleModelDao getBundlesFromAccountAndKey(@Bind("accountId") String accountId,
                                                                   @Bind("externalKey") String externalKey,

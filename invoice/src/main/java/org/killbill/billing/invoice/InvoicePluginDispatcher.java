@@ -60,9 +60,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class InvoicePluginDispatcher {
 
@@ -223,16 +221,7 @@ public class InvoicePluginDispatcher {
 
         // Add or update items from generated invoice
         for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItems) {
-            final InvoiceItem existingItem = Iterables.tryFind(originalInvoice.getInvoiceItems(),
-                                                               new Predicate<InvoiceItem>() {
-                                                                   @Override
-                                                                   public boolean apply(final InvoiceItem originalInvoiceItem) {
-                                                                       return originalInvoiceItem.getId().equals(additionalInvoiceItem.getId());
-                                                                   }
-                                                               }).orNull();
-            if (existingItem != null) {
-                originalInvoice.removeInvoiceItem(existingItem);
-            }
+            originalInvoice.removeInvoiceItemIfExists(additionalInvoiceItem);
             originalInvoice.addInvoiceItem(additionalInvoiceItem);
         }
 
@@ -273,7 +262,7 @@ public class InvoicePluginDispatcher {
                                           immutableField("rate", existingItem, existingItem != null ? existingItem.getRate() : null, additionalInvoiceItem.getRate(), invoicePlugin),
                                           immutableField("currency", existingItem, existingItem != null ? existingItem.getCurrency() : null, additionalInvoiceItem.getCurrency(), invoicePlugin),
                                           immutableField("linkedItemId", existingItem, existingItem != null ? existingItem.getLinkedItemId() : null, additionalInvoiceItem.getLinkedItemId(), invoicePlugin),
-                                          immutableField("quantity", existingItem, existingItem != null ? existingItem.getQuantity() : null, additionalInvoiceItem.getQuantity(), invoicePlugin),
+                                          immutableField("quantity", existingItem, (existingItem == null ? null : existingItem.getQuantity()), additionalInvoiceItem.getQuantity() == null ? null : additionalInvoiceItem.getQuantity(), invoicePlugin),
                                           mutableField("itemDetails", existingItem != null ? existingItem.getItemDetails() : null, additionalInvoiceItem.getItemDetails(), invoicePlugin),
                                           immutableField("invoiceItemType", existingItem, existingItem != null ? existingItem.getInvoiceItemType() : null, additionalInvoiceItem.getInvoiceItemType(), invoicePlugin));
         switch (tmp.getInvoiceItemType()) {

@@ -82,7 +82,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
         Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
 
@@ -96,7 +96,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         Assert.assertEquals(entitlementsUpdated.get(0).getLastActiveProduct().getName(), "Cannon");
         Assert.assertEquals(entitlementsUpdated.get(0).getBillCycleDayLocal(), (Integer) 7);
 
-        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
     }
@@ -131,7 +131,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
         Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
 
@@ -145,7 +145,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         Assert.assertEquals(entitlementsUpdated.get(0).getLastActiveProduct().getName(), "Trebuchet");
         Assert.assertEquals(entitlementsUpdated.get(0).getBillCycleDayLocal(), (Integer) 7);
 
-        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
     }
@@ -184,7 +184,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
         Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 3);
         for (final BillingEvent billingEvent : events) {
             Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
@@ -202,7 +202,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         Assert.assertEquals(entitlementsUpdated.get(1).getLastActiveProduct().getName(), "Cabinet");
         Assert.assertEquals(entitlementsUpdated.get(1).getBillCycleDayLocal(), (Integer) 7);
 
-        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 3);
         for (final BillingEvent billingEvent : events) {
             Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
@@ -249,7 +249,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
         Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 4);
         for (final BillingEvent billingEvent : events) {
             if ("pistol-annual-gunclub-discount-notrial".equals(billingEvent.getPlan().getName())) {
@@ -274,7 +274,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
             }
         }
 
-        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 4);
         for (final BillingEvent billingEvent : events) {
             if ("pistol-annual-gunclub-discount-notrial".equals(billingEvent.getPlan().getName())) {
@@ -415,7 +415,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         // Expected blocking duration:
         // * 2013-08-15 to 2013-10-04 [2013-08-15 to 2013-10-01 (block3Date -> block4Date) and 2013-10-01 to 2013-10-04 (block4Date -> block5Date)]
-        final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 3);
         Assert.assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(events.get(0).getEffectiveDate(), subscription.getStartDate());
@@ -494,7 +494,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         clock.addDays(3);
         assertListenerStatus();
 
-        final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, internalCallContext));
+        final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         if (delay.toPeriod().toStandardDuration().compareTo(Period.ZERO.toStandardDuration()) == 0) {
             Assert.assertEquals(events.size(), 0);
         } else {

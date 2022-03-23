@@ -25,23 +25,16 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.api.VersionedCatalog;
-import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import static org.testng.Assert.assertNotNull;
 
 public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestIntegrationBase {
 
@@ -56,7 +49,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
     // Similar test than TestCatalogWithEffectiveDateForExistingSubscriptions#testUsagePlan but with a slightly
     // different catalog to address issue #1329
-    @Test(groups = "slow", description = "See https://github.com/killbill/killbill/issues/1329")
+    @Test(groups = "slow", description = "See https://github.com/killbill/killbill/issues/1329") 
     public void testUsagePlan() throws Exception {
 
         final LocalDate today = new LocalDate(2018, 1, 1);
@@ -69,8 +62,8 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
-        recordUsageData(entitlementId, "t1", "liter", new LocalDate(2018, 1, 1), 10L, callContext);
-        recordUsageData(entitlementId, "t2", "liter", new LocalDate(2018, 1, 23), 10L, callContext);
+        recordUsageData(entitlementId, "t1", "liter", new LocalDate(2018, 1, 1), BigDecimal.valueOf(10L), callContext);
+        recordUsageData(entitlementId, "t2", "liter", new LocalDate(2018, 1, 23), BigDecimal.valueOf(10L), callContext);
 
         // Catalog v2 with price increase is on 2018-04-01 but because we have an effectiveDateForExistingSubscriptions set to 2018-05-01
         // we don't see any change until 5-1
@@ -85,7 +78,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
 
 
-        recordUsageData(entitlementId, "t3", "liter", new LocalDate(2018, 2, 15), 20L, callContext);
+        recordUsageData(entitlementId, "t3", "liter", new LocalDate(2018, 2, 15), BigDecimal.valueOf(20L), callContext);
         // 2018-3-1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -96,7 +89,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3"), internalCallContext);
 
 
-        recordUsageData(entitlementId, "t4", "liter", new LocalDate(2018, 3, 18), 20L, callContext);
+        recordUsageData(entitlementId, "t4", "liter", new LocalDate(2018, 3, 18), BigDecimal.valueOf(20L), callContext);
         // 2018-4-1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -107,7 +100,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t4"), internalCallContext);
 
 
-        recordUsageData(entitlementId, "t5", "liter", new LocalDate(2018, 4, 28), 20L, callContext);
+        recordUsageData(entitlementId, "t5", "liter", new LocalDate(2018, 4, 28), BigDecimal.valueOf(20L), callContext);
 
         // 2018-5-1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -119,7 +112,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t5"), internalCallContext);
 
 
-        recordUsageData(entitlementId, "t6", "liter", new LocalDate(2018, 5, 22), 20L, callContext);
+        recordUsageData(entitlementId, "t6", "liter", new LocalDate(2018, 5, 22), BigDecimal.valueOf(20L), callContext);
 
         // 2018-6-1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -132,7 +125,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
 
 
-        recordUsageData(entitlementId, "t7", "liter", new LocalDate(2018, 6, 29), 20L, callContext);
+        recordUsageData(entitlementId, "t7", "liter", new LocalDate(2018, 6, 29), BigDecimal.valueOf(20L), callContext);
 
         // 2018-7-1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -145,7 +138,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
 
 
-        recordUsageData(entitlementId, "t8", "liter", new LocalDate(2018, 7, 13), 20L, callContext);
+        recordUsageData(entitlementId, "t8", "liter", new LocalDate(2018, 7, 13), BigDecimal.valueOf(20L), callContext);
 
         // Catalog v3 with price increase is on 2018-07-01 but because we have an effectiveDateForExistingSubscriptions set to 2018-08-01
         // we don't see any change until 8-1
@@ -159,7 +152,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t8"), internalCallContext);
 
 
-        recordUsageData(entitlementId, "t9", "liter", new LocalDate(2018, 8, 13), 20L, callContext);
+        recordUsageData(entitlementId, "t9", "liter", new LocalDate(2018, 8, 13), BigDecimal.valueOf(20L), callContext);
 
         // Check we see the new price for catalog version v3
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);

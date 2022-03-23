@@ -18,6 +18,7 @@
 
 package org.killbill.billing.subscription.api.transfer;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -94,7 +95,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, false, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, callContext);
         assertListenerStatus();
         final DateTime afterTransferDate = clock.getUTCNow();
 
@@ -134,7 +135,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30);
 
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
 
         final DateTime evergreenPhaseDate = ((DefaultSubscriptionBase) baseSubscription).getPendingTransition().getEffectiveTransitionTime();
 
@@ -143,7 +144,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         final DateTime transferRequestedDate = clock.getUTCNow();
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, false, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, callContext);
         assertListenerStatus();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
@@ -190,7 +191,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, false, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, callContext);
         assertListenerStatus();
         final DateTime afterTransferDate = clock.getUTCNow();
 
@@ -235,11 +236,11 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // SET CTD
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, false, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, callContext);
         assertListenerStatus();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
@@ -283,7 +284,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(2);
 
         final DateTime newCtd = newBaseSubscription.getStartDate().plusYears(1);
-        subscriptionInternalApi.setChargedThroughDate(newBaseSubscription.getId(), newCtd, internalCallContext);
+        setChargedThroughDate(newBaseSubscription.getId(), newCtd, internalCallContext);
         final SubscriptionBase newBaseSubscriptionWithCtd = subscriptionInternalApi.getSubscriptionFromId(newBaseSubscription.getId(), internalCallContext);
 
         final String newBaseProduct2 = "Pistol";
@@ -331,13 +332,18 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // SET CTD TO TRIGGER CANCELLATION EOT
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
+
+        final HashMap<UUID, String> subExtKeysMap = new HashMap<>();
+        subExtKeysMap.put(baseSubscription.getId(), "new-base-key");
+        subExtKeysMap.put(aoSubscription1.getId(), "new-ao1-key");
+        subExtKeysMap.put(aoSubscription2.getId(), "new-ao2-key");
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, true, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), subExtKeysMap, transferRequestedDate, true, false, callContext);
         assertListenerStatus();
 
         // RETRIEVE NEW BUNDLE AND CHECK SUBSCRIPTIONS
@@ -347,31 +353,35 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBaseBundle newBundle = bundlesForAccountAndKey.get(0);
         final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 3);
-        boolean foundBP = false;
-        boolean foundAO1 = false;
-        boolean foundAO2 = false;
+
+        SubscriptionBase newBaseSubscription = null;
+        SubscriptionBase newAoSubscription1 = null;
+        SubscriptionBase newAoSubscription2 = null;
         for (final SubscriptionBase cur : subscriptions) {
             final Plan curPlan = cur.getCurrentPlan();
             final Product curProduct = curPlan.getProduct();
             if (curProduct.getName().equals(baseProduct)) {
-                foundBP = true;
+                newBaseSubscription = cur;
                 assertTrue(((DefaultSubscriptionBase) cur).getAlignStartDate().compareTo(((DefaultSubscriptionBase) baseSubscription).getAlignStartDate()) == 0);
                 assertNull(cur.getPendingTransition());
+                assertEquals(cur.getExternalKey(), "new-base-key");
             } else if (curProduct.getName().equals(aoProduct1)) {
-                foundAO1 = true;
+                newAoSubscription1 = cur;
                 assertTrue(((DefaultSubscriptionBase) cur).getAlignStartDate().compareTo((aoSubscription1).getAlignStartDate()) == 0);
                 assertNull(cur.getPendingTransition());
+                assertEquals(cur.getExternalKey(), "new-ao1-key");
             } else if (curProduct.getName().equals(aoProduct2)) {
-                foundAO2 = true;
+                newAoSubscription2 = cur;
                 assertTrue(((DefaultSubscriptionBase) cur).getAlignStartDate().compareTo((aoSubscription2).getAlignStartDate()) == 0);
                 assertNotNull(cur.getPendingTransition());
+                assertEquals(cur.getExternalKey(), "new-ao2-key");
             } else {
                 Assert.fail("Unexpected product " + curProduct.getName());
             }
         }
-        assertTrue(foundBP);
-        assertTrue(foundAO1);
-        assertTrue(foundAO2);
+        assertNotNull(newBaseSubscription);
+        assertNotNull(newAoSubscription1);
+        assertNotNull(newAoSubscription2);
 
         // MOVE AFTER CANCEL DATE TO TRIGGER OLD SUBSCRIPTIONS CANCELLATION + LASER_SCOPE PHASE EVENT
         testListener.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE);
@@ -382,13 +392,38 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // ISSUE ANOTHER TRANSFER TO CHECK THAT WE CAN TRANSFER AGAIN-- NOTE WILL NOT WORK ON PREVIOUS ACCOUNT (LIMITATION)
+
+        subExtKeysMap.clear();
+        subExtKeysMap.put(newBaseSubscription.getId(), "latest-base-key");
+        subExtKeysMap.put(newAoSubscription1.getId(), "latest-ao1-key");
+        subExtKeysMap.put(newAoSubscription2.getId(), "latest-ao2-key");
+
         final DateTime newTransferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.CANCEL);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(newBundle.getAccountId(), finalNewAccountId, newBundle.getExternalKey(), newTransferRequestedDate, true, false, callContext);
+        transferApi.transferBundle(newBundle.getAccountId(), finalNewAccountId, newBundle.getExternalKey(), subExtKeysMap, newTransferRequestedDate, true, false, callContext);
         assertListenerStatus();
+
+        final List<SubscriptionBaseBundle> latestBundlesForAccountAndKey = subscriptionInternalApi.getBundlesForAccountAndKey(finalNewAccountId, newBundle.getExternalKey(), internalCallContext);
+        assertEquals(latestBundlesForAccountAndKey.size(), 1);
+
+        final SubscriptionBaseBundle latestSubscriptionBundle = latestBundlesForAccountAndKey.get(0);
+        final List<SubscriptionBase> latestSubscriptions = subscriptionInternalApi.getSubscriptionsForBundle(latestSubscriptionBundle.getId(), null, internalCallContext);
+        assertEquals(latestSubscriptions.size(), 3);
+
+        final SubscriptionBase latestBaseSubscription = subscriptionInternalApi.getSubscriptionFromExternalKey("latest-base-key", internalCallContext);
+        assertNotNull(latestBaseSubscription);
+        assertEquals(latestBaseSubscription.getBundleId(), latestSubscriptionBundle.getId());
+
+        final SubscriptionBase latestAoSubscription1 = subscriptionInternalApi.getSubscriptionFromExternalKey("latest-ao1-key", internalCallContext);
+        assertNotNull(latestAoSubscription1);
+        assertEquals(latestAoSubscription1.getBundleId(), latestSubscriptionBundle.getId());
+
+        final SubscriptionBase latestAoSubscription2 = subscriptionInternalApi.getSubscriptionFromExternalKey("latest-ao2-key", internalCallContext);
+        assertNotNull(latestAoSubscription2);
+        assertEquals(latestAoSubscription2.getBundleId(), latestSubscriptionBundle.getId());
     }
 
     @Test(groups = "slow")
@@ -414,10 +449,10 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // SET CTD TO TRIGGER CANCELLATION EOT
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
 
         // SET CTD TO TRIGGER CANCELLATION EOT
-        subscriptionInternalApi.setChargedThroughDate(aoSubscription1.getId(), ctd, internalCallContext);
+        setChargedThroughDate(aoSubscription1.getId(), ctd, internalCallContext);
 
         // CANCEL ADDON
         testListener.pushExpectedEvent(NextEvent.CANCEL);
@@ -428,7 +463,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, true, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate,  true, false, callContext);
         assertListenerStatus();
 
         final List<SubscriptionBaseBundle> bundlesForAccountAndKey = subscriptionInternalApi.getBundlesForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
@@ -454,7 +489,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // SET CTD TO TRIGGER CANCELLATION EOT
         final DateTime ctd = baseSubscription.getStartDate().plusDays(30).plusMonths(1);
-        subscriptionInternalApi.setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
+        setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
 
         // CANCEL BP
         baseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
@@ -470,7 +505,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(1);
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), transferRequestedDate, true, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
         assertListenerStatus();
 
         final List<SubscriptionBaseBundle> bundlesForAccountAndKey = subscriptionInternalApi.getBundlesForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);

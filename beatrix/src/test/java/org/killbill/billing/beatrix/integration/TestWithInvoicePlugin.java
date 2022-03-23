@@ -65,7 +65,6 @@ import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
-import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.queue.retry.RetryNotificationEvent;
 import org.killbill.queue.retry.RetryableService;
@@ -468,15 +467,15 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpEntitlement.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2017, 6, 18), 99L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2017, 7, 25), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2017, 6, 18), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2017, 7, 25), BigDecimal.valueOf(100L), callContext);
 
 
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2017, 8, 18), 99L, callContext);
-        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2017, 9, 25), 100L, callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2017, 8, 18), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2017, 9, 25), BigDecimal.valueOf(100L), callContext);
 
 
-        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2018, 8, 15), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2018, 8, 15), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
         assertEquals(dryRunInvoice.getInvoiceItems().size(), 16);
 
 
@@ -485,6 +484,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     private void checkInvoiceDescriptions(final Invoice invoice) {
         for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
+            if (invoiceItem.getInvoiceItemType() == InvoiceItemType.CBA_ADJ) {
+                // CBA_ABJ will be recomputed and recreated after we come back from the plugin
+                continue;
+            }
             assertEquals(invoiceItem.getDescription(), String.format("[plugin] %s", invoiceItem.getId()));
         }
     }

@@ -38,6 +38,7 @@ public class SubscriptionBundleModelDao extends EntityModelDaoBase implements En
 
     private String externalKey;
     private UUID accountId;
+    @Deprecated
     private DateTime lastSysUpdateDate;
     private DateTime originalCreatedDate;
 
@@ -53,7 +54,7 @@ public class SubscriptionBundleModelDao extends EntityModelDaoBase implements En
     }
 
     public SubscriptionBundleModelDao(final DefaultSubscriptionBaseBundle input) {
-        this(input.getId(), input.getExternalKey(), input.getAccountId(), input.getLastSysUpdateDate(), input.getCreatedDate(), input.getOriginalCreatedDate(), input.getUpdatedDate());
+        this(input.getId(), input.getExternalKey(), input.getAccountId(), null, input.getCreatedDate(), input.getOriginalCreatedDate(), input.getUpdatedDate());
     }
 
     public String getExternalKey() {
@@ -96,7 +97,7 @@ public class SubscriptionBundleModelDao extends EntityModelDaoBase implements En
         // Fix externalKey to remove internal prefix used for tsf
         final Matcher m = BUNDLE_KEY_PATTERN.matcher(src.getExternalKey());
         final String externalKey = m.matches() ? m.group(1) : src.getExternalKey();
-        return new DefaultSubscriptionBaseBundle(src.getId(), externalKey, src.getAccountId(), src.getLastSysUpdateDate(), src.getOriginalCreatedDate(), src.getCreatedDate(), src.getUpdatedDate());
+        return new DefaultSubscriptionBaseBundle(src.getId(), externalKey, src.getAccountId(), src.getOriginalCreatedDate(), src.getCreatedDate(), src.getUpdatedDate());
     }
 
     @Override

@@ -16,6 +16,7 @@
 
 package org.killbill.billing.mock;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 
 import org.killbill.billing.catalog.api.Limit;
@@ -130,7 +131,7 @@ public class MockProduct implements Product {
     }
 
     @Override
-    public boolean compliesWithLimits(String unit, double value) {
+    public boolean compliesWithLimits(String unit, BigDecimal value) {
         return false;
     }
 }

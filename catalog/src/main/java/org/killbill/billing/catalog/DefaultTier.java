@@ -83,8 +83,8 @@ public class DefaultTier extends ValidatingConfig<StandaloneCatalog> implements 
                     @Override
                     public boolean apply(final TieredBlockPriceOverride input) {
                         return (input != null && input.getUnitName().equals(curTieredBlock.getUnit().getName()) &&
-                                Double.compare(input.getSize(), curTieredBlock.getSize()) == 0 &&
-                                Double.compare(input.getMax(), curTieredBlock.getMax()) == 0);
+                                (input.getSize().compareTo(curTieredBlock.getSize()) == 0) &&
+                                (input.getMax().compareTo(curTieredBlock.getMax()) == 0));
                     }
 
                 }).orNull();

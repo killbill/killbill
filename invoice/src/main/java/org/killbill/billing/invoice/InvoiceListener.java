@@ -234,7 +234,8 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
     @AllowConcurrentEvents
     @Subscribe
     public void handleSubscriptionTransition(final EffectiveSubscriptionInternalEvent event) {
-        handleEvent(event);
+    	if(!(event.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED)) 
+    			handleEvent(event);
     }
 
     @AllowConcurrentEvents

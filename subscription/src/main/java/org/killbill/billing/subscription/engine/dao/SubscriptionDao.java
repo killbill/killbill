@@ -22,6 +22,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+import javax.annotation.Nullable;
+
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -72,13 +79,15 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     List<DefaultSubscriptionBase> getSubscriptions(UUID bundleId, List<SubscriptionBaseEvent> dryRunEvents, final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
-    Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
+    Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsForAccount(final SubscriptionCatalog catalog,  LocalDate cutoffDt, InternalTenantContext context) throws CatalogApiException;
+
+    Map<UUID, List<DefaultSubscriptionBase>> getSubscriptionsFromAccountId(@Nullable final LocalDate cutoffDt, final InternalTenantContext context);
 
     // Update
-    void updateChargedThroughDate(DefaultSubscriptionBase subscription, InternalCallContext context);
+    void updateChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context);
 
     // Event apis
-    void createNextPhaseEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
+    void createNextPhaseOrExpiredEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
 
     SubscriptionBaseEvent getEventById(UUID eventId, InternalTenantContext context);
 
@@ -90,7 +99,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(List<SubscriptionBaseWithAddOns> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final SubscriptionCatalog catalog, InternalCallContext context);
 
-    void cancelSubscriptionsOnBasePlanEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, InternalCallContext context);
+    void cancelOrExpireSubscriptionOnNotification(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelOrExpireEvents, final SubscriptionCatalog catalog, InternalCallContext context);
 
     void notifyOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final SubscriptionCatalog catalog, final InternalCallContext context);
 

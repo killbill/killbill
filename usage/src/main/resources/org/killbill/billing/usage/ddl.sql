@@ -7,7 +7,7 @@ CREATE TABLE rolled_up_usage (
     subscription_id varchar(36) NOT NULL,
     unit_type varchar(255) NOT NULL,
     record_date date NOT NULL,
-    amount bigint NOT NULL,
+    amount decimal(18, 9) NOT NULL,
     tracking_id varchar(128) NOT NULL,
     created_by varchar(50) NOT NULL,
     created_date datetime NOT NULL,

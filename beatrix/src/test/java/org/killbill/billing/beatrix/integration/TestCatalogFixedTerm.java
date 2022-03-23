@@ -83,7 +83,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
 
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.EXPIRED, NextEvent.NULL_INVOICE);
         clock.addYears(1);//2024-12-01
         assertListenerStatus();
         
@@ -105,7 +105,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
         
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.EXPIRED); 
         clock.addYears(2);//2025-12-01
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));

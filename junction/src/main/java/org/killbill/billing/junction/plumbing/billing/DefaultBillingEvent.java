@@ -73,7 +73,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.subscriptionId = subscription.getId();
         this.bundleId = subscription.getBundleId();
 
-        this.isCancelledOrBlocked = inputEvent.getType() == SubscriptionBaseTransitionType.CANCEL;
+        this.isCancelledOrBlocked = inputEvent.getType() == SubscriptionBaseTransitionType.CANCEL || inputEvent.getType() == SubscriptionBaseTransitionType.EXPIRED; 
 
         this.type = inputEvent.getType();
         this.plan = inputEvent.getPlan();

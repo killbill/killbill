@@ -24,6 +24,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.killbill.billing.KillbillApi;
 import org.killbill.billing.osgi.api.ROTenantContext;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
@@ -56,16 +57,28 @@ public class KillbillApiAopModule extends AbstractModule {
         }
     };
 
+    private final boolean shouldGETUseROConnection;
+
+    public KillbillApiAopModule(final JaxrsConfig jaxrsConfig) {
+        this.shouldGETUseROConnection = jaxrsConfig.shouldGETUseROConnection();
+    }
+
     @Override
     protected void configure() {
         bindInterceptor(Matchers.subclassesOf(KillbillApi.class),
                         Matchers.not(SYNTHETIC_METHOD_MATCHER),
-                        new ProfilingMethodInterceptor());
+                        new ProfilingMethodInterceptor(shouldGETUseROConnection));
     }
 
     public static class ProfilingMethodInterceptor implements MethodInterceptor {
 
         private final Profiling<Object, Throwable> prof = new Profiling<Object, Throwable>();
+
+        private final boolean shouldGETUseROConnection;
+
+        public ProfilingMethodInterceptor(final boolean shouldGETUseROConnection) {
+            this.shouldGETUseROConnection = shouldGETUseROConnection;
+        }
 
         @Override
         public Object invoke(final MethodInvocation invocation) throws Throwable {
@@ -99,7 +112,7 @@ public class KillbillApiAopModule extends AbstractModule {
             // Snowflakes from server filters
             final boolean safeROOperations = "getTenantByApiKey".equals(invocation.getMethod().getName()) || "login".equals(invocation.getMethod().getName());
             if (safeROOperations) {
-                return true;
+                return shouldGETUseROConnection;
             }
 
             final Object[] arguments = invocation.getArguments();

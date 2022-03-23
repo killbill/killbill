@@ -44,6 +44,7 @@ import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.expired.ExpiredEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -203,7 +204,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         testUtil.printEvents(events);
         assertTrue(events.size() == 1);
         assertTrue(events.get(0) instanceof PhaseEvent);
-        final DateTime nextPhaseChange = ((PhaseEvent) events.get(0)).getEffectiveDate();
+        final DateTime nextPhaseChange = events.get(0).getEffectiveDate();
         final DateTime nextExpectedPhaseChange = TestSubscriptionHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration());
         assertEquals(nextPhaseChange, nextExpectedPhaseChange);
 
@@ -289,8 +290,6 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.ACTIVE);
     }
-
-
 
     @Test(groups = "slow")
     public void testCreateSubscriptionWithBCD() throws SubscriptionBaseApiException {
