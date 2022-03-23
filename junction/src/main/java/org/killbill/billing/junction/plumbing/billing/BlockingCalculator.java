@@ -198,17 +198,16 @@ public class BlockingCalculator {
 
         for (final DisabledDuration duration : disabledDuration) {
             // The first one before the blocked duration
-            final BillingEvent precedingInitialEvent = precedingBillingEventForSubscription(duration.getStart(), subscriptionBillingEvents);
+            final BillingEvent precedingInitialEvent = precedingActiveBillingEventForSubscription(duration.getStart(), subscriptionBillingEvents);
             // The last one during of before the duration
-            final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), subscriptionBillingEvents);
+            final BillingEvent precedingFinalEvent = precedingActiveBillingEventForSubscription(duration.getEnd(), subscriptionBillingEvents);
 
-            // We ignore anything beyond the CANCEL event
-            if (precedingInitialEvent != null && precedingInitialEvent.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) { // there is a preceding billing event
+            if (precedingInitialEvent != null) { // there is a preceding billing event
                 result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent));
-                if (duration.getEnd() != null && precedingFinalEvent != null && precedingFinalEvent.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) { // no second event in the pair means they are still disabled (no re-enable)
+                if (duration.getEnd() != null && precedingFinalEvent != null) { // no second event in the pair means they are still disabled (no re-enable)
                     result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
                 }
-            } else if (precedingFinalEvent != null && precedingFinalEvent.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) { // can happen - e.g. phase event
+            } else if (precedingFinalEvent != null) { // can happen - e.g. phase event
                 result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
             }
             // N.B. if there's no precedingInitial and no precedingFinal then there's nothing to do
@@ -216,8 +215,8 @@ public class BlockingCalculator {
         return result;
     }
 
-    protected BillingEvent precedingBillingEventForSubscription(final DateTime disabledDurationStart,
-                                                                final Iterable<BillingEvent> subscriptionBillingEvents) {
+    protected BillingEvent precedingActiveBillingEventForSubscription(final DateTime disabledDurationStart,
+                                                                      final Iterable<BillingEvent> subscriptionBillingEvents) {
         if (disabledDurationStart == null) {
             return null;
         }
@@ -231,6 +230,13 @@ public class BlockingCalculator {
                 prev = event;
             }
         }
+
+        // We ignore anything beyond the final event
+        // TODO 0.23.x
+        if (prev == null || prev.getTransitionType() == SubscriptionBaseTransitionType.CANCEL /*|| prev.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED */) {
+            return null;
+        }
+
         return prev;
     }
 

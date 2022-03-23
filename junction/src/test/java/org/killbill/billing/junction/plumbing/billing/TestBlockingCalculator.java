@@ -633,10 +633,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         events.add(createRealEvent(subscription1, now.minusDays(5)));
         events.add(createRealEvent(subscription1, now.minusDays(1)));
 
-        final BillingEvent minus11 = blockingCalculator.precedingBillingEventForSubscription(now.minusDays(11), events);
+        final BillingEvent minus11 = blockingCalculator.precedingActiveBillingEventForSubscription(now.minusDays(11), events);
         assertNull(minus11);
 
-        final BillingEvent minus5andAHalf = blockingCalculator.precedingBillingEventForSubscription(now.minusDays(5).minusHours(12), events);
+        final BillingEvent minus5andAHalf = blockingCalculator.precedingActiveBillingEventForSubscription(now.minusDays(5).minusHours(12), events);
         assertNotNull(minus5andAHalf);
         assertEquals(minus5andAHalf.getEffectiveDate(), now.minusDays(6));
 
