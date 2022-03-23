@@ -1,7 +1,10 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -43,6 +46,8 @@ import org.killbill.billing.junction.plumbing.billing.DefaultBillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBillingEvent;
+import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.bus.api.PersistentBus;
@@ -51,7 +56,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -118,16 +122,25 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         final Plan shotgun = new MockPlan();
         final PlanPhase shotgunMonthly = createMockMonthlyPlanPhase(null, BigDecimal.ZERO, PhaseType.TRIAL);
 
-        return new DefaultBillingEvent(sub.getId(), sub.getBundleId(), effectiveDate,
-                                       shotgun, shotgunMonthly, BigDecimal.ZERO, BigDecimal.ZERO, ImmutableList.of(),
-                                       Currency.USD, BillingPeriod.NO_BILLING_PERIOD, billCycleDay,
-                                       "Test Event 1", totalOrdering, type, false);
+        final SubscriptionBillingEvent subscriptionBillingEvent = new DefaultSubscriptionBillingEvent(type,
+                                                                                                      shotgun,
+                                                                                                      shotgunMonthly,
+                                                                                                      effectiveDate,
+                                                                                                      totalOrdering,
+                                                                                                      billCycleDay,
+                                                                                                      effectiveDate);
+        return new DefaultBillingEvent(subscriptionBillingEvent,
+                                       sub,
+                                       billCycleDay,
+                                       null,
+                                       Currency.USD);
     }
 
     protected MockPlanPhase createMockMonthlyPlanPhase(@Nullable final BigDecimal recurringRate,
-                                                     final BigDecimal fixedRate, final PhaseType phaseType) {
-        return new MockPlanPhase(new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD)),
-                                 new MockInternationalPrice(new DefaultPrice(fixedRate, Currency.USD)),
+                                                       @Nullable final BigDecimal fixedRate,
+                                                       final PhaseType phaseType) {
+        return new MockPlanPhase(recurringRate == null ? null : new MockInternationalPrice(new DefaultPrice(recurringRate, Currency.USD)),
+                                 fixedRate == null ? null : new MockInternationalPrice(new DefaultPrice(fixedRate, Currency.USD)),
                                  BillingPeriod.MONTHLY, phaseType);
     }
 
