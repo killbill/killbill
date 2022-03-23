@@ -61,6 +61,7 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
+import org.killbill.billing.subscription.events.expired.ExpiredEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
@@ -265,6 +266,24 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
         return null;
     }
+    
+    @Override
+    public DateTime getFutureExpiryDate() {
+        if (transitions == null) {
+            return null;
+        }
+
+        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
+                clock, transitions, Order.ASC_FROM_PAST,
+                Visibility.ALL, TimeLimit.FUTURE_ONLY);
+        while (it.hasNext()) {
+            final SubscriptionBaseTransition cur = it.next();
+            if (cur.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED) {
+                return cur.getEffectiveTransitionTime();
+            }
+        }
+        return null;
+    }    
 
     @Override
     public boolean cancel(final CallContext context) throws SubscriptionBaseApiException {
@@ -367,7 +386,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public Plan getLastActivePlan() {
-        if (getState() == EntitlementState.CANCELLED) {
+        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { 
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan();
         } else if (getState() == EntitlementState.PENDING) {
@@ -380,7 +399,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public PlanPhase getLastActivePhase() {
-        if (getState() == EntitlementState.CANCELLED) {
+        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { 
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPhase();
         } else if (getState() == EntitlementState.PENDING) {
@@ -652,33 +671,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     }
                 }
             }
-            // If we end up with a PlanPhase which is not evergreen, it means it should STOP at the end of the duration
-            // Ideally, we should have a special transition type (e.g 'EXPIRED') and not compute this transition dynamically
-            // See https://github.com/killbill/killbill/issues/824
-            SubscriptionBillingEvent expiredTransition = null;
-            if (lastPhaseTransition != null &&
-                lastPhaseTransition.getNextPhase() != null &&
-                lastPhaseTransition.getNextPhase().getPhaseType() != PhaseType.EVERGREEN) {
-                final DateTime effectiveDate = lastPhaseTransition.getNextPhase().getDuration().addToDateTime(lastPhaseTransition.getEffectiveTransitionTime());
-                // Insert the expiredTransition at the right place depending on whether or not we still have pending catalog version transitions
-                // (there is a sorting of all billing event in junction, so this is not strictly necessary but cleaner)
-                expiredTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CANCEL, null, null, effectiveDate,
-                                                                                                       lastPhaseTransition.getTotalOrdering(), lastPhaseTransition.getNextBillingCycleDayLocal(),
-                                                                                                       CatalogDateHelper.toUTCDateTime(lastPhaseTransition.getNextPlan().getCatalog().getEffectiveDate()));
-            }
-
-
             SubscriptionBillingEvent prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
             while (prevCandidateForCatalogChangeEvents != null) {
-                if (expiredTransition != null && expiredTransition.getEffectiveDate().compareTo(prevCandidateForCatalogChangeEvents.getEffectiveDate()) <= 0) {
-                    result.add(expiredTransition);
-                    expiredTransition = null;
-                }
                 result.add(prevCandidateForCatalogChangeEvents);
                 prevCandidateForCatalogChangeEvents = candidatesCatalogChangeEvents.poll();
-            }
-            if (expiredTransition != null) {
-                result.add(expiredTransition);
             }
 
             return result;
@@ -926,6 +922,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                             .getApiEventType().toString()));
                     }
                     break;
+                case EXPIRED:
+                    nextState = EntitlementState.EXPIRED; 
+                    nextPlanName = null;
+                    nextPhaseName = null;
+                	break;
                 default:
                     throw new SubscriptionBaseError(String.format(
                             "Unexpected Event type = %s", cur.getType()));

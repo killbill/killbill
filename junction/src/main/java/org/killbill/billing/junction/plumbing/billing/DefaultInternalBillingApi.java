@@ -307,7 +307,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             BillingAlignment alignment = null;
             for (final SubscriptionBillingEvent transition : billingTransitions) {
 
-                if (transition.getType() != SubscriptionBaseTransitionType.CANCEL) {
+                if (transition.getType() != SubscriptionBaseTransitionType.CANCEL && transition.getType() != SubscriptionBaseTransitionType.EXPIRED) { 
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(transition.getPlan().getName(), transition.getPlanPhase().getPhaseType());
                     alignment = subscription.getBillingAlignment(spec, transition.getEffectiveDate(), catalog);
 

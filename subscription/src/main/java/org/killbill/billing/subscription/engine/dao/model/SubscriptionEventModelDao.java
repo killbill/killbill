@@ -25,6 +25,7 @@ import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
+import org.killbill.billing.subscription.events.expired.ExpiredEventBuilder;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEvent;
@@ -185,6 +186,8 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
             base = new PhaseEventBuilder();
         } else if (src.getEventType() == EventType.BCD_UPDATE) {
             base = new BCDEventBuilder();
+        } else if(src.getEventType() == EventType.EXPIRED) {
+        	base = new ExpiredEventBuilder();
         } else {
             base = new ApiEventBuilder();
         }
@@ -210,6 +213,8 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
             result = builder.build();
         } else if (src.getEventType() == EventType.BCD_UPDATE) {
             result = (new BCDEventBuilder(base).setBillCycleDayLocal(src.getBillingCycleDayLocal())).build();
+        } else if (src.getEventType() == EventType.EXPIRED) {
+        	result = (new ExpiredEventBuilder(base)).build(); 
         } else {
             throw new SubscriptionBaseError(String.format("Can't figure out event %s", src.getEventType()));
         }
