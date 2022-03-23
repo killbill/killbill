@@ -208,4 +208,50 @@ public final class Preconditions {
             throw new IllegalStateException();
         }
     }
+
+    /**
+     * Ensures the truth of an expression involving one or more parameters to the calling method.
+     *
+     * <p>See {@link #checkArgument(boolean, String, Object...)} for details.
+     *
+     * @since 20.0 (varargs overload since 2.0)
+     */
+    public static void checkArgument(final boolean b, final String errorMessageTemplate, final Object p1, final int p2) {
+        if (!b) {
+            throw new IllegalArgumentException(lenientFormat(errorMessageTemplate, p1, p2));
+        }
+    }
+
+    /**
+     * Ensures the truth of an expression involving one or more parameters to the calling method.
+     *
+     * <p>See {@link #checkArgument(boolean, String, Object...)} for details.
+     *
+     * @since 20.0 (varargs overload since 2.0)
+     */
+    public static void checkArgument(final boolean b, final String errorMessageTemplate,
+                                     final Object p1, final Object p2, final Object p3) {
+        if (!b) {
+            throw new IllegalArgumentException(lenientFormat(errorMessageTemplate, p1, p2, p3));
+        }
+    }
+
+    /**
+     * Ensures the truth of an expression involving one or more parameters to the calling method.
+     *
+     * @param expression a boolean expression
+     * @param errorMessageTemplate a template for the exception message should the check fail. The
+     *     message is formed by replacing each {@code %s} placeholder in the template with an
+     *     argument. These are matched by position - the first {@code %s} gets {@code
+     *     errorMessageArgs[0]}, etc. Unmatched arguments will be appended to the formatted message in
+     *     square braces. Unmatched placeholders will be left as-is.
+     * @param errorMessageArgs the arguments to be substituted into the message template. Arguments
+     *     are converted to strings using {@link String#valueOf(Object)}.
+     * @throws IllegalArgumentException if {@code expression} is false
+     */
+    public static void checkArgument(final boolean expression, final String errorMessageTemplate, final Object... errorMessageArgs) {
+        if (!expression) {
+            throw new IllegalArgumentException(lenientFormat(errorMessageTemplate, errorMessageArgs));
+        }
+    }
 }
