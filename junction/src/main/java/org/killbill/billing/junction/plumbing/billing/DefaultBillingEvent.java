@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -97,6 +98,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.usages = computeUsages(isCancelledOrBlocked, planPhase);
     }
 
+    // Only used for START_BILLING_DISABLED / END_BILLING_DISABLED
     public DefaultBillingEvent(final UUID subscriptionId,
                                final UUID bundleId,
                                final DateTime effectiveDate,
@@ -110,8 +112,7 @@ public class DefaultBillingEvent implements BillingEvent {
                                final int billCycleDayLocal,
                                final String description,
                                final long totalOrdering,
-                               final SubscriptionBaseTransitionType type,
-                               final boolean isDisableEvent) {
+                               final SubscriptionBaseTransitionType type) {
         this.subscriptionId = subscriptionId;
         this.bundleId = bundleId;
 
@@ -119,7 +120,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
         this.effectiveDate = effectiveDate;
 
-        this.isCancelledOrBlocked = isDisableEvent;
+        this.isCancelledOrBlocked = type == SubscriptionBaseTransitionType.START_BILLING_DISABLED;
 
         this.plan = plan;
         this.planPhase = planPhase;
@@ -133,9 +134,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.type = type;
         this.totalOrdering = totalOrdering;
         this.billingAlignment = null;
-
     }
-
 
     @Override
     public UUID getSubscriptionId() {

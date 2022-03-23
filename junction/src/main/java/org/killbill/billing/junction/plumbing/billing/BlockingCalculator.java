@@ -1,8 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
  * Copyright 2014-2020 Groupon, Inc
- * Copyright 2020-2021 Equinix, Inc
- * Copyright 2014-2021 The Billing Project, LLC
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -202,12 +202,13 @@ public class BlockingCalculator {
             // The last one during of before the duration
             final BillingEvent precedingFinalEvent = precedingBillingEventForSubscription(duration.getEnd(), subscriptionBillingEvents);
 
-            if (precedingInitialEvent != null) { // there is a preceding billing event
+            // We ignore anything beyond the CANCEL event
+            if (precedingInitialEvent != null && precedingInitialEvent.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) { // there is a preceding billing event
                 result.add(createNewDisableEvent(duration.getStart(), precedingInitialEvent));
-                if (duration.getEnd() != null) { // no second event in the pair means they are still disabled (no re-enable)
+                if (duration.getEnd() != null && precedingFinalEvent != null && precedingFinalEvent.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) { // no second event in the pair means they are still disabled (no re-enable)
                     result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
                 }
-            } else if (precedingFinalEvent != null) { // can happen - e.g. phase event
+            } else if (precedingFinalEvent != null && precedingFinalEvent.getTransitionType() != SubscriptionBaseTransitionType.CANCEL) { // can happen - e.g. phase event
                 result.add(createNewReenableEvent(duration.getEnd(), precedingFinalEvent));
             }
             // N.B. if there's no precedingInitial and no precedingFinal then there's nothing to do
@@ -264,8 +265,7 @@ public class BlockingCalculator {
                                        billCycleDay,
                                        description,
                                        totalOrdering,
-                                       type,
-                                       true
+                                       type
         );
     }
 
@@ -298,8 +298,7 @@ public class BlockingCalculator {
                                        billCycleDay,
                                        description,
                                        totalOrdering,
-                                       type,
-                                       false
+                                       type
         );
     }
 

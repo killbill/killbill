@@ -1,8 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
  * Copyright 2014-2020 Groupon, Inc
- * Copyright 2020-2021 Equinix, Inc
- * Copyright 2014-2021 The Billing Project, LLC
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -54,6 +54,8 @@ import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBillingEvent;
+import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -61,7 +63,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -584,6 +585,43 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         assertEquals(results.size(), 0);
     }
 
+    // Open after cancel
+    // -----X----Y-----[------------------------
+    @Test(groups = "fast")
+    public void testCreateNewEventsOpenFollowCancellation() throws CatalogApiException {
+        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
+        disabledDuration.add(new DisabledDuration(new DateTime(2020, 6, 1, 0, 0), null));
+        billingEvents.add(createRealEvent(subscription1, new DateTime(2020, 1, 1, 0, 0), SubscriptionBaseTransitionType.CREATE));
+        billingEvents.add(createRealEvent(subscription1, new DateTime(2020, 2, 1, 0, 0), SubscriptionBaseTransitionType.CANCEL));
+
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, internalCallContext);
+
+        assertEquals(results.size(), 0);
+    }
+
+    // Closed with cancel in between
+    // -----X----[-----Y----]-------------------
+    @Test(groups = "fast")
+    public void testCreateNewEventsClosedWithInBetweenCancellation() throws CatalogApiException {
+        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+
+        disabledDuration.add(new DisabledDuration(new DateTime(2020, 6, 1, 0, 0), new DateTime(2020, 7, 1, 0, 0)));
+        billingEvents.add(createRealEvent(subscription1, new DateTime(2020, 1, 1, 0, 0), SubscriptionBaseTransitionType.CREATE));
+        billingEvents.add(createRealEvent(subscription1, new DateTime(2020, 6, 15, 0, 0), SubscriptionBaseTransitionType.CANCEL));
+
+        final SortedSet<BillingEvent> results = blockingCalculator.createNewEvents(disabledDuration, billingEvents, internalCallContext);
+
+        assertEquals(results.size(), 1);
+        assertEquals(results.first().getEffectiveDate().compareTo(new DateTime(2020, 6, 1, 0, 0)), 0);
+        assertNull(results.first().getFixedPrice());
+        assertNull(results.first().getRecurringPrice());
+        assertEquals(results.first().getBillingPeriod(), BillingPeriod.NO_BILLING_PERIOD);
+        assertEquals(results.first().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
+    }
+
     @Test(groups = "fast")
     public void testPrecedingBillingEventForSubscription() {
         final DateTime now = new DateTime();
@@ -829,47 +867,44 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
 
     private BillingEvent createRealEvent(final SubscriptionBase subscription, final DateTime effectiveDate, final SubscriptionBaseTransitionType type, final Long totalOrdering) {
         try {
-
             final Integer billCycleDay = 1;
-            final Plan plan = new MockPlan();
+
+            final Plan plan;
+            final PlanPhase planPhase;
+            if (type == SubscriptionBaseTransitionType.CANCEL) {
+                plan = null;
+                planPhase = null;
+            } else {
+                plan = new MockPlan();
+                planPhase = Mockito.mock(PlanPhase.class);
+
+                final InternationalPrice internationalPrice = Mockito.mock(InternationalPrice.class);
+
+                Mockito.when(internationalPrice.getPrice(Mockito.<Currency>any())).thenReturn(BigDecimal.TEN);
+                final Recurring recurring = Mockito.mock(Recurring.class);
+                Mockito.when(recurring.getRecurringPrice()).thenReturn(internationalPrice);
+                Mockito.when(planPhase.getRecurring()).thenReturn(recurring);
+                Mockito.when(planPhase.getUsages()).thenReturn(new DefaultUsage[0]);
+            }
+
             final Currency currency = Currency.USD;
-            final String description = "";
-            final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
 
-            final PlanPhase planPhase = Mockito.mock(PlanPhase.class);
-
-            final InternationalPrice internationalPrice = Mockito.mock(InternationalPrice.class);
-
-            Mockito.when(internationalPrice.getPrice(Mockito.<Currency>any())).thenReturn(BigDecimal.TEN);
-            final Recurring recurring = Mockito.mock(Recurring.class);
-            Mockito.when(recurring.getRecurringPrice()).thenReturn(internationalPrice);
-            Mockito.when(planPhase.getRecurring()).thenReturn(recurring);
-            Mockito.when(planPhase.getUsages()).thenReturn(new DefaultUsage[0]);
-
-            final BigDecimal fixedPrice = BigDecimal.TEN;
-            final BigDecimal recurringPrice = BigDecimal.TEN;
-
-            return new DefaultBillingEvent(subscription.getId(),
-                                           subscription.getBundleId(),
-                                           effectiveDate,
-                                           plan,
-                                           planPhase,
-                                           fixedPrice,
-                                           recurringPrice,
-                                           ImmutableList.of(),
-                                           currency,
-                                           billingPeriod,
+            final SubscriptionBillingEvent subscriptionBillingEvent = new DefaultSubscriptionBillingEvent(type,
+                                                                                                          plan,
+                                                                                                          planPhase,
+                                                                                                          effectiveDate,
+                                                                                                          totalOrdering,
+                                                                                                          billCycleDay,
+                                                                                                          effectiveDate);
+            return new DefaultBillingEvent(subscriptionBillingEvent,
+                                           subscription,
                                            billCycleDay,
-                                           description,
-                                           totalOrdering,
-                                           type,
-                                           false
-            );
+                                           null,
+                                           currency);
 
         } catch (final CatalogApiException e) {
             Assert.fail("", e);
         }
         throw new IllegalStateException();
     }
-
 }
