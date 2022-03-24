@@ -29,6 +29,8 @@ import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.EventModule;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 
 public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
 
@@ -49,5 +51,6 @@ public class TestDefaultSubscriptionModule extends DefaultSubscriptionModule {
         bind(TestSubscriptionHelper.class).asEagerSingleton();
         bind(TestApiListener.class).asEagerSingleton();
         bind(SubscriptionTestInitializer.class).to(DefaultSubscriptionTestInitializer.class).asEagerSingleton();
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }

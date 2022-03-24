@@ -27,11 +27,11 @@ import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.killbill.billing.util.cache.BaseCacheLoader;
+import org.killbill.commons.metrics.api.MetricRegistry;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.MetricRegistry;
 
 import static org.killbill.billing.util.glue.CacheModule.REDIS_CACHE_CLIENT;
 

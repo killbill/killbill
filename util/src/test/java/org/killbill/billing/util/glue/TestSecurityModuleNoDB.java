@@ -31,5 +31,4 @@ public class TestSecurityModuleNoDB extends SecurityModule {
     protected void installDao() {
         bind(UserDao.class).toInstance(Mockito.mock(UserDao.class));
     }
-
 }

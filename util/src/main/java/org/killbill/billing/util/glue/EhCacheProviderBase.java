@@ -26,9 +26,8 @@ import javax.cache.configuration.Configuration;
 import javax.cache.configuration.MutableConfiguration;
 
 import org.killbill.billing.util.config.definition.EhCacheConfig;
+import org.killbill.commons.metrics.api.MetricRegistry;
 import org.killbill.xmlloader.UriAccessor;
-
-import com.codahale.metrics.MetricRegistry;
 
 abstract class EhCacheProviderBase extends CacheProviderBase {
 

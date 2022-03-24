@@ -57,7 +57,7 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;

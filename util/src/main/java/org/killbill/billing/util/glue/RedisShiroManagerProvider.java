@@ -25,6 +25,7 @@ import javax.inject.Provider;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.mgt.SubjectDAO;
+import org.killbill.commons.metrics.api.MetricRegistry;
 import org.redisson.api.RedissonClient;
 
 import com.codahale.metrics.MetricRegistry;

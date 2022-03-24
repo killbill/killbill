@@ -88,17 +88,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.palominolabs.metrics</groupId>
-            <artifactId>metrics-guice</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <!-- Will be required when we upgrade metrics-guice to 3.1.3 -->
-        <!--<dependency>-->
-        <!--<groupId>com.palominolabs.metrics</groupId>-->
-        <!--<artifactId>metrics-guice-servlet</artifactId>-->
-        <!--<scope>runtime</scope>-->
-        <!--</dependency>-->
-        <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <exclusions>
@@ -122,16 +111,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-logback</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.dropwizard.metrics</groupId>
-            <artifactId>metrics-servlet</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-jaxrs</artifactId>
         </dependency>
@@ -139,6 +118,11 @@
             <groupId>it.ozimov</groupId>
             <artifactId>embedded-redis</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
@@ -151,11 +135,6 @@
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>
@@ -203,12 +182,6 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-io</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -218,7 +191,6 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -228,7 +200,6 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-util</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -441,6 +412,10 @@
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-jdbi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.commons</groupId>
+            <artifactId>killbill-metrics-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
