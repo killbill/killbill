@@ -29,8 +29,6 @@ import org.killbill.billing.util.metrics.JCacheGaugeFactory;
 import org.killbill.commons.metrics.api.Gauge;
 import org.killbill.commons.metrics.api.MetricRegistry;
 
-import com.google.common.base.Preconditions;
-
 abstract class CacheProviderBase {
 
     private final MetricRegistry metricRegistry;

@@ -28,8 +28,6 @@ import org.apache.shiro.mgt.SubjectDAO;
 import org.killbill.commons.metrics.api.MetricRegistry;
 import org.redisson.api.RedissonClient;
 
-import com.codahale.metrics.MetricRegistry;
-
 import static org.killbill.billing.util.glue.CacheModule.REDIS_CACHE_CLIENT;
 
 public class RedisShiroManagerProvider implements Provider<RedisShiroManager> {
