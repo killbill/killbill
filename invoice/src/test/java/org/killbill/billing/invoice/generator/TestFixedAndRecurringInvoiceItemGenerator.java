@@ -1,6 +1,7 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,6 +37,7 @@ import org.killbill.billing.catalog.MockPlan;
 import org.killbill.billing.catalog.MockPlanPhase;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
@@ -59,11 +61,12 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.junction.plumbing.billing.DefaultBillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
+import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
+import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -1978,37 +1981,32 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         assertNull(notifications.getNextRecurringDate());
     }
 
-
     private BillingEvent createDefaultBillingEvent(final LocalDate eventDate, final BigDecimal fixedAmount, final BigDecimal recurringPrice, final SubscriptionBaseTransitionType eventType, final int billCycleDay, final long ordering, final BillingMode billingMode) {
-
-
         final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(recurringPrice, account.getCurrency()));
         final MockPlan plan = new MockPlan("my-plan");
         plan.setRecurringBillingMode(billingMode);
 
         final PlanPhase planPhase = new MockPlanPhase(price, null, BillingPeriod.MONTHLY, PhaseType.EVERGREEN);
 
-        final boolean isDisabledOrBlocked = (eventType == SubscriptionBaseTransitionType.CANCEL || eventType ==  SubscriptionBaseTransitionType.START_BILLING_DISABLED);
-        final BillingPeriod billingPeriod = recurringPrice == null ? BillingPeriod.NO_BILLING_PERIOD : BillingPeriod.MONTHLY;
-        // Rely on real (junction) BillingEvent instead of MockBillingEvent to test the real behavior
-        return new DefaultBillingEvent(subscription.getId(),
-                                       subscription.getBundleId(),
-                                       eventDate.toDateTimeAtStartOfDay(),
-                                       plan,
-                                       planPhase,
-                                       fixedAmount,
-                                       recurringPrice,
-                                       ImmutableList.of(),
-                                       account.getCurrency(),
-                                       billingPeriod,
-                                       billCycleDay,
-                                       "desc",
-                                       ordering,
-                                       eventType,
-                                       isDisabledOrBlocked);
+        final SubscriptionBillingEvent subscriptionBillingEvent = Mockito.mock(SubscriptionBillingEvent.class);
+        Mockito.when(subscriptionBillingEvent.getPlan()).thenReturn(plan);
+        Mockito.when(subscriptionBillingEvent.getPlanPhase()).thenReturn(planPhase);
+        Mockito.when(subscriptionBillingEvent.getEffectiveDate()).thenReturn(eventDate.toDateTimeAtStartOfDay());
+        Mockito.when(subscriptionBillingEvent.getTotalOrdering()).thenReturn(ordering);
+        Mockito.when(subscriptionBillingEvent.getType()).thenReturn(eventType);
+        Mockito.when(subscriptionBillingEvent.getBcdLocal()).thenReturn(billCycleDay);
+        Mockito.when(subscriptionBillingEvent.getCatalogEffectiveDate()).thenReturn(eventDate.toDateTimeAtStartOfDay());
 
-
+        try {
+            // Rely on real (junction) BillingEvent instead of MockBillingEvent to test the real behavior
+            return new DefaultBillingEvent(subscriptionBillingEvent,
+                                           subscription,
+                                           billCycleDay,
+                                           null,
+                                           Currency.USD);
+        } catch (final CatalogApiException e) {
+            fail("Catalog error", e);
+            return null;
+        }
     }
-
-
 }
