@@ -24,7 +24,7 @@
         version="3.0">
     <filter>
         <filter-name>instrumentedFilter</filter-name>
-        <filter-class>com.codahale.metrics.servlet.InstrumentedFilter</filter-class>
+        <filter-class>org.killbill.commons.metrics.servlets.InstrumentedFilter</filter-class>
         <async-supported>true</async-supported>
     </filter>
     <filter-mapping>

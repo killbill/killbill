@@ -23,7 +23,7 @@
         version="2.5">
     <filter>
         <filter-name>instrumentedFilter</filter-name>
-        <filter-class>com.codahale.metrics.servlet.InstrumentedFilter</filter-class>
+        <filter-class>org.killbill.commons.metrics.servlets.InstrumentedFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>instrumentedFilter</filter-name>

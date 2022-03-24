@@ -35,6 +35,8 @@ import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.EventModule;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 import org.mockito.Mockito;
 
 import com.google.common.base.MoreObjects;
@@ -78,5 +80,6 @@ public class TestInvoiceModule extends DefaultInvoiceModule {
         installExternalApis();
 
         bind(TestInvoiceHelper.class).asEagerSingleton();
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }

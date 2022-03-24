@@ -135,8 +135,8 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.MetricTag;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.MetricTag;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 
