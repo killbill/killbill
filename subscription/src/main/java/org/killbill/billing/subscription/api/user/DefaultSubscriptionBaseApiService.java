@@ -63,8 +63,11 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
 import org.killbill.billing.subscription.events.bcd.BCDEventData;
+import org.killbill.billing.subscription.events.expired.ExpiredEventBuilder;
+import org.killbill.billing.subscription.events.expired.ExpiredEventData;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.events.user.ApiEvent;
@@ -180,6 +183,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public boolean cancel(final DefaultSubscriptionBase subscription, final CallContext context) throws SubscriptionBaseApiException {
+        if (subscription.getState() == EntitlementState.EXPIRED) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), subscription.getState());
+        }
         final Plan currentPlan = subscription.getCurrentOrPendingPlan();
         final PlanPhaseSpecifier planPhase = new PlanPhaseSpecifier(currentPlan.getName(), null);
 
@@ -200,6 +206,10 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public boolean cancelWithRequestedDate(final DefaultSubscriptionBase subscription, final DateTime requestedDateWithMs, final CallContext context) throws SubscriptionBaseApiException {
+        if (subscription.getState() == EntitlementState.EXPIRED) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), subscription.getState());
+        }
+
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
@@ -213,6 +223,9 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
     @Override
     public boolean cancelWithPolicy(final DefaultSubscriptionBase subscription, final BillingActionPolicy policy, final CallContext context) throws SubscriptionBaseApiException {
+        if (subscription.getState() == EntitlementState.EXPIRED) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), subscription.getState());
+        }
 
         final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
         try {
@@ -253,7 +266,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             for (final DefaultSubscriptionBase subscription : subscriptions.keySet()) {
 
                 final EntitlementState currentState = subscription.getState();
-                if (currentState == EntitlementState.CANCELLED) {
+                if (currentState == EntitlementState.CANCELLED || currentState == EntitlementState.EXPIRED) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), currentState);
                 }
                 final DateTime effectiveDate = subscriptions.get(subscription);
@@ -267,6 +280,12 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                     pendingTransition.getTransitionType() == SubscriptionBaseTransitionType.CANCEL &&
                     pendingTransition.getEffectiveTransitionTime().compareTo(effectiveDate) < 0) {
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), "PENDING CANCELLED");
+                }
+                // Similarly, if subscription is cancelled with date past the expiry date (in case of a FIXEDTERM phase), we disallow the operation
+                if (pendingTransition != null &&
+                    pendingTransition.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED &&
+                    pendingTransition.getEffectiveTransitionTime().compareTo(effectiveDate) < 0) {
+                    throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), "PENDING EXPIRY");
                 }
 
                 validateEffectiveDate(subscription, effectiveDate);
@@ -493,6 +512,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 .setFromDisk(true);
         final SubscriptionBaseEvent creationEvent = new ApiEventCreate(createBuilder);
 
+        final TimedPhase currentPhase = curAndNextPhases[0];
         final TimedPhase nextTimedPhase = curAndNextPhases[1];
         final PhaseEvent nextPhaseEvent = (nextTimedPhase != null) ?
                                           PhaseEventData.createNextPhaseEvent(subscriptionId, nextTimedPhase.getPhase().getName(), nextTimedPhase.getStartPhase()) :
@@ -511,6 +531,13 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         if (nextPhaseEvent != null) {
             events.add(nextPhaseEvent);
+        } else if (currentPhase.getPhase().getPhaseType() == PhaseType.FIXEDTERM) {
+            final DateTime fixedTermExpiryDate = currentPhase.getPhase().getDuration().addToDateTime(effectiveDate);
+            final SubscriptionBaseEvent expiredEvent = new ExpiredEventData(new ExpiredEventBuilder()
+                                                                                    .setSubscriptionId(subscriptionId)
+                                                                                    .setEffectiveDate(fixedTermExpiryDate)
+                                                                                    .setActive(true));
+            events.add(expiredEvent);
         }
         return events;
     }
@@ -561,6 +588,15 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         final List<SubscriptionBaseEvent> changeEvents = new ArrayList<SubscriptionBaseEvent>();
         // Only add the PHASE if it does not coincide with the CHANGE, if not this is 'just' a CHANGE.
         changeEvents.add(changeEvent);
+
+        if (currentTimedPhase.getPhase().getPhaseType() == PhaseType.FIXEDTERM) {
+            final DateTime fixedTermExpiryDate = currentTimedPhase.getPhase().getDuration().addToDateTime(currentTimedPhase.getStartPhase());
+            final SubscriptionBaseEvent expiredEvent = new ExpiredEventData(new ExpiredEventBuilder()
+                                                                                    .setSubscriptionId(subscription.getId())
+                                                                                    .setEffectiveDate(fixedTermExpiryDate)
+                                                                                    .setActive(true));
+            changeEvents.add(expiredEvent);
+        }
 
         if (bcd != null) {
             final SubscriptionBaseEvent bcdEvent = new BCDEventData(new BCDEventBuilder()
@@ -650,13 +686,54 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             final List<SubscriptionBaseEvent> cancelEvents = new LinkedList<SubscriptionBaseEvent>();
             final List<DefaultSubscriptionBase> subscriptionsToBeCancelled = computeAddOnsToCancel(cancelEvents, baseProduct, subscription.getBundleId(), event.getEffectiveDate(), catalog, internalCallContext);
-            dao.cancelSubscriptionsOnBasePlanEvent(subscription, event, subscriptionsToBeCancelled, cancelEvents, catalog, internalCallContext);
+            dao.cancelOrExpireSubscriptionOnNotification(subscription, event, subscriptionsToBeCancelled, cancelEvents, catalog, internalCallContext);
 
             return subscriptionsToBeCancelled.size();
         } else {
             dao.notifyOnBasePlanEvent(subscription, event, catalog, internalCallContext);
             return 0;
         }
+    }
+
+    @Override
+    public int handleExpiredEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final SubscriptionCatalog catalog, final CallContext context) throws CatalogApiException {
+
+        final InternalCallContext internalCallContext = createCallContextFromBundleId(subscription.getBundleId(), context);
+        if (subscription.getCategory() == ProductCategory.BASE) {
+            final List<SubscriptionBaseEvent> expireEvents = new LinkedList<SubscriptionBaseEvent>();
+            final List<DefaultSubscriptionBase> subscriptionsToBeExpired = computeAddOnsToExpire(expireEvents, subscription.getBundleId(), event.getEffectiveDate(), catalog, internalCallContext);
+            dao.cancelOrExpireSubscriptionOnNotification(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext);
+            return subscriptionsToBeExpired.size();
+        } else { //ADD_ON and STANDALONE products
+            final List<SubscriptionBaseEvent> expireEvents = new LinkedList<SubscriptionBaseEvent>();
+            final List<DefaultSubscriptionBase> subscriptionsToBeExpired = new LinkedList<DefaultSubscriptionBase>();
+            dao.cancelOrExpireSubscriptionOnNotification(subscription, event, subscriptionsToBeExpired, expireEvents, catalog, internalCallContext);
+            return 1;
+        }
+    }
+
+    private List<DefaultSubscriptionBase> computeAddOnsToExpire(final Collection<SubscriptionBaseEvent> expireEvents, final UUID bundleId, final DateTime effectiveDate, final SubscriptionCatalog catalog, final InternalCallContext internalCallContext) throws CatalogApiException {
+
+        final List<DefaultSubscriptionBase> subscriptionsToBeExpired = new ArrayList<DefaultSubscriptionBase>();
+
+        final List<DefaultSubscriptionBase> subscriptions = dao.getSubscriptions(bundleId, ImmutableList.<SubscriptionBaseEvent>of(), catalog, internalCallContext);
+
+        for (final SubscriptionBase subscription : subscriptions) {
+            final DefaultSubscriptionBase cur = (DefaultSubscriptionBase) subscription;
+            if (cur.getCategory() != ProductCategory.ADD_ON || cur.getState() == EntitlementState.CANCELLED || cur.getState() == EntitlementState.EXPIRED) {
+                continue;
+            }
+
+            final SubscriptionBaseEvent expiredEvent = new ExpiredEventData(new ExpiredEventBuilder()
+                                                                                    .setSubscriptionId(cur.getId())
+                                                                                    .setEffectiveDate(effectiveDate)
+                                                                                    .setActive(true));
+
+            expireEvents.add(expiredEvent);
+            subscriptionsToBeExpired.add(cur);
+        }
+        return subscriptionsToBeExpired;
+
     }
 
     private List<DefaultSubscriptionBase> computeAddOnsToCancel(final Collection<SubscriptionBaseEvent> cancelEvents, final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final SubscriptionCatalog catalog, final InternalCallContext internalCallContext) throws CatalogApiException {
@@ -678,6 +755,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
         for (final SubscriptionBase subscription : subscriptions) {
             final DefaultSubscriptionBase cur = (DefaultSubscriptionBase) subscription;
             if (cur.getState() == EntitlementState.CANCELLED ||
+                cur.getState() == EntitlementState.EXPIRED ||
                 cur.getCategory() != ProductCategory.ADD_ON) {
                 continue;
             }
@@ -716,12 +794,16 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         final EntitlementState currentState = subscription.getState();
         if (currentState == EntitlementState.CANCELLED ||
+            currentState == EntitlementState.EXPIRED ||
             // We don't look for PENDING because as long as change is after startDate, we want to allow it.
             effectiveDate != null && effectiveDate.compareTo(subscription.getStartDate()) < 0) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, subscription.getId(), currentState);
         }
         if (subscription.isFutureCancelled()) {
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_FUTURE_CANCELLED, subscription.getId());
+        }
+        if (effectiveDate != null && subscription.getFutureExpiryDate() != null && subscription.getFutureExpiryDate().isBefore(effectiveDate)) {
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_FUTURE_CANCELLED, subscription.getId()); //TODO_1533 - change to different ErrorCode
         }
     }
 

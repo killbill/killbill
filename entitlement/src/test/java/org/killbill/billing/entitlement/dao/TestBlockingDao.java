@@ -78,7 +78,6 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
     }
 
-
     @Test(groups = "slow", description = "Check BlockingStateDao for a subscription with events at all level (subscription, bundle, account)")
     public void testWithMultipleAccountBlockingStates() throws AccountApiException {
         final UUID accountId = createAccount(getAccountData(1)).getId();
@@ -137,8 +136,6 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
     }
 
-
-
     @Test(groups = "slow", description = "Verify active blocking states are being returned")
     public void testActiveBlockingStates() throws AccountApiException {
 
@@ -177,14 +174,17 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(stateB2, Optional.<UUID>absent()), internalCallContext);
         assertListenerStatus();
 
-
         List<BlockingState> states = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
         Assert.assertEquals(states.size(), 5);
-
 
         states = blockingStateDao.getBlockingActiveForAccount(catalog, null, internalCallContext);
         Assert.assertEquals(states.size(), 2);
 
+        blockingStateDao.unactiveBlockingState(states.get(0).getId(), internalCallContext);
+        final UUID remainingId = states.get(1).getId();
+        states = blockingStateDao.getBlockingActiveForAccount(catalog, null, internalCallContext);
+        Assert.assertEquals(states.size(), 1);
+        Assert.assertEquals(states.get(0).getId(), remainingId);
     }
 
 

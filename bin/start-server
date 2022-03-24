@@ -75,7 +75,7 @@ function usage() {
 function start() {
     mkdir -p $LOG_DIR
 
-    local start_cmd="mvn -Dcom.sun.xml.bind.v2.bytecode.ClassTailor.noOptimize=true -Dorg.killbill.server.properties=file://$PROPERTIES -Dlogback.configurationFile=$LOG jetty:run"
+    local start_cmd="mvn -Dcom.sun.xml.bind.v2.bytecode.ClassTailor.noOptimize=true -Dorg.killbill.server.properties=file://$PROPERTIES -Dlogback.configurationFile=$LOG -Dcheck.skip-dependency=true -Dcheck.skip-dependency-scope=true -Dcheck.skip-dependency-versions=true -Dcheck.skip-duplicate-finder=true -Dcheck.skip-enforcer=true -Dcheck.skip-rat=true -Dcheck.skip-spotbugs=true jetty:run"
 
     local debug_opts_eclipse=
     if [ ! -z $DEBUG ]; then

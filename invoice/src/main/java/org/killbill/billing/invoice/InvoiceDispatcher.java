@@ -703,7 +703,7 @@ public class InvoiceDispatcher {
             if (invoiceUpdated) {
                 // Remove the temporary CBA item as we need to re-compute CBA
                 if (cbaItemPreInvoicePlugins != null) {
-                    invoice.removeInvoiceItem(cbaItemPreInvoicePlugins);
+                    invoice.removeInvoiceItemIfExists(cbaItemPreInvoicePlugins);
                 }
 
                 // Use credit after we call the plugin (https://github.com/killbill/killbill/issues/637)

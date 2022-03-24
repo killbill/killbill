@@ -208,6 +208,11 @@ public class MockSubscription implements SubscriptionBase {
     public DateTime getFutureEndDate() {
         return sub.getFutureEndDate();
     }
+    
+    @Override
+    public DateTime getFutureExpiryDate() {
+        return sub.getFutureExpiryDate();
+    }    
 
     @Override
     public EntitlementSourceType getSourceType() {

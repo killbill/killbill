@@ -102,7 +102,7 @@ public class TestCatalogFixedTermWithVersionedCatalogs extends TestIntegrationBa
         //Fixed term duration of 100 days ends on 2021-04-11
         invoiceChecker.checkInvoice(account.getId(), 5, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 04, 01), new LocalDate(2021, 04, 11), InvoiceItemType.RECURRING, new BigDecimal("20.00")));
         
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.EXPIRED);
         clock.addMonths(1);//2021-05-01
         assertListenerStatus();         
         

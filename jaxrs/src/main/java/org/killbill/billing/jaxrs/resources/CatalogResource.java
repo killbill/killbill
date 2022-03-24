@@ -20,9 +20,11 @@ package org.killbill.billing.jaxrs.resources;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,9 +43,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -87,7 +94,6 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
-import org.killbill.xmlloader.XMLWriter;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -148,7 +154,7 @@ public class CatalogResource extends JaxRsResourceBase {
         if (catalogDateVersion == null) {
             catalog = versionedcatalog;
         } else {
-            // We have no other choice than to deep copy the catalog...
+            // We have no other choice than to deep copy the catalog (JAXB can't handle interfaces)...
             final ByteArrayOutputStream bos = new ByteArrayOutputStream();
             final ObjectOutput out = new ObjectOutputStream(bos);
             out.writeObject(versionedcatalog);
@@ -161,9 +167,25 @@ public class CatalogResource extends JaxRsResourceBase {
 
         // This assumes serializableClass has the right JAXB annotations
         final Class serializableClass = catalog.getClass();
-        final String result = XMLWriter.writeXML(catalog, serializableClass);
 
-        return Response.status(Status.OK).entity(result).build();
+        final JAXBContext context = JAXBContext.newInstance(serializableClass);
+        final Marshaller marshaller = context.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+        final StreamingOutput json = new StreamingOutput() {
+            @Override
+            public void write(final OutputStream output) throws IOException, WebApplicationException {
+                try {
+                    marshaller.marshal(catalog, output);
+                } catch (final JAXBException e) {
+                    throw new IOException(e);
+                }
+            }
+        };
+
+        return Response.status(Status.OK)
+                       .entity(json)
+                       .build();
     }
 
     @TimedResource
@@ -534,5 +556,4 @@ public class CatalogResource extends JaxRsResourceBase {
         catalogUserApi.deleteCatalog(callContext);
         return Response.status(Status.NO_CONTENT).build();
     }
-
 }
