@@ -17,10 +17,11 @@
 
 package org.killbill.billing.tenant.dao;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -37,10 +38,6 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
@@ -74,17 +71,9 @@ public class NoCachingTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Te
 
     @Override
     public List<String> getTenantValueForKey(final String key, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<String>>() {
-            @Override
-            public List<String> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<TenantKVModelDao> tenantKV = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
-                return new ArrayList(Collections2.transform(tenantKV, new Function<TenantKVModelDao, String>() {
-                    @Override
-                    public String apply(final TenantKVModelDao in) {
-                        return in.getTenantValue();
-                    }
-                }));
-            }
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
+            final List<TenantKVModelDao> tenantKV = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
+            return tenantKV.stream().map(TenantKVModelDao::getTenantValue).collect(Collectors.toUnmodifiableList());
         });
     }
 
