@@ -28,8 +28,6 @@ import org.killbill.billing.util.entity.Pagination;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestDefaultCustomFieldDao extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
@@ -39,7 +37,7 @@ public class TestDefaultCustomFieldDao extends UtilTestSuiteWithEmbeddedDB {
         final String SEARCHABLE_FILED_NAME = "ToBeSearched";
         final String NON_SEARCHABLE_FILED_NAME = "NotToBeFound";
 
-        final List<CustomFieldModelDao> input = ImmutableList.of(
+        final List<CustomFieldModelDao> input = List.of(
                 new CustomFieldModelDao(internalCallContext.getCreatedDate(), SEARCHABLE_FILED_NAME, "The world will collapse soon!", someUUId, ObjectType.ACCOUNT),
                 new CustomFieldModelDao(internalCallContext.getCreatedDate(), SEARCHABLE_FILED_NAME, "How do you know?", someUUId, ObjectType.ACCOUNT),
                 new CustomFieldModelDao(internalCallContext.getCreatedDate(), SEARCHABLE_FILED_NAME, "Just a guess...", someUUId, ObjectType.INVOICE),

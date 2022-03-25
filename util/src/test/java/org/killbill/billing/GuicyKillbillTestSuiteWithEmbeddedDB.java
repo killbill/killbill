@@ -30,10 +30,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.cache.CacheManager;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.sql.DataSource;
 
@@ -47,9 +49,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.CacheModule.REDIS_CACHE_CLIENT;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
@@ -75,11 +74,12 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected CacheControllerDispatcher controlCacheDispatcher;
 
     @Nullable
-    @Inject(optional = true)
+    @com.google.inject.Inject(optional = true)
     protected CacheManager cacheManager;
 
     @Nullable
-    @Inject(optional = true)
+    // FIXME-1615 : Originally, this injection is: @Inject(optional = true) . Let see if this broke something
+    @Inject
     @Named(REDIS_CACHE_CLIENT)
     protected RedissonClient redissonCachingClient;
 
@@ -90,7 +90,7 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
         }
 
         // Hack to configure log4jdbc -- properties used by tests will be properly setup in @BeforeClass
-        getConfigSource(ImmutableMap.<String, String>of());
+        getConfigSource(Collections.emptyMap());
         DBTestingHelper.get().start();
     }
 

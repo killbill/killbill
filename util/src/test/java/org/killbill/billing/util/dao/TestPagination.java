@@ -27,7 +27,7 @@ import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionSqlDao;
 
-import com.google.common.collect.ImmutableList;
+import static org.killbill.billing.util.collect.CollectionTransformer.*;
 
 public class TestPagination extends UtilTestSuiteWithEmbeddedDB {
 
@@ -44,13 +44,13 @@ public class TestPagination extends UtilTestSuiteWithEmbeddedDB {
         }
 
         // Tests via SQL dao directly
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.getAll(internalCallContext)).size(), 10);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(0L, 100L, "record_id", "asc", internalCallContext)).size(), 10);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(5L, 100L, "record_id", "asc", internalCallContext)).size(), 5);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(5L, 10L, "record_id", "asc", internalCallContext)).size(), 5);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(0L, 5L, "record_id", "asc", internalCallContext)).size(), 5);
+        Assert.assertEquals(iteratorToList(tagDefinitionSqlDao.getAll(internalCallContext)).size(), 10);
+        Assert.assertEquals(iteratorToList(tagDefinitionSqlDao.get(0L, 100L, "record_id", "asc", internalCallContext)).size(), 10);
+        Assert.assertEquals(iteratorToList(tagDefinitionSqlDao.get(5L, 100L, "record_id", "asc", internalCallContext)).size(), 5);
+        Assert.assertEquals(iteratorToList(tagDefinitionSqlDao.get(5L, 10L, "record_id", "asc", internalCallContext)).size(), 5);
+        Assert.assertEquals(iteratorToList(tagDefinitionSqlDao.get(0L, 5L, "record_id", "asc", internalCallContext)).size(), 5);
         for (int i = 0; i < 10; i++) {
-            final List<TagDefinitionModelDao> tagDefinitions = ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionSqlDao.get(0L, (long) i, "record_id", "asc", internalCallContext));
+            final List<TagDefinitionModelDao> tagDefinitions = iteratorToList(tagDefinitionSqlDao.get(0L, (long) i, "record_id", "asc", internalCallContext));
             Assert.assertEquals(tagDefinitions.size(), i);
 
             for (int j = 0; j < tagDefinitions.size(); j++) {
@@ -60,13 +60,13 @@ public class TestPagination extends UtilTestSuiteWithEmbeddedDB {
         }
 
         // Tests via DAO (to test EntityDaoBase)
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionDao.getAll(internalCallContext)).size(), 10);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionDao.get(0L, 100L, internalCallContext)).size(), 10);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionDao.get(5L, 100L, internalCallContext)).size(), 5);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionDao.get(5L, 10L, internalCallContext)).size(), 5);
-        Assert.assertEquals(ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionDao.get(0L, 5L, internalCallContext)).size(), 5);
+        Assert.assertEquals(iterableToList(tagDefinitionDao.getAll(internalCallContext)).size(), 10);
+        Assert.assertEquals(iterableToList(tagDefinitionDao.get(0L, 100L, internalCallContext)).size(), 10);
+        Assert.assertEquals(iterableToList(tagDefinitionDao.get(5L, 100L, internalCallContext)).size(), 5);
+        Assert.assertEquals(iterableToList(tagDefinitionDao.get(5L, 10L, internalCallContext)).size(), 5);
+        Assert.assertEquals(iterableToList(tagDefinitionDao.get(0L, 5L, internalCallContext)).size(), 5);
         for (int i = 0; i < 10; i++) {
-            final List<TagDefinitionModelDao> tagDefinitions = ImmutableList.<TagDefinitionModelDao>copyOf(tagDefinitionDao.get(0L, (long) i, internalCallContext));
+            final List<TagDefinitionModelDao> tagDefinitions = iterableToList(tagDefinitionDao.get(0L, (long) i, internalCallContext));
             Assert.assertEquals(tagDefinitions.size(), i);
 
             for (int j = 0; j < tagDefinitions.size(); j++) {

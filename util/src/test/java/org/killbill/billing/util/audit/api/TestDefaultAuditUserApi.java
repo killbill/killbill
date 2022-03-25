@@ -29,8 +29,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestDefaultAuditUserApi extends AuditLogsTestBase {
 
     private List<AuditLog> auditLogs;
@@ -42,8 +40,8 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
             return;
         }
 
-        auditLogs = ImmutableList.<AuditLog>of(createAuditLog(), createAuditLog(), createAuditLog(), createAuditLog());
-        objectIds = ImmutableList.<UUID>of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        auditLogs = List.of(createAuditLog(), createAuditLog(), createAuditLog(), createAuditLog());
+        objectIds = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
 
         for (final TableName tableName : TableName.values()) {
             for (final UUID objectId : objectIds) {
@@ -62,7 +60,7 @@ public class TestDefaultAuditUserApi extends AuditLogsTestBase {
                     if (AuditLevel.NONE.equals(level)) {
                         Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level, callContext).size(), 0);
                     } else if (AuditLevel.MINIMAL.equals(level)) {
-                        Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level, callContext), ImmutableList.<AuditLog>of(auditLogs.get(0)));
+                        Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level, callContext), List.of(auditLogs.get(0)));
                     } else {
                         Assert.assertEquals(auditUserApi.getAuditLogs(objectId, objectType, level, callContext), auditLogs);
                     }

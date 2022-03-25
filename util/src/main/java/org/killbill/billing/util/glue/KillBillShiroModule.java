@@ -20,6 +20,7 @@
 package org.killbill.billing.util.glue;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.shiro.cache.CacheManager;
@@ -43,10 +44,8 @@ import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.AnnotatedBindingBuilder;
-import com.google.inject.name.Names;
 
 // For Kill Bill library only.
 // See org.killbill.billing.server.modules.KillBillShiroWebModule for Kill Bill server.
@@ -102,7 +101,7 @@ public class KillBillShiroModule extends ShiroModule {
 
         final SecurityConfig securityConfig = new ConfigurationObjectFactory(skifeConfigSource).build(SecurityConfig.class);
         final Collection<Realm> realms = defaultSecurityManager.getRealms() != null ? defaultSecurityManager.getRealms() :
-                                         ImmutableSet.<Realm>of(new IniRealm(securityConfig.getShiroResourcePath())); // Mainly for testing
+                                         List.of(new IniRealm(securityConfig.getShiroResourcePath())); // Mainly for testing
         for (final Realm realm : realms) {
             bindRealm().toInstance(realm);
         }

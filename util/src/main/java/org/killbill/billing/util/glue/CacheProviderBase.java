@@ -23,11 +23,11 @@ import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.Configuration;
 
+import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.metrics.JCacheGaugeFactory;
+
 import org.killbill.commons.metrics.api.Gauge;
 import org.killbill.commons.metrics.api.MetricRegistry;
-
-import com.google.common.base.Preconditions;
 
 abstract class CacheProviderBase {
 

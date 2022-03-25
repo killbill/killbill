@@ -42,6 +42,7 @@ import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.events.TagDefinitionInternalEvent;
 import org.killbill.billing.events.TagInternalEvent;
+import org.killbill.billing.util.Joiner;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
@@ -50,7 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 
-import com.google.common.base.Joiner;
+// FIXME-1615 : Maybe need to migrate as well?
 import com.google.common.eventbus.Subscribe;
 
 import static org.awaitility.Awaitility.await;
@@ -83,7 +84,7 @@ public class TestApiListener {
     }
 
     // In some (rare) cases we don't want to listen to events -- e.g event processing causes exceptions
-    public void waitAndIgnoreEvents(long waitMsec) {
+    public void waitAndIgnoreEvents(final long waitMsec) {
 
         long remaining = waitMsec;
         try {
@@ -91,7 +92,7 @@ public class TestApiListener {
                 Thread.sleep(100);
                 remaining -= 100;
             } while(remaining > 0);
-        } catch(InterruptedException ignored) {
+        } catch(final InterruptedException ignored) {
         } finally {
             reset();
         }

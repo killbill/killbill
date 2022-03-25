@@ -32,18 +32,17 @@ import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
     protected static final AtomicLong autoIncrement = new AtomicLong(1);
 
-    protected final Map<UUID, Map<Long, M>> entities = new HashMap<UUID, Map<Long, M>>();
+    protected final Map<UUID, Map<Long, M>> entities = new HashMap<>();
 
     @Override
     public void create(final M entity, final InternalCallContext context) throws U {
-        entities.put(entity.getId(), ImmutableMap.<Long, M>of(autoIncrement.incrementAndGet(), entity));
+        entities.put(entity.getId(), Map.of(autoIncrement.incrementAndGet(), entity));
     }
 
     protected Long getRecordId(final UUID id, final InternalTenantContext context) {
@@ -67,7 +66,7 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
 
     @Override
     public Pagination<M> getAll(final InternalTenantContext context) {
-        final List<M> result = new ArrayList<M>();
+        final List<M> result = new ArrayList<>();
         for (final Map<Long, M> cur : entities.values()) {
             result.add(cur.values().iterator().next());
         }
@@ -76,7 +75,7 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
 
     @Override
     public Pagination<M> get(final Long offset, final Long limit, final InternalTenantContext context) {
-        return DefaultPagination.<M>build(offset, limit, ImmutableList.<M>copyOf(getAll(context)));
+        return DefaultPagination.<M>build(offset, limit, iterableToList(getAll(context)));
     }
 
     @Override

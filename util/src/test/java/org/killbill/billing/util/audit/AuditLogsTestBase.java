@@ -17,24 +17,22 @@
 package org.killbill.billing.util.audit;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.mockito.Mockito;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
 public abstract class AuditLogsTestBase extends UtilTestSuiteNoDB {
 
-    protected ImmutableMap<UUID, List<AuditLog>> createAuditLogsAssociation() {
+    protected Map<UUID, List<AuditLog>> createAuditLogsAssociation() {
         final UUID id1 = UUID.randomUUID();
         final UUID id2 = UUID.randomUUID();
         final UUID id3 = UUID.randomUUID();
-        return ImmutableMap.<UUID, List<AuditLog>>of(id1, ImmutableList.<AuditLog>of(createAuditLog(), createAuditLog()),
-                                                     id2, ImmutableList.<AuditLog>of(createAuditLog(), createAuditLog()),
-                                                     id3, ImmutableList.<AuditLog>of(createAuditLog(), createAuditLog()));
+        return Map.of(id1, List.of(createAuditLog(), createAuditLog()),
+                      id2, List.of(createAuditLog(), createAuditLog()),
+                      id3, List.of(createAuditLog(), createAuditLog()));
     }
 
     protected AuditLog createAuditLog() {

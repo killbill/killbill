@@ -20,10 +20,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.Joiner;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
@@ -47,11 +52,8 @@ import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDaoHelper;
 
+// FIXME-1615 : should replaced when working with DefaultPaginationHelper.getEntityPaginationNoException()
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
@@ -81,13 +83,11 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public List<TagDefinition> getTagDefinitions(final TenantContext context) {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(true, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
-                                                                          new Function<TagDefinitionModelDao, TagDefinition>() {
-                                                                              @Override
-                                                                              public TagDefinition apply(final TagDefinitionModelDao input) {
-                                                                                  return new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName()));
-                                                                              }
-                                                                          }));
+        final InternalTenantContext internalCtx = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
+        final List<TagDefinitionModelDao> tagDefinitions = tagDefinitionDao.getTagDefinitions(true, internalCtx);
+        return tagDefinitions.stream()
+                .map(input -> new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName())))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -112,15 +112,12 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     @Override
-    public List<TagDefinition> getTagDefinitions(final Collection<UUID> tagDefinitionIds, final TenantContext context)
-            throws TagDefinitionApiException {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getByIds(tagDefinitionIds, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context)),
-                                                                          new Function<TagDefinitionModelDao, TagDefinition>() {
-                                                                              @Override
-                                                                              public TagDefinition apply(final TagDefinitionModelDao input) {
-                                                                                  return new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName()));
-                                                                              }
-                                                                          }));
+    public List<TagDefinition> getTagDefinitions(final Collection<UUID> tagDefinitionIds, final TenantContext context) throws TagDefinitionApiException {
+        final InternalTenantContext internalCtx = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
+        final List<TagDefinitionModelDao> tagDefinitions = tagDefinitionDao.getByIds(tagDefinitionIds, internalCtx);
+        return tagDefinitions.stream()
+                .map(input -> new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName())))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -142,7 +139,7 @@ public class DefaultTagUserApi implements TagUserApi {
         final TagModelDao tag = new TagModelDao(context.getCreatedDate(), tagDefinitionId, objectId, objectType);
         try {
             tagDao.create(tag, internalContext);
-        } catch (TagApiException e) {
+        } catch (final TagApiException e) {
             // Be lenient here and make the addTag method idempotent
             if (ErrorCode.TAG_ALREADY_EXISTS.getCode() != e.getCode()) {
                 throw e;
@@ -220,6 +217,6 @@ public class DefaultTagUserApi implements TagUserApi {
     }
 
     private List<Tag> withModelTransform(final Collection<TagModelDao> input) {
-        return ImmutableList.<Tag>copyOf(Collections2.transform(input, TAG_MODEL_DAO_TAG_FUNCTION));
+        return input.stream().map(TAG_MODEL_DAO_TAG_FUNCTION).collect(Collectors.toUnmodifiableList());
     }
 }

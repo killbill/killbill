@@ -21,8 +21,10 @@ package org.killbill.billing.util.customfield.dao;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.BillingExceptionBase;
@@ -48,7 +50,6 @@ import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Orderi
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.optimizer.BusOptimizer;
@@ -57,12 +58,6 @@ import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
@@ -83,103 +78,85 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
     @Override
     public List<CustomFieldModelDao> getCustomFieldsForObject(final UUID objectId, final ObjectType objectType, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<CustomFieldModelDao>>() {
-            @Override
-            public List<CustomFieldModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class).getCustomFieldsForObject(objectId, objectType, context);
-            }
-        });
+        List<CustomFieldModelDao> result = transactionalSqlDao
+                .execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory
+                        .become(CustomFieldSqlDao.class)
+                        .getCustomFieldsForObject(objectId, objectType, context));
+        return List.copyOf(result);
     }
 
     @Override
     public List<CustomFieldModelDao>
     getCustomFieldsForAccountType(final ObjectType objectType, final InternalTenantContext context) {
         final List<CustomFieldModelDao> allFields = getCustomFieldsForAccount(context);
-
-        return ImmutableList.<CustomFieldModelDao>copyOf(Collections2.filter(allFields, new Predicate<CustomFieldModelDao>() {
-            @Override
-            public boolean apply(@Nullable final CustomFieldModelDao input) {
-                return input.getObjectType() == objectType;
-            }
-        }));
+        return allFields.stream()
+                .filter(customFieldModelDao -> customFieldModelDao.getObjectType() == objectType)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public List<CustomFieldModelDao> getCustomFieldsForAccount(final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<CustomFieldModelDao>>() {
-            @Override
-            public List<CustomFieldModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class).getByAccountRecordId(context);
-            }
-        });
+        final List<CustomFieldModelDao> result = transactionalSqlDao
+                .execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory
+                        .become(CustomFieldSqlDao.class)
+                        .getByAccountRecordId(context));
+        return List.copyOf(result);
     }
 
     @Override
     public void deleteCustomFields(final Iterable<UUID> customFieldIds, final InternalCallContext context) throws CustomFieldApiException {
-        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final CustomFieldSqlDao sqlDao = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
+        transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
+            final CustomFieldSqlDao sqlDao = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
 
-                for (final UUID cur : customFieldIds) {
-                    final CustomFieldModelDao customField = sqlDao.getById(cur.toString(), context);
-                    if (customField != null) {
-                        sqlDao.markTagAsDeleted(cur.toString(), context);
-                        postBusEventFromTransaction(customField, customField, ChangeType.DELETE, entitySqlDaoWrapperFactory, context);
-                    }
+            for (final UUID cur : customFieldIds) {
+                final CustomFieldModelDao customField = sqlDao.getById(cur.toString(), context);
+                if (customField != null) {
+                    sqlDao.markTagAsDeleted(cur.toString(), context);
+                    postBusEventFromTransaction(customField, customField, ChangeType.DELETE, entitySqlDaoWrapperFactory, context);
                 }
-                return null;
             }
+            return null;
         });
-
     }
 
     @Override
     public void updateCustomFields(final Iterable<CustomFieldModelDao> customFieldIds, final InternalCallContext context) throws CustomFieldApiException {
+        transactionalSqlDao.execute(false, CustomFieldApiException.class, entitySqlDaoWrapperFactory -> {
+            final CustomFieldSqlDao sqlDao = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
 
-        transactionalSqlDao.execute(false, CustomFieldApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
+            for (final CustomFieldModelDao cur : customFieldIds) {
+                final CustomFieldModelDao customField = sqlDao.getById(cur.getId().toString(), context);
 
-            private void validateCustomField(final CustomFieldModelDao input, @Nullable CustomFieldModelDao existing) throws CustomFieldApiException {
-                if (existing == null) {
-                    throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_DOES_NOT_EXISTS_FOR_ID, input.getId());
-                }
-                if (input.getObjectId() != null & !input.getObjectId().equals(existing.getObjectId())) {
-                    throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getObjectId(), "ObjectId");
-                }
-                if (input.getObjectType() != null && input.getObjectType() != existing.getObjectType()) {
-                    throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getObjectType(), "ObjectType");
-                }
-                if (input.getFieldName() != null && !input.getFieldName().equals(existing.getFieldName())) {
-                    throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getFieldName(), "FieldName");
-                }
+                validateCustomFieldWhenUpdate(cur, customField);
+
+                sqlDao.updateValue(cur.getId().toString(), cur.getFieldValue(), context);
+                postBusEventFromTransaction(customField, customField, ChangeType.UPDATE, entitySqlDaoWrapperFactory, context);
+
             }
-
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final CustomFieldSqlDao sqlDao = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
-
-                for (final CustomFieldModelDao cur : customFieldIds) {
-                    final CustomFieldModelDao customField = sqlDao.getById(cur.getId().toString(), context);
-
-                    validateCustomField(cur, customField);
-
-                    sqlDao.updateValue(cur.getId().toString(), cur.getFieldValue(), context);
-                    postBusEventFromTransaction(customField, customField, ChangeType.UPDATE, entitySqlDaoWrapperFactory, context);
-
-                }
-                return null;
-            }
+            return null;
         });
+    }
+
+    private void validateCustomFieldWhenUpdate(final CustomFieldModelDao input, @Nullable CustomFieldModelDao existing) throws CustomFieldApiException {
+        if (existing == null) {
+            throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_DOES_NOT_EXISTS_FOR_ID, input.getId());
+        }
+        if (input.getObjectId() != null & !input.getObjectId().equals(existing.getObjectId())) {
+            throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getObjectId(), "ObjectId");
+        }
+        if (input.getObjectType() != null && input.getObjectType() != existing.getObjectType()) {
+            throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getObjectType(), "ObjectType");
+        }
+        if (input.getFieldName() != null && !input.getFieldName().equals(existing.getFieldName())) {
+            throw new CustomFieldApiException(ErrorCode.CUSTOM_FIELD_INVALID_UPDATE, input.getId(), input.getFieldName(), "FieldName");
+        }
     }
 
     @Override
     public List<AuditLogWithHistory> getCustomFieldAuditLogsWithHistoryForId(final UUID customFieldId, final AuditLevel auditLevel, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
-            @Override
-            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
-                final CustomFieldSqlDao transactional = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
-                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.CUSTOM_FIELD, customFieldId, auditLevel, context);
-            }
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
+            final CustomFieldSqlDao transactional = entitySqlDaoWrapperFactory.become(CustomFieldSqlDao.class);
+            return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.CUSTOM_FIELD, customFieldId, auditLevel, context);
         });
     }
 
@@ -190,22 +167,16 @@ public class DefaultCustomFieldDao extends EntityDaoBase<CustomFieldModelDao, Cu
 
     @Override
     protected boolean checkEntityAlreadyExists(final EntitySqlDao<CustomFieldModelDao, CustomField> transactional, final CustomFieldModelDao entity, final InternalCallContext context) {
-        return Iterables.find(transactional.getByAccountRecordId(context),
-                              new Predicate<CustomFieldModelDao>() {
-                                  @Override
-                                  public boolean apply(final CustomFieldModelDao existingCustomField) {
-                                      return entity.isSame(existingCustomField);
-                                  }
-                              },
-                              null) != null;
+        return transactional.getByAccountRecordId(context).stream().filter(entity::isSame).findFirst().orElse(null) != null;
     }
 
     @Override
-    protected void postBusEventFromTransaction(final CustomFieldModelDao customField, final CustomFieldModelDao savedCustomField, final ChangeType changeType,
-                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context)
-            throws BillingExceptionBase {
-
-        BusInternalEvent customFieldEvent = null;
+    protected void postBusEventFromTransaction(final CustomFieldModelDao customField,
+                                               final CustomFieldModelDao savedCustomField,
+                                               final ChangeType changeType,
+                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+                                               final InternalCallContext context) throws BillingExceptionBase {
+        final BusInternalEvent customFieldEvent;
         switch (changeType) {
             case INSERT:
                 customFieldEvent = new DefaultCustomFieldCreationEvent(customField.getId(), customField.getObjectId(), customField.getObjectType(),

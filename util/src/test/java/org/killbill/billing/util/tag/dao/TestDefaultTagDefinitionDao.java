@@ -16,24 +16,17 @@
 
 package org.killbill.billing.util.tag.dao;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.events.BusInternalEvent;
-import org.killbill.billing.events.TagDefinitionInternalEvent;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.eventbus.Subscribe;
-
 public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
-
 
     @Test(groups = "slow")
     public void testCatchEventsOnCreateAndDelete() throws Exception {
@@ -60,7 +53,6 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagDefinitionFirstEventReceived.getTagDefinition().getDescription(), createdTagDefinition.getDescription());
         Assert.assertEquals(tagDefinitionFirstEventReceived.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAGDEFINITION_CREATION);
         Assert.assertEquals(tagDefinitionFirstEventReceived.getUserToken(), internalCallContext.getUserToken());
-
         */
         // Delete the tag definition
         eventsListener.pushExpectedEvent(NextEvent.TAG_DEFINITION);
@@ -82,8 +74,6 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
             Assert.assertEquals(e.getCode(), ErrorCode.TAG_DEFINITION_DOES_NOT_EXIST.getCode());
         }
 
-
-
         /*
         // Verify we caught an event on the bus
         final TagDefinitionInternalEvent tagDefinitionSecondEventReceived = eventsListener.getTagDefinitionEvents().get(1);
@@ -93,29 +83,5 @@ public class TestDefaultTagDefinitionDao extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tagDefinitionSecondEventReceived.getBusEventType(), BusInternalEvent.BusInternalEventType.USER_TAGDEFINITION_DELETION);
         Assert.assertEquals(tagDefinitionSecondEventReceived.getUserToken(), internalCallContext.getUserToken());
         */
-    }
-
-    private static final class EventsListener {
-
-        private final List<BusInternalEvent> events = new ArrayList<BusInternalEvent>();
-        private final List<TagDefinitionInternalEvent> tagDefinitionEvents = new ArrayList<TagDefinitionInternalEvent>();
-
-        @Subscribe
-        public synchronized void processEvent(final BusInternalEvent event) {
-            events.add(event);
-        }
-
-        @Subscribe
-        public synchronized void processTagDefinitionEvent(final TagDefinitionInternalEvent event) {
-            tagDefinitionEvents.add(event);
-        }
-
-        public List<BusInternalEvent> getEvents() {
-            return events;
-        }
-
-        public List<TagDefinitionInternalEvent> getTagDefinitionEvents() {
-            return tagDefinitionEvents;
-        }
     }
 }

@@ -32,6 +32,7 @@ public interface CacheController<K, V> {
 
     boolean remove(K key);
 
+    // FIXME-1615 : We can change this, but will affect at least CacheController and AdminResource (in jax-rs module)
     void remove(Function<K, Boolean> keyMatcher);
 
     void putIfAbsent(final K key, V value);

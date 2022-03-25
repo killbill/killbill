@@ -18,6 +18,7 @@ package org.killbill.billing.util.tag;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -29,14 +30,8 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.tag.dao.TagDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionDao;
-import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDaoHelper;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class DefaultTagInternalApi implements TagInternalApi {
 
@@ -44,21 +39,17 @@ public class DefaultTagInternalApi implements TagInternalApi {
     private final TagDefinitionDao tagDefinitionDao;
 
     @Inject
-    public DefaultTagInternalApi(final TagDao tagDao,
-                                 final TagDefinitionDao tagDefinitionDao) {
+    public DefaultTagInternalApi(final TagDao tagDao, final TagDefinitionDao tagDefinitionDao) {
         this.tagDao = tagDao;
         this.tagDefinitionDao = tagDefinitionDao;
     }
 
     @Override
     public List<TagDefinition> getTagDefinitions(final InternalTenantContext context) {
-        return ImmutableList.<TagDefinition>copyOf(Collections2.transform(tagDefinitionDao.getTagDefinitions(true, context),
-                                                                          new Function<TagDefinitionModelDao, TagDefinition>() {
-                                                                              @Override
-                                                                              public TagDefinition apply(final TagDefinitionModelDao input) {
-                                                                                  return new DefaultTagDefinition(input, TagModelDaoHelper.isControlTag(input.getName()));
-                                                                              }
-                                                                          }));
+        final List<TagDefinition> result = tagDefinitionDao.getTagDefinitions(true, context).stream()
+                .map(modelDao -> new DefaultTagDefinition(modelDao, TagModelDaoHelper.isControlTag(modelDao.getName())))
+                .collect(Collectors.toUnmodifiableList());
+        return result;
     }
 
     @Override
@@ -82,7 +73,7 @@ public class DefaultTagInternalApi implements TagInternalApi {
         final TagModelDao tag = new TagModelDao(context.getCreatedDate(), tagDefinitionId, objectId, objectType);
         try {
             tagDao.create(tag, context);
-        } catch (TagApiException e) {
+        } catch (final TagApiException e) {
             // Be lenient here and make the addTag method idempotent
             if (ErrorCode.TAG_ALREADY_EXISTS.getCode() != e.getCode()) {
                 throw e;
@@ -97,14 +88,12 @@ public class DefaultTagInternalApi implements TagInternalApi {
     }
 
     private List<Tag> toTagList(final List<TagModelDao> input) {
-        return ImmutableList.<Tag>copyOf(Iterables.transform(input, new Function<TagModelDao, Tag>() {
-            @Override
-            public Tag apply(final TagModelDao input) {
-                return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
-                       new DefaultControlTag(ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
-                       new DescriptiveTag(input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
-            }
-        }));
+        final List<Tag> result = input.stream()
+                .map(modelDao -> TagModelDaoHelper.isControlTag(modelDao.getTagDefinitionId()) ?
+                                 new DefaultControlTag(ControlTagType.getTypeFromId(modelDao.getTagDefinitionId()), modelDao.getObjectType(), modelDao.getObjectId(), modelDao.getCreatedDate()) :
+                                 new DescriptiveTag(modelDao.getTagDefinitionId(), modelDao.getObjectType(), modelDao.getObjectId(), modelDao.getCreatedDate()))
+                .collect(Collectors.toUnmodifiableList());
+        return result;
     }
 
 

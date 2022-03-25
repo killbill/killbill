@@ -37,6 +37,7 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// FIXME-1615 : Cache: should discuss this.
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 

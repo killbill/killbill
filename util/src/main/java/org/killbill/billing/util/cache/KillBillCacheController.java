@@ -21,6 +21,8 @@ package org.killbill.billing.util.cache;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.cache.Cache;
 import javax.cache.Cache.Entry;
@@ -30,9 +32,8 @@ import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// FIXME-1615 : This one needed for CacheController
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class KillBillCacheController<K, V> implements CacheController<K, V> {
 
@@ -48,14 +49,9 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
 
     @Override
     public List<K> getKeys() {
-        final Iterable<K> kIterable = Iterables.<Entry<K, V>, K>transform(cache,
-                                                                          new Function<Entry<K, V>, K>() {
-                                                                              @Override
-                                                                              public K apply(final Entry<K, V> input) {
-                                                                                  return input.getKey();
-                                                                              }
-                                                                          });
-        return ImmutableList.<K>copyOf(kIterable);
+        return StreamSupport.stream(cache.spliterator(), false)
+                     .map(Entry::getKey)
+                     .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -127,7 +123,7 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
 
     @Override
     public int size() {
-        return Iterables.size(cache);
+        return (int) StreamSupport.stream(cache.spliterator(), false).count();
     }
 
     @Override

@@ -19,6 +19,7 @@ package org.killbill.billing.util.security.shiro.dao;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -37,9 +38,6 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-
 public class DefaultUserDao implements UserDao {
 
     private static final RandomNumberGenerator rng = new SecureRandomNumberGenerator();
@@ -53,6 +51,19 @@ public class DefaultUserDao implements UserDao {
         this.dbi = dbi;
         this.clock = clock;
         this.securityConfig = securityConfig;
+    }
+
+    /**
+     * Validate if username exist.
+     * @param username to validate
+     * @param usersSqlDao usersSqlDao instance
+     * @throws SecurityApiException if {@link UsersSqlDao#getByUsername(String)} return null
+     */
+    private void validateUser(final String username, final UsersSqlDao usersSqlDao) throws SecurityApiException {
+        final UserModelDao userModelDao = usersSqlDao.getByUsername(username);
+        if (userModelDao == null) {
+            throw new SecurityApiException(ErrorCode.SECURITY_INVALID_USER, username);
+        }
     }
 
     @Override
@@ -83,103 +94,70 @@ public class DefaultUserDao implements UserDao {
 
     @Override
     public List<UserRolesModelDao> getUserRoles(final String username) throws SecurityApiException {
-        return inTransactionWithExceptionHandling(new TransactionCallback<List<UserRolesModelDao>>() {
-            @Override
-            public List<UserRolesModelDao> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-                final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
-                final UserModelDao userModelDao = usersSqlDao.getByUsername(username);
-                if (userModelDao == null) {
-                    throw new SecurityApiException(ErrorCode.SECURITY_INVALID_USER, username);
-                }
+        return inTransactionWithExceptionHandling((handle, status) -> {
+            final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
+            validateUser(username, usersSqlDao);
 
-                final UserRolesSqlDao userRolesSqlDao = handle.attach(UserRolesSqlDao.class);
-                return userRolesSqlDao.getByUsername(username);
-            }
+            final UserRolesSqlDao userRolesSqlDao = handle.attach(UserRolesSqlDao.class);
+            return userRolesSqlDao.getByUsername(username);
         });
     }
 
     @Override
     public void addRoleDefinition(final String role, final List<String> permissions, final String createdBy)  throws SecurityApiException {
         final DateTime createdDate = clock.getUTCNow();
-        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-                final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
-                final List<RolesPermissionsModelDao> existingRole = rolesPermissionsSqlDao.getByRoleName(role);
-                if (!existingRole.isEmpty()) {
-                    throw new SecurityApiException(ErrorCode.SECURITY_ROLE_ALREADY_EXISTS, role);
-                }
-                for (final String permission : permissions) {
-                    rolesPermissionsSqlDao.create(new RolesPermissionsModelDao(role, permission, createdDate, createdBy));
-                }
-                return null;
+        inTransactionWithExceptionHandling((handle, status) -> {
+            final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
+            final List<RolesPermissionsModelDao> existingRole = rolesPermissionsSqlDao.getByRoleName(role);
+            if (!existingRole.isEmpty()) {
+                throw new SecurityApiException(ErrorCode.SECURITY_ROLE_ALREADY_EXISTS, role);
             }
+            permissions.forEach(permission -> rolesPermissionsSqlDao.create(new RolesPermissionsModelDao(role, permission, createdDate, createdBy)));
+            return null;
         });
-
     }
 
     @Override
     public void updateRoleDefinition(final String role, final List<String> permissions, final String createdBy) throws SecurityApiException {
         final DateTime createdDate = clock.getUTCNow();
-        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-                final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
-                final List<RolesPermissionsModelDao> existingPermissions = rolesPermissionsSqlDao.getByRoleName(role);
-                // A empty list of permissions means we should remove all current permissions
-                final Iterable<RolesPermissionsModelDao> toBeDeleted = existingPermissions.isEmpty() ?
-                                                                       existingPermissions :
-                                                                       Iterables.filter(existingPermissions, new Predicate<RolesPermissionsModelDao>() {
-                    @Override
-                    public boolean apply(final RolesPermissionsModelDao input) {
-                        return !permissions.contains(input.getPermission());
-                    }
-                });
+        inTransactionWithExceptionHandling((handle, status) -> {
+            final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
+            final List<RolesPermissionsModelDao> existingPermissions = rolesPermissionsSqlDao.getByRoleName(role);
+            // A empty list of permissions means we should remove all current permissions
+            final Iterable<RolesPermissionsModelDao> toBeDeleted = existingPermissions.isEmpty() ?
+                                                                   existingPermissions :
+                                                                   existingPermissions.stream()
+                                                                           .filter(input -> !permissions.contains(input.getPermission()))
+                                                                           .collect(Collectors.toUnmodifiableList());
 
-                final Iterable<String> toBeAdded = Iterables.filter(permissions, new Predicate<String>() {
-                    @Override
-                    public boolean apply(final String input) {
-                        for (RolesPermissionsModelDao e : existingPermissions) {
-                            if (e.getPermission().equals(input)) {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
-                });
+            final List<String> toBeAdded = permissions.stream()
+                    .filter(s -> existingPermissions.stream().noneMatch(e -> e.getPermission().equals(s)))
+                    .collect(Collectors.toUnmodifiableList());
 
-                for (RolesPermissionsModelDao d : toBeDeleted) {
-                    rolesPermissionsSqlDao.unactiveEvent(d.getRecordId(), createdDate, createdBy);
-                }
-
-                for (final String permission : toBeAdded) {
-                    rolesPermissionsSqlDao.create(new RolesPermissionsModelDao(role, permission, createdDate, createdBy));
-                }
-                return null;
+            for (final RolesPermissionsModelDao d : toBeDeleted) {
+                rolesPermissionsSqlDao.unactiveEvent(d.getRecordId(), createdDate, createdBy);
             }
-        });
 
+            for (final String permission : toBeAdded) {
+                rolesPermissionsSqlDao.create(new RolesPermissionsModelDao(role, permission, createdDate, createdBy));
+            }
+            return null;
+        });
     }
 
     @Override
     public List<RolesPermissionsModelDao> getRoleDefinition(final String role) {
-        return dbi.inTransaction(new TransactionCallback<List<RolesPermissionsModelDao>>() {
-            @Override
-            public List<RolesPermissionsModelDao> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-                final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
-                return rolesPermissionsSqlDao.getByRoleName(role);
-            }
+        return dbi.inTransaction((handle, status) -> {
+            final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
+            return rolesPermissionsSqlDao.getByRoleName(role);
         });
     }
 
     @Override
     public Set<String> getAllPermissions() {
-        return dbi.inTransaction(new TransactionCallback<Set<String>>() {
-            @Override
-            public Set<String> inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-                final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
-                return rolesPermissionsSqlDao.getAllPermissions();
-            }
+        return dbi.inTransaction((handle, status) -> {
+            final RolesPermissionsSqlDao rolesPermissionsSqlDao = handle.attach(RolesPermissionsSqlDao.class);
+            return rolesPermissionsSqlDao.getAllPermissions();
         });
     }
 
@@ -189,78 +167,50 @@ public class DefaultUserDao implements UserDao {
         final String hashedPasswordBase64 = new SimpleHash(KillbillCredentialsMatcher.HASH_ALGORITHM_NAME,
                                                            password, salt.toBase64(), securityConfig.getShiroNbHashIterations()).toBase64();
 
-        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-
-                final DateTime updatedDate = clock.getUTCNow();
-                final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
-                final UserModelDao userModelDao = usersSqlDao.getByUsername(username);
-                if (userModelDao == null) {
-                    throw new SecurityApiException(ErrorCode.SECURITY_INVALID_USER, username);
-                }
-                usersSqlDao.updatePassword(username, hashedPasswordBase64, salt.toBase64(), updatedDate.toDate(), updatedBy);
-                return null;
-            }
+        inTransactionWithExceptionHandling((handle, status) -> {
+            final DateTime updatedDate = clock.getUTCNow();
+            final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
+            validateUser(username, usersSqlDao);
+            usersSqlDao.updatePassword(username, hashedPasswordBase64, salt.toBase64(), updatedDate.toDate(), updatedBy);
+            return null;
         });
     }
 
     @Override
     public void updateUserRoles(final String username, final List<String> roles, final String updatedBy) throws SecurityApiException {
-        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-                final DateTime updatedDate = clock.getUTCNow();
-                final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
-                final UserModelDao userModelDao = usersSqlDao.getByUsername(username);
-                if (userModelDao == null) {
-                    throw new SecurityApiException(ErrorCode.SECURITY_INVALID_USER, username);
-                }
+        inTransactionWithExceptionHandling((handle, status) -> {
+            final DateTime updatedDate = clock.getUTCNow();
+            final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
+            validateUser(username, usersSqlDao);
 
-                // Remove stale entries
-                final UserRolesSqlDao userRolesSqlDao = handle.attach(UserRolesSqlDao.class);
-                final List<UserRolesModelDao> existingRoles = userRolesSqlDao.getByUsername(username);
-                for (final UserRolesModelDao curRole : existingRoles) {
-                    if (Iterables.tryFind(roles, new Predicate<String>() {
-                        @Override
-                        public boolean apply(final String input) {
-                            return input.equals(curRole.getRoleName());
-                        }
-                    }).orNull() == null) {
-                        userRolesSqlDao.invalidate(username, curRole.getRoleName(), updatedDate.toDate(), updatedBy);
-                    }
-                }
+            // Remove stale entries
+            final UserRolesSqlDao userRolesSqlDao = handle.attach(UserRolesSqlDao.class);
+            final List<UserRolesModelDao> existingRoles = userRolesSqlDao.getByUsername(username);
 
-                // Add new entries
-                for (final String curNewRole : roles) {
-                    if (Iterables.tryFind(existingRoles, new Predicate<UserRolesModelDao>() {
-                        @Override
-                        public boolean apply(final UserRolesModelDao input) {
-                            return input.getRoleName().equals(curNewRole);
-                        }
-                    }).orNull() == null) {
-                        userRolesSqlDao.create(new UserRolesModelDao(username, curNewRole, updatedDate, updatedBy));
-                    }
+            for (final UserRolesModelDao curRole : existingRoles) {
+                if (roles.stream().filter(input -> input.equals(curRole.getRoleName())).findFirst().orElse(null) == null) {
+                    userRolesSqlDao.invalidate(username, curRole.getRoleName(), updatedDate.toDate(), updatedBy);
                 }
-                return null;
             }
+
+            // Add new entries
+            for (final String curNewRole : roles) {
+                if (existingRoles.stream().filter(input -> input.getRoleName().equals(curNewRole)).findFirst().orElse(null) == null) {
+                    userRolesSqlDao.create(new UserRolesModelDao(username, curNewRole, updatedDate, updatedBy));
+                }
+            }
+            return null;
         });
     }
 
     @Override
     public void invalidateUser(final String username, final String updatedBy) throws SecurityApiException {
-        inTransactionWithExceptionHandling(new TransactionCallback<Void>() {
-            @Override
-            public Void inTransaction(final Handle handle, final TransactionStatus status) throws Exception {
-                final DateTime updatedDate = clock.getUTCNow();
-                final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
-                final UserModelDao userModelDao = usersSqlDao.getByUsername(username);
-                if (userModelDao == null) {
-                    throw new SecurityApiException(ErrorCode.SECURITY_INVALID_USER, username);
-                }
-                usersSqlDao.invalidate(username, updatedDate.toDate(), updatedBy);
-                return null;
-            }
+        inTransactionWithExceptionHandling((handle, status) -> {
+            final DateTime updatedDate = clock.getUTCNow();
+            final UsersSqlDao usersSqlDao = handle.attach(UsersSqlDao.class);
+            validateUser(username, usersSqlDao);
+            usersSqlDao.invalidate(username, updatedDate.toDate(), updatedBy);
+            return null;
         });
     }
 
