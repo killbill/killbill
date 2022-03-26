@@ -83,10 +83,6 @@
                 <artifactId>jersey-common</artifactId>
                 <version>2.35</version>
                 <exclusions>
-                    <exclusion>
-                        <groupId>org.osgi</groupId>
-                        <artifactId>org.osgi.core</artifactId>
-                    </exclusion>
                     <!-- Need to duplicate exclusion from the base pom.xml -->
                     <exclusion>
                         <groupId>org.glassfish.hk2.external</groupId>
@@ -99,10 +95,6 @@
                 <artifactId>jersey-server</artifactId>
                 <version>2.35</version>
                 <exclusions>
-                    <exclusion>
-                        <groupId>org.osgi</groupId>
-                        <artifactId>org.osgi.core</artifactId>
-                    </exclusion>
                     <!-- Need to duplicate exclusion from the base pom.xml -->
                     <exclusion>
                         <groupId>org.glassfish.hk2.external</groupId>
@@ -114,12 +106,6 @@
                 <groupId>org.mariadb.jdbc</groupId>
                 <artifactId>mariadb-java-client</artifactId>
                 <version>2.7.4</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.osgi</groupId>
-                        <artifactId>org.osgi.core</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>
