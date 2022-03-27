@@ -64,7 +64,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
 
 public class TestEntitlement extends TestJaxrsBase {
 
@@ -129,8 +128,7 @@ public class TestEntitlement extends TestJaxrsBase {
         // Retrieves to check EndDate
         subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         assertNotNull(subscription.getCancelledDate());
-        assertTrue(subscription.getCancelledDate().compareTo(new LocalDate(clock.getUTCNow())) == 0);
-
+        assertEquals(subscription.getCancelledDate().compareTo(new LocalDate(clock.getUTCNow())), 0);
 
         final Bundles accountBundles = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(accountBundles.size(), 1);
