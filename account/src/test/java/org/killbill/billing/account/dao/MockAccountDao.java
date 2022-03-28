@@ -23,6 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.ErrorCode;
@@ -48,15 +51,12 @@ import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.testng.Assert;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
+import static org.killbill.billing.util.collect.CollectionTransformer.*;
 
 public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
 
-    private final MockEntityDaoBase<AccountModelDao, Account, AccountApiException> accountSqlDao = new MockEntityDaoBase<AccountModelDao, Account, AccountApiException>();
-    private final MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException> accountEmailSqlDao = new MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException>();
+    private final MockEntityDaoBase<AccountModelDao, Account, AccountApiException> accountSqlDao = new MockEntityDaoBase<>();
+    private final MockEntityDaoBase<AccountEmailModelDao, AccountEmail, AccountApiException> accountEmailSqlDao = new MockEntityDaoBase<>();
     private final PersistentBus eventBus;
     private final Clock clock;
 
@@ -165,12 +165,9 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
 
     @Override
     public List<AccountEmailModelDao> getEmailsByAccountId(final UUID accountId, final InternalTenantContext context) {
-        return ImmutableList.<AccountEmailModelDao>copyOf(Iterables.<AccountEmailModelDao>filter(accountEmailSqlDao.getAll(context), new Predicate<AccountEmailModelDao>() {
-            @Override
-            public boolean apply(final AccountEmailModelDao input) {
-                return input.getAccountId().equals(accountId);
-            }
-        }));
+        return iterableToList(accountEmailSqlDao.getAll(context)).stream()
+                .filter(input -> input.getAccountId().equals(accountId))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -181,12 +178,9 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
 
     @Override
     public List<AccountModelDao> getAccountsByParentId(final UUID parentAccountId, final InternalTenantContext context) {
-        return ImmutableList.<AccountModelDao>copyOf(Iterables.<AccountModelDao>filter(accountSqlDao.getAll(context), new Predicate<AccountModelDao>() {
-            @Override
-            public boolean apply(final AccountModelDao input) {
-                return parentAccountId.equals(input.getParentAccountId());
-            }
-        }));
+        return iterableToList(accountSqlDao.getAll(context)).stream()
+                .filter(input -> parentAccountId.equals(input.getParentAccountId()))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override

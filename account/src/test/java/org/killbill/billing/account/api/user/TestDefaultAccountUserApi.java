@@ -43,7 +43,7 @@ import org.killbill.billing.util.entity.Pagination;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
+// FIXME-1615 : Wait until killbill-commons eventbus fixed
 import com.google.common.eventbus.Subscribe;
 
 import static org.awaitility.Awaitility.await;
@@ -51,6 +51,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.killbill.billing.account.AccountTestUtils.createAccountData;
 import static org.killbill.billing.account.AccountTestUtils.createTestAccount;
 import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
+import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 import static org.testng.Assert.assertEquals;
 
 public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
@@ -76,21 +77,21 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertNull(search1.getNextOffset());
         Assert.assertEquals(search1.getMaxNbRecords(), (Long) 2L);
         Assert.assertEquals(search1.getTotalNbRecords(), (Long) 2L);
-        Assert.assertEquals(ImmutableList.<Account>copyOf(search1.iterator()).size(), 2);
+        Assert.assertEquals(List.copyOf(iterableToList(search1)).size(), 2);
 
         final Pagination<Account> search2 = accountUserApi.searchAccounts("Inc.", 0L, 1L, callContext);
         Assert.assertEquals(search2.getCurrentOffset(), (Long) 0L);
         Assert.assertEquals(search2.getNextOffset(), (Long) 1L);
         Assert.assertEquals(search2.getMaxNbRecords(), (Long) 2L);
         Assert.assertEquals(search2.getTotalNbRecords(), (Long) 2L);
-        Assert.assertEquals(ImmutableList.<Account>copyOf(search2.iterator()).size(), 1);
+        Assert.assertEquals(List.of(iterableToList(search2)).size(), 1);
 
         final Pagination<Account> search3 = accountUserApi.searchAccounts("acme.com", 0L, 5L, callContext);
         Assert.assertEquals(search3.getCurrentOffset(), (Long) 0L);
         Assert.assertNull(search3.getNextOffset());
         Assert.assertEquals(search3.getMaxNbRecords(), (Long) 2L);
         Assert.assertEquals(search3.getTotalNbRecords(), (Long) 1L);
-        Assert.assertEquals(ImmutableList.<Account>copyOf(search3.iterator()).size(), 1);
+        Assert.assertEquals(List.copyOf(iterableToList(search3)).size(), 1);
 
         // Exact search will fail
         final Pagination<Account> search4 = accountUserApi.searchAccounts("acme.com", -1L, 1L, callContext);
@@ -99,7 +100,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         // Not computed
         Assert.assertNull(search4.getMaxNbRecords());
         Assert.assertEquals(search4.getTotalNbRecords(), (Long) 0L);
-        Assert.assertEquals(ImmutableList.<Account>copyOf(search4.iterator()).size(), 0);
+        Assert.assertEquals(List.copyOf(iterableToList(search4)).size(), 0);
 
         final Pagination<Account> search5 = accountUserApi.searchAccounts("john@acme.com", -1L, 1L, callContext);
         Assert.assertEquals(search5.getCurrentOffset(), (Long) 0L);
@@ -107,7 +108,7 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         // Not computed
         Assert.assertNull(search5.getMaxNbRecords());
         Assert.assertEquals(search5.getTotalNbRecords(), (Long) 1L);
-        Assert.assertEquals(ImmutableList.<Account>copyOf(search5.iterator()).size(), 1);
+        Assert.assertEquals(List.copyOf(iterableToList(search5)).size(), 1);
     }
 
     @Test(groups = "slow", description = "Test Account creation generates an event")

@@ -22,6 +22,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -47,8 +49,8 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
+// FIXME-1615 : DefaultPaginationHelper
 import com.google.common.base.Function;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
