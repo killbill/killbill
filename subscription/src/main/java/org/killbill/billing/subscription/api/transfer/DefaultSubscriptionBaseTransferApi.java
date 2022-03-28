@@ -23,10 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
@@ -34,6 +35,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.SubscriptionApiBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
+import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.timeline.BundleBaseTimeline;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseRepairException;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimeline;
@@ -47,6 +49,7 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.bcd.BCDEventData;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
@@ -79,24 +82,23 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    private SubscriptionBaseEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate, final InternalTenantContext context)
+    private SubscriptionBaseEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate)
             throws CatalogApiException {
 
         SubscriptionBaseEvent newEvent = null;
         final DateTime effectiveDate = existingEvent.getEffectiveDate().isBefore(transferDate) ? transferDate : existingEvent.getEffectiveDate();
 
-        final PlanPhaseSpecifier spec = existingEvent.getPlanPhaseSpecifier();
-        if (spec == null || existingEvent.getPlanPhaseName() == null) {
-            // Ignore cancellations - we assume that transferred subscriptions should always be active
-            return null;
-        }
         final ApiEventBuilder apiBuilder = new ApiEventBuilder()
                 .setSubscriptionId(subscription.getId())
                 .setEventPlan(existingEvent.getPlanName())
                 .setEventPlanPhase(existingEvent.getPlanPhaseName())
-                .setEventPriceList(spec.getPriceListName())
                 .setEffectiveDate(effectiveDate)
                 .setFromDisk(true);
+
+        final PlanPhaseSpecifier spec = existingEvent.getPlanPhaseSpecifier();
+        if (spec != null) {
+            apiBuilder.setEventPriceList(spec.getPriceListName());
+        }
 
         switch (existingEvent.getSubscriptionTransitionType()) {
             case TRANSFER:
@@ -114,64 +116,74 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                            PhaseEventData.createNextPhaseEvent(subscription.getId(), existingEvent.getPlanPhaseName(), effectiveDate);
                 break;
 
-            case CANCEL:
+            case BCD_CHANGE:
+                newEvent = BCDEventData.createBCDEvent(subscription, transferDate, existingEvent.getBillCycleDayLocal());
                 break;
 
+            case CANCEL:
             default:
-                throw new SubscriptionBaseError(String.format("Unexpected transitionType %s", existingEvent.getSubscriptionTransitionType()));
+                break;
+
         }
         return newEvent;
     }
 
     @VisibleForTesting
-    List<SubscriptionBaseEvent> toEvents(final List<ExistingEvent> existingEvents, final DefaultSubscriptionBase subscription,
-                                         final DateTime transferDate, final InternalTenantContext context) throws SubscriptionBaseTransferApiException {
-
-
+    List<SubscriptionBaseEvent> toEvents(final List<ExistingEvent> existingEvents, final DefaultSubscriptionBase subscription, final DateTime transferDate) throws SubscriptionBaseTransferApiException {
         try {
-
             final List<SubscriptionBaseEvent> result = new LinkedList<SubscriptionBaseEvent>();
-
-            SubscriptionBaseEvent event = null;
             ExistingEvent prevEvent = null;
+            ExistingEvent prevBCDEvent = null;
             boolean firstEvent = true;
             for (ExistingEvent cur : existingEvents) {
                 // Skip all events prior to the transferDate
                 if (cur.getEffectiveDate().isBefore(transferDate)) {
-                    prevEvent = cur;
+                    if (cur.getSubscriptionTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE) {
+                        prevBCDEvent = cur;
+                    } else {
+                        prevEvent = cur;
+                    }
                     continue;
                 }
 
                 // Add previous event the first time if needed
-                if (prevEvent != null) {
-                    event = createEvent(firstEvent, prevEvent, subscription, transferDate, context);
-                    if (event != null) {
-                        result.add(event);
-                        firstEvent = false;
-                    }
+                if (insertEventToResult(firstEvent, prevEvent, subscription, transferDate, result)) {
+                    firstEvent = false;
                     prevEvent = null;
                 }
 
-                event = createEvent(firstEvent, cur, subscription, transferDate, context);
-                if (event != null) {
-                    result.add(event);
+                if (insertEventToResult(firstEvent, prevBCDEvent, subscription, transferDate, result)) {
+                    firstEvent = false;
+                    prevBCDEvent = null;
+                }
+
+                if (insertEventToResult(firstEvent, cur, subscription, transferDate, result)) {
                     firstEvent = false;
                 }
             }
 
             // Previous loop did not get anything because transferDate is greater than effectiveDate of last event
-            if (prevEvent != null) {
-                event = createEvent(firstEvent, prevEvent, subscription, transferDate, context);
-                if (event != null) {
-                    result.add(event);
-                }
-                prevEvent = null;
+            if (insertEventToResult(firstEvent, prevEvent, subscription, transferDate, result)) {
+                firstEvent = false;
             }
+            insertEventToResult(firstEvent, prevBCDEvent, subscription, transferDate, result);
+
 
             return result;
         } catch (CatalogApiException e) {
             throw new SubscriptionBaseTransferApiException(e);
         }
+    }
+
+    private boolean insertEventToResult(final boolean firstEvent, @Nullable final ExistingEvent event, final DefaultSubscriptionBase subscription, final DateTime transferDate, final List<SubscriptionBaseEvent> result) throws CatalogApiException {
+        if (event != null) {
+            SubscriptionBaseEvent newEvent = createEvent(firstEvent, event, subscription, transferDate);
+            if (newEvent != null) {
+                result.add(newEvent);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -258,7 +270,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                                                                             .setAlignStartDate(subscriptionAlignStartDate),
                                                                                                     ImmutableList.<SubscriptionBaseEvent>of(), catalog, fromInternalCallContext);
 
-                final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate, fromInternalCallContext);
+                final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate);
                 final SubscriptionTransferData curData = new SubscriptionTransferData(defaultSubscriptionBase, events, null);
                 subscriptionTransferDataList.add(curData);
             }

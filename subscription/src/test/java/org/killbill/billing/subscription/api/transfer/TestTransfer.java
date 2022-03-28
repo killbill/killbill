@@ -23,9 +23,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
 import org.killbill.billing.api.TestApiListener.NextEvent;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.Plan;
@@ -463,7 +465,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate,  true, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
         assertListenerStatus();
 
         final List<SubscriptionBaseBundle> bundlesForAccountAndKey = subscriptionInternalApi.getBundlesForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
@@ -514,5 +516,37 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBaseBundle newBundle = bundlesForAccountAndKey.get(0);
         final List<SubscriptionBase> subscriptions = subscriptionInternalApi.getSubscriptionsForBundle(newBundle.getId(), null, internalCallContext);
         assertEquals(subscriptions.size(), 1);
+    }
+
+    @Test(groups = "slow")
+    public void testWithBCDUpdatePriorTransfer() throws Exception {
+        final String baseProduct = "Pistol";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = "notrial";
+
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+
+        // Create context for the updateBCD as it looks like test default internalCallContext to be on newAccountId
+        final InternalCallContext originalcontext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
+                                                                                                         ObjectType.ACCOUNT,
+                                                                                                         this.internalCallContext.getUpdatedBy(),
+                                                                                                         this.internalCallContext.getCallOrigin(),
+                                                                                                         this.internalCallContext.getContextUserType(),
+                                                                                                         this.internalCallContext.getUserToken(),
+                                                                                                         this.internalCallContext.getTenantRecordId());
+
+        subscriptionInternalApi.updateBCD(baseSubscription.getId(), 8, clock.getUTCToday(), originalcontext);
+
+        // 2012-5-8
+        testListener.pushExpectedEvent(NextEvent.BCD_CHANGE);
+        clock.addDays(1);
+        assertListenerStatus();
+
+        // Transfer date = 2012-5-12
+        clock.addDays(4);
+        final DateTime transferRequestedDate = clock.getUTCNow();
+        testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.BCD_CHANGE, NextEvent.CANCEL);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
+        assertListenerStatus();
     }
 }
