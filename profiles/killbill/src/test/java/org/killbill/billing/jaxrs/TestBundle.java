@@ -18,7 +18,9 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -127,10 +129,13 @@ public class TestBundle extends TestJaxrsBase {
 
         final Account newAccount = createAccountWithDefaultPaymentMethod();
 
+        final Map<String, String> props = new HashMap<>();
+        final String subKey = String.format("KB_SUB_ID_%s", entitlementJsonNoEvents.getSubscriptionId());
+        props.put(subKey, "new-sub-key");
         final Bundle bundle = new Bundle();
         bundle.setAccountId(newAccount.getAccountId());
         bundle.setBundleId(entitlementJsonNoEvents.getBundleId());
-        bundleApi.transferBundle(entitlementJsonNoEvents.getBundleId(), bundle, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        bundleApi.transferBundle(entitlementJsonNoEvents.getBundleId(), bundle, null, props, requestOptions);
 
         existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
         assertEquals(existingBundles.size(), 1);
@@ -138,6 +143,8 @@ public class TestBundle extends TestJaxrsBase {
         assertNotEquals(newBundle.getBundleId(), originalBundle.getBundleId());
         assertEquals(newBundle.getExternalKey(), originalBundle.getExternalKey());
         assertEquals(newBundle.getAccountId(), newAccount.getAccountId());
+        assertEquals(newBundle.getSubscriptions().size(), 1);
+        assertEquals(newBundle.getSubscriptions().get(0).getExternalKey(), "new-sub-key");
 
         final Bundles bundles = bundleApi.getBundleByKey(bundleExternalKey, true, AuditLevel.NONE, requestOptions);
         assertEquals(bundles.size(), 2);
