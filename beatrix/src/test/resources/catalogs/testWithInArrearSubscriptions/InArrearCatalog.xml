@@ -39,7 +39,13 @@
         </product>
         <product name="PremiumSupport">
             <category>BASE</category>
+ 			<available>
+                <addonProduct>PremiumSupportAddOn</addonProduct>
+            </available>            
         </product>
+        <product name="PremiumSupportAddOn">
+            <category>ADD_ON</category>
+        </product>        
     </products>
 
     <rules>
@@ -175,6 +181,31 @@
                 </recurring>
             </finalPhase>
         </plan>
+       <plan name="premium-support-addon-monthly-notrial">
+            <product>PremiumSupportAddOn</product>
+            <finalPhase type="EVERGREEN">
+                <duration>
+                    <unit>UNLIMITED</unit>
+                </duration>
+                <recurring>
+                    <billingPeriod>MONTHLY</billingPeriod>
+                    <recurringPrice>
+                        <price>
+                            <currency>USD</currency>
+                            <value>900.00</value>
+                        </price>
+                        <price>
+                            <currency>EUR</currency>
+                            <value>900.00</value>
+                        </price>
+                        <price>
+                            <currency>GBP</currency>
+                            <value>900.00</value>
+                        </price>
+                    </recurringPrice>
+                </recurring>
+            </finalPhase>
+        </plan>        
         <plan name="premium-support-annual-notrial">
             <product>PremiumSupport</product>
             <finalPhase type="EVERGREEN">
@@ -208,6 +239,7 @@
                 <plan>basic-support-annual-notrial</plan>
                 <plan>premium-support-monthly-notrial</plan>
                 <plan>premium-support-annual-notrial</plan>
+                <plan>premium-support-addon-monthly-notrial</plan>
             </plans>
         </defaultPriceList>
     </priceLists>
