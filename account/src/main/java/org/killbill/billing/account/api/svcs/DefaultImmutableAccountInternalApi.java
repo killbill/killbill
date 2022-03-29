@@ -19,6 +19,7 @@ package org.killbill.billing.account.api.svcs;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
@@ -43,8 +44,6 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
-
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 

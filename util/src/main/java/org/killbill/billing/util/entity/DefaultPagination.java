@@ -26,7 +26,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import static org.killbill.billing.util.collect.CollectionTransformer.*;
+import static org.killbill.billing.util.collect.CollectionTransformer.iteratorToList;
 
 // Assumes the original offset starts at zero.
 public class DefaultPagination<T> implements Pagination<T>, Closeable {

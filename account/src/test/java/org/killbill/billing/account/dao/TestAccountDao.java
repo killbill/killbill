@@ -53,10 +53,9 @@ import org.killbill.billing.util.tag.dao.TagModelDao;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.killbill.billing.account.AccountTestUtils.checkAccountsEqual;
 import static org.killbill.billing.account.AccountTestUtils.createTestAccount;
+import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
 
@@ -97,7 +96,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
 
         // Retrieve all
         final Pagination<AccountModelDao> allAccounts = accountDao.getAll(internalCallContext);
-        final List<AccountModelDao> all = ImmutableList.<AccountModelDao>copyOf(allAccounts);
+        final List<AccountModelDao> all = iterableToList(allAccounts);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
         checkAccountsEqual(all.get(0), account);
