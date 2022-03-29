@@ -27,7 +27,8 @@ import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 import org.killbill.billing.util.tag.dao.TagDefinitionSqlDao;
 
-import static org.killbill.billing.util.collect.CollectionTransformer.*;
+import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
+import static org.killbill.billing.util.collect.CollectionTransformer.iteratorToList;
 
 public class TestPagination extends UtilTestSuiteWithEmbeddedDB {
 

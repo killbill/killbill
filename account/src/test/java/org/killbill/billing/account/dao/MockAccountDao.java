@@ -51,7 +51,7 @@ import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.testng.Assert;
 
-import static org.killbill.billing.util.collect.CollectionTransformer.*;
+import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
 
