@@ -51,7 +51,7 @@ from
 where blockable_id = :blockableId
 and service = :service
 and effective_date \<= :effectiveDate
-and is_active = '1'
+<andCheckSoftDeletionWithComma("")>
 <AND_CHECK_TENANT("")>
 -- We want the current state, hence the order desc and limit 1
 order by effective_date desc, record_id desc
@@ -78,6 +78,7 @@ join (
 ) tmp
 on t.record_id = tmp.record_id
 where t.type = :type
+<andCheckSoftDeletionWithComma("")>
 and <accountRecordIdField("t.")> = :accountRecordId
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
@@ -101,6 +102,7 @@ join (
 ) tmp
 on t.record_id = tmp.record_id
 where <accountRecordIdField("t.")> = :accountRecordId
+<andCheckSoftDeletionWithComma("")>
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
 ;
@@ -128,6 +130,7 @@ join (
 on bs1.service = tmp.service
    and bs1.blockable_id = tmp.blockable_id
 where 1=1
+<andCheckSoftDeletionWithComma("")>
 and <accountRecordIdField("bs1.")> = :accountRecordId
 <AND_CHECK_TENANT("bs1.")>
 order by bs1.service, bs1.blockable_id, bs1.block_billing
@@ -141,7 +144,7 @@ from
 <tableName()>
 where blockable_id = :blockableId
 and service = :service
-and is_active = '1'
+<andCheckSoftDeletionWithComma("")>
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;
@@ -153,7 +156,7 @@ select
 from
 <tableName()>
 where blockable_id in (<ids>)
-and is_active = '1'
+<andCheckSoftDeletionWithComma("")>
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;

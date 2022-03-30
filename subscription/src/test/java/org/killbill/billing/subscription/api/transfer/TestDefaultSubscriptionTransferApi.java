@@ -87,7 +87,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusDays(10);
-        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, internalCallContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate);
 
         Assert.assertEquals(events.size(), 0);
     }
@@ -103,7 +103,7 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
         final DateTime transferDate = subscriptionStartTime.plusHours(1);
-        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate, internalCallContext);
+        final List<SubscriptionBaseEvent> events = transferApi.toEvents(existingEvents, subscription, transferDate);
 
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getType(), EventType.API_USER);

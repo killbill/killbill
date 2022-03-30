@@ -19,6 +19,8 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -82,7 +84,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(17));
 
         busHandler.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, false, callContext);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, false, callContext);
         assertListenerStatus();
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), false, false, callContext);
@@ -128,7 +130,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
 
         busHandler.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, false, callContext);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, false, callContext);
         assertListenerStatus();
 
         // Verify the BCD of the new account
@@ -184,7 +186,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
 
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.TRANSFER, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", clock.getUTCNow(), false, true, callContext);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, true, callContext);
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
