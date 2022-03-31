@@ -17,6 +17,7 @@
 
 package org.killbill.billing.usage.api;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -54,5 +55,42 @@ public class DefaultUsageContext implements UsageContext {
     @Override
     public UUID getTenantId() {
         return context.getTenantId();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final DefaultUsageContext that = (DefaultUsageContext) o;
+
+        if (dryRunType != that.dryRunType) {
+            return false;
+        }
+        if (targetDate != null ? targetDate.compareTo(that.targetDate) != 0 : that.targetDate != null) {
+            return false;
+        }
+        return context != null ? context.equals(that.context) : that.context == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = dryRunType != null ? dryRunType.hashCode() : 0;
+        result = 31 * result + (targetDate != null ? targetDate.hashCode() : 0);
+        result = 31 * result + (context != null ? context.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultUsageContext{" +
+               "dryRunType=" + dryRunType +
+               ", targetDate=" + targetDate +
+               ", context=" + context +
+               '}';
     }
 }

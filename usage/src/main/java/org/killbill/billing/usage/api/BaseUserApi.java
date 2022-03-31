@@ -32,7 +32,6 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
-import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +61,7 @@ public class BaseUserApi {
     }
 
     private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
-        Preconditions.checkNotNull(usageContext.getAccountId(), "TenantContext has no accountId");
+        Preconditions.checkNotNull(usageContext.getAccountId(), "UsageContext has no accountId");
 
         final Set<String> allServices = pluginRegistry.getAllServices();
         // No plugin registered
