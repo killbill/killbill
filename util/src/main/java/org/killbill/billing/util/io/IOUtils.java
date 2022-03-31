@@ -18,11 +18,15 @@ package org.killbill.billing.util.io;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
+import java.util.Objects;
 import java.util.Queue;
 
-import org.killbill.billing.util.Preconditions;
+import static org.killbill.billing.util.Preconditions.checkArgument;
+import static org.killbill.billing.util.Preconditions.checkNotNull;
 
 public final class IOUtils {
 
@@ -54,7 +58,7 @@ public final class IOUtils {
      * @throws IOException if an I/O error occurs
      */
     public static byte[] toByteArray(final InputStream in) throws IOException {
-        Preconditions.checkNotNull(in);
+        checkNotNull(in);
         return toByteArrayInternal(in, new ArrayDeque<byte[]>(TO_BYTE_ARRAY_DEQUE_SIZE), 0);
     }
 
@@ -133,4 +137,76 @@ public final class IOUtils {
         return (int) value;
     }
 
+    // -- Verbatim copy of Guava 31.0.1 {@link com.google.common.io.Resources#getResource(String)}
+
+    /**
+     * Returns a {@code URL} pointing to {@code resourceName} if the resource is found using the
+     * {@linkplain Thread#getContextClassLoader() context class loader}. In simple environments, the
+     * context class loader will find resources from the class path. In environments where different
+     * threads can have different class loaders, for example app servers, the context class loader
+     * will typically have been set to an appropriate loader for the current thread.
+     *
+     * <p>In the unusual case where the context class loader is null, the class loader that loaded
+     * this class ({@code Resources}) will be used instead.
+     *
+     * @throws IllegalArgumentException if the resource is not found
+     */
+    public static URL getResourceAsURL(final String resourceName) {
+        final ClassLoader loader = Objects.requireNonNullElse(Thread.currentThread().getContextClassLoader(), IOUtils.class.getClassLoader());
+        final URL url = loader.getResource(resourceName);
+        checkArgument(url != null, "resource %s not found.", resourceName);
+        return url;
+    }
+
+    // -- Verbatim Copy of CharStreams
+
+    // 2K chars (4K bytes)
+    private static final int DEFAULT_BUF_SIZE = 0x800;
+
+    /**
+     * Reads all characters from a {@link Readable} object into a {@link String}. Does not close the
+     * {@code Readable}.
+     *
+     * @param r the object to read from
+     * @return a string containing all the characters
+     * @throws IOException if an I/O error occurs
+     */
+    public static String toString(Readable r) throws IOException {
+        return toStringBuilder(r).toString();
+    }
+
+    /**
+     * Warning: Not like Guava's {@link com.google.common.io.CharStreams}#<code>toStringBuilder(Readable)</code>,
+     * parameter of this method only accept instance of {@link Reader}, otherwise it will throw an Exception. Method
+     * parameter type preserved here to make sure easier to track it back to Guava, if needed.
+     *
+     * Reads all characters from a {@link Readable} object into a new {@link StringBuilder} instance.
+     * Does not close the {@code Readable}.
+     *
+     * @param r the object to read from
+     * @return a {@link StringBuilder} containing all the characters
+     * @throws IOException if an I/O error occurs
+     */
+    private static StringBuilder toStringBuilder(Readable r) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        if (r instanceof Reader) {
+            copyReaderToBuilder((Reader) r, sb);
+        } else {
+            throw new RuntimeException("IOUtils#toStringBuilder() parameter should be instance of java.io.Reader");
+        }
+        return sb;
+    }
+
+    static long copyReaderToBuilder(final Reader from, final StringBuilder to) throws IOException {
+        checkNotNull(from);
+        checkNotNull(to);
+        char[] buf = new char[DEFAULT_BUF_SIZE];
+        int nRead;
+        long total = 0;
+        while ((nRead = from.read(buf)) != -1) {
+            to.append(buf, 0, nRead);
+            total += nRead;
+        }
+        return total;
+    }
 }
