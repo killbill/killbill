@@ -48,6 +48,7 @@ import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UsageApiException;
@@ -174,16 +175,18 @@ public class UsageResource extends JaxRsResourceBase {
                              @PathParam("unitType") final String unitType,
                              @QueryParam(QUERY_START_DATE) final String startDate,
                              @QueryParam(QUERY_END_DATE) final String endDate,
+                             @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                              @javax.ws.rs.core.Context final HttpServletRequest request) {
         if (startDate == null || endDate == null) {
             return Response.status(Status.BAD_REQUEST).build();
         }
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
         final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
         final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);
 
-        final RolledUpUsage usage = usageUserApi.getUsageForSubscription(subscriptionId, unitType, usageStartDate, usageEndDate, tenantContext);
+        final RolledUpUsage usage = usageUserApi.getUsageForSubscription(subscriptionId, unitType, usageStartDate, usageEndDate, pluginProperties, tenantContext);
         final RolledUpUsageJson result = new RolledUpUsageJson(usage);
         return Response.status(Status.OK).entity(result).build();
     }
@@ -197,19 +200,21 @@ public class UsageResource extends JaxRsResourceBase {
     public Response getAllUsage(@PathParam("subscriptionId") final UUID subscriptionId,
                                 @QueryParam(QUERY_START_DATE) final String startDate,
                                 @QueryParam(QUERY_END_DATE) final String endDate,
+                                @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                 @javax.ws.rs.core.Context final HttpServletRequest request) {
 
         if (startDate == null || endDate == null) {
             return Response.status(Status.BAD_REQUEST).build();
         }
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
         final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
         final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);
 
         // The current JAXRS API only allows to look for one transition
         final List<LocalDate> startEndDate = ImmutableList.<LocalDate>builder().add(usageStartDate).add(usageEndDate).build();
-        final List<RolledUpUsage> usage = usageUserApi.getAllUsageForSubscription(subscriptionId, startEndDate, tenantContext);
+        final List<RolledUpUsage> usage = usageUserApi.getAllUsageForSubscription(subscriptionId, startEndDate, pluginProperties, tenantContext);
         final RolledUpUsageJson result = new RolledUpUsageJson(usage.get(0));
         return Response.status(Status.OK).entity(result).build();
     }

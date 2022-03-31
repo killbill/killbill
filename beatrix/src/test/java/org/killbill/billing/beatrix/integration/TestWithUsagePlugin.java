@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedMap;
@@ -135,7 +136,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
 
-        final RolledUpUsage result1 = usageUserApi.getUsageForSubscription(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 15), callContext);
+        final RolledUpUsage result1 = usageUserApi.getUsageForSubscription(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 15), Collections.emptyList(), callContext);
         assertEquals(result1.getSubscriptionId(), aoSubscription.getId());
         assertEquals(result1.getRolledUpUnits().size(), 1);
         assertEquals(result1.getRolledUpUnits().get(0).getUnitType(), "bullets");
@@ -148,7 +149,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         transitionDates.add(new LocalDate(2012, 4, 15));
         transitionDates.add(new LocalDate(2012, 4, 17));
 
-        final List<RolledUpUsage> result2 = usageUserApi.getAllUsageForSubscription(aoSubscription.getId(), transitionDates, callContext);
+        final List<RolledUpUsage> result2 = usageUserApi.getAllUsageForSubscription(aoSubscription.getId(), transitionDates, Collections.emptyList(), callContext);
         assertEquals(result2.size(), 4);
 
         assertEquals(result2.get(0).getSubscriptionId(), aoSubscription.getId());

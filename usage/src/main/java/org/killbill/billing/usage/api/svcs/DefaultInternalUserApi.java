@@ -17,6 +17,7 @@
 
 package org.killbill.billing.usage.api.svcs;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -72,7 +73,7 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
 
         final UsageContext usageContext = new DefaultUsageContext(dryRunType, inputTargetDate, tenantContext);
 
-        final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, usageContext);
+        final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, Collections.emptyList(), usageContext);
         if (resultFromPlugin != null) {
             return resultFromPlugin;
         }
