@@ -16,14 +16,13 @@
 
 package org.killbill.billing.catalog;
 
+import java.util.List;
+
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.Plan;
 import org.killbill.xmlloader.ValidationException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
 
@@ -66,7 +65,7 @@ public class TestStandaloneCatalog extends CatalogTestSuiteNoDB {
         phaseDiscount1.setPlan(plan1);
         phaseDiscount2.setPlan(plan2);
 
-        final StandaloneCatalog cat = new MockCatalog().setPlans(ImmutableList.<Plan>of(plan1, plan2));
+        final StandaloneCatalog cat = new MockCatalog().setPlans(List.of(plan1, plan2));
 
         Assert.assertEquals(cat.findPhase("TestPlan1-discount"), phaseDiscount1);
         Assert.assertEquals(cat.findPhase("TestPlan2-discount"), phaseDiscount2);

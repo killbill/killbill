@@ -16,6 +16,8 @@
 
 package org.killbill.billing.catalog;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.catalog.caching.CatalogCacheInvalidationCallback;
@@ -24,12 +26,11 @@ import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
+import org.killbill.billing.util.io.IOUtils;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.annotations.BeforeClass;
 
-import com.google.common.io.Resources;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 public abstract class CatalogTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
@@ -63,6 +64,6 @@ public abstract class CatalogTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     }
 
     protected StandaloneCatalog getCatalog(final String name) throws Exception {
-        return XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/catalog/" + name).toExternalForm(), StandaloneCatalog.class);
+        return XMLLoader.getObjectFromString(IOUtils.getResourceAsURL("org/killbill/billing/catalog/" + name).toExternalForm(), StandaloneCatalog.class);
     }
 }

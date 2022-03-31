@@ -20,6 +20,8 @@ package org.killbill.billing.catalog.dao;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -40,17 +42,13 @@ import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.skife.jdbi.v2.TransactionStatus;
 
-import com.google.inject.Inject;
-
 public class DefaultCatalogOverrideDao implements CatalogOverrideDao {
 
     private final IDBI dbi;
-    private final Clock clock;
 
     @Inject
-    public DefaultCatalogOverrideDao(final IDBI dbi, final Clock clock) {
+    public DefaultCatalogOverrideDao(final IDBI dbi) {
         this.dbi = dbi;
-        this.clock = clock;
         // There is no real good place to do that but here (since the sqlDao are NOT EntitySqlDao and DBPProvider belongs in common)... oh well..
         ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(CatalogOverridePlanDefinitionModelDao.class));
         ((DBI) dbi).registerMapper(new LowerToCamelBeanMapperFactory(CatalogOverridePhaseDefinitionModelDao.class));
