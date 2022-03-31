@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
@@ -51,16 +52,16 @@ public class BaseUserApi {
     //   and the usage module will look for data inside its own table.
     // * If not, a possibly empty (or not) list should be returned (and the usage module will *not* look for data inside its own table)
     //
-    protected List<RawUsageRecord> getAccountUsageFromPlugin(final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
-        return getUsageFromPlugin(null, startDate, endDate, tenantContext);
+    protected List<RawUsageRecord> getAccountUsageFromPlugin(final LocalDate startDate, final LocalDate endDate, final UsageContext usageContext) {
+        return getUsageFromPlugin(null, startDate, endDate, usageContext);
     }
 
-    protected List<RawUsageRecord> getSubscriptionUsageFromPlugin(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
-        return getUsageFromPlugin(subscriptionId, startDate, endDate, tenantContext);
+    protected List<RawUsageRecord> getSubscriptionUsageFromPlugin(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final UsageContext usageContext) {
+        return getUsageFromPlugin(subscriptionId, startDate, endDate, usageContext);
     }
 
-    private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
-        Preconditions.checkNotNull(tenantContext.getAccountId(), "TenantContext has no accountId");
+    private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final UsageContext usageContext) {
+        Preconditions.checkNotNull(usageContext.getAccountId(), "TenantContext has no accountId");
 
         final Set<String> allServices = pluginRegistry.getAllServices();
         // No plugin registered
@@ -71,8 +72,8 @@ public class BaseUserApi {
             final UsagePluginApi plugin = pluginRegistry.getServiceForName(service);
 
             final List<RawUsageRecord> result = subscriptionId != null ?
-                                                plugin.getUsageForSubscription(subscriptionId, startDate, endDate, tenantContext) :
-                                                plugin.getUsageForAccount(startDate, endDate, tenantContext);
+                                                plugin.getUsageForSubscription(subscriptionId, startDate, endDate, usageContext, Collections.emptyList()) :
+                                                plugin.getUsageForAccount(startDate, endDate, usageContext, Collections.emptyList());
             // First plugin registered, returns result -- could be empty List if no usage was recorded.
             if (result != null) {
 

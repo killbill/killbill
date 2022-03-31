@@ -39,10 +39,12 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
+import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -188,7 +190,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public List<RawUsageRecord> getUsageForAccount(final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+        public List<RawUsageRecord> getUsageForAccount(final LocalDate startDate, final LocalDate endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
 
             final List<RawUsageRecord> result = new LinkedList<>();
             for (final LocalDate curDate : usageData.keySet()) {
@@ -203,10 +205,10 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public List<RawUsageRecord> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+        public List<RawUsageRecord> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
 
             final List<RawUsageRecord> result = new ArrayList<>();
-            final List<RawUsageRecord> usageForAccount = getUsageForAccount(startDate, endDate, tenantContext);
+            final List<RawUsageRecord> usageForAccount = getUsageForAccount(startDate, endDate, usageContext, properties);
             for (final RawUsageRecord cur : usageForAccount) {
                 if (cur.getSubscriptionId().equals(subscriptionId)) {
                     result.add(cur);
