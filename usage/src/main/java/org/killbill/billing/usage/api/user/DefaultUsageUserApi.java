@@ -32,7 +32,9 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.api.BaseUserApi;
+import org.killbill.billing.usage.api.DefaultUsageContext;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
@@ -43,6 +45,7 @@ import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
 import org.killbill.billing.usage.dao.RolledUpUsageModelDao;
+import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -90,10 +93,11 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     @Override
-    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContextNoAccountId) {
+    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final LocalDate startDate, final LocalDate endDate, final Iterable<PluginProperty> properties, final TenantContext tenantContextNoAccountId) {
         final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContextNoAccountId);
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalCallContext);
-        final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, startDate, endDate, tenantContext);
+        final UsageContext usageContext = new DefaultUsageContext(null, null, tenantContext);
+        final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, startDate, endDate, properties, usageContext);
         if (rawUsage != null) {
             final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(subscriptionId, unitType, rawUsage);
             return new DefaultRolledUpUsage(subscriptionId, startDate, endDate, rolledUpAmount);
@@ -105,15 +109,17 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     @Override
-    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final List<LocalDate> transitionTimes, final TenantContext tenantContextNoAccountId) {
+    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final List<LocalDate> transitionTimes, final Iterable<PluginProperty> properties, final TenantContext tenantContextNoAccountId) {
         final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContextNoAccountId);
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalCallContext);
+        final UsageContext usageContext = new DefaultUsageContext(null, null, tenantContext);
+
         final List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
         LocalDate prevDate = null;
         for (final LocalDate curDate : transitionTimes) {
             if (prevDate != null) {
 
-                final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, prevDate, curDate, tenantContext);
+                final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, prevDate, curDate, properties, usageContext);
                 if (rawUsage != null) {
                     final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(subscriptionId, null, rawUsage);
                     result.add(new DefaultRolledUpUsage(subscriptionId, prevDate, curDate, rolledUpAmount));

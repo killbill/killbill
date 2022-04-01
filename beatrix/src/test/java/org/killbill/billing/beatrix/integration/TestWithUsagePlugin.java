@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedMap;
@@ -39,10 +40,12 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
+import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -133,7 +136,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
         invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
 
-        final RolledUpUsage result1 = usageUserApi.getUsageForSubscription(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 15), callContext);
+        final RolledUpUsage result1 = usageUserApi.getUsageForSubscription(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 15), Collections.emptyList(), callContext);
         assertEquals(result1.getSubscriptionId(), aoSubscription.getId());
         assertEquals(result1.getRolledUpUnits().size(), 1);
         assertEquals(result1.getRolledUpUnits().get(0).getUnitType(), "bullets");
@@ -146,7 +149,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         transitionDates.add(new LocalDate(2012, 4, 15));
         transitionDates.add(new LocalDate(2012, 4, 17));
 
-        final List<RolledUpUsage> result2 = usageUserApi.getAllUsageForSubscription(aoSubscription.getId(), transitionDates, callContext);
+        final List<RolledUpUsage> result2 = usageUserApi.getAllUsageForSubscription(aoSubscription.getId(), transitionDates, Collections.emptyList(), callContext);
         assertEquals(result2.size(), 4);
 
         assertEquals(result2.get(0).getSubscriptionId(), aoSubscription.getId());
@@ -188,7 +191,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public List<RawUsageRecord> getUsageForAccount(final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+        public List<RawUsageRecord> getUsageForAccount(final LocalDate startDate, final LocalDate endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
 
             final List<RawUsageRecord> result = new LinkedList<>();
             for (final LocalDate curDate : usageData.keySet()) {
@@ -203,10 +206,10 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public List<RawUsageRecord> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
+        public List<RawUsageRecord> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
 
             final List<RawUsageRecord> result = new ArrayList<>();
-            final List<RawUsageRecord> usageForAccount = getUsageForAccount(startDate, endDate, tenantContext);
+            final List<RawUsageRecord> usageForAccount = getUsageForAccount(startDate, endDate, usageContext, properties);
             for (final RawUsageRecord cur : usageForAccount) {
                 if (cur.getSubscriptionId().equals(subscriptionId)) {
                     result.add(cur);

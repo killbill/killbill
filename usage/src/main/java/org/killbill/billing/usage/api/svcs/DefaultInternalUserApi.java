@@ -17,6 +17,7 @@
 
 package org.killbill.billing.usage.api.svcs;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -25,13 +26,15 @@ import javax.inject.Inject;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.DryRunInfo;
+import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-import org.killbill.billing.usage.DryRunTenantContext;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.api.BaseUserApi;
+import org.killbill.billing.usage.api.DefaultUsageContext;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
 import org.killbill.billing.usage.dao.RolledUpUsageModelDao;
+import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -64,8 +67,13 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
         log.info("GetRawUsageForAccount startDate='{}', endDate='{}'", startDate, endDate);
 
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalTenantContext);
-        final TenantContext tenantContextWithHint = dryRunInfo != null ? new DryRunTenantContext(dryRunInfo, tenantContext) : tenantContext;
-        final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, tenantContextWithHint);
+
+        final DryRunType dryRunType = dryRunInfo != null ? dryRunInfo.getDryRunType() : null;
+        final LocalDate inputTargetDate = dryRunInfo != null ? dryRunInfo.getInputTargetDate() : null;
+
+        final UsageContext usageContext = new DefaultUsageContext(dryRunType, inputTargetDate, tenantContext);
+
+        final List<RawUsageRecord> resultFromPlugin = getAccountUsageFromPlugin(startDate, endDate, Collections.emptyList(), usageContext);
         if (resultFromPlugin != null) {
             return resultFromPlugin;
         }
