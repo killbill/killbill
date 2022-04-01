@@ -39,12 +39,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <!-- Required scope for the maven shade plugin (tools) -->
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <scope>provided</scope>
