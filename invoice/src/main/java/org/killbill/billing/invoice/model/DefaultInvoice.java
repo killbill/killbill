@@ -134,6 +134,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         this.parentInvoice = (parentInvoice != null) ? new DefaultInvoice(parentInvoice) : null;
     }
 
+    // TODO ?
     // Semi deep copy where we copy the lists but not the elements in the lists since they are immutables.
     @Override
     @SuppressFBWarnings("CN_IDIOM_NO_SUPER_CALL")
@@ -142,6 +143,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
         final Invoice clonedInvoice = new DefaultInvoice(getId(),  getCreatedDate(), getAccountId(), getInvoiceNumber(), getInvoiceDate(), getTargetDate(), getCurrency(), getProcessedCurrency(), isMigrationInvoice(), isWrittenOff(), getStatus(), isParentInvoice(), parentInvoiceModelDao);
         clonedInvoice.getInvoiceItems().addAll(getInvoiceItems());
         clonedInvoice.getPayments().addAll(getPayments());
+        // TODO What about trackingIds
         return clonedInvoice;
     }
 

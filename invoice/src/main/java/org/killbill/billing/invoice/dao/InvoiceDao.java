@@ -44,18 +44,15 @@ import org.killbill.billing.util.entity.dao.EntityDao;
 
 public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceApiException> {
 
-    // Used by InvoiceDispatcher only for regular invoice runs
-    void createInvoice(final InvoiceModelDao invoice,
-                       final BillingEventSet billingEvents,
-                       final Set<InvoiceTrackingModelDao> trackingIds,
-                       final FutureAccountNotifications callbackDateTimePerSubscriptions,
-                       final ExistingInvoiceMetadata existingInvoiceMetadata,
-                       final InternalCallContext context);
 
-    // Used by APIs, for HA, etc.
+    List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
+                                             final InternalCallContext context);
+
     List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
                                              final BillingEventSet billingEvents,
                                              final Set<InvoiceTrackingModelDao> trackingIds,
+                                             final FutureAccountNotifications callbackDateTimePerSubscriptions,
+                                             final ExistingInvoiceMetadata existingInvoiceMetadata,
                                              final InternalCallContext context);
 
     void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions,

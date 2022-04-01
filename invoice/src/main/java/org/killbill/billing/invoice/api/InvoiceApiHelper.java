@@ -110,20 +110,20 @@ public class InvoiceApiHelper {
 
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
             for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
-                // Call plugin(s)
-                invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, properties, internalCallContext);
 
-                // Transformation to InvoiceModelDao
-                final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);
-                final List<InvoiceItem> invoiceItems = invoiceForPlugin.getInvoiceItems();
-                final List<InvoiceItemModelDao> invoiceItemModelDaos = toInvoiceItemModelDao(invoiceItems);
-                invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
+                final List<DefaultInvoice> updatedInvoices = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, properties, internalCallContext);
+                for (final DefaultInvoice tmp : updatedInvoices) {
+                    final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(tmp);
+                    final List<InvoiceItem> invoiceItems = tmp.getInvoiceItems();
+                    final List<InvoiceItemModelDao> invoiceItemModelDaos = toInvoiceItemModelDao(invoiceItems);
+                    invoiceModelDao.addInvoiceItems(invoiceItemModelDaos);
 
-                // Keep track of modified invoices
-                invoiceModelDaos.add(invoiceModelDao);
+                    // Keep track of modified invoices
+                    invoiceModelDaos.add(invoiceModelDao);
+                }
             }
 
-            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, ImmutableSet.of(), internalCallContext);
+            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, internalCallContext);
             success = true;
 
             return fromInvoiceItemModelDao(createdInvoiceItems);

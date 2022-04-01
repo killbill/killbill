@@ -200,7 +200,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao1);
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao2);
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), events, ImmutableSet.of(), context);
+        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), context);
 
         try {
             dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
@@ -316,20 +316,20 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoiceItems.get(1).getInvoiceItemType(), InvoiceItemType.RECURRING);
         Assert.assertEquals(invoiceItems.get(1).getStartDate(), new LocalDate("2012-05-31"));
         Assert.assertEquals(invoiceItems.get(1).getEndDate(), new LocalDate("2012-06-30"));
-        Assert.assertEquals(invoiceItems.get(1).getAmount(), new BigDecimal("249.95"));
-        Assert.assertEquals(invoiceItems.get(1).getRate(), new BigDecimal("249.95"));
+        Assert.assertEquals(invoiceItems.get(1).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(invoiceItems.get(1).getRate().compareTo(new BigDecimal("249.95")), 0);
 
         Assert.assertEquals(invoiceItems.get(2).getInvoiceItemType(), InvoiceItemType.RECURRING);
         Assert.assertEquals(invoiceItems.get(2).getStartDate(), new LocalDate("2012-06-30"));
         Assert.assertEquals(invoiceItems.get(2).getEndDate(), new LocalDate("2012-07-15"));
-        Assert.assertEquals(invoiceItems.get(2).getAmount(), new BigDecimal("124.98"));
-        Assert.assertEquals(invoiceItems.get(2).getRate(), new BigDecimal("249.95"));
+        Assert.assertEquals(invoiceItems.get(2).getAmount().compareTo(new BigDecimal("124.98")), 0);
+        Assert.assertEquals(invoiceItems.get(2).getRate().compareTo(new BigDecimal("249.95")), 0);
 
         Assert.assertEquals(invoiceItems.get(3).getInvoiceItemType(), InvoiceItemType.RECURRING);
         Assert.assertEquals(invoiceItems.get(3).getStartDate(), new LocalDate("2012-07-25"));
         Assert.assertEquals(invoiceItems.get(3).getEndDate(), new LocalDate("2012-07-31"));
-        Assert.assertEquals(invoiceItems.get(3).getAmount(), new BigDecimal("193.55"));
-        Assert.assertEquals(invoiceItems.get(3).getRate(), new BigDecimal("1000"));
+        Assert.assertEquals(invoiceItems.get(3).getAmount().compareTo(new BigDecimal("193.55")), 0);
+        Assert.assertEquals(invoiceItems.get(3).getRate().compareTo(new BigDecimal("1000")), 0);
 
         // Verify common fields
         for (final InvoiceItem item : invoiceItems) {

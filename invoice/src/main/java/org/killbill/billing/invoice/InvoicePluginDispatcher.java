@@ -19,6 +19,7 @@ package org.killbill.billing.invoice;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -60,7 +61,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 
 public class InvoicePluginDispatcher {
 
@@ -173,63 +179,105 @@ public class InvoicePluginDispatcher {
         }
     }
 
-    public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
-                                                               final boolean isDryRun,
-                                                               final CallContext callContext,
-                                                               // The pluginProperties list passed to plugins is mutable by the plugins
-                                                               @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
-                                                               final InternalTenantContext tenantContext) throws InvoiceApiException {
+    public List<DefaultInvoice> updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
+                                                                            final boolean isDryRun,
+                                                                            final CallContext callContext,
+                                                                            // The pluginProperties list passed to plugins is mutable by the plugins
+                                                                            @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                                                            final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
+
+        final List<DefaultInvoice> updatedInvoices = new LinkedList<DefaultInvoice>();
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         if (invoicePlugins.isEmpty()) {
-            return false;
+            // Optimization
+            updatedInvoices.add(originalInvoice);
+            return updatedInvoices;
         }
 
-        // Look-up map for performance
-        final Map<UUID, InvoiceItem> invoiceItemsByItemId = new HashMap<UUID, InvoiceItem>();
+        // Final mapping of invoiceId to invoice items
+        final Multimap<UUID, InvoiceItem> perInvoiceInvoiceItems = HashMultimap.<UUID, InvoiceItem>create();
         for (final InvoiceItem invoiceItem : originalInvoice.getInvoiceItems()) {
-            invoiceItemsByItemId.put(invoiceItem.getId(), invoiceItem);
+            perInvoiceInvoiceItems.put(invoiceItem.getInvoiceId(), invoiceItem);
         }
 
-        boolean invoiceUpdated = false;
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             // We clone the original invoice so plugins don't remove/add items
             final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
+            // Invoice items returned by the plugin: some can be new items, some can be updated items (on the same or new invoice)
             final List<InvoiceItem> additionalInvoiceItemsForPlugin = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, properties, callContext);
+            if (additionalInvoiceItemsForPlugin == null || additionalInvoiceItemsForPlugin.isEmpty()) {
+                continue;
+            }
 
-            if (additionalInvoiceItemsForPlugin != null && !additionalInvoiceItemsForPlugin.isEmpty()) {
-                final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
-                for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItemsForPlugin) {
-                    final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice.getId(),
-                                                                                                      invoiceItemsByItemId,
-                                                                                                      additionalInvoiceItem,
-                                                                                                      invoicePlugin);
-                    additionalInvoiceItems.add(sanitizedInvoiceItem);
-                }
-                invoiceUpdated = updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems) || invoiceUpdated;
+            for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItemsForPlugin) {
+                final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice, additionalInvoiceItem, invoicePlugin);
+                updatePerInvoiceInvoiceItems(perInvoiceInvoiceItems, sanitizedInvoiceItem);
             }
         }
 
-        return invoiceUpdated;
+
+        for (final UUID invoiceId : perInvoiceInvoiceItems.keySet()) {
+            final Collection<InvoiceItem> updatedInvoiceItems = perInvoiceInvoiceItems.get(invoiceId);
+            if (updatedInvoiceItems.isEmpty()) {
+                continue;
+            }
+
+            // Note that here, the clonedInvoice is just used as a container object, it doesn't actually represent the final invoice.
+            // For instance, the plugin could return an ITEM_ADJ pointing to an existing invoice: the clonedInvoice object would
+            // not include the items from the original invoice. This doesn't matter anyways, as the dao will create the appropriate entries
+            // and we will re-hydrate the objects before returning (at least in the non dry-run path, see comments in processAccountWithLockAndInputTargetDate).
+            final DefaultInvoice clonedInvoice = (DefaultInvoice) originalInvoice.clone();
+            // Honor the ID set by the plugin (plugin implementors must know what they are doing here!)
+            clonedInvoice.setId(invoiceId);
+            // Clear non-shared state (not everything is strictly needed, but be explicit for the sake of completeness)
+            clonedInvoice.getTrackingIds().clear();
+            clonedInvoice.getPayments().clear();
+            clonedInvoice.getInvoiceItems().clear();
+            // Add the final invoice items for that invoice
+            clonedInvoice.addInvoiceItems(updatedInvoiceItems);
+            updatedInvoices.add(clonedInvoice);
+        }
+        if (updatedInvoices.size() == 0) {
+            updatedInvoices.add(originalInvoice);
+        }
+        return updatedInvoices;
     }
 
-    private boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice, final Collection<InvoiceItem> additionalInvoiceItems) {
-        if (additionalInvoiceItems.isEmpty()) {
-            return false;
+    private void updatePerInvoiceInvoiceItems(final Multimap<UUID, InvoiceItem> perInvoiceInvoiceItems,
+                                              final InvoiceItem pluginInvoiceItem) {
+        InvoiceItem foundInvoiceItem = null;
+        invoicePluginDispatcher:
+
+        // TODO Can't we just fetch it from perInvoiceInvoiceItems.get(pluginInvoiceItem.getInvoiceId())
+        // and if not should we then verify that as we replace it, it is against the right invoice?
+        for (final UUID invoiceId : perInvoiceInvoiceItems.keys()) {
+            for (final InvoiceItem invoiceItem : perInvoiceInvoiceItems.get(invoiceId)) {
+                if (invoiceItem.getId().equals(pluginInvoiceItem.getId())) {
+                    foundInvoiceItem = invoiceItem;
+                    break invoicePluginDispatcher;
+                }
+            }
         }
 
-        // Add or update items from generated invoice
-        for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItems) {
-            originalInvoice.removeInvoiceItemIfExists(additionalInvoiceItem);
-            originalInvoice.addInvoiceItem(additionalInvoiceItem);
+        if (foundInvoiceItem != null) {
+            perInvoiceInvoiceItems.remove(foundInvoiceItem.getInvoiceId(), foundInvoiceItem);
         }
 
-        return true;
+        Preconditions.checkNotNull(pluginInvoiceItem.getInvoiceId(), "Invoice plugin error: missing invoiceId for item %s", pluginInvoiceItem);
+        perInvoiceInvoiceItems.put(pluginInvoiceItem.getInvoiceId(), pluginInvoiceItem);
     }
 
-    private InvoiceItem validateAndSanitizeInvoiceItemFromPlugin(final UUID originalInvoiceId, final Map<UUID, InvoiceItem> invoiceItemsByItemId, final InvoiceItem additionalInvoiceItem, final InvoicePluginApi invoicePlugin) throws InvoiceApiException {
-        final InvoiceItem existingItem = invoiceItemsByItemId.get(additionalInvoiceItem.getId());
+
+    private InvoiceItem validateAndSanitizeInvoiceItemFromPlugin(final Invoice originalInvoice, final InvoiceItem additionalInvoiceItem, final InvoicePluginApi invoicePlugin) throws InvoiceApiException {
+        final InvoiceItem existingItem = Iterables.<InvoiceItem>tryFind(originalInvoice.getInvoiceItems(),
+                                                                        new Predicate<InvoiceItem>() {
+                                                                            @Override
+                                                                            public boolean apply(final InvoiceItem originalInvoiceItem) {
+                                                                                return originalInvoiceItem.getId().equals(additionalInvoiceItem.getId());
+                                                                            }
+                                                                        }).orNull();
 
         if (!ALLOWED_INVOICE_ITEM_TYPES.contains(additionalInvoiceItem.getInvoiceItemType()) && existingItem == null) {
             log.warn("Ignoring invoice item of type {} from InvoicePlugin {}: {}", additionalInvoiceItem.getInvoiceItemType(), invoicePlugin, additionalInvoiceItem);
@@ -237,34 +285,34 @@ public class InvoicePluginDispatcher {
         }
 
         final UUID invoiceId = MoreObjects.firstNonNull(mutableField("invoiceId", existingItem != null ? existingItem.getInvoiceId() : null, additionalInvoiceItem.getInvoiceId(), invoicePlugin),
-                                                        originalInvoiceId);
+                                                        originalInvoice.getId());
 
         final UUID additionalInvoiceId = MoreObjects.firstNonNull(additionalInvoiceItem.getId(), UUIDs.randomUUID());
         final InvoiceItemCatalogBase tmp = new InvoiceItemCatalogBase(additionalInvoiceId,
-                                          mutableField("createdDate", existingItem != null ? existingItem.getCreatedDate() : null, additionalInvoiceItem.getCreatedDate(), invoicePlugin),
-                                          invoiceId,
-                                          immutableField("accountId", existingItem, existingItem != null ? existingItem.getAccountId() : null, additionalInvoiceItem.getAccountId(), invoicePlugin),
-                                          immutableField("bundleId", existingItem, existingItem != null ? existingItem.getBundleId() : null, additionalInvoiceItem.getBundleId(), invoicePlugin),
-                                          immutableField("subscriptionId", existingItem, existingItem != null ? existingItem.getSubscriptionId() : null, additionalInvoiceItem.getSubscriptionId(), invoicePlugin),
-                                          mutableField("description", existingItem != null ? existingItem.getDescription() : null, additionalInvoiceItem.getDescription(), invoicePlugin),
-                                          immutableField("productName", existingItem, existingItem != null ? existingItem.getProductName() : null, additionalInvoiceItem.getProductName(), invoicePlugin),
-                                          immutableField("planName", existingItem, existingItem != null ? existingItem.getPlanName() : null, additionalInvoiceItem.getPlanName(), invoicePlugin),
-                                          immutableField("phaseName", existingItem, existingItem != null ? existingItem.getPhaseName() : null, additionalInvoiceItem.getPhaseName(), invoicePlugin),
-                                          immutableField("usageName", existingItem, existingItem != null ? existingItem.getUsageName() : null, additionalInvoiceItem.getUsageName(), invoicePlugin),
-                                          immutableField("catalogEffectiveDate", existingItem, existingItem != null ? existingItem.getCatalogEffectiveDate() : null, additionalInvoiceItem.getCatalogEffectiveDate(), invoicePlugin),
-                                          mutableField("prettyProductName", existingItem != null ? existingItem.getPrettyProductName() : null, additionalInvoiceItem.getPrettyProductName(), invoicePlugin),
-                                          mutableField("prettyPlanName", existingItem != null ? existingItem.getPrettyPlanName() : null, additionalInvoiceItem.getPrettyPlanName(), invoicePlugin),
-                                          mutableField("prettyPhaseName", existingItem != null ? existingItem.getPrettyPhaseName() : null, additionalInvoiceItem.getPrettyPhaseName(), invoicePlugin),
-                                          mutableField("prettyUsageName", existingItem != null ? existingItem.getPrettyUsageName() : null, additionalInvoiceItem.getPrettyUsageName(), invoicePlugin),
-                                          immutableField("startDate", existingItem, existingItem != null ? existingItem.getStartDate() : null, additionalInvoiceItem.getStartDate(), invoicePlugin),
-                                          immutableField("endDate", existingItem, existingItem != null ? existingItem.getEndDate() : null, additionalInvoiceItem.getEndDate(), invoicePlugin),
-                                          mutableField("amount", existingItem != null ? existingItem.getAmount() : null, additionalInvoiceItem.getAmount(), invoicePlugin),
-                                          immutableField("rate", existingItem, existingItem != null ? existingItem.getRate() : null, additionalInvoiceItem.getRate(), invoicePlugin),
-                                          immutableField("currency", existingItem, existingItem != null ? existingItem.getCurrency() : null, additionalInvoiceItem.getCurrency(), invoicePlugin),
-                                          immutableField("linkedItemId", existingItem, existingItem != null ? existingItem.getLinkedItemId() : null, additionalInvoiceItem.getLinkedItemId(), invoicePlugin),
-                                          immutableField("quantity", existingItem, (existingItem == null ? null : existingItem.getQuantity()), additionalInvoiceItem.getQuantity() == null ? null : additionalInvoiceItem.getQuantity(), invoicePlugin),
-                                          mutableField("itemDetails", existingItem != null ? existingItem.getItemDetails() : null, additionalInvoiceItem.getItemDetails(), invoicePlugin),
-                                          immutableField("invoiceItemType", existingItem, existingItem != null ? existingItem.getInvoiceItemType() : null, additionalInvoiceItem.getInvoiceItemType(), invoicePlugin));
+                                                                      mutableField("createdDate", existingItem != null ? existingItem.getCreatedDate() : null, additionalInvoiceItem.getCreatedDate(), invoicePlugin),
+                                                                      invoiceId,
+                                                                      immutableField("accountId", existingItem, existingItem != null ? existingItem.getAccountId() : null, additionalInvoiceItem.getAccountId(), invoicePlugin),
+                                                                      immutableField("bundleId", existingItem, existingItem != null ? existingItem.getBundleId() : null, additionalInvoiceItem.getBundleId(), invoicePlugin),
+                                                                      immutableField("subscriptionId", existingItem, existingItem != null ? existingItem.getSubscriptionId() : null, additionalInvoiceItem.getSubscriptionId(), invoicePlugin),
+                                                                      mutableField("description", existingItem != null ? existingItem.getDescription() : null, additionalInvoiceItem.getDescription(), invoicePlugin),
+                                                                      immutableField("productName", existingItem, existingItem != null ? existingItem.getProductName() : null, additionalInvoiceItem.getProductName(), invoicePlugin),
+                                                                      immutableField("planName", existingItem, existingItem != null ? existingItem.getPlanName() : null, additionalInvoiceItem.getPlanName(), invoicePlugin),
+                                                                      immutableField("phaseName", existingItem, existingItem != null ? existingItem.getPhaseName() : null, additionalInvoiceItem.getPhaseName(), invoicePlugin),
+                                                                      immutableField("usageName", existingItem, existingItem != null ? existingItem.getUsageName() : null, additionalInvoiceItem.getUsageName(), invoicePlugin),
+                                                                      immutableField("catalogEffectiveDate", existingItem, existingItem != null ? existingItem.getCatalogEffectiveDate() : null, additionalInvoiceItem.getCatalogEffectiveDate(), invoicePlugin),
+                                                                      mutableField("prettyProductName", existingItem != null ? existingItem.getPrettyProductName() : null, additionalInvoiceItem.getPrettyProductName(), invoicePlugin),
+                                                                      mutableField("prettyPlanName", existingItem != null ? existingItem.getPrettyPlanName() : null, additionalInvoiceItem.getPrettyPlanName(), invoicePlugin),
+                                                                      mutableField("prettyPhaseName", existingItem != null ? existingItem.getPrettyPhaseName() : null, additionalInvoiceItem.getPrettyPhaseName(), invoicePlugin),
+                                                                      mutableField("prettyUsageName", existingItem != null ? existingItem.getPrettyUsageName() : null, additionalInvoiceItem.getPrettyUsageName(), invoicePlugin),
+                                                                      immutableField("startDate", existingItem, existingItem != null ? existingItem.getStartDate() : null, additionalInvoiceItem.getStartDate(), invoicePlugin),
+                                                                      immutableField("endDate", existingItem, existingItem != null ? existingItem.getEndDate() : null, additionalInvoiceItem.getEndDate(), invoicePlugin),
+                                                                      mutableField("amount", existingItem != null ? existingItem.getAmount() : null, additionalInvoiceItem.getAmount(), invoicePlugin),
+                                                                      immutableField("rate", existingItem, existingItem != null ? existingItem.getRate() : null, additionalInvoiceItem.getRate(), invoicePlugin),
+                                                                      immutableField("currency", existingItem, existingItem != null ? existingItem.getCurrency() : null, additionalInvoiceItem.getCurrency(), invoicePlugin),
+                                                                      immutableField("linkedItemId", existingItem, existingItem != null ? existingItem.getLinkedItemId() : null, additionalInvoiceItem.getLinkedItemId(), invoicePlugin),
+                                                                      mutableField("quantity", existingItem != null ? existingItem.getQuantity() : null, additionalInvoiceItem.getQuantity(), invoicePlugin),
+                                                                      mutableField("itemDetails", existingItem != null ? existingItem.getItemDetails() : null, additionalInvoiceItem.getItemDetails(), invoicePlugin),
+                                                                      immutableField("invoiceItemType", existingItem, existingItem != null ? existingItem.getInvoiceItemType() : null, additionalInvoiceItem.getInvoiceItemType(), invoicePlugin));
         switch (tmp.getInvoiceItemType()) {
             case RECURRING:
                 return new RecurringInvoiceItem(tmp);
@@ -282,6 +330,8 @@ public class InvoicePluginDispatcher {
                 return tmp;
         }
     }
+
+
 
 
     private <T> T mutableField(final String fieldName, @Nullable final T existingValue, @Nullable final T updatedValue, final InvoicePluginApi invoicePlugin) {

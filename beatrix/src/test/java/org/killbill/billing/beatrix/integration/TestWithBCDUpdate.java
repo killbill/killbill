@@ -75,7 +75,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
     private void insertInvoiceItems(final InvoiceModelDao invoice) {
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
-        invoiceDao.createInvoice(invoice, null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
+        invoiceDao.createInvoices(ImmutableList.of(invoice), null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
     }
 
     @Test(groups = "slow")
