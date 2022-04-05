@@ -52,9 +52,6 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements Usage, Externalizable {
 
@@ -123,26 +120,23 @@ public class DefaultUsage extends ValidatingConfig<StandaloneCatalog> implements
             if (override != null && override.getTierPriceOverrides() != null) {
                 final TieredBlock[] curTieredBlocks = in.getTiers()[i].getTieredBlocks();
 
-                final TierPriceOverride overriddenTier = Iterables.tryFind(override.getTierPriceOverrides(), new Predicate<TierPriceOverride>() {
-                    @Override
-                    public boolean apply(final TierPriceOverride input) {
-
-                        if (input != null) {
-                            final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
-                            for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
-                                String unitName = blockDef.getUnitName();
-                                for (TieredBlock curTieredBlock : curTieredBlocks) {
-                                    if (unitName.equals(curTieredBlock.getUnit().getName()) &&
-                                        blockDef.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
-                                        blockDef.getMax().compareTo(curTieredBlock.getMax()) == 0) {
-                                        return true;
+                final TierPriceOverride overriddenTier = override.getTierPriceOverrides().stream()
+                        .filter(input -> {
+                            if (input != null) {
+                                final List<TieredBlockPriceOverride> blockPriceOverrides = input.getTieredBlockPriceOverrides();
+                                for (TieredBlockPriceOverride blockDef : blockPriceOverrides) {
+                                    String unitName = blockDef.getUnitName();
+                                    for (TieredBlock curTieredBlock : curTieredBlocks) {
+                                        if (unitName.equals(curTieredBlock.getUnit().getName()) &&
+                                            blockDef.getSize().compareTo(curTieredBlock.getSize()) == 0 &&
+                                            blockDef.getMax().compareTo(curTieredBlock.getMax()) == 0) {
+                                            return true;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        return false;
-                    }
-                }).orNull();
+                            return false;
+                        }).findFirst().orElse(null);
                 tiers[i] = (overriddenTier != null) ? new DefaultTier(in.getTiers()[i], overriddenTier, currency) : (DefaultTier) in.getTiers()[i];
             } else {
                 tiers[i] = (DefaultTier) in.getTiers()[i];

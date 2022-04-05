@@ -18,12 +18,10 @@ package org.killbill.billing.catalog;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
-import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.Plan;
-
-import com.google.common.collect.ImmutableList;
 
 public class MockPlan extends DefaultPlan {
 
@@ -135,13 +133,13 @@ public class MockPlan extends DefaultPlan {
     }
 
     public static Collection<Plan> createAll() {
-        return ImmutableList.<Plan>of(createBicycleTrialEvergreen1USD(),
-                               createBicycleNoTrialEvergreen1USD(),
-                               createPickupTrialEvergreen10USD(),
-                               createSportsCarTrialEvergreen100USD(),
-                               createJetTrialEvergreen1000USD(),
-                               createJetTrialFixedTermEvergreen1000USD(),
-                               createHornMonthlyNoTrial1USD());
+        return List.of(createBicycleTrialEvergreen1USD(),
+                       createBicycleNoTrialEvergreen1USD(),
+                       createPickupTrialEvergreen10USD(),
+                       createSportsCarTrialEvergreen100USD(),
+                       createJetTrialEvergreen1000USD(),
+                       createJetTrialFixedTermEvergreen1000USD(),
+                       createHornMonthlyNoTrial1USD());
     }
 
 

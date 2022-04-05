@@ -49,9 +49,6 @@ import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implements PlanPhase, Externalizable {
 
@@ -92,12 +89,9 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         for (int i = 0; i < in.getUsages().length; i++) {
             final Usage curUsage = in.getUsages()[i];
             if (override != null && override.getUsagePriceOverrides() != null) {
-                final UsagePriceOverride usagePriceOverride = Iterables.tryFind(override.getUsagePriceOverrides(), new Predicate<UsagePriceOverride>() {
-                    @Override
-                    public boolean apply(final UsagePriceOverride input) {
-                        return input != null && input.getName().equals(curUsage.getName());
-                    }
-                }).orNull();
+                final UsagePriceOverride usagePriceOverride = override.getUsagePriceOverrides().stream()
+                        .filter(input -> input != null && input.getName().equals(curUsage.getName()))
+                        .findFirst().orElse(null);
                 usages[i] = (usagePriceOverride != null) ? new DefaultUsage(in.getUsages()[i], usagePriceOverride, override.getCurrency()) : (DefaultUsage) curUsage;
             } else {
                 usages[i] = (DefaultUsage) curUsage;
@@ -134,7 +128,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
     @Override
     public boolean compliesWithLimits(final String unit, final BigDecimal value) {
         // First check usage section
-        for (DefaultUsage usage : usages) {
+        for (final DefaultUsage usage : usages) {
             if (!usage.compliesWithLimits(unit, value)) {
                 return false;
             }
@@ -275,11 +269,7 @@ public class DefaultPlanPhase extends ValidatingConfig<StandaloneCatalog> implem
         if (type != that.type) {
             return false;
         }
-        if (!Arrays.equals(usages, that.usages)) {
-            return false;
-        }
-
-        return true;
+        return Arrays.equals(usages, that.usages);
     }
 
     @Override

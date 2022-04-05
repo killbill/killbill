@@ -24,6 +24,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -53,8 +54,6 @@ import org.killbill.billing.catalog.api.rules.PlanRules;
 import org.killbill.xmlloader.ValidatingConfig;
 import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
-
-import com.google.common.collect.ImmutableList;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implements PlanRules, Externalizable {
@@ -95,32 +94,32 @@ public class DefaultPlanRules extends ValidatingConfig<StandaloneCatalog> implem
 
     @Override
     public Iterable<CaseChangePlanPolicy> getCaseChangePlanPolicy() {
-        return ImmutableList.<CaseChangePlanPolicy>copyOf(changeCase);
+        return List.of(changeCase);
     }
 
     @Override
     public Iterable<CaseChangePlanAlignment> getCaseChangePlanAlignment() {
-        return ImmutableList.<CaseChangePlanAlignment>copyOf(changeAlignmentCase);
+        return List.of(changeAlignmentCase);
     }
 
     @Override
     public Iterable<CaseCancelPolicy> getCaseCancelPolicy() {
-        return ImmutableList.<CaseCancelPolicy>copyOf(cancelCase);
+        return List.of(cancelCase);
     }
 
     @Override
     public Iterable<CaseCreateAlignment> getCaseCreateAlignment() {
-        return ImmutableList.<CaseCreateAlignment>copyOf(createAlignmentCase);
+        return List.of(createAlignmentCase);
     }
 
     @Override
     public Iterable<CaseBillingAlignment> getCaseBillingAlignment() {
-        return ImmutableList.<CaseBillingAlignment>copyOf(billingAlignmentCase);
+        return List.of(billingAlignmentCase);
     }
 
     @Override
     public Iterable<CasePriceList> getCasePriceList() {
-        return ImmutableList.<CasePriceList>copyOf(priceListCase);
+        return List.of(priceListCase);
     }
 
     @Override

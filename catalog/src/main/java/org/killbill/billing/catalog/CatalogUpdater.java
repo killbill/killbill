@@ -19,6 +19,7 @@ package org.killbill.billing.catalog;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.util.Collections;
 
 import javax.xml.bind.JAXBException;
 
@@ -51,8 +52,6 @@ import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 
-import com.google.common.collect.ImmutableList;
-
 public class CatalogUpdater {
 
     public static String DEFAULT_CATALOG_NAME = "DEFAULT";
@@ -83,8 +82,8 @@ public class CatalogUpdater {
                 .setCatalogName(DEFAULT_CATALOG_NAME)
                 .setEffectiveDate(effectiveDate.toDate())
                 .setRecurringBillingMode(BillingMode.IN_ADVANCE)
-                .setProducts(ImmutableList.<Product>of())
-                .setPlans(ImmutableList.<Plan>of())
+                .setProducts(Collections.emptyList())
+                .setPlans(Collections.emptyList())
                 .setPriceLists(new DefaultPriceListSet(defaultPriceList, new DefaultPriceList[0]))
                 .setPlanRules(getSaneDefaultPlanRules(defaultPriceList));
         if (currencies != null && currencies.length > 0) {
