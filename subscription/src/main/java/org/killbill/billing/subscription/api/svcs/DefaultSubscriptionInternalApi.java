@@ -20,14 +20,18 @@ package org.killbill.billing.subscription.api.svcs;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -63,16 +67,15 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
-import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
-import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventData;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.cache.AccountIdFromBundleIdCacheLoader;
@@ -92,12 +95,8 @@ import org.killbill.clock.DefaultClock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
+// FIXME-1615 : (Part of) DefaultPaginationHelper
 import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
@@ -161,25 +160,22 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public void cancelBaseSubscriptions(final Iterable<SubscriptionBase> subscriptions, final BillingActionPolicy policy, final InternalCallContext context) throws SubscriptionBaseApiException {
-
+    public void cancelBaseSubscriptions(final Iterable<SubscriptionBase> subscriptions,
+                                        final BillingActionPolicy policy,
+                                        final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            apiService.cancelWithPolicyNoValidationAndCatalog(Iterables.<SubscriptionBase, DefaultSubscriptionBase>transform(subscriptions,
-                                                                                                                             new Function<SubscriptionBase, DefaultSubscriptionBase>() {
-                                                                                                                       @Override
-                                                                                                                       public DefaultSubscriptionBase apply(final SubscriptionBase subscriptionBase) {
-                                                                                                                           try {
-                                                                                                                               return getDefaultSubscriptionBase(subscriptionBase, catalog, context);
-                                                                                                                           } catch (final CatalogApiException e) {
-                                                                                                                               throw new RuntimeException(e);
-                                                                                                                           }
-                                                                                                                       }
-                                                                                                                   }),
-                                                              policy,
-                                                              catalog,
-                                                              context);
-        } catch (CatalogApiException e) {
+            final Iterable<DefaultSubscriptionBase> toCancel = StreamSupport
+                    .stream(subscriptions.spliterator(), false)
+                    .map(subscriptionBase -> {
+                        try {
+                            return getDefaultSubscriptionBase(subscriptionBase, catalog, context);
+                        } catch (final CatalogApiException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).collect(Collectors.toUnmodifiableList());
+            apiService.cancelWithPolicyNoValidationAndCatalog(toCancel, policy, catalog, context);
+        } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
 
@@ -189,6 +185,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     @Override
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
         final DateTime now = context.getCreatedDate();
+        // FIXME-1615 : This is not used but intellij report there's possible side effect. But I don't think so. Thought?
         final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, now, now, now);
         if (null != bundleKey && bundleKey.length() > 255) {
             throw new SubscriptionBaseApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
@@ -204,7 +201,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     @Override
     public List<SubscriptionBaseBundle> getBundlesForAccountAndKey(final UUID accountId, final String bundleKey, final InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionBaseBundle subscriptionBundlesForAccountAndKey = dao.getSubscriptionBundlesForAccountAndKey(accountId, bundleKey, context);
-        return subscriptionBundlesForAccountAndKey != null ? ImmutableList.of(subscriptionBundlesForAccountAndKey) : ImmutableList.<SubscriptionBaseBundle>of();
+        return subscriptionBundlesForAccountAndKey != null ? List.of(subscriptionBundlesForAccountAndKey) : Collections.emptyList();
     }
 
     @Override
@@ -410,7 +407,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
 
             final List<EntitlementAOStatusDryRun> result = new LinkedList<EntitlementAOStatusDryRun>();
 
-            final List<DefaultSubscriptionBase> bundleSubscriptions = dao.getSubscriptions(subscription.getBundleId(), ImmutableList.<SubscriptionBaseEvent>of(), catalog, context);
+            final List<DefaultSubscriptionBase> bundleSubscriptions = dao.getSubscriptions(subscription.getBundleId(), Collections.emptyList(), catalog, context);
             for (final SubscriptionBase cur : bundleSubscriptions) {
                 if (cur.getId().equals(subscriptionId)) {
                     continue;
@@ -577,14 +574,16 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     private List<EffectiveSubscriptionInternalEvent> convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(final SubscriptionBase subscription,
-                                                                                                                          final InternalTenantContext context, final Collection<SubscriptionBaseTransition> transitions) {
-        return ImmutableList.<EffectiveSubscriptionInternalEvent>copyOf(Collections2.transform(transitions, new Function<SubscriptionBaseTransition, EffectiveSubscriptionInternalEvent>() {
-            @Override
-            @Nullable
-            public EffectiveSubscriptionInternalEvent apply(@Nullable final SubscriptionBaseTransition input) {
-                return new DefaultEffectiveSubscriptionEvent((SubscriptionBaseTransitionData) input, ((DefaultSubscriptionBase) subscription).getAlignStartDate(), null, context.getAccountRecordId(), context.getTenantRecordId());
-            }
-        }));
+                                                                                                                          final InternalTenantContext context,
+                                                                                                                          final Collection<SubscriptionBaseTransition> transitions) {
+        return transitions.stream()
+                .map((@Nullable SubscriptionBaseTransition input) -> new DefaultEffectiveSubscriptionEvent(
+                        (SubscriptionBaseTransitionData) input,
+                        ((DefaultSubscriptionBase) subscription).getAlignStartDate(),
+                        null,
+                        context.getAccountRecordId(),
+                        context.getTenantRecordId()))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     // For forward-compatibility

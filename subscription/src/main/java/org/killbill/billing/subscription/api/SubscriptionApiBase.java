@@ -18,9 +18,9 @@ package org.killbill.billing.subscription.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -58,9 +58,8 @@ import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.sort;
 
 public class SubscriptionApiBase {
 
@@ -78,7 +77,7 @@ public class SubscriptionApiBase {
     protected SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final SubscriptionCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
         final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
         for (final SubscriptionBaseBundle cur : existingBundles) {
-            final List<DefaultSubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), ImmutableList.<SubscriptionBaseEvent>of(), catalog, context);
+            final List<DefaultSubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), emptyList(), catalog, context);
             for (final SubscriptionBase s : subscriptions) {
                 if (s.getCategory() == ProductCategory.ADD_ON) {
                     continue;
@@ -116,7 +115,7 @@ public class SubscriptionApiBase {
         if (result != null && !result.isEmpty()) {
             outputSubscriptions.addAll(result);
         }
-        Collections.sort(outputSubscriptions, DefaultSubscriptionInternalApi.SUBSCRIPTIONS_COMPARATOR);
+        sort(outputSubscriptions, DefaultSubscriptionInternalApi.SUBSCRIPTIONS_COMPARATOR);
 
         return createSubscriptionsForApiUse(outputSubscriptions);
     }
@@ -289,18 +288,14 @@ public class SubscriptionApiBase {
     }
 
     protected List<DefaultSubscriptionBase> createSubscriptionsForApiUse(final Collection<DefaultSubscriptionBase> internalSubscriptions) {
-        return new ArrayList<DefaultSubscriptionBase>(Collections2.transform(internalSubscriptions, new Function<SubscriptionBase, DefaultSubscriptionBase>() {
-            @Override
-            public DefaultSubscriptionBase apply(final SubscriptionBase subscription) {
-                return createSubscriptionForApiUse(subscription);
-            }
-        }));
+        return internalSubscriptions.stream().map(this::createSubscriptionForApiUse).collect(Collectors.toUnmodifiableList());
     }
 
     protected DefaultSubscriptionBase createSubscriptionForApiUse(final SubscriptionBase internalSubscription) {
         return new DefaultSubscriptionBase((DefaultSubscriptionBase) internalSubscription, apiService, clock);
     }
 
+    // FIXME-1615 : Parameter InternalTenantContext context not used. Maybe worth to remove?
     protected DefaultSubscriptionBase createSubscriptionForApiUse(final SubscriptionBuilder builder,
                                                                   final List<SubscriptionBaseEvent> events,
                                                                   final SubscriptionCatalog catalog,
