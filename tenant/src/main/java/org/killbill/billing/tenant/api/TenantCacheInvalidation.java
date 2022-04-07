@@ -17,12 +17,9 @@
 
 package org.killbill.billing.tenant.api;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -41,6 +38,8 @@ import org.killbill.billing.tenant.dao.TenantBroadcastModelDao;
 import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.tenant.dao.TenantKVModelDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
+import org.killbill.billing.util.collect.MultiValueHashMap;
+import org.killbill.billing.util.collect.MultiValueMap;
 import org.killbill.billing.util.config.definition.TenantConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -64,8 +63,7 @@ public class TenantCacheInvalidation {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantCacheInvalidation.class);
 
-    // FIXME-1615 : Changed from Guava's Multimap to plain Map. Need review.
-    private final Map<TenantKey, Collection<CacheInvalidationCallback>> cache;
+    private final MultiValueMap<TenantKey, CacheInvalidationCallback> cache;
     private final TenantBroadcastDao broadcastDao;
     private final TenantConfig tenantConfig;
     private final PersistentBus eventBus;
@@ -80,7 +78,7 @@ public class TenantCacheInvalidation {
                                    @Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao,
                                    final PersistentBus eventBus,
                                    final TenantConfig tenantConfig) {
-        this.cache = new HashMap<>();
+        this.cache = new MultiValueHashMap<>();
         this.broadcastDao = broadcastDao;
         this.tenantConfig = tenantConfig;
         this.tenantDao = tenantDao;
@@ -122,15 +120,7 @@ public class TenantCacheInvalidation {
     }
 
     public void registerCallback(final TenantKey key, final CacheInvalidationCallback value) {
-        final Collection<CacheInvalidationCallback> values = cache.get(key);
-        if (values == null || values.isEmpty()) {
-            final Collection<CacheInvalidationCallback> val = new ArrayList<>();
-            val.add(value);
-            cache.put(key, val);
-        } else {
-            cache.get(key).add(value);
-        }
-
+        cache.putElement(key, value);
     }
 
     public Collection<CacheInvalidationCallback> getCacheInvalidations(final TenantKey key) {
