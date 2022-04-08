@@ -118,7 +118,6 @@ import org.slf4j.LoggerFactory;
 import static java.util.Collections.emptyList;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
-// FIXME-1615 : This class complex. Ask test point to verify that changes not broke anything
 public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionDao.class);

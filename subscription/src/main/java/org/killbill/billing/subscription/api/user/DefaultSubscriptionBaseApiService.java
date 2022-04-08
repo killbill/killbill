@@ -90,7 +90,6 @@ import org.killbill.clock.DefaultClock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// FIXME-1615 : Take care of new MultiValueMap implementation
 public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiService {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultSubscriptionBaseApiService.class);

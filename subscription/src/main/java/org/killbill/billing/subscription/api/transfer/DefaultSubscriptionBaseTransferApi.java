@@ -129,11 +129,11 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
     @VisibleForTesting
     List<SubscriptionBaseEvent> toEvents(final List<ExistingEvent> existingEvents, final DefaultSubscriptionBase subscription, final DateTime transferDate) throws SubscriptionBaseTransferApiException {
         try {
-            final List<SubscriptionBaseEvent> result = new LinkedList<SubscriptionBaseEvent>();
+            final List<SubscriptionBaseEvent> result = new LinkedList<>();
             ExistingEvent prevEvent = null;
             ExistingEvent prevBCDEvent = null;
             boolean firstEvent = true;
-            for (ExistingEvent cur : existingEvents) {
+            for (final ExistingEvent cur : existingEvents) {
                 // Skip all events prior to the transferDate
                 if (cur.getEffectiveDate().isBefore(transferDate)) {
                     if (cur.getSubscriptionTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE) {
@@ -168,14 +168,14 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
 
             return result;
-        } catch (CatalogApiException e) {
+        } catch (final CatalogApiException e) {
             throw new SubscriptionBaseTransferApiException(e);
         }
     }
 
     private boolean insertEventToResult(final boolean firstEvent, @Nullable final ExistingEvent event, final DefaultSubscriptionBase subscription, final DateTime transferDate, final List<SubscriptionBaseEvent> result) throws CatalogApiException {
         if (event != null) {
-            SubscriptionBaseEvent newEvent = createEvent(firstEvent, event, subscription, transferDate);
+            final SubscriptionBaseEvent newEvent = createEvent(firstEvent, event, subscription, transferDate);
             if (newEvent != null) {
                 result.add(newEvent);
                 return true;
@@ -267,8 +267,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                                                                             .setBundleStartDate(effectiveTransferDate)
                                                                                                             .setAlignStartDate(subscriptionAlignStartDate),
                                                                                                     Collections.emptyList(),
-                                                                                                    catalog,
-                                                                                                    fromInternalCallContext);
+                                                                                                    catalog);
 
                 final List<SubscriptionBaseEvent> events = toEvents(existingEvents, defaultSubscriptionBase, effectiveTransferDate);
                 final SubscriptionTransferData curData = new SubscriptionTransferData(defaultSubscriptionBase, events, null);
@@ -280,9 +279,9 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             dao.transfer(sourceAccountId, destAccountId, bundleTransferData, transferCancelDataList, catalog, fromInternalCallContext, toInternalCallContext);
 
             return bundleTransferData.getData();
-        } catch (SubscriptionBaseRepairException e) {
+        } catch (final SubscriptionBaseRepairException e) {
             throw new SubscriptionBaseTransferApiException(e);
-        } catch (CatalogApiException e) {
+        } catch (final CatalogApiException e) {
             throw new SubscriptionBaseTransferApiException(e);
         }
     }

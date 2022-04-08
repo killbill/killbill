@@ -60,7 +60,6 @@ import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
 import org.killbill.billing.subscription.api.user.DefaultEffectiveSubscriptionEvent;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
-import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionStatusDryRun;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
@@ -184,9 +183,6 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     @VisibleForTesting
     @Override
     public SubscriptionBaseBundle createBundleForAccount(final UUID accountId, final String bundleKey, final boolean renameCancelledBundleIfExist, final InternalCallContext context) throws SubscriptionBaseApiException {
-        final DateTime now = context.getCreatedDate();
-        // FIXME-1615 : This is not used but intellij report there's possible side effect. But I don't think so. Thought?
-        final DefaultSubscriptionBaseBundle bundle = new DefaultSubscriptionBaseBundle(bundleKey, accountId, now, now, now, now);
         if (null != bundleKey && bundleKey.length() > 255) {
             throw new SubscriptionBaseApiException(ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED);
         }
@@ -346,7 +342,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
 
 
     @Override
-    public void setChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, InternalCallContext context) throws SubscriptionBaseApiException {
+    public void setChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context) throws SubscriptionBaseApiException {
             dao.updateChargedThroughDates(chargeThroughDates, context);
     }
 
@@ -555,7 +551,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         if (bcd < currentDay) {
             final LocalDate startDatePlusOneMonth = startDate.plusMonths(1);
             final int lastDayOfNextMonth = startDatePlusOneMonth.dayOfMonth().getMaximumValue();
-            final int originalBCDORLastDayOfMonth = bcd <= lastDayOfNextMonth ? bcd : lastDayOfNextMonth;
+            final int originalBCDORLastDayOfMonth = Math.min(bcd, lastDayOfNextMonth);
             requestedDate = new LocalDate(startDatePlusOneMonth.getYear(), startDatePlusOneMonth.getMonthOfYear(), originalBCDORLastDayOfMonth);
         } else if (bcd == currentDay && effectiveFromDate == null) {
             // will default to immediate event

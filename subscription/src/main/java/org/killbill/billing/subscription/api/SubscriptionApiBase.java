@@ -295,11 +295,9 @@ public class SubscriptionApiBase {
         return new DefaultSubscriptionBase((DefaultSubscriptionBase) internalSubscription, apiService, clock);
     }
 
-    // FIXME-1615 : Parameter InternalTenantContext context not used. Maybe worth to remove?
     protected DefaultSubscriptionBase createSubscriptionForApiUse(final SubscriptionBuilder builder,
                                                                   final List<SubscriptionBaseEvent> events,
-                                                                  final SubscriptionCatalog catalog,
-                                                                  final InternalTenantContext context) throws CatalogApiException {
+                                                                  final SubscriptionCatalog catalog) throws CatalogApiException {
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder, apiService, clock);
         if (!events.isEmpty()) {
             subscription.rebuildTransitions(events, catalog);
