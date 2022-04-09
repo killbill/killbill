@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
@@ -40,6 +41,7 @@ import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -561,5 +563,70 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // Check the transferred subscription has the latest value for the BCD
         final DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(newBundle.getId(), internalCallContext);
         assertEquals(newSubscription.getBillCycleDayLocal().intValue(), 9);
+    }
+
+
+
+    @Test(groups = "slow")
+    public void testTransferWithPendingSubscription() throws Exception {
+        final String baseProduct = "Pistol";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = "notrial";
+
+        final LocalDate init = clock.getUTCToday(); // 2012-05-07
+        final LocalDate futureCreationDate = init.plusDays(10);  // 2012-05-17
+
+        DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList, futureCreationDate);
+        assertListenerStatus();
+        assertNotNull(baseSubscription);
+        assertEquals(baseSubscription.getState(), EntitlementState.PENDING);
+
+
+        // Update BCD to align to future start date
+        subscriptionInternalApi.updateBCD(baseSubscription.getId(), 17, futureCreationDate, internalCallContext);
+
+        clock.addDays(3);
+        final DateTime transferRequestedDate = clock.getUTCNow();
+        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
+
+
+        // Create context for the old Subscription as it looks like test default initialInternalCallContext to be on newAccountId
+        final InternalCallContext initialInternalCallContext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
+                                                                                                             ObjectType.ACCOUNT,
+                                                                                                             this.internalCallContext.getUpdatedBy(),
+                                                                                                             this.internalCallContext.getCallOrigin(),
+                                                                                                             this.internalCallContext.getContextUserType(),
+                                                                                                             this.internalCallContext.getUserToken(),
+                                                                                                             this.internalCallContext.getTenantRecordId());
+
+
+
+        // Check transfer was realigned to futureCreationDate, i.e both the CANCEL an old subscription and CREATE on the new one
+        DefaultSubscriptionBase oldSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(bundle.getId(), initialInternalCallContext);
+        assertEquals(initialInternalCallContext.toLocalDate(oldSubscription.getStartDate()), futureCreationDate);
+        assertEquals(initialInternalCallContext.toLocalDate(oldSubscription.getFutureEndDate()), futureCreationDate);
+        assertNull(oldSubscription.getEndDate());
+        assertEquals(oldSubscription.getState(), EntitlementState.PENDING);
+
+
+        DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(newBundle.getId(), internalCallContext);
+        assertEquals(internalCallContext.toLocalDate(newSubscription.getStartDate()), futureCreationDate);
+        assertNull(newSubscription.getEndDate());
+        assertEquals(newSubscription.getState(), EntitlementState.PENDING);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL, NextEvent.BCD_CHANGE, NextEvent.TRANSFER);
+        clock.addDays(7);
+        assertListenerStatus();
+
+        oldSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(bundle.getId(), initialInternalCallContext);
+        assertEquals(initialInternalCallContext.toLocalDate(oldSubscription.getStartDate()), futureCreationDate);
+        assertEquals(initialInternalCallContext.toLocalDate(oldSubscription.getEndDate()), futureCreationDate);
+        assertEquals(oldSubscription.getState(), EntitlementState.CANCELLED);
+
+        newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(newBundle.getId(), internalCallContext);
+        assertEquals(internalCallContext.toLocalDate(newSubscription.getStartDate()), futureCreationDate);
+        assertEquals(newSubscription.getState(), EntitlementState.ACTIVE);
+        assertEquals(newSubscription.getBillCycleDayLocal().intValue(), 17);
+
     }
 }
