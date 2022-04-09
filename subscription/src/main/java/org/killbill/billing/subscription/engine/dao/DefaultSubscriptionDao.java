@@ -115,7 +115,6 @@ import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.util.Collections.emptyList;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao {
@@ -259,7 +258,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
         return transactionalSqlDao.execute(false, SubscriptionBaseApiException.class, entitySqlDaoWrapperFactory -> {
             final List<SubscriptionBundleModelDao> existingBundles = bundle.getExternalKey() == null ?
-                                                                     emptyList() :
+                                                                     Collections.emptyList() :
                                                                      entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getBundlesForLikeKey(bundle.getExternalKey(), context);
 
             final SubscriptionBaseBundle unusedBundle = findExistingUnusedBundleForExternalKeyAndAccount(bundle, existingBundles, entitySqlDaoWrapperFactory, context);
@@ -276,7 +275,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         .getSubscriptionsFromBundleId(cur.getId().toString(), context);
 
                 final Iterable<SubscriptionModelDao> filtered = subscriptions == null ?
-                                                                emptyList() :
+                                                                Collections.emptyList() :
                                                                 subscriptions.stream()
                                                                              .filter(input -> input.getCategory() != ProductCategory.ADD_ON)
                                                                              .collect(Collectors.toUnmodifiableList());
@@ -412,7 +411,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             // We avoid pulling the bundles when a cutoffDt is specified, as those are not really used
             final List<SubscriptionBundleModelDao> bundleModels = cutoffDt == null ?
                                                                   entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getByAccountRecordId(context) :
-                                                                  emptyList();
+                                                                  Collections.emptyList();
             return subscriptionModels.stream()
                                      .map(input -> {
                                          final SubscriptionBundleModelDao bundleModel = bundleModels.stream()
@@ -814,7 +813,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                    final SubscriptionCatalog catalog,
                                                                    final InternalTenantContext context) throws CatalogApiException {
         if (input == null || input.isEmpty()) {
-            return emptyList();
+            return Collections.emptyList();
         }
 
         // Make sure BasePlan -- if exists-- is first

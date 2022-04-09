@@ -17,6 +17,7 @@
 
 package org.killbill.billing.util.security.shiro.realm;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,8 +40,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import static java.util.Collections.emptyList;
 
 public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
@@ -122,10 +121,10 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testEmptyPermissions() throws SecurityApiException {
         securityApi.addRoleDefinition("sanity1", null, callContext);
-        validateUserRoles(securityApi.getRoleDefinition("sanity1", callContext), emptyList());
+        validateUserRoles(securityApi.getRoleDefinition("sanity1", callContext), Collections.emptyList());
 
-        securityApi.addRoleDefinition("sanity2", emptyList(), callContext);
-        validateUserRoles(securityApi.getRoleDefinition("sanity2", callContext), emptyList());
+        securityApi.addRoleDefinition("sanity2", Collections.emptyList(), callContext);
+        validateUserRoles(securityApi.getRoleDefinition("sanity2", callContext), Collections.emptyList());
     }
 
     @Test(groups = "slow")

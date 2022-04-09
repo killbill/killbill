@@ -18,6 +18,7 @@ package org.killbill.billing.subscription.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -58,9 +59,6 @@ import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.sort;
-
 public class SubscriptionApiBase {
 
     protected final SubscriptionDao dao;
@@ -77,7 +75,7 @@ public class SubscriptionApiBase {
     protected SubscriptionBaseBundle getActiveBundleForKey(final String bundleKey, final SubscriptionCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
         final List<SubscriptionBaseBundle> existingBundles = dao.getSubscriptionBundlesForKey(bundleKey, context);
         for (final SubscriptionBaseBundle cur : existingBundles) {
-            final List<DefaultSubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), emptyList(), catalog, context);
+            final List<DefaultSubscriptionBase> subscriptions = dao.getSubscriptions(cur.getId(), Collections.emptyList(), catalog, context);
             for (final SubscriptionBase s : subscriptions) {
                 if (s.getCategory() == ProductCategory.ADD_ON) {
                     continue;
@@ -115,7 +113,7 @@ public class SubscriptionApiBase {
         if (result != null && !result.isEmpty()) {
             outputSubscriptions.addAll(result);
         }
-        sort(outputSubscriptions, DefaultSubscriptionInternalApi.SUBSCRIPTIONS_COMPARATOR);
+        Collections.sort(outputSubscriptions, DefaultSubscriptionInternalApi.SUBSCRIPTIONS_COMPARATOR);
 
         return createSubscriptionsForApiUse(outputSubscriptions);
     }
