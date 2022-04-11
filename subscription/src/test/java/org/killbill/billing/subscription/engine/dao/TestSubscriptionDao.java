@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -56,7 +55,6 @@ import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
@@ -68,9 +66,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 
@@ -138,10 +133,9 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
             final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
             testListener.pushExpectedEvents(NextEvent.CREATE);
-            final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
-                                                                                                                ImmutableList.<SubscriptionBase>of(subscription));
-            dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
-                                              ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+            final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle, List.of(subscription));
+            dao.createSubscriptionsWithAddOns(List.of(subscriptionBaseWithAddOns),
+                                              Map.of(subscription.getId(), List.of(creationEvent)),
                                               catalog,
                                               internalCallContext);
             assertListenerStatus();
@@ -208,14 +202,10 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // This time we call the lower SqlDao to rename the bundle automatically and verify we still get same # results,
         // with original key
-        transactionalSqlDao.execute(false,
-                                    new EntitySqlDaoTransactionWrapper<Void>() {
-                                        @Override
-                                        public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                                            entitySqlDaoWrapperFactory.become(BundleSqlDao.class).renameBundleExternalKey(ImmutableList.<String>of(bundle2.getId().toString()), "foo", internalCallContext);
-                                            return null;
-                                        }
-                                    });
+        transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
+            entitySqlDaoWrapperFactory.become(BundleSqlDao.class).renameBundleExternalKey(List.of(bundle2.getId().toString()), "foo", internalCallContext);
+            return null;
+        });
         final List<SubscriptionBaseBundle> result4 = dao.getSubscriptionBundlesForKey(externalKey, internalCallContext);
         assertEquals(result4.size(), 2);
         assertEquals(result4.get(0).getExternalKey(), bundle2.getExternalKey());
@@ -283,11 +273,10 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
         testListener.pushExpectedEvents(NextEvent.CREATE);
-        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
-                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle, List.of(subscription));
 
-        final List<SubscriptionBaseEvent> resultSubscriptions = dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
-                                                                                                  ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), ImmutableList.<SubscriptionBaseEvent>of(creationEvent)),
+        final List<SubscriptionBaseEvent> resultSubscriptions = dao.createSubscriptionsWithAddOns(List.of(subscriptionBaseWithAddOns),
+                                                                                                  Map.of(subscription.getId(), List.of(creationEvent)),
                                                                                                   catalog,
                                                                                                   internalCallContext);
         assertListenerStatus();
@@ -467,15 +456,12 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
 
 
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(builder);
-        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle,
-                                                                                                            ImmutableList.<SubscriptionBase>of(subscription));
+        final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = new DefaultSubscriptionBaseWithAddOns(bundle, List.of(subscription));
         testListener.pushExpectedEvents(NextEvent.CREATE);
-        final ImmutableList<SubscriptionBaseEvent> events = cancelEvent !=  null ?
-                                                            ImmutableList.<SubscriptionBaseEvent>of(creationEvent, cancelEvent) :
-                                                            ImmutableList.<SubscriptionBaseEvent>of(creationEvent);
+        final List<SubscriptionBaseEvent> events = (cancelEvent != null) ? List.of(creationEvent, cancelEvent) : List.of(creationEvent);
 
-        final List<SubscriptionBaseEvent> result = dao.createSubscriptionsWithAddOns(ImmutableList.<SubscriptionBaseWithAddOns>of(subscriptionBaseWithAddOns),
-                                                                                     ImmutableMap.<UUID, List<SubscriptionBaseEvent>>of(subscription.getId(), events),
+        final List<SubscriptionBaseEvent> result = dao.createSubscriptionsWithAddOns(List.of(subscriptionBaseWithAddOns),
+                                                                                     Map.of(subscription.getId(), events),
                                                                                      catalog,
                                                                                      internalCallContext);
         assertListenerStatus();

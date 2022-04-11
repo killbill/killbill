@@ -60,8 +60,6 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -227,7 +225,7 @@ public class TestSubscriptionHelper {
             testListener.pushExpectedEvent(NextEvent.CREATE);
         }
 
-        final ImmutableList<EntitlementSpecifier> entitlementSpecifiers = ImmutableList.<EntitlementSpecifier>of(new EntitlementSpecifier() {
+        final List<EntitlementSpecifier> entitlementSpecifiers = List.of(new EntitlementSpecifier() {
             @Override
             public PlanPhaseSpecifier getPlanPhaseSpecifier() {
                 if (planName == null) {
@@ -259,7 +257,7 @@ public class TestSubscriptionHelper {
                                                                                                                                 false);
 
         final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionApi.createBaseSubscriptionsWithAddOns(catalog,
-                                                                                                                        ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+                                                                                                                        List.of(subscriptionBaseWithAddOnsSpecifier),
                                                                                                                         false,
                                                                                                                         internalCallContext).get(0);
         final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionBaseWithAddOns.getSubscriptionBaseList().get(0);

@@ -21,6 +21,8 @@ package org.killbill.billing.subscription.engine.core;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -52,7 +54,6 @@ import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus.EventBusException;
-import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -62,15 +63,12 @@ import org.killbill.notificationq.api.NotificationQueueService.NotificationQueue
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-
 public class DefaultSubscriptionBaseService implements EventListener, SubscriptionBaseService {
 
     public static final String NOTIFICATION_QUEUE_NAME = "subscription-events";
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionBaseService.class);
 
-    private final Clock clock;
     private final SubscriptionDao dao;
     private final PlanAligner planAligner;
     private final BusOptimizer eventBus;
@@ -82,15 +80,13 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
     private NotificationQueue subscriptionEventQueue;
 
     @Inject
-    public DefaultSubscriptionBaseService(final Clock clock,
-                                          final SubscriptionDao dao,
+    public DefaultSubscriptionBaseService(final SubscriptionDao dao,
                                           final PlanAligner planAligner,
                                           final BusOptimizer eventBus,
                                           final NotificationQueueService notificationQueueService,
                                           final InternalCallContextFactory internalCallContextFactory,
                                           final SubscriptionBaseApiService apiService,
                                           final SubscriptionCatalogApi subscriptionCatalogApi) {
-        this.clock = clock;
         this.dao = dao;
         this.planAligner = planAligner;
         this.eventBus = eventBus;

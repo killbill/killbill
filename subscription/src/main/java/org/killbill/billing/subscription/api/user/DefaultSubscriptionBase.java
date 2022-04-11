@@ -61,21 +61,17 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent.EventType;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
-import org.killbill.billing.subscription.events.expired.ExpiredEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
+import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.catalog.CatalogDateHelper;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 
 public class DefaultSubscriptionBase extends EntityBase implements SubscriptionBase {
 
@@ -266,7 +262,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
         return null;
     }
-    
+
     @Override
     public DateTime getFutureExpiryDate() {
         if (transitions == null) {
@@ -283,7 +279,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             }
         }
         return null;
-    }    
+    }
 
     @Override
     public boolean cancel(final CallContext context) throws SubscriptionBaseApiException {
@@ -386,7 +382,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public Plan getLastActivePlan() {
-        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { 
+        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPlan();
         } else if (getState() == EntitlementState.PENDING) {
@@ -399,7 +395,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public PlanPhase getLastActivePhase() {
-        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) { 
+        if (getState() == EntitlementState.CANCELLED || getState() == EntitlementState.EXPIRED) {
             final SubscriptionBaseTransition data = getPreviousTransition();
             return data.getPreviousPhase();
         } else if (getState() == EntitlementState.PENDING) {
@@ -807,15 +803,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
     public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final SubscriptionCatalog catalog) throws CatalogApiException {
-
         if (inputEvents == null) {
             return;
         }
-
         this.events = inputEvents;
-
-
-        Collections.sort(inputEvents, new Comparator<SubscriptionBaseEvent>() {
+        inputEvents.sort(new Comparator<SubscriptionBaseEvent>() {
             @Override
             public int compare(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2) {
                 final int res = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
@@ -923,7 +915,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     }
                     break;
                 case EXPIRED:
-                    nextState = EntitlementState.EXPIRED; 
+                    nextState = EntitlementState.EXPIRED;
                     nextPlanName = null;
                     nextPhaseName = null;
                 	break;
@@ -971,13 +963,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     //  * Hardening against data integrity issues where we have multiple active CANCEL (https://github.com/killbill/killbill/issues/619)
     //
     private void removeEverythingPastCancelEvent(final List<SubscriptionBaseEvent> inputEvents) {
-        final SubscriptionBaseEvent cancellationEvent = Iterables.tryFind(inputEvents,
-                                                                          new Predicate<SubscriptionBaseEvent>() {
-                                                                              @Override
-                                                                              public boolean apply(final SubscriptionBaseEvent input) {
-                                                                                  return input.getType() == EventType.API_USER && ((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL;
-                                                                              }
-                                                                          }).orNull();
+        final SubscriptionBaseEvent cancellationEvent = inputEvents.stream()
+                .filter(input -> input.getType() == EventType.API_USER && ((ApiEvent) input).getApiEventType() == ApiEventType.CANCEL)
+                .findFirst().orElse(null);
         if (cancellationEvent == null) {
             return;
         }
