@@ -31,6 +31,12 @@
     <products>
         <product name="Standard">
             <category>BASE</category>
+            <included>
+                <addonProduct>Standard</addonProduct>
+            </included>
+            <available>
+                <addonProduct>Standard</addonProduct>
+            </available>
         </product>
     </products>
 
