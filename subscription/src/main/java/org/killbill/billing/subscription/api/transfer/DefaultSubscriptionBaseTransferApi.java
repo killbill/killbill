@@ -241,7 +241,13 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                                                          effectiveTransferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
                                                          oldSubscription.getChargedThroughDate() : effectiveTransferDate;
 
-                    // Reuse logic from validateEffectiveDate where we check the latest transition and readjust the candidateCancelDate to match such transition if needed
+                    //
+                    // We are checking that if the subscription is PENDING (start date in the future) and if the requestedDate
+                    // for the transfer is prior to the startDate, then it gets realigned with the startDate.
+                    // The code goes further (reuse logic from validateEffectiveDate) and also checks that we if we have a subscription with multiple
+                    // change plans (that we want to transfer), we don't end up cancelling prior a previous transition as this would create some
+                    // weird REPAIR scenarios.
+                    //
                     final SubscriptionBaseTransition previousTransition = oldSubscription.getPreviousTransition();
                     final DateTime earliestValidDate = previousTransition != null ? previousTransition.getEffectiveTransitionTime() : oldSubscription.getStartDate();
                     final DateTime effectiveCancelDate = (candidateCancelDate.isBefore(earliestValidDate)) ? earliestValidDate : candidateCancelDate;
