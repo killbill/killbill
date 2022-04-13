@@ -96,13 +96,13 @@ public class TestOverdueWithSubscriptionEOTCancellation extends TestOverdueBase 
 
         final Subscription cancelledBaseSubscription = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
         assertTrue(cancelledBaseSubscription.getState() == EntitlementState.CANCELLED);
-        assertEquals(cancelledBaseSubscription.getEffectiveEndDate(), new LocalDate(2012, 6, 05));
-        assertEquals(cancelledBaseSubscription.getBillingEndDate(), new LocalDate(2012, 6, 30));
+        assertEquals(internalCallContext.toLocalDate(cancelledBaseSubscription.getEffectiveEndDate()), new LocalDate(2012, 6, 05));
+        assertEquals(internalCallContext.toLocalDate(cancelledBaseSubscription.getBillingEndDate()), new LocalDate(2012, 6, 30));
 
         final Subscription cancelledAddon1 = subscriptionApi.getSubscriptionForEntitlementId(addOn1.getId(), callContext);
         assertTrue(cancelledAddon1.getState() == EntitlementState.CANCELLED);
-        assertEquals(cancelledAddon1.getEffectiveEndDate(), new LocalDate(2012, 6, 05));
-        assertEquals(cancelledAddon1.getBillingEndDate(), new LocalDate(2012, 6, 30));
+        assertEquals(internalCallContext.toLocalDate(cancelledAddon1.getEffectiveEndDate()), new LocalDate(2012, 6, 05));
+        assertEquals(internalCallContext.toLocalDate(cancelledAddon1.getBillingEndDate()), new LocalDate(2012, 6, 30));
 
         // Payment Retry on the 2012-6-8
         addDaysAndCheckForCompletion(2, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);

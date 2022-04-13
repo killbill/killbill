@@ -632,7 +632,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(newEntitlement.getId(), ctx);
                 if (subscription.getBillingEndDate() != null) {
                     final Account account = accountUserApi.getAccountById(subscription.getAccountId(), callContext);
-                    final boolean inTheFuture = isInTheFuture(subscription.getBillingEndDate(), account);
+                    final boolean inTheFuture = isInTheFuture(subscription.getBillingEndDate().toLocalDate(), account); //TODO_1375 - Converting to LocalDate for comparison, should we instead change isInTheFuture to accept DateTime? Also, not sure how to access internalCallContext here so I've used toLocalDate
                     if (inTheFuture) {
                         isImmediateOp = false;
                     }

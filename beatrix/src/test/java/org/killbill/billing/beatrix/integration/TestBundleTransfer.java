@@ -288,10 +288,10 @@ public class TestBundleTransfer extends TestIntegrationBase {
         Assert.assertEquals(oldEntitlements.size(), 2);
         for (final Entitlement entitlement : oldEntitlements) {
             final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
-            Assert.assertEquals(subscription.getEffectiveStartDate(), startDate);
-            Assert.assertEquals(subscription.getEffectiveEndDate(), transferDay);
-            Assert.assertEquals(subscription.getBillingStartDate(), startDate);
-            Assert.assertEquals(subscription.getBillingEndDate(), transferDay);
+            Assert.assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveStartDate()), startDate);
+            Assert.assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()), transferDay);
+            Assert.assertEquals(internalCallContext.toLocalDate(subscription.getBillingStartDate()), startDate);
+            Assert.assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()), transferDay);
         }
 
         // Check entitlements and subscriptions on the new account
@@ -299,9 +299,9 @@ public class TestBundleTransfer extends TestIntegrationBase {
         Assert.assertEquals(newEntitlements.size(), 2);
         for (final Entitlement entitlement : newEntitlements) {
             final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
-            Assert.assertEquals(subscription.getEffectiveStartDate(), transferDay);
+            Assert.assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveStartDate()), transferDay);
             Assert.assertNull(subscription.getEffectiveEndDate());
-            Assert.assertEquals(subscription.getBillingStartDate(), transferDay);
+            Assert.assertEquals(internalCallContext.toLocalDate(subscription.getBillingStartDate()), transferDay);
             Assert.assertNull(subscription.getBillingEndDate());
         }
 

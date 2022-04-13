@@ -136,8 +136,8 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
-        assertEquals(subscription.getEffectiveEndDate().compareTo(new LocalDate(2016, 5, 18)), 0);
-        assertEquals(subscription.getBillingEndDate().compareTo(new LocalDate(2016, 5, 15)), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(new LocalDate(2016, 5, 18)), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()).compareTo(new LocalDate(2016, 5, 15)), 0);
     }
 
     @Test(groups = "slow")
@@ -214,8 +214,8 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
-        assertEquals(subscription.getEffectiveEndDate().compareTo(new LocalDate(2016, 7, 13)), 0);
-        assertEquals(subscription.getBillingEndDate().compareTo(new LocalDate(2016, 7, 10)), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(new LocalDate(2016, 7, 13)), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()).compareTo(new LocalDate(2016, 7, 10)), 0);
 
     }
 

@@ -349,7 +349,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), futureDate, futureDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         assertEquals(createdEntitlement.getState(), Entitlement.EntitlementState.PENDING);
-        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(internalCallContext.toLocalDate(createdEntitlement.getEffectiveStartDate()).compareTo(futureDate), 0); //TODO_1375 - Revisit
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
 
@@ -427,7 +427,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), futureStartDate, futureStartDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         assertEquals(createdEntitlement.getState(), Entitlement.EntitlementState.PENDING);
-        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureStartDate), 0);
+        assertEquals(internalCallContext.toLocalDate(createdEntitlement.getEffectiveStartDate()).compareTo(futureStartDate), 0); //TODO_1375 - Revisit
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
 
