@@ -135,7 +135,7 @@ public class SubscriptionJson extends JsonBase {
             final PlanPhase phase = subscriptionEvent.getNextPhase() != null ? subscriptionEvent.getNextPhase() : subscriptionEvent.getPrevPhase();
             this.eventId = subscriptionEvent.getId();
             this.billingPeriod = billingPeriod;
-            this.effectiveDate = subscriptionEvent.getEffectiveDate().toLocalDate(); //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
+            this.effectiveDate = subscriptionEvent.getEffectiveDate() != null ? subscriptionEvent.getEffectiveDate().toLocalDate() : null; //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
             this.plan = plan != null ? plan.getName() : null;
             this.product = product != null ? product.getName() : null;
             this.priceList = priceList != null ? priceList.getName() : null;
@@ -348,7 +348,7 @@ public class SubscriptionJson extends JsonBase {
 
     public SubscriptionJson(final Subscription subscription, @Nullable final Currency currency, @Nullable final AccountAuditLogs accountAuditLogs) throws CatalogApiException {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscription(subscription.getId())));
-        this.startDate = subscription.getEffectiveStartDate().toLocalDate(); //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
+        this.startDate = subscription.getEffectiveStartDate() != null ? subscription.getEffectiveStartDate().toLocalDate() : null; //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
 
         // last* fields can be null if the subscription starts in the future - rely on the first available event instead
         final List<SubscriptionEvent> subscriptionEvents = subscription.getSubscriptionEvents();
@@ -387,10 +387,10 @@ public class SubscriptionJson extends JsonBase {
 
         this.state = subscription.getState();
         this.sourceType = subscription.getSourceType();
-        this.cancelledDate = subscription.getEffectiveEndDate().toLocalDate(); //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
+        this.cancelledDate = subscription.getEffectiveEndDate() != null ? subscription.getEffectiveEndDate().toLocalDate() : null; //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
         this.chargedThroughDate = subscription.getChargedThroughDate();
-        this.billingStartDate = subscription.getBillingStartDate().toLocalDate(); //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
-        this.billingEndDate = subscription.getBillingEndDate().toLocalDate(); //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
+        this.billingStartDate = subscription.getBillingStartDate() != null ? subscription.getBillingStartDate().toLocalDate() : null; //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
+        this.billingEndDate = subscription.getBillingEndDate() != null ? subscription.getBillingEndDate().toLocalDate() : null; //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
         this.billCycleDayLocal = subscription.getBillCycleDayLocal();
         this.accountId = subscription.getAccountId();
         this.bundleId = subscription.getBundleId();
