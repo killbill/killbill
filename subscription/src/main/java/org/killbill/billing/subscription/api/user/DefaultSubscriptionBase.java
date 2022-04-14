@@ -555,7 +555,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog) throws SubscriptionBaseApiException {
+    @Override
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog, final InternalTenantContext context) throws SubscriptionBaseApiException {
 
         if (transitions == null) {
             return Collections.emptyList();
@@ -638,8 +639,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                         Plan nextPlan = catalog.getNextPlanVersion(currentPlan);
                         while (nextPlan != null ) {
                             if (nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
-                                final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
+                                DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
                                 final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
+
+                                nextEffectiveDate = alignToNextBCD(plan, planPhase, nextEffectiveDate, catalog, null, context);
 
                                 // Computed from the nextPlan
                                 final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
@@ -687,6 +690,30 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
     }
 
+
+    private DateTime alignToNextBCD(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime originalDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
+
+        final BillingAlignment billingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
+                                                                           originalDate, originalDate);
+
+        final int accountBillCycleDayLocal = apiService.getBCD(context);
+        Integer bcd = bcdLocal;
+        if (bcd == null) {
+            bcd = BillCycleDayCalculator.calculateBcdForAlignment(null, this, this, billingAlignment, context, accountBillCycleDayLocal);
+        }
+
+        // TODO : no Recurring PlanPhase, Usage sections, ...
+        final BillingPeriod billingPeriod = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+        DateTime proposedDate = chargedThroughDate != null ? chargedThroughDate : originalDate;
+        while (proposedDate != null && proposedDate.isBefore(originalDate)) {
+            proposedDate = proposedDate.plus(billingPeriod.getPeriod());
+        }
+
+        final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, context);
+        final DateTime candidateResult = context.toUTCDateTime(resultingLocalDate);
+        return candidateResult;
+    }
+
     public SubscriptionBaseTransitionData getLastTransitionForCurrentPlan() {
         if (transitions == null) {
             throw new SubscriptionBaseError(String.format("No transitions for subscription %s", getId()));
@@ -729,8 +756,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return false;
     }
 
-    public DateTime getEffectiveDateForPolicy(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
+    public DateTime getEffectiveDateForPolicy(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, final InternalTenantContext context) throws SubscriptionBaseApiException {
 
+        final Integer accountBillCycleDayLocal = apiService != null ? apiService.getBCD(context) : null;
         final DateTime candidateResult;
         switch (policy) {
             case IMMEDIATE:

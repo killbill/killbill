@@ -190,7 +190,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             Preconditions.checkState(policy != BillingActionPolicy.START_OF_TERM, "A default START_OF_TERM policy is not availaible");
 
-            final DateTime effectiveDate = subscription.getEffectiveDateForPolicy(policy, null, -1, null);
+            final DateTime effectiveDate = subscription.getEffectiveDateForPolicy(policy, null, internalCallContext);
 
             return doCancelPlan(ImmutableMap.<DefaultSubscriptionBase, DateTime>of(subscription, effectiveDate), catalog, internalCallContext);
         } catch (final CatalogApiException e) {
@@ -233,14 +233,11 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 final BillingAlignment billingAlignment = (subscription.getState() == EntitlementState.PENDING ? null : catalog.billingAlignment(new PlanPhaseSpecifier(subscription.getLastActivePlan().getName(), subscription.getLastActivePhase().getPhaseType()),
                                                                                                                                                  clock.getUTCNow(),
                                                                                                                                                  subscription.getLastTransitionForCurrentPlan().getEffectiveTransitionTime()));
-                final Integer accountBillCycleDayLocal = accountInternalApi.getBCD(context);
-                final DateTime effectiveDate = subscription.getEffectiveDateForPolicy(policy, billingAlignment, accountBillCycleDayLocal, context);
+                final DateTime effectiveDate = subscription.getEffectiveDateForPolicy(policy, billingAlignment, context);
                 subscriptionsWithEffectiveDate.put(subscription, effectiveDate);
             }
             return doCancelPlan(subscriptionsWithEffectiveDate, catalog, context);
         } catch (final CatalogApiException e) {
-            throw new SubscriptionBaseApiException(e);
-        } catch (final AccountApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
     }
@@ -349,7 +346,8 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         logger.debug("dryRunChangePlan: requestedPolicy='{}', actualPolicy='{}', requestedDateWithMs='{}'", requestedPolicy, policyMaybeNull, requestedDateWithMs);
         if (policyMaybeNull != null) {
-            return subscription.getEffectiveDateForPolicy(policyMaybeNull, null, -1, null);
+            final InternalTenantContext internalCallContext = createTenantContextFromBundleId(subscription.getBundleId(), context);
+            return subscription.getEffectiveDateForPolicy(policyMaybeNull, null, internalCallContext);
         } else if (requestedDateWithMs != null) {
             return DefaultClock.truncateMs(requestedDateWithMs);
         } else {
@@ -658,6 +656,16 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             return 0;
         }
     }
+
+    @Override
+    public int getBCD(InternalTenantContext context) throws SubscriptionBaseApiException {
+        try {
+            return accountInternalApi.getBCD(context);
+        } catch (final AccountApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+    }
+
 
     private List<DefaultSubscriptionBase> computeAddOnsToCancel(final Collection<SubscriptionBaseEvent> cancelEvents, final Product baseProduct, final UUID bundleId, final DateTime effectiveDate, final SubscriptionCatalog catalog, final InternalCallContext internalCallContext) throws CatalogApiException {
         // If cancellation/change occur in the future, there is nothing to do

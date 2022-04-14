@@ -37,6 +37,7 @@ import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.dao.MockNonEntityDao;
 import org.killbill.billing.lifecycle.api.BusService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBaseService;
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
@@ -77,6 +78,8 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     protected ImmutableAccountInternalApi immutableAccountInternalApi;
     @Inject
     protected SubscriptionBaseService subscriptionBaseService;
+    @Inject
+    protected SubscriptionBaseApiService subscriptionBaseApiService;
     @Inject
     protected SubscriptionBaseInternalApi subscriptionInternalApi;
     @Inject
@@ -155,6 +158,7 @@ public class SubscriptionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
         this.catalog = DefaultSubscriptionCatalogApi.wrapCatalog(subscriptionTestInitializer.initCatalog(catalogService, internalCallContext), clock);
         this.accountData = subscriptionTestInitializer.initAccountData(clock);
 
+        Mockito.when(accountInternalApi.getBCD(Mockito.any())). thenReturn(1);
         final Account account = GuicyKillbillTestSuiteNoDB.createMockAccount(accountData,
                                                                              accountUserApi,
                                                                              accountInternalApi,
