@@ -17,8 +17,11 @@
 
 package org.killbill.billing.entitlement.api;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
@@ -32,9 +35,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class DefaultEntitlementContext implements EntitlementContext {
 
@@ -96,15 +97,12 @@ public class DefaultEntitlementContext implements EntitlementContext {
         this.accountId = accountId;
         this.destinationAccountId = destinationAccountId;
         if (baseEntitlementWithAddOnsSpecifiers == null) {
-            this.baseEntitlementWithAddOnsSpecifiers = ImmutableList.<DefaultBaseEntitlementWithAddOnsSpecifier>of();
+            this.baseEntitlementWithAddOnsSpecifiers = Collections.emptyList();
         } else {
-            this.baseEntitlementWithAddOnsSpecifiers = ImmutableList.<DefaultBaseEntitlementWithAddOnsSpecifier>copyOf(Iterables.<BaseEntitlementWithAddOnsSpecifier, DefaultBaseEntitlementWithAddOnsSpecifier>transform(baseEntitlementWithAddOnsSpecifiers,
-                                                                                                                                                                                                                          new Function<BaseEntitlementWithAddOnsSpecifier, DefaultBaseEntitlementWithAddOnsSpecifier>() {
-                                                                                                                                                                                                                              @Override
-                                                                                                                                                                                                                              public DefaultBaseEntitlementWithAddOnsSpecifier apply(final BaseEntitlementWithAddOnsSpecifier input) {
-                                                                                                                                                                                                                                  return new DefaultBaseEntitlementWithAddOnsSpecifier(input);
-                                                                                                                                                                                                                              }
-                                                                                                                                                                                                                          }));
+            this.baseEntitlementWithAddOnsSpecifiers = StreamSupport
+                    .stream(baseEntitlementWithAddOnsSpecifiers.spliterator(), false)
+                    .map(DefaultBaseEntitlementWithAddOnsSpecifier::new)
+                    .collect(Collectors.toUnmodifiableList());
         }
         this.billingActionPolicy = actionPolicy;
         this.pluginProperties = pluginProperties;
@@ -122,7 +120,9 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private static <T> Iterable<T> lastUnlessEmptyOrFirst(final Iterable<T> prevValues, final Iterable<T> newValues) {
         // Be lenient if a plugin returns an empty list (default behavior for Ruby plugins): at this point,
         // we know the isAborted flag hasn't been set, so let's assume the user actually wants to use the previous list
-        if (newValues != null && !Iterables.isEmpty(newValues)) {
+        // FIXME-1615 : Instead of "iterableToList(newValues).isEmpty()", should we copy guava version to new class
+        //  "CollectionUtils.isIterableEmpty(Iterable)" ?
+        if (newValues != null && !iterableToList(newValues).isEmpty()) {
             return newValues;
         } else {
             return prevValues;

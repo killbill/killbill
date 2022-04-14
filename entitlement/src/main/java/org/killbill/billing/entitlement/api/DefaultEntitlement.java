@@ -21,6 +21,7 @@ package org.killbill.billing.entitlement.api;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -72,8 +73,6 @@ import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCancelEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logChangePlan;
@@ -823,7 +822,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Optimization - bail early
         if (!ProductCategory.BASE.equals(getSubscriptionBase().getCategory())) {
             // Only base subscriptions have add-ons
-            return ImmutableList.<BlockingState>of();
+            return Collections.emptyList();
         }
 
         // Get the latest state from disk (we just got cancelled or changed plan)
@@ -840,7 +839,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             final boolean isBaseEntitlementCancelled = eventsStream.isEntitlementCancelled();
             final NotificationEvent notificationEvent = new EntitlementNotificationKey(getId(), getBundleId(), isBaseEntitlementCancelled ? EntitlementNotificationKeyAction.CANCEL : EntitlementNotificationKeyAction.CHANGE, effectiveDate);
             notificationEvents.add(notificationEvent);
-            return ImmutableList.<BlockingState>of();
+            return Collections.emptyList();
         }
 
         return eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
@@ -881,7 +880,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         //
         if (securityApi.isSubjectAuthenticated()) {
             try {
-                securityApi.checkCurrentUserPermissions(ImmutableList.of(permission), Logical.AND, callContext);
+                securityApi.checkCurrentUserPermissions(List.of(permission), Logical.AND, callContext);
             } catch (final SecurityApiException e) {
                 throw new EntitlementApiException(ErrorCode.SECURITY_NOT_ENOUGH_PERMISSIONS);
             }

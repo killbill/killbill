@@ -45,8 +45,6 @@ import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
@@ -1017,7 +1015,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         allTransitions.add(tr3);
 
         // Verify the timeline without the blocking state events
-        final ImmutableList<Entitlement> entitlementsWithoutBlockingStates = ImmutableList.<Entitlement>of(createEntitlement(entitlementId, allTransitions, blockingStates));
+        final List<Entitlement> entitlementsWithoutBlockingStates = List.of(createEntitlement(entitlementId, allTransitions, blockingStates));
         final List<SubscriptionEvent> eventsWithoutBlockingStates = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlementsWithoutBlockingStates, internalCallContext).getSubscriptionEvents();
         assertEquals(eventsWithoutBlockingStates.size(), 4);
         assertEquals(eventsWithoutBlockingStates.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
@@ -1033,7 +1031,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         blockingStates.add(bs1);
 
         // Verify the timeline with the overdue event blocking the entitlement
-        final ImmutableList<Entitlement> entitlementsWithOverdueEvent = ImmutableList.<Entitlement>of(createEntitlement(entitlementId, allTransitions, blockingStates));
+        final List<Entitlement> entitlementsWithOverdueEvent = List.of(createEntitlement(entitlementId, allTransitions, blockingStates));
         final List<SubscriptionEvent> eventsWithOverdueEvent = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlementsWithOverdueEvent, internalCallContext).getSubscriptionEvents();
         assertEquals(eventsWithOverdueEvent.size(), 5);
         assertEquals(eventsWithOverdueEvent.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);

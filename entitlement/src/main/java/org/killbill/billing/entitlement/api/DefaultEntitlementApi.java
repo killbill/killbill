@@ -25,9 +25,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -73,14 +75,6 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
-
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCreateEntitlementsWithAOs;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logPauseResumeEntitlement;
@@ -140,13 +134,13 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                       final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null,
                                                                                                                                     bundleExternalKey,
-                                                                                                                                    ImmutableList.<EntitlementSpecifier>of(entitlementSpecifier),
+                                                                                                                                    List.<EntitlementSpecifier>of(entitlementSpecifier),
                                                                                                                                     entitlementEffectiveDate,
                                                                                                                                     billingEffectiveDate,
                                                                                                                                     isMigrated);
         final List<UUID> createdEntitlements = createBaseEntitlementsWithAddOns(OperationType.CREATE_SUBSCRIPTION,
                                                                                 accountId,
-                                                                                ImmutableList.<BaseEntitlementWithAddOnsSpecifier>of(baseEntitlementWithAddOnsSpecifier),
+                                                                                List.of(baseEntitlementWithAddOnsSpecifier),
                                                                                 renameCancelledBundleIfExist,
                                                                                 properties,
                                                                                 callContext);
@@ -168,7 +162,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                                final boolean isMigrated, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(bundleId,
                                                                                                                                     null,
-                                                                                                                                    ImmutableList.<EntitlementSpecifier>of(entitlementSpecifier),
+                                                                                                                                    List.of(entitlementSpecifier),
                                                                                                                                     entitlementEffectiveDate,
                                                                                                                                     billingEffectiveDate,
                                                                                                                                     isMigrated);
@@ -182,7 +176,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
         final List<UUID> createdEntitlements = createBaseEntitlementsWithAddOns(OperationType.CREATE_SUBSCRIPTION,
                                                                                 accountId,
-                                                                                ImmutableList.<BaseEntitlementWithAddOnsSpecifier>of(baseEntitlementWithAddOnsSpecifier),
+                                                                                List.of(baseEntitlementWithAddOnsSpecifier),
                                                                                 false,
                                                                                 properties,
                                                                                 callContext);
@@ -220,25 +214,17 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
             throw new EntitlementApiException(e);
         }
 
-        return ImmutableList.<Entitlement>copyOf(Iterables.<Entitlement>filter(getAllEntitlementsForAccountId(accountId, tenantContext),
-                                                                               new Predicate<Entitlement>() {
-                                                                                   @Override
-                                                                                   public boolean apply(final Entitlement input) {
-                                                                                       return bundleId.equals(input.getBundleId());
-                                                                                   }
-                                                                               }));
+        return getAllEntitlementsForAccountId(accountId, tenantContext).stream()
+                .filter(input -> bundleId.equals(input.getBundleId()))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public List<Entitlement> getAllEntitlementsForAccountIdAndBundleExternalKey(final UUID accountId, final String bundleExternalKey, final TenantContext tenantContext) throws EntitlementApiException {
         // getAllEntitlementsForAccount should be fast (uses account_record_id)
-        return ImmutableList.<Entitlement>copyOf(Iterables.<Entitlement>filter(getAllEntitlementsForAccountId(accountId, tenantContext),
-                                                                               new Predicate<Entitlement>() {
-                                                                                   @Override
-                                                                                   public boolean apply(final Entitlement input) {
-                                                                                       return bundleExternalKey.equals(input.getBundleExternalKey());
-                                                                                   }
-                                                                               }));
+        return getAllEntitlementsForAccountId(accountId, tenantContext).stream()
+                .filter(input -> bundleExternalKey.equals(input.getBundleExternalKey()))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -247,16 +233,14 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         final InternalTenantContext context = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
 
         final AccountEventsStreams accountEventsStreams = eventsStreamBuilder.buildForAccount(context);
-        final List<EventsStream> eventsStreams = ImmutableList.<EventsStream>copyOf(Iterables.<EventsStream>concat(accountEventsStreams.getEventsStreams().values()));
-        return Lists.<EventsStream, Entitlement>transform(eventsStreams,
-                                                          new Function<EventsStream, Entitlement>() {
-                                                              @Override
-                                                              public Entitlement apply(final EventsStream eventsStream) {
-                                                                  return new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
-                                                                                                blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
-                                                                                                entitlementUtils, dateHelper, clock, securityApi, context, internalCallContextFactory);
-                                                              }
-                                                          });
+        return accountEventsStreams.getEventsStreams().values()
+                                   .stream()
+                                   .flatMap(Collection::stream)
+                                   .map(eventsStream -> new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
+                                                            blockingStateDao, subscriptionBaseInternalApi, checker, notificationQueueService,
+                                                            entitlementUtils, dateHelper, clock, securityApi,
+                                                            context, internalCallContextFactory))
+                                   .collect(Collectors.toList());
     }
 
     @Override
@@ -285,7 +269,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
 
     static Map<UUID, String> toSubExtKeysMap(final Iterable<PluginProperty> properties) {
         final Map<UUID, String> res = new HashMap<>();
-        for (PluginProperty pp : properties) {
+        for (final PluginProperty pp : properties) {
             final Matcher m = TRANSFER_PLUGIN_PROPS_PATTERN.matcher(pp.getKey());
             if (m.matches()) {
                 final UUID subId =  UUID.fromString(m.group(1));
@@ -416,10 +400,10 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     throw new EntitlementApiException(e);
                 }
 
-                final Map<UUID, Optional<EventsStream>> eventsStreamForBaseSubscriptionPerBundle = new HashMap<UUID, Optional<EventsStream>>();
-                final Map<String, Optional<UUID>> bundleKeyToIdMapping = new HashMap<String, Optional<UUID>>();
+                final Map<UUID, Optional<EventsStream>> eventsStreamForBaseSubscriptionPerBundle = new HashMap<>();
+                final Map<String, Optional<UUID>> bundleKeyToIdMapping = new HashMap<>();
                 final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiersAfterPlugins = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers();
-                final Collection<SubscriptionBaseWithAddOnsSpecifier> subscriptionBaseWithAddOnsSpecifiers = new LinkedList<SubscriptionBaseWithAddOnsSpecifier>();
+                final Collection<SubscriptionBaseWithAddOnsSpecifier> subscriptionBaseWithAddOnsSpecifiers = new LinkedList<>();
                 DateTime upTo = null;
                 for (final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier : baseEntitlementWithAddOnsSpecifiersAfterPlugins) {
                     // Entitlement
@@ -523,9 +507,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
         if (bundleKeyToIdMapping.get(baseEntitlementWithAddOnsSpecifier.getBundleExternalKey()) == null) {
             final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getActiveBundleForKey(catalog, baseEntitlementWithAddOnsSpecifier.getBundleExternalKey(), contextWithValidAccountRecordId);
             if (bundle != null) {
-                bundleKeyToIdMapping.put(baseEntitlementWithAddOnsSpecifier.getBundleExternalKey(), Optional.<UUID>of(bundle.getId()));
+                bundleKeyToIdMapping.put(baseEntitlementWithAddOnsSpecifier.getBundleExternalKey(), Optional.of(bundle.getId()));
             } else {
-                bundleKeyToIdMapping.put(baseEntitlementWithAddOnsSpecifier.getBundleExternalKey(), Optional.<UUID>absent());
+                bundleKeyToIdMapping.put(baseEntitlementWithAddOnsSpecifier.getBundleExternalKey(), Optional.empty());
             }
         }
     }
@@ -543,19 +527,13 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                 throw new EntitlementApiException(e);
             }
 
-            final boolean isStandalone = Iterables.any(subscriptionsByBundle,
-                                                       new Predicate<SubscriptionBase>() {
-                                                           @Override
-                                                           public boolean apply(final SubscriptionBase input) {
-                                                               return ProductCategory.STANDALONE.equals(input.getCategory());
-                                                           }
-                                                       });
+            final boolean isStandalone = subscriptionsByBundle.stream().anyMatch(input -> ProductCategory.STANDALONE.equals(input.getCategory()));
 
             if (!isStandalone) {
                 final EventsStream eventsStreamForBaseSubscription = eventsStreamBuilder.buildForBaseSubscription(bundleId, callContext);
-                eventsStreamForBaseSubscriptionPerBundle.put(bundleId, Optional.<EventsStream>of(eventsStreamForBaseSubscription));
+                eventsStreamForBaseSubscriptionPerBundle.put(bundleId, Optional.of(eventsStreamForBaseSubscription));
             } else {
-                eventsStreamForBaseSubscriptionPerBundle.put(bundleId, Optional.<EventsStream>absent());
+                eventsStreamForBaseSubscriptionPerBundle.put(bundleId, Optional.empty());
             }
         }
     }
