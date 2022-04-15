@@ -440,13 +440,13 @@ public class TestSubscription extends TestIntegrationBase {
         // No CREATE event as this is set in the future
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), futureDate, futureDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
-        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(internalCallContext.toLocalDate(createdEntitlement.getEffectiveStartDate()).compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
 
 
         final Entitlement cancelledEntitlement = createdEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, null, callContext);
-        assertEquals(cancelledEntitlement.getEffectiveEndDate().compareTo(futureDate), 0);
+        assertEquals(internalCallContext.toLocalDate(cancelledEntitlement.getEffectiveEndDate()).compareTo(futureDate), 0);
         assertListenerStatus();
 
         // Move off trial and reach start/cancellation date
@@ -474,7 +474,7 @@ public class TestSubscription extends TestIntegrationBase {
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), futureDate, futureDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         assertEquals(createdEntitlement.getState(), EntitlementState.PENDING);
-        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
+        assertEquals(internalCallContext.toLocalDate(createdEntitlement.getEffectiveStartDate()).compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertEquals(createdEntitlement.getLastActiveProduct().getName(), "Shotgun");
         assertEquals(createdEntitlement.getLastActivePlan().getName(), "shotgun-annual");
@@ -491,7 +491,7 @@ public class TestSubscription extends TestIntegrationBase {
         }
 
         final Entitlement cancelledEntitlement = createdEntitlement.cancelEntitlementWithDate(futureDate, true, null, callContext);
-        assertEquals(cancelledEntitlement.getEffectiveEndDate().compareTo(futureDate), 0);
+        assertEquals(internalCallContext.toLocalDate(cancelledEntitlement.getEffectiveEndDate()).compareTo(futureDate), 0);
         assertListenerStatus();
 
         // Move off trial and reach start/cancellation date
@@ -518,7 +518,7 @@ public class TestSubscription extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), initialDate, initialDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
-        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(initialDate), 0);
+        assertEquals(internalCallContext.toLocalDate(createdEntitlement.getEffectiveStartDate()).compareTo(initialDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
 
@@ -531,8 +531,8 @@ public class TestSubscription extends TestIntegrationBase {
 
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
 
-        assertEquals(subscription.getEffectiveEndDate().compareTo(new LocalDate(2015, 9, 6)), 0);
-        assertEquals(subscription.getBillingEndDate().compareTo(initialDate), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(new LocalDate(2015, 9, 6)), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()).compareTo(initialDate), 0);
 
     }
 
@@ -548,7 +548,7 @@ public class TestSubscription extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), initialDate, initialDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
-        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(initialDate), 0);
+        assertEquals(internalCallContext.toLocalDate(createdEntitlement.getEffectiveStartDate()).compareTo(initialDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
         assertListenerStatus();
 
@@ -570,8 +570,8 @@ public class TestSubscription extends TestIntegrationBase {
 
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
 
-        assertEquals(subscription.getEffectiveEndDate().compareTo(new LocalDate(2015, 9, 5)), 0);
-        assertEquals(subscription.getBillingEndDate().compareTo(new LocalDate(2015, 8, 31)), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(new LocalDate(2015, 9, 5)), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()).compareTo(new LocalDate(2015, 8, 31)), 0);
 
     }
 

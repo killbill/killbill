@@ -257,7 +257,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         final Subscription cancelledSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlement.getBaseEntitlementId(), callContext);
         assertEquals(cancelledSubscription.getChargedThroughDate(), new LocalDate(2017, 6, 16));
         // We default to now() when we compute the date if the CTD is in the past
-        assertEquals(cancelledSubscription.getBillingEndDate(), new LocalDate(2017, 7, 16));
+        assertEquals(internalCallContext.toLocalDate(cancelledSubscription.getBillingEndDate()), new LocalDate(2017, 7, 16));
 
         // An additional repair invoice has been generated in DRAFT mode. Both DRAFT invoices should be voided.
         invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);

@@ -254,13 +254,13 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public LocalDate getEffectiveStartDate() {
-        return eventsStream.getEntitlementEffectiveStartDate();
+    public DateTime getEffectiveStartDate() {
+        return eventsStream.getEntitlementEffectiveStartDateTime();
     }
 
     @Override
-    public LocalDate getEffectiveEndDate() {
-        return eventsStream.getEntitlementEffectiveEndDate();
+    public DateTime getEffectiveEndDate() {
+        return eventsStream.getEntitlementEffectiveEndDateTime();
     }
 
     @Override
@@ -316,7 +316,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Get the latest state from disk
         refresh(callContext);
 
-        if (entitlementEffectiveDate != null && entitlementEffectiveDate.compareTo(getEffectiveStartDate()) < 0) {
+        if (entitlementEffectiveDate != null && entitlementEffectiveDate.compareTo(internalTenantContext.toLocalDate(getEffectiveStartDate())) < 0) { //TODO_1375 - Change DateTime to LocalDate for now. Revisit once we change API method to receive DateTime
             throw new EntitlementApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, entitlementEffectiveDate, getEffectiveStartDate());
         }
 
@@ -538,7 +538,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             default:
                 throw new RuntimeException("Unsupported policy " + entitlementPolicy);
         }
-        return (cancellationDate.compareTo(getEffectiveStartDate()) < 0) ? getEffectiveStartDate() : cancellationDate;
+        return (cancellationDate.compareTo(internalTenantContext.toLocalDate(getEffectiveStartDate())) < 0) ? internalTenantContext.toLocalDate(getEffectiveStartDate()) : cancellationDate; //TODO_1375 - Return LocalDate for now. Revisit later to check if this method should return DateTime
     }
 
 

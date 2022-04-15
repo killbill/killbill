@@ -133,7 +133,7 @@ public class UsageResource extends JaxRsResourceBase {
         final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), callContext);
         if (entitlement.getEffectiveEndDate() != null) {
             final LocalDate highestRecordDate = getHighestRecordDate(json.getUnitUsageRecords());
-            if (entitlement.getEffectiveEndDate().compareTo(highestRecordDate) < 0) {
+            if (entitlement.getEffectiveEndDate().toLocalDate().compareTo(highestRecordDate) < 0) { //TODO_1375 - Converting to LocalDate for comparison, should we instead convert highestRecordDate to DateTime and use it? Also, not sure how to access internalCallContext here so I've used toLocalDate
                 return Response.status(Status.BAD_REQUEST).build();
             }
         }
