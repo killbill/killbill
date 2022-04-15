@@ -177,7 +177,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final Entitlement cancelledEntitlement = entitlement.cancelEntitlementWithDateOverrideBillingPolicy(clock.getToday(account.getTimeZone()), BillingActionPolicy.END_OF_TERM, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Assert.assertEquals(cancelledEntitlement.getEffectiveEndDate(), entitlementCancelledDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(cancelledEntitlement.getEffectiveEndDate()), entitlementCancelledDate);
 
         testListener.pushExpectedEvent(NextEvent.UNCANCEL);
         cancelledEntitlement.uncancelEntitlement(Collections.emptyList(), callContext);
@@ -204,7 +204,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(entitlement.getAccountId(), account.getId());
         assertEquals(entitlement.getBundleExternalKey(), account.getExternalKey());
 
-        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), initialDate);
         assertNull(entitlement.getEffectiveEndDate());
 
         assertEquals(entitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -230,7 +230,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(entitlement2.getAccountId(), account.getId());
         assertEquals(entitlement2.getBundleExternalKey(), account.getExternalKey());
 
-        assertEquals(entitlement2.getEffectiveStartDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveStartDate()), initialDate);
         assertNull(entitlement2.getEffectiveEndDate());
 
         assertEquals(entitlement2.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -259,7 +259,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(entitlement3.getAccountId(), account.getId());
         assertEquals(entitlement3.getBundleExternalKey(), account.getExternalKey());
 
-        assertEquals(entitlement3.getEffectiveStartDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement3.getEffectiveStartDate()), initialDate);
         assertNull(entitlement3.getEffectiveEndDate());
 
         assertEquals(entitlement3.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -305,7 +305,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(telescopicEntitlement.getAccountId(), account.getId());
         assertEquals(telescopicEntitlement.getBundleExternalKey(), account.getExternalKey());
 
-        assertEquals(telescopicEntitlement.getEffectiveStartDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(telescopicEntitlement.getEffectiveStartDate()), initialDate);
         assertNull(telescopicEntitlement.getEffectiveEndDate());
 
         assertEquals(telescopicEntitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -358,7 +358,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(telescopicEntitlement.getAccountId(), account.getId());
         assertEquals(telescopicEntitlement.getBundleExternalKey(), account.getExternalKey());
 
-        assertEquals(telescopicEntitlement.getEffectiveStartDate(), startDate);
+        assertEquals(internalCallContext.toLocalDate(telescopicEntitlement.getEffectiveStartDate()), startDate);
         assertNull(telescopicEntitlement.getEffectiveEndDate());
 
         assertEquals(telescopicEntitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -575,7 +575,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertListenerStatus();
 
         final Entitlement oldBaseEntitlement = entitlementApi.getAllEntitlementsForAccountIdAndBundleExternalKey(accountSrc.getId(), accountSrc.getExternalKey(), callContext).get(0);
-        assertEquals(oldBaseEntitlement.getEffectiveEndDate(), effectiveDate);
+        assertEquals(internalCallContext.toLocalDate(oldBaseEntitlement.getEffectiveEndDate()), effectiveDate);
         assertEquals(oldBaseEntitlement.getState(), EntitlementState.CANCELLED);
 
         final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForBundle(newBundleId, callContext);
@@ -583,7 +583,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         final Entitlement newBaseEntitlement = entitlements.get(0);
         assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
-        assertEquals(newBaseEntitlement.getEffectiveStartDate(), effectiveDate);
+        assertEquals(internalCallContext.toLocalDate(newBaseEntitlement.getEffectiveStartDate()), effectiveDate);
         assertEquals(newBaseEntitlement.getEffectiveEndDate(), null);
         assertEquals(newBaseEntitlement.getSourceType(), EntitlementSourceType.TRANSFERRED);
 
@@ -608,7 +608,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertEquals(entitlement.getAccountId(), account.getId());
         assertEquals(entitlement.getBundleExternalKey(), account.getExternalKey());
 
-        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), initialDate);
         assertNull(entitlement.getEffectiveEndDate());
 
         assertEquals(entitlement.getLastActivePriceList().getName(), PriceListSet.DEFAULT_PRICELIST_NAME);
@@ -653,7 +653,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         assertEquals(entitlement.getState(), EntitlementState.PENDING);
-        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), entitlementDate);
 
 
 
@@ -711,7 +711,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         assertEquals(entitlement.getState(), EntitlementState.PENDING);
-        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), entitlementDate);
 
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         clock.addDays(3);
@@ -739,7 +739,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), initialDate);
 
         testListener.pushExpectedEvents(NextEvent.CREATE);
         clock.addDays(5);
@@ -763,7 +763,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         assertEquals(entitlement.getState(), EntitlementState.PENDING);
-        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), entitlementDate);
         // shotgun-annual is SUBSCRIPTION aligned and has a 30 days trial (2013-09-07 + 30 days = 2013-10-07 for the phase)
         assertEquals(entitlement.getBillCycleDayLocal(), (Integer) 7);
 
@@ -807,7 +807,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), entitlementDate);
     }
 
     @Test(groups = "slow")
@@ -828,7 +828,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement.getEffectiveStartDate(), entitlementDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), entitlementDate);
     }
 
     @Test(groups = "slow")
@@ -849,7 +849,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), initialDate);
     }
 
     @Test(groups = "slow")

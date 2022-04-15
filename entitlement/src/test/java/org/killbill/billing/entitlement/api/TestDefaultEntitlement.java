@@ -68,7 +68,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
-        assertEquals(entitlement2.getEffectiveEndDate(), clock.getUTCToday());
+        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), clock.getUTCToday());
         assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
     }
 
@@ -95,7 +95,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement2.getEffectiveEndDate(), cancelDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), cancelDate);
 
         clock.addDays(1);
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
@@ -103,7 +103,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement3 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement3.getState(), EntitlementState.CANCELLED);
-        assertEquals(entitlement3.getEffectiveEndDate(), cancelDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement3.getEffectiveEndDate()), cancelDate);
     }
 
     @Test(groups = "slow")
@@ -129,7 +129,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement2.getEffectiveEndDate(), cancelDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), cancelDate);
 
         testListener.pushExpectedEvents(NextEvent.UNCANCEL);
         entitlement2.uncancelEntitlement(Collections.emptyList(), callContext);
@@ -163,7 +163,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement2.getEffectiveEndDate(), cancelDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), cancelDate);
 
         testListener.pushExpectedEvents(NextEvent.UNCANCEL);
         entitlement2.uncancelEntitlement(Collections.emptyList(), callContext);
@@ -193,11 +193,11 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         final Entitlement cancelledEntitlement = entitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, Collections.emptyList(), callContext);
         assertListenerStatus();
         assertEquals(cancelledEntitlement.getState(), EntitlementState.CANCELLED);
-        assertEquals(cancelledEntitlement.getEffectiveEndDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(cancelledEntitlement.getEffectiveEndDate()), initialDate);
 
         // Entitlement started in trial on 2013-08-07, which is when we want the billing cancellation to occur
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getBaseEntitlementId(), callContext);
-        assertEquals(subscription.getBillingEndDate(), new LocalDate(2013, 8, 7));
+        assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()), new LocalDate(2013, 8, 7));
     }
 
     @Test(groups = "slow")
@@ -228,11 +228,11 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         final Entitlement entitlement3 = entitlement2.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
         assertEquals(entitlement3.getState(), EntitlementState.CANCELLED);
-        assertEquals(entitlement3.getEffectiveEndDate(), new LocalDate(2013, 9, 8));
+        assertEquals(internalCallContext.toLocalDate(entitlement3.getEffectiveEndDate()), new LocalDate(2013, 9, 8));
 
         // Entitlement started in trial on 2013-08-07. The phase occurs at 2013-09-06. The CTD is 2013-10-06 which is when we want the billing cancellation to occur
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getBaseEntitlementId(), callContext);
-        assertEquals(subscription.getBillingEndDate(), new LocalDate(2013, 10, 6));
+        assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()), new LocalDate(2013, 10, 6));
 
         testListener.pushExpectedEvent(NextEvent.CANCEL);
         clock.addMonths(1);
@@ -240,7 +240,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement4 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement4.getState(), EntitlementState.CANCELLED);
-        assertEquals(entitlement4.getEffectiveEndDate(), new LocalDate(2013, 9, 8));
+        assertEquals(internalCallContext.toLocalDate(entitlement4.getEffectiveEndDate()), new LocalDate(2013, 9, 8));
     }
 
     @Test(groups = "slow")
@@ -269,11 +269,11 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement3 = entitlement2.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, Collections.emptyList(), callContext);
         assertEquals(entitlement3.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement3.getEffectiveEndDate(), new LocalDate(ctd));
+        assertEquals(internalCallContext.toLocalDate(entitlement3.getEffectiveEndDate()), new LocalDate(ctd));
 
         // Entitlement started in trial on 2013-08-07. The phase occurs at 2013-09-06. The CTD is 2013-10-06 which is when we want the billing cancellation to occur
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getBaseEntitlementId(), callContext);
-        assertEquals(subscription.getBillingEndDate(), new LocalDate(2013, 10, 6));
+        assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()), new LocalDate(2013, 10, 6));
 
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         clock.addMonths(1);
@@ -281,7 +281,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement4 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement4.getState(), EntitlementState.CANCELLED);
-        assertEquals(entitlement4.getEffectiveEndDate(), new LocalDate(ctd));
+        assertEquals(internalCallContext.toLocalDate(entitlement4.getEffectiveEndDate()), new LocalDate(ctd));
     }
 
     @Test(groups = "slow")
@@ -316,11 +316,11 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         final Entitlement cancelledEntitlement = entitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.END_OF_TERM, Collections.emptyList(), callContext);
         assertListenerStatus();
         assertEquals(cancelledEntitlement.getState(), EntitlementState.CANCELLED);
-        assertEquals(cancelledEntitlement.getEffectiveEndDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(cancelledEntitlement.getEffectiveEndDate()), initialDate);
 
         // Entitlement started in trial on 2013-08-07, which is when we want the billing cancellation date to occur
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getBaseEntitlementId(), callContext);
-        assertEquals(subscription.getBillingEndDate(), new LocalDate(2013, 8, 7));
+        assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()), new LocalDate(2013, 8, 7));
     }
 
     @Test(groups = "slow")

@@ -551,7 +551,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                 if (cur.getSubscriptionEventType() == SubscriptionEventType.START_BILLING && olderEntitlementSet.contains(cur.getEntitlementId())) {
                     final SubscriptionEvent newEntitlementStartEvent = new DefaultSubscriptionEvent(cur.getId(),
                                                                                                     cur.getEntitlementId(),
-                                                                                                    internalTenantContext.toUTCDateTime(cur.getEffectiveDate()),
+                                                                                                    cur.getEffectiveDate(),
                                                                                                     SubscriptionEventType.START_ENTITLEMENT,
                                                                                                     false,
                                                                                                     false,
@@ -567,7 +567,7 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
                                                                                                     cur.getNextPhase(),
                                                                                                     cur.getNextPriceList(),
                                                                                                     cur.getNextBillingPeriod(),
-                                                                                                    internalTenantContext.toUTCDateTime(cur.getEffectiveDate()),
+                                                                                                    cur.getEffectiveDate(),
                                                                                                     internalTenantContext);
                     it.previous();
                     it.add(newEntitlementStartEvent);

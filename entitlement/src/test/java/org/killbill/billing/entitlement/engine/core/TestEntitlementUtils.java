@@ -342,21 +342,21 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         addOn2Entitlement.cancelEntitlementWithDate(addOn2CancellationDate, true, List.of(), callContext);
 
         // Before the base entitlement is cancelled, respect the specified cancellation date
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), addOn2CancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate()), addOn2CancellationDate);
 
         final LocalDate baseCancellationDate = new LocalDate(2013, 10, 10);
         baseEntitlement.cancelEntitlementWithDate(baseCancellationDate, true, List.of(), callContext);
 
         // After the base entitlement is cancelled, verify the date is overridden
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
 
         // No further event yet
         assertListenerStatus();
 
         // Verify the cancellation dates
-        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate(), addOn1CancellationDate);
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate()), addOn1CancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
 
         // Move to addOn1CancellationDate
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
@@ -369,9 +369,9 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Verify the cancellation dates
-        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate(), addOn1CancellationDate);
-        Assert.assertEquals(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate(), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate()), addOn1CancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
     }
 
     // Test the "read" path

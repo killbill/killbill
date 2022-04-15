@@ -87,15 +87,15 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         Assert.assertEquals(bundles.get(idx).getSubscriptions().size(), 1);
         Assert.assertEquals(bundles.get(idx).getSubscriptions().get(0).getId(), entitlement.getId());
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().size(), 4);
-        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(0).getEffectiveDate(), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(bundles.get(idx).getTimeline().getSubscriptionEvents().get(0).getEffectiveDate()), initialDate);
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
-        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(1).getEffectiveDate(), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(bundles.get(idx).getTimeline().getSubscriptionEvents().get(1).getEffectiveDate()), initialDate);
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
-        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getEffectiveDate(), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getEffectiveDate()), initialDate);
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getSubscriptionEventType(), SubscriptionEventType.SERVICE_STATE_CHANGE);
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getServiceName(), "service");
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getServiceStateName(), "stateName");
-        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(3).getEffectiveDate(), new LocalDate(2013, 9, 6));
+        Assert.assertEquals(internalCallContext.toLocalDate(bundles.get(idx).getTimeline().getSubscriptionEvents().get(3).getEffectiveDate()), new LocalDate(2013, 9, 6));
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(3).getSubscriptionEventType(), SubscriptionEventType.PHASE);
     }
 
@@ -118,7 +118,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertEquals(entitlement.getAccountId(), account.getId());
         assertEquals(entitlement.getBundleExternalKey(), externalKey);
 
-        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), initialDate);
         assertNull(entitlement.getEffectiveEndDate());
 
         final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, callContext);
@@ -158,15 +158,15 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         SubscriptionBundle firstbundle = bundles2.get(0);
         assertEquals(firstbundle.getSubscriptions().size(), 1);
-        assertEquals(firstbundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 7));
-        assertEquals(firstbundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 7));
-        assertEquals(firstbundle.getSubscriptions().get(0).getEffectiveEndDate(), new LocalDate(2013, 8, 10));
-        assertEquals(firstbundle.getSubscriptions().get(0).getBillingEndDate(), new LocalDate(2013, 8, 10));
+        assertEquals(internalCallContext.toLocalDate(firstbundle.getSubscriptions().get(0).getEffectiveStartDate()), new LocalDate(2013, 8, 7));
+        assertEquals(internalCallContext.toLocalDate(firstbundle.getSubscriptions().get(0).getBillingStartDate()), new LocalDate(2013, 8, 7));
+        assertEquals(internalCallContext.toLocalDate(firstbundle.getSubscriptions().get(0).getEffectiveEndDate()), new LocalDate(2013, 8, 10));
+        assertEquals(internalCallContext.toLocalDate(firstbundle.getSubscriptions().get(0).getBillingEndDate()), new LocalDate(2013, 8, 10));
 
         SubscriptionBundle secondbundle = bundles2.get(1);
         assertEquals(secondbundle.getSubscriptions().size(), 1);
-        assertEquals(secondbundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 11));
-        assertEquals(secondbundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 11));
+        assertEquals(internalCallContext.toLocalDate(secondbundle.getSubscriptions().get(0).getEffectiveStartDate()), new LocalDate(2013, 8, 11));
+        assertEquals(internalCallContext.toLocalDate(secondbundle.getSubscriptions().get(0).getBillingStartDate()), new LocalDate(2013, 8, 11));
         assertNull(secondbundle.getSubscriptions().get(0).getEffectiveEndDate());
         assertNull(secondbundle.getSubscriptions().get(0).getBillingEndDate());
         assertEquals(secondbundle.getOriginalCreatedDate().compareTo(firstbundle.getCreatedDate()), 0);
@@ -187,23 +187,23 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         firstbundle = bundles3.get(0);
         assertEquals(firstbundle.getSubscriptions().size(), 1);
-        assertEquals(firstbundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 7));
-        assertEquals(firstbundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 7));
-        assertEquals(firstbundle.getSubscriptions().get(0).getEffectiveEndDate(), new LocalDate(2013, 8, 10));
-        assertEquals(firstbundle.getSubscriptions().get(0).getBillingEndDate(), new LocalDate(2013, 8, 10));
+        assertEquals(internalCallContext.toLocalDate(firstbundle.getSubscriptions().get(0).getEffectiveStartDate()), new LocalDate(2013, 8, 7));
+        assertEquals(internalCallContext.toLocalDate(firstbundle.getSubscriptions().get(0).getBillingStartDate()), new LocalDate(2013, 8, 7));
+        assertEquals(internalCallContext.toLocalDate(firstbundle.getSubscriptions().get(0).getEffectiveEndDate()), new LocalDate(2013, 8, 10));
+        assertEquals(internalCallContext.toLocalDate(firstbundle.getSubscriptions().get(0).getBillingEndDate()), new LocalDate(2013, 8, 10));
 
         secondbundle = bundles3.get(1);
         assertEquals(secondbundle.getSubscriptions().size(), 1);
-        assertEquals(secondbundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 11));
-        assertEquals(secondbundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 11));
-        assertEquals(secondbundle.getSubscriptions().get(0).getEffectiveEndDate(), new LocalDate(2013, 8, 14));
-        assertEquals(secondbundle.getSubscriptions().get(0).getBillingEndDate(), new LocalDate(2013, 8, 14));
+        assertEquals(internalCallContext.toLocalDate(secondbundle.getSubscriptions().get(0).getEffectiveStartDate()), new LocalDate(2013, 8, 11));
+        assertEquals(internalCallContext.toLocalDate(secondbundle.getSubscriptions().get(0).getBillingStartDate()), new LocalDate(2013, 8, 11));
+        assertEquals(internalCallContext.toLocalDate(secondbundle.getSubscriptions().get(0).getEffectiveEndDate()), new LocalDate(2013, 8, 14));
+        assertEquals(internalCallContext.toLocalDate(secondbundle.getSubscriptions().get(0).getBillingEndDate()), new LocalDate(2013, 8, 14));
         assertEquals(secondbundle.getOriginalCreatedDate().compareTo(firstbundle.getCreatedDate()), 0);
 
         final SubscriptionBundle thirdBundle = bundles3.get(2);
         assertEquals(thirdBundle.getSubscriptions().size(), 1);
-        assertEquals(thirdBundle.getSubscriptions().get(0).getEffectiveStartDate(), new LocalDate(2013, 8, 14));
-        assertEquals(thirdBundle.getSubscriptions().get(0).getBillingStartDate(), new LocalDate(2013, 8, 14));
+        assertEquals(internalCallContext.toLocalDate(thirdBundle.getSubscriptions().get(0).getEffectiveStartDate()), new LocalDate(2013, 8, 14));
+        assertEquals(internalCallContext.toLocalDate(thirdBundle.getSubscriptions().get(0).getBillingStartDate()), new LocalDate(2013, 8, 14));
         assertNull(thirdBundle.getSubscriptions().get(0).getEffectiveEndDate());
         assertNull(thirdBundle.getSubscriptions().get(0).getBillingEndDate());
         assertEquals(thirdBundle.getOriginalCreatedDate().compareTo(firstbundle.getCreatedDate()), 0);
@@ -287,13 +287,13 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertEquals(events.size(), 3);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
-        assertEquals(events.get(0).getEffectiveDate().compareTo(effectiveDate), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(effectiveDate), 0);
 
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(effectiveDate), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(effectiveDate), 0);
 
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(effectiveDate.plusMonths(1)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(effectiveDate.plusMonths(1)), 0);
 
         assertListenerStatus();
     }
@@ -309,22 +309,22 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
 
         final LocalDate futureDate = new LocalDate(2013, 9, 1);
-
+        
         // No CREATE event as this is set in the future
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), futureDate, futureDate, false, true, Collections.emptyList(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
-        assertEquals(createdEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
-        assertNull(createdEntitlement.getEffectiveEndDate());
+        assertEquals(internalCallContext.toLocalDate(createdEntitlement.getEffectiveStartDate()).compareTo(futureDate), 0);
+        assertEquals(createdEntitlement.getEffectiveEndDate(), null);
 
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
-        assertEquals(baseEntitlement.getEffectiveStartDate().compareTo(futureDate), 0);
-        assertNull(baseEntitlement.getEffectiveEndDate());
+        assertEquals(internalCallContext.toLocalDate(baseEntitlement.getEffectiveStartDate()).compareTo(futureDate), 0);
+        assertEquals(baseEntitlement.getEffectiveEndDate(), null);
 
         final Entitlement cancelledEntitlement = baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, null, callContext);
-        assertEquals(cancelledEntitlement.getEffectiveEndDate().compareTo(futureDate), 0);
+        assertEquals(internalCallContext.toLocalDate(cancelledEntitlement.getEffectiveEndDate()).compareTo(futureDate), 0);
 
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
-        assertEquals(subscription.getEffectiveEndDate().compareTo(futureDate), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(futureDate), 0);
 
         assertListenerStatus();
     }
@@ -548,8 +548,8 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertListenerStatus();
 
         final Subscription result1 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
-        assertEquals(result1.getBillingEndDate().compareTo(new LocalDate(2013, 8, 10)), 0);
-        assertEquals(result1.getEffectiveEndDate().compareTo(new LocalDate(2013, 8, 14)), 0);
+        assertEquals(internalCallContext.toLocalDate(result1.getBillingEndDate()).compareTo(new LocalDate(2013, 8, 10)), 0);
+        assertEquals(internalCallContext.toLocalDate(result1.getEffectiveEndDate()).compareTo(new LocalDate(2013, 8, 14)), 0);
         assertEquals(result1.getLastActiveProduct().getName(), "Shotgun");
         assertEquals(result1.getState(), EntitlementState.ACTIVE);
 
@@ -559,8 +559,8 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertListenerStatus();
 
         final Subscription result2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
-        assertEquals(result2.getBillingEndDate().compareTo(new LocalDate(2013, 8, 10)), 0);
-        assertEquals(result2.getEffectiveEndDate().compareTo(new LocalDate(2013, 8, 14)), 0);
+        assertEquals(internalCallContext.toLocalDate(result2.getBillingEndDate()).compareTo(new LocalDate(2013, 8, 10)), 0);
+        assertEquals(internalCallContext.toLocalDate(result2.getEffectiveEndDate()).compareTo(new LocalDate(2013, 8, 14)), 0);
         assertEquals(result2.getLastActiveProduct().getName(), "Shotgun");
         assertEquals(result2.getState(), EntitlementState.CANCELLED);
     }

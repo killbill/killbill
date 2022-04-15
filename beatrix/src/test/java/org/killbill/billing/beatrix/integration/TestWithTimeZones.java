@@ -146,7 +146,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify first entitlement is correctly cancelled on the right date
-        Assert.assertEquals(entitlement.getEffectiveEndDate(), cancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveEndDate()), cancellationDate);
 
         // We now move the clock to the date of the cancellation, which match the cancellation day from the client point of view
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
@@ -191,7 +191,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         entitlement = entitlement.cancelEntitlementWithDate(cancellationDate, true, ImmutableList.<PluginProperty>of(), callContext);
 
         // Verify first entitlement is correctly cancelled on the right date
-        Assert.assertEquals(entitlement.getEffectiveEndDate(), cancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveEndDate()), cancellationDate);
 
         // We now move the clock to the date of the cancellation  which match the cancellation day from the client point of view
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
@@ -241,7 +241,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
-        Assert.assertEquals(entitlement.getEffectiveStartDate().compareTo(new LocalDate("2015-03-08")), 0);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()).compareTo(new LocalDate("2015-03-08")), 0);
         Assert.assertEquals(((DefaultEntitlement) entitlement).getBasePlanSubscriptionBase().getStartDate().compareTo(new DateTime("2015-03-08T02:00:00.000-08:00")), 0);
 
         invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-04-08"), callContext);
