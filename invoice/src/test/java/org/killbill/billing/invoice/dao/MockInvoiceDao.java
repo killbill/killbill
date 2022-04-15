@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -87,6 +88,17 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     @Override
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext context) {
 
+    }
+
+    @Override
+    public InvoiceStatus getInvoiceStatus(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
+        synchronized (monitor) {
+            final InvoiceModelDao invoice =  invoices.get(invoiceId);
+            if (invoice == null) {
+                throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
+            }
+            return invoice.getStatus();
+        }
     }
 
     @Override

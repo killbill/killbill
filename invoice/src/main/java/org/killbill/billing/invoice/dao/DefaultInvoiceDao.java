@@ -320,6 +320,22 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
+    public InvoiceStatus getInvoiceStatus(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
+        return transactionalSqlDao.execute(true, InvoiceApiException.class, new EntitySqlDaoTransactionWrapper<InvoiceStatus>() {
+            @Override
+            public InvoiceStatus inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+
+                final InvoiceModelDao invoice = invoiceSqlDao.getById(invoiceId.toString(), context);
+                if (invoice == null) {
+                    throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
+                }
+                return invoice.getStatus();
+            }
+        });
+    }
+
+    @Override
     public void rescheduleInvoiceNotification(final UUID accountId, final DateTime nextRescheduleDt, final InternalCallContext context) {
         transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
 
