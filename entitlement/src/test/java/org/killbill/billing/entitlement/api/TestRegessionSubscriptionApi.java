@@ -17,6 +17,7 @@
 
 package org.killbill.billing.entitlement.api;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,11 +28,8 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 
@@ -50,7 +48,7 @@ public class TestRegessionSubscriptionApi extends EntitlementTestSuiteWithEmbedd
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(planPhaseSpecifier);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), entitlementEffectiveDate, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), entitlementEffectiveDate, null, false, true, Collections.emptyList(), callContext);
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         // Because of the BlockingState event ENT_STARTED, the entitlement date should be correctly set
         Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), entitlementEffectiveDate);
