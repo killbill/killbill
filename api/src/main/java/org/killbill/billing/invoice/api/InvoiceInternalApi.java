@@ -33,6 +33,8 @@ import org.killbill.billing.util.callcontext.TenantContext;
 
 public interface InvoiceInternalApi {
 
+    InvoiceStatus getInvoiceStatus(UUID invoiceId, InternalTenantContext context) throws InvoiceApiException;
+
     Invoice getInvoiceById(UUID invoiceId, InternalTenantContext context) throws InvoiceApiException;
 
     Collection<Invoice> getUnpaidInvoicesByAccountId(UUID accountId, LocalDate upToDate, InternalTenantContext context);
