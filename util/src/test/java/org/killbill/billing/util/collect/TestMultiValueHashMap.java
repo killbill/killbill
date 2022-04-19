@@ -17,8 +17,6 @@
 
 package org.killbill.billing.util.collect;
 
-import java.util.Objects;
-
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -54,32 +52,5 @@ public class TestMultiValueHashMap {
             multiValueMap.putElement("one");
             fail("IllegalArgumentException should be thrown because empty element");
         } catch (final IllegalArgumentException ignored) {}
-    }
-
-    static class KeyValue {
-        private final String key;
-        private final String value;
-
-        public KeyValue(final String key, final String value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            final KeyValue keyValue = (KeyValue) o;
-            return key.equals(keyValue.key) && value.equals(keyValue.value);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(key, value);
-        }
     }
 }
