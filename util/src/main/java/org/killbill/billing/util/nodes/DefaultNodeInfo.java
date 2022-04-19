@@ -19,13 +19,13 @@ package org.killbill.billing.util.nodes;
 
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginInfo;
 import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginServiceInfo;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginServiceInfo;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginServiceInfoModelJson;
@@ -81,16 +81,15 @@ public class DefaultNodeInfo implements NodeInfo {
     }
 
     private static Iterable<PluginInfo> toPluginInfo(final Iterable<PluginInfoModelJson> plugins) {
-        return StreamSupport.stream(plugins.spliterator(), false)
-                            .map(input -> new DefaultPluginInfo(
-                                    input.getPluginKey(),
-                                    input.getBundleSymbolicName(),
-                                    input.getPluginName(),
-                                    input.getVersion(),
-                                    input.getState(),
-                                    input.isSelectedForStart(),
-                                    toPluginServiceInfo(input.getServices())
-                            )).collect(Collectors.toUnmodifiableList());
+        return Iterables.toStream(plugins)
+                        .map(DefaultNodeInfo::newDefaultPluginInfo)
+                        .collect(Collectors.toUnmodifiableList());
+    }
+
+    private static DefaultPluginInfo newDefaultPluginInfo(PluginInfoModelJson input) {
+        return new DefaultPluginInfo(input.getPluginKey(), input.getBundleSymbolicName(), input.getPluginName(),
+                                     input.getVersion(), input.getState(), input.isSelectedForStart(),
+                                     toPluginServiceInfo(input.getServices()));
     }
 
     @Override

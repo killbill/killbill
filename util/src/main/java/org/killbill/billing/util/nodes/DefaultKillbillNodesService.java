@@ -31,6 +31,7 @@ import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
@@ -41,8 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-
-import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class DefaultKillbillNodesService implements KillbillNodesService {
 
@@ -142,10 +141,9 @@ public class DefaultKillbillNodesService implements KillbillNodesService {
     }
 
     private void createBootNodeInfo(final boolean skipPlugins) throws JsonProcessingException {
-
         final DateTime bootTime = clock.getUTCNow();
         final Iterable<PluginInfo> rawPluginInfo = skipPlugins ? Collections.emptyList() : pluginInfoApi.getPluginsInfo();
-        final List<PluginInfo> pluginInfo = rawPluginInfo.iterator().hasNext() ? iterableToList(rawPluginInfo) : Collections.emptyList();
+        final List<PluginInfo> pluginInfo = !Iterables.isEmpty(rawPluginInfo) ? Iterables.toUnmodifiableList(rawPluginInfo) : Collections.emptyList();
         final String kbVersion = org.killbill.billing.util.nodes.KillbillVersions.getKillbillVersion();
         final String kbApiVersion  = org.killbill.billing.util.nodes.KillbillVersions.getApiVersion();
         final String kbPluginApiVersion  = org.killbill.billing.util.nodes.KillbillVersions.getPluginApiVersion();

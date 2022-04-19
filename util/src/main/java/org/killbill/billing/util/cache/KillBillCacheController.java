@@ -22,13 +22,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.cache.Cache;
 import javax.cache.Cache.Entry;
 import javax.cache.CacheException;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
+import org.killbill.billing.util.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +49,9 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
 
     @Override
     public List<K> getKeys() {
-        return StreamSupport.stream(cache.spliterator(), false)
-                     .map(Entry::getKey)
-                     .collect(Collectors.toUnmodifiableList());
+        return Iterables.toStream(cache)
+                .map(Entry::getKey)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -123,7 +123,7 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
 
     @Override
     public int size() {
-        return (int) StreamSupport.stream(cache.spliterator(), false).count();
+        return Iterables.size(cache);
     }
 
     @Override

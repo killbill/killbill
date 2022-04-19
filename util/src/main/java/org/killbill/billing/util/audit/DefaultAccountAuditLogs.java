@@ -27,9 +27,8 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.collect.AbstractIterator;
+import org.killbill.billing.util.collect.Iterators;
 import org.killbill.billing.util.dao.TableName;
-
-import static org.killbill.billing.util.collect.CollectionTransformer.iteratorToList;
 
 public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
@@ -47,7 +46,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         this.accountId = accountId;
         this.auditLevel = auditLevel;
         // TODO pierre - lame, we should be smarter to avoid loading all entries in memory. It's a bit tricky though...
-        this.accountAuditLogs = iteratorToList(accountAuditLogsOrderedByTableName);
+        this.accountAuditLogs = Iterators.toUnmodifiableList(accountAuditLogsOrderedByTableName);
     }
 
     public void close() {

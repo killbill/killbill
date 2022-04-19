@@ -22,9 +22,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.collect.Iterables;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -35,8 +35,8 @@ public class TestPluginProperties extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testMerge() throws Exception {
-        final List<PluginProperty> pluginPropertiesRaw = StreamSupport
-                .stream(PluginProperties.merge(pluginProperties1, pluginProperties2).spliterator(), false)
+        final List<PluginProperty> pluginPropertiesRaw = Iterables
+                .toStream(PluginProperties.merge(pluginProperties1, pluginProperties2))
                 .collect(Collectors.toUnmodifiableList());
 
         final List<PluginProperty> pluginProperties = sort(pluginPropertiesRaw);
@@ -81,9 +81,9 @@ public class TestPluginProperties extends UtilTestSuiteNoDB {
     }
 
     private List<PluginProperty> sort(final Iterable<PluginProperty> pluginProperties) {
-        return StreamSupport.stream(pluginProperties.spliterator(), false)
-                            .sorted(Comparator.comparing(PluginProperty::getKey))
-                            .collect(Collectors.toUnmodifiableList());
+        return Iterables.toStream(pluginProperties)
+                .sorted(Comparator.comparing(PluginProperty::getKey))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     /** needed because {@link Map#of()} not maintaining insertion order. */

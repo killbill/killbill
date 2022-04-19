@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -69,6 +68,7 @@ import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
@@ -474,7 +474,7 @@ public class EventsStreamBuilder {
     }
 
     private SubscriptionBase findBaseSubscription(final Iterable<SubscriptionBase> subscriptions) {
-        return StreamSupport.stream(subscriptions.spliterator(), false)
+        return Iterables.toStream(subscriptions)
                 .filter(input -> {
                     final List<SubscriptionBaseTransition> allTransitions = input.getAllTransitions();
                     return !allTransitions.isEmpty() &&

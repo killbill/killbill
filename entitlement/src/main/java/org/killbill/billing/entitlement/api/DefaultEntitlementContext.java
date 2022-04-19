@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
@@ -34,8 +33,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
-
-import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
+import org.killbill.billing.util.collect.Iterables;
 
 public class DefaultEntitlementContext implements EntitlementContext {
 
@@ -55,8 +53,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private final DateTime updatedDate;
     private final UUID tenantId;
 
-    public DefaultEntitlementContext(final EntitlementContext prev,
-                                     @Nullable final PriorEntitlementResult pluginResult) {
+    public DefaultEntitlementContext(final EntitlementContext prev, @Nullable final PriorEntitlementResult pluginResult) {
         this(prev.getOperationType(),
              prev.getAccountId(),
              prev.getDestinationAccountId(),
@@ -99,8 +96,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
         if (baseEntitlementWithAddOnsSpecifiers == null) {
             this.baseEntitlementWithAddOnsSpecifiers = Collections.emptyList();
         } else {
-            this.baseEntitlementWithAddOnsSpecifiers = StreamSupport
-                    .stream(baseEntitlementWithAddOnsSpecifiers.spliterator(), false)
+            this.baseEntitlementWithAddOnsSpecifiers = Iterables.toStream(baseEntitlementWithAddOnsSpecifiers)
                     .map(DefaultBaseEntitlementWithAddOnsSpecifier::new)
                     .collect(Collectors.toUnmodifiableList());
         }
@@ -122,7 +118,7 @@ public class DefaultEntitlementContext implements EntitlementContext {
         // we know the isAborted flag hasn't been set, so let's assume the user actually wants to use the previous list
         // FIXME-1615 : Instead of "iterableToList(newValues).isEmpty()", should we copy guava version to new class
         //  "CollectionUtils.isIterableEmpty(Iterable)" ?
-        if (newValues != null && !iterableToList(newValues).isEmpty()) {
+        if (newValues != null && !Iterables.isEmpty(newValues)) {
             return newValues;
         } else {
             return prevValues;
