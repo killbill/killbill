@@ -193,11 +193,9 @@ public class TestDateInvestigation /* extends UtilTestSuiteWithEmbeddedDB */ {
 
     private DataSource getRawMariaDBDataSource(final String dbName, final String user, final String pwd) throws SQLException {
         final org.mariadb.jdbc.MariaDbDataSource rawSource = new org.mariadb.jdbc.MariaDbDataSource();
-        rawSource.setUrl("jdbc:mysql://localhost:3306/killbill?createDatabaseIfNotExist=true&allowMultiQueries=true");
-        rawSource.setDatabaseName(dbName);
+        rawSource.setUrl("jdbc:mysql://localhost:3306/" + dbName + "?createDatabaseIfNotExist=true&allowMultiQueries=true&permitMysqlScheme=true");
         rawSource.setUser(user);
         rawSource.setPassword(pwd);
-        rawSource.setPort(3306);
         return rawSource;
     }
 
