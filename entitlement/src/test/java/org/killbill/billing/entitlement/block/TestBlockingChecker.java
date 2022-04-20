@@ -18,6 +18,7 @@
 
 package org.killbill.billing.entitlement.block;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
@@ -36,8 +37,8 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+// FIXME-1615 : some test deal with BlockingStateDao
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 
 public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
@@ -80,17 +81,17 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(bundleState, Optional.<UUID>absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(bundleState, Optional.<UUID>absent()), internalCallContext);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState accountState = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(accountState, Optional.<UUID>absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(accountState, Optional.<UUID>absent()), internalCallContext);
     }
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState subscriptionState = new DefaultBlockingState(subscription.getId(), BlockingStateType.SUBSCRIPTION, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(subscriptionState, Optional.<UUID>of(subscription.getBundleId())), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(subscriptionState, Optional.<UUID>of(subscription.getBundleId())), internalCallContext);
     }
 
     @Test(groups = "fast")

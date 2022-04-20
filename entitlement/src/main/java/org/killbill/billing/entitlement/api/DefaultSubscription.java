@@ -30,12 +30,12 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
     }
 
     @Override
-    public LocalDate getBillingStartDate() {
-        return internalTenantContext.toLocalDate(getSubscriptionBase().getStartDate());
+    public DateTime getBillingStartDate() {
+        return getSubscriptionBase().getStartDate();
     }
 
     @Override
-    public LocalDate getBillingEndDate() {
+    public DateTime getBillingEndDate() {
         final DateTime futureOrCurrentEndDateForSubscription = getSubscriptionBase().getEndDate() != null ? getSubscriptionBase().getEndDate() : getSubscriptionBase().getFutureEndDate();
         final DateTime futureOrCurrentEndDateForBaseSubscription;
         if (getBasePlanSubscriptionBase() == null) {
@@ -51,7 +51,7 @@ public class DefaultSubscription extends DefaultEntitlement implements Subscript
             futureOrCurrentEndDate = futureOrCurrentEndDateForSubscription;
         }
 
-        return futureOrCurrentEndDate != null ? internalTenantContext.toLocalDate(futureOrCurrentEndDate) : null;
+        return futureOrCurrentEndDate != null ? futureOrCurrentEndDate : null;
     }
 
     @Override

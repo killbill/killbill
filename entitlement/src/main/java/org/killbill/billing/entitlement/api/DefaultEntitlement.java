@@ -21,6 +21,7 @@ package org.killbill.billing.entitlement.api;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -72,8 +73,6 @@ import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logCancelEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logChangePlan;
@@ -254,13 +253,13 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public LocalDate getEffectiveStartDate() {
-        return eventsStream.getEntitlementEffectiveStartDate();
+    public DateTime getEffectiveStartDate() {
+        return eventsStream.getEntitlementEffectiveStartDateTime();
     }
 
     @Override
-    public LocalDate getEffectiveEndDate() {
-        return eventsStream.getEntitlementEffectiveEndDate();
+    public DateTime getEffectiveEndDate() {
+        return eventsStream.getEntitlementEffectiveEndDateTime();
     }
 
     @Override
@@ -316,7 +315,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Get the latest state from disk
         refresh(callContext);
 
-        if (entitlementEffectiveDate != null && entitlementEffectiveDate.compareTo(getEffectiveStartDate()) < 0) {
+        if (entitlementEffectiveDate != null && entitlementEffectiveDate.compareTo(internalTenantContext.toLocalDate(getEffectiveStartDate())) < 0) { //TODO_1375 - Change DateTime to LocalDate for now. Revisit once we change API method to receive DateTime
             throw new EntitlementApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, entitlementEffectiveDate, getEffectiveStartDate());
         }
 
@@ -538,7 +537,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             default:
                 throw new RuntimeException("Unsupported policy " + entitlementPolicy);
         }
-        return (cancellationDate.compareTo(getEffectiveStartDate()) < 0) ? getEffectiveStartDate() : cancellationDate;
+        return (cancellationDate.compareTo(internalTenantContext.toLocalDate(getEffectiveStartDate())) < 0) ? internalTenantContext.toLocalDate(getEffectiveStartDate()) : cancellationDate; //TODO_1375 - Return LocalDate for now. Revisit later to check if this method should return DateTime
     }
 
 
@@ -823,7 +822,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         // Optimization - bail early
         if (!ProductCategory.BASE.equals(getSubscriptionBase().getCategory())) {
             // Only base subscriptions have add-ons
-            return ImmutableList.<BlockingState>of();
+            return Collections.emptyList();
         }
 
         // Get the latest state from disk (we just got cancelled or changed plan)
@@ -840,7 +839,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             final boolean isBaseEntitlementCancelled = eventsStream.isEntitlementCancelled();
             final NotificationEvent notificationEvent = new EntitlementNotificationKey(getId(), getBundleId(), isBaseEntitlementCancelled ? EntitlementNotificationKeyAction.CANCEL : EntitlementNotificationKeyAction.CHANGE, effectiveDate);
             notificationEvents.add(notificationEvent);
-            return ImmutableList.<BlockingState>of();
+            return Collections.emptyList();
         }
 
         return eventsStream.computeAddonsBlockingStatesForNextSubscriptionBaseEvent(effectiveDate);
@@ -881,7 +880,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         //
         if (securityApi.isSubjectAuthenticated()) {
             try {
-                securityApi.checkCurrentUserPermissions(ImmutableList.of(permission), Logical.AND, callContext);
+                securityApi.checkCurrentUserPermissions(List.of(permission), Logical.AND, callContext);
             } catch (final SecurityApiException e) {
                 throw new EntitlementApiException(ErrorCode.SECURITY_NOT_ENOUGH_PERMISSIONS);
             }

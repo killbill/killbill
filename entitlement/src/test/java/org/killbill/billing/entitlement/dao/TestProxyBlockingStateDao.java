@@ -28,8 +28,6 @@ import org.killbill.billing.junction.DefaultBlockingState;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestProxyBlockingStateDao extends EntitlementTestSuiteNoDB {
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/174")
@@ -98,7 +96,7 @@ public class TestProxyBlockingStateDao extends EntitlementTestSuiteNoDB {
 
     private void verifySortedCopy(final BlockingState bs1, final BlockingState bs2, final BlockingState bs3, final BlockingState bs4,
                                   final BlockingState a, final BlockingState b, final BlockingState c, final BlockingState d) {
-        final List<BlockingState> sortedCopy = ProxyBlockingStateDao.sortedCopy(ImmutableList.<BlockingState>of(a, b, c, d));
+        final List<BlockingState> sortedCopy = ProxyBlockingStateDao.sortedCopy(List.of(a, b, c, d));
         Assert.assertEquals(sortedCopy.get(0).getStateName(), bs1.getStateName());
         Assert.assertEquals(sortedCopy.get(1).getStateName(), bs2.getStateName());
         Assert.assertEquals(sortedCopy.get(2).getStateName(), bs3.getStateName());

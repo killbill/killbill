@@ -20,6 +20,7 @@ package org.killbill.billing.entitlement.dao;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -43,8 +44,6 @@ import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
-
-import com.google.common.collect.ImmutableList;
 
 public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
 
@@ -93,19 +92,19 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
         }
 
         // Find all base entitlements that we care about (for which we want to find future cancelled add-ons)
-        final Iterable<EventsStream> eventsStreams = ImmutableList.<EventsStream>of(eventsStreamBuilder.buildForEntitlement(allBlockingStatesOnDiskForAccount,
-                                                                                                                            account,
-                                                                                                                            bundle,
-                                                                                                                            baseSubscription,
-                                                                                                                            allSubscriptionsForBundle,
-                                                                                                                            accountBCD,
-                                                                                                                            catalog,
-                                                                                                                            context));
+        final Iterable<EventsStream> eventsStreams = List.of(eventsStreamBuilder.buildForEntitlement(allBlockingStatesOnDiskForAccount,
+                                                                                                     account,
+                                                                                                     bundle,
+                                                                                                     baseSubscription,
+                                                                                                     allSubscriptionsForBundle,
+                                                                                                     accountBCD,
+                                                                                                     catalog,
+                                                                                                     context));
 
         return addBlockingStatesNotOnDisk(subscription.getId(),
                                           BlockingStateType.SUBSCRIPTION,
-                                          new LinkedList<BlockingState>(subscriptionBlockingStatesOnDisk),
-                                          ImmutableList.<SubscriptionBase>of(baseSubscription),
+                                          new LinkedList<>(subscriptionBlockingStatesOnDisk),
+                                          List.of(baseSubscription),
                                           eventsStreams);
     }
 }

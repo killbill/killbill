@@ -457,13 +457,13 @@ public class CatalogResource extends JaxRsResourceBase {
         SubscriptionEvent lastEventBeforeRequestedDate = null;
         for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
             if (lastEventBeforeRequestedDate == null) {
-                if (subscriptionEvent.getEffectiveDate().compareTo(requestedDate) > 0) {
+                if (subscriptionEvent.getEffectiveDate().compareTo(requestedDateTime) > 0) { //TODO_1375 - Is this correct or should we compare LocalDate?
                     // requestedDate too far in the past, before subscription start date
                     return null;
                 }
                 lastEventBeforeRequestedDate = subscriptionEvent;
             }
-            if (subscriptionEvent.getEffectiveDate().compareTo(requestedDate) > 0) {
+            if (subscriptionEvent.getEffectiveDate().compareTo(requestedDateTime) > 0) { //TODO_1375 - Is this correct or should we compare LocalDate?
                 break;
             } else {
                 lastEventBeforeRequestedDate = subscriptionEvent;

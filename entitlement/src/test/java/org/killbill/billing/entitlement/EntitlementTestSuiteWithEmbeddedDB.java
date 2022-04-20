@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.config.Ini;
 import org.apache.shiro.config.IniSecurityManagerFactory;
@@ -42,7 +44,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.SubscriptionApi;
@@ -73,10 +74,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 
@@ -303,7 +301,7 @@ public class EntitlementTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWi
     }
 
     protected void setChargedThroughDate(final UUID entitlementId, final DateTime ctd, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException {
-        final Map<DateTime, List<UUID>> chargeThroughDates = ImmutableMap.of(ctd, ImmutableList.of(entitlementId));
+        final Map<DateTime, List<UUID>> chargeThroughDates = Map.of(ctd, List.of(entitlementId));
         subscriptionInternalApi.setChargedThroughDates(chargeThroughDates, internalCallContext);
     }
 

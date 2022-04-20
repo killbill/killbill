@@ -18,15 +18,16 @@
 
 package org.killbill.billing.entitlement.engine.core;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.entitlement.DefaultEntitlementService;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
@@ -36,10 +37,8 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.notificationq.api.NotificationQueueService;
 
+// FIXME-1615 : have BlockingStateDao instance
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 public class EntitlementUtils {
 
@@ -58,20 +57,20 @@ public class EntitlementUtils {
     }
 
     public void setBlockingStatesAndPostBlockingTransitionEvent(final Iterable<BlockingState> blockingStates, @Nullable final UUID bundleId, final InternalCallContext internalCallContext) {
-        final ImmutableMap.Builder<BlockingState, Optional<UUID>> states = new ImmutableMap.Builder<BlockingState, Optional<UUID>>();
+        final Map<BlockingState, Optional<UUID>> states = new HashMap<>();
         final Optional<UUID> bundleIdOptional = Optional.<UUID>fromNullable(bundleId);
         for (final BlockingState blockingState : blockingStates) {
             states.put(blockingState, bundleIdOptional);
         }
-        dao.setBlockingStatesAndPostBlockingTransitionEvent(states.build(), internalCallContext);
+        dao.setBlockingStatesAndPostBlockingTransitionEvent(states, internalCallContext);
     }
 
     public void setBlockingStateAndPostBlockingTransitionEvent(final Map<BlockingState, UUID> blockingStates, final InternalCallContext internalCallContext) {
-        final ImmutableMap.Builder<BlockingState, Optional<UUID>> states = new ImmutableMap.Builder<BlockingState, Optional<UUID>>();
+        final Map<BlockingState, Optional<UUID>> states = new HashMap<>();
         for (final BlockingState blockingState : blockingStates.keySet()) {
-            states.put(blockingState, Optional.<UUID>fromNullable(blockingStates.get(blockingState)));
+            states.put(blockingState, Optional.fromNullable(blockingStates.get(blockingState)));
         }
-        dao.setBlockingStatesAndPostBlockingTransitionEvent(states.build(), internalCallContext);
+        dao.setBlockingStatesAndPostBlockingTransitionEvent(states, internalCallContext);
     }
 
     public void setBlockingStateAndPostBlockingTransitionEvent(final BlockingState state, final InternalCallContext context) {
@@ -84,7 +83,7 @@ public class EntitlementUtils {
                 throw new RuntimeException(e);
             }
         }
-        dao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(state, Optional.<UUID>fromNullable(bundleId)), context);
+        dao.setBlockingStatesAndPostBlockingTransitionEvent(Map.<BlockingState, Optional<UUID>>of(state, Optional.fromNullable(bundleId)), context);
     }
 
     /**
@@ -93,14 +92,12 @@ public class EntitlementUtils {
      * @return the id of the first subscription (BASE or STANDALONE) that is still active for that key
      */
     public UUID getFirstActiveSubscriptionIdForKeyOrNull(final String externalKey, final InternalTenantContext tenantContext) {
-
         final Iterable<UUID> nonAddonUUIDs = subscriptionBaseInternalApi.getNonAOSubscriptionIdsForKey(externalKey, tenantContext);
-        return Iterables.tryFind(nonAddonUUIDs, new Predicate<UUID>() {
-            @Override
-            public boolean apply(final UUID input) {
-                final BlockingState state = dao.getBlockingStateForService(input, BlockingStateType.SUBSCRIPTION, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), tenantContext);
-                return (state == null || !state.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED));
-            }
-        }).orNull();
+        return StreamSupport.stream(nonAddonUUIDs.spliterator(), false)
+                .filter(input -> {
+                    final BlockingState state = dao.getBlockingStateForService(input, BlockingStateType.SUBSCRIPTION, KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(), tenantContext);
+                    return (state == null || !state.getStateName().equals(DefaultEntitlementApi.ENT_STATE_CANCELLED));
+                })
+                .findFirst().orElse(null);
     }
 }
