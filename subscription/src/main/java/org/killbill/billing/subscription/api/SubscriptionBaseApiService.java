@@ -108,6 +108,6 @@ public interface SubscriptionBaseApiService {
 
     boolean undoChangePlan(DefaultSubscriptionBase defaultSubscriptionBase, CallContext context) throws SubscriptionBaseApiException;
 
-    int getBCD(InternalTenantContext context) throws SubscriptionBaseApiException;
+    int getAccountBCD(InternalTenantContext context) throws SubscriptionBaseApiException;
 
 }

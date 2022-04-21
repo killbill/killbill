@@ -696,7 +696,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         final BillingAlignment billingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
                                                                            originalDate, originalDate);
 
-        final int accountBillCycleDayLocal = apiService.getBCD(context);
+        final int accountBillCycleDayLocal = apiService.getAccountBCD(context);
         Integer bcd = bcdLocal;
         if (bcd == null) {
             bcd = BillCycleDayCalculator.calculateBcdForAlignment(null, this, this, billingAlignment, context, accountBillCycleDayLocal);
@@ -758,7 +758,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     public DateTime getEffectiveDateForPolicy(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, final InternalTenantContext context) throws SubscriptionBaseApiException {
 
-        final Integer accountBillCycleDayLocal = apiService != null ? apiService.getBCD(context) : null;
+        final Integer accountBillCycleDayLocal = apiService != null ? apiService.getAccountBCD(context) : null;
         final DateTime candidateResult;
         switch (policy) {
             case IMMEDIATE:

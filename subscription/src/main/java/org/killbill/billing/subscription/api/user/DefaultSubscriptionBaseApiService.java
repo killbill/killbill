@@ -658,7 +658,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
     }
 
     @Override
-    public int getBCD(InternalTenantContext context) throws SubscriptionBaseApiException {
+    public int getAccountBCD(InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
             return accountInternalApi.getBCD(context);
         } catch (final AccountApiException e) {
