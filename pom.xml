@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.145.3-3328d3b-SNAPSHOT</version>
+        <version>0.145.3-fd2ee3a-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.23.0-SNAPSHOT</version>
@@ -61,7 +61,6 @@
     <properties>
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
         <killbill-api.version>0.54.0-261dceb-SNAPSHOT</killbill-api.version>
-        <killbill-commons.version>0.25.1-211b337-SNAPSHOT</killbill-commons.version>
         <killbill-plugin-api.version>0.27.0-7c87b30-SNAPSHOT</killbill-plugin-api.version>
         <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
