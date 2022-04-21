@@ -28,11 +28,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
-
-import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
@@ -75,7 +74,7 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
 
     @Override
     public Pagination<M> get(final Long offset, final Long limit, final InternalTenantContext context) {
-        return DefaultPagination.<M>build(offset, limit, iterableToList(getAll(context)));
+        return DefaultPagination.<M>build(offset, limit, Iterables.toUnmodifiableList(getAll(context)));
     }
 
     @Override

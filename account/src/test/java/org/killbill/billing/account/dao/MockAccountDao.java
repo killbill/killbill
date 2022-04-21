@@ -43,6 +43,7 @@ import org.killbill.billing.events.AccountChangeInternalEvent;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
@@ -50,8 +51,6 @@ import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.testng.Assert;
-
-import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, AccountApiException> implements AccountDao {
 
@@ -165,9 +164,9 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
 
     @Override
     public List<AccountEmailModelDao> getEmailsByAccountId(final UUID accountId, final InternalTenantContext context) {
-        return iterableToList(accountEmailSqlDao.getAll(context)).stream()
-                .filter(input -> input.getAccountId().equals(accountId))
-                .collect(Collectors.toUnmodifiableList());
+        return Iterables.toStream(accountEmailSqlDao.getAll(context))
+                        .filter(input -> input.getAccountId().equals(accountId))
+                        .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -178,9 +177,9 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
 
     @Override
     public List<AccountModelDao> getAccountsByParentId(final UUID parentAccountId, final InternalTenantContext context) {
-        return iterableToList(accountSqlDao.getAll(context)).stream()
-                .filter(input -> parentAccountId.equals(input.getParentAccountId()))
-                .collect(Collectors.toUnmodifiableList());
+        return Iterables.toStream(accountSqlDao.getAll(context))
+                        .filter(input -> parentAccountId.equals(input.getParentAccountId()))
+                        .collect(Collectors.toUnmodifiableList());
     }
 
     @Override

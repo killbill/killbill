@@ -45,8 +45,7 @@ import org.killbill.billing.catalog.api.rules.CaseChangePlanPolicy;
 import org.killbill.billing.catalog.api.rules.CaseCreateAlignment;
 import org.killbill.billing.catalog.api.rules.CasePriceList;
 import org.killbill.billing.catalog.api.rules.PlanRules;
-
-import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
+import org.killbill.billing.util.collect.Iterables;
 
 public class TestModelPlanRules implements PlanRules {
 
@@ -229,7 +228,7 @@ public class TestModelPlanRules implements PlanRules {
         if (name == null) {
             return null;
         }
-        final T result = iterableToList(all).stream().filter(predicate).findFirst().orElse(null);
+        final T result = Iterables.toUnmodifiableList(all).stream().filter(predicate).findFirst().orElse(null);
         if (result == null) {
             throw new IllegalStateException(String.format("%s : cannot find entry %s", what, name));
         }

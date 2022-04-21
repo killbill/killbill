@@ -48,8 +48,7 @@ import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-
-import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
+import org.killbill.billing.util.collect.Iterables;
 
 public class DefaultTenantUserApi implements TenantUserApi {
 
@@ -206,6 +205,6 @@ public class DefaultTenantUserApi implements TenantUserApi {
     }
 
     private boolean isCachedInTenantKVCache(final String key) {
-        return iterableToList(CACHED_TENANT_KEY).stream().anyMatch(input -> key.startsWith(input.toString()));
+        return Iterables.toUnmodifiableList(CACHED_TENANT_KEY).stream().anyMatch(input -> key.startsWith(input.toString()));
     }
 }

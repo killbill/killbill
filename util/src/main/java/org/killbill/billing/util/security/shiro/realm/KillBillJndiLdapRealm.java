@@ -24,10 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 import javax.naming.NamingEnumeration;
@@ -49,6 +46,7 @@ import org.apache.shiro.realm.ldap.LdapUtils;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.killbill.billing.util.Strings;
 import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.billing.util.collect.Iterators;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -187,9 +185,7 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
         final SearchResult result = foundGroups.next();
 
         // Extract the name of all the groups
-        final Collection<String> finalGroupsNames = extractGroupNamesFromSearchResult(result).stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toUnmodifiableList());
+        final Collection<String> finalGroupsNames = extractGroupNamesFromSearchResult(result);
 
         return new HashSet<>(finalGroupsNames);
     }
@@ -198,27 +194,27 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
         // Get all attributes for that group
         final Iterator<? extends Attribute> attributesIterator = searchResult.getAttributes().getAll().asIterator();
 
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(attributesIterator, Spliterator.ORDERED), false)
-                // Find the attribute representing the group name
-                .filter(attribute -> groupNameId.equalsIgnoreCase(attribute.getID()))
-                // Extract the group name from the attribute
-                // Note: at this point, groupNameAttributesIterator should really contain a single element
-                .map(groupNameAttribute -> {
-                    try {
-                        final NamingEnumeration<?> enumeration = groupNameAttribute.getAll();
-                        return enumeration.asIterator();
-                    } catch (final NamingException namingException) {
-                        log.warn("Unable to read group name(s)", namingException);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .map(Object::toString)
-                .collect(Collectors.toUnmodifiableList());
+        return Iterators.toStream(attributesIterator)
+                        // Find the attribute representing the group name
+                        .filter(attribute -> groupNameId.equalsIgnoreCase(attribute.getID()))
+                        // Extract the group name from the attribute
+                        // Note: at this point, groupNameAttributesIterator should really contain a single element
+                        .map(groupNameAttribute -> {
+                            try {
+                                final NamingEnumeration<?> enumeration = groupNameAttribute.getAll();
+                                return enumeration.asIterator();
+                            } catch (final NamingException namingException) {
+                                log.warn("Unable to read group name(s)", namingException);
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .map(Object::toString)
+                        .collect(Collectors.toUnmodifiableSet());
     }
 
     private Set<String> groupsPermissions(final Set<String> groups) {
-        final Set<String> permissions = new HashSet<String>();
+        final Set<String> permissions = new HashSet<>();
         for (final String group : groups) {
             final Collection<String> permissionsForGroup = permissionsByGroup.get(group);
             if (permissionsForGroup != null) {

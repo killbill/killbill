@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -86,6 +85,7 @@ import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
@@ -164,20 +164,24 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
                                         final InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            final Iterable<DefaultSubscriptionBase> toCancel = StreamSupport
-                    .stream(subscriptions.spliterator(), false)
-                    .map(subscriptionBase -> {
-                        try {
-                            return getDefaultSubscriptionBase(subscriptionBase, catalog, context);
-                        } catch (final CatalogApiException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).collect(Collectors.toUnmodifiableList());
+            final Iterable<DefaultSubscriptionBase> toCancel = Iterables
+                    .toStream(subscriptions)
+                    .map(subscriptionBase -> mapToDefaultSubscriptionBase(subscriptionBase, catalog, context))
+                    .collect(Collectors.toUnmodifiableList());
             apiService.cancelWithPolicyNoValidationAndCatalog(toCancel, policy, catalog, context);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
+    }
 
+    private DefaultSubscriptionBase mapToDefaultSubscriptionBase(final SubscriptionBase subscriptionBase,
+                                                                 final SubscriptionCatalog catalog,
+                                                                 final InternalCallContext context) {
+        try {
+            return getDefaultSubscriptionBase(subscriptionBase, catalog, context);
+        } catch (final CatalogApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @VisibleForTesting

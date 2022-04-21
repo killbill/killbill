@@ -19,10 +19,10 @@ package org.killbill.billing.util.entity.dao;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.StreamSupport;
 
 import org.killbill.billing.BillingExceptionBase;
-import org.killbill.billing.util.collect.CollectionTransformer;
+import org.killbill.billing.util.collect.Iterables;
+import org.killbill.billing.util.collect.Iterators;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
@@ -91,7 +91,7 @@ public class DefaultPaginationHelper {
                                                                                                           final Function<O, E> function) throws T {
         final Pagination<O> modelsDao = sourcePaginationBuilder.build();
 
-        return new DefaultPagination<E>(modelsDao, limit, StreamSupport.stream(modelsDao.spliterator(), false).map(function).filter(Objects::nonNull).iterator());
+        return new DefaultPagination<E>(modelsDao, limit, Iterables.toStream(modelsDao).map(function).filter(Objects::nonNull).iterator());
     }
 
     public static <E extends Entity, O, T extends BillingExceptionBase> Pagination<E> getEntityPaginationNoException(final Long limit,
@@ -108,6 +108,6 @@ public class DefaultPaginationHelper {
      * Iterate all element to avoid memory leak.
      */
     private static void closeDatabaseConnection(final Iterable<?> page) {
-        CollectionTransformer.iterableToList(page);
+        Iterators.toUnmodifiableList(page.iterator());
     }
 }

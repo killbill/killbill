@@ -127,7 +127,7 @@ public abstract class AbstractIterator<T> implements Iterator<T> {
 
     /**
      * Returns the next element in the iteration without advancing the iteration, according to the
-     * contract of {@link com.google.common.collect.PeekingIterator#peek()}.
+     * contract of {@code com.google.common.collect.PeekingIterator#peek()}.
      *
      * <p>Implementations of {@code AbstractIterator} that wish to expose this functionality should
      * implement {@code PeekingIterator}.

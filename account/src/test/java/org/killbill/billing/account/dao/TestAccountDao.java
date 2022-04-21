@@ -43,6 +43,7 @@ import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.audit.DefaultAccountAuditLogs;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.customfield.dao.CustomFieldModelDao;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Pagination;
@@ -55,7 +56,6 @@ import org.testng.annotations.Test;
 
 import static org.killbill.billing.account.AccountTestUtils.checkAccountsEqual;
 import static org.killbill.billing.account.AccountTestUtils.createTestAccount;
-import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
 
@@ -96,7 +96,7 @@ public class TestAccountDao extends AccountTestSuiteWithEmbeddedDB {
 
         // Retrieve all
         final Pagination<AccountModelDao> allAccounts = accountDao.getAll(internalCallContext);
-        final List<AccountModelDao> all = iterableToList(allAccounts);
+        final List<AccountModelDao> all = Iterables.toUnmodifiableList(allAccounts);
         Assert.assertNotNull(all);
         Assert.assertEquals(all.size(), 1);
         checkAccountsEqual(all.get(0), account);

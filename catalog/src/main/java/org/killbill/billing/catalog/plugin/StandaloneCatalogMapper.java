@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
@@ -85,8 +84,7 @@ import org.killbill.billing.catalog.rules.DefaultCasePhase;
 import org.killbill.billing.catalog.rules.DefaultCasePriceList;
 import org.killbill.billing.catalog.rules.DefaultCaseStandardNaming;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
-
-import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
+import org.killbill.billing.util.collect.Iterables;
 
 public class StandaloneCatalogMapper {
 
@@ -517,9 +515,8 @@ public class StandaloneCatalogMapper {
         if (input == null || !input.iterator().hasNext()) {
             return null;
         }
-        final Iterable<C> tmp = StreamSupport.stream(input.spliterator(), false)
-                                             .map(transformer)
-                                             .collect(Collectors.toUnmodifiableList());
+        // FIXME-1615 We need better approach
+        final Iterable<C> tmp = Iterables.toStream(input).map(transformer).collect(Collectors.toUnmodifiableList());
         return toArray(tmp);
     }
 
@@ -529,7 +526,7 @@ public class StandaloneCatalogMapper {
         }
         final C[] foo = (C[]) java.lang.reflect.Array
                 .newInstance(input.iterator().next().getClass(), 1);
-        return iterableToList(input).toArray(foo);
+        return Iterables.toUnmodifiableList(input).toArray(foo);
     }
 
 }

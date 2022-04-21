@@ -41,7 +41,7 @@ import org.killbill.billing.util.audit.DefaultAuditLog;
 import org.killbill.billing.util.audit.DefaultAuditLogWithHistory;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.collect.CollectionTransformer;
+import org.killbill.billing.util.collect.Iterators;
 import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.dao.NonEntityDao;
@@ -103,7 +103,7 @@ public class DefaultAuditDao implements AuditDao {
     private Iterator<AuditLog> buildAuditLogsFromModelDao(final Iterator<AuditLogModelDao> auditLogsForAccountRecordId, final InternalTenantContext tenantContext) {
         final Map<TableName, Map<Long, UUID>> recordIdIdsCache = new HashMap<>();
         final Map<TableName, Map<Long, UUID>> historyRecordIdIdsCache = new HashMap<>();
-        return CollectionTransformer.transformIterator(auditLogsForAccountRecordId, input -> {
+        return Iterators.transform(auditLogsForAccountRecordId, input -> {
             final TableName originalTableNameForHistoryTableName = findTableNameForHistoryTableName(input.getTableName());
             final NonEntitySqlDao nonEntitySqlDao = dbRouter.onDemand(true);
             final ObjectType objectType;
