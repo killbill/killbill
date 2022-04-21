@@ -19,7 +19,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,16 +31,8 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 
 public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements SortedSet<BillingEvent>, BillingEventSet {
-
-    private static final Logger logger = LoggerFactory.getLogger(DefaultBillingEventSet.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -78,23 +70,16 @@ public class DefaultBillingEventSet extends TreeSet<BillingEvent> implements Sor
 
     @Override
     public Map<String, Usage> getUsages() {
-        final Iterable<Usage> allUsages = Iterables.concat(Iterables.transform(this, new Function<BillingEvent, List<Usage>>() {
-            @Override
-            public List<Usage> apply(final BillingEvent input) {
+        final Map<String, Usage> result = new HashMap<>();
+        this.stream()
+            .map(input -> {
                 try {
                     return input.getUsages();
                 } catch (final CatalogApiException e) {
                     throw new IllegalStateException(String.format("Failed to retrieve usage section for billing event %s", input), e);
                 }
-            }
-        }));
-        if (!allUsages.iterator().hasNext()) {
-            return Collections.emptyMap();
-        }
-        final Map<String, Usage> result = new HashMap<String, Usage>();
-        for (Usage cur : Sets.<Usage>newHashSet(allUsages)) {
-            result.put(cur.getName(), cur);
-        }
+            }).flatMap(Collection::stream)
+            .forEach(usage -> result.put(usage.getName(), usage));
         return result;
     }
 
