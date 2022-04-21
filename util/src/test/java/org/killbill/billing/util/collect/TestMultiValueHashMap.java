@@ -17,12 +17,13 @@
 
 package org.killbill.billing.util.collect;
 
+import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
-public class TestMultiValueHashMap {
+public class TestMultiValueHashMap extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void putElement() {

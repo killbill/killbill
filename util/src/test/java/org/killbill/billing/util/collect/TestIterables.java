@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -29,7 +30,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.fail;
 
-public class TestIterables {
+public class TestIterables extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void getLast() {
@@ -41,7 +42,7 @@ public class TestIterables {
         assertEquals(last.getValue(), "3");
     }
 
-    @Test
+    @Test(groups = "fast")
     void getLastWithEmptyList() {
         final List<KeyValue> keyValues = Collections.emptyList();
         try {
@@ -50,7 +51,7 @@ public class TestIterables {
         } catch (final NoSuchElementException ignored) {}
     }
 
-    @Test
+    @Test(groups = "fast")
     void concat() {
         final Iterable<String> a = List.of("a", "b", "c");
         final Iterable<String> b = List.of("d", "e");
@@ -62,7 +63,7 @@ public class TestIterables {
         assertEquals(Iterators.size(result.iterator()), 8);
     }
 
-    @Test
+    @Test(groups = "fast")
     void concatWithNullElement() {
         final Iterable<String> a = List.of("a", "b", "c");
         final Iterable<String> b = List.of("1", "2", "3");
@@ -73,7 +74,7 @@ public class TestIterables {
         } catch (NullPointerException ignored) {}
     }
 
-    @Test
+    @Test(groups = "fast")
     void isEmpty() {
         final Iterable<String> a = List.of("a", "b", "c");
         final Iterable<String> b = Collections.emptyList();
@@ -82,7 +83,7 @@ public class TestIterables {
         assertTrue(Iterables.isEmpty(b));
     }
 
-    @Test
+    @Test(groups = "fast")
     void size() {
         final Iterable<String> a = List.of("a", "b", "c");
         final Iterable<String> b = Collections.emptyList();

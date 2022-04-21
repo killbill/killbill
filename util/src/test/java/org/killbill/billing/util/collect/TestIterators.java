@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -31,7 +32,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
-public class TestIterators {
+public class TestIterators extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void getLast() {
@@ -43,7 +44,7 @@ public class TestIterators {
         assertEquals(last.getValue(), "3");
     }
 
-    @Test
+    @Test(groups = "fast")
     void getLastWithEmptyList() {
         final List<KeyValue> keyValues = Collections.emptyList();
         try {
@@ -52,7 +53,7 @@ public class TestIterators {
         } catch (final NoSuchElementException ignored) {}
     }
 
-    @Test
+    @Test(groups = "fast")
     void transform() {
         final List<KeyValue> list = List.of(new KeyValue("a", "1"), new KeyValue("b", "2"), new KeyValue("c", "3"));
         final Iterator<String> keyOnly = Iterators.transform(list.iterator(), KeyValue::getKey);
@@ -61,7 +62,7 @@ public class TestIterators {
         assertEquals(keyOnly.next(), "c");
     }
 
-    @Test
+    @Test(groups = "fast")
     void toUnmodifiableList() {
         final Collection<KeyValue> set = new HashSet<>();
         set.add(new KeyValue("a", "1"));
@@ -76,7 +77,7 @@ public class TestIterators {
         assertTrue(list.contains(new KeyValue("b", "2")));
     }
 
-    @Test
+    @Test(groups = "fast")
     void size() {
         final List<String> strings = List.of("a", "b", "c", "d", "e", "f", "g", "h", "i", "j");
         final int size = Iterators.size(strings.iterator());
