@@ -31,12 +31,12 @@ import java.util.stream.StreamSupport;
 import org.killbill.billing.util.Preconditions;
 
 /**
- * Contains subset of Guava's {@link com.google.common.collect.Iterators} functionality.
+ * Contains subset of Guava's {@code com.google.common.collect.Iterators} functionality.
  */
 public final class Iterators {
 
     /**
-     * Verbatim copy of Guava's {@link com.google.common.collect.Iterators#getLast(Iterator)}
+     * Verbatim copy of Guava's {@code com.google.common.collect.Iterators#getLast(Iterator)}
      *
      * Advances {@code iterator} to the end, returning the last element.
      *
@@ -70,7 +70,7 @@ public final class Iterators {
     }
 
     /**
-     * Verbatim copy of what guava's did in {@link com.google.common.collect.ImmutableList#copyOf(Iterator)}.
+     * Verbatim copy of what guava's did in {@code com.google.common.collect.ImmutableList#copyOf(Iterator)} .
      *
      * Returns an immutable list containing the given elements, in order.
      *
@@ -93,7 +93,7 @@ public final class Iterators {
     }
 
     /**
-     * Get size of {@link Iterator}. See also Guava's {@link com.google.common.collect.Iterators#size(Iterator)}.
+     * Get size of {@link Iterator}. See also Guava's {@code com.google.common.collect.Iterators#size(Iterator)}.
      *
      * @param iterator to compute its size.
      * @return the size of this iterator.

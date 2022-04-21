@@ -30,12 +30,12 @@ import java.util.stream.StreamSupport;
 import org.killbill.billing.util.Preconditions;
 
 /**
- * Contains subset of Guava's {@link com.google.common.collect.Iterables} functionality.
+ * Contains subset of Guava's {@code com.google.common.collect.Iterables} functionality.
  */
 public final class Iterables {
 
     /**
-     * Verbatim copy of {@link com.google.common.collect.Iterables#getLast(Iterable)}.
+     * Verbatim copy of {@code com.google.common.collect.Iterables#getLast(Iterable)}.
      *
      * Returns the last element of {@code iterable}. If {@code iterable} is a {@link List} with {@link RandomAccess}
      * support, then this operation is guaranteed to be {@code O(1)}.
@@ -95,7 +95,7 @@ public final class Iterables {
     }
 
     /**
-     * Verbatim copy of {@link com.google.common.collect.Iterables#isEmpty(Iterable)}.
+     * Verbatim copy of {@code com.google.common.collect.Iterables#isEmpty(Iterable)}.
      *
      * Determines if the given iterable contains no elements.
      *

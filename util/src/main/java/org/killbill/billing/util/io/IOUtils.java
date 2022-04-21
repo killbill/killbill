@@ -137,7 +137,7 @@ public final class IOUtils {
         return (int) value;
     }
 
-    // -- Verbatim copy of Guava 31.0.1 {@link com.google.common.io.Resources#getResource(String)}
+    // -- Verbatim copy of Guava 31.0.1 (com.google.common.io.Resources#getResource(String))
 
     /**
      * Returns a {@code URL} pointing to {@code resourceName} if the resource is found using the
@@ -176,7 +176,7 @@ public final class IOUtils {
     }
 
     /**
-     * Warning: Not like Guava's {@link com.google.common.io.CharStreams}#<code>toStringBuilder(Readable)</code>,
+     * Warning: Not like Guava's {@code com.google.common.io.CharStreams#toStringBuilder(Readable)},
      * parameter of this method only accept instance of {@link Reader}, otherwise it will throw an Exception. Method
      * parameter type preserved here to make sure easier to track it back to Guava, if needed.
      *
