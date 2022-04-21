@@ -143,7 +143,7 @@ public class ValidationManager {
 
     private boolean isValidLengthChar(final DefaultColumnInfo columnInfo, final Object value) {
         // MySQL and PostgreSQL report data_type as Strings, H2 as SQLTypes
-        if ("char".equals(columnInfo.getDataType()) || "character".equals(columnInfo.getDataType()) || String.valueOf(Types.CHAR).equals(columnInfo.getDataType())) {
+        if ("char".equalsIgnoreCase(columnInfo.getDataType()) || "character".equalsIgnoreCase(columnInfo.getDataType()) || String.valueOf(Types.CHAR).equals(columnInfo.getDataType())) {
             if (value == null) {
                 return false;
             } else {

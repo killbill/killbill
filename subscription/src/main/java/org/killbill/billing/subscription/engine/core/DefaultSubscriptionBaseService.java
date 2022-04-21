@@ -120,7 +120,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
                     final SubscriptionNotificationKey key = (SubscriptionNotificationKey) inputKey;
                     final SubscriptionBaseEvent event = dao.getEventById(key.getEventId(), internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId));
                     if (event == null) {
-                        // This can be expected if the event is soft deleted (is_active = '0')
+                        // This can be expected if the event is soft deleted (is_active = FALSE)
                         log.debug("Failed to extract event for notification key {}", inputKey);
                         return;
                     }
