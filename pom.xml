@@ -62,6 +62,7 @@
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
         <killbill-api.version>0.54.0-261dceb-SNAPSHOT</killbill-api.version>
         <killbill-plugin-api.version>0.27.0-7c87b30-SNAPSHOT</killbill-plugin-api.version>
+        <killbill-client.version>1.3.0-a7daeaa-SNAPSHOT</killbill-client.version>
         <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
         <!-- Temporary until upgrade to 2.x -->
