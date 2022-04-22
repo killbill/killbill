@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -64,11 +65,12 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
 
         final PhasePriceJson priceOverride = new PhasePriceJson(null, null, "somePhaseType", BigDecimal.ONE, null, null);
 
+       
         final SubscriptionJson subscription = new SubscriptionJson(UUID.randomUUID(),
                                                                    UUID.randomUUID(),
                                                                    bundleExternalKey, UUID.randomUUID(),
                                                                    externalKey,
-                                                                   new LocalDate(),
+                                                                   new DateTime(),  //TODO_1375 - Revisit
                                                                    UUID.randomUUID().toString(),
                                                                    ProductCategory.BASE,
                                                                    BillingPeriod.MONTHLY,
@@ -77,10 +79,10 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    UUID.randomUUID().toString(),
                                                                    EntitlementState.ACTIVE,
                                                                    EntitlementSourceType.NATIVE,
+                                                                   new DateTime(),  //TODO_1375 - Revisit
                                                                    new LocalDate(),
-                                                                   new LocalDate(),
-                                                                   new LocalDate(),
-                                                                   new LocalDate(),
+                                                                   new DateTime(),//TODO_1375 - Revisit
+                                                                   new DateTime(),//TODO_1375 - Revisit
                                                                    null,
                                                                    ImmutableList.<EventSubscriptionJson>of(event),
                                                                    ImmutableList.of(priceOverride),

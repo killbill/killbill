@@ -71,7 +71,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 UUID.randomUUID(),
                                                                                 bundleExternalKey, UUID.randomUUID(),
                                                                                 externalKey,
-                                                                                new LocalDate(),
+                                                                                new DateTime(),  //TODO_1375 - Revisit
                                                                                 UUID.randomUUID().toString(),
                                                                                 ProductCategory.BASE,
                                                                                 BillingPeriod.MONTHLY,
@@ -80,10 +80,10 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 UUID.randomUUID().toString(),
                                                                                 EntitlementState.ACTIVE,
                                                                                 EntitlementSourceType.NATIVE,
+                                                                                new DateTime(),  //TODO_1375 - Revisit
                                                                                 new LocalDate(),
-                                                                                new LocalDate(),
-                                                                                new LocalDate(),
-                                                                                new LocalDate(),
+                                                                                new DateTime(), //TODO_1375 - Revisit
+                                                                                new DateTime(),//TODO_1375 - Revisit
                                                                                 null,
                                                                                 ImmutableList.<EventSubscriptionJson>of(newEvent),
                                                                                 ImmutableList.of(priceOverride),
