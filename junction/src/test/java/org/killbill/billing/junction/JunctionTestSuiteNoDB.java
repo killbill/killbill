@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
@@ -57,7 +58,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
