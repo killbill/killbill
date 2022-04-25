@@ -19,6 +19,7 @@ package org.killbill.billing.usage.api.svcs;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -40,10 +41,6 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class DefaultInternalUserApi extends BaseUserApi implements InternalUserApi {
 
@@ -79,12 +76,9 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
         }
 
         final List<RolledUpUsageModelDao> usage = rolledUpUsageDao.getRawUsageForAccount(startDate, endDate, internalTenantContext);
-        return ImmutableList.copyOf(Iterables.transform(usage, new Function<RolledUpUsageModelDao, RawUsageRecord>() {
-            @Override
-            public RawUsageRecord apply(final RolledUpUsageModelDao input) {
-                return new DefaultRawUsage(input.getSubscriptionId(), input.getRecordDate(), input.getUnitType(), input.getAmount(), input.getTrackingId());
-            }
-        }));
+        return usage.stream()
+                .map(input -> new DefaultRawUsage(input.getSubscriptionId(), input.getRecordDate(), input.getUnitType(), input.getAmount(), input.getTrackingId()))
+                .collect(Collectors.toUnmodifiableList());
     }
 
 }
