@@ -40,6 +40,11 @@ public class TaxInvoiceItem extends InvoiceItemCatalogBase {
         this(id, null, invoiceId, accountId, bundleId, null, null, null, null, null, null, null, null, null, null, date, null, description, amount, currency, null, null);
     }
 
+    public TaxInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
+                          @Nullable final String description, final LocalDate date, final BigDecimal amount, final Currency currency, final UUID linkedItemId) {
+        this(id, null, invoiceId, accountId, bundleId, null, null, null, null, null, null, null, null, null, null, date, null, description, amount, currency, linkedItemId, null);
+    }
+
     public TaxInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId,
                           @Nullable final String productName, @Nullable final String planName, @Nullable final String phaseName, @Nullable final String usageName, final DateTime catalogEffectiveDate,
                           @Nullable final String prettyProductName, @Nullable final String prettyPlanName, @Nullable final String prettyPhaseName, @Nullable final String prettyUsageName,

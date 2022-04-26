@@ -17,6 +17,8 @@
 
 package org.killbill.billing.invoice;
 
+import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +30,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -42,6 +45,8 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.DefaultInvoice;
+import org.killbill.billing.invoice.model.DefaultInvoiceItem;
+import org.killbill.billing.invoice.model.DefaultInvoiceItem.Builder;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.billing.invoice.model.InvoiceItemCatalogBase;
@@ -49,6 +54,8 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
+import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
+import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult.InvoiceGroup;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
@@ -60,6 +67,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
@@ -180,6 +188,44 @@ public class InvoicePluginDispatcher {
                                               // The pluginProperties list passed to plugins is mutable by the plugins
                                               @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
                                               final InternalTenantContext tenantContext) {
+        log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
+
+        final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
+        final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
+        for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
+            final InvoiceGroupingResult grpResult = invoicePlugin.getInvoiceGrouping(clonedInvoice, isDryRun, properties, callContext);
+            if (grpResult != null && grpResult.getInvoiceGroups() != null && grpResult.getInvoiceGroups().size() > 0) {
+
+                final List<DefaultInvoice> result = new ArrayList<>();
+                final Map<UUID, InvoiceItem> itemMap = originalInvoice.getInvoiceItems()
+                                                                      .stream()
+                                                                      .map(new Function<InvoiceItem, AbstractMap.SimpleEntry<UUID, InvoiceItem>>() {
+                                                                          @Override
+                                                                          public SimpleEntry<UUID, InvoiceItem> apply(final InvoiceItem invoiceItem) {
+                                                                              return new SimpleEntry<>(invoiceItem.getId(), invoiceItem);
+                                                                          }
+                                                                      }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                final List<InvoiceGroup> groups = grpResult.getInvoiceGroups();
+                for (final InvoiceGroup grp : groups) {
+                    // TODO_1658 new Invoice operation
+                    final DefaultInvoice grpInvoice = (DefaultInvoice) originalInvoice.clone();
+                    final UUID newInvoiceId = UUIDs.randomUUID();
+                    grpInvoice.setId(newInvoiceId);
+                    grpInvoice.getTrackingIds().clear();
+                    grpInvoice.getPayments().clear();
+                    grpInvoice.getInvoiceItems().clear();
+                    for (final UUID itemId : grp.getInvoiceItemIds()) {
+                        final InvoiceItem item = itemMap.get(itemId);
+                        final DefaultInvoiceItem.Builder tmp = new Builder().source(item);
+                        tmp.withInvoiceId(newInvoiceId);
+                        grpInvoice.addInvoiceItem(tmp.build());
+                    }
+                    result.add(grpInvoice);
+                }
+                return result;
+            }
+        }
         return Collections.singletonList(originalInvoice);
     }
 
