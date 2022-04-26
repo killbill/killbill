@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
@@ -30,6 +29,7 @@ import org.killbill.CreatorName;
 import org.killbill.billing.broadcast.BroadcastApi;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
@@ -112,7 +112,7 @@ public class DefaultKillbillNodesApi implements KillbillNodesApi {
         final NodeInfoModelJson nodeInfoJson = mapper.deserializeNodeInfo(nodeInfo.getNodeInfo());
 
         final List<PluginInfo> pluginInfos = rawPluginInfo.iterator().hasNext() ?
-                                             StreamSupport.stream(rawPluginInfo.spliterator(), false).collect(Collectors.toUnmodifiableList()) :
+                                             Iterables.toUnmodifiableList(rawPluginInfo) :
                                              Collections.emptyList();
 
         final NodeInfoModelJson updatedNodeInfoJson = new NodeInfoModelJson(CreatorName.get(),

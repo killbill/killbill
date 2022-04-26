@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -56,6 +55,7 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
@@ -78,10 +78,10 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
 
     // Ordering is critical here, especially for Junction
     public static List<BlockingState> sortedCopy(final Iterable<BlockingState> blockingStates) {
-        final List<BlockingState> result = new LinkedList<BlockingState>();
+        final List<BlockingState> result = new LinkedList<>();
 
         // Make sure same-day transitions are always returned in the same order depending on their attributes
-        final Iterator<BlockingState> iterator = StreamSupport.stream(blockingStates.spliterator(), false)
+        final Iterator<BlockingState> iterator = Iterables.toStream(blockingStates)
                 .sorted(Comparator.naturalOrder())
                 .iterator();
         BlockingState prev = null;
@@ -358,9 +358,9 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
             return null;
         }
 
-        return StreamSupport.stream(blockingStatesOnDisk.spliterator(), false)
-                .filter(input -> input.getBlockedId().equals(blockedId) && isEntitlementCancellationBlockingState(input))
-                .findFirst().orElse(null);
+        return Iterables.toStream(blockingStatesOnDisk)
+                        .filter(input -> input.getBlockedId().equals(blockedId) && isEntitlementCancellationBlockingState(input))
+                        .findFirst().orElse(null);
     }
 
     private static boolean isEntitlementCancellationBlockingState(final BlockingState blockingState) {

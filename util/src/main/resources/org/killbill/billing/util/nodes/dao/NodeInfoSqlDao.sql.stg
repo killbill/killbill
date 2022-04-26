@@ -42,14 +42,14 @@ select <allTableFields("")>
 from <tableName()>
 where node_name = :nodeName
 and updated_date \> :updatedDate
-and is_active = '1'
+and is_active = TRUE
 ;
 >>
 
 getAll() ::= <<
 select <allTableFields("")>
 from <tableName()>
-where is_active = '1'
+where is_active = TRUE
 and updated_date \> :updatedDate
 order by node_name asc
 ;

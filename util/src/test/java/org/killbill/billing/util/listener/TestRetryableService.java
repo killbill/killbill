@@ -33,6 +33,7 @@ import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.tag.DefaultTagDefinition;
 import org.killbill.billing.util.tag.api.user.DefaultControlTagCreationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
@@ -48,8 +49,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import static org.killbill.billing.util.collect.CollectionTransformer.iterableToList;
 
 public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
 
@@ -176,7 +175,7 @@ public class TestRetryableService extends UtilTestSuiteWithEmbeddedDB {
 
     private List<NotificationEventWithMetadata> getFutureRetryableEvents() throws NoSuchNotificationQueue {
         final NotificationQueue notificationQueue = queueService.getNotificationQueue(RetryableService.RETRYABLE_SERVICE_NAME, TEST_LISTENER);
-        return iterableToList(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
+        return Iterables.toUnmodifiableList(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
     }
 
     private final class TestListener extends RetryableService {

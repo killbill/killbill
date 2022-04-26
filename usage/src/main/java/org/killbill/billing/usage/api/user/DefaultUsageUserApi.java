@@ -52,8 +52,6 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 
-import com.google.common.base.Strings;
-
 public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
 
     private final RolledUpUsageDao rolledUpUsageDao;
@@ -73,7 +71,7 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(record.getSubscriptionId(), ObjectType.SUBSCRIPTION, callContext);
 
         final String trackingIds;
-        if (Strings.isNullOrEmpty(record.getTrackingId())) {
+        if (record.getTrackingId() == null || record.getTrackingId().isEmpty()) {
             trackingIds = UUIDs.randomUUID().toString();
         // check if we have (at least) one row with the supplied tracking id
         } else if (recordsWithTrackingIdExist(record, internalCallContext)) {
