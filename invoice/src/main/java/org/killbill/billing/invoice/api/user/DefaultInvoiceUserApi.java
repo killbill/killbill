@@ -515,7 +515,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }));
         migrationInvoice.addInvoiceItems(itemModelDaos);
 
-        dao.createInvoices(ImmutableList.<InvoiceModelDao>of(migrationInvoice), null, ImmutableSet.of(), internalCallContext);
+        dao.createInvoices(ImmutableList.<InvoiceModelDao>of(migrationInvoice), null, ImmutableSet.of(), null, null, false, internalCallContext);
         return migrationInvoice.getId();
     }
 

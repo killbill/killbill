@@ -123,7 +123,7 @@ public class InvoiceApiHelper {
                 invoiceModelDaos.add(invoiceModelDao);
             }
 
-            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, ImmutableSet.of(), internalCallContext);
+            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, ImmutableSet.of(), null, null, true,  internalCallContext);
             success = true;
 
             return fromInvoiceItemModelDao(createdInvoiceItems);

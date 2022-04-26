@@ -19,6 +19,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -389,7 +390,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
     private void insertInvoiceItems(final InvoiceModelDao invoice) {
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
-        invoiceDao.createInvoice(invoice, null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
+        invoiceDao.createInvoices(Collections.singleton(invoice), null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, false, internalCallContext);
     }
 
     private void verifyNoInvoiceDueOnDate(final UUID accountId, final LocalDate targetDate) {

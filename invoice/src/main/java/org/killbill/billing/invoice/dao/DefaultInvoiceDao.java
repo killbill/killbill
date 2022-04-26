@@ -331,28 +331,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
-    @Override
-    public void createInvoice(final InvoiceModelDao invoice,
-                              final BillingEventSet billingEvents,
-                              final Set<InvoiceTrackingModelDao> trackingIds,
-                              final FutureAccountNotifications callbackDateTimePerSubscriptions,
-                              final ExistingInvoiceMetadata existingInvoiceMetadata,
-                              final InternalCallContext context) {
-        createInvoices(ImmutableList.<InvoiceModelDao>of(invoice), billingEvents, trackingIds, callbackDateTimePerSubscriptions, existingInvoiceMetadata, false, context);
-    }
-
-    @Override
-    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
-                                                    final BillingEventSet billingEvents,
-                                                    final Set<InvoiceTrackingModelDao> trackingIds,
-                                                    final InternalCallContext context) {
-        return createInvoices(invoices, billingEvents, trackingIds, new FutureAccountNotifications(), null, true, context);
-    }
-
-    private List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> inputInvoices,
+    public List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> inputInvoices,
                                                      @Nullable final BillingEventSet billingEvents,
                                                      final Set<InvoiceTrackingModelDao> trackingIds,
-                                                     final FutureAccountNotifications callbackDateTimePerSubscriptions,
+                                                     @Nullable final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                      @Nullable final ExistingInvoiceMetadata existingInvoiceMetadataOrNull,
                                                      final boolean returnCreatedInvoiceItems,
                                                      final InternalCallContext context) {
@@ -1194,6 +1176,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                              final UUID accountId,
                                              final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                              final InternalCallContext internalCallContext) {
+        if (callbackDateTimePerSubscriptions == null) {
+            return;
+        }
         for (final LocalDate notificationDate : callbackDateTimePerSubscriptions.getNotificationsForTrigger().keySet()) {
             final DateTime notificationDateTime = internalCallContext.toUTCDateTime(notificationDate);
             final Set<UUID> subscriptionIds = callbackDateTimePerSubscriptions.getNotificationsForTrigger().get(notificationDate);

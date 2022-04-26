@@ -19,6 +19,7 @@ package org.killbill.billing.invoice;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -171,6 +172,15 @@ public class InvoicePluginDispatcher {
                 invoicePlugin.onFailureCall(invoiceContext, properties);
             }
         }
+    }
+
+    public List<DefaultInvoice> splitInvoices(final DefaultInvoice originalInvoice,
+                                              final boolean isDryRun,
+                                              final CallContext callContext,
+                                              // The pluginProperties list passed to plugins is mutable by the plugins
+                                              @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                              final InternalTenantContext tenantContext) {
+        return Collections.singletonList(originalInvoice);
     }
 
     public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
