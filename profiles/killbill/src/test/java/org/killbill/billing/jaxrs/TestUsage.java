@@ -208,7 +208,7 @@ public class TestUsage extends TestJaxrsBase {
         Assert.assertEquals(new BigDecimal("14.75").compareTo(retrievedUsage3.getRolledUpUnits().get(0).getAmount()), 0);
     }
 
-    @Test(groups = "slow", enabled=false)
+    @Test(groups = "slow")
     public void testRecordUsageWithBigDecimalValue() throws Exception {
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         final Subscriptions body = createSubscriptions(accountJson);
