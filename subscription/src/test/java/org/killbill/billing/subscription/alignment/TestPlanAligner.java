@@ -20,6 +20,7 @@ package org.killbill.billing.subscription.alignment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -379,13 +380,15 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
 
     private DefaultSubscriptionBase createSubscription(final DateTime bundleStartDate, final DateTime alignStartDate, final String productName, final PhaseType phaseType) throws CatalogApiException {
         final SubscriptionBuilder builder = new SubscriptionBuilder();
+        builder.setId(UUID.randomUUID());
         builder.setBundleStartDate(bundleStartDate);
         // Make sure to set the dates apart
         builder.setAlignStartDate(new DateTime(alignStartDate));
 
         // Create the transitions
         final DefaultSubscriptionBase defaultSubscriptionBase = new DefaultSubscriptionBase(builder, null, clock);
-        final SubscriptionBaseEvent event = createSubscriptionEvent(builder.getAlignStartDate(),
+        final SubscriptionBaseEvent event = createSubscriptionEvent(defaultSubscriptionBase.getId(),
+                                                                    builder.getAlignStartDate(),
                                                                     productName,
                                                                     phaseType,
                                                                     ApiEventType.CREATE
@@ -406,12 +409,14 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
                                     final String previousProductName,
                                     final String newProductName,
                                     final PhaseType commonPhaseType) throws CatalogApiException {
-        final SubscriptionBaseEvent previousEvent = createSubscriptionEvent(defaultSubscriptionBase.getStartDate(),
+        final SubscriptionBaseEvent previousEvent = createSubscriptionEvent(defaultSubscriptionBase.getId(),
+                                                                            defaultSubscriptionBase.getStartDate(),
                                                                             previousProductName,
                                                                             commonPhaseType,
                                                                             ApiEventType.CREATE
                                                                            );
-        final SubscriptionBaseEvent event = createSubscriptionEvent(effectiveChangeDate,
+        final SubscriptionBaseEvent event = createSubscriptionEvent(defaultSubscriptionBase.getId(),
+                                                                    effectiveChangeDate,
                                                                     newProductName,
                                                                     commonPhaseType,
                                                                     ApiEventType.CHANGE
@@ -430,11 +435,13 @@ public class TestPlanAligner extends SubscriptionTestSuiteNoDB {
         Assert.assertNotNull(newTransitions.get(1).getNextPhase());
     }
 
-    private SubscriptionBaseEvent createSubscriptionEvent(final DateTime effectiveDate,
+    private SubscriptionBaseEvent createSubscriptionEvent(final UUID subscriptionId,
+                                                          final DateTime effectiveDate,
                                                           final String productName,
                                                           final PhaseType phaseType,
                                                           final ApiEventType apiEventType) {
         final ApiEventBuilder eventBuilder = new ApiEventBuilder();
+        eventBuilder.setSubscriptionId(subscriptionId);
         eventBuilder.setEffectiveDate(effectiveDate);
         eventBuilder.setEventPlan(productName);
         eventBuilder.setEventPlanPhase(productName + "-" + phaseType.toString().toLowerCase());

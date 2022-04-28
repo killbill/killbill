@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.joda.time.DateTime;
 
 import org.killbill.billing.subscription.events.user.ApiEvent;
+import org.killbill.billing.subscription.events.user.ApiEventType;
 
 public abstract class EventBase implements SubscriptionBaseEvent {
 
@@ -78,31 +79,49 @@ public abstract class EventBase implements SubscriptionBaseEvent {
         return isActive;
     }
 
-    //
-    // Really used for unit tests only as the sql implementation relies on date first and then event insertion
-    //
-    // Order first by:
-    // - effectiveDate, followed by processedDate
-    // - if all dates are equal-- unlikely, we first return PHASE EVENTS
-    // - If both events are User events, return the first CREATE, CHANGE,... as specified by ApiEventType
-    // - If all that is not enough return consistent by random ordering based on UUID
-    //
+
     @Override
     public int compareTo(final SubscriptionBaseEvent other) {
         if (other == null) {
             throw new IllegalArgumentException("IEvent is compared to a null instance");
         }
 
+        // If events are for different subscriptions order per subscriptionId first
+        final int subCmp = subscriptionId.compareTo(other.getSubscriptionId());
+        if (subCmp != 0) {
+            return subCmp;
+        }
+
+        // Order by effective date first
         if (effectiveDate.isBefore(other.getEffectiveDate())) {
             return -1;
         } else if (effectiveDate.isAfter(other.getEffectiveDate())) {
             return 1;
-        } else if (getType() != other.getType()) {
-            return (getType() == EventType.PHASE) ? -1 : 1;
-        } else if (getType() == EventType.API_USER) {
-            return ((ApiEvent) this).getApiEventType().compareTo(((ApiEvent) other).getApiEventType());
+        }
+
+        //
+        // In case of date equality:
+        //
+
+        // We first ensure that first event is a start event (CREATE or TRANSFER)
+        final boolean isCurTransferOrCreate = getType() == EventType.API_USER &&
+                                              (((ApiEvent) this).getApiEventType() == ApiEventType.CREATE || ((ApiEvent) this).getApiEventType() == ApiEventType.TRANSFER);
+        final boolean isOtherTransferOrCreate = other.getType() == EventType.API_USER &&
+                                                (((ApiEvent) other).getApiEventType() == ApiEventType.CREATE || ((ApiEvent) other).getApiEventType() == ApiEventType.TRANSFER);
+        if (isCurTransferOrCreate) {
+            return -1;
+        } else if (isOtherTransferOrCreate) {
+            return 1;
+        }
+        // Then we rely on the totalOrdering (recordId unless in-memory event for which it is 0)
+        if (getTotalOrdering() == 0 && other.getTotalOrdering() > 0) {
+            return 1;
+        } else if (getTotalOrdering() > 0 && other.getTotalOrdering() == 0) {
+            return -1;
+        } else if (getTotalOrdering() == other.getTotalOrdering()) {
+            return 0;
         } else {
-            return uuid.compareTo(other.getId());
+            return getTotalOrdering() < (other.getTotalOrdering()) ? -1 : 1;
         }
     }
 
