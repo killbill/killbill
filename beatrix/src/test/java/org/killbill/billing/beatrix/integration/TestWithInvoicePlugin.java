@@ -57,7 +57,6 @@ import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
-import org.killbill.billing.invoice.plugin.api.InvoiceGroup;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
