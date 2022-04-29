@@ -137,6 +137,11 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
+    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final InternalTenantContext context) {
+        return null;
+    }
+
+    @Override
     public Pagination<InvoiceModelDao> getAll(final InternalTenantContext context) {
         synchronized (monitor) {
             return new DefaultPagination<InvoiceModelDao>((long) invoices.values().size(), invoices.values().iterator());

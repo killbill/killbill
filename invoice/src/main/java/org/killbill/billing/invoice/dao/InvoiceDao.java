@@ -39,6 +39,7 @@ import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
+import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.EntityDao;
 
@@ -60,6 +61,8 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     InvoiceModelDao getByNumber(Integer number, InternalTenantContext context) throws InvoiceApiException;
 
     InvoiceModelDao getByInvoiceItem(final UUID uuid, final InternalTenantContext context) throws InvoiceApiException;
+
+    public List<InvoiceModelDao> getInvoicesByGroup(UUID groupId, InternalTenantContext context);
 
     List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, InternalTenantContext context);
 

@@ -11,6 +11,7 @@ tableFields(prefix) ::= <<
 , <prefix>status
 , <prefix>migrated
 , <prefix>parent_invoice
+, <prefix>grp_id
 , <prefix>created_by
 , <prefix>created_date
 >>
@@ -23,6 +24,7 @@ tableValues() ::= <<
 , :status
 , :migrated
 , :parentInvoice
+, :grpId
 , :createdBy
 , :createdDate
 >>

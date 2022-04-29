@@ -141,6 +141,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         final BigDecimal newAmountCharged = newInvoice.getChargedAmount();
         Assert.assertEquals(newInvoice.getOriginalChargedAmount().compareTo(externalChargeAmount), 0);
         Assert.assertEquals(newAmountCharged.compareTo(externalChargeAmount), 0);
+        Assert.assertEquals(newInvoice.getId(), newInvoice.getGroupId());
     }
 
     @Test(groups = "slow")

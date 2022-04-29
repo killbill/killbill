@@ -307,6 +307,30 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
+    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final InternalTenantContext context) {
+        // TODO_1658 Do we want a special query along with a new index on grpId or is the cardinality small enough that we
+        // fetch by accountRecordId. Note that we only 'populate' on the filtered list.
+        final List<Tag> invoicesTags = getInvoicesTags(context);
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
+            @Override
+            public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                final List<InvoiceModelDao> allInvoices = invoiceSqlDao.getByAccountRecordId(context);
+                final List<InvoiceModelDao> invoices = ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(allInvoices,
+                                                                                                                                                                     new Predicate<InvoiceModelDao>() {
+                                                                                                                                                                         @Override
+                                                                                                                                                                         public boolean apply(final InvoiceModelDao invoice) {
+                                                                                                                                                                             return invoice.getGrpId().equals(groupId);
+                                                                                                                                                                         }
+                                                                                                                                                                     })));
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
+                return invoices;
+            }
+        });
+
+    }
+
+    @Override
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                              final InternalCallContext context) {
 
@@ -379,6 +403,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
 
                 final List<InvoiceItemModelDao> invoiceItemsToCreate = new LinkedList<InvoiceItemModelDao>();
+                UUID grpId = null;
                 for (final InvoiceModelDao invoiceModelDao : inputInvoices) {
                     inputInvoicesById.put(invoiceModelDao.getId(), invoiceModelDao);
                     final boolean isNotShellInvoice = invoiceIdsReferencedFromItems.remove(invoiceModelDao.getId());
@@ -387,6 +412,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     if (isNotShellInvoice) {
                         // Create the invoice if this is not a shell invoice and it does not already exist
                         if (invoiceOnDisk == null) {
+                            if (grpId == null) {
+                                grpId = invoiceModelDao.getId();
+                            }
+                            invoiceModelDao.setGrpId(grpId);
                             createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
                             if (billingEvents != null) {
                                 billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), BillingEventSerializer.serialize(billingEvents), context.getCreatedDate()), context);

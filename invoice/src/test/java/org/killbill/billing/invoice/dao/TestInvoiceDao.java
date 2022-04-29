@@ -141,6 +141,38 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.checkInvoicesEqual(invoiceForExternalCharge, invoice);
     }
 
+
+    @Test(groups = "slow")
+    public void testWithInvoiceGroup() throws Exception {
+        final UUID accountId = account.getId();
+
+        final InvoiceModelDao invoice1 = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false);
+        final InvoiceItemModelDao item1 = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(invoice1.getId(), accountId, UUID.randomUUID(), UUID.randomUUID().toString(), clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD, null));
+        invoice1.addInvoiceItem(item1);
+
+
+        final InvoiceModelDao invoice2 = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false);
+        final InvoiceItemModelDao item2 = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(invoice2.getId(), accountId, UUID.randomUUID(), UUID.randomUUID().toString(), clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("17.0"), Currency.USD, null));
+        invoice2.addInvoiceItem(item2);
+
+        final List<InvoiceModelDao> invoices = new ArrayList<>();
+        invoices.add(invoice1);
+        invoices.add(invoice2);
+
+        invoiceDao.createInvoices(invoices,
+                                  null,
+                                  ImmutableSet.<InvoiceTrackingModelDao>of(),
+                                  new FutureAccountNotifications(),
+                                  new ExistingInvoiceMetadata(ImmutableList.<Invoice>of()),
+                                  false,
+                                  context);
+
+        // We know that groupId will be the ID of the first invoice
+        final UUID groupId = invoice1.getId();
+        final List<Invoice> result = invoiceUserApi.getInvoicesByGroup(accountId, groupId, callContext);
+        assertEquals(result.size(), 2);
+    }
+
     @Test(groups = "slow")
     public void testCreationAndRetrievalByAccount() throws EntityPersistenceException {
         final UUID accountId = account.getId();
