@@ -367,6 +367,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         return invoice.getParentInvoiceId();
     }
 
+    @Override
+    public UUID getGroupId() {
+        return invoice.getGroupId();
+    }
+
     // Expose the fields for children classes. This is useful for further customization of the invoices
 
     @SuppressWarnings("UnusedDeclaration")

@@ -22,6 +22,7 @@ package org.killbill.billing.invoice.api.user;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -172,6 +173,12 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public List<Invoice> getInvoicesByGroup(final UUID groupId, final TenantContext context) {
+        // TODO_1658
+        return null;
+    }
+
+    @Override
     public Invoice getInvoiceByPayment(final UUID paymentId, final TenantContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context);
         final UUID invoiceId = dao.getInvoiceIdByPaymentId(paymentId, internalTenantContext);
@@ -272,20 +279,32 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice triggerDryRunInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
-        final Invoice result = dispatcher.processAccount(true, accountId, targetDate, dryRunArguments, false, internalContext);
-        if (result == null) {
+        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, dryRunArguments, false, internalContext);
+        if (result.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
-            return result;
+            // TODO_1658
+             return result.get(0);
         }
     }
 
     @Override
-    public Invoice triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
-        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+    public Iterable<Invoice> triggerDryRunInvoiceGroupGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments, final CallContext context) throws InvoiceApiException {
+        return null;
+    }
 
-        final Invoice result = dispatcher.processAccount(true, accountId, targetDate, null, false, internalContext);
-        if (result == null) {
+    @Override
+    public Invoice  triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
+        final Iterable<Invoice> result = triggerInvoiceGroupGeneration(accountId, targetDate, context);
+        // TODO_1658
+        return result.iterator().next();
+    }
+
+    @Override
+    public Iterable<Invoice> triggerInvoiceGroupGeneration(final UUID accountId, final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, null, false, internalContext);
+        if (result.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
             return result;

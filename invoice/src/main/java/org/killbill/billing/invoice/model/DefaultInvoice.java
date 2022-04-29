@@ -321,6 +321,12 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     }
 
     @Override
+    public UUID getGroupId() {
+        // TODO_1658
+        return null;
+    }
+
+    @Override
     public String toString() {
         return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId
                + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount()

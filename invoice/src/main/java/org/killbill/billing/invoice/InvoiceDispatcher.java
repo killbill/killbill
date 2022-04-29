@@ -263,26 +263,31 @@ public class InvoiceDispatcher {
     }
 
     public void processSubscriptionForInvoiceNotification(final LocalDate targetDate, final InternalCallContext context) throws InvoiceApiException {
-        final Invoice dryRunInvoice = processSubscriptionInternal(targetDate, true, false, context);
-        if (dryRunInvoice != null && dryRunInvoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
-            final InvoiceNotificationInternalEvent event = new DefaultInvoiceNotificationInternalEvent(dryRunInvoice.getAccountId(), dryRunInvoice.getBalance(), dryRunInvoice.getCurrency(),
-                                                                                                       context.toUTCDateTime(targetDate), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
-            try {
-                eventBus.post(event);
-            } catch (final EventBusException e) {
-                log.warn("Failed to post event {}", event, e);
+        final List<Invoice> dryRunInvoices = processSubscriptionInternal(targetDate, true, false, context);
+        for (final Invoice dryRunInvoice : dryRunInvoices) {
+
+            // TODO_1658 Confirm we should we send a bus event per invoice in the group
+            // Perhaps we could introduce an INVOICE_GROUP event that contains the id of all the invoices?
+            if (dryRunInvoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
+                final InvoiceNotificationInternalEvent event = new DefaultInvoiceNotificationInternalEvent(dryRunInvoice.getAccountId(), dryRunInvoice.getBalance(), dryRunInvoice.getCurrency(),
+                                                                                                           context.toUTCDateTime(targetDate), context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken());
+                try {
+                    eventBus.post(event);
+                } catch (final EventBusException e) {
+                    log.warn("Failed to post event {}", event, e);
+                }
             }
         }
     }
 
-    private Invoice processSubscriptionInternal(final LocalDate targetDate, final boolean dryRunForNotification, final boolean isRescheduled, final InternalCallContext context) throws InvoiceApiException {
+    private List<Invoice> processSubscriptionInternal(final LocalDate targetDate, final boolean dryRunForNotification, final boolean isRescheduled, final InternalCallContext context) throws InvoiceApiException {
         final CallContext callContext = internalCallContextFactory.createCallContext(context);
         final UUID accountId = callContext.getAccountId();
         final DryRunArguments dryRunArguments = dryRunForNotification ? TARGET_DATE_DRY_RUN_ARGUMENTS : null;
         return processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, isRescheduled, context);
     }
 
-    public Invoice processAccountFromNotificationOrBusEvent(final UUID accountId,
+    public List<Invoice> processAccountFromNotificationOrBusEvent(final UUID accountId,
                                                             @Nullable final LocalDate targetDate,
                                                             @Nullable final DryRunArguments dryRunArguments,
                                                             final boolean isRescheduled,
@@ -290,14 +295,14 @@ public class InvoiceDispatcher {
         if (!invoiceConfig.isInvoicingSystemEnabled(context)) {
             log.warn("Invoicing system is off, parking accountId='{}'", accountId);
             parkAccount(accountId, context);
-            return null;
+            return Collections.emptyList();
         }
 
         return processAccount(false, accountId, targetDate, dryRunArguments, isRescheduled, context);
     }
 
 
-    public Invoice processAccount(final boolean isApiCall,
+    public List<Invoice> processAccount(final boolean isApiCall,
                                   final UUID accountId,
                                   @Nullable final LocalDate targetDate,
                                   @Nullable final DryRunArguments dryRunArguments,
@@ -308,7 +313,7 @@ public class InvoiceDispatcher {
             parkedAccount = parkedAccountsManager.isParked(context);
             if (parkedAccount && !isApiCall) {
                 log.warn("Ignoring invoice generation process for accountId='{}', targetDate='{}', account is parked", accountId.toString(), targetDate);
-                return null;
+                return Collections.emptyList();
             }
         } catch (final TagApiException e) {
             log.warn("Unable to determine parking state for accountId='{}'", accountId);
@@ -318,7 +323,7 @@ public class InvoiceDispatcher {
         if (!isApiCall &&
             !locker.isFree(LockerType.ACCNT_INV_PAY.toString(), accountId.toString())) {
             if (invoiceOptimizer.rescheduleProcessAccount(accountId, context)) {
-                return null;
+                return Collections.emptyList();
             }
         }
 
@@ -340,7 +345,7 @@ public class InvoiceDispatcher {
                 lock.release();
             }
         }
-        return null;
+        return Collections.emptyList();
     }
 
     private enum InvoiceTiming {
@@ -354,7 +359,7 @@ public class InvoiceDispatcher {
         SET_CHARGE_THROUGH_DT,
     }
 
-    private Invoice processAccountInternal(final boolean isApiCall,
+    private List<Invoice> processAccountInternal(final boolean isApiCall,
                                            final boolean parkedAccount,
                                            final UUID accountId,
                                            @Nullable final LocalDate inputTargetDateMaybeNull,
@@ -387,13 +392,13 @@ public class InvoiceDispatcher {
             final BillingEventSet billingEvents = billingApi.getBillingEventsForAccountAndUpdateAccountBCD(accountId, dryRunArguments, accountInvoices.getBillingEventCutoffDate(), context);
             invoiceTimings.put(InvoiceTiming.BILLING_EVENTS, System.nanoTime() - startNano);
             if (!isApiCall && billingEvents.isAccountAutoInvoiceOff()) {
-                return null;
+                return Collections.emptyList();
             }
 
-            final Invoice invoice;
+            List<Invoice> result;
             if (!isDryRun) {
                 final InvoicesWithFutureNotifications invoicesWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, accountInvoices, isRescheduled, Lists.newLinkedList(), invoiceTimings, context);
-                final List <Invoice> invoices = invoicesWithFutureNotifications != null ? invoicesWithFutureNotifications.getInvoices() : Collections.emptyList();
+                result = invoicesWithFutureNotifications != null ? invoicesWithFutureNotifications.getInvoices() : Collections.emptyList();
                 if (parkedAccount) {
                     try {
                         log.info("Illegal invoicing state fixed for accountId='{}', unparking account", accountId);
@@ -402,9 +407,10 @@ public class InvoiceDispatcher {
                         log.warn("Unable to unpark account", ignored);
                     }
                 }
-                // TODO_1658 Requires API change all the way up to JAXRS
-                invoice = invoices.size() > 0 ? invoices.get(0) : null;
             } else /* Dry run use cases */ {
+                // TODO_1658
+                result = new ArrayList<>();
+                final Invoice invoice;
                 final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                                                           DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
                 final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsIterable = notificationQueue.getFutureNotificationForSearchKeys(context.getAccountRecordId(), context.getTenantRecordId());
@@ -433,22 +439,25 @@ public class InvoiceDispatcher {
                 } else /* DryRunType.TARGET_DATE, SUBSCRIPTION_ACTION */ {
                     invoice = processDryRun_TARGET_DATE_Invoice(accountId, inputTargetDate, allCandidateTargetDates, billingEvents, accountInvoices, dryRunInfo, invoiceTimings, context);
                 }
+                if (invoice !=  null) {
+                    result.add(invoice);
+                }
             }
 
             printInvoiceTiming(invoiceTimings);
-            return invoice;
+            return result;
         } catch (final CatalogApiException e) {
             log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
-            return null;
+            return Collections.emptyList();
         } catch (final AccountApiException e) {
             log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
-            return null;
+            return Collections.emptyList();
         } catch (final SubscriptionBaseApiException e) {
             log.warn("Failed to retrieve BillingEvents for accountId='{}', dryRunArguments='{}'", accountId, dryRunArguments, e);
-            return null;
+            return Collections.emptyList();
         } catch (final InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_PLUGIN_API_ABORTED.getCode()) {
-                return null;
+                return Collections.emptyList();
             }
 
             if (e.getCode() == ErrorCode.UNEXPECTED_ERROR.getCode() && !isDryRun) {

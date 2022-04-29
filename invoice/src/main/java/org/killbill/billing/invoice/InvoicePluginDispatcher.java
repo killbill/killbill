@@ -54,8 +54,8 @@ import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
+import org.killbill.billing.invoice.plugin.api.InvoiceGroup;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
-import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult.InvoiceGroup;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
@@ -297,30 +297,30 @@ public class InvoicePluginDispatcher {
 
         final UUID additionalInvoiceId = MoreObjects.firstNonNull(additionalInvoiceItem.getId(), UUIDs.randomUUID());
         final InvoiceItemCatalogBase tmp = new InvoiceItemCatalogBase(additionalInvoiceId,
-                                          mutableField("createdDate", existingItem != null ? existingItem.getCreatedDate() : null, additionalInvoiceItem.getCreatedDate(), invoicePlugin),
-                                          invoiceId,
-                                          immutableField("accountId", existingItem, existingItem != null ? existingItem.getAccountId() : null, additionalInvoiceItem.getAccountId(), invoicePlugin),
-                                          immutableField("bundleId", existingItem, existingItem != null ? existingItem.getBundleId() : null, additionalInvoiceItem.getBundleId(), invoicePlugin),
-                                          immutableField("subscriptionId", existingItem, existingItem != null ? existingItem.getSubscriptionId() : null, additionalInvoiceItem.getSubscriptionId(), invoicePlugin),
-                                          mutableField("description", existingItem != null ? existingItem.getDescription() : null, additionalInvoiceItem.getDescription(), invoicePlugin),
-                                          immutableField("productName", existingItem, existingItem != null ? existingItem.getProductName() : null, additionalInvoiceItem.getProductName(), invoicePlugin),
-                                          immutableField("planName", existingItem, existingItem != null ? existingItem.getPlanName() : null, additionalInvoiceItem.getPlanName(), invoicePlugin),
-                                          immutableField("phaseName", existingItem, existingItem != null ? existingItem.getPhaseName() : null, additionalInvoiceItem.getPhaseName(), invoicePlugin),
-                                          immutableField("usageName", existingItem, existingItem != null ? existingItem.getUsageName() : null, additionalInvoiceItem.getUsageName(), invoicePlugin),
-                                          immutableField("catalogEffectiveDate", existingItem, existingItem != null ? existingItem.getCatalogEffectiveDate() : null, additionalInvoiceItem.getCatalogEffectiveDate(), invoicePlugin),
-                                          mutableField("prettyProductName", existingItem != null ? existingItem.getPrettyProductName() : null, additionalInvoiceItem.getPrettyProductName(), invoicePlugin),
-                                          mutableField("prettyPlanName", existingItem != null ? existingItem.getPrettyPlanName() : null, additionalInvoiceItem.getPrettyPlanName(), invoicePlugin),
-                                          mutableField("prettyPhaseName", existingItem != null ? existingItem.getPrettyPhaseName() : null, additionalInvoiceItem.getPrettyPhaseName(), invoicePlugin),
-                                          mutableField("prettyUsageName", existingItem != null ? existingItem.getPrettyUsageName() : null, additionalInvoiceItem.getPrettyUsageName(), invoicePlugin),
-                                          immutableField("startDate", existingItem, existingItem != null ? existingItem.getStartDate() : null, additionalInvoiceItem.getStartDate(), invoicePlugin),
-                                          immutableField("endDate", existingItem, existingItem != null ? existingItem.getEndDate() : null, additionalInvoiceItem.getEndDate(), invoicePlugin),
-                                          mutableField("amount", existingItem != null ? existingItem.getAmount() : null, additionalInvoiceItem.getAmount(), invoicePlugin),
-                                          immutableField("rate", existingItem, existingItem != null ? existingItem.getRate() : null, additionalInvoiceItem.getRate(), invoicePlugin),
-                                          immutableField("currency", existingItem, existingItem != null ? existingItem.getCurrency() : null, additionalInvoiceItem.getCurrency(), invoicePlugin),
-                                          immutableField("linkedItemId", existingItem, existingItem != null ? existingItem.getLinkedItemId() : null, additionalInvoiceItem.getLinkedItemId(), invoicePlugin),
-                                          immutableField("quantity", existingItem, (existingItem == null ? null : existingItem.getQuantity()), additionalInvoiceItem.getQuantity() == null ? null : additionalInvoiceItem.getQuantity(), invoicePlugin),
-                                          mutableField("itemDetails", existingItem != null ? existingItem.getItemDetails() : null, additionalInvoiceItem.getItemDetails(), invoicePlugin),
-                                          immutableField("invoiceItemType", existingItem, existingItem != null ? existingItem.getInvoiceItemType() : null, additionalInvoiceItem.getInvoiceItemType(), invoicePlugin));
+                                                                      mutableField("createdDate", existingItem != null ? existingItem.getCreatedDate() : null, additionalInvoiceItem.getCreatedDate(), invoicePlugin),
+                                                                      invoiceId,
+                                                                      immutableField("accountId", existingItem, existingItem != null ? existingItem.getAccountId() : null, additionalInvoiceItem.getAccountId(), invoicePlugin),
+                                                                      immutableField("bundleId", existingItem, existingItem != null ? existingItem.getBundleId() : null, additionalInvoiceItem.getBundleId(), invoicePlugin),
+                                                                      immutableField("subscriptionId", existingItem, existingItem != null ? existingItem.getSubscriptionId() : null, additionalInvoiceItem.getSubscriptionId(), invoicePlugin),
+                                                                      mutableField("description", existingItem != null ? existingItem.getDescription() : null, additionalInvoiceItem.getDescription(), invoicePlugin),
+                                                                      immutableField("productName", existingItem, existingItem != null ? existingItem.getProductName() : null, additionalInvoiceItem.getProductName(), invoicePlugin),
+                                                                      immutableField("planName", existingItem, existingItem != null ? existingItem.getPlanName() : null, additionalInvoiceItem.getPlanName(), invoicePlugin),
+                                                                      immutableField("phaseName", existingItem, existingItem != null ? existingItem.getPhaseName() : null, additionalInvoiceItem.getPhaseName(), invoicePlugin),
+                                                                      immutableField("usageName", existingItem, existingItem != null ? existingItem.getUsageName() : null, additionalInvoiceItem.getUsageName(), invoicePlugin),
+                                                                      immutableField("catalogEffectiveDate", existingItem, existingItem != null ? existingItem.getCatalogEffectiveDate() : null, additionalInvoiceItem.getCatalogEffectiveDate(), invoicePlugin),
+                                                                      mutableField("prettyProductName", existingItem != null ? existingItem.getPrettyProductName() : null, additionalInvoiceItem.getPrettyProductName(), invoicePlugin),
+                                                                      mutableField("prettyPlanName", existingItem != null ? existingItem.getPrettyPlanName() : null, additionalInvoiceItem.getPrettyPlanName(), invoicePlugin),
+                                                                      mutableField("prettyPhaseName", existingItem != null ? existingItem.getPrettyPhaseName() : null, additionalInvoiceItem.getPrettyPhaseName(), invoicePlugin),
+                                                                      mutableField("prettyUsageName", existingItem != null ? existingItem.getPrettyUsageName() : null, additionalInvoiceItem.getPrettyUsageName(), invoicePlugin),
+                                                                      immutableField("startDate", existingItem, existingItem != null ? existingItem.getStartDate() : null, additionalInvoiceItem.getStartDate(), invoicePlugin),
+                                                                      immutableField("endDate", existingItem, existingItem != null ? existingItem.getEndDate() : null, additionalInvoiceItem.getEndDate(), invoicePlugin),
+                                                                      mutableField("amount", existingItem != null ? existingItem.getAmount() : null, additionalInvoiceItem.getAmount(), invoicePlugin),
+                                                                      immutableField("rate", existingItem, existingItem != null ? existingItem.getRate() : null, additionalInvoiceItem.getRate(), invoicePlugin),
+                                                                      immutableField("currency", existingItem, existingItem != null ? existingItem.getCurrency() : null, additionalInvoiceItem.getCurrency(), invoicePlugin),
+                                                                      immutableField("linkedItemId", existingItem, existingItem != null ? existingItem.getLinkedItemId() : null, additionalInvoiceItem.getLinkedItemId(), invoicePlugin),
+                                                                      immutableField("quantity", existingItem, (existingItem == null ? null : existingItem.getQuantity()), additionalInvoiceItem.getQuantity() == null ? null : additionalInvoiceItem.getQuantity(), invoicePlugin),
+                                                                      mutableField("itemDetails", existingItem != null ? existingItem.getItemDetails() : null, additionalInvoiceItem.getItemDetails(), invoicePlugin),
+                                                                      immutableField("invoiceItemType", existingItem, existingItem != null ? existingItem.getInvoiceItemType() : null, additionalInvoiceItem.getInvoiceItemType(), invoicePlugin));
         switch (tmp.getInvoiceItemType()) {
             case RECURRING:
                 return new RecurringInvoiceItem(tmp);
@@ -338,7 +338,6 @@ public class InvoicePluginDispatcher {
                 return tmp;
         }
     }
-
 
     private <T> T mutableField(final String fieldName, @Nullable final T existingValue, @Nullable final T updatedValue, final InvoicePluginApi invoicePlugin) {
         if (updatedValue != null) {
