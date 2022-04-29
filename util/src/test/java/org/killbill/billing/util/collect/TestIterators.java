@@ -28,6 +28,7 @@ import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
@@ -82,5 +83,22 @@ public class TestIterators extends UtilTestSuiteNoDB {
         final List<String> strings = List.of("a", "b", "c", "d", "e", "f", "g", "h", "i", "j");
         final int size = Iterators.size(strings.iterator());
         assertEquals(size, 10);
+    }
+
+    @Test
+    void contains() {
+        final Iterator<String> strings = List.of("a", "b", "c").iterator();
+        final Iterator<String> empty = Collections.emptyIterator();
+        final Iterator<KeyValue> keyValues = List.of(new KeyValue("a", "1"),
+                                                     new KeyValue("b", "2"))
+                                                 .iterator();
+
+        assertTrue(Iterators.contains(strings, "a"));
+        assertFalse(Iterators.contains(strings, "d"));
+
+        assertFalse(Iterators.contains(empty, "a"));
+
+        assertTrue(Iterators.contains(keyValues, new KeyValue("b", "2")));
+        assertFalse(Iterators.contains(keyValues, new KeyValue("a", "2")));
     }
 }

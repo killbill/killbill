@@ -91,4 +91,20 @@ public class TestIterables extends UtilTestSuiteNoDB {
         assertEquals(Iterables.size(a), 3);
         assertEquals(Iterables.size(b), 0);
     }
+
+    @Test
+    void contains() {
+        final Iterable<String> strings = List.of("a", "b", "c");
+        final Iterable<String> empty = Collections.emptyList();
+        final Iterable<KeyValue> keyValues = List.of(new KeyValue("a", "1"),
+                                                     new KeyValue("b", "2"));
+
+        assertTrue(Iterables.contains(strings, "a"));
+        assertFalse(Iterables.contains(strings, "d"));
+
+        assertFalse(Iterables.contains(empty, "a"));
+
+        assertTrue(Iterables.contains(keyValues, new KeyValue("b", "2")));
+        assertFalse(Iterables.contains(keyValues, new KeyValue("a", "2")));
+    }
 }
