@@ -17,6 +17,7 @@
 
 package org.killbill.billing.invoice.dao;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -28,8 +29,6 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
-
-import com.google.common.base.Objects;
 
 public class InvoiceTrackingModelDao extends EntityModelDaoBase implements EntityModelDao<Entity> {
 
@@ -123,17 +122,17 @@ public class InvoiceTrackingModelDao extends EntityModelDaoBase implements Entit
             return false;
         }
         final InvoiceTrackingModelDao that = (InvoiceTrackingModelDao) o;
-        return Objects.equal(trackingId, that.trackingId) &&
-               Objects.equal(invoiceId, that.invoiceId) &&
-               Objects.equal(isActive, that.isActive) &&
-               Objects.equal(subscriptionId, that.subscriptionId) &&
-               Objects.equal(unitType, that.unitType) &&
-               Objects.equal(recordDate, that.recordDate);
+        return Objects.equals(trackingId, that.trackingId) &&
+               Objects.equals(invoiceId, that.invoiceId) &&
+               Objects.equals(isActive, that.isActive) &&
+               Objects.equals(subscriptionId, that.subscriptionId) &&
+               Objects.equals(unitType, that.unitType) &&
+               Objects.equals(recordDate, that.recordDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(super.hashCode(), trackingId, invoiceId, subscriptionId, unitType, recordDate, isActive);
+        return Objects.hash(super.hashCode(), trackingId, invoiceId, subscriptionId, unitType, recordDate, isActive);
     }
 
     @Override

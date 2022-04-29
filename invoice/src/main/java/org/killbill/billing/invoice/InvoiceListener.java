@@ -22,6 +22,8 @@ package org.killbill.billing.invoice;
 import java.util.Objects;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -56,9 +58,9 @@ import org.killbill.queue.retry.RetryableSubscriber.SubscriberQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// FIXME-1615 : EventBus - Back to this later. AllowConcurrentEvents is easy. Subscribe? I believe I missed some conversation about that.
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 
 @SuppressWarnings("TypeMayBeWeakened")
 public class InvoiceListener extends RetryableService implements InvoiceListenerService {

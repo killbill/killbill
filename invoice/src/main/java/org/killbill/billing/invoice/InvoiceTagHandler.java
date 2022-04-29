@@ -20,6 +20,8 @@ package org.killbill.billing.invoice;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
@@ -43,9 +45,9 @@ import org.killbill.queue.retry.RetryableSubscriber.SubscriberQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// FIXME-1615 : EventBus - Back to this later. AllowConcurrentEvents is easy. Subscribe? I believe I missed some conversation about that.
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 
 @SuppressWarnings("TypeMayBeWeakened")
 public class InvoiceTagHandler extends RetryableService implements KillbillService {
