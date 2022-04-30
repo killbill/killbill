@@ -27,13 +27,13 @@ import javax.management.MBeanServer;
 import javax.servlet.DispatcherType;
 
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.io.ConnectionStatistics;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.ConnectorStatistics;
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
@@ -47,6 +47,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.log.Log;
+import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.xml.XmlConfiguration;
@@ -80,7 +81,7 @@ public class HttpServer {
     }
 
     public void configure(final String jettyXml) throws Exception {
-        final XmlConfiguration configuration = new XmlConfiguration(Resources.getResource(jettyXml));
+        final XmlConfiguration configuration = new XmlConfiguration(Resource.newResource(jettyXml));
         configuration.configure(server);
     }
 
@@ -143,7 +144,7 @@ public class HttpServer {
         http.setPort(localPort);
 
         if (isStatsOn) {
-            final ConnectorStatistics stats = new ConnectorStatistics();
+            final ConnectionStatistics stats = new ConnectionStatistics();
             http.addBean(stats);
         }
 
@@ -152,7 +153,7 @@ public class HttpServer {
 
     private ServerConnector configureSslConnector(final HttpConfiguration httpConfiguration, final boolean isStatsOn, final int localSslPort, final String sslKeyStorePath, final String sslKeyStorePassword) {
         // SSL Context Factory for HTTPS
-        final SslContextFactory sslContextFactory = new SslContextFactory();
+        final SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
         sslContextFactory.setKeyStorePath(sslKeyStorePath);
         sslContextFactory.setKeyStorePassword(sslKeyStorePassword);
 
@@ -167,7 +168,7 @@ public class HttpServer {
         https.setPort(localSslPort);
 
         if (isStatsOn) {
-            final ConnectorStatistics stats = new ConnectorStatistics();
+            final ConnectionStatistics stats = new ConnectionStatistics();
             https.addBean(stats);
         }
 
@@ -219,7 +220,7 @@ public class HttpServer {
     private RequestLogHandler createLogHandler(final HttpServerConfig config) {
         final RequestLogHandler logHandler = new RequestLogHandler();
 
-        final RequestLog requestLog = new NCSARequestLog(config.getLogPath());
+        final RequestLog requestLog = new CustomRequestLog(config.getLogPath());
         logHandler.setRequestLog(requestLog);
 
         return logHandler;
