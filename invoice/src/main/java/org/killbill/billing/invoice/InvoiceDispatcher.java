@@ -687,8 +687,7 @@ public class InvoiceDispatcher {
         final LocalDate actualTargetDate = invoice.getTargetDate();
         boolean success = false;
 
-        List<DefaultInvoice> splitInvoices;
-
+        List<DefaultInvoice> splitInvoices = Collections.emptyList();
         final List<Invoice> resultingInvoices = new ArrayList<>();
         try {
             // Generate missing credit (> 0 for generation and < 0 for use) prior we call the plugin(s)
@@ -754,20 +753,31 @@ public class InvoiceDispatcher {
             success = true;
 
         } finally {
+            // We call invoice control plugin completion calls for each resulting invoice.
             if (success) {
-                final DefaultInvoice refreshedInvoice = new DefaultInvoice(invoiceDao.getById(invoice.getId(), internalCallContext));
-                startNano = System.nanoTime();
-                invoicePluginDispatcher.onSuccessCall(actualTargetDate, refreshedInvoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
-                invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
-
-                resultingInvoices.add(refreshedInvoice);
+                splitInvoices.stream()
+                             .forEach(i -> {
+                                 try {
+                                     final InvoiceModelDao refreshedInv = invoiceDao.getById(i.getId(), internalCallContext);
+                                     final DefaultInvoice refreshedInvoice = new DefaultInvoice(refreshedInv);
+                                     long startNano1 = System.nanoTime();
+                                     invoicePluginDispatcher.onSuccessCall(actualTargetDate, refreshedInvoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
+                                     invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano1);
+                                     resultingInvoices.add(refreshedInvoice);
+                                 } catch (final InvoiceApiException e) {
+                                     throw new IllegalStateException(String.format("Failed to fetch invoice %s from disk", i.getId()));
+                                 }
+                             });
             } else {
-                // Make sure we always set future notifications in case of errors
-                setFutureNotifications(account, futureAccountNotifications, internalCallContext);
+                splitInvoices.stream()
+                             .forEach(i -> {
+                                 // Make sure we always set future notifications in case of errors
+                                 setFutureNotifications(account, futureAccountNotifications, internalCallContext);
+                                 long startNano2 = System.nanoTime();
+                                 invoicePluginDispatcher.onFailureCall(actualTargetDate, invoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
+                                 invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano2);
+                             });
 
-                startNano = System.nanoTime();
-                invoicePluginDispatcher.onFailureCall(actualTargetDate, invoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
-                invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
             }
         }
         return new InvoicesWithFutureNotifications(resultingInvoices, futureAccountNotifications);
