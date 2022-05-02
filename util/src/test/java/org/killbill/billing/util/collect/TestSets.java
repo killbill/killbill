@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 public class TestSets extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
-    public void difference() {
+    public void testDifference() {
         final Set<String> s1 = Set.of("a", "b", "c", "d", "e");
         final Set<String> s2 = Set.of("a", "c", "d");
 

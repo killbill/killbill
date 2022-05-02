@@ -28,9 +28,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-/**
- * Add "Unit" in the end of class name to indicate that this is unit/fast test.
- */
 public class TestCBADaoUnit extends InvoiceTestSuiteNoDB {
 
     /**
@@ -68,15 +65,17 @@ public class TestCBADaoUnit extends InvoiceTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void testGetInvoiceBalance() {
+    public void testGetInvoiceBalance() {
         final UUID accountId = UUID.randomUUID();
-        final BigDecimal doesntMatter = BigDecimal.ZERO; // current invoice item amount calculation mocked by 'childInvoiceAmountCharged'
+        // current invoice item amount calculation mocked by 'childInvoiceAmountCharged'. See {@link #getCBADao(BigDecimal)}
+        final BigDecimal doesntMatter = BigDecimal.ZERO;
         InvoiceModelDao parent = createInvoiceWithItems(accountId, null, new BigDecimal("10"), new BigDecimal("20"));
         InvoiceModelDao toTest = createInvoiceWithItems(accountId, parent, doesntMatter);
 
         CBADao dao = getCBADao(new BigDecimal("100"));
         Assert.assertEquals(dao.getInvoiceBalance(toTest).compareTo(new BigDecimal("70")), 0);
 
+        // total items amount here: 80.000
         parent = createInvoiceWithItems(accountId, null,
                                         new BigDecimal("3000"), new BigDecimal("12000"), new BigDecimal("5000"),
                                         new BigDecimal("1000"), new BigDecimal("2000"), new BigDecimal("17000"),

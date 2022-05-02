@@ -33,7 +33,7 @@ import static org.testng.Assert.fail;
 public class TestIterables extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
-    public void getLast() {
+    public void testGetLast() {
         final List<KeyValue> keyValues = List.of(new KeyValue("a", "1"), new KeyValue("b", "2"), new KeyValue("c", "3"));
         final KeyValue last = Iterables.getLast(keyValues);
 
@@ -43,7 +43,7 @@ public class TestIterables extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void getLastWithEmptyList() {
+    public void testGetLastWithEmptyList() {
         final List<KeyValue> keyValues = Collections.emptyList();
         try {
             Iterables.getLast(keyValues);
@@ -52,7 +52,7 @@ public class TestIterables extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void concat() {
+    public void testConcat() {
         final Iterable<String> a = List.of("a", "b", "c");
         final Iterable<String> b = List.of("d", "e");
         final Iterable<String> c = List.of("1", "2", "3");
@@ -64,7 +64,7 @@ public class TestIterables extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void concatWithNullElement() {
+    public void testConcatWithNullElement() {
         final Iterable<String> a = List.of("a", "b", "c");
         final Iterable<String> b = List.of("1", "2", "3");
 
@@ -75,7 +75,7 @@ public class TestIterables extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void isEmpty() {
+    public void testIsEmpty() {
         final Iterable<String> a = List.of("a", "b", "c");
         final Iterable<String> b = Collections.emptyList();
 
@@ -84,7 +84,7 @@ public class TestIterables extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void size() {
+    public void testSize() {
         final Iterable<String> a = List.of("a", "b", "c");
         final Iterable<String> b = Collections.emptyList();
 
@@ -92,8 +92,8 @@ public class TestIterables extends UtilTestSuiteNoDB {
         assertEquals(Iterables.size(b), 0);
     }
 
-    @Test
-    void contains() {
+    @Test(groups = "fast")
+    public void testContains() {
         final Iterable<String> strings = List.of("a", "b", "c");
         final Iterable<String> empty = Collections.emptyList();
         final Iterable<KeyValue> keyValues = List.of(new KeyValue("a", "1"),
