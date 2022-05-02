@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -193,6 +194,32 @@ public class InvoiceResource extends JaxRsResourceBase {
 
     @TimedResource
     @GET
+    @Path("/{groupId:" + UUID_PATTERN + "}/" + GROUP)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve a set of invoices by group id", response = InvoiceJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid group id supplied")})
+    public Response getInvoicesGroup(@PathParam("groupId") final UUID groupId,
+                                     @ApiParam(required = true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+                                     @QueryParam(QUERY_INVOICE_WITH_CHILDREN_ITEMS) @DefaultValue("false") final boolean withChildrenItems,
+                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
+        final Iterable<Invoice> invoices = invoiceApi.getInvoicesByGroup(accountId, groupId, tenantContext);
+
+        final List<InvoiceJson> result = new ArrayList<>();
+        final Iterator<Invoice> it = invoices.iterator();
+        while (it.hasNext()) {
+            final Invoice invoice  = it.next();
+            final List<InvoiceItem> childInvoiceItems = withChildrenItems ? invoiceApi.getInvoiceItemsByParentInvoice(invoice.getId(), tenantContext) : null;
+            final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
+            result.add(new InvoiceJson(invoice, childInvoiceItems, accountAuditLogs));
+        }
+        // TODO_1658 404 if no invoices?
+        return Response.status(Status.OK).entity(result).build();
+    }
+
+    @TimedResource
+    @GET
     @Path("/{invoiceId:" + UUID_PATTERN + "}/" + AUDIT_LOG_WITH_HISTORY)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve invoice audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
@@ -340,6 +367,37 @@ public class InvoiceResource extends JaxRsResourceBase {
         try {
             final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(accountId, inputDate, callContext);
             return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", generatedInvoice.getId(), request);
+        } catch (InvoiceApiException e) {
+            if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
+                return Response.status(Status.NOT_FOUND).build();
+            }
+            throw e;
+        }
+    }
+
+    @TimedResource
+    @POST
+    @Path("/" + GROUP)
+    @Consumes(APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Trigger an invoice generation", response = InvoiceJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Created invoice successfully"),
+                           @ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
+    public Response createFutureInvoiceGroup(@ApiParam(required = true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
+                                             @QueryParam(QUERY_TARGET_DATE) final String targetDate,
+                                             @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                             @HeaderParam(HDR_REASON) final String reason,
+                                             @HeaderParam(HDR_COMMENT) final String comment,
+                                             @javax.ws.rs.core.Context final HttpServletRequest request,
+                                             @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
+
+        final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
+        final LocalDate inputDate = toLocalDate(targetDate);
+
+        try {
+            final Iterable<Invoice> generatedInvoices = invoiceApi.triggerInvoiceGroupGeneration(accountId, inputDate, callContext);
+            final UUID groupId = generatedInvoices.iterator().next().getGroupId();
+            return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoicesGroup", groupId, request);
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
                 return Response.status(Status.NOT_FOUND).build();
