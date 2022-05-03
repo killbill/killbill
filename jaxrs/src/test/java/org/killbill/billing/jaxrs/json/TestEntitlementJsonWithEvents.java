@@ -53,7 +53,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
 
         final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId,
                                                                          BillingPeriod.NO_BILLING_PERIOD,
-                                                                         effectiveDate.toLocalDate(),
+                                                                         effectiveDate, //TODO_1375 - Revisit
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),

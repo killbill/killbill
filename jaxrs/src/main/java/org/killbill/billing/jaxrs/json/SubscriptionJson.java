@@ -86,7 +86,7 @@ public class SubscriptionJson extends JsonBase {
 
         private final UUID eventId;
         private final BillingPeriod billingPeriod;
-        private final LocalDate effectiveDate;
+        private final DateTime effectiveDate;
         private final String plan;
         private final String product;
         private final String priceList;
@@ -100,7 +100,7 @@ public class SubscriptionJson extends JsonBase {
         @JsonCreator
         public EventSubscriptionJson(@JsonProperty("eventId") final UUID eventId,
                                      @JsonProperty("billingPeriod") final BillingPeriod billingPeriod,
-                                     @JsonProperty("effectiveDate") final LocalDate effectiveDate,
+                                     @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                      @JsonProperty("plan") final String plan,
                                      @JsonProperty("product") final String product,
                                      @JsonProperty("priceList") final String priceList,
@@ -136,7 +136,7 @@ public class SubscriptionJson extends JsonBase {
             final PlanPhase phase = subscriptionEvent.getNextPhase() != null ? subscriptionEvent.getNextPhase() : subscriptionEvent.getPrevPhase();
             this.eventId = subscriptionEvent.getId();
             this.billingPeriod = billingPeriod;
-            this.effectiveDate = subscriptionEvent.getEffectiveDate() != null ? subscriptionEvent.getEffectiveDate().toLocalDate() : null; //TODO_1375 - Added this to keep the jaxrs layer the same, will be updated in step 2. Not sure how to access internalCallContext here so I've used toLocalDate
+            this.effectiveDate = subscriptionEvent.getEffectiveDate();
             this.plan = plan != null ? plan.getName() : null;
             this.product = product != null ? product.getName() : null;
             this.priceList = priceList != null ? priceList.getName() : null;
@@ -170,7 +170,7 @@ public class SubscriptionJson extends JsonBase {
             return billingPeriod;
         }
 
-        public LocalDate getEffectiveDate() {
+        public DateTime getEffectiveDate() {
             return effectiveDate;
         }
 

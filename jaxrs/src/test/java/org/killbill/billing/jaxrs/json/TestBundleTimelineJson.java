@@ -20,7 +20,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.util.UUID;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
@@ -36,7 +36,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
     public void testJson() throws Exception {
         final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID(),
                                                                       BillingPeriod.NO_BILLING_PERIOD,
-                                                                      new LocalDate(),
+                                                                      new DateTime(),//TODO_1375 - Revisit 
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
