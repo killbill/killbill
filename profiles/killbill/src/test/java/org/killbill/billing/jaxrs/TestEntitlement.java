@@ -128,7 +128,7 @@ public class TestEntitlement extends TestJaxrsBase {
         // Retrieves to check EndDate
         subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         assertNotNull(subscription.getCancelledDate());
-        assertEquals(subscription.getCancelledDate().compareTo(new DateTime(clock.getUTCNow())), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getCancelledDate()).compareTo(new LocalDate(clock.getUTCNow())), 0);
 
         final Bundles accountBundles = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(accountBundles.size(), 1);
