@@ -724,7 +724,7 @@ public class InvoiceDispatcher {
 
             logInvoiceWithItems(account, invoice, actualTargetDate, adjustedUniqueOtherInvoiceId, isRealInvoiceWithItems);
 
-            splitInvoices = allowSplitting ?
+            splitInvoices = allowSplitting && !billingEvents.isAccountAutoInvoiceReuseDraft() ?
                             invoicePluginDispatcher.splitInvoices(invoice, false, callContext, pluginProperties, internalCallContext) :
                             Collections.singletonList(invoice);
 
