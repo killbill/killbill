@@ -32,7 +32,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoicePluginDispatcher;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -104,7 +103,10 @@ public class InvoiceApiHelper {
         GlobalLock lock = null;
         Iterable<DefaultInvoice> invoicesForPlugins = null;
         try {
+            log.info("Account Lock requested for account {}", accountId.toString());
+
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
+            log.info("Account Lock held for account {}", accountId.toString());
 
             invoicesForPlugins = withAccountLock.prepareInvoices();
 
@@ -132,6 +134,7 @@ public class InvoiceApiHelper {
         } finally {
             if (lock != null) {
                 lock.release();
+                log.info("Account Lock released for account {}", accountId.toString());
             }
 
             if (success) {

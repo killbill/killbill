@@ -86,7 +86,10 @@ public class OverdueWrapper {
 
         GlobalLock lock = null;
         try {
+            log.info("Account Lock requested for account {}", overdueable.getId().toString());
+
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), overdueable.getId().toString(), MAX_LOCK_RETRIES);
+            log.info("Account Lock held for account {}", overdueable.getId().toString());
 
             return refreshWithLock(effectiveDate, context);
         } catch (final LockFailedException e) {
@@ -94,6 +97,7 @@ public class OverdueWrapper {
         } finally {
             if (lock != null) {
                 lock.release();
+                log.info("Account Lock released for account {}",  overdueable.getId());
             }
         }
         return null;
@@ -114,14 +118,16 @@ public class OverdueWrapper {
     public void clear(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
         GlobalLock lock = null;
         try {
+            log.info("Account Lock requested for account {}", overdueable.getId().toString());
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), overdueable.getId().toString(), MAX_LOCK_RETRIES);
-
+            log.info("Account Lock held for account {}", overdueable.getId().toString());
             clearWithLock(effectiveDate, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to clear overdue for accountId='{}'", overdueable.getId(), e);
         } finally {
             if (lock != null) {
                 lock.release();
+                log.info("Account Lock released for account {}",  overdueable.getId());
             }
         }
     }

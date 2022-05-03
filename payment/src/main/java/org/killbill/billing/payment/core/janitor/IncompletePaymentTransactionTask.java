@@ -278,15 +278,19 @@ public class IncompletePaymentTransactionTask {
 
     private TransactionStatus tryToDoJanitorOperationWithAccountLock(final JanitorIterationCallback callback, final InternalTenantContext internalTenantContext) throws LockFailedException {
         GlobalLock lock = null;
+        ImmutableAccountData account = null;
         try {
-            final ImmutableAccountData account = accountInternalApi.getImmutableAccountDataByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
+            account = accountInternalApi.getImmutableAccountDataByRecordId(internalTenantContext.getAccountRecordId(), internalTenantContext);
+            log.info("Account Lock requested for account {}", account.getId().toString());
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), account.getId().toString(), paymentConfig.getMaxGlobalLockRetries());
+            log.info("Account Lock held for account {}", account.getId().toString());
             return callback.doIteration();
         } catch (final AccountApiException e) {
             log.warn("Error retrieving accountRecordId='{}'", internalTenantContext.getAccountRecordId(), e);
         } finally {
             if (lock != null) {
                 lock.release();
+                log.info("Account Lock released for account {}", account.getId().toString());
             }
         }
         return null;

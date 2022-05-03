@@ -215,14 +215,19 @@ public class InvoiceDispatcher {
 
         GlobalLock lock = null;
         try {
+            log.info("Account Lock requested for account {}", accountId.toString());
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries());
+            log.info("Account Lock held for account {}", accountId);
+
 
             processSubscriptionStartRequestedDateWithLock(accountId, transition, context);
         } catch (final LockFailedException e) {
-            log.warn("Failed to process RequestedSubscriptionInternalEvent for accountId='{}'", accountId.toString(), e);
+            log.warn("Failed to process RequestedSubscriptionInternalEvent for accountId='{}'", accountId, e);
         } finally {
             if (lock != null) {
                 lock.release();
+                log.info("Account Lock released for account {}", accountId);
+
             }
         }
     }
@@ -326,7 +331,13 @@ public class InvoiceDispatcher {
         try {
             // Grab lock unless we do a dry-run
             final boolean isDryRun = dryRunArguments != null;
+            log.info("Account Lock requested for account {}", accountId.toString());
+
             lock = !isDryRun ? locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries()) : null;
+
+            if (lock != null) {
+                log.info("Account Lock held for account {}", accountId.toString());
+            }
             return processAccountInternal(isApiCall, parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, context);
         } catch (final LockFailedException e) {
             if (isApiCall) {
@@ -338,6 +349,7 @@ public class InvoiceDispatcher {
         } finally {
             if (lock != null) {
                 lock.release();
+                log.info("Account Lock released for account {}", accountId);
             }
         }
         return null;
@@ -1168,7 +1180,9 @@ public class InvoiceDispatcher {
     public void processParentInvoiceForInvoiceGeneration(final Account childAccount, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
+            log.info("Account Lock requested for account {}", childAccount.getParentAccountId().toString());
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), childAccount.getParentAccountId().toString(), invoiceConfig.getMaxGlobalLockRetries());
+            log.info("Account Lock held for account {}", childAccount.getParentAccountId().toString());
 
             processParentInvoiceForInvoiceGenerationWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
@@ -1176,6 +1190,7 @@ public class InvoiceDispatcher {
         } finally {
             if (lock != null) {
                 lock.release();
+                log.info("Account Lock released for account {}", childAccount.getParentAccountId().toString());
             }
         }
     }
@@ -1254,7 +1269,10 @@ public class InvoiceDispatcher {
     public void processParentInvoiceForAdjustments(final Account childAccount, final UUID childInvoiceId, final InternalCallContext context) throws InvoiceApiException {
         GlobalLock lock = null;
         try {
+            log.info("Account Lock requested for account {}", childAccount.getParentAccountId().toString());
+
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), childAccount.getParentAccountId().toString(), invoiceConfig.getMaxGlobalLockRetries());
+            log.info("Account Lock held for account {}", childAccount.getParentAccountId().toString());
 
             processParentInvoiceForAdjustmentsWithLock(childAccount, childInvoiceId, context);
         } catch (final LockFailedException e) {
@@ -1262,6 +1280,7 @@ public class InvoiceDispatcher {
         } finally {
             if (lock != null) {
                 lock.release();
+                log.info("Account Lock released for account {}", childAccount.getParentAccountId().toString());
             }
         }
     }
