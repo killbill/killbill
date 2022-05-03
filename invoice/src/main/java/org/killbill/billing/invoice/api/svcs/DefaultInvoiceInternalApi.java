@@ -49,6 +49,7 @@ import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
@@ -164,7 +165,8 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         return dao.computeItemAdjustments(invoicePayment.getInvoiceId().toString(), idWithAmount, context);
     }
 
-    private InvoicePayment getInvoicePayment(final UUID paymentId, final InvoicePaymentType type, final InternalTenantContext context) throws InvoiceApiException {
+    @VisibleForTesting
+    InvoicePayment getInvoicePayment(final UUID paymentId, final InvoicePaymentType type, final InternalTenantContext context) throws InvoiceApiException {
         final List<InvoicePaymentModelDao> invoicePayments = dao.getInvoicePaymentsByPaymentId(paymentId, context);
         return invoicePayments.stream()
                 .filter(input -> input.getType() == type && input.getSuccess())
