@@ -100,6 +100,7 @@ public class CBADao {
     BigDecimal getInvoiceBalance(final InvoiceModelDao invoice) {
         if (isParentExistAndRawBalanceIsZero(invoice)) {
             final BigDecimal parentInvoiceAmountChargedForChild = invoice.getParentInvoice().getInvoiceItems().stream()
+                    .filter(input -> input.getChildAccountId().equals(invoice.getAccountId()))
                     .map(InvoiceItemModelDao::getAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
