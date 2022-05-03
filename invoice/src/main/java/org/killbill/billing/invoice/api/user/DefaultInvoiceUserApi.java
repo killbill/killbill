@@ -289,10 +289,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }
     }
 
-    @Override
-    public Iterable<Invoice> triggerDryRunInvoiceGroupGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments, final CallContext context) throws InvoiceApiException {
-        return null;
-    }
 
     @Override
     public Invoice  triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
