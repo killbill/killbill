@@ -22,7 +22,6 @@ package org.killbill.billing.invoice.api.user;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -280,27 +279,33 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice triggerDryRunInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
-        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, dryRunArguments, false, internalContext);
+        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, dryRunArguments, false, false, internalContext);
         if (result.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
             // TODO_1658
-             return result.get(0);
+            org.killbill.billing.util.Preconditions.checkState(result.size() == 1);
+            return result.get(0);
         }
     }
 
-
     @Override
-    public Invoice  triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
-        final Iterable<Invoice> result = triggerInvoiceGroupGeneration(accountId, targetDate, context);
-        // TODO_1658
-        return result.iterator().next();
+    public Invoice triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, null, false, false, internalContext);
+        if (result.isEmpty()) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
+        } else {
+            // TODO_1658
+            org.killbill.billing.util.Preconditions.checkState(result.size() == 1);
+            return result.get(0);
+        }
     }
 
     @Override
     public Iterable<Invoice> triggerInvoiceGroupGeneration(final UUID accountId, final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
-        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, null, false, internalContext);
+        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, null, false, true, internalContext);
         if (result.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
@@ -689,7 +694,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return invoices;
     }
 
-
     @Override
     public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
         final WithAccountLock withAccountLock = new WithAccountLock() {
@@ -807,7 +811,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                 return ImmutableList.of(invoice);
             }
         };
-
 
         final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
         properties.add(new PluginProperty(INVOICE_OPERATION, "void", false));

@@ -191,7 +191,7 @@ public class InvoiceDispatcher {
 
     public void processAccountBCDChange(final UUID accountId, final InternalCallContext internalCallContext) {
         try {
-            processAccount(false, accountId, null, null, false, internalCallContext);
+            processAccount(false, accountId, null, null, false, true, internalCallContext);
         } catch (final InvoiceApiException e) {
             log.warn("Failed to process BCD change for accountId='{}'", accountId, e);
         }
@@ -297,17 +297,17 @@ public class InvoiceDispatcher {
             parkAccount(accountId, context);
             return Collections.emptyList();
         }
-
-        return processAccount(false, accountId, targetDate, dryRunArguments, isRescheduled, context);
+        return processAccount(false, accountId, targetDate, dryRunArguments, isRescheduled, true, context);
     }
 
 
     public List<Invoice> processAccount(final boolean isApiCall,
-                                  final UUID accountId,
-                                  @Nullable final LocalDate targetDate,
-                                  @Nullable final DryRunArguments dryRunArguments,
-                                  final boolean isRescheduled,
-                                  final InternalCallContext context) throws InvoiceApiException {
+                                        final UUID accountId,
+                                        @Nullable final LocalDate targetDate,
+                                        @Nullable final DryRunArguments dryRunArguments,
+                                        final boolean isRescheduled,
+                                        final boolean allowSplitting,
+                                        final InternalCallContext context) throws InvoiceApiException {
         boolean parkedAccount = false;
         try {
             parkedAccount = parkedAccountsManager.isParked(context);
@@ -332,7 +332,7 @@ public class InvoiceDispatcher {
             // Grab lock unless we do a dry-run
             final boolean isDryRun = dryRunArguments != null;
             lock = !isDryRun ? locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries()) : null;
-            return processAccountInternal(isApiCall, parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, context);
+            return processAccountInternal(isApiCall, parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, allowSplitting, context);
         } catch (final LockFailedException e) {
             if (isApiCall) {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
@@ -360,12 +360,12 @@ public class InvoiceDispatcher {
     }
 
     private List<Invoice> processAccountInternal(final boolean isApiCall,
-                                           final boolean parkedAccount,
-                                           final UUID accountId,
-                                           @Nullable final LocalDate inputTargetDateMaybeNull,
-                                           @Nullable final DryRunArguments dryRunArguments,
-                                           final boolean isRescheduled,
-                                           final InternalCallContext context) throws InvoiceApiException {
+                                                 final boolean parkedAccount,
+                                                 final UUID accountId,
+                                                 @Nullable final LocalDate inputTargetDateMaybeNull,
+                                                 @Nullable final DryRunArguments dryRunArguments,
+                                                 final boolean isRescheduled,
+                                                 final boolean allowSplitting, final InternalCallContext context) throws InvoiceApiException {
         final boolean isDryRun = dryRunArguments != null;
         final boolean upcomingInvoiceDryRun = isDryRun && DryRunType.UPCOMING_INVOICE.equals(dryRunArguments.getDryRunType());
 
@@ -397,7 +397,7 @@ public class InvoiceDispatcher {
 
             List<Invoice> result;
             if (!isDryRun) {
-                final InvoicesWithFutureNotifications invoicesWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, accountInvoices, isRescheduled, Lists.newLinkedList(), invoiceTimings, context);
+                final InvoicesWithFutureNotifications invoicesWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, accountInvoices, isRescheduled, allowSplitting, Lists.newLinkedList(), invoiceTimings, context);
                 result = invoicesWithFutureNotifications != null ? invoicesWithFutureNotifications.getInvoices() : Collections.emptyList();
                 if (parkedAccount) {
                     try {
@@ -628,6 +628,7 @@ public class InvoiceDispatcher {
                                                                                     final BillingEventSet billingEvents,
                                                                                     final AccountInvoices accountInvoices,
                                                                                     final boolean isRescheduled,
+                                                                                    final boolean allowSplitting,
                                                                                     final LinkedList<PluginProperty> pluginProperties,
                                                                                     final Map<InvoiceTiming, Long> invoiceTimings,
                                                                                     final InternalCallContext internalCallContext) throws InvoiceApiException {
@@ -723,7 +724,9 @@ public class InvoiceDispatcher {
 
             logInvoiceWithItems(account, invoice, actualTargetDate, adjustedUniqueOtherInvoiceId, isRealInvoiceWithItems);
 
-            splitInvoices = invoicePluginDispatcher.splitInvoices(invoice, false, callContext, pluginProperties, internalCallContext);
+            splitInvoices = allowSplitting ?
+                            invoicePluginDispatcher.splitInvoices(invoice, false, callContext, pluginProperties, internalCallContext) :
+                            Collections.singletonList(invoice);
 
 
             // Transformation to Invoice -> InvoiceModelDao
