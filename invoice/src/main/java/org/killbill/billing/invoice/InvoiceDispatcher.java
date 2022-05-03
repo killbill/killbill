@@ -769,10 +769,10 @@ public class InvoiceDispatcher {
                                  }
                              });
             } else {
+                // Make sure we always set the future notifications in case of errors
+                setFutureNotifications(account, futureAccountNotifications, internalCallContext);
                 splitInvoices.stream()
                              .forEach(i -> {
-                                 // Make sure we always set future notifications in case of errors
-                                 setFutureNotifications(account, futureAccountNotifications, internalCallContext);
                                  long startNano2 = System.nanoTime();
                                  invoicePluginDispatcher.onFailureCall(actualTargetDate, invoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
                                  invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano2);
