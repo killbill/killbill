@@ -128,7 +128,7 @@ public class TestEntitlement extends TestJaxrsBase {
         // Retrieves to check EndDate
         subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         assertNotNull(subscription.getCancelledDate());
-        assertEquals(subscription.getCancelledDate().compareTo(new LocalDate(clock.getUTCNow())), 0);
+        assertEquals(internalCallContext.toLocalDate(subscription.getCancelledDate()).compareTo(new LocalDate(clock.getUTCNow())), 0);
 
         final Bundles accountBundles = accountApi.getAccountBundles(accountJson.getAccountId(), null, null, requestOptions);
         assertEquals(accountBundles.size(), 1);
@@ -714,8 +714,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.PENDING);
         Assert.assertEquals(entitlementJson.getChargedThroughDate(), initialDate.toLocalDate());
-        Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate());
-        Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate().plusMonths(1));
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate.toLocalDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate.toLocalDate().plusMonths(1));
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
         Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
@@ -760,8 +760,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
         Assert.assertNull(entitlementJson.getChargedThroughDate());
-        Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate().plusMonths(1));
-        Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate.toLocalDate().plusMonths(1));
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate.toLocalDate());
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
         Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
@@ -810,8 +810,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
         Assert.assertNull(entitlementJson.getChargedThroughDate());
-        Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate());
-        Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate.toLocalDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate.toLocalDate());
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
         Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
@@ -859,8 +859,8 @@ public class TestEntitlement extends TestJaxrsBase {
 
         Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
         verifyChargedThroughDate(entitlementJson.getSubscriptionId(), new LocalDate("2012-05-24"));
-        Assert.assertEquals(entitlementJson.getBillingStartDate(), initialDate.toLocalDate().minusMonths(1));
-        Assert.assertEquals(entitlementJson.getStartDate(), initialDate.toLocalDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate.toLocalDate().minusMonths(1));
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate.toLocalDate());
         Assert.assertEquals(entitlementJson.getProductName(), input.getProductName());
         Assert.assertEquals(entitlementJson.getProductCategory(), input.getProductCategory());
         Assert.assertEquals(entitlementJson.getBillingPeriod(), input.getBillingPeriod());
