@@ -172,6 +172,13 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public List<Invoice> getInvoicesByGroup(final UUID accountId, final UUID groupId, final TenantContext context) {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByGroup(groupId, internalTenantContext);
+        return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
+    }
+
+    @Override
     public Invoice getInvoiceByPayment(final UUID paymentId, final TenantContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context);
         final UUID invoiceId = dao.getInvoiceIdByPaymentId(paymentId, internalTenantContext);
@@ -272,20 +279,32 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     public Invoice triggerDryRunInvoiceGeneration(final UUID accountId, final LocalDate targetDate, final DryRunArguments dryRunArguments, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
 
-        final Invoice result = dispatcher.processAccount(true, accountId, targetDate, dryRunArguments, false, internalContext);
-        if (result == null) {
+        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, dryRunArguments, false, false, internalContext);
+        if (result.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
-            return result;
+            Preconditions.checkState(result.size() == 1);
+            return result.get(0);
         }
     }
 
     @Override
     public Invoice triggerInvoiceGeneration(final UUID accountId, @Nullable final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, null, false, false, internalContext);
+        if (result.isEmpty()) {
+            throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
+        } else {
+            Preconditions.checkState(result.size() == 1);
+            return result.get(0);
+        }
+    }
 
-        final Invoice result = dispatcher.processAccount(true, accountId, targetDate, null, false, internalContext);
-        if (result == null) {
+    @Override
+    public Iterable<Invoice> triggerInvoiceGroupGeneration(final UUID accountId, final LocalDate targetDate, final CallContext context) throws InvoiceApiException {
+        final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(accountId, context);
+        final List<Invoice> result = dispatcher.processAccount(true, accountId, targetDate, null, false, true, internalContext);
+        if (result.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
             return result;
@@ -515,7 +534,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         }));
         migrationInvoice.addInvoiceItems(itemModelDaos);
 
-        dao.createInvoices(ImmutableList.<InvoiceModelDao>of(migrationInvoice), null, ImmutableSet.of(), internalCallContext);
+        dao.createInvoices(ImmutableList.<InvoiceModelDao>of(migrationInvoice), null, ImmutableSet.of(), null, null, false, internalCallContext);
         return migrationInvoice.getId();
     }
 
@@ -673,7 +692,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         return invoices;
     }
 
-
     @Override
     public void commitInvoice(final UUID invoiceId, final CallContext context) throws InvoiceApiException {
         final WithAccountLock withAccountLock = new WithAccountLock() {
@@ -791,7 +809,6 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                 return ImmutableList.of(invoice);
             }
         };
-
 
         final LinkedList<PluginProperty> properties = new LinkedList<PluginProperty>();
         properties.add(new PluginProperty(INVOICE_OPERATION, "void", false));

@@ -42,6 +42,7 @@ import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
+import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.plugin.api.OnFailureInvoiceResult;
 import org.killbill.billing.invoice.plugin.api.OnSuccessInvoiceResult;
@@ -503,6 +504,11 @@ public class TestWithTaxItems extends TestIntegrationBase {
                           );
             }
             return result;
+        }
+
+        @Override
+        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> properties, final CallContext context) {
+            return null;
         }
 
         @Override

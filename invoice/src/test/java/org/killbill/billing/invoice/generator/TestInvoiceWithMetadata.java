@@ -77,7 +77,7 @@ public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
 
         final LocalDate invoiceDate = new LocalDate(2016, 11, 15);
 
-        final DefaultInvoice originalInvoice = new DefaultInvoice(account.getId(), invoiceDate, account.getCurrency());
+        final DefaultInvoice originalInvoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), invoiceDate, account.getCurrency());
 
         final Plan plan = new MockPlan("my-plan");
         final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(BigDecimal.TEN, account.getCurrency()));

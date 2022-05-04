@@ -22,6 +22,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
@@ -109,22 +111,19 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
                                                                    internalCallContextFactory, invoicePluginDispatcher, locker, bus,
                                                                    notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
 
-        Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
-        Assert.assertNotNull(invoice);
+        Invoice invoice = processAccountFromNotificationOrBusEventAndAssertResult(accountId, target, new DryRunFutureDateArguments(), false, context);
 
         List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, context);
         Assert.assertEquals(invoices.size(), 0);
 
         // Try it again to double check
-        invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
-        Assert.assertNotNull(invoice);
+        invoice = processAccountFromNotificationOrBusEventAndAssertResult(accountId, target, new DryRunFutureDateArguments(), false, context);
 
         invoices = invoiceDao.getInvoicesByAccount(false, context);
         Assert.assertEquals(invoices.size(), 0);
 
         // This time no dry run
-        invoice = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, false, context);
-        Assert.assertNotNull(invoice);
+        invoice = processAccountFromNotificationOrBusEventAndAssertResult(accountId, target, null, false, context);
 
         invoices = invoiceDao.getInvoicesByAccount(false, context);
         Assert.assertEquals(invoices.size(), 1);
@@ -200,7 +199,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao1);
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao2);
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), events, ImmutableSet.of(), context);
+        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), events, ImmutableSet.of(), null, null, false, context);
 
         try {
             dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
@@ -227,12 +226,12 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(tags.get(0).getTagDefinitionId(), SystemTags.PARK_TAG_DEFINITION_ID);
 
         // isApiCall=false
-        final Invoice nullInvoice1 = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, false, context);
-        Assert.assertNull(nullInvoice1);
+        final List<Invoice> emptyInvoices = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, null, false, context);
+        Assert.assertTrue(emptyInvoices.isEmpty());
 
         // No dry-run and isApiCall=true
         try {
-            dispatcher.processAccount(true, accountId, target, null, false, context);
+            dispatcher.processAccount(true, accountId, target, null, false, false, context);
             Assert.fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -253,19 +252,19 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         });
 
         // Dry-run and isApiCall=false: still parked
-        final Invoice nullInvoice2 = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
-        Assert.assertNull(nullInvoice2);
+        final List<Invoice> emptyInvoices2 = dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);
+        Assert.assertTrue(emptyInvoices2.isEmpty());
 
         // Dry-run and isApiCall=true: call goes through
-        final Invoice invoice1 = dispatcher.processAccount(true, accountId, target, new DryRunFutureDateArguments(), false, context);
-        Assert.assertNotNull(invoice1);
+        final List<Invoice> invoices1 = dispatcher.processAccount(true, accountId, target, new DryRunFutureDateArguments(), false, false, context);
+        Assert.assertFalse(invoices1.isEmpty());
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, context).size(), 0);
         // Dry-run: still parked
         Assert.assertEquals(tagUserApi.getTagsForAccount(accountId, false, callContext).size(), 1);
 
         // No dry-run and isApiCall=true: call goes through
-        final Invoice invoice2 = dispatcher.processAccount(true, accountId, target, null, false, context);
-        Assert.assertNotNull(invoice2);
+        final List<Invoice> invoice2s = dispatcher.processAccount(true, accountId, target, null, false, false, context);
+        Assert.assertFalse(invoice2s.isEmpty());
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, context).size(), 1);
         // No dry-run: now unparked
         Assert.assertEquals(tagUserApi.getTagsForAccount(accountId, false, callContext).size(), 0);
@@ -302,7 +301,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceDispatcher dispatcher = new InvoiceDispatcher(generator, accountApi, billingApi, subscriptionApi, invoiceDao,
                                                                    internalCallContextFactory, invoicePluginDispatcher, locker, bus,
                                                                    notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
-        final Invoice invoice = dispatcher.processAccountFromNotificationOrBusEvent(account.getId(), new LocalDate("2012-07-30"), null, false, context);
+        final Invoice invoice = processAccountFromNotificationOrBusEventAndAssertResult(account.getId(), new LocalDate("2012-07-30"), null, false, context);
         Assert.assertNotNull(invoice);
 
         final List<InvoiceItem> invoiceItems = invoice.getInvoiceItems();
@@ -316,20 +315,20 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoiceItems.get(1).getInvoiceItemType(), InvoiceItemType.RECURRING);
         Assert.assertEquals(invoiceItems.get(1).getStartDate(), new LocalDate("2012-05-31"));
         Assert.assertEquals(invoiceItems.get(1).getEndDate(), new LocalDate("2012-06-30"));
-        Assert.assertEquals(invoiceItems.get(1).getAmount(), new BigDecimal("249.95"));
-        Assert.assertEquals(invoiceItems.get(1).getRate(), new BigDecimal("249.95"));
+        Assert.assertEquals(invoiceItems.get(1).getAmount().compareTo(new BigDecimal("249.95")), 0);
+        Assert.assertEquals(invoiceItems.get(1).getRate().compareTo(new BigDecimal("249.95")), 0);
 
         Assert.assertEquals(invoiceItems.get(2).getInvoiceItemType(), InvoiceItemType.RECURRING);
         Assert.assertEquals(invoiceItems.get(2).getStartDate(), new LocalDate("2012-06-30"));
         Assert.assertEquals(invoiceItems.get(2).getEndDate(), new LocalDate("2012-07-15"));
-        Assert.assertEquals(invoiceItems.get(2).getAmount(), new BigDecimal("124.98"));
-        Assert.assertEquals(invoiceItems.get(2).getRate(), new BigDecimal("249.95"));
+        Assert.assertEquals(invoiceItems.get(2).getAmount().compareTo(new BigDecimal("124.98")), 0);
+        Assert.assertEquals(invoiceItems.get(2).getRate().compareTo(new BigDecimal("249.95")), 0);
 
         Assert.assertEquals(invoiceItems.get(3).getInvoiceItemType(), InvoiceItemType.RECURRING);
         Assert.assertEquals(invoiceItems.get(3).getStartDate(), new LocalDate("2012-07-25"));
         Assert.assertEquals(invoiceItems.get(3).getEndDate(), new LocalDate("2012-07-31"));
-        Assert.assertEquals(invoiceItems.get(3).getAmount(), new BigDecimal("193.55"));
-        Assert.assertEquals(invoiceItems.get(3).getRate(), new BigDecimal("1000"));
+        Assert.assertEquals(invoiceItems.get(3).getAmount().compareTo(new BigDecimal("193.55")), 0);
+        Assert.assertEquals(invoiceItems.get(3).getRate().compareTo(new BigDecimal("1000")), 0);
 
         // Verify common fields
         for (final InvoiceItem item : invoiceItems) {
@@ -341,4 +340,15 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
             Assert.assertEquals(item.getSubscriptionId(), subscription.getId());
         }
     }
+
+    private Invoice processAccountFromNotificationOrBusEventAndAssertResult(final UUID accountId,
+                                                                            @Nullable final LocalDate targetDate,
+                                                                            @Nullable final DryRunArguments dryRunArguments,
+                                                                            final boolean isRescheduled,
+                                                                            final InternalCallContext context) throws InvoiceApiException {
+        final List<Invoice> invoices = dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, isRescheduled, context);
+        Assert.assertEquals(invoices.size(), 1);
+        return invoices.get(0);
+    }
+    
 }

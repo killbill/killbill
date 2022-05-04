@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -65,24 +67,6 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
         this.eventBus = eventBus;
     }
 
-    @Override
-    public void createInvoice(final InvoiceModelDao invoice,
-                              final BillingEventSet billingEvents,
-                              final Set<InvoiceTrackingModelDao> trackingIds,
-                              final FutureAccountNotifications callbackDateTimePerSubscriptions,
-                              final ExistingInvoiceMetadata existingInvoiceMetadata,
-                              final InternalCallContext context) {
-        synchronized (monitor) {
-            storeInvoice(invoice, context);
-        }
-        try {
-            eventBus.post(new DefaultInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
-                                                          InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice), invoice.getCurrency(),
-                                                          context.getAccountRecordId(), context.getTenantRecordId(), context.getUserToken()));
-        } catch (final PersistentBus.EventBusException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
 
     @Override
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions, final InternalCallContext context) {
@@ -95,9 +79,12 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoiceModelDaos,
-                                                    final BillingEventSet billingEvents,
+    public List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> invoiceModelDaos,
+                                                    @Nullable final BillingEventSet billingEvents,
                                                     final Set<InvoiceTrackingModelDao> trackingIds,
+                                                    final FutureAccountNotifications callbackDateTimePerSubscriptions,
+                                                    @Nullable final ExistingInvoiceMetadata existingInvoiceMetadataOrNull,
+                                                    final boolean returnCreatedInvoiceItems,
                                                     final InternalCallContext context) {
         synchronized (monitor) {
             final List<InvoiceItemModelDao> createdItems = new LinkedList<InvoiceItemModelDao>();
@@ -147,6 +134,11 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     public InvoiceModelDao getByInvoiceItem(final UUID invoiceItemId, final InternalTenantContext context) throws InvoiceApiException {
         final InvoiceItemModelDao item = items.get(invoiceItemId);
         return (item != null) ? invoices.get(item.getInvoiceId()) : null;
+    }
+
+    @Override
+    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final InternalTenantContext context) {
+        return null;
     }
 
     @Override

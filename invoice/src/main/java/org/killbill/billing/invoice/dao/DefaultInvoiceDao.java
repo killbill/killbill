@@ -307,6 +307,29 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
+    public List<InvoiceModelDao> getInvoicesByGroup(final UUID groupId, final InternalTenantContext context) {
+        // TODO_1658 Do we want a special query along with a new index on grpId or is the cardinality small enough that we
+        // fetch by accountRecordId. Note that we only 'populate' on the filtered list.
+        final List<Tag> invoicesTags = getInvoicesTags(context);
+        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<InvoiceModelDao>>() {
+            @Override
+            public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+                final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
+                final List<InvoiceModelDao> allInvoices = invoiceSqlDao.getByAccountRecordId(context);
+                final List<InvoiceModelDao> invoices = ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(allInvoices, new Predicate<InvoiceModelDao>() {
+                    @Override
+                    public boolean apply(final InvoiceModelDao invoice) {
+                        return invoice.getGrpId().equals(groupId);
+                    }
+                })));
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
+                return invoices;
+            }
+        });
+
+    }
+
+    @Override
     public void setFutureAccountNotificationsForEmptyInvoice(final UUID accountId, final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                              final InternalCallContext context) {
 
@@ -331,28 +354,10 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
-    @Override
-    public void createInvoice(final InvoiceModelDao invoice,
-                              final BillingEventSet billingEvents,
-                              final Set<InvoiceTrackingModelDao> trackingIds,
-                              final FutureAccountNotifications callbackDateTimePerSubscriptions,
-                              final ExistingInvoiceMetadata existingInvoiceMetadata,
-                              final InternalCallContext context) {
-        createInvoices(ImmutableList.<InvoiceModelDao>of(invoice), billingEvents, trackingIds, callbackDateTimePerSubscriptions, existingInvoiceMetadata, false, context);
-    }
-
-    @Override
-    public List<InvoiceItemModelDao> createInvoices(final List<InvoiceModelDao> invoices,
-                                                    final BillingEventSet billingEvents,
-                                                    final Set<InvoiceTrackingModelDao> trackingIds,
-                                                    final InternalCallContext context) {
-        return createInvoices(invoices, billingEvents, trackingIds, new FutureAccountNotifications(), null, true, context);
-    }
-
-    private List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> invoices,
+    public List<InvoiceItemModelDao> createInvoices(final Iterable<InvoiceModelDao> inputInvoices,
                                                      @Nullable final BillingEventSet billingEvents,
                                                      final Set<InvoiceTrackingModelDao> trackingIds,
-                                                     final FutureAccountNotifications callbackDateTimePerSubscriptions,
+                                                     @Nullable final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                                      @Nullable final ExistingInvoiceMetadata existingInvoiceMetadataOrNull,
                                                      final boolean returnCreatedInvoiceItems,
                                                      final InternalCallContext context) {
@@ -365,21 +370,23 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         // Track invoices that are committed but were not created or reused -- to sent the InvoiceAdjustment bus event
         final Set<UUID> adjustedCommittedInvoiceIds = new HashSet<UUID>();
 
+        // Track set of invoices being referenced - note that input invoices can be used as 'containers' with items that belong to them
+        // However, if this is the case, we expect the invoice to exist
         final Collection<UUID> invoiceIdsReferencedFromItems = new HashSet<UUID>();
-        for (final InvoiceModelDao invoiceModelDao : invoices) {
+        for (final InvoiceModelDao invoiceModelDao : inputInvoices) {
             for (final InvoiceItemModelDao invoiceItemModelDao : invoiceModelDao.getInvoiceItems()) {
                 invoiceIdsReferencedFromItems.add(invoiceItemModelDao.getInvoiceId());
             }
         }
 
-        if (Iterables.isEmpty(invoices)) {
+        if (Iterables.isEmpty(inputInvoices)) {
             return ImmutableList.<InvoiceItemModelDao>of();
         }
-        final UUID accountId = invoices.iterator().next().getAccountId();
+        final UUID accountId = inputInvoices.iterator().next().getAccountId();
 
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
-        final Map<UUID, InvoiceModelDao> invoiceByInvoiceId = new HashMap<UUID, InvoiceModelDao>();
+        final Map<UUID, InvoiceModelDao> inputInvoicesById = new HashMap<UUID, InvoiceModelDao>();
         return transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<List<InvoiceItemModelDao>>() {
             @Override
             public List<InvoiceItemModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -395,14 +402,19 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 }
 
                 final List<InvoiceItemModelDao> invoiceItemsToCreate = new LinkedList<InvoiceItemModelDao>();
-                for (final InvoiceModelDao invoiceModelDao : invoices) {
-                    invoiceByInvoiceId.put(invoiceModelDao.getId(), invoiceModelDao);
+                UUID grpId = null;
+                for (final InvoiceModelDao invoiceModelDao : inputInvoices) {
+                    inputInvoicesById.put(invoiceModelDao.getId(), invoiceModelDao);
                     final boolean isNotShellInvoice = invoiceIdsReferencedFromItems.remove(invoiceModelDao.getId());
 
                     final InvoiceModelDao invoiceOnDisk = existingInvoiceMetadata.getExistingInvoice(invoiceModelDao.getId(), context);
                     if (isNotShellInvoice) {
                         // Create the invoice if this is not a shell invoice and it does not already exist
                         if (invoiceOnDisk == null) {
+                            if (grpId == null) {
+                                grpId = invoiceModelDao.getId();
+                            }
+                            invoiceModelDao.setGrpId(grpId);
                             createAndRefresh(invoiceSqlDao, invoiceModelDao, context);
                             if (billingEvents != null) {
                                 billingEventSqlDao.create(new InvoiceBillingEventModelDao(invoiceModelDao.getId(), BillingEventSerializer.serialize(billingEvents), context.getCreatedDate()), context);
@@ -470,6 +482,15 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     notifyOfFutureBillingEvents(entitySqlDaoWrapperFactory, invoiceModelDao.getAccountId(), callbackDateTimePerSubscriptions, context);
                 }
 
+                // Verify invoices remaining through input items exist (if not already created before)
+                for (final UUID invoiceId : invoiceIdsReferencedFromItems) {
+                    final InvoiceModelDao tmp = invoiceSqlDao.getById(invoiceId.toString(), context);
+                    if (tmp == null) {
+                        throw new InvoiceApiException(ErrorCode.INVOICE_NOT_FOUND, invoiceId);
+                    }
+                }
+
+
                 // Bulk insert the invoice items
                 createInvoiceItemsFromTransaction(transInvoiceItemSqlDao, invoiceItemsToCreate, context);
 
@@ -480,7 +501,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 if (createdInvoiceIds.equals(allInvoiceIds)) {
                     final List<InvoiceModelDao> cbaInvoicesInput = new ArrayList<>();
                     for (final UUID id : createdInvoiceIds) {
-                        cbaInvoicesInput.add(invoiceByInvoiceId.get(id));
+                        cbaInvoicesInput.add(inputInvoicesById.get(id));
                     }
                     cbaWrapper.runCBALogicWithNotificationEvents(adjustedCommittedInvoiceIds, createdInvoiceIds, cbaInvoicesInput);
                 } else {
@@ -1183,6 +1204,9 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                              final UUID accountId,
                                              final FutureAccountNotifications callbackDateTimePerSubscriptions,
                                              final InternalCallContext internalCallContext) {
+        if (callbackDateTimePerSubscriptions == null) {
+            return;
+        }
         for (final LocalDate notificationDate : callbackDateTimePerSubscriptions.getNotificationsForTrigger().keySet()) {
             final DateTime notificationDateTime = internalCallContext.toUTCDateTime(notificationDate);
             final Set<UUID> subscriptionIds = callbackDateTimePerSubscriptions.getNotificationsForTrigger().get(notificationDate);
