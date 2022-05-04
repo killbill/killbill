@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -29,6 +30,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.client.KillBillClientException;
+import org.killbill.billing.client.UTF8UrlEncoder;
 import org.killbill.billing.client.model.Tags;
 import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.AuditLog;
@@ -41,8 +43,6 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.dao.SystemTags;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import org.asynchttpclient.util.Utf8UrlEncoder;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -160,8 +160,7 @@ public class TestTag extends TestJaxrsBase {
             if (controlTagType.getApplicableObjectTypes().contains(ObjectType.ACCOUNT)) {
                 Assert.assertEquals(tagApi.searchTags(controlTagType.toString(), requestOptions).size(), 1);
                 // TODO Hack until we fix client api
-
-                Assert.assertEquals(tagApi.searchTags(Utf8UrlEncoder.encodePath(controlTagType.getDescription()), requestOptions).size(), 1);
+                Assert.assertEquals(tagApi.searchTags(UTF8UrlEncoder.encode(controlTagType.getDescription()), requestOptions).size(), 1);
             }
         }
     }

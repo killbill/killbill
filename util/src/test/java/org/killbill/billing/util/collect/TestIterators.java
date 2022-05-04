@@ -28,6 +28,7 @@ import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
@@ -35,7 +36,7 @@ import static org.testng.Assert.fail;
 public class TestIterators extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
-    public void getLast() {
+    public void testGetLast() {
         final List<KeyValue> keyValues = List.of(new KeyValue("a", "1"), new KeyValue("b", "2"), new KeyValue("c", "3"));
         final KeyValue last = Iterators.getLast(keyValues.iterator());
 
@@ -45,7 +46,7 @@ public class TestIterators extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void getLastWithEmptyList() {
+    public void testGetLastWithEmptyList() {
         final List<KeyValue> keyValues = Collections.emptyList();
         try {
             Iterators.getLast(keyValues.iterator());
@@ -54,7 +55,7 @@ public class TestIterators extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void transform() {
+    public void testTransform() {
         final List<KeyValue> list = List.of(new KeyValue("a", "1"), new KeyValue("b", "2"), new KeyValue("c", "3"));
         final Iterator<String> keyOnly = Iterators.transform(list.iterator(), KeyValue::getKey);
         assertEquals(keyOnly.next(), "a");
@@ -63,7 +64,7 @@ public class TestIterators extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void toUnmodifiableList() {
+    public void testToUnmodifiableList() {
         final Collection<KeyValue> set = new HashSet<>();
         set.add(new KeyValue("a", "1"));
         set.add(new KeyValue("b", "2"));
@@ -78,9 +79,26 @@ public class TestIterators extends UtilTestSuiteNoDB {
     }
 
     @Test(groups = "fast")
-    void size() {
+    public void testSize() {
         final List<String> strings = List.of("a", "b", "c", "d", "e", "f", "g", "h", "i", "j");
         final int size = Iterators.size(strings.iterator());
         assertEquals(size, 10);
+    }
+
+    @Test(groups = "fast")
+    public void testContains() {
+        final Iterator<String> strings = List.of("a", "b", "c").iterator();
+        final Iterator<String> empty = Collections.emptyIterator();
+        final Iterator<KeyValue> keyValues = List.of(new KeyValue("a", "1"),
+                                                     new KeyValue("b", "2"))
+                                                 .iterator();
+
+        assertTrue(Iterators.contains(strings, "a"));
+        assertFalse(Iterators.contains(strings, "d"));
+
+        assertFalse(Iterators.contains(empty, "a"));
+
+        assertTrue(Iterators.contains(keyValues, new KeyValue("b", "2")));
+        assertFalse(Iterators.contains(keyValues, new KeyValue("a", "2")));
     }
 }

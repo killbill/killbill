@@ -205,4 +205,12 @@ public class CatalogEntityCollection<T extends CatalogEntity> implements Collect
     public void writeExternal(final ObjectOutput oo) throws IOException {
         oo.writeObject(data);
     }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("CatalogEntityCollection{");
+        sb.append("data=").append(data.keySet());
+        sb.append('}');
+        return sb.toString();
+    }
 }

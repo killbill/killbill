@@ -19,17 +19,14 @@ package org.killbill.billing.invoice;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
-import org.killbill.billing.util.tag.Tag;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.tag.dao.SystemTags.PARK_TAG_DEFINITION_ID;
 
@@ -58,12 +55,8 @@ public class ParkedAccountsManager {
     }
 
     public boolean isParked(final InternalCallContext internalCallContext) throws TagApiException {
-        return Iterables.<Tag>tryFind(tagApi.getTagsForAccountType(ObjectType.ACCOUNT, false, internalCallContext),
-                                      new Predicate<Tag>() {
-                                          @Override
-                                          public boolean apply(final Tag input) {
-                                              return PARK_TAG_DEFINITION_ID.equals(input.getTagDefinitionId());
-                                          }
-                                      }).orNull() != null;
+        return tagApi.getTagsForAccountType(ObjectType.ACCOUNT, false, internalCallContext)
+                     .stream()
+                     .anyMatch(input -> PARK_TAG_DEFINITION_ID.equals(input.getTagDefinitionId()));
     }
 }

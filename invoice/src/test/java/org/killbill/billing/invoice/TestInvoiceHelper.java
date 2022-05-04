@@ -242,7 +242,9 @@ public class TestInvoiceHelper {
                                                                    invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, eventBus,
                                                                    notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
 
-        return dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);
+        final List<Invoice> result = dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);
+        Assert.assertEquals(result.size(), 1);
+        return result.get(0);
     }
 
     public SubscriptionBase createSubscription() throws SubscriptionBaseApiException {

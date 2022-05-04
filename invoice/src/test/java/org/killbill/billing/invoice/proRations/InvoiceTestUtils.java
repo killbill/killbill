@@ -109,7 +109,7 @@ public class InvoiceTestUtils {
 
         final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
         invoiceModelDao.addInvoiceItems(invoiceModelItems);
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), null, ImmutableSet.of(), internalCallContext);
+        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), null, ImmutableSet.of(), null, null, false, internalCallContext);
 
         return invoice;
     }

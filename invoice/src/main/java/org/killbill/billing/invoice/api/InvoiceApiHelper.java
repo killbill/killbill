@@ -19,11 +19,14 @@ package org.killbill.billing.invoice.api;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -32,7 +35,6 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoicePluginDispatcher;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -50,21 +52,10 @@ import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class InvoiceApiHelper {
-
-    private static final Logger log = LoggerFactory.getLogger(InvoiceApiHelper.class);
 
     private final InvoicePluginDispatcher invoicePluginDispatcher;
     private final InvoiceDao dao;
@@ -123,7 +114,7 @@ public class InvoiceApiHelper {
                 invoiceModelDaos.add(invoiceModelDao);
             }
 
-            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, ImmutableSet.of(), internalCallContext);
+            final List<InvoiceItemModelDao> createdInvoiceItems = dao.createInvoices(invoiceModelDaos, null, Collections.emptySet(), null, null, true,  internalCallContext);
             success = true;
 
             return fromInvoiceItemModelDao(createdInvoiceItems);
@@ -163,19 +154,14 @@ public class InvoiceApiHelper {
                                             final String description,
                                             @Nullable final String itemDetails,
                                             final InternalCallContext context) throws InvoiceApiException {
-        final InvoiceItem invoiceItemToBeAdjusted = Iterables.<InvoiceItem>tryFind(invoiceToBeAdjusted.getInvoiceItems(),
-                                                                                   new Predicate<InvoiceItem>() {
-                                                                                       @Override
-                                                                                       public boolean apply(final InvoiceItem input) {
-                                                                                           return input.getId().equals(invoiceItemId);
-                                                                                       }
-                                                                                   }).orNull();
-        if (invoiceItemToBeAdjusted == null) {
-            throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId);
-        }
+
+        final InvoiceItem invoiceItemToBeAdjusted = invoiceToBeAdjusted.getInvoiceItems().stream()
+                .filter(input -> input.getId().equals(invoiceItemId))
+                .findFirst()
+                .orElseThrow(() -> new InvoiceApiException(ErrorCode.INVOICE_ITEM_NOT_FOUND, invoiceItemId));
 
         // Check the specified currency matches the one of the existing invoice
-        final Currency currencyForAdjustment = MoreObjects.firstNonNull(currency, invoiceItemToBeAdjusted.getCurrency());
+        final Currency currencyForAdjustment = Objects.requireNonNullElse(currency, invoiceItemToBeAdjusted.getCurrency());
         if (invoiceItemToBeAdjusted.getCurrency() != currencyForAdjustment) {
             throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, currency, invoiceItemToBeAdjusted.getCurrency());
         }
@@ -219,22 +205,14 @@ public class InvoiceApiHelper {
     }
 
     private List<InvoiceItem> fromInvoiceItemModelDao(final Collection<InvoiceItemModelDao> invoiceItemModelDaos) {
-        return ImmutableList.<InvoiceItem>copyOf(Collections2.transform(invoiceItemModelDaos,
-                                                                        new Function<InvoiceItemModelDao, InvoiceItem>() {
-                                                                            @Override
-                                                                            public InvoiceItem apply(final InvoiceItemModelDao input) {
-                                                                                return InvoiceItemFactory.fromModelDao(input);
-                                                                            }
-                                                                        }));
+        return invoiceItemModelDaos.stream()
+                .map(InvoiceItemFactory::fromModelDao)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private List<InvoiceItemModelDao> toInvoiceItemModelDao(final Collection<InvoiceItem> invoiceItems) {
-        return ImmutableList.copyOf(Collections2.transform(invoiceItems,
-                                                           new Function<InvoiceItem, InvoiceItemModelDao>() {
-                                                               @Override
-                                                               public InvoiceItemModelDao apply(final InvoiceItem input) {
-                                                                   return new InvoiceItemModelDao(input);
-                                                               }
-                                                           }));
+        return invoiceItems.stream()
+                .map(InvoiceItemModelDao::new)
+                .collect(Collectors.toUnmodifiableList());
     }
 }

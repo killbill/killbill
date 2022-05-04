@@ -45,7 +45,9 @@ import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimeline.E
 import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseBundle;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
+import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
@@ -115,7 +117,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 break;
 
             case BCD_CHANGE:
-                newEvent = BCDEventData.createBCDEvent(subscription, transferDate, existingEvent.getBillCycleDayLocal());
+                newEvent = BCDEventData.createBCDEvent(subscription, effectiveDate, existingEvent.getBillCycleDayLocal());
                 break;
 
             case CANCEL:
@@ -224,6 +226,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 if (oldSubscription.getState() == EntitlementState.CANCELLED) {
                     continue;
                 }
+
                 final List<ExistingEvent> existingEvents = cur.getExistingEvents();
                 final ProductCategory productCategory = existingEvents.get(0).getProductCategory();
 
@@ -231,9 +234,21 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 // on base plan cancellations, even though we don't support un-transfer today)
                 if (productCategory != ProductCategory.ADD_ON || cancelImmediately) {
                     // Create the cancelWithRequestedDate event on effectiveCancelDate
-                    final DateTime effectiveCancelDate = !cancelImmediately && oldSubscription.getChargedThroughDate() != null &&
+                    final DateTime candidateCancelDate = !cancelImmediately &&
+                                                         oldSubscription.getChargedThroughDate() != null &&
                                                          effectiveTransferDate.isBefore(oldSubscription.getChargedThroughDate()) ?
                                                          oldSubscription.getChargedThroughDate() : effectiveTransferDate;
+
+                    //
+                    // We are checking that if the subscription is PENDING (start date in the future) and if the requestedDate
+                    // for the transfer is prior to the startDate, then it gets realigned with the startDate.
+                    // The code goes further (reuse logic from validateEffectiveDate) and also checks that we if we have a subscription with multiple
+                    // change plans (that we want to transfer), we don't end up cancelling prior a previous transition as this would create some
+                    // weird REPAIR scenarios.
+                    //
+                    final SubscriptionBaseTransition previousTransition = oldSubscription.getPreviousTransition();
+                    final DateTime earliestValidDate = previousTransition != null ? previousTransition.getEffectiveTransitionTime() : oldSubscription.getStartDate();
+                    final DateTime effectiveCancelDate = (candidateCancelDate.isBefore(earliestValidDate)) ? earliestValidDate : candidateCancelDate;
 
                     final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
                                                                                          .setSubscriptionId(cur.getId())

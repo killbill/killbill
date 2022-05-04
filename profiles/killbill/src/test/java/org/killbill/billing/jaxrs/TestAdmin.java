@@ -1,6 +1,8 @@
 /*
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -17,7 +19,10 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,8 +47,6 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import org.asynchttpclient.Response;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMultimap;
@@ -141,13 +144,13 @@ public class TestAdmin extends TestJaxrsBase {
         }
 
         // Fix one account
-        final Response response = triggerInvoiceGenerationForParkedAccounts(1);
-        Assert.assertEquals(response.getResponseBody(), "{\"" + accounts.get(0) + "\":\"OK\"}");
+        final HttpResponse<InputStream> response = triggerInvoiceGenerationForParkedAccounts(1);
+        Assert.assertEquals(new String(response.body().readAllBytes(), StandardCharsets.UTF_8), "{\"" + accounts.get(0) + "\":\"OK\"}");
         Assert.assertEquals(invoiceApi.getInvoices(requestOptions).getPaginationMaxNbRecords(), 11);
 
         // Fix all accounts
-        final Response response2 = triggerInvoiceGenerationForParkedAccounts(4);
-        final Map<String, String> fixedAccounts = mapper.readValue(response2.getResponseBody(), new TypeReference<Map<String, String>>() {});
+        final HttpResponse<InputStream> response2 = triggerInvoiceGenerationForParkedAccounts(4);
+        final Map<String, String> fixedAccounts = mapper.readValue(response2.body(), new TypeReference<Map<String, String>>() {});
         Assert.assertEquals(fixedAccounts.size(), 4);
         Assert.assertEquals(fixedAccounts.get(accounts.get(1).toString()), "OK");
         Assert.assertEquals(fixedAccounts.get(accounts.get(2).toString()), "OK");
@@ -186,7 +189,7 @@ public class TestAdmin extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
     }
 
-    private Response triggerInvoiceGenerationForParkedAccounts(final int limit) throws KillBillClientException {
+    private HttpResponse<InputStream> triggerInvoiceGenerationForParkedAccounts(final int limit) throws KillBillClientException {
         final String uri = "/1.0/kb/admin/invoices";
 
         final RequestOptions requestOptions = RequestOptions.builder()
@@ -197,7 +200,7 @@ public class TestAdmin extends TestJaxrsBase {
         for (int i = 0; i < limit; i++) {
             callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_DELETION, ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
         }
-        final Response response = killBillHttpClient.doPost(uri, null, requestOptions);
+        final HttpResponse<InputStream> response = killBillHttpClient.doPost(uri, null, requestOptions);
         callbackServlet.assertListenerStatus();
         return response;
     }

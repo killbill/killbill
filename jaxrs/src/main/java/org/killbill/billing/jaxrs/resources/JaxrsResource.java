@@ -33,6 +33,7 @@ public interface JaxrsResource {
     String UPLOAD_PLUGIN_PAYMENT_STATE_MACHINE_CONFIG = "uploadPluginPaymentStateMachineConfig";
     String USER_KEY_VALUE = "userKeyValue";
     String SEARCH = "search";
+    String GROUP = "group";
 
     /*
      * Multi-Tenancy headers

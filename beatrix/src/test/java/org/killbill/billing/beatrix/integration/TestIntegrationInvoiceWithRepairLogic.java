@@ -20,6 +20,8 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -803,7 +805,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         newItems.add(recurring3);
         newItems.add(repair3);
         shellInvoice.addInvoiceItems(newItems);
-        invoiceDao.createInvoice(shellInvoice, null, ImmutableSet.of(), new FutureAccountNotifications(), null, internalCallContext);
+        invoiceDao.createInvoices(Collections.singleton(shellInvoice), null, ImmutableSet.of(), new FutureAccountNotifications(), null, false, internalCallContext);
 
         // Move ahead one month, verify nothing from previous data was generated
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -993,7 +995,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     }
     private void insertInvoiceItems(final InvoiceModelDao invoice) {
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
-        invoiceDao.createInvoice(invoice, null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
+        invoiceDao.createInvoices(Collections.singleton(invoice), null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, false, internalCallContext);
     }
 
 

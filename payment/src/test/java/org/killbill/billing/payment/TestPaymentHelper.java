@@ -121,6 +121,7 @@ public class TestPaymentHelper {
 
         Mockito.when(invoiceApi.getInvoiceById(Mockito.eq(invoice.getId()), Mockito.<InternalTenantContext>any())).thenReturn(invoice);
         Mockito.when(invoiceApi.getInvoiceForPaymentId(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(invoice);
+        Mockito.when(invoiceApi.getInvoiceStatus(Mockito.<UUID>any(), Mockito.<InternalCallContext>any())).thenReturn(invoice.getStatus());
 
         final InvoiceCreationInternalEvent event = new MockInvoiceCreationEvent(invoice.getId(), invoice.getAccountId(),
                                                                                 invoice.getBalance(), invoice.getCurrency(),
