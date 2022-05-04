@@ -42,8 +42,6 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableMap;
-
 public class TestUsage extends TestJaxrsBase {
 
     private  static Subscriptions createSubscriptions(final Account accountJson) {
