@@ -395,7 +395,7 @@ public class InvoiceDispatcher {
                 return Collections.emptyList();
             }
 
-            List<Invoice> result;
+            final List<Invoice> result;
             if (!isDryRun) {
                 final InvoicesWithFutureNotifications invoicesWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, accountInvoices, isRescheduled, allowSplitting, Lists.newLinkedList(), invoiceTimings, context);
                 result = invoicesWithFutureNotifications != null ? invoicesWithFutureNotifications.getInvoices() : Collections.emptyList();
@@ -408,7 +408,7 @@ public class InvoiceDispatcher {
                     }
                 }
             } else /* Dry run use cases */ {
-                // TODO_1658
+                // Splitting invoices has not been implemented for dry-run use cases to we simply add the one invoice in the result list
                 result = new ArrayList<>();
                 final Invoice invoice;
                 final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
@@ -1045,7 +1045,7 @@ public class InvoiceDispatcher {
                                                         final ExistingInvoiceMetadata existingInvoiceMetadata,
                                                         final InternalCallContext context) {
 
-        final boolean isThereAnyItemsLeft = invoicesModelDao.size() > 0; // TODO_1658
+        final boolean isThereAnyItemsLeft = invoicesModelDao.size() > 0;
         if (isThereAnyItemsLeft) {
             invoiceDao.createInvoices(invoicesModelDao, billingEvents, trackingIds, futureAccountNotifications, existingInvoiceMetadata, false, context);
         } else {

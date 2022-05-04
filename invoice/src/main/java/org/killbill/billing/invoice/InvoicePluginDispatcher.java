@@ -188,7 +188,7 @@ public class InvoicePluginDispatcher {
                                               // The pluginProperties list passed to plugins is mutable by the plugins
                                               @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
                                               final InternalTenantContext tenantContext) {
-        log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
+        log.debug("Invoking invoice plugins for splitInvoices operation: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
@@ -208,7 +208,6 @@ public class InvoicePluginDispatcher {
 
                 final List<InvoiceGroup> groups = grpResult.getInvoiceGroups();
                 for (final InvoiceGroup grp : groups) {
-                    // TODO_1658 new Invoice operation
                     final DefaultInvoice grpInvoice = (DefaultInvoice) originalInvoice.clone();
                     final UUID newInvoiceId = UUIDs.randomUUID();
                     grpInvoice.setId(newInvoiceId);

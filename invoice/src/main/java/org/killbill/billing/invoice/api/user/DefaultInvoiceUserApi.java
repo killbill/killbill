@@ -283,8 +283,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         if (result.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
-            // TODO_1658
-            org.killbill.billing.util.Preconditions.checkState(result.size() == 1);
+            Preconditions.checkState(result.size() == 1);
             return result.get(0);
         }
     }
@@ -296,8 +295,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         if (result.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
-            // TODO_1658
-            org.killbill.billing.util.Preconditions.checkState(result.size() == 1);
+            Preconditions.checkState(result.size() == 1);
             return result.get(0);
         }
     }

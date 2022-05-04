@@ -316,13 +316,12 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             public List<InvoiceModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
                 final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
                 final List<InvoiceModelDao> allInvoices = invoiceSqlDao.getByAccountRecordId(context);
-                final List<InvoiceModelDao> invoices = ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(allInvoices,
-                                                                                                                                                                     new Predicate<InvoiceModelDao>() {
-                                                                                                                                                                         @Override
-                                                                                                                                                                         public boolean apply(final InvoiceModelDao invoice) {
-                                                                                                                                                                             return invoice.getGrpId().equals(groupId);
-                                                                                                                                                                         }
-                                                                                                                                                                     })));
+                final List<InvoiceModelDao> invoices = ImmutableList.<InvoiceModelDao>copyOf(INVOICE_MODEL_DAO_ORDERING.sortedCopy(Iterables.<InvoiceModelDao>filter(allInvoices, new Predicate<InvoiceModelDao>() {
+                    @Override
+                    public boolean apply(final InvoiceModelDao invoice) {
+                        return invoice.getGrpId().equals(groupId);
+                    }
+                })));
                 invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
                 return invoices;
             }

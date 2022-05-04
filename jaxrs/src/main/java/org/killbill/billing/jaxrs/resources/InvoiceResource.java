@@ -214,8 +214,11 @@ public class InvoiceResource extends JaxRsResourceBase {
             final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
             result.add(new InvoiceJson(invoice, childInvoiceItems, accountAuditLogs));
         }
-        // TODO_1658 404 if no invoices?
-        return Response.status(Status.OK).entity(result).build();
+        if (result.isEmpty()) {
+            return Response.status(Status.NOT_FOUND).build();
+        } else {
+            return Response.status(Status.OK).entity(result).build();
+        }
     }
 
     @TimedResource
