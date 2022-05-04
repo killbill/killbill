@@ -36,7 +36,7 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-public class SubscriptionEventModelDao extends EntityModelDaoBase implements EntityModelDao<SubscriptionBaseEvent> {
+public class SubscriptionEventModelDao extends EntityModelDaoBase implements EntityModelDao<SubscriptionBaseEvent>, Comparable<SubscriptionEventModelDao> {
     private long totalOrdering;
     private EventType eventType;
     private ApiEventType userType;
@@ -221,6 +221,8 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         return result;
     }
 
+
+
     public boolean isOfSubscriptionBaseTransitionType(final SubscriptionBaseTransitionType type) {
         switch(type) {
             case CREATE:
@@ -332,5 +334,13 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
     @Override
     public TableName getHistoryTableName() {
         return TableName.SUBSCRIPTION_EVENT_HISTORY;
+    }
+
+    @Override
+    public int compareTo(final SubscriptionEventModelDao o) {
+
+        final SubscriptionBaseEvent thisEvent = toSubscriptionEvent(this);
+        final SubscriptionBaseEvent otherEvent = o.toSubscriptionEvent(o);
+        return thisEvent.compareTo(otherEvent);
     }
 }

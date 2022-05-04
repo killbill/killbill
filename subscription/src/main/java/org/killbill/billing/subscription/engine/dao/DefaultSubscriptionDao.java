@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -120,6 +121,8 @@ import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleModelDao, SubscriptionBaseBundle, SubscriptionApiException> implements SubscriptionDao {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionDao.class);
+
+    private static final LocalDate NO_CUTOFF_DT = new LocalDate(1970, 01, 02);
 
     private final Clock clock;
     private final NotificationQueueService notificationQueueService;
@@ -486,9 +489,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     public List<SubscriptionBaseEvent> getPendingEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
         final Date now = clock.getUTCNow().toDate();
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
-            final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory
-                    .become(SubscriptionEventSqlDao.class)
-                    .getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
+            final SubscriptionEventSqlDao eventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+            final SortedSet<SubscriptionEventModelDao> eventModels = eventSqlDao.getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
             return toSubscriptionBaseEvents(eventModels);
         });
     }
@@ -584,11 +586,11 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
         final InternalCallContext contextWithUpdatedDate = contextWithUpdatedDate(context);
         transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
-            final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+            final SubscriptionEventSqlDao eventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
             final UUID subscriptionId = subscription.getId();
             final Set<SubscriptionEventModelDao> targetEvents = new HashSet<SubscriptionEventModelDao>();
             final Date now = context.getCreatedDate().toDate();
-            final List<SubscriptionEventModelDao> eventModels = transactional.getFutureActiveEventForSubscription(subscriptionId.toString(), now, contextWithUpdatedDate);
+            final SortedSet<SubscriptionEventModelDao> eventModels = eventSqlDao.getFutureActiveEventForSubscription(subscriptionId.toString(), now, contextWithUpdatedDate);
             for (final SubscriptionEventModelDao cur : eventModels) {
                 if (cur.getEventType() == EventType.API_USER && cur.getUserType() == targetOperation) {
                     targetEvents.add(cur);
@@ -599,10 +601,10 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
             if (!targetEvents.isEmpty()) {
                 for (SubscriptionEventModelDao target : targetEvents) {
-                    transactional.unactiveEvent(target.getId().toString(), contextWithUpdatedDate);
+                    eventSqlDao.unactiveEvent(target.getId().toString(), contextWithUpdatedDate);
                 }
                 for (final SubscriptionBaseEvent cur : inputEvents) {
-                    transactional.create(new SubscriptionEventModelDao(cur), contextWithUpdatedDate);
+                    eventSqlDao.create(new SubscriptionEventModelDao(cur), contextWithUpdatedDate);
                     recordFutureNotificationFromTransaction(entitySqlDaoWrapperFactory,
                                                             cur.getEffectiveDate(),
                                                             new SubscriptionNotificationKey(cur.getId()),
@@ -628,11 +630,10 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         Preconditions.checkState(inputChangeEvent.getSubscriptionId().equals(subscription.getId()));
 
         transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
-            final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-            final List<SubscriptionEventModelDao> activeSubscriptionEvents = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getActiveEventsForSubscription(subscription.getId().toString(), context);
-
+            final SubscriptionEventSqlDao eventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+            final SortedSet<SubscriptionEventModelDao> activeSubscriptionEvents = eventSqlDao.getActiveEventsForSubscription(subscription.getId().toString(), context);
             // First event is CREATE/TRANSFER event
-            final SubscriptionEventModelDao firstSubscriptionEvent = activeSubscriptionEvents.get(0);
+            final SubscriptionEventModelDao firstSubscriptionEvent = activeSubscriptionEvents.first();
             final Iterable<SubscriptionEventModelDao> activePresentOrFutureSubscriptionEvents = activeSubscriptionEvents.stream()
                                                                                                                         .filter(input -> input.getEffectiveDate().compareTo(inputChangeEvent.getEffectiveDate()) >= 0)
                                                                                                                         .collect(Collectors.toUnmodifiableList());
@@ -664,7 +665,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             unactivateFutureEventsFromTransaction(activePresentOrFutureSubscriptionEvents, entitySqlDaoWrapperFactory, false, context);
 
             for (final SubscriptionBaseEvent cur : inputChangeEvents) {
-                createAndRefresh(transactional, new SubscriptionEventModelDao(cur), context);
+                createAndRefresh(eventSqlDao, new SubscriptionEventModelDao(cur), context);
 
                 final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER || cur.getType() == EventType.BCD_UPDATE);
                 recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
@@ -696,10 +697,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
     public List<SubscriptionBaseEvent> getEventsForAccountId(@Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
-            final SubscriptionEventSqlDao subscriptionEventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-            final List<SubscriptionEventModelDao> models = cutoffDt == null ?
-                                                           subscriptionEventSqlDao.getByAccountRecordId(context) :
-                                                           subscriptionEventSqlDao.getActiveByAccountRecordId(cutoffDt.toDate(), context);
+            final SubscriptionEventSqlDao eventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+            final LocalDate effCutoffDt = cutoffDt == null ? NO_CUTOFF_DT : cutoffDt;
+            final SortedSet<SubscriptionEventModelDao> models = eventSqlDao.getActiveByAccountRecordId(effCutoffDt.toDate(), context);
             return filterSubscriptionBaseEvents(models);
         });
     }
@@ -727,7 +727,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     private void unactivateFutureEventsFromTransaction(final UUID subscriptionId, final DateTime effectiveDate, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingBCDChange, final InternalCallContext context) {
-        final List<SubscriptionEventModelDao> eventModels = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getFutureOrPresentActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
+        final SubscriptionEventSqlDao eventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+        final SortedSet<SubscriptionEventModelDao> eventModels = eventSqlDao.getFutureOrPresentActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
         unactivateFutureEventsFromTransaction(eventModels, entitySqlDaoWrapperFactory, includingBCDChange, context);
     }
 
@@ -756,7 +757,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         SubscriptionEventModelDao futureEvent = null;
         final Date now = context.getCreatedDate().toDate();
 
-        final List<SubscriptionEventModelDao> eventModels = dao.become(SubscriptionEventSqlDao.class).getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
+        final SubscriptionEventSqlDao eventSqlDao = dao.become(SubscriptionEventSqlDao.class);
+        final SortedSet<SubscriptionEventModelDao> eventModels = eventSqlDao.getFutureActiveEventForSubscription(subscriptionId.toString(), now, context);
         for (final SubscriptionEventModelDao cur : eventModels) {
             if (cur.getEventType() == type &&
                 (apiType == null || apiType == cur.getUserType())) {
@@ -1046,7 +1048,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     private List<SubscriptionBaseEvent> getEventsForSubscriptionInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID subscriptionId, final InternalTenantContext context) {
-        final List<SubscriptionEventModelDao> models = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class).getActiveEventsForSubscription(subscriptionId.toString(), context);
+        final SubscriptionEventSqlDao eventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
+        final SortedSet<SubscriptionEventModelDao> models = eventSqlDao.getActiveEventsForSubscription(subscriptionId.toString(), context);
         return filterSubscriptionBaseEvents(models);
     }
 
