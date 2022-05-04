@@ -28,8 +28,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -61,24 +63,20 @@ import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-
 public class InvoicePluginDispatcher {
 
     private static final Logger log = LoggerFactory.getLogger(InvoicePluginDispatcher.class);
 
-    public static final Collection<InvoiceItemType> ALLOWED_INVOICE_ITEM_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
-                                                                                                                   InvoiceItemType.ITEM_ADJ,
-                                                                                                                   InvoiceItemType.CREDIT_ADJ,
-                                                                                                                   InvoiceItemType.TAX);
+    public static final Collection<InvoiceItemType> ALLOWED_INVOICE_ITEM_TYPES = List.of(InvoiceItemType.EXTERNAL_CHARGE,
+                                                                                         InvoiceItemType.ITEM_ADJ,
+                                                                                         InvoiceItemType.CREDIT_ADJ,
+                                                                                         InvoiceItemType.TAX);
 
     private final OSGIServiceRegistration<InvoicePluginApi> pluginRegistry;
     private final InvoiceConfig invoiceConfig;
@@ -199,7 +197,7 @@ public class InvoicePluginDispatcher {
                 final List<DefaultInvoice> result = new ArrayList<>();
                 final Map<UUID, InvoiceItem> itemMap = originalInvoice.getInvoiceItems()
                                                                       .stream()
-                                                                      .map(new Function<InvoiceItem, AbstractMap.SimpleEntry<UUID, InvoiceItem>>() {
+                                                                      .map(new Function<InvoiceItem, SimpleEntry<UUID, InvoiceItem>>() {
                                                                           @Override
                                                                           public SimpleEntry<UUID, InvoiceItem> apply(final InvoiceItem invoiceItem) {
                                                                               return new SimpleEntry<>(invoiceItem.getId(), invoiceItem);
@@ -291,10 +289,11 @@ public class InvoicePluginDispatcher {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEM_TYPE_INVALID, additionalInvoiceItem.getInvoiceItemType());
         }
 
-        final UUID invoiceId = MoreObjects.firstNonNull(mutableField("invoiceId", existingItem != null ? existingItem.getInvoiceId() : null, additionalInvoiceItem.getInvoiceId(), invoicePlugin),
-                                                        originalInvoiceId);
+        final UUID invoiceId = Objects.requireNonNullElse(
+                mutableField("invoiceId", (existingItem != null ? existingItem.getInvoiceId() : null), additionalInvoiceItem.getInvoiceId(), invoicePlugin),
+                originalInvoiceId);
 
-        final UUID additionalInvoiceId = MoreObjects.firstNonNull(additionalInvoiceItem.getId(), UUIDs.randomUUID());
+        final UUID additionalInvoiceId = Objects.requireNonNullElse(additionalInvoiceItem.getId(), UUIDs.randomUUID());
         final InvoiceItemCatalogBase tmp = new InvoiceItemCatalogBase(additionalInvoiceId,
                                                                       mutableField("createdDate", existingItem != null ? existingItem.getCreatedDate() : null, additionalInvoiceItem.getCreatedDate(), invoicePlugin),
                                                                       invoiceId,
@@ -381,7 +380,7 @@ public class InvoicePluginDispatcher {
         if (configuredPlugins == null || configuredPlugins.isEmpty()) {
             return registeredPlugins;
         } else {
-            final List<String> result = new ArrayList<String>(configuredPlugins.size());
+            final List<String> result = new ArrayList<>(configuredPlugins.size());
             for (final String name : configuredPlugins) {
                 if (pluginRegistry.getServiceForName(name) != null) {
                     result.add(name);

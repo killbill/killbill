@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class TestDefaultInvoiceDaoUnit extends InvoiceTestSuiteNoDB {
 
+    // FIXME-1615 : Should we move this to TestInvoiceHelperUnit? AFAIK non of DefaultInvoiceDao methods involved here.
     @Test(groups = "fast")
     public void testComputePositiveRefundAmount() throws Exception {
         // Verify the cases with no adjustment first

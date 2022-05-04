@@ -141,7 +141,6 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.checkInvoicesEqual(invoiceForExternalCharge, invoice);
     }
 
-
     @Test(groups = "slow")
     public void testWithInvoiceGroup() throws Exception {
         final UUID accountId = account.getId();
@@ -173,23 +172,58 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(result.size(), 2);
     }
 
+    // Return persisted invoice
+    private Invoice createAndGetInvoice(final LocalDate invoiceDate, final LocalDate targetDate) throws EntityPersistenceException {
+        final UUID accountId = account.getId();
+        final Invoice invoice = new DefaultInvoice(accountId, invoiceDate, targetDate, Currency.USD);
+        invoiceUtil.createInvoice(invoice, context);
+
+        return invoice;
+    }
+
     @Test(groups = "slow")
     public void testCreationAndRetrievalByAccount() throws EntityPersistenceException {
-        final UUID accountId = account.getId();
-        final Invoice invoice = new DefaultInvoice(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD);
-        final LocalDate invoiceDate = invoice.getInvoiceDate();
-
-        invoiceUtil.createInvoice(invoice, context);
+        final Invoice createdInvoice = createAndGetInvoice(clock.getUTCToday(), clock.getUTCToday());
 
         final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, context);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 1);
         final InvoiceModelDao thisInvoice = invoices.get(0);
-        assertEquals(invoice.getAccountId(), accountId);
-        assertTrue(thisInvoice.getInvoiceDate().compareTo(invoiceDate) == 0);
+        assertEquals(createdInvoice.getAccountId(), account.getId());
+        assertEquals(thisInvoice.getInvoiceDate().compareTo(createdInvoice.getInvoiceDate()), 0);
         assertEquals(thisInvoice.getCurrency(), Currency.USD);
         assertEquals(thisInvoice.getInvoiceItems().size(), 0);
-        assertTrue(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.ZERO) == 0);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.ZERO), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testGetInvoicesByAccountSorted() throws EntityPersistenceException {
+        final Invoice invoice1 = createAndGetInvoice(clock.getUTCToday(), clock.getUTCToday());
+        final Invoice invoice2 = createAndGetInvoice(clock.getUTCToday().minusDays(1), clock.getUTCToday().minusDays(1));
+        final Invoice invoice3 = createAndGetInvoice(clock.getUTCToday().minusDays(2), clock.getUTCToday().minusDays(2));
+        final Invoice invoice4 = createAndGetInvoice(clock.getUTCToday().minusDays(4), clock.getUTCToday().minusDays(4));
+        // although labeled "invoice5", the clock use "minusDays(3)", so in assertion, this should be in 2nd element.
+        final Invoice invoice5 = createAndGetInvoice(clock.getUTCToday().minusDays(3), clock.getUTCToday().minusDays(3));
+
+        final List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, context);
+
+        assertNotNull(invoices);
+        assertEquals(invoices.size(), 5);
+
+        assertEquals(invoice4.getId(), invoices.get(0).getId());
+        assertEquals(invoice4.getTargetDate().compareTo(invoices.get(0).getTargetDate()), 0);
+
+        assertEquals(invoice5.getId(), invoices.get(1).getId());
+        assertEquals(invoice5.getTargetDate().compareTo(invoices.get(1).getTargetDate()), 0);
+
+        assertEquals(invoice3.getId(), invoices.get(2).getId());
+        assertEquals(invoice3.getTargetDate().compareTo(invoices.get(2).getTargetDate()), 0);
+
+        assertEquals(invoice2.getId(), invoices.get(3).getId());
+        assertEquals(invoice2.getTargetDate().compareTo(invoices.get(3).getTargetDate()), 0);
+
+        assertEquals(invoice1.getId(), invoices.get(4).getId());
+        assertEquals(invoice1.getTargetDate().compareTo(invoices.get(4).getTargetDate()), 0);
     }
 
     @Test(groups = "slow")
