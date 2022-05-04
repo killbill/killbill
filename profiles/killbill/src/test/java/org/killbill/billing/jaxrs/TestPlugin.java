@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014 Groupon, Inc
- * Copyright 2014 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,6 +20,8 @@
 package org.killbill.billing.jaxrs;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.http.HttpResponse;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
@@ -27,7 +30,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.asynchttpclient.Response;
 import org.killbill.billing.client.KillBillHttpClient;
 import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.osgi.http.DefaultServletRouter;
@@ -72,7 +74,7 @@ public class TestPlugin extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testPassRequestsToUnknownPlugin() throws Exception {
         final String uri = "pluginDoesNotExist/something";
-        Response response;
+        HttpResponse<InputStream> response;
 
         // We don't test the output here as it is some Jetty specific HTML blurb
 
@@ -99,7 +101,7 @@ public class TestPlugin extends TestJaxrsBase {
     @Test(groups = "slow")
     public void testPassRequestsToKnownPluginButWrongPath() throws Exception {
         final String uri = TEST_PLUGIN_NAME + "/somethingSomething";
-        Response response;
+        HttpResponse<InputStream> response;
 
         response = pluginGET(uri, requestOptions);
         testAndResetAllMarkers(response, 200, new byte[]{}, false, false, false, false, false, false);
@@ -123,7 +125,7 @@ public class TestPlugin extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testPassRequestsToKnownPluginAndKnownPath() throws Exception {
-        Response response;
+        HttpResponse<InputStream> response;
 
         response = pluginGET(TEST_PLUGIN_NAME + "/" + TEST_PLUGIN_VALID_GET_PATH, requestOptions);
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, true, false, false, false, false, false);
@@ -144,15 +146,15 @@ public class TestPlugin extends TestJaxrsBase {
         testAndResetAllMarkers(response, 230, TEST_PLUGIN_RESPONSE_BYTES, false, false, false, false, false, true);
     }
 
-    private void testAndResetAllMarkers(@Nullable final Response response, final int responseCode, @Nullable final byte[] responseBytes, final boolean get, final boolean head,
+    private void testAndResetAllMarkers(@Nullable final HttpResponse<InputStream> response, final int responseCode, @Nullable final byte[] responseBytes, final boolean get, final boolean head,
                                         final boolean post, final boolean put, final boolean delete, final boolean options) throws IOException {
         if (responseCode == 404 || responseCode == 204) {
             Assert.assertNull(response);
         } else {
             Assert.assertNotNull(response);
-            Assert.assertEquals(response.getStatusCode(), responseCode);
+            Assert.assertEquals(response.statusCode(), responseCode);
             if (responseBytes != null) {
-                Assert.assertEquals(response.getResponseBodyAsBytes(), responseBytes);
+                Assert.assertEquals(response.body().readAllBytes(), responseBytes);
             }
         }
 
@@ -178,27 +180,27 @@ public class TestPlugin extends TestJaxrsBase {
     //
     // Plugin routing endpoints are not officially part of api (yet)
     //
-    private Response pluginGET(final String uri, final RequestOptions inputOptions) throws Exception {
+    private HttpResponse<InputStream> pluginGET(final String uri, final RequestOptions inputOptions) throws Exception {
         return killBillHttpClient.doGet(PLUGIN_PATH + uri, inputOptions);
     }
 
-    private Response pluginHEAD(final String uri, final RequestOptions inputOptions) throws Exception {
+    private HttpResponse<InputStream> pluginHEAD(final String uri, final RequestOptions inputOptions) throws Exception {
         return killBillHttpClient.doHead(PLUGIN_PATH + uri, inputOptions);
     }
 
-    private Response pluginPOST(final String uri, @Nullable final String body, final RequestOptions inputOptions) throws Exception {
+    private HttpResponse<InputStream> pluginPOST(final String uri, @Nullable final String body, final RequestOptions inputOptions) throws Exception {
         return killBillHttpClient.doPost(PLUGIN_PATH + uri, body, inputOptions);
     }
 
-    private Response pluginDELETE(final String uri, final RequestOptions inputOptions) throws Exception {
+    private HttpResponse<InputStream> pluginDELETE(final String uri, final RequestOptions inputOptions) throws Exception {
         return killBillHttpClient.doDelete(PLUGIN_PATH + uri, inputOptions);
     }
 
-    private Response pluginPUT(final String uri, @Nullable final String body, final RequestOptions inputOptions) throws Exception {
+    private HttpResponse<InputStream> pluginPUT(final String uri, @Nullable final String body, final RequestOptions inputOptions) throws Exception {
         return killBillHttpClient.doPut(PLUGIN_PATH + uri, body, inputOptions);
     }
 
-    private Response pluginOPTIONS(final String uri, final RequestOptions inputOptions) throws Exception {
+    private HttpResponse<InputStream> pluginOPTIONS(final String uri, final RequestOptions inputOptions) throws Exception {
         return killBillHttpClient.doOptions(PLUGIN_PATH + uri, inputOptions);
     }
 

@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2018 Groupon, Inc
- * Copyright 2014-2018 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -118,7 +119,6 @@ public class TestJaxrsBase extends KillbillClient {
 
     protected final int DEFAULT_CONNECT_TIMEOUT_SEC = 10;
     protected final int DEFAULT_READ_TIMEOUT_SEC = 60;
-    protected final int DEFAULT_REQUEST_TIMEOUT_SEC = DEFAULT_READ_TIMEOUT_SEC;
 
     protected static final String PLUGIN_NAME = "noop";
 
@@ -226,8 +226,7 @@ public class TestJaxrsBase extends KillbillClient {
                                                     null,
                                                     null,
                                                     DEFAULT_CONNECT_TIMEOUT_SEC * 1000,
-                                                    DEFAULT_READ_TIMEOUT_SEC * 1000,
-                                                    DEFAULT_REQUEST_TIMEOUT_SEC * 1000);
+                                                    DEFAULT_READ_TIMEOUT_SEC * 1000);
         accountApi = new AccountApi(killBillHttpClient);
         adminApi = new AdminApi(killBillHttpClient);
         bundleApi = new BundleApi(killBillHttpClient);

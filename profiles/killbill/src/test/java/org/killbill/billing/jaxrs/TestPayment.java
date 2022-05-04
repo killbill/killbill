@@ -1,6 +1,8 @@
 /*
+ * Copyright 2010-2014 Ning, Inc.
  * Copyright 2014-2020 Groupon, Inc
- * Copyright 2014-2020 The Billing Project, LLC
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -178,7 +180,7 @@ public class TestPayment extends TestJaxrsBase {
                                       NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptionsWithoutFollowLocation);
             fail();
         } catch (final KillBillClientException e) {
-            assertEquals(e.getResponse().getStatusCode(), 402);
+            assertEquals(e.getResponse().statusCode(), 402);
             assertEquals(e.getBillingException().getMessage(), "Payment decline by gateway. Error message: gatewayError");
         }
     }
@@ -215,7 +217,7 @@ public class TestPayment extends TestJaxrsBase {
                                       NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
             fail();
         } catch (KillBillClientException e) {
-            assertEquals(504, e.getResponse().getStatusCode());
+            assertEquals(504, e.getResponse().statusCode());
         }
     }
 
@@ -698,7 +700,7 @@ public class TestPayment extends TestJaxrsBase {
             paymentApi.createComboPayment(comboPaymentTransaction, Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME), requestOptions);
             fail();
         } catch (KillBillClientException e) {
-            assertEquals(e.getResponse().getStatusCode(), 422);
+            assertEquals(e.getResponse().statusCode(), 422);
         }
         assertFalse(mockPaymentControlProviderPlugin.isOnFailureCallExecuted());
         assertFalse(mockPaymentControlProviderPlugin.isOnSuccessCallExecuted());
@@ -742,7 +744,7 @@ public class TestPayment extends TestJaxrsBase {
             paymentApi.createComboPayment(comboPaymentTransaction, Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME), requestOptions);
             fail();
         } catch (KillBillClientException e) {
-            assertEquals(e.getResponse().getStatusCode(), 500);
+            assertEquals(e.getResponse().statusCode(), 500);
         }
     }
 
