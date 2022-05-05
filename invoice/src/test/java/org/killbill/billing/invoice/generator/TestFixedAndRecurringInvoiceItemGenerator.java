@@ -62,6 +62,8 @@ import org.killbill.billing.junction.plumbing.billing.DefaultBillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
+import org.killbill.billing.util.collect.MultiValueHashMap;
+import org.killbill.billing.util.collect.MultiValueMap;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -1309,27 +1311,40 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
     //
     //
 
+    private FixedPriceInvoiceItem createFixedPriceInvoiceItem(final LocalDate startDate) {
+        return new FixedPriceInvoiceItem(UUID.randomUUID(),
+                                         clock.getUTCNow(),
+                                         null,
+                                         account.getId(),
+                                         subscription.getBundleId(),
+                                         subscription.getId(),
+                                         null,
+                                         "planName",
+                                         "phaseName",
+                                         null,
+                                         "description",
+                                         startDate,
+                                         BigDecimal.ONE,
+                                         account.getCurrency());
+    }
+
     // Simulate a bug in the generator where two fixed items for the same day and subscription end up in the resulting items
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testTooManyFixedInvoiceItemsForGivenSubscriptionAndStartDatePostMerge() throws InvoiceApiException {
-        final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
+        final MultiValueMap<UUID, LocalDate> createdItemsPerDayPerSubscription = new MultiValueHashMap<>();
         final LocalDate startDate = new LocalDate("2016-01-01");
 
-        final Collection<InvoiceItem> resultingItems = new LinkedList<InvoiceItem>();
-        final InvoiceItem fixedPriceInvoiceItem = new FixedPriceInvoiceItem(UUID.randomUUID(),
-                                                                            clock.getUTCNow(),
-                                                                            null,
-                                                                            account.getId(),
-                                                                            subscription.getBundleId(),
-                                                                            subscription.getId(),
-                                                                            null,
-                                                                            "planName",
-                                                                            "phaseName",
-                                                                            null,
-                                                                            "description",
-                                                                            startDate,
-                                                                            BigDecimal.ONE,
-                                                                            account.getCurrency());
+        final Collection<InvoiceItem> resultingItems = new LinkedList<>();
+
+        // This part should never throw exception because startDate is different
+        resultingItems.add(createFixedPriceInvoiceItem(startDate));
+        resultingItems.add(createFixedPriceInvoiceItem(startDate.plusDays(1)));
+        resultingItems.add(createFixedPriceInvoiceItem(startDate.plusMonths(1)));
+        fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+
+        resultingItems.clear();
+
+        final InvoiceItem fixedPriceInvoiceItem = createFixedPriceInvoiceItem(startDate);
         resultingItems.add(fixedPriceInvoiceItem);
         resultingItems.add(fixedPriceInvoiceItem);
 
@@ -1341,22 +1356,9 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         }
 
         resultingItems.clear();
+
         for (int i = 0; i < 2; i++) {
-            resultingItems.add(new FixedPriceInvoiceItem(UUID.randomUUID(),
-                                                         clock.getUTCNow(),
-                                                         null,
-                                                         account.getId(),
-                                                         subscription.getBundleId(),
-                                                         subscription.getId(),
-                                                         null,
-                                                         "planName",
-                                                         "phaseName",
-                                                         null,
-                                                         "description",
-                                                         startDate,
-                                                         // Amount shouldn't have any effect
-                                                         BigDecimal.ONE.add(new BigDecimal(i)),
-                                                         account.getCurrency()));
+            resultingItems.add(createFixedPriceInvoiceItem(startDate));
         }
 
         try {
@@ -1367,28 +1369,42 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         }
     }
 
+    private RecurringInvoiceItem createRecurringInvoiceItem(final LocalDate startDate, final LocalDate endDate) {
+        return new RecurringInvoiceItem(UUID.randomUUID(),
+                                        clock.getUTCNow(),
+                                        null,
+                                        account.getId(),
+                                        subscription.getBundleId(),
+                                        subscription.getId(),
+                                        null,
+                                        "planName",
+                                        "phaseName",
+                                        null,
+                                        startDate,
+                                        endDate,
+                                        BigDecimal.ONE,
+                                        BigDecimal.ONE,
+                                        account.getCurrency());
+    }
+
     // Simulate a bug in the generator where two recurring items for the same service period and subscription end up in the resulting items
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/664")
     public void testTooManyRecurringInvoiceItemsForGivenSubscriptionAndServicePeriodPostMerge() throws InvoiceApiException {
-        final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
+        final MultiValueMap<UUID, LocalDate> createdItemsPerDayPerSubscription = new MultiValueHashMap<>();
         final LocalDate startDate = new LocalDate("2016-01-01");
 
-        final Collection<InvoiceItem> resultingItems = new LinkedList<InvoiceItem>();
-        final InvoiceItem recurringInvoiceItem = new RecurringInvoiceItem(UUID.randomUUID(),
-                                                                          clock.getUTCNow(),
-                                                                          null,
-                                                                          account.getId(),
-                                                                          subscription.getBundleId(),
-                                                                          subscription.getId(),
-                                                                          null,
-                                                                          "planName",
-                                                                          "phaseName",
-                                                                          null,
-                                                                          startDate,
-                                                                          startDate.plusMonths(1),
-                                                                          BigDecimal.ONE,
-                                                                          BigDecimal.ONE,
-                                                                          account.getCurrency());
+        final Collection<InvoiceItem> resultingItems = new LinkedList<>();
+
+        // This part should never throw exception because date interval is different
+        resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusDays(10)));
+        resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusDays(14)));
+        resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusWeeks(3)));
+        resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusMonths(1)));
+        fixedAndRecurringInvoiceItemGenerator.safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
+
+        resultingItems.clear();
+
+        final InvoiceItem recurringInvoiceItem = createRecurringInvoiceItem(startDate, startDate.plusMonths(1));
         resultingItems.add(recurringInvoiceItem);
         resultingItems.add(recurringInvoiceItem);
 
@@ -1400,23 +1416,9 @@ public class TestFixedAndRecurringInvoiceItemGenerator extends InvoiceTestSuiteN
         }
 
         resultingItems.clear();
+
         for (int i = 0; i < 2; i++) {
-            resultingItems.add(new RecurringInvoiceItem(UUID.randomUUID(),
-                                                        clock.getUTCNow(),
-                                                        null,
-                                                        account.getId(),
-                                                        subscription.getBundleId(),
-                                                        subscription.getId(),
-                                                        null,
-                                                        "planName",
-                                                        "phaseName",
-                                                        null,
-                                                        startDate,
-                                                        startDate.plusMonths(1),
-                                                        // Amount shouldn't have any effect
-                                                        BigDecimal.TEN,
-                                                        BigDecimal.ONE,
-                                                        account.getCurrency()));
+            resultingItems.add(createRecurringInvoiceItem(startDate, startDate.plusMonths(1)));
         }
 
         try {
