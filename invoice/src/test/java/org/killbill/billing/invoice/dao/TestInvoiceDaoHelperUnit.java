@@ -29,9 +29,8 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 
-public class TestDefaultInvoiceDaoUnit extends InvoiceTestSuiteNoDB {
+public class TestInvoiceDaoHelperUnit extends InvoiceTestSuiteNoDB {
 
-    // FIXME-1615 : Should we move this to TestInvoiceHelperUnit? AFAIK none of DefaultInvoiceDao methods involved here.
     @Test(groups = "fast")
     public void testComputePositiveRefundAmount() throws Exception {
         // Verify the cases with no adjustment first
