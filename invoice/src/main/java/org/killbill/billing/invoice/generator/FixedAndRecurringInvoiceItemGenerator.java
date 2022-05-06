@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
@@ -446,9 +447,9 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             final Map<UUID, MultiValueMap<Interval, InvoiceItem>> recurringItemsPerServicePeriodAndSubscription = new HashMap<>();
             for (final InvoiceItem resultingItem : resultingItems) {
                 if (resultingItem.getInvoiceItemType() == InvoiceItemType.FIXED) {
-                    validateSafeBoundsWithFixedInvoiceItem(fixedItemsPerDateAndSubscription, resultingItem);
+                    validateSafetyBoundsWithFixedInvoiceItem(fixedItemsPerDateAndSubscription, resultingItem);
                 } else if (resultingItem.getInvoiceItemType() == InvoiceItemType.RECURRING) {
-                    validateSafeBoundsWithRecurringInvoiceItem(recurringItemsPerServicePeriodAndSubscription, resultingItem);
+                    validateSafetyBoundsWithRecurringInvoiceItem(recurringItemsPerServicePeriodAndSubscription, resultingItem);
                 }
             }
         }
@@ -479,8 +480,9 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         }
     }
 
-    private void validateSafeBoundsWithFixedInvoiceItem(final Map<UUID, MultiValueMap<LocalDate, InvoiceItem>> fixedItemsPerDateAndSubscription,
-                                                        final InvoiceItem resultingItem) throws InvoiceApiException {
+    @VisibleForTesting
+    void validateSafetyBoundsWithFixedInvoiceItem(final Map<UUID, MultiValueMap<LocalDate, InvoiceItem>> fixedItemsPerDateAndSubscription,
+                                                  final InvoiceItem resultingItem) throws InvoiceApiException {
         if (fixedItemsPerDateAndSubscription.get(resultingItem.getSubscriptionId()) == null) {
             fixedItemsPerDateAndSubscription.put(resultingItem.getSubscriptionId(), new MultiValueHashMap<>());
         }
@@ -493,12 +495,14 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         }
     }
 
-    private void validateSafeBoundsWithRecurringInvoiceItem(final Map<UUID, MultiValueMap<Interval, InvoiceItem>> recurringItemsPerServicePeriodAndSubscription,
-                                                            final InvoiceItem resultingItem) throws InvoiceApiException {
+    @VisibleForTesting
+    void validateSafetyBoundsWithRecurringInvoiceItem(final Map<UUID, MultiValueMap<Interval, InvoiceItem>> recurringItemsPerServicePeriodAndSubscription,
+                                                      final InvoiceItem resultingItem) throws InvoiceApiException {
         if (recurringItemsPerServicePeriodAndSubscription.get(resultingItem.getSubscriptionId()) == null) {
             recurringItemsPerServicePeriodAndSubscription.put(resultingItem.getSubscriptionId(), new MultiValueHashMap<>());
         }
-        final Interval interval = new Interval(resultingItem.getStartDate().toDateTimeAtStartOfDay(), resultingItem.getEndDate().toDateTimeAtStartOfDay());
+        final Interval interval = new Interval(resultingItem.getStartDate().toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                                               resultingItem.getEndDate().toDateTimeAtStartOfDay(DateTimeZone.UTC));
         recurringItemsPerServicePeriodAndSubscription.get(resultingItem.getSubscriptionId()).putElement(interval, resultingItem);
 
         final Collection<InvoiceItem> resultingInvoiceItems = recurringItemsPerServicePeriodAndSubscription.get(resultingItem.getSubscriptionId()).get(interval);
