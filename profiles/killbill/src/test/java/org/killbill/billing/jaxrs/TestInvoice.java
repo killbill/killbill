@@ -936,7 +936,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         // Follow location to return the list of invoices
         final Invoices invoices2 = invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), new LocalDate(2022, 7, 4), requestOptions.extend()
-                                                                                                                                             .withQueryParamsForFollow(ImmutableMultimap.of(org.killbill.billing.jaxrs.resources.JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId().toString()))
+                                                                                                                                             .withQueryParamsForFollow(ImmutableMultimap.of(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId().toString()))
                                                                                                                                              .withFollowLocation(true).build());
         // We expect only one invoice as there is no grouping plugin
         assertEquals(invoices2.size(), 1);
