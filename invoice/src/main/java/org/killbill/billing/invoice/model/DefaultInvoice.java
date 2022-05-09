@@ -332,7 +332,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     public String toString() {
         return "DefaultInvoice [items=" + invoiceItems + ", payments=" + payments + ", id=" + id + ", accountId=" + accountId
                + ", invoiceDate=" + invoiceDate + ", targetDate=" + targetDate + ", currency=" + currency + ", amountPaid=" + getPaidAmount()
-               + ", status=" + status + ", isParentInvoice=" + isParentInvoice + "]";
+               + ", status=" + status + ", grpId=" + grpId + ", isParentInvoice=" + isParentInvoice + "]";
     }
 
 }

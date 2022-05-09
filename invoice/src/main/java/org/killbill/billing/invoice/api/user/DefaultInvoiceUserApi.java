@@ -280,7 +280,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         if (result.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_NOTHING_TO_DO, accountId, targetDate != null ? targetDate : "null");
         } else {
-            Preconditions.checkState(result.size() == 1);
+            Preconditions.checkState(result.size() == 1, String.format("Expected one invoice but got %d", result.size()));
             return result.get(0);
         }
     }
