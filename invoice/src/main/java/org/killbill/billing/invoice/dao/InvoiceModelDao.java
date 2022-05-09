@@ -36,8 +36,6 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-import com.google.common.collect.ImmutableList;
-
 public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDao<Invoice> {
 
     private UUID accountId;
@@ -99,7 +97,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     }
 
     public List<String> getTrackingIds() {
-        return ImmutableList.copyOf(trackingIds);
+        return List.copyOf(trackingIds);
     }
 
     public void addTrackingIds(final Set<String> trackingIds) {

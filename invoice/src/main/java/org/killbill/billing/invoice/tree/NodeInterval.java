@@ -22,9 +22,9 @@ package org.killbill.billing.invoice.tree;
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.util.Preconditions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Preconditions;
 
 public class NodeInterval {
 

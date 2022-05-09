@@ -37,7 +37,8 @@ public class TestMultiValueHashMap extends UtilTestSuiteNoDB {
 
         multiValueMap.putElement("two", new KeyValue("c", "C")); // same element, to prove that values size will keep increase.
 
-        assertEquals(multiValueMap.get("two").size(), 3);
+        assertEquals(multiValueMap.size(), 2); // The MultiValueMap's size() itself remaining the same ....
+        assertEquals(multiValueMap.get("two").size(), 3); // .... But the value elements is up-to-date.
     }
 
     @Test(groups = "fast")

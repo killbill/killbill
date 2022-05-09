@@ -18,11 +18,13 @@
 
 package org.killbill.billing.invoice.generator;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.joda.time.Months;
@@ -46,12 +48,6 @@ import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 public class DefaultInvoiceGenerator implements InvoiceGenerator {
 
@@ -84,7 +80,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                                @Nullable final DryRunInfo dryRunInfo,
                                                final InternalCallContext context) throws InvoiceApiException {
         if (events == null) {
-            return new InvoiceWithMetadata(null, ImmutableSet.of(), ImmutableMap.<UUID, SubscriptionFutureNotificationDates>of(), false, context);
+            return new InvoiceWithMetadata(null, Collections.emptySet(), Collections.emptyMap(), false, context);
         }
 
         validateTargetDate(targetDate, context);
@@ -96,7 +92,7 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                                        new DefaultInvoice(targetInvoiceId, account.getId(), null, invoiceDate, adjustedTargetDate, targetCurrency, false, invoiceStatus) :
                                        new DefaultInvoice(account.getId(), invoiceDate, adjustedTargetDate, targetCurrency, invoiceStatus);
 
-        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<UUID, SubscriptionFutureNotificationDates>();
+        final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates = new HashMap<>();
 
         final InvoiceGeneratorResult fixedAndRecurringItems = recurringInvoiceItemGenerator.generateItems(account, invoice.getId(), events, existingInvoices, adjustedTargetDate, targetCurrency, perSubscriptionFutureNotificationDates, dryRunInfo, context);
         invoice.addInvoiceItems(fixedAndRecurringItems.getItems());
@@ -105,13 +101,9 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         invoice.addInvoiceItems(usageItemsWithTrackingIds.getItems());
 
         if (targetInvoiceId != null) {
-            final Invoice originalInvoice = Iterables.find(existingInvoices.getInvoices(), new Predicate<Invoice>() {
-                @Override
-                public boolean apply(final Invoice input) {
-                    return input.getId().equals(targetInvoiceId);
-                }
-            });
-            invoice.addInvoiceItems(originalInvoice.getInvoiceItems());
+            existingInvoices.getInvoices().stream()
+                    .filter(input -> input.getId().equals(targetInvoiceId))
+                    .findFirst().ifPresent(input -> invoice.addInvoiceItems(input.getInvoiceItems()));
         }
 
         return new InvoiceWithMetadata(invoice,
@@ -142,12 +134,8 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
         for (final Invoice invoice : existingInvoices) {
 
             // See https://github.com/killbill/killbill/issues/1241
-            boolean containsUsageOrRecurringItems = Iterables.any(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
-                @Override
-                public boolean apply(final InvoiceItem input) {
-                    return input.getInvoiceItemType() == InvoiceItemType.RECURRING || input.getInvoiceItemType() == InvoiceItemType.USAGE;
-                }
-            });
+            final boolean containsUsageOrRecurringItems = invoice.getInvoiceItems().stream()
+                    .anyMatch(input -> input.getInvoiceItemType() == InvoiceItemType.RECURRING || input.getInvoiceItemType() == InvoiceItemType.USAGE);
             if (!containsUsageOrRecurringItems) {
                 continue;
             }

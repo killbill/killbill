@@ -22,6 +22,8 @@ package org.killbill.billing.invoice.tree;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,9 +39,6 @@ import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -84,8 +83,8 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed2);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
-        expectedResult.addAll(ImmutableList.of());
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
+        expectedResult.addAll(Collections.emptyList());
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -117,7 +116,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed2);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem1StartPeriod, existingItemStartPeriod, new BigDecimal("1"), monthlyRate, currency);
         expectedResult.add(expected1);
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItemEndPeriod, proposedItem2EndPeriod, new BigDecimal("9.03"), monthlyRate, currency);
@@ -165,7 +164,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed4);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, existingItem2EndPeriod, proposedItem3EndPeriod, new BigDecimal("1"), monthlyRate, currency);
         expectedResult.add(expected1);
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, proposedItem3EndPeriod, proposedItem4EndPeriod, new BigDecimal("7"), monthlyRate, currency);
@@ -217,7 +216,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed3);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -237,7 +236,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startAnnual2, endAnnual1, annualRate1.negate(), currency, annual1.getId());
         final InvoiceItem annual2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startAnnual2, endAnnual2, annualRate2, annualRate2, currency);
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem annual1Prorated = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startAnnual1, startAnnual2, new BigDecimal("10.0"), annualRate1, currency);
         expectedResult.add(annual1Prorated);
         expectedResult.add(annual2);
@@ -282,8 +281,8 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem expected1 = new RepairAdjInvoiceItem(invoiceId, accountId, startBlock, endBlock, new BigDecimal("-6.85"), currency, annual.getId());
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endDate, newEndDate, new BigDecimal("7.79"), yearlyAmount, currency);
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
-        expectedResult.addAll(ImmutableList.of(expected1, expected2));
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
+        expectedResult.addAll(List.of(expected1, expected2));
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -319,8 +318,8 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed2);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
-        expectedResult.addAll(ImmutableList.of());
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
+        expectedResult.addAll(Collections.emptyList());
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -341,7 +340,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.addItem(repair1);
         tree.build();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         expectedResult.add(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, blockDate, new BigDecimal("5.99"), rate, currency));
 
         verifyResult(tree.getView(), expectedResult);
@@ -350,7 +349,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.buildForMerge();
 
         expectedResult.clear();
-        expectedResult.addAll(ImmutableList.of(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, blockDate, new BigDecimal("-5.99"), currency, recurring1.getId())));
+        expectedResult.addAll(List.of(new RepairAdjInvoiceItem(invoiceId, accountId, startDate, blockDate, new BigDecimal("-5.99"), currency, recurring1.getId())));
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -424,7 +423,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem newItem = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", "someelse", null, repairDate, endDate, amount2, rate2, currency);
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate, endDate, amount1.negate(), currency, initial.getId());
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, repairDate, new BigDecimal("8.52"), rate1, currency);
         expectedResult.add(expected1);
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, "someelse", "someelse", "someelse", null, repairDate, endDate, amount2, rate2, currency);
@@ -493,7 +492,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem newItem2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, repairDate2, endDate, amount3, rate3, currency);
         final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, repairDate2, endDate, amount2.negate(), currency, newItem1.getId());
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, repairDate1, new BigDecimal("8.52"), rate1, currency);
         expectedResult.add(expected1);
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, repairDate1, repairDate2, new BigDecimal("4.95"), rate2, currency);
@@ -531,7 +530,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem block1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockStart1, unblockStart1, amount1.negate(), currency, initial.getId());
         final InvoiceItem block2 = new RepairAdjInvoiceItem(invoiceId, accountId, blockStart2, unblockStart2, amount1.negate(), currency, initial.getId());
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, blockStart1, new BigDecimal("2.71"), rate1, currency);
         expectedResult.add(expected1);
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, unblockStart1, blockStart2, new BigDecimal("2.71"), rate1, currency);
@@ -565,7 +564,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem block1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate, startDate2, amount1.negate(), currency, first.getId());
         final InvoiceItem block2 = new RepairAdjInvoiceItem(invoiceId, accountId, startDate2, unblockDate, amount1.negate(), currency, first.getId());
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem expected1 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate1, blockDate, new BigDecimal("9.29"), rate1, currency);
         final InvoiceItem expected2 = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, unblockDate, endDate, new BigDecimal("9.43"), rate1, currency);
         expectedResult.add(expected1);
@@ -601,7 +600,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem leadingAnnualProration = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, switchToAnnualDate, endMonthly2, yearlyAmount, yearlyRate, currency);
         final InvoiceItem annual = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endMonthly2, endDate, yearlyAmount, yearlyRate, currency);
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         expectedResult.add(monthly1);
         final InvoiceItem monthly2Prorated = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endMonthly1, switchToAnnualDate, new BigDecimal("9.43"), monthlyRate, currency);
         expectedResult.add(monthly2Prorated);
@@ -639,7 +638,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, switchToAnnualDate, endMonthly2, monthlyAmount.negate(), currency, monthly2.getId());
         final InvoiceItem annual = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, switchToAnnualDate, endDate, yearlyAmount, yearlyRate, currency);
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         expectedResult.add(monthly1);
         final InvoiceItem monthly2Prorated = new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, endMonthly1, switchToAnnualDate, new BigDecimal("9.43"), monthlyRate, currency);
         expectedResult.add(monthly2Prorated);
@@ -735,7 +734,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         expectedResult.add(proposed1);
         verifyResult(tree.getView(), expectedResult);
     }
@@ -759,7 +758,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -785,7 +784,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, monthlyAmount1.negate(), currency, monthly1.getId());
         expectedResult.add(proposed1);
         expectedResult.add(repair);
@@ -812,7 +811,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, blockDate, new BigDecimal("-9.29"), currency, monthly1.getId());
         expectedResult.add(repair);
         verifyResult(tree.getView(), expectedResult);
@@ -837,7 +836,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, new BigDecimal("-2.71"), currency, monthly1.getId());
         expectedResult.add(repair);
         verifyResult(tree.getView(), expectedResult);
@@ -866,7 +865,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed2);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate, unblockDate, new BigDecimal("-4.65"), currency, monthly1.getId());
         expectedResult.add(repair);
         verifyResult(tree.getView(), expectedResult);
@@ -899,7 +898,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed3);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate1, unblockDate1, new BigDecimal("-2.32"), currency, monthly.getId());
         final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, blockDate2, unblockDate2, new BigDecimal("-3.10"), currency, monthly.getId());
         expectedResult.add(repair1);
@@ -948,7 +947,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed2);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, upgradeDate, endDate, new BigDecimal("-2.71"), currency, monthly1.getId());
         expectedResult.add(proposed2);
         expectedResult.add(repair);
@@ -990,7 +989,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed3);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair2 = new RepairAdjInvoiceItem(invoiceId, accountId, change2, endDate, new BigDecimal("-7.70"), currency, initial.getId());
         expectedResult.add(proposed3);
         expectedResult.add(repair2);
@@ -1019,7 +1018,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(fixed);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -1044,7 +1043,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(fixed);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         expectedResult.add(fixed);
         verifyResult(tree.getView(), expectedResult);
     }
@@ -1072,7 +1071,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, new BigDecimal("-3.48"), currency, initial.getId());
         expectedResult.add(repair1);
 
@@ -1102,7 +1101,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair1 = new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, new BigDecimal("-2.00"), currency, initial.getId());
         expectedResult.add(repair1);
 
@@ -1136,7 +1135,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(new RecurringInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, null, startDate, cancelDate, amount1, rate1, currency));
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -1172,7 +1171,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, switchToAnnualDate, endMonthly2, new BigDecimal("-2.57"), currency, monthly2.getId());
         expectedResult.add(proposed);
         expectedResult.add(repair);
@@ -1231,7 +1230,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         //printTree(tree);
 
         // We except to see a repair for the piece cancelled with a $0 price since item was fully adjusted
-        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, BigDecimal.ZERO, Currency.USD, existing1.getId()));
+        final List<InvoiceItem> expectedResult = List.of(new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, BigDecimal.ZERO, Currency.USD, existing1.getId()));
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -1258,7 +1257,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.buildForMerge();
 
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, cancelDate, endDate, BigDecimal.ONE.negate(), Currency.USD, existing1.getId());
-        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(repair);
+        final List<InvoiceItem> expectedResult = List.of(repair);
         verifyResult(tree.getView(), expectedResult);
     }
 
@@ -1325,7 +1324,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
                                                                 new BigDecimal("0.40"),
                                                                 rate,
                                                                 currency);
-        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of(expected);
+        final List<InvoiceItem> expectedResult = List.of(expected);
         verifyResult(tree.getView(), expectedResult);
 
     }
@@ -1349,7 +1348,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposedPayingMonthly2);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = Lists.newLinkedList();
+        final List<InvoiceItem> expectedResult = new LinkedList<>();
         expectedResult.add(proposedPayingMonthly2);
         final InvoiceItem repair = new RepairAdjInvoiceItem(invoiceId, accountId, startDate, endDate, monthlyRate1.negate(), currency, payingMonthly1.getId());
         expectedResult.add(repair);
@@ -1373,7 +1372,7 @@ public class TestSubscriptionItemTree extends InvoiceTestSuiteNoDB {
         tree.mergeProposedItem(proposed1);
         tree.buildForMerge();
 
-        final List<InvoiceItem> expectedResult = ImmutableList.<InvoiceItem>of();
+        final List<InvoiceItem> expectedResult = Collections.emptyList();
         verifyResult(tree.getView(), expectedResult);
     }
 
