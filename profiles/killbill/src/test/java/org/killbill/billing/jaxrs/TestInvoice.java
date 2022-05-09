@@ -56,6 +56,7 @@ import org.testng.util.Strings;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
@@ -64,6 +65,8 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class TestInvoice extends TestJaxrsBase {
+
+
 
     @Test(groups = "slow", description = "Can search and retrieve invoices with and without items")
     public void testInvoiceOk() throws Exception {
@@ -920,4 +923,29 @@ public class TestInvoice extends TestJaxrsBase {
         Assert.assertEquals(tagsNoAudit.get(0).getTagId(), tagsWithAudit.get(0).getTagId());
         Assert.assertEquals(tagsNoAudit.get(0).getAuditLogs().size(), 0);
     }
+
+    @Test(groups = "slow", description = "Test invoice grouping api")
+    public void testInvoiceGroupApi() throws Exception {
+        final DateTime initialDate = new DateTime(2022, 5, 5, 0, 3, 42, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        final Invoices accountInvoices1 = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(accountInvoices1.size(), 2);
+
+        // Follow location to return the list of invoices
+        final Invoices invoices2 = invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), new LocalDate(2022, 7, 4), requestOptions.extend()
+                                                                                                                                             .withQueryParamsForFollow(ImmutableMultimap.of(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId().toString()))
+                                                                                                                                             .withFollowLocation(true).build());
+        // We expect only one invoice as there is no grouping plugin
+        assertEquals(invoices2.size(), 1);
+
+        // Do it again for following month but without any follow up
+        invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), new LocalDate(2022, 8, 4), requestOptions);
+
+        final Invoices accountInvoices2 = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.FULL, requestOptions);
+        assertEquals(accountInvoices2.size(), 4);
+    }
+
 }
