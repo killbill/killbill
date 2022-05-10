@@ -206,16 +206,18 @@ public class InvoicePluginDispatcher {
 
                 final List<InvoiceGroup> groups = grpResult.getInvoiceGroups();
                 for (final InvoiceGroup grp : groups) {
-                    final DefaultInvoice grpInvoice = (DefaultInvoice) originalInvoice.clone();
-                    final UUID newInvoiceId = UUIDs.randomUUID();
-                    grpInvoice.setId(newInvoiceId);
-                    grpInvoice.getTrackingIds().clear();
-                    grpInvoice.getPayments().clear();
-                    grpInvoice.getInvoiceItems().clear();
+                    final DefaultInvoice grpInvoice = new DefaultInvoice(UUIDs.randomUUID(),
+                                                                         originalInvoice.getAccountId(),
+                                                                         null,
+                                                                         originalInvoice.getInvoiceDate(),
+                                                                         originalInvoice.getTargetDate(),
+                                                                         originalInvoice.getCurrency(),
+                                                                         originalInvoice.isMigrationInvoice(),
+                                                                         originalInvoice.getStatus());
                     for (final UUID itemId : grp.getInvoiceItemIds()) {
                         final InvoiceItem item = itemMap.get(itemId);
                         final DefaultInvoiceItem.Builder tmp = new Builder().source(item);
-                        tmp.withInvoiceId(newInvoiceId);
+                        tmp.withInvoiceId(grpInvoice.getId());
                         grpInvoice.addInvoiceItem(tmp.build());
                     }
                     result.add(grpInvoice);

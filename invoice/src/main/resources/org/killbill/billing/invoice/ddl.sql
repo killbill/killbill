@@ -83,7 +83,6 @@ CREATE INDEX invoice_items_account_id ON invoice_items(account_id ASC);
 CREATE INDEX invoice_items_linked_item_id ON invoice_items(linked_item_id ASC);
 CREATE INDEX invoice_items_tenant_account_record_id ON invoice_items(tenant_record_id, account_record_id);
 
-
 DROP TABLE IF EXISTS invoice_item_history;
 CREATE TABLE invoice_item_history (
     record_id serial unique,
@@ -142,6 +141,7 @@ CREATE TABLE invoices (
 CREATE UNIQUE INDEX invoices_id ON invoices(id);
 CREATE INDEX invoices_account ON invoices(account_id ASC);
 CREATE INDEX invoices_tenant_account_record_id ON invoices(tenant_record_id, account_record_id);
+CREATE INDEX invoice_grp_id ON invoices(grp_id ASC);
 
 
 DROP TABLE IF EXISTS invoice_history;
