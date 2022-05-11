@@ -18,6 +18,8 @@
 
 package org.killbill.billing.invoice;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.currency.api.CurrencyConversionApi;
@@ -47,7 +49,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 public abstract class InvoiceTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {

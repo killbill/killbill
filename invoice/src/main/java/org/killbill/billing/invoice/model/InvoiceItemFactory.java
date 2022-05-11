@@ -37,10 +37,9 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
+import org.killbill.billing.util.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 public class InvoiceItemFactory {
 
@@ -169,7 +168,7 @@ public class InvoiceItemFactory {
                         prettyPlanName = plan.getPrettyName();
 
                         if (productName != null) {
-                            Preconditions.checkState(plan.getProduct().getName().equals(productName));
+                            Preconditions.checkState(plan.getProduct().getName().equals(productName), "#computePrettyName(): Plan's product name is not equal to productName");
                             prettyProductName = plan.getProduct().getPrettyName();
                         }
 

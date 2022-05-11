@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -28,8 +29,6 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
-
-import com.google.common.base.MoreObjects;
 
 public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
 
@@ -89,7 +88,7 @@ public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
     @Override
     public String getDescription() {
         final String resolvedPhaseName = getPrettyPhaseName() != null ? getPrettyPhaseName() : getPhaseName();
-        return MoreObjects.firstNonNull(description, resolvedPhaseName);
+        return Objects.requireNonNullElse(description, resolvedPhaseName);
     }
 
     @Override
