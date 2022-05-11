@@ -197,12 +197,16 @@ public final class Preconditions {
     }
 
     /**
+     * <p>This method is DEPRECATED, to encourage user put message in precondition. See
+     * <a href="https://github.com/killbill/killbill/pull/1687#discussion_r869565378">this discussion</a>.</p>
+     *
      * Ensures the truth of an expression involving the state of the calling instance, but not
      * involving any parameters to the calling method.
      *
      * @param expression a boolean expression
      * @throws IllegalStateException if {@code expression} is false
      */
+    @Deprecated
     public static void checkState(final boolean expression) {
         if (!expression) {
             throw new IllegalStateException();
