@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -86,9 +87,9 @@ public class ItemsInterval {
     }
 
     public void cancelItems(final Item item) {
-        Preconditions.checkState(item.getAction() == ItemAction.ADD);
-        Preconditions.checkState(items.size() == 1);
-        Preconditions.checkState(items.get(0).getAction() == ItemAction.CANCEL);
+        Preconditions.checkState((item.getAction() == ItemAction.ADD), "item.getAction != ADD");
+        Preconditions.checkState(items.size() == 1, "items.size() != 1");
+        Preconditions.checkState((items.get(0).getAction() == ItemAction.CANCEL), "item.get(0).getAction() != CANCEL");
         items.clear();
     }
 
@@ -177,7 +178,7 @@ public class ItemsInterval {
                     addItemsCancelled.add(cancelItem.getLinkedId());
                 }
             }
-            final Set<UUID> addItemsToBeCancelled = new HashSet<UUID>();
+            final Set<UUID> addItemsToBeCancelled = new HashSet<>();
             checkDoubleBilling(addItemsCancelled, addItemsToBeCancelled);
         }
 
@@ -213,13 +214,11 @@ public class ItemsInterval {
         parentItemsInterval.checkDoubleBilling(addItemsCancelled, addItemsToBeCancelled);
     }
 
-    // FIXME-1615: Use import statement
-    private Item findItem(final java.util.function.Predicate<? super Item> filter) {
+    private Item findItem(final Predicate<? super Item> filter) {
         return items.stream().filter(filter).findFirst().orElse(null);
     }
 
-    // FIXME-1615: Use import statement
-    private List<Item> findItems(final java.util.function.Predicate<? super Item> filter) {
+    private List<Item> findItems(final Predicate<? super Item> filter) {
         return items.stream().filter(filter).collect(Collectors.toUnmodifiableList());
     }
 
