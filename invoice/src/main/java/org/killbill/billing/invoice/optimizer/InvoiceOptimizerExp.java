@@ -163,8 +163,10 @@ public class InvoiceOptimizerExp extends InvoiceOptimizerBase {
                         return true;
                     } else {
                         for (final Invoice inv : invoices) {
-                            final boolean existingItemExists = inv.getInvoiceItems()
-                                    .stream()
+                            final boolean existingItemExists = inv.getInvoiceItems().stream()
+                                    // If we find a similar item in the 'existing' list, i.e same subscription, same start date,
+                                    // we keep it so it cancels out in the tree later.
+                                    // We don't include the end date to catch trailing pro-ration (early cancellation)
                                     .anyMatch(item -> (item.getInvoiceItemType() == InvoiceItemType.RECURRING &&
                                                        item.getSubscriptionId().equals(invoiceItem.getSubscriptionId()) &&
                                                        item.getStartDate().compareTo(invoiceItem.getStartDate()) == 0));
