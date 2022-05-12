@@ -168,7 +168,7 @@ public class InvoiceItemFactory {
                         prettyPlanName = plan.getPrettyName();
 
                         if (productName != null) {
-                            Preconditions.checkState(plan.getProduct().getName().equals(productName), "#computePrettyName(): Plan's product name is not equal to productName");
+                            Preconditions.checkState(plan.getProduct().getName().equals(productName), "#computePrettyName(): plan.product.name: %s is not equal to productName: %s", plan.getProduct().getName(), productName);
                             prettyProductName = plan.getProduct().getPrettyName();
                         }
 
