@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -69,6 +70,18 @@ public final class Iterables {
             iterable.forEach(result::add);
         }
         return result;
+    }
+
+    /**
+     * Convert {@link Iterable} to immutable {@link Set}. If any stream operation need to applied to iterable, use
+     * {@link #toStream(Iterable)} instead.
+     *
+     * @param iterable to convert
+     * @param <T> iterable element
+     * @return immutable {@link Set}
+     */
+    public static <T> Set<T> toUnmodifiableSet(final Iterable<? extends T> iterable) {
+        return toStream(iterable).collect(Collectors.toUnmodifiableSet());
     }
 
     /**

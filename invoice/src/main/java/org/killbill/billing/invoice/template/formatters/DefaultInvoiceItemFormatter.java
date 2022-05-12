@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.template.formatters;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.UUID;
 
@@ -33,12 +34,10 @@ import org.killbill.billing.invoice.api.formatters.InvoiceItemFormatter;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
 import org.killbill.billing.util.LocaleUtils;
+import org.killbill.billing.util.Strings;
 import org.killbill.billing.util.template.translation.DefaultCatalogTranslator;
 import org.killbill.billing.util.template.translation.Translator;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
-
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
 
 /**
  * Format invoice item fields
@@ -67,7 +66,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public BigDecimal getAmount() {
-        return MoreObjects.firstNonNull(item.getAmount(), BigDecimal.ZERO);
+        return Objects.requireNonNullElse(item.getAmount(), BigDecimal.ZERO);
     }
 
     @Override

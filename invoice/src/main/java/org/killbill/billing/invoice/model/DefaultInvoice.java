@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -36,15 +37,10 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
-import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
-import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
@@ -90,18 +86,14 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
              invoiceModelDao.getCurrency(), invoiceModelDao.getProcessedCurrency(), invoiceModelDao.isMigrated(),
              invoiceModelDao.isWrittenOff(), invoiceModelDao.getStatus(), invoiceModelDao.isParentInvoice(),
              invoiceModelDao.getParentInvoice(), invoiceModelDao.getGrpId());
-        addInvoiceItems(Collections2.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
-            @Override
-            public InvoiceItem apply(final InvoiceItemModelDao input) {
-                return InvoiceItemFactory.fromModelDaoWithCatalog(input, catalog);
-            }
-        }));
-        addPayments(Collections2.transform(invoiceModelDao.getInvoicePayments(), new Function<InvoicePaymentModelDao, InvoicePayment>() {
-            @Override
-            public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                return new DefaultInvoicePayment(input);
-            }
-        }));
+
+        final List<InvoiceItem> invoiceItems = invoiceModelDao.getInvoiceItems().stream()
+                .map(input -> InvoiceItemFactory.fromModelDaoWithCatalog(input, catalog))
+                .collect(Collectors.toUnmodifiableList());
+        addInvoiceItems(invoiceItems);
+
+        addPayments(invoiceModelDao.getInvoicePayments().stream().map(DefaultInvoicePayment::new).collect(Collectors.toUnmodifiableList()));
+
         addTrackingIds(invoiceModelDao.getTrackingIds());
     }
 
@@ -154,12 +146,7 @@ public class DefaultInvoice extends EntityBase implements Invoice, Cloneable {
     }
 
     public boolean removeInvoiceItemIfExists(final InvoiceItem item) {
-        return invoiceItems.removeIf(new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem cur) {
-                return cur.getId().equals(item.getId());
-            }
-        });
+        return invoiceItems.removeIf(cur -> cur.getId().equals(item.getId()));
     }
 
     @Override

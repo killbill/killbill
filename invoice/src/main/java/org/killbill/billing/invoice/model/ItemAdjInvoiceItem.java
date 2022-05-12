@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -29,8 +30,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
-
-import com.google.common.base.MoreObjects;
 
 public class ItemAdjInvoiceItem extends AdjInvoiceItem {
 
@@ -52,6 +51,6 @@ public class ItemAdjInvoiceItem extends AdjInvoiceItem {
 
     @Override
     public String getDescription() {
-        return MoreObjects.firstNonNull(description, "Invoice item adjustment");
+        return Objects.requireNonNullElse(description, "Invoice item adjustment");
     }
 }

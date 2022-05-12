@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.annotation.CheckForNull;
+
 /**
  * Verbatim copy to guava's Strings (v.31.0.1). See https://github.com/killbill/killbill/issues/1615
  */
@@ -54,5 +56,15 @@ public final class Strings {
                 .filter(s -> !s.isBlank())
                 .map(String::trim)
                 .collect(Collectors.toUnmodifiableList());
+    }
+
+    /**
+     * Returns the given string if it is non-null; the empty string otherwise.
+     *
+     * @param string the string to test and possibly return
+     * @return {@code string} itself if it is non-null; {@code ""} if it is null
+     */
+    public static String nullToEmpty(@CheckForNull final String string) {
+        return (string == null) ? "" : string;
     }
 }
