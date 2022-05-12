@@ -116,8 +116,8 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertFalse(Iterables.isEmpty(uuidKeys));
         final List<UUID> uuidKeysList = ImmutableList.copyOf(uuidKeys);
         Assert.assertEquals(uuidKeysList.size(), 2);
-        Assert.assertEquals(uuidKeysList.get(0), subscriptionId1);
-        Assert.assertEquals(uuidKeysList.get(1), subscriptionId2);
+        Assert.assertTrue(uuidKeysList.contains(subscriptionId1));
+        Assert.assertTrue(uuidKeysList.contains(subscriptionId2));
     }
 
     @Test(groups = "slow")
