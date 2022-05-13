@@ -20,6 +20,7 @@ package org.killbill.billing.entitlement.logging;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -158,7 +159,7 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
-    public static void logCancelEntitlement(final Logger log, final Entitlement entitlement, final LocalDate entitlementEffectiveDate, final Boolean overrideBillingEffectiveDate, final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy) {
+    public static void logCancelEntitlement(final Logger log, final Entitlement entitlement, final LocalDate entitlementEffectiveDate, final Boolean overrideBillingEffectiveDate, final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy, final DateTime entitlementEffectiveDateTime, final DateTime billingEffectiveDateTime) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Cancel Entitlement: ")
                     .append(" id = '")
@@ -167,6 +168,16 @@ public abstract class EntitlementLoggingHelper {
             if (entitlementEffectiveDate != null) {
                 logLine.append(", entDate='")
                        .append(entitlementEffectiveDate)
+                       .append("'");
+            }
+            if (entitlementEffectiveDateTime != null) {
+                logLine.append(", entDateTime='")
+                       .append(entitlementEffectiveDateTime)
+                       .append("'");
+            }
+            if (billingEffectiveDateTime != null) {
+                logLine.append(", billingDateTime='")
+                       .append(billingEffectiveDateTime)
                        .append("'");
             }
             if (overrideBillingEffectiveDate != null) {

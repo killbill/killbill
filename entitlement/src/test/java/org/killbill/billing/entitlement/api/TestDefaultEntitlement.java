@@ -71,6 +71,98 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), clock.getUTCToday());
         assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
     }
+    
+    @Test(groups = "slow")
+    public void testCancelWithEntitlementDateTime() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planPhaseSpecifier), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
+
+        clock.addDays(5);
+
+        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        final DateTime cancelDateTime = new DateTime(clock.getUTCNow());
+        entitlement.cancelEntitlementWithDate(cancelDateTime, cancelDateTime, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
+        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), clock.getUTCToday());
+        assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
+    }
+
+    @Test(groups = "slow")
+    public void testCancelWithEntitlementDateTimeInFuture() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planPhaseSpecifier), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
+
+        final DateTime cancelDateTime = new DateTime(clock.getUTCNow().plusDays(5));
+        entitlement.cancelEntitlementWithDate(cancelDateTime, cancelDateTime, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(5);
+        testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
+        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), clock.getUTCToday());
+        assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
+    }
+
+    @Test(groups = "slow")
+    public void testCancelWithEntitlementWithDifferentDateTimeForBillingAndEntitlement() throws AccountApiException, EntitlementApiException {
+        final LocalDate initialDate = new LocalDate(2013, 8, 7);
+        clock.setDay(initialDate);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planPhaseSpecifier), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
+
+        final DateTime entitlementDateTime = new DateTime(clock.getUTCNow().plusDays(5));
+        final DateTime billingDateTime = new DateTime(clock.getUTCNow().plusDays(7));
+        entitlement.cancelEntitlementWithDate(entitlementDateTime, billingDateTime, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        clock.addDays(5);
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), clock.getUTCToday());
+
+        clock.addDays(2);
+        testListener.pushExpectedEvents(NextEvent.CANCEL);
+        assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
+        assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
+    }
 
     @Test(groups = "slow")
     public void testCancelWithEntitlementDateInFuture() throws AccountApiException, EntitlementApiException {
