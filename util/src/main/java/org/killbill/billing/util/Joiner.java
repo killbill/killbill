@@ -18,6 +18,7 @@
 package org.killbill.billing.util;
 
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.Iterator;
 
 import javax.annotation.CheckForNull;
@@ -99,5 +100,39 @@ public final class Joiner {
     CharSequence toString(@CheckForNull final Object part) {
         requireNonNull(part);
         return (part instanceof CharSequence) ? (CharSequence) part : part.toString();
+    }
+
+    /**
+     * Returns a string containing the string representation of each argument, using the previously
+     * configured separator between each.
+     */
+    public String join(@CheckForNull final Object first, @CheckForNull final Object second, final Object... rest) {
+        return join(iterable(first, second, rest));
+    }
+
+    /**
+     * See Guava's {@code Joiner#iterable(first, second, rest)}
+     */
+    private static Iterable<Object> iterable(final Object first, final Object second, final Object[] rest) {
+        Preconditions.checkNotNull(rest);
+        return new AbstractList<Object>() {
+            @Override
+            public int size() {
+                return rest.length + 2;
+            }
+
+            @Override
+            @CheckForNull
+            public Object get(final int index) {
+                switch (index) {
+                    case 0:
+                        return first;
+                    case 1:
+                        return second;
+                    default:
+                        return rest[index - 2];
+                }
+            }
+        };
     }
 }
