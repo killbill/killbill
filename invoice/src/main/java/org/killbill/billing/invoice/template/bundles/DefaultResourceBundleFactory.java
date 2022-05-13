@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
@@ -35,8 +36,6 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.xmlloader.UriAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Charsets;
 
 public class DefaultResourceBundleFactory implements ResourceBundleFactory {
 
@@ -57,7 +56,7 @@ public class DefaultResourceBundleFactory implements ResourceBundleFactory {
         final String bundle = getTenantBundleForType(locale, type, tenantContext);
         if (bundle != null) {
             try {
-                return new PropertyResourceBundle(new ByteArrayInputStream(bundle.getBytes(Charsets.UTF_8)));
+                return new PropertyResourceBundle(new ByteArrayInputStream(bundle.getBytes(StandardCharsets.UTF_8)));
             } catch (IOException e) {
                 logger.warn("Failed to de-serialize the property bundle for tenant {} and locale {}", tenantContext.getTenantRecordId(), locale);
                 // Fall through...

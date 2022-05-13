@@ -36,8 +36,6 @@ import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestRawUsageOptimizer extends TestUsageInArrearBase {
 
     @Test(groups = "fast")
@@ -45,9 +43,9 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
 
         final LocalDate firstEventStartDate = new LocalDate(2014, 03, 15);
 
-        final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
+        final List<InvoiceItem> invoiceItems = new ArrayList<>();
 
-        final Map<String, Usage> knownUsage = new HashMap<String, Usage>();
+        final Map<String, Usage> knownUsage = new HashMap<>();
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(block);
         final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
@@ -62,11 +60,11 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
 
         final LocalDate firstEventStartDate = new LocalDate(2014, 03, 15);
 
-        final List<InvoiceItem> invoiceItems = new ArrayList<InvoiceItem>();
+        final List<InvoiceItem> invoiceItems = new ArrayList<>();
         invoiceItems.add(createUsageItem(firstEventStartDate));
         final LocalDate targetDate = invoiceItems.get(invoiceItems.size() - 1).getEndDate();
 
-        final Map<String, Usage> knownUsage = new HashMap<String, Usage>();
+        final Map<String, Usage> knownUsage = new HashMap<>();
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(block);
         final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
@@ -135,7 +133,7 @@ public class TestRawUsageOptimizer extends TestUsageInArrearBase {
         final LocalDate today = clock.getUTCToday();
         final LocalDate targetDate = today;
 
-        final Map<BillingPeriod, LocalDate> res = rawUsageOptimizer.getBillingPeriodMinDate2(ImmutableList.of(BillingPeriod.MONTHLY), targetDate);
+        final Map<BillingPeriod, LocalDate> res = rawUsageOptimizer.getBillingPeriodMinDate2(List.of(BillingPeriod.MONTHLY), targetDate);
         Assert.assertEquals(res.size(), 1);
         //
         // We expect to return 1 BP back in time from where we are.

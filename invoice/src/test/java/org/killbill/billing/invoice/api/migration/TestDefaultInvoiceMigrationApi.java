@@ -38,8 +38,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbeddedDB {
 
     private LocalDate date_migrated;
@@ -72,7 +70,7 @@ public class TestDefaultInvoiceMigrationApi extends InvoiceTestSuiteWithEmbedded
     private UUID createAndCheckMigrationInvoice(final UUID accountId) throws InvoiceApiException {
 
         final InvoiceItem recurringItem = new RecurringInvoiceItem(null, accountId, null, null, "productName", "planName", "phaseName", null, new LocalDate(2016, 2, 1), new LocalDate(2016, 3, 1), MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_AMOUNT, MIGRATION_INVOICE_CURRENCY);
-        final UUID migrationInvoiceId = invoiceUserApi.createMigrationInvoice(accountId, date_migrated, ImmutableList.of(recurringItem), callContext);
+        final UUID migrationInvoiceId = invoiceUserApi.createMigrationInvoice(accountId, date_migrated, List.of(recurringItem), callContext);
         Assert.assertNotNull(migrationInvoiceId);
         //Double check it was created and values are correct
 

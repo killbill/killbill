@@ -21,7 +21,10 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,18 +48,14 @@ import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUni
 import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
+import org.killbill.billing.util.Preconditions;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
 
 import static org.killbill.billing.invoice.usage.UsageUtils.getConsumableInArrearTieredBlocks;
 
@@ -124,7 +123,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 previousUnitsUsage.put(cur.getUnitType(), usageInArrearDetailForUnitType);
             }
         } else {
-            previousUnitsUsage = ImmutableMap.of();
+            previousUnitsUsage = Collections.emptyMap();
         }
 
         final List<UsageConsumableInArrearTierUnitAggregate> usageConsumableInArrearTierUnitAggregates = new ArrayList<UsageConsumableInArrearTierUnitAggregate>();
@@ -133,7 +132,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 log.warn("ContiguousIntervalConsumableInArrear is skipping unitType " + cur.getUnitType());
                 continue;
             }
-            final List<UsageConsumableInArrearTierUnitAggregate> previousUsage = previousUnitsUsage.containsKey(cur.getUnitType()) ? previousUnitsUsage.get(cur.getUnitType()) : ImmutableList.<UsageConsumableInArrearTierUnitAggregate>of();
+            final List<UsageConsumableInArrearTierUnitAggregate> previousUsage = previousUnitsUsage.containsKey(cur.getUnitType()) ? previousUnitsUsage.get(cur.getUnitType()) : Collections.emptyList();
 
             final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledConsumableInArrear = computeToBeBilledConsumableInArrear(startDate, endDate, cur, previousUsage);
             usageConsumableInArrearTierUnitAggregates.addAll(toBeBilledConsumableInArrear);
@@ -145,7 +144,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     List<UsageConsumableInArrearTierUnitAggregate> getBilledDetailsForUnitType(final Iterable<InvoiceItem> billedItems, final String unitType) {
 
         // Aggregate on a per-tier level, will return a list with item per level -- for this 'unitType'
-        final Map<Integer, UsageConsumableInArrearTierUnitAggregate> resultMap = new TreeMap<>(Ordering.<Integer>natural());
+        final Map<Integer, UsageConsumableInArrearTierUnitAggregate> resultMap = new TreeMap<>(Comparator.naturalOrder());
 
         final List<UsageConsumableInArrearTierUnitAggregate> tierDetails = new ArrayList<>();
         for (final InvoiceItem bi : billedItems) {
@@ -181,13 +180,13 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                 perTierDetail.updateQuantityAndAmount(curDetail.getQuantity());
             }
         }
-        return ImmutableList.copyOf(resultMap.values());
+        return List.copyOf(resultMap.values());
     }
 
     @VisibleForTesting
     List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrear(final LocalDate startDate, final LocalDate endDate, final RolledUpUnit roUnit, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage) throws CatalogApiException {
 
-        Preconditions.checkState(isBuilt.get());
+        Preconditions.checkState(isBuilt.get(), "#computeToBeBilledConsumableInArrear(): isBuilt");
         final List<TieredBlock> tieredBlocks = getConsumableInArrearTieredBlocks(usage, roUnit.getUnitType());
 
         switch (usage.getTierBlockPolicy()) {
@@ -201,7 +200,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     }
 
     List<UsageConsumableInArrearTierUnitAggregate> computeToBeBilledConsumableInArrearWith_ALL_TIERS(final LocalDate startDate, final LocalDate endDate, final List<TieredBlock> tieredBlocks, final List<UsageConsumableInArrearTierUnitAggregate> previousUsage, final BigDecimal units) throws CatalogApiException {
-        final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledDetails = Lists.newLinkedList();
+        final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledDetails = new LinkedList<>();
         BigDecimal remainingUnits = units;
         int tierNum = 0;
 

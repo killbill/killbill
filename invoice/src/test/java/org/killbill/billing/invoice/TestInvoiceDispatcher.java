@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,9 +61,6 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
@@ -199,7 +197,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao1);
         invoiceModelDao.addInvoiceItem(invoiceItemModelDao2);
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), events, ImmutableSet.of(), null, null, false, context);
+        invoiceDao.createInvoices(List.of(invoiceModelDao), events, Collections.emptySet(), null, null, false, context);
 
         try {
             dispatcher.processAccountFromNotificationOrBusEvent(accountId, target, new DryRunFutureDateArguments(), false, context);

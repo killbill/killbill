@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -90,10 +91,6 @@ import org.killbill.notificationq.api.NotificationQueueService;
 import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
 
 public class TestInvoiceHelper {
 
@@ -302,18 +299,17 @@ public class TestInvoiceHelper {
     }
 
     public List<InvoiceItemModelDao> getInvoiceItemByInvoiceId(final UUID invoiceId, final InternalCallContext internalCallContext) {
-        return invoiceItemSqlDao.getInvoiceItemsForInvoices(ImmutableList.of(invoiceId), internalCallContext);
+        return invoiceItemSqlDao.getInvoiceItemsForInvoices(List.of(invoiceId), internalCallContext);
     }
 
     public void createInvoice(final Invoice invoice, final InternalCallContext internalCallContext) throws EntityPersistenceException {
         final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
-        final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.transform(invoice.getInvoiceItems(),
-                                                                                                                                new Function<InvoiceItem, InvoiceItemModelDao>() {
-                                                                                                                                    @Override
-                                                                                                                                    public InvoiceItemModelDao apply(final InvoiceItem input) {
-                                                                                                                                        return new InvoiceItemModelDao(input);
-                                                                                                                                    }
-                                                                                                                                }));
+        // FIXME-1615: invoiceItemModelDaos below never used
+        final List<InvoiceItemModelDao> invoiceItemModelDaos = invoice.getInvoiceItems()
+                .stream()
+                .map(InvoiceItemModelDao::new)
+                .collect(Collectors.toUnmodifiableList());
+
         invoiceSqlDao.create(invoiceModelDao, internalCallContext);
 
         for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {

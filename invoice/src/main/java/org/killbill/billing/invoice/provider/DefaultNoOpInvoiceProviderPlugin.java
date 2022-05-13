@@ -17,7 +17,10 @@
 
 package org.killbill.billing.invoice.provider;
 
+import java.util.Collections;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -29,9 +32,6 @@ import org.killbill.billing.invoice.plugin.api.OnSuccessInvoiceResult;
 import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 public class DefaultNoOpInvoiceProviderPlugin implements NoOpInvoicePluginApi {
 
@@ -46,7 +46,7 @@ public class DefaultNoOpInvoiceProviderPlugin implements NoOpInvoicePluginApi {
 
     @Override
     public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> properties, final CallContext context) {
-        return ImmutableList.<InvoiceItem>of();
+        return Collections.emptyList();
     }
 
     @Override
