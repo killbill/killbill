@@ -296,7 +296,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
-        logCancelEntitlement(log, this, null, null, entitlementPolicy, null, null, null);
+        logCancelEntitlement(log, this, null, null, null, entitlementPolicy, null);
 
         // Get the latest state from disk - required to have the latest CTD
         refresh(callContext);
@@ -308,7 +308,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Entitlement cancelEntitlementWithDate(@Nullable final LocalDate entitlementEffectiveDate, final boolean overrideBillingEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
-        logCancelEntitlement(log, this, entitlementEffectiveDate, overrideBillingEffectiveDate, null, null, null, null);
+        logCancelEntitlement(log, this, entitlementEffectiveDate, null, overrideBillingEffectiveDate, null, null);
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
 
@@ -380,17 +380,16 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Entitlement cancelEntitlementWithDate(final DateTime entitlementEffectiveDate, final DateTime billingEffectiveDate,
                                                  final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
-        logCancelEntitlement(log, this, null, null, null, null, entitlementEffectiveDate, billingEffectiveDate); //TODO_1375 - commented for now to avoid compilation errors
+        logCancelEntitlement(log, this, entitlementEffectiveDate, billingEffectiveDate, null, null, null); 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
         // Get the latest state from disk
         refresh(callContext);
-        if (entitlementEffectiveDate != null && entitlementEffectiveDate.compareTo(getEffectiveStartDate()) < 0) {
+        if (entitlementEffectiveDate == null || (entitlementEffectiveDate != null && entitlementEffectiveDate.compareTo(getEffectiveStartDate()) < 0)) {
             throw new EntitlementApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, entitlementEffectiveDate, getEffectiveStartDate());
         }
-        if (billingEffectiveDate != null && billingEffectiveDate.compareTo(getSubscriptionBase().getStartDate()) < 0) { //TODO_1375 - Added this check for billingEffectiveDate similar to the check above for entitlementEffectiveDate. Is the comparison to getSubscriptionBase().getStartDate() correct?
+        if (billingEffectiveDate == null || (billingEffectiveDate != null && billingEffectiveDate.compareTo(getSubscriptionBase().getStartDate()) < 0)) { //TODO_1375 - Added this check for billingEffectiveDate similar to the check above for entitlementEffectiveDate. Is the comparison to getSubscriptionBase().getStartDate() correct?
             throw new EntitlementApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, entitlementEffectiveDate, getEffectiveStartDate());
         }
-        //TODO_1375 - Is a null check required here for entitlementEffectiveDate and billingEffectiveDate?
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CANCEL_SUBSCRIPTION,
                                                                                getAccountId(),
                                                                                null,
@@ -498,7 +497,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Entitlement cancelEntitlementWithPolicyOverrideBillingPolicy(final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
-        logCancelEntitlement(log, this, null, null, entitlementPolicy, billingPolicy, null, null);
+        logCancelEntitlement(log, this, null, null, null, entitlementPolicy, billingPolicy);
 
         // Get the latest state from disk - required to have the latest CTD
         refresh(callContext);
@@ -511,7 +510,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     @Override
     public Entitlement cancelEntitlementWithDateOverrideBillingPolicy(@Nullable final LocalDate entitlementEffectiveDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
-        logCancelEntitlement(log, this, entitlementEffectiveDate, null, null, billingPolicy, null, null);
+        logCancelEntitlement(log, this, entitlementEffectiveDate, null, null, null, billingPolicy);
 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
 
