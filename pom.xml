@@ -64,6 +64,7 @@
         <main.basedir>${project.basedir}</main.basedir>
         <!-- Temporary until upgrade to 2.x -->
         <swagger.version>1.6.2</swagger.version>
+        <killbill-commons.version>0.24.21-bf57972-SNAPSHOT</killbill-commons.version>
     </properties>
     <dependencyManagement>
         <dependencies>
