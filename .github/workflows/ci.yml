@@ -38,10 +38,17 @@ jobs:
           distribution: ${{ matrix.java-distribution }}
           java-version: ${{ matrix.java-version }}
       - name: Configure Sonatype mirror
-        uses: s4u/maven-settings-action@v2.3.0
+        uses: s4u/maven-settings-action@v2.4.1
         # Go to Sonatype directly to avoid delay syncs (could get rid of this if actions/setup-java were to support mirrors).
         with:
-          mirrors: '[{"id": "oss-releases", "name": "Sonatype releases", "mirrorOf": "*", "url": "https://oss.sonatype.org/content/repositories/releases/"}]'
+          mirrors: '[{"id": "oss-releases", "name": "Sonatype releases", "mirrorOf": "central", "url": "https://oss.sonatype.org/content/repositories/releases"}]'
+          sonatypeSnapshots: true
+          servers: |
+            [{
+                "id": "sonatype-nexus-snapshots",
+                "username": "${OSSRH_USER}",
+                "password": "${OSSRH_PASS}"
+            }]
       - name: Check if killbill-oss-parent SNAPSHOT must be fetched
         id: killbill-oss-parent
         run: |
