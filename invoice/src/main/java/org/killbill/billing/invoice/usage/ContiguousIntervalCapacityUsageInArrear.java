@@ -19,6 +19,7 @@ package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -40,13 +41,11 @@ import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.invoice.usage.details.UsageInArrearTierUnitDetail;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
+import org.killbill.billing.util.Joiner;
+import org.killbill.billing.util.Preconditions;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearTier;
 
@@ -108,13 +107,13 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
 
     @VisibleForTesting
     UsageCapacityInArrearAggregate computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
-        Preconditions.checkState(isBuilt.get());
+        Preconditions.checkState(isBuilt.get(), "#computeToBeBilledCapacityInArrear() isBuilt.get() return false");
 
         final List<Tier> tiers = getCapacityInArrearTier(usage);
 
-        final Set<String> perUnitTypeDetailTierLevel = new HashSet<String>();
+        final Set<String> perUnitTypeDetailTierLevel = new HashSet<>();
         int tierNum = 0;
-        final List<UsageInArrearTierUnitDetail> toBeBilledDetails = Lists.newLinkedList();
+        final List<UsageInArrearTierUnitDetail> toBeBilledDetails = new LinkedList<>();
         for (final Tier cur : tiers) {
             tierNum++;
             final BigDecimal curTierPrice = cur.getRecurringPrice().getPrice(getCurrency());

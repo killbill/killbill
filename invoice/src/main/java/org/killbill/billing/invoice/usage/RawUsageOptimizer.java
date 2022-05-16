@@ -18,12 +18,15 @@
 package org.killbill.billing.invoice.usage;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -41,25 +44,16 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecord
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.api.RawUsageRecord;
+import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
-
 public class RawUsageOptimizer {
 
-    private static final Ordering<InvoiceItem> USAGE_ITEM_ORDERING = Ordering.natural()
-                                                                             .onResultOf(new Function<InvoiceItem, Comparable>() {
-                                                                                 @Override
-                                                                                 public Comparable apply(final InvoiceItem invoiceItem) {
-                                                                                     return invoiceItem.getEndDate();
-                                                                                 }
-                                                                             });
+    private static final Comparator<InvoiceItem> USAGE_ITEM_COMPARATOR = Comparator.comparing(InvoiceItem::getEndDate);
 
     private static final Logger log = LoggerFactory.getLogger(RawUsageOptimizer.class);
 
@@ -84,7 +78,7 @@ public class RawUsageOptimizer {
         final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(optimizedStartDate, targetDate, dryRunInfo, internalCallContext);
 
         final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(optimizedStartDate, targetDate, internalCallContext);
-        final Set<TrackingRecordId> existingTrackingIds = new HashSet<TrackingRecordId>();
+        final Set<TrackingRecordId> existingTrackingIds = new HashSet<>();
         for (final InvoiceTrackingModelDao invoiceTrackingModelDao : trackingIds) {
             existingTrackingIds.add(new TrackingRecordId(invoiceTrackingModelDao.getTrackingId(), invoiceTrackingModelDao.getInvoiceId(), invoiceTrackingModelDao.getSubscriptionId(), invoiceTrackingModelDao.getUnitType(), invoiceTrackingModelDao.getRecordDate()));
         }
@@ -133,13 +127,15 @@ public class RawUsageOptimizer {
     Map<BillingPeriod, LocalDate> getBillingPeriodMinDate1(final Collection<BillingPeriod> knownUsageBillingPeriod, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage) {
 
         if (!existingUsageItems.iterator().hasNext()) {
-            return ImmutableMap.<BillingPeriod, LocalDate>of();
+            return Collections.emptyMap();
         }
 
         final Map<BillingPeriod, LocalDate> perBillingPeriodMostRecentConsumableInArrearItemEndDate = new HashMap<>();
 
         // Make sure all usage items are sorted by endDate
-        final List<InvoiceItem> sortedUsageItems = USAGE_ITEM_ORDERING.sortedCopy(existingUsageItems);
+        final List<InvoiceItem> sortedUsageItems = Iterables.toStream(existingUsageItems)
+                                                            .sorted(USAGE_ITEM_COMPARATOR)
+                                                            .collect(Collectors.toUnmodifiableList());
 
         for (final BillingPeriod bp : knownUsageBillingPeriod) {
             perBillingPeriodMostRecentConsumableInArrearItemEndDate.put(bp, null);

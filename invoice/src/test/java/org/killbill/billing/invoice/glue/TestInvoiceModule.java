@@ -18,6 +18,8 @@
 
 package org.killbill.billing.invoice.glue;
 
+import java.util.Objects;
+
 import org.killbill.billing.catalog.glue.CatalogModule;
 import org.killbill.billing.invoice.TestInvoiceHelper;
 import org.killbill.billing.invoice.optimizer.InvoiceOptimizer;
@@ -39,15 +41,13 @@ import org.killbill.commons.metrics.api.MetricRegistry;
 import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 import org.mockito.Mockito;
 
-import com.google.common.base.MoreObjects;
-
 public class TestInvoiceModule extends DefaultInvoiceModule {
 
     private final boolean testFeatureInvoiceOptimization;
 
     public TestInvoiceModule(final KillbillConfigSource configSource) {
         super(configSource);
-        testFeatureInvoiceOptimization = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
+        testFeatureInvoiceOptimization = Boolean.parseBoolean(Objects.requireNonNullElse(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
     }
 
     private void installExternalApis() {

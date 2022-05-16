@@ -19,11 +19,13 @@ package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -37,7 +39,6 @@ import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
@@ -56,17 +57,12 @@ import org.killbill.billing.util.jackson.ObjectMapper;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
-    protected static final Set<TrackingRecordId> EMPTY_EXISTING_TRACKING_IDS = ImmutableSet.of();
+    protected static final Set<TrackingRecordId> EMPTY_EXISTING_TRACKING_IDS = Collections.emptySet();
 
     protected int BCD;
     protected UUID accountId;
@@ -239,12 +235,9 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
             trackingIdMapping.get(u.getTrackingId()).add(u);
         }
 
-        final Set<String> trackingIds = ImmutableSet.copyOf(Iterables.transform(trackingRecords, new Function<TrackingRecordId, String>() {
-            @Override
-            public String apply(final TrackingRecordId input) {
-                return input.getTrackingId();
-            }
-        }));
+        final Set<String> trackingIds = trackingRecords.stream()
+                .map(TrackingRecordId::getTrackingId)
+                .collect(Collectors.toUnmodifiableSet());
 
         // Verify the per trackingId input matches the per trackingId output
         assertEquals(trackingIdMapping.size(), trackingIds.size());
@@ -253,15 +246,11 @@ public abstract class TestUsageInArrearBase extends InvoiceTestSuiteNoDB {
 
             final List<RawUsageRecord> rawUsageForId = trackingIdMapping.get(id);
             for (RawUsageRecord u : rawUsageForId) {
-
-                final TrackingRecordId found = Iterables.tryFind(trackingRecords, new Predicate<TrackingRecordId>() {
-                    @Override
-                    public boolean apply(final TrackingRecordId input) {
-                        return input.getTrackingId().equals(u.getTrackingId()) &&
-                               input.getRecordDate().equals(u.getDate()) &&
-                               input.getUnitType().equals(u.getUnitType());
-                    }
-                }).orNull();
+                final TrackingRecordId found = trackingRecords.stream()
+                        .filter(input -> input.getTrackingId().equals(u.getTrackingId()) &&
+                                         input.getRecordDate().equals(u.getDate()) &&
+                                         input.getUnitType().equals(u.getUnitType()))
+                        .findFirst().orElse(null);
                 assertNotNull(found, "Cannot find tracking Id " + u.getTrackingId());
 
                 assertEquals(found.getSubscriptionId(), subscriptionId);
