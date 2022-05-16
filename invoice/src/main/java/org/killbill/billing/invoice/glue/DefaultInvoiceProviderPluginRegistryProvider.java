@@ -16,12 +16,12 @@
 
 package org.killbill.billing.invoice.glue;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.provider.DefaultInvoiceProviderPluginRegistry;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 
 public class DefaultInvoiceProviderPluginRegistryProvider implements Provider<OSGIServiceRegistration<InvoicePluginApi>> {
 

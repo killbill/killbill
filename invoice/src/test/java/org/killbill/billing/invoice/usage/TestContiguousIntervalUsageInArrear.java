@@ -20,7 +20,6 @@ package org.killbill.billing.invoice.usage;
 import java.math.BigDecimal;
 import java.util.Collections;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultTier;
@@ -31,11 +30,9 @@ import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.usage.api.RawUsageRecord;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestContiguousIntervalUsageInArrear extends TestUsageInArrearBase {
 
@@ -64,7 +61,7 @@ public class TestContiguousIntervalUsageInArrear extends TestUsageInArrearBase {
                                                                   BillingPeriod.MONTHLY,
                                                                   Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
         final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage,
-                                                                                                                                ImmutableList.<RawUsageRecord>of(),
+                                                                                                                                Collections.emptyList(),
                                                                                                                                 targetDate,
                                                                                                                                 false,
                                                                                                                                 billingEvent1,
