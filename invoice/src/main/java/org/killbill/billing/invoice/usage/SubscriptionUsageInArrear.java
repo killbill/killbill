@@ -104,8 +104,8 @@ public class SubscriptionUsageInArrear {
         this.internalTenantContext = internalTenantContext;
         // Extract raw usage for that subscription and sort it by date
         this.rawSubscriptionUsage = rawUsage.stream()
-                .sorted(RAW_USAGE_DATE_COMPARATOR)
                 .filter(input -> input.getSubscriptionId().equals(subscriptionBillingEvents.get(0).getSubscriptionId()))
+                .sorted(RAW_USAGE_DATE_COMPARATOR)
                 .collect(Collectors.toUnmodifiableList());
         this.existingTrackingIds = existingTrackingIds;
         this.usageDetailMode = usageDetailMode;
