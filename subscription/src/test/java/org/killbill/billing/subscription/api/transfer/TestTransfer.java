@@ -629,4 +629,52 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(newSubscription.getBillCycleDayLocal().intValue(), 17);
 
     }
+
+    @Test(groups = "slow")
+    public void testTransferPriorCreationDate() throws Exception {
+        final String baseProduct = "Pistol";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = "notrial";
+
+        final LocalDate init = clock.getUTCToday(); // 2012-05-07
+        final LocalDate creationDate = init; // 2012-05-07
+
+        DefaultSubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList, creationDate);
+        assertListenerStatus();
+        assertNotNull(baseSubscription);
+        assertEquals(baseSubscription.getState(), EntitlementState.ACTIVE);
+
+        // Update BCD to align to future start date
+        testListener.pushExpectedEvent(NextEvent.BCD_CHANGE);
+        subscriptionInternalApi.updateBCD(baseSubscription.getId(), 7, creationDate, internalCallContext);
+        assertListenerStatus();
+
+        clock.addDays(3);
+
+        // Transfer with a date prior the start date of the subscription
+        final DateTime transferRequestedDate = creationDate.minusDays(3).toDateTimeAtCurrentTime();
+        testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.BCD_CHANGE, NextEvent.CANCEL);
+        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
+        assertListenerStatus();
+        // Create context for the old Subscription as it looks like test default initialInternalCallContext to be on newAccountId
+        final InternalCallContext initialInternalCallContext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
+                                                                                                                    ObjectType.ACCOUNT,
+                                                                                                                    this.internalCallContext.getUpdatedBy(),
+                                                                                                                    this.internalCallContext.getCallOrigin(),
+                                                                                                                    this.internalCallContext.getContextUserType(),
+                                                                                                                    this.internalCallContext.getUserToken(),
+                                                                                                                    this.internalCallContext.getTenantRecordId());
+
+        // We verify everything got realigned to the start date of the subscription.
+        DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(newBundle.getId(), internalCallContext);
+        assertEquals(internalCallContext.toLocalDate(newSubscription.getStartDate()), creationDate);
+        assertNull(newSubscription.getEndDate());
+        assertEquals(newSubscription.getState(), EntitlementState.ACTIVE);
+
+        DefaultSubscriptionBase oldSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(bundle.getId(), initialInternalCallContext);
+        assertEquals(initialInternalCallContext.toLocalDate(oldSubscription.getStartDate()), creationDate);
+        assertEquals(initialInternalCallContext.toLocalDate(oldSubscription.getEndDate()), creationDate);
+        assertEquals(oldSubscription.getState(), EntitlementState.CANCELLED);
+
+    }
 }
