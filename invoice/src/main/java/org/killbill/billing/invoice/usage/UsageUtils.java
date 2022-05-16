@@ -33,7 +33,7 @@ public class UsageUtils {
 
     public static List<TieredBlock> getConsumableInArrearTieredBlocks(final Usage usage, final String unitType) {
 
-        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE, "#getConsumableInArrearTieredBlocks(): usage");
+        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE, "#getConsumableInArrearTieredBlocks(): usage: %s", usage);
         Preconditions.checkArgument(usage.getTiers().length > 0, "#getConsumableInArrearTieredBlocks(): usage tier's length is 0");
 
 
@@ -54,7 +54,7 @@ public class UsageUtils {
     }
 
     public static Set<String> getConsumableInArrearUnitTypes(final Usage usage) {
-        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE, "#getConsumableInArrearUnitTypes(): usage");
+        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE, "#getConsumableInArrearUnitTypes(): usage: %s", usage);
         Preconditions.checkArgument(usage.getTiers().length > 0, "#getConsumableInArrearUnitTypes(): usage tier's length is 0");
 
         final Set<String> result = new HashSet<>();

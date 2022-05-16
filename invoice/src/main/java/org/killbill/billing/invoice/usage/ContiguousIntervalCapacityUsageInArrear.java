@@ -51,7 +51,7 @@ import static org.killbill.billing.invoice.usage.UsageUtils.getCapacityInArrearT
 
 public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalUsageInArrear {
 
-    private static final org.killbill.billing.util.Joiner joiner = Joiner.on(", ");
+    private static final Joiner joiner = Joiner.on(", ");
 
     public ContiguousIntervalCapacityUsageInArrear(final Usage usage,
                                                    final UUID accountId,
@@ -107,7 +107,7 @@ public class ContiguousIntervalCapacityUsageInArrear extends ContiguousIntervalU
 
     @VisibleForTesting
     UsageCapacityInArrearAggregate computeToBeBilledCapacityInArrear(final List<RolledUpUnit> roUnits) throws CatalogApiException {
-        org.killbill.billing.util.Preconditions.checkState(isBuilt.get(), "#computeToBeBilledCapacityInArrear() isBuilt.get() return false");
+        Preconditions.checkState(isBuilt.get(), "#computeToBeBilledCapacityInArrear() isBuilt.get() return false");
 
         final List<Tier> tiers = getCapacityInArrearTier(usage);
 

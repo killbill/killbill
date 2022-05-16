@@ -349,10 +349,7 @@ public abstract class ContiguousIntervalUsageInArrear {
     protected abstract UsageInArrearAggregate getToBeBilledUsageDetails(final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException;
 
     private boolean areAllBilledItemsWithDetails(final Iterable<InvoiceItem> billedItems) {
-        // FIXME-1615: Use import statement
-        return org.killbill.billing.util.collect.Iterables
-                .toStream(billedItems)
-                .noneMatch(input -> input.getItemDetails() == null || input.getItemDetails().isEmpty());
+        return Iterables.toStream(billedItems).noneMatch(input -> input.getItemDetails() == null || input.getItemDetails().isEmpty());
     }
 
     private LocalDate computeNextNotificationDate() {
@@ -588,7 +585,7 @@ public abstract class ContiguousIntervalUsageInArrear {
     }
 
     public void addBillingEvent(final BillingEvent event) {
-        Preconditions.checkState(!isBuilt.get(), "#addBillingEvent(): isBuilt");
+        Preconditions.checkState(!isBuilt.get(), "#addBillingEvent(): !isBuilt");
         billingEvents.add(event);
     }
 

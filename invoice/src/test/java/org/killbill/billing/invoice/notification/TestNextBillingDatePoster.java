@@ -65,8 +65,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                                                  DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
         final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationForSearchKeys(accountRecordId, internalCallContext.getTenantRecordId());
-        // FIXME-1615: Use import statement
-        final List<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = org.killbill.billing.util.collect.Iterables.toUnmodifiableList(futureNotifications);
+        final List<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = Iterables.toUnmodifiableList(futureNotifications);
         Assert.assertEquals(futureNotificationsList.size(), 1);
 
         // We expect only one notification for which effectiveDate matches our original effectiveDate (conversion DateTime -> LocalDate -> DateTime)
