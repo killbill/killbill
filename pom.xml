@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.145.3-51086e9-SNAPSHOT</version>
+        <version>0.145.3-d1d7bd5-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.23.0-SNAPSHOT</version>
@@ -121,4 +121,15 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>oss-sonatype</id>
+            <name>oss-sonatype</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
+
 </project>
