@@ -17,6 +17,7 @@
 
 package org.killbill.billing.entitlement.logging;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
@@ -158,7 +159,7 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
-    public static void logCancelEntitlement(final Logger log, final Entitlement entitlement, final LocalDate entitlementEffectiveDate, final Boolean overrideBillingEffectiveDate, final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy) {
+    public static void logCancelEntitlement(final Logger log, final Entitlement entitlement, final Object entitlementEffectiveDate, final Object billingEffectiveDate, final Boolean overrideBillingEffectiveDate, final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Cancel Entitlement: ")
                     .append(" id = '")
@@ -169,6 +170,11 @@ public abstract class EntitlementLoggingHelper {
                        .append(entitlementEffectiveDate)
                        .append("'");
             }
+            if (billingEffectiveDate != null) {
+                logLine.append(", billingDate='")
+                       .append(billingEffectiveDate)
+                       .append("'");
+            }            
             if (overrideBillingEffectiveDate != null) {
                 logLine.append(", overrideBillDate='")
                        .append(overrideBillingEffectiveDate)
