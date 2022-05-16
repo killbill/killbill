@@ -28,7 +28,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.tree.NodeInterval.AddNodeCallback;
 import org.killbill.billing.invoice.tree.NodeInterval.BuildNodeCallback;
 import org.killbill.billing.invoice.tree.NodeInterval.WalkCallback;
-import org.killbill.billing.util.Preconditions;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -57,10 +57,10 @@ public class TestNodeInterval extends InvoiceTestSuiteNoDB {
 
         @Override
         public ItemsNodeInterval[] split(final LocalDate splitDate) {
-            Preconditions.checkState(splitDate.compareTo(start) > 0 && splitDate.compareTo(end) < 0,
-                                     String.format("Unexpected item split with startDate='%s' and endDate='%s'", start, end));
-            Preconditions.checkState(leftChild == null, "leftChild is not null");
-            Preconditions.checkState(rightSibling == null, "rightSibling is not null");
+            Assert.assertTrue(splitDate.compareTo(start) > 0 && splitDate.compareTo(end) < 0,
+                              String.format("Unexpected item split with startDate='%s' and endDate='%s'", start, end));
+            Assert.assertNull(leftChild, "leftChild is not null");
+            Assert.assertNull(rightSibling, "rightSibling is not null");
 
             final DummyNodeInterval split1 = new DummyNodeInterval(this.parent, this.start, splitDate);
             final DummyNodeInterval split2 = new DummyNodeInterval(this.parent, splitDate, this.end);
