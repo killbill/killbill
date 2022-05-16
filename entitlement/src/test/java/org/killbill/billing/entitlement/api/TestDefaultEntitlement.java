@@ -73,7 +73,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
     }
     
     @Test(groups = "slow")
-    public void testCancelWithEntitlementDateTime() throws AccountApiException, EntitlementApiException {
+    public void testCancelWithEntitlementDateTime() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
@@ -98,12 +98,14 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
-        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), clock.getUTCToday());
+        assertEquals(entitlement2.getEffectiveEndDate(), cancelDateTime);
         assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
+        Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        assertEquals(subscription2.getBillingEndDate(), cancelDateTime);
     }
 
     @Test(groups = "slow")
-    public void testCancelWithEntitlementDateTimeInFuture() throws AccountApiException, EntitlementApiException {
+    public void testCancelWithEntitlementDateTimeInFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
@@ -127,12 +129,15 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
-        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), clock.getUTCToday());
+        assertEquals(entitlement2.getEffectiveEndDate(), cancelDateTime);
         assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
+        Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        assertEquals(subscription2.getBillingEndDate(), cancelDateTime);
+        
     }
 
     @Test(groups = "slow")
-    public void testCancelWithEntitlementWithDifferentDateTimeForBillingAndEntitlement() throws AccountApiException, EntitlementApiException {
+    public void testCancelWithEntitlementWithDifferentDateTimeForBillingAndEntitlement() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
         final LocalDate initialDate = new LocalDate(2013, 8, 7);
         clock.setDay(initialDate);
 
@@ -149,19 +154,22 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         assertEquals(entitlement.getSourceType(), EntitlementSourceType.NATIVE);
 
         final DateTime entitlementDateTime = new DateTime(clock.getUTCNow().plusDays(5));
-        final DateTime billingDateTime = new DateTime(clock.getUTCNow().plusDays(7));
+        final DateTime billingDateTime = new DateTime(clock.getUTCNow().plusDays(7).plusHours(2));
         entitlement.cancelEntitlementWithDate(entitlementDateTime, billingDateTime, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         clock.addDays(5);
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-        assertEquals(internalCallContext.toLocalDate(entitlement2.getEffectiveEndDate()), clock.getUTCToday());
+        assertEquals(entitlement2.getEffectiveEndDate(), entitlementDateTime);
 
-        clock.addDays(2);
+        clock.setTime(billingDateTime);
         testListener.pushExpectedEvents(NextEvent.CANCEL);
         assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
         assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
+        Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        assertEquals(subscription2.getBillingEndDate(), billingDateTime);
+        
     }
 
     @Test(groups = "slow")

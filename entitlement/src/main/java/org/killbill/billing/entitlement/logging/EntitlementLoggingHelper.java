@@ -159,7 +159,7 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
-    public static void logCancelEntitlement(final Logger log, final Entitlement entitlement, final Serializable entitlementEffectiveDate, final Serializable billingEffectiveDate, final Boolean overrideBillingEffectiveDate, final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy) {
+    public static void logCancelEntitlement(final Logger log, final Entitlement entitlement, final Object entitlementEffectiveDate, final Object billingEffectiveDate, final Boolean overrideBillingEffectiveDate, final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Cancel Entitlement: ")
                     .append(" id = '")
