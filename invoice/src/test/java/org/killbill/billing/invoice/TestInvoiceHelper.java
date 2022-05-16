@@ -22,7 +22,6 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -304,12 +303,6 @@ public class TestInvoiceHelper {
 
     public void createInvoice(final Invoice invoice, final InternalCallContext internalCallContext) throws EntityPersistenceException {
         final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
-        // FIXME-1615: invoiceItemModelDaos below never used
-        final List<InvoiceItemModelDao> invoiceItemModelDaos = invoice.getInvoiceItems()
-                .stream()
-                .map(InvoiceItemModelDao::new)
-                .collect(Collectors.toUnmodifiableList());
-
         invoiceSqlDao.create(invoiceModelDao, internalCallContext);
 
         for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
