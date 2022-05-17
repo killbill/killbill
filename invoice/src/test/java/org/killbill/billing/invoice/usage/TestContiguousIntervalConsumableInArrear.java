@@ -61,6 +61,7 @@ import static org.testng.Assert.assertTrue;
 
 public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearBase {
 
+    // Only works if the RolledUpUsage have at least one
     private static final Comparator<RolledUpUsageWithMetadata> TEST_ROLLED_UP_FIRST_USAGE_COMPARATOR = Comparator.comparing(rolledUpUsageWithMetadata -> rolledUpUsageWithMetadata.getRolledUpUnits().get(0).getUnitType());
 
     @Test(groups = "fast")
