@@ -31,8 +31,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 /**
- * Simple {@link BiMap} implementation: This class extends {@link HashMap} and use most of its functionality except
- * for method that described in {@link BiMap}.
+ * <p>Simple {@link BiMap} implementation: This class extends {@link HashMap} and use most of its functionality except
+ * for method that described in {@link BiMap}.</p>
+ *
+ * <p>This implementation used mainly in test with small data set. Use this class cautiously when in use with large
+ * data set in production.</p>
  */
 public class SimpleHashBiMap<K, V> extends HashMap<K, V> implements BiMap<K, V> {
 
