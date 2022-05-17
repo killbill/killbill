@@ -45,8 +45,21 @@ public class SimpleHashBiMap<K, V> extends HashMap<K, V> implements BiMap<K, V> 
         return super.put(key, value);
     }
 
+    private K getKeyByValue(final V value) {
+        return entrySet().stream()
+                .filter(entry -> value.equals(entry.getValue()))
+                .findFirst().get().getKey();
+    }
+
     @Override
     public V forcePut(final K key, final V value) {
+        if (values().contains(value)) {
+            final K k = getKeyByValue(value);
+            final boolean isRemoved = remove(k, value);
+            if (!isRemoved) {
+                throw new IllegalStateException("Illegal BiMap#focePut() behaviour. Remove operation failed");
+            }
+        }
         return super.put(key, value);
     }
 

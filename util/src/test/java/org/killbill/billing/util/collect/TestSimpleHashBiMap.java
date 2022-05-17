@@ -25,7 +25,7 @@ import static org.testng.Assert.fail;
 
 public class TestSimpleHashBiMap extends UtilTestSuiteNoDB {
 
-    static BiMap<Integer, String> topCountryByPopulation() {
+    private static BiMap<Integer, String> topCountryByPopulation() {
         final BiMap<Integer, String> result = new SimpleHashBiMap<>();
         result.put(1, "China");
         result.put(2, "India");
@@ -47,24 +47,45 @@ public class TestSimpleHashBiMap extends UtilTestSuiteNoDB {
         } catch (final IllegalArgumentException ignored) {}
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testForcePut() {
         final BiMap<Integer, String> countries = topCountryByPopulation();
         countries.put(6, "Brazil");
         countries.forcePut(6, "Brazil");
         countries.forcePut(7, "Brazil");
-        Assert.assertEquals(countries.size(), 7);
+
+        Assert.assertEquals(countries.size(), 6);
+        Assert.assertNull(countries.get(6)); // because replaced by "7"
+        Assert.assertEquals(countries.get(7), "Brazil");
     }
 
     @Test(groups = "fast")
-    void testInverse() {
+    public void testInverse() {
         final BiMap<Integer, String> result = topCountryByPopulation();
         result.put(6, "Brazil");
 
         final BiMap<String, Integer> inversed = result.inverse();
+        Assert.assertEquals(6, inversed.size());
         Assert.assertEquals((int) inversed.get("Indonesia"), 4);
         Assert.assertEquals((int) inversed.get("India"), 2);
         Assert.assertEquals((int) inversed.get("Brazil"), 6);
+        Assert.assertEquals((int) inversed.get("United States"), 3);
+    }
+
+    @Test(groups = "fast")
+    public void testForcePutAndInverse() {
+        final BiMap<Integer, String> countries = topCountryByPopulation();
+        countries.put(6, "Brazil");
+        Assert.assertEquals(countries.size(), 6);
+        countries.forcePut(6, "Brazil");
+        Assert.assertEquals(countries.size(), 6);
+        countries.forcePut(7, "Brazil");
+        Assert.assertEquals(countries.size(), 6);
+
+        final BiMap<String, Integer> inversed = countries.inverse();
+        Assert.assertEquals((int) inversed.get("Indonesia"), 4);
+        Assert.assertEquals((int) inversed.get("India"), 2);
+        Assert.assertEquals((int) inversed.get("Brazil"), 7);
         Assert.assertEquals((int) inversed.get("United States"), 3);
     }
 }
