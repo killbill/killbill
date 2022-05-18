@@ -94,7 +94,7 @@ public class InvoicePluginDispatcher {
                               final boolean isRescheduled,
                               final CallContext callContext,
                               // The pluginProperties list passed to plugins is mutable by the plugins
-                              @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                              @SuppressWarnings("TypeMayBeWeakened") final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins priorCall: targetDate='{}', isDryRun='{}', isRescheduled='{}'", targetDate, isDryRun, isRescheduled);
         final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
@@ -134,7 +134,7 @@ public class InvoicePluginDispatcher {
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
-                              final LinkedList<PluginProperty> properties,
+                              final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
         log.debug("Invoking invoice plugins onSuccessCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
         onCompletionCall(true, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
@@ -146,7 +146,7 @@ public class InvoicePluginDispatcher {
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
-                              final LinkedList<PluginProperty> properties,
+                              final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
         log.debug("Invoking invoice plugins onFailureCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
         onCompletionCall(false, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
@@ -160,7 +160,7 @@ public class InvoicePluginDispatcher {
                                   final boolean isRescheduled,
                                   final CallContext callContext,
                                   // The pluginProperties list passed to plugins is mutable by the plugins
-                                  @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                  @SuppressWarnings("TypeMayBeWeakened") final Iterable<PluginProperty> properties,
                                   final InternalTenantContext internalTenantContext) {
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext).values();
         if (invoicePlugins.isEmpty()) {
@@ -184,7 +184,7 @@ public class InvoicePluginDispatcher {
                                               final boolean isDryRun,
                                               final CallContext callContext,
                                               // The pluginProperties list passed to plugins is mutable by the plugins
-                                              @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                              @SuppressWarnings("TypeMayBeWeakened") final Iterable<PluginProperty> properties,
                                               final InternalTenantContext tenantContext) {
         log.debug("Invoking invoice plugins for splitInvoices operation: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
@@ -232,7 +232,7 @@ public class InvoicePluginDispatcher {
                                                                final boolean isDryRun,
                                                                final CallContext callContext,
                                                                // The pluginProperties list passed to plugins is mutable by the plugins
-                                                               @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                                               @SuppressWarnings("TypeMayBeWeakened") final Iterable<PluginProperty> properties,
                                                                final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 

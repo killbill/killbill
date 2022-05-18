@@ -358,6 +358,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                            @ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response createFutureInvoice(@ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                         @QueryParam(QUERY_TARGET_DATE) final String targetDate,
+                                        @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                         @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                         @HeaderParam(HDR_REASON) final String reason,
                                         @HeaderParam(HDR_COMMENT) final String comment,
@@ -365,10 +366,11 @@ public class InvoiceResource extends JaxRsResourceBase {
                                         @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
 
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final LocalDate inputDate = toLocalDate(targetDate);
 
         try {
-            final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(accountId, inputDate, callContext);
+            final Invoice generatedInvoice = invoiceApi.triggerInvoiceGeneration(accountId, inputDate, pluginProperties, callContext);
             return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoice", generatedInvoice.getId(), request);
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {
@@ -388,6 +390,7 @@ public class InvoiceResource extends JaxRsResourceBase {
                            @ApiResponse(code = 400, message = "Invalid account id or target datetime supplied")})
     public Response createFutureInvoiceGroup(@ApiParam(required = true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                              @QueryParam(QUERY_TARGET_DATE) final String targetDate,
+                                             @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                              @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                              @HeaderParam(HDR_REASON) final String reason,
                                              @HeaderParam(HDR_COMMENT) final String comment,
@@ -395,10 +398,12 @@ public class InvoiceResource extends JaxRsResourceBase {
                                              @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
 
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+
         final LocalDate inputDate = toLocalDate(targetDate);
 
         try {
-            final Iterable<Invoice> generatedInvoices = invoiceApi.triggerInvoiceGroupGeneration(accountId, inputDate, callContext);
+            final Iterable<Invoice> generatedInvoices = invoiceApi.triggerInvoiceGroupGeneration(accountId, inputDate, pluginProperties, callContext);
             final UUID groupId = generatedInvoices.iterator().next().getGroupId();
             return uriBuilder.buildResponse(uriInfo, InvoiceResource.class, "getInvoicesGroup", groupId, request);
         } catch (InvoiceApiException e) {
@@ -446,12 +451,15 @@ public class InvoiceResource extends JaxRsResourceBase {
     public Response generateDryRunInvoice(@Nullable final InvoiceDryRunJson dryRunSubscriptionSpec,
                                           @ApiParam(required=true) @QueryParam(QUERY_ACCOUNT_ID) final UUID accountId,
                                           @Nullable @QueryParam(QUERY_TARGET_DATE) final String targetDate,
+                                          @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
                                           @javax.ws.rs.core.Context final HttpServletRequest request,
                                           @javax.ws.rs.core.Context final UriInfo uriInfo) throws AccountApiException, InvoiceApiException {
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
+
         final LocalDate inputDate = (dryRunSubscriptionSpec != null && DryRunType.UPCOMING_INVOICE.equals(dryRunSubscriptionSpec.getDryRunType())) ?
                                      null : toLocalDate(targetDate);
 
@@ -480,7 +488,7 @@ public class InvoiceResource extends JaxRsResourceBase {
 
         final DryRunArguments dryRunArguments = new DefaultDryRunArguments(dryRunSubscriptionSpec, account);
         try {
-            final Invoice generatedInvoice = invoiceApi.triggerDryRunInvoiceGeneration(accountId, inputDate, dryRunArguments, callContext);
+            final Invoice generatedInvoice = invoiceApi.triggerDryRunInvoiceGeneration(accountId, inputDate, dryRunArguments, pluginProperties, callContext);
             return Response.status(Status.OK).entity(new InvoiceJson(generatedInvoice, null, null)).build();
         } catch (InvoiceApiException e) {
             if (e.getCode() == ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {

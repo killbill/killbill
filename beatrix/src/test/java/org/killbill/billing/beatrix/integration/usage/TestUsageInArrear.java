@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration.usage;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.joda.time.DateTime;
@@ -414,6 +415,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.triggerInvoiceGeneration(account.getId(),
                                                 new LocalDate(2012, 5, 1),
+                                                Collections.emptyList(),
                                                 callContext);
         assertListenerStatus();
         final Invoice secondInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -446,6 +448,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.triggerInvoiceGeneration(account.getId(),
                                                 new LocalDate(2012, 5, 1),
+                                                Collections.emptyList(),
                                                 callContext);
         assertListenerStatus();
 
@@ -653,6 +656,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR);
         invoiceUserApi.triggerInvoiceGeneration(account.getId(),
                                                 new LocalDate(2012, 5, 1),
+                                                Collections.emptyList(),
                                                 callContext);
         assertListenerStatus();
 
@@ -670,6 +674,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR);
         invoiceUserApi.triggerInvoiceGeneration(account.getId(),
                                                 new LocalDate(2012, 5, 1),
+                                                Collections.emptyList(),
                                                 callContext);
         assertListenerStatus();
 

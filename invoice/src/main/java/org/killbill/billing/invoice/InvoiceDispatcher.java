@@ -182,7 +182,7 @@ public class InvoiceDispatcher {
 
     public void processAccountBCDChange(final UUID accountId, final InternalCallContext internalCallContext) {
         try {
-            processAccount(false, accountId, null, null, false, true, internalCallContext);
+            processAccount(false, accountId, null, null, false, true, Collections.emptyList(), internalCallContext);
         } catch (final InvoiceApiException e) {
             log.warn("Failed to process BCD change for accountId='{}'", accountId, e);
         }
@@ -288,7 +288,7 @@ public class InvoiceDispatcher {
             parkAccount(accountId, context);
             return Collections.emptyList();
         }
-        return processAccount(false, accountId, targetDate, dryRunArguments, isRescheduled, true, context);
+        return processAccount(false, accountId, targetDate, dryRunArguments, isRescheduled, true, Collections.emptyList(), context);
     }
 
 
@@ -298,6 +298,7 @@ public class InvoiceDispatcher {
                                         @Nullable final DryRunArguments dryRunArguments,
                                         final boolean isRescheduled,
                                         final boolean allowSplitting,
+                                        final Iterable<PluginProperty> properties,
                                         final InternalCallContext context) throws InvoiceApiException {
         boolean parkedAccount = false;
         try {
@@ -323,7 +324,7 @@ public class InvoiceDispatcher {
             // Grab lock unless we do a dry-run
             final boolean isDryRun = dryRunArguments != null;
             lock = !isDryRun ? locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), invoiceConfig.getMaxGlobalLockRetries()) : null;
-            return processAccountInternal(isApiCall, parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, allowSplitting, context);
+            return processAccountInternal(isApiCall, parkedAccount, accountId, targetDate, dryRunArguments, isRescheduled, allowSplitting, properties, context);
         } catch (final LockFailedException e) {
             if (isApiCall) {
                 throw new InvoiceApiException(e, ErrorCode.UNEXPECTED_ERROR, "Failed to generate invoice: failed to acquire lock");
@@ -356,7 +357,9 @@ public class InvoiceDispatcher {
                                                  @Nullable final LocalDate inputTargetDateMaybeNull,
                                                  @Nullable final DryRunArguments dryRunArguments,
                                                  final boolean isRescheduled,
-                                                 final boolean allowSplitting, final InternalCallContext context) throws InvoiceApiException {
+                                                 final boolean allowSplitting,
+                                                 final Iterable<PluginProperty> properties,
+                                                 final InternalCallContext context) throws InvoiceApiException {
         final boolean isDryRun = dryRunArguments != null;
         final boolean upcomingInvoiceDryRun = isDryRun && DryRunType.UPCOMING_INVOICE.equals(dryRunArguments.getDryRunType());
 
@@ -388,7 +391,7 @@ public class InvoiceDispatcher {
 
             final List<Invoice> result;
             if (!isDryRun) {
-                final InvoicesWithFutureNotifications invoicesWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, accountInvoices, isRescheduled, allowSplitting, new LinkedList<>(), invoiceTimings, context);
+                final InvoicesWithFutureNotifications invoicesWithFutureNotifications = processAccountWithLockAndInputTargetDate(accountId, inputTargetDate, billingEvents, accountInvoices, isRescheduled, allowSplitting, invoiceTimings, properties, context);
                 result = invoicesWithFutureNotifications != null ? invoicesWithFutureNotifications.getInvoices() : Collections.emptyList();
                 if (parkedAccount) {
                     try {
@@ -609,8 +612,7 @@ public class InvoiceDispatcher {
                                                                                     final AccountInvoices accountInvoices,
                                                                                     final boolean isRescheduled,
                                                                                     final boolean allowSplitting,
-                                                                                    final LinkedList<PluginProperty> pluginProperties,
-                                                                                    final Map<InvoiceTiming, Long> invoiceTimings,
+                                                                                    final Map<InvoiceTiming, Long> invoiceTimings, final Iterable<PluginProperty> pluginProperties,
                                                                                     final InternalCallContext internalCallContext) throws InvoiceApiException {
         final CallContext callContext = buildCallContext(internalCallContext);
 

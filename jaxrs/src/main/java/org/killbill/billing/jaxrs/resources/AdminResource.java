@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -269,11 +270,13 @@ public class AdminResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successful operation")})
     public Response triggerInvoiceGenerationForParkedAccounts(@QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                                               @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                                              @QueryParam(QUERY_PLUGIN_PROPERTY) final List<String> pluginPropertiesString,
                                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                                               @HeaderParam(HDR_REASON) final String reason,
                                                               @HeaderParam(HDR_COMMENT) final String comment,
                                                               @javax.ws.rs.core.Context final HttpServletRequest request) {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
         // TODO Consider adding a real invoice API post 0.18.x
         final Pagination<Tag> tags = tagUserApi.searchTags(SystemTags.PARK_TAG_DEFINITION_NAME, offset, limit, callContext);
@@ -291,7 +294,7 @@ public class AdminResource extends JaxRsResourceBase {
                         final Tag tag = iterator.next();
                         final UUID accountId = tag.getObjectId();
                         try {
-                            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), callContext);
+                            invoiceUserApi.triggerInvoiceGeneration(accountId, clock.getUTCToday(), pluginProperties, callContext);
                             generator.writeStringField(accountId.toString(), OK);
                         } catch (final InvoiceApiException e) {
                             if (e.getCode() != ErrorCode.INVOICE_NOTHING_TO_DO.getCode()) {

@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -76,7 +77,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         assertEquals(invoices.size(), 0);
 
         // Dry-run generation
-        Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+        Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
         assertListenerStatus();
         final ImmutableList<ExpectedInvoiceItemCheck> expected = ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO),
                                                                                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
@@ -89,7 +90,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
 
         // Non dry-run generation
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+        invoice = invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Now unparked

@@ -378,7 +378,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         // This remove the __PARK__ tag and fixes the state !
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.NULL_INVOICE);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2019, 5, 17), callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2019, 5, 17), Collections.emptyList(), callContext);
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
@@ -397,7 +397,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         try {
 
-            invoiceUserApi.triggerInvoiceGeneration(accountId, targetDate, callContext);
+            invoiceUserApi.triggerInvoiceGeneration(accountId, targetDate, Collections.emptyList(), callContext);
             Assert.fail("Unexpected to generate a new invoice for date " + targetDate);
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());

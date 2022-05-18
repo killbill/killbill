@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +86,7 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
                                                                                     createdEntitlement.getBundleId(),
                                                                                     futureDate,
                                                                                     BillingActionPolicy.IMMEDIATE);
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunSubscriptionActionArg, callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunSubscriptionActionArg, Collections.emptyList(), callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 10, 21), null, InvoiceItemType.FIXED, new BigDecimal("80.00")));
@@ -127,7 +128,7 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
 
         // Generate the invoice
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        invoiceUserApi.triggerInvoiceGeneration(bpEntitlement.getAccountId(), changeDate, callContext);
+        invoiceUserApi.triggerInvoiceGeneration(bpEntitlement.getAccountId(), changeDate, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -163,7 +164,7 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
                                                                                     BillingActionPolicy.END_OF_TERM,
                                                                                     overrides);
         final LocalDate targetDate = new LocalDate(2020, 11, 1);
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(bpEntitlement.getAccountId(), targetDate, dryRunSubscriptionActionArg, callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(bpEntitlement.getAccountId(), targetDate, dryRunSubscriptionActionArg, Collections.emptyList(), callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), null, InvoiceItemType.FIXED, new BigDecimal("70.00")));
@@ -189,7 +190,7 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
                                                                                     null,
                                                                                     BillingActionPolicy.END_OF_TERM,
                                                                                     override2s);
-        final Invoice dryRunInvoice2 = invoiceUserApi.triggerDryRunInvoiceGeneration(bpEntitlement.getAccountId(), targetDate, dryRunSubscriptionActionArg2, callContext);
+        final Invoice dryRunInvoice2 = invoiceUserApi.triggerDryRunInvoiceGeneration(bpEntitlement.getAccountId(), targetDate, dryRunSubscriptionActionArg2, Collections.emptyList(), callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices2 = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices2.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 11, 1), null, InvoiceItemType.FIXED, new BigDecimal("80.00")));

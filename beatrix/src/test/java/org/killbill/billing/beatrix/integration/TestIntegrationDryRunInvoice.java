@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -87,7 +88,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         bp.cancelEntitlementWithDate(new LocalDate(2021, 6, 1), true, ImmutableList.<PluginProperty>of(), callContext);
 
         // We see one recurring from 2021-5-1 -> 2021-6-1
-        final Invoice dryRunInvoice1 = invoiceUserApi.triggerDryRunInvoiceGeneration(bp.getAccountId(), new LocalDate(2021, 5, 1), DRY_RUN_TARGET_DATE_ARG, callContext);
+        final Invoice dryRunInvoice1 = invoiceUserApi.triggerDryRunInvoiceGeneration(bp.getAccountId(), new LocalDate(2021, 5, 1), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice1, ImmutableList.of(new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95"))));
 
         // From any date > 2021-5-1, we should see nothing
@@ -97,7 +98,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         for (LocalDate targetDate : nextDates) {
             try {
-                invoiceUserApi.triggerDryRunInvoiceGeneration(bp.getAccountId(), targetDate, DRY_RUN_TARGET_DATE_ARG, callContext);
+                invoiceUserApi.triggerDryRunInvoiceGeneration(bp.getAccountId(), targetDate, DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
                 Assert.fail(String.format("Should not have received an invoice for date %s", targetDate));
             } catch(final InvoiceApiException e) {
                 assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
@@ -155,7 +156,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
             Assert.fail("Should not generate an invoice");
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
@@ -189,7 +190,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 6, 14), new LocalDate(2015, 7, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
         // This will verify that the upcoming Phase is found and the invoice is generated at the right date, with correct items
-        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         // Move through time and verify we get the same invoice
@@ -202,7 +203,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         // This will verify that the upcoming invoice notification is found and the invoice is generated at the right date, with correct items
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 7, 14), new LocalDate(2015, 8, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         // Move through time and verify we get the same invoice
@@ -215,7 +216,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         // One more time, this will verify that the upcoming invoice notification is found and the invoice is generated at the right date, with correct items
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 8, 14), new LocalDate(2015, 9, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
     }
 
@@ -250,7 +251,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 1), new LocalDate(2015, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
 
-        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -262,7 +263,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         // Since we only have one subscription next dryRun will show the annual
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 1), new LocalDate(2016, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
@@ -287,7 +288,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // Verify next dryRun invoice and then move the clock to that date to also verify real invoice is the same
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 1, 14), new LocalDate(2015, 2, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 1, 14), new LocalDate(2015, 2, 14), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.NULL_INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -301,7 +302,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         final DryRunArguments dryRunUpcomingInvoiceWithFilterArg1 = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE, null, null, null, null, null, null, subscriptionMonthly1.getId(), null, null, null);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 14), new LocalDate(2015, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 14), new LocalDate(2015, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg1, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg1, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2015, 2, 14));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
@@ -309,14 +310,14 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         final DryRunArguments dryRunUpcomingInvoiceWithFilterArg2 = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE, null, null, null, null, null, null, subscriptionMonthly2.getId(), null, null, null);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 14), new LocalDate(2015, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 14), new LocalDate(2015, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg2, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg2, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2015, 2, 14));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
         // Then we test first the next expected invoice at the account level
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 1), new LocalDate(2016, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -328,7 +329,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 14), new LocalDate(2015, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 14), new LocalDate(2015, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
     }
 
@@ -354,7 +355,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // Generate a dryRun invoice on the billing startDate
-        final Invoice dryRunInvoice1 = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, DRY_RUN_TARGET_DATE_ARG, callContext);
+        final Invoice dryRunInvoice1 = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice1.getInvoiceItems().size(), 1);
         assertEquals(dryRunInvoice1.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
         assertEquals(dryRunInvoice1.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
@@ -367,14 +368,14 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         // First one day prior subscription starts
         try {
-            invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate.minusDays(1), dryRunSubscriptionActionArg, callContext);
+            invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate.minusDays(1), dryRunSubscriptionActionArg, Collections.emptyList(), callContext);
             fail("Should fail to trigger dryRun invoice prior subscription starts");
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
         }
 
         // Second, on the startDate
-        final Invoice dryRunInvoice2 = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunSubscriptionActionArg, callContext);
+        final Invoice dryRunInvoice2 = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunSubscriptionActionArg, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice2.getInvoiceItems().size(), 1);
         assertEquals(dryRunInvoice2.getInvoiceItems().get(0).getInvoiceItemType(), InvoiceItemType.FIXED);
         assertEquals(dryRunInvoice2.getInvoiceItems().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
@@ -386,7 +387,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         assertEquals(refreshedAccount1.getBillCycleDayLocal(), new Integer(0));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
-        final Invoice realInvoice = invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, callContext);
+        final Invoice realInvoice = invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         assertEquals(realInvoice.getInvoiceItems().size(), 1);
@@ -433,7 +434,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         // Generate an invoice using a future targetDate
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final Invoice firstInvoice = invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureStartDate, callContext);
+        final Invoice firstInvoice = invoiceUserApi.triggerInvoiceGeneration(createdEntitlement.getAccountId(), futureStartDate, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         assertEquals(firstInvoice.getInvoiceItems().size(), 1);
@@ -449,7 +450,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 5, 1), new LocalDate(2017, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-19.95")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 4, 1), new LocalDate(2017, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("19.95")));
 
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2017, 5, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
@@ -480,25 +481,25 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 1), new LocalDate(2014, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 28), DRY_RUN_TARGET_DATE_ARG, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 28), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 3, 1), new LocalDate(2014, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 3, 1), DRY_RUN_TARGET_DATE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 3, 1), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 3, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 4, 1), new LocalDate(2014, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 4, 1), DRY_RUN_TARGET_DATE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 4, 1), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 4, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 5, 1), new LocalDate(2014, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 5, 3), DRY_RUN_TARGET_DATE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 5, 3), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 5, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
@@ -521,13 +522,13 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 1), new LocalDate(2014, 2, 14), InvoiceItemType.RECURRING, new BigDecimal("104.82")));
-        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 13), DRY_RUN_TARGET_DATE_ARG, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 13), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2014, 2, 14), new LocalDate(2014, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 14), DRY_RUN_TARGET_DATE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2014, 2, 14), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2014, 2, 14));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
@@ -584,7 +585,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // 1. We verify that a DryRunType.TARGET_DATE for 2015-2-14 leads to an invoice that **only** contains the MONTHLY item (fix for #774)
         //
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 14), new LocalDate(2015, 3, 14), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2015, 2, 14), DRY_RUN_TARGET_DATE_ARG, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2015, 2, 14), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2015, 2, 14));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
@@ -592,14 +593,14 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // 2. We verify that a DryRunType.TARGET_DATE for 2015-2-3 leads to an invoice that **only** contains the 2nd ANNUAL item (fix for #774)
         //
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 3), new LocalDate(2016, 2, 3), InvoiceItemType.RECURRING, new BigDecimal("199.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2015, 2, 3), DRY_RUN_TARGET_DATE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2015, 2, 3), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2015, 2, 3));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
         // 3. We verify that UPCOMING_INVOICE leads to next invoice fo the ANNUAL
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 2, 1), new LocalDate(2016, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2015, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
@@ -632,19 +633,19 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
 
         // Specify AO subscriptionId filter
         final DryRunArguments dryRunUpcomingInvoiceWithFilterArg1 = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE, null, null, null, null, null, null, aoEntitlement.getId(), null, null, null);
-        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg1, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg1, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2018, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         // Specify BP subscriptionId filter
         final DryRunArguments dryRunUpcomingInvoiceWithFilterArg2 = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE, null, null, null, null, null, null, baseEntitlement.getId(), null, null, null);
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg2, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg2, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2018, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
         // Specify bundleId filter
         final DryRunArguments dryRunUpcomingInvoiceWithFilterArg3 = new TestDryRunArguments(DryRunType.UPCOMING_INVOICE, null, null, null, null, null, null, null, baseEntitlement.getBundleId(), null, null);
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg3, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, dryRunUpcomingInvoiceWithFilterArg3, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2018, 2, 1));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
@@ -669,7 +670,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // Verify the next invoice based on the PHASE event is correctly seen in the dryRun scenario
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 1), new LocalDate(2018, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
-        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
@@ -686,7 +687,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // Verify the next invoice based on the PAUSE event is correctly seen in the dryRun scenario
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 15), new LocalDate(2018, 1, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-137.07")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 1), new LocalDate(2017, 12, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("137.07")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
@@ -708,7 +709,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // Verify the next invoice based on the RESUME event is correctly seen in the dryRun scenario
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 25), new LocalDate(2018, 1, 1), InvoiceItemType.RECURRING, new BigDecimal("56.44")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2017, 12, 15), new LocalDate(2017, 12, 15), InvoiceItemType.CBA_ADJ, new BigDecimal("-56.44")));
-        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, callContext);
+        dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), null, DRY_RUN_UPCOMING_INVOICE_ARG, Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
         expectedInvoices.clear();
 
@@ -750,7 +751,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         dryRunExpectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 15), new LocalDate(2020, 10, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
         dryRunExpectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2020, 10, 15), new LocalDate(2020, 11, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
 
-        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2020, 10, 15), DRY_RUN_TARGET_DATE_ARG, callContext);
+        Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2020, 10, 15), DRY_RUN_TARGET_DATE_ARG, Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getInvoiceItems().size(), 5);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, dryRunExpectedInvoices);
         assertEquals(dryRunInvoice.getId(), draftInvoice.getId());
