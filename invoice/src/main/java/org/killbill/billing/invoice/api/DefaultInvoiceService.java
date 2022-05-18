@@ -18,6 +18,8 @@
 
 package org.killbill.billing.invoice.api;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentNotifier;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
@@ -28,8 +30,6 @@ import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueAlreadyExists;
-
-import com.google.inject.Inject;
 
 public class DefaultInvoiceService implements InvoiceService {
 

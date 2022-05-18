@@ -868,7 +868,30 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // Retrieves with GET
         final Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
-        Assert.assertEquals(subscription, entitlementJson);
+
+        // See https://github.com/killbill/killbill/issues/1694
+        Assert.assertEquals(subscription.getAccountId(), entitlementJson.getAccountId());
+        Assert.assertEquals(subscription.getBundleId(), entitlementJson.getBundleId());
+        Assert.assertEquals(subscription.getBundleExternalKey(), entitlementJson.getBundleExternalKey());
+        Assert.assertEquals(subscription.getSubscriptionId(), entitlementJson.getSubscriptionId());
+        Assert.assertEquals(subscription.getExternalKey(), entitlementJson.getExternalKey());
+        Assert.assertEquals(subscription.getStartDate(), entitlementJson.getStartDate());
+        Assert.assertEquals(subscription.getProductName(), entitlementJson.getProductName());
+        Assert.assertEquals(subscription.getProductCategory(), entitlementJson.getProductCategory());
+        Assert.assertEquals(subscription.getBillingPeriod(), entitlementJson.getBillingPeriod());
+        Assert.assertEquals(subscription.getPhaseType(), entitlementJson.getPhaseType());
+        Assert.assertEquals(subscription.getPriceList(), entitlementJson.getPriceList());
+        Assert.assertEquals(subscription.getPlanName(), entitlementJson.getPlanName());
+        Assert.assertEquals(subscription.getState(), entitlementJson.getState());
+        Assert.assertEquals(subscription.getSourceType(), entitlementJson.getSourceType());
+        Assert.assertEquals(subscription.getCancelledDate(), entitlementJson.getCancelledDate());
+        Assert.assertEquals(subscription.getBillingStartDate(), entitlementJson.getBillingStartDate());
+        Assert.assertEquals(subscription.getBillingEndDate(), entitlementJson.getBillingEndDate());
+        Assert.assertEquals(subscription.getBillCycleDayLocal(), entitlementJson.getBillCycleDayLocal());
+        Assert.assertEquals(subscription.getEvents(), entitlementJson.getEvents());
+        Assert.assertEquals(subscription.getPriceOverrides(), entitlementJson.getPriceOverrides());
+        Assert.assertEquals(subscription.getPrices(), entitlementJson.getPrices());
+
         Assert.assertEquals(subscription.getPrices().size(), 2);
         Assert.assertEquals(subscription.getPrices().get(0).getPhaseName(), "shotgun-monthly-trial");
         Assert.assertEquals(subscription.getPrices().get(0).getFixedPrice(), BigDecimal.ZERO);

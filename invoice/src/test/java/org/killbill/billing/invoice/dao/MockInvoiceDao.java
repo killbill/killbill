@@ -21,6 +21,7 @@ package org.killbill.billing.invoice.dao;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -41,7 +43,6 @@ import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceStatus;
-import org.killbill.billing.invoice.api.user.DefaultInvoiceCreationEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
@@ -50,18 +51,14 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 import org.killbill.bus.api.PersistentBus;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.inject.Inject;
-
 public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, InvoiceApiException> implements InvoiceDao {
 
     private final PersistentBus eventBus;
     private final Object monitor = new Object();
-    private final Map<UUID, InvoiceModelDao> invoices = new LinkedHashMap<UUID, InvoiceModelDao>();
-    private final Map<UUID, InvoiceItemModelDao> items = new LinkedHashMap<UUID, InvoiceItemModelDao>();
-    private final Map<UUID, InvoicePaymentModelDao> payments = new LinkedHashMap<UUID, InvoicePaymentModelDao>();
-    private final BiMap<UUID, Long> accountRecordIds = HashBiMap.create();
+    private final Map<UUID, InvoiceModelDao> invoices = new LinkedHashMap<>();
+    private final Map<UUID, InvoiceItemModelDao> items = new LinkedHashMap<>();
+    private final Map<UUID, InvoicePaymentModelDao> payments = new LinkedHashMap<>();
+    private final Map<UUID, Long> accountRecordIds = new HashMap<>();
 
     @Inject
     public MockInvoiceDao(final PersistentBus eventBus) {
@@ -99,7 +96,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
                                                     final boolean returnCreatedInvoiceItems,
                                                     final InternalCallContext context) {
         synchronized (monitor) {
-            final List<InvoiceItemModelDao> createdItems = new LinkedList<InvoiceItemModelDao>();
+            final List<InvoiceItemModelDao> createdItems = new LinkedList<>();
             for (final InvoiceModelDao invoice : invoiceModelDaos) {
                 createdItems.addAll(storeInvoice(invoice, context));
             }
@@ -107,8 +104,14 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
         }
     }
 
+    private UUID getAccountIdByRecordId(final Long accountRecordId) {
+        return accountRecordIds.entrySet().stream()
+                .filter(entry -> accountRecordId.equals(entry.getValue()))
+                .findFirst().get().getKey();
+    }
+
     private Collection<InvoiceItemModelDao> storeInvoice(final InvoiceModelDao invoice, final InternalCallContext context) {
-        final Collection<InvoiceItemModelDao> createdItems = new LinkedList<InvoiceItemModelDao>();
+        final Collection<InvoiceItemModelDao> createdItems = new LinkedList<>();
 
         invoices.put(invoice.getId(), invoice);
         for (final InvoiceItemModelDao invoiceItemModelDao : invoice.getInvoiceItems()) {
@@ -165,7 +168,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
         final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
-            final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
+            final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : invoices.values()) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.isMigrated()) {
                     result.add(invoice);
@@ -177,9 +180,9 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final InternalTenantContext context) {
-        final List<InvoiceModelDao> invoicesForAccount = new ArrayList<InvoiceModelDao>();
+        final List<InvoiceModelDao> invoicesForAccount = new ArrayList<>();
         synchronized (monitor) {
-            final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
+            final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : getAll(context)) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrated() &&
                     (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
@@ -193,7 +196,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public List<InvoiceModelDao> getInvoicesBySubscription(final UUID subscriptionId, final InternalTenantContext context) {
-        final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
+        final List<InvoiceModelDao> result = new ArrayList<>();
 
         synchronized (monitor) {
             for (final InvoiceModelDao invoice : invoices.values()) {
@@ -210,7 +213,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public Pagination<InvoiceModelDao> searchInvoices(final String searchKey, final Long offset, final Long limit, final InternalTenantContext context) {
-        final List<InvoiceModelDao> results = new LinkedList<InvoiceModelDao>();
+        final List<InvoiceModelDao> results = new LinkedList<>();
         int maxNbRecords = 0;
         for (final InvoiceModelDao invoice : getAll(context)) {
             maxNbRecords++;
@@ -222,7 +225,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
             }
         }
 
-        return DefaultPagination.<InvoiceModelDao>build(offset, limit, maxNbRecords, results);
+        return DefaultPagination.build(offset, limit, maxNbRecords, results);
     }
 
     @Override
@@ -243,7 +246,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public List<InvoicePaymentModelDao> getInvoicePaymentsByPaymentId(final UUID paymentId, final InternalTenantContext context) {
-        final List<InvoicePaymentModelDao> result = new LinkedList<InvoicePaymentModelDao>();
+        final List<InvoicePaymentModelDao> result = new LinkedList<>();
         synchronized (monitor) {
             for (final InvoicePaymentModelDao payment : payments.values()) {
                 if (paymentId.equals(payment.getPaymentId())) {
@@ -256,7 +259,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public List<InvoicePaymentModelDao> getInvoicePaymentsByInvoice(final UUID invoiceId, final InternalTenantContext context) {
-        final List<InvoicePaymentModelDao> result = new LinkedList<InvoicePaymentModelDao>();
+        final List<InvoicePaymentModelDao> result = new LinkedList<>();
         synchronized (monitor) {
             for (final InvoicePaymentModelDao payment : payments.values()) {
                 if (invoiceId.equals(payment.getInvoiceId())) {
@@ -276,7 +279,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
         final List<InvoicePaymentModelDao> invoicesForAccount = new ArrayList<InvoicePaymentModelDao>();
         synchronized (monitor) {
-            final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
+            final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoicePaymentModelDao payment : payments.values()) {
             }
         }
@@ -320,7 +323,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public List<InvoiceModelDao> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate startDate, final LocalDate upToDate, final InternalTenantContext context) {
-        final List<InvoiceModelDao> unpaidInvoices = new ArrayList<InvoiceModelDao>();
+        final List<InvoiceModelDao> unpaidInvoices = new ArrayList<>();
 
         for (final InvoiceModelDao invoice : getAll(context)) {
             if (accountId.equals(invoice.getAccountId()) && (InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice).compareTo(BigDecimal.ZERO) > 0) && !invoice.isMigrated()) {
@@ -333,10 +336,10 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 
     @Override
     public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
-        final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
+        final List<InvoiceModelDao> result = new ArrayList<>();
 
         synchronized (monitor) {
-            final UUID accountId = accountRecordIds.inverse().get(context.getAccountRecordId());
+            final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : invoices.values()) {
                 if (accountId.equals(invoice.getAccountId()) && (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
                     result.add(invoice);
