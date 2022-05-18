@@ -117,12 +117,13 @@ public class InvoicePluginDispatcher {
                               final Iterable<PluginProperty> pluginProperties,
                               final InternalTenantContext internalTenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins priorCall: targetDate='{}', isDryRun='{}', isRescheduled='{}'", targetDate, isDryRun, isRescheduled);
-        final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
-        if (invoicePlugins.isEmpty()) {
-            return null;
-        }
 
         Iterable<PluginProperty> inputPluginProperties = pluginProperties;
+        final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
+        if (invoicePlugins.isEmpty()) {
+            return new PriorCallResult(null, inputPluginProperties);
+        }
+
         DateTime earliestRescheduleDate = null;
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext);
         for (final Entry<String, InvoicePluginApi> entry : invoicePlugins.entrySet()) {
