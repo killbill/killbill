@@ -1087,6 +1087,11 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             return new PriorInvoiceResult() {
 
                 @Override
+                public Iterable<PluginProperty> getAdjustedPluginProperties() {
+                    return pluginProperties;
+                }
+
+                @Override
                 public boolean isAborted() {
                     return isAborted;
                 }

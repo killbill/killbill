@@ -59,6 +59,8 @@ import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroup;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
+import org.killbill.billing.invoice.plugin.api.OnFailureInvoiceResult;
+import org.killbill.billing.invoice.plugin.api.OnSuccessInvoiceResult;
 import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -88,13 +90,31 @@ public class InvoicePluginDispatcher {
         this.invoiceConfig = invoiceConfig;
     }
 
-    public DateTime priorCall(final LocalDate targetDate,
+    public static final class PriorCallResult {
+
+        private final DateTime rescheduleDate;
+        private final Iterable<PluginProperty> pluginProperties;
+
+        public PriorCallResult(final DateTime rescheduleDate, final Iterable<PluginProperty> pluginProperties) {
+            this.rescheduleDate = rescheduleDate;
+            this.pluginProperties = pluginProperties;
+        }
+
+        public DateTime getRescheduleDate() {
+            return rescheduleDate;
+        }
+
+        public Iterable<PluginProperty> getPluginProperties() {
+            return pluginProperties;
+        }
+    }
+
+    public PriorCallResult priorCall(final LocalDate targetDate,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
-                              // The pluginProperties list passed to plugins is mutable by the plugins
-                              @SuppressWarnings("TypeMayBeWeakened") final Iterable<PluginProperty> properties,
+                              final Iterable<PluginProperty> pluginProperties,
                               final InternalTenantContext internalTenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins priorCall: targetDate='{}', isDryRun='{}', isRescheduled='{}'", targetDate, isDryRun, isRescheduled);
         final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
@@ -102,11 +122,12 @@ public class InvoicePluginDispatcher {
             return null;
         }
 
+        Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         DateTime earliestRescheduleDate = null;
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext);
         for (final Entry<String, InvoicePluginApi> entry : invoicePlugins.entrySet()) {
             final String invoicePluginName = entry.getKey();
-            final PriorInvoiceResult priorInvoiceResult = entry.getValue().priorCall(invoiceContext, properties);
+            final PriorInvoiceResult priorInvoiceResult = entry.getValue().priorCall(invoiceContext, inputPluginProperties);
             log.debug("Invoice plugin {} returned priorInvoiceResult='{}'", invoicePluginName, priorInvoiceResult);
             if (priorInvoiceResult == null) {
                 // Naughty plugin...
@@ -123,9 +144,13 @@ public class InvoicePluginDispatcher {
                 log.info("Invoice plugin {} aborted invoice generation for targetDate {}", invoicePluginName, targetDate);
                 throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, invoicePluginName);
             }
+
+            if (priorInvoiceResult.getAdjustedPluginProperties() != null) {
+                inputPluginProperties = priorInvoiceResult.getAdjustedPluginProperties();
+            }
         }
 
-        return earliestRescheduleDate;
+        return new PriorCallResult(earliestRescheduleDate, inputPluginProperties);
     }
 
     public void onSuccessCall(final LocalDate targetDate,
@@ -159,8 +184,7 @@ public class InvoicePluginDispatcher {
                                   final boolean isDryRun,
                                   final boolean isRescheduled,
                                   final CallContext callContext,
-                                  // The pluginProperties list passed to plugins is mutable by the plugins
-                                  @SuppressWarnings("TypeMayBeWeakened") final Iterable<PluginProperty> properties,
+                                  final Iterable<PluginProperty> pluginProperties,
                                   final InternalTenantContext internalTenantContext) {
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext).values();
         if (invoicePlugins.isEmpty()) {
@@ -171,11 +195,18 @@ public class InvoicePluginDispatcher {
         final Invoice clonedInvoice = originalInvoice == null ? null : (Invoice) originalInvoice.clone();
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, clonedInvoice, existingInvoices, isDryRun, isRescheduled, callContext);
 
+        Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             if (isSuccess) {
-                invoicePlugin.onSuccessCall(invoiceContext, properties);
+                final OnSuccessInvoiceResult res1 = invoicePlugin.onSuccessCall(invoiceContext, inputPluginProperties);
+                if (res1 != null && res1.getAdjustedPluginProperties() != null) {
+                    inputPluginProperties = res1.getAdjustedPluginProperties();
+                }
             } else {
-                invoicePlugin.onFailureCall(invoiceContext, properties);
+                final OnFailureInvoiceResult res2 = invoicePlugin.onFailureCall(invoiceContext, inputPluginProperties);
+                if (res2 != null && res2.getAdjustedPluginProperties() != null) {
+                    inputPluginProperties = res2.getAdjustedPluginProperties();
+                }
             }
         }
     }
@@ -183,8 +214,7 @@ public class InvoicePluginDispatcher {
     public List<DefaultInvoice> splitInvoices(final DefaultInvoice originalInvoice,
                                               final boolean isDryRun,
                                               final CallContext callContext,
-                                              // The pluginProperties list passed to plugins is mutable by the plugins
-                                              @SuppressWarnings("TypeMayBeWeakened") final Iterable<PluginProperty> properties,
+                                              final Iterable<PluginProperty> properties,
                                               final InternalTenantContext tenantContext) {
         log.debug("Invoking invoice plugins for splitInvoices operation: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
@@ -231,8 +261,7 @@ public class InvoicePluginDispatcher {
     public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
                                                                final boolean isDryRun,
                                                                final CallContext callContext,
-                                                               // The pluginProperties list passed to plugins is mutable by the plugins
-                                                               @SuppressWarnings("TypeMayBeWeakened") final Iterable<PluginProperty> properties,
+                                                               final Iterable<PluginProperty> properties,
                                                                final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 

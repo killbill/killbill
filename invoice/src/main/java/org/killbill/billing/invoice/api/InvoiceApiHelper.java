@@ -37,6 +37,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoicePluginDispatcher;
+import org.killbill.billing.invoice.InvoicePluginDispatcher.PriorCallResult;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -86,8 +87,8 @@ public class InvoiceApiHelper {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, contextMaybeWithoutAccountId);
         final CallContext context = internalCallContextFactory.createCallContext(internalCallContext);
 
-        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, properties, internalCallContext);
-        if (rescheduleDate != null) {
+        final PriorCallResult priorCallResult = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, properties, internalCallContext);
+        if (priorCallResult.getRescheduleDate() != null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, "delayed scheduling is unsupported for API calls");
         }
 
@@ -102,7 +103,7 @@ public class InvoiceApiHelper {
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
             for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
                 // Call plugin(s)
-                invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, properties, internalCallContext);
+                invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, priorCallResult.getPluginProperties(), internalCallContext);
 
                 // Transformation to InvoiceModelDao
                 final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);
@@ -128,10 +129,10 @@ public class InvoiceApiHelper {
             if (success) {
                 for (final Invoice invoiceForPlugin : invoicesForPlugins) {
                     final DefaultInvoice refreshedInvoice = new DefaultInvoice(dao.getById(invoiceForPlugin.getId(), internalCallContext));
-                    invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, context, properties, internalCallContext);
+                    invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, context, priorCallResult.getPluginProperties(), internalCallContext);
                 }
             } else {
-                invoicePluginDispatcher.onFailureCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, context, properties, internalCallContext);
+                invoicePluginDispatcher.onFailureCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, context, priorCallResult.getPluginProperties(), internalCallContext);
             }
         }
     }

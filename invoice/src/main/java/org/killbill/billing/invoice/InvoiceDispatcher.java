@@ -60,6 +60,7 @@ import org.killbill.billing.events.EffectiveSubscriptionInternalEvent;
 import org.killbill.billing.events.InvoiceNotificationInternalEvent;
 import org.killbill.billing.events.RequestedSubscriptionInternalEvent;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications.FutureAccountNotificationsBuilder;
+import org.killbill.billing.invoice.InvoicePluginDispatcher.PriorCallResult;
 import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunInfo;
 import org.killbill.billing.invoice.api.DryRunType;
@@ -607,13 +608,14 @@ public class InvoiceDispatcher {
     }
 
     private InvoicesWithFutureNotifications processAccountWithLockAndInputTargetDate(final UUID accountId,
-                                                                                    final LocalDate originalTargetDate,
-                                                                                    final BillingEventSet billingEvents,
-                                                                                    final AccountInvoices accountInvoices,
-                                                                                    final boolean isRescheduled,
-                                                                                    final boolean allowSplitting,
-                                                                                    final Map<InvoiceTiming, Long> invoiceTimings, final Iterable<PluginProperty> pluginProperties,
-                                                                                    final InternalCallContext internalCallContext) throws InvoiceApiException {
+                                                                                     final LocalDate originalTargetDate,
+                                                                                     final BillingEventSet billingEvents,
+                                                                                     final AccountInvoices accountInvoices,
+                                                                                     final boolean isRescheduled,
+                                                                                     final boolean allowSplitting,
+                                                                                     final Map<InvoiceTiming, Long> invoiceTimings,
+                                                                                     final Iterable<PluginProperty> pluginProperties,
+                                                                                     final InternalCallContext internalCallContext) throws InvoiceApiException {
         final CallContext callContext = buildCallContext(internalCallContext);
 
         final ImmutableAccountData account;
@@ -628,11 +630,11 @@ public class InvoiceDispatcher {
         }
 
         long startNano = System.nanoTime();
-        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(originalTargetDate, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
+        final PriorCallResult priorCallResult = invoicePluginDispatcher.priorCall(originalTargetDate, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
         invoiceTimings.put(InvoiceTiming.PLUGINS_PRIOR_CALL, System.nanoTime() - startNano);
 
-        if (rescheduleDate != null) {
-            final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(rescheduleDate, billingEvents, internalCallContext);
+        if (priorCallResult.getRescheduleDate() != null) {
+            final FutureAccountNotifications futureAccountNotifications = createNextFutureNotificationDate(priorCallResult.getRescheduleDate(), billingEvents, internalCallContext);
             setFutureNotifications(account, futureAccountNotifications, internalCallContext);
             return null;
         }
@@ -649,7 +651,7 @@ public class InvoiceDispatcher {
         // If invoice comes back null, there is nothing new to generate, we can bail early
         if (invoice == null) {
             startNano = System.nanoTime();
-            invoicePluginDispatcher.onSuccessCall(originalTargetDate, null, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
+            invoicePluginDispatcher.onSuccessCall(originalTargetDate, null, accountInvoices.getInvoices(), false, isRescheduled, callContext, priorCallResult.getPluginProperties(), internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
 
             log.info("Generated null invoice for accountId='{}', targetDate='{}'", accountId, originalTargetDate);
@@ -683,7 +685,7 @@ public class InvoiceDispatcher {
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
             startNano = System.nanoTime();
-            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, false, callContext, pluginProperties, internalCallContext);
+            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, false, callContext, priorCallResult.getPluginProperties(), internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_ADDITIONAL_ITEMS, System.nanoTime() - startNano);
 
             if (invoiceUpdated) {
@@ -707,7 +709,7 @@ public class InvoiceDispatcher {
             logInvoiceWithItems(account, invoice, actualTargetDate, adjustedUniqueOtherInvoiceId, isRealInvoiceWithItems);
 
             splitInvoices = allowSplitting && !billingEvents.isAccountAutoInvoiceReuseDraft() ?
-                            invoicePluginDispatcher.splitInvoices(invoice, false, callContext, pluginProperties, internalCallContext) :
+                            invoicePluginDispatcher.splitInvoices(invoice, false, callContext, priorCallResult.getPluginProperties(), internalCallContext) :
                             Collections.singletonList(invoice);
 
 
@@ -746,7 +748,7 @@ public class InvoiceDispatcher {
                                      final InvoiceModelDao refreshedInv = invoiceDao.getById(i.getId(), internalCallContext);
                                      final DefaultInvoice refreshedInvoice = new DefaultInvoice(refreshedInv);
                                      long startNano1 = System.nanoTime();
-                                     invoicePluginDispatcher.onSuccessCall(actualTargetDate, refreshedInvoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
+                                     invoicePluginDispatcher.onSuccessCall(actualTargetDate, refreshedInvoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, priorCallResult.getPluginProperties(), internalCallContext);
                                      invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano1);
                                      resultingInvoices.add(refreshedInvoice);
                                  } catch (final InvoiceApiException e) {
@@ -759,7 +761,7 @@ public class InvoiceDispatcher {
                 splitInvoices.stream()
                              .forEach(i -> {
                                  long startNano2 = System.nanoTime();
-                                 invoicePluginDispatcher.onFailureCall(actualTargetDate, invoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, pluginProperties, internalCallContext);
+                                 invoicePluginDispatcher.onFailureCall(actualTargetDate, invoice, accountInvoices.getInvoices(), false, isRescheduled, callContext, priorCallResult.getPluginProperties(), internalCallContext);
                                  invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano2);
                              });
 
@@ -791,11 +793,11 @@ public class InvoiceDispatcher {
         }
 
         long startNano = System.nanoTime();
-        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(originalTargetDate, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
+        final PriorCallResult priorCallResult = invoicePluginDispatcher.priorCall(originalTargetDate, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
         invoiceTimings.put(InvoiceTiming.PLUGINS_PRIOR_CALL, System.nanoTime() - startNano);
 
-        if (rescheduleDate != null) {
-            log.warn("Ignoring rescheduleDate='{}', delayed scheduling is unsupported in dry-run", rescheduleDate);
+        if (priorCallResult.getRescheduleDate() != null) {
+            log.warn("Ignoring rescheduleDate='{}', delayed scheduling is unsupported in dry-run", priorCallResult.getRescheduleDate());
             return null;
         }
 
@@ -812,7 +814,7 @@ public class InvoiceDispatcher {
         // If invoice comes back null, there is nothing new to generate, we can bail early
         if (invoice == null) {
             startNano = System.nanoTime();
-            invoicePluginDispatcher.onSuccessCall(originalTargetDate, null, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
+            invoicePluginDispatcher.onSuccessCall(originalTargetDate, null, accountInvoices.getInvoices(), true, isRescheduled, callContext, priorCallResult.getPluginProperties(), internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
 
             log.info("Generated null dryRun invoice for accountId='{}', targetDate='{}'", accountId, originalTargetDate);
@@ -831,7 +833,7 @@ public class InvoiceDispatcher {
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
             startNano = System.nanoTime();
-            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, true, callContext, pluginProperties, internalCallContext);
+            final boolean invoiceUpdated = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, true, callContext, priorCallResult.getPluginProperties(), internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_ADDITIONAL_ITEMS, System.nanoTime() - startNano);
 
             if (invoiceUpdated) {
@@ -849,7 +851,7 @@ public class InvoiceDispatcher {
 
         } finally {
             startNano = System.nanoTime();
-            invoicePluginDispatcher.onSuccessCall(actualTargetDate, invoice, accountInvoices.getInvoices(), true, isRescheduled, callContext, pluginProperties, internalCallContext);
+            invoicePluginDispatcher.onSuccessCall(actualTargetDate, invoice, accountInvoices.getInvoices(), true, isRescheduled, callContext, priorCallResult.getPluginProperties(), internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_COMPLETION_CALL, System.nanoTime() - startNano);
         }
 
