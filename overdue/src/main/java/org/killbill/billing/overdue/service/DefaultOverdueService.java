@@ -18,6 +18,7 @@
 
 package org.killbill.billing.overdue.service;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -38,8 +39,6 @@ import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
 
 public class DefaultOverdueService implements OverdueService {
 
