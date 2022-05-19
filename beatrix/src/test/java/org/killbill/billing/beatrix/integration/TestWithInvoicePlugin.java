@@ -59,6 +59,7 @@ import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
+import org.killbill.billing.invoice.plugin.api.AdditionalItemsResult;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroup;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
@@ -1002,6 +1003,11 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             return invoiceGroups;
         }
 
+        @Override
+        public Iterable<PluginProperty> getAdjustedPluginProperties() {
+            return null;
+        }
+
         private static class TestInvoiceGroup implements InvoiceGroup {
 
             private final List<UUID> invoiceItemIds;
@@ -1104,7 +1110,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
 
             assertTrue(checkPluginProperties.apply(pluginProperties));
 
@@ -1127,12 +1133,13 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 assertTrue(p2.isPresent());
             }
 
+            final List<InvoiceItem> res;
             if (shouldThrowException) {
                 throw new InvoicePluginApiRetryException();
             } else if (additionalInvoiceItem != null) {
-                return ImmutableList.<InvoiceItem>of(additionalInvoiceItem);
+                res = ImmutableList.<InvoiceItem>of(additionalInvoiceItem);
             } else if (taxItems.apply(invoice) != null) {
-                return taxItems.apply(invoice);
+                res = taxItems.apply(invoice);
             } else if (shouldUpdateDescription) {
                 final List<InvoiceItem> updatedInvoiceItems = new LinkedList<InvoiceItem>();
                 for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
@@ -1140,10 +1147,21 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                     Mockito.when(updatedInvoiceItem.getDescription()).thenReturn(String.format("[plugin] %s", invoiceItem.getId()));
                     updatedInvoiceItems.add(updatedInvoiceItem);
                 }
-                return updatedInvoiceItems;
+                res = updatedInvoiceItems;
             } else {
-                return ImmutableList.<InvoiceItem>of();
+                res = ImmutableList.<InvoiceItem>of();
             }
+            return new AdditionalItemsResult() {
+                @Override
+                public List<InvoiceItem> getAdditionalItems() {
+                    return res;
+                }
+
+                @Override
+                public Iterable<PluginProperty> getAdjustedPluginProperties() {
+                    return null;
+                }
+            };
         }
 
         @Override

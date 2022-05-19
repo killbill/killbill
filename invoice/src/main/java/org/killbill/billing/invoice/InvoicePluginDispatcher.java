@@ -55,6 +55,7 @@ import org.killbill.billing.invoice.model.InvoiceItemCatalogBase;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
+import org.killbill.billing.invoice.plugin.api.AdditionalItemsResult;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroup;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
@@ -212,63 +213,111 @@ public class InvoicePluginDispatcher {
         }
     }
 
-    public List<DefaultInvoice> splitInvoices(final DefaultInvoice originalInvoice,
+    public static class SplitInvoiceResult {
+
+        private final List<DefaultInvoice> invoices;
+        final Iterable<PluginProperty> pluginProperties;
+
+        public SplitInvoiceResult(final List<DefaultInvoice> invoices, final Iterable<PluginProperty> pluginProperties) {
+            this.invoices = invoices;
+            this.pluginProperties = pluginProperties;
+        }
+
+        public List<DefaultInvoice> getInvoices() {
+            return invoices;
+        }
+
+        public Iterable<PluginProperty> getPluginProperties() {
+            return pluginProperties;
+        }
+    }
+
+    public SplitInvoiceResult splitInvoices(final DefaultInvoice originalInvoice,
                                               final boolean isDryRun,
                                               final CallContext callContext,
-                                              final Iterable<PluginProperty> properties,
+                                              final Iterable<PluginProperty> pluginProperties,
                                               final InternalTenantContext tenantContext) {
         log.debug("Invoking invoice plugins for splitInvoices operation: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
+        Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
-            final InvoiceGroupingResult grpResult = invoicePlugin.getInvoiceGrouping(clonedInvoice, isDryRun, properties, callContext);
-            if (grpResult != null && grpResult.getInvoiceGroups() != null && grpResult.getInvoiceGroups().size() > 0) {
+            final InvoiceGroupingResult grpResult = invoicePlugin.getInvoiceGrouping(clonedInvoice, isDryRun, inputPluginProperties, callContext);
+            if (grpResult !=  null) {
 
-                final List<DefaultInvoice> result = new ArrayList<>();
-                final Map<UUID, InvoiceItem> itemMap = originalInvoice.getInvoiceItems()
-                                                                      .stream()
-                                                                      .map(new Function<InvoiceItem, SimpleEntry<UUID, InvoiceItem>>() {
-                                                                          @Override
-                                                                          public SimpleEntry<UUID, InvoiceItem> apply(final InvoiceItem invoiceItem) {
-                                                                              return new SimpleEntry<>(invoiceItem.getId(), invoiceItem);
-                                                                          }
-                                                                      }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-                final List<InvoiceGroup> groups = grpResult.getInvoiceGroups();
-                for (final InvoiceGroup grp : groups) {
-                    final DefaultInvoice grpInvoice = new DefaultInvoice(UUIDs.randomUUID(),
-                                                                         originalInvoice.getAccountId(),
-                                                                         null,
-                                                                         originalInvoice.getInvoiceDate(),
-                                                                         originalInvoice.getTargetDate(),
-                                                                         originalInvoice.getCurrency(),
-                                                                         originalInvoice.isMigrationInvoice(),
-                                                                         originalInvoice.getStatus());
-                    for (final UUID itemId : grp.getInvoiceItemIds()) {
-                        final InvoiceItem item = itemMap.get(itemId);
-                        final DefaultInvoiceItem.Builder tmp = new Builder().source(item);
-                        tmp.withInvoiceId(grpInvoice.getId());
-                        grpInvoice.addInvoiceItem(tmp.build());
-                    }
-                    result.add(grpInvoice);
+                if (grpResult.getAdjustedPluginProperties() != null) {
+                    inputPluginProperties = grpResult.getAdjustedPluginProperties();
                 }
-                return result;
+
+                if (grpResult.getInvoiceGroups() != null && grpResult.getInvoiceGroups().size() > 0) {
+
+                    final List<DefaultInvoice> result = new ArrayList<>();
+                    final Map<UUID, InvoiceItem> itemMap = originalInvoice.getInvoiceItems()
+                                                                          .stream()
+                                                                          .map(new Function<InvoiceItem, SimpleEntry<UUID, InvoiceItem>>() {
+                                                                              @Override
+                                                                              public SimpleEntry<UUID, InvoiceItem> apply(final InvoiceItem invoiceItem) {
+                                                                                  return new SimpleEntry<>(invoiceItem.getId(), invoiceItem);
+                                                                              }
+                                                                          }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                    final List<InvoiceGroup> groups = grpResult.getInvoiceGroups();
+                    for (final InvoiceGroup grp : groups) {
+                        final DefaultInvoice grpInvoice = new DefaultInvoice(UUIDs.randomUUID(),
+                                                                             originalInvoice.getAccountId(),
+                                                                             null,
+                                                                             originalInvoice.getInvoiceDate(),
+                                                                             originalInvoice.getTargetDate(),
+                                                                             originalInvoice.getCurrency(),
+                                                                             originalInvoice.isMigrationInvoice(),
+                                                                             originalInvoice.getStatus());
+                        for (final UUID itemId : grp.getInvoiceItemIds()) {
+                            final InvoiceItem item = itemMap.get(itemId);
+                            final DefaultInvoiceItem.Builder tmp = new Builder().source(item);
+                            tmp.withInvoiceId(grpInvoice.getId());
+                            grpInvoice.addInvoiceItem(tmp.build());
+                        }
+                        result.add(grpInvoice);
+                    }
+                    return new SplitInvoiceResult(result, inputPluginProperties);
+                }
+
             }
+
         }
-        return Collections.singletonList(originalInvoice);
+        return new SplitInvoiceResult(Collections.singletonList(originalInvoice), inputPluginProperties);
     }
 
-    public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
+    public static final class AdditionalInvoiceItemsResult {
+
+        private final boolean invoiceUpdated;
+        private final Iterable<PluginProperty> pluginProperties;
+
+        public AdditionalInvoiceItemsResult(final boolean invoiceUpdated, final Iterable<PluginProperty> pluginProperties) {
+            this.invoiceUpdated = invoiceUpdated;
+            this.pluginProperties = pluginProperties;
+        }
+
+        public boolean isInvoiceUpdated() {
+            return invoiceUpdated;
+        }
+
+        public Iterable<PluginProperty> getPluginProperties() {
+            return pluginProperties;
+        }
+    }
+
+    public AdditionalInvoiceItemsResult updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
                                                                final boolean isDryRun,
                                                                final CallContext callContext,
-                                                               final Iterable<PluginProperty> properties,
+                                                               final Iterable<PluginProperty> pluginProperties,
                                                                final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         if (invoicePlugins.isEmpty()) {
-            return false;
+            return new AdditionalInvoiceItemsResult(false, pluginProperties);
         }
 
         // Look-up map for performance
@@ -277,26 +326,33 @@ public class InvoicePluginDispatcher {
             invoiceItemsByItemId.put(invoiceItem.getId(), invoiceItem);
         }
 
+        Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         boolean invoiceUpdated = false;
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             // We clone the original invoice so plugins don't remove/add items
             final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
-            final List<InvoiceItem> additionalInvoiceItemsForPlugin = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, properties, callContext);
+            final AdditionalItemsResult res = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, inputPluginProperties, callContext);
 
-            if (additionalInvoiceItemsForPlugin != null && !additionalInvoiceItemsForPlugin.isEmpty()) {
-                final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
-                for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItemsForPlugin) {
-                    final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice.getId(),
-                                                                                                      invoiceItemsByItemId,
-                                                                                                      additionalInvoiceItem,
-                                                                                                      invoicePlugin);
-                    additionalInvoiceItems.add(sanitizedInvoiceItem);
+            if (res != null) {
+                if (res.getAdditionalItems() != null &&
+                    !res.getAdditionalItems().isEmpty()) {
+                    final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
+                    for (final InvoiceItem additionalInvoiceItem : res.getAdditionalItems()) {
+                        final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice.getId(),
+                                                                                                          invoiceItemsByItemId,
+                                                                                                          additionalInvoiceItem,
+                                                                                                          invoicePlugin);
+                        additionalInvoiceItems.add(sanitizedInvoiceItem);
+                    }
+                    invoiceUpdated = updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems) || invoiceUpdated;
                 }
-                invoiceUpdated = updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems) || invoiceUpdated;
+
+                if (res.getAdjustedPluginProperties() != null) {
+                    inputPluginProperties = res.getAdjustedPluginProperties();
+                }
             }
         }
-
-        return invoiceUpdated;
+        return new AdditionalInvoiceItemsResult(invoiceUpdated, inputPluginProperties);
     }
 
     private boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice, final Collection<InvoiceItem> additionalInvoiceItems) {

@@ -42,6 +42,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
+import org.killbill.billing.invoice.plugin.api.AdditionalItemsResult;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
@@ -468,7 +469,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         }
 
         @Override
-        public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
             final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
             for (final TaxInvoiceItem item : taxItems) {
                 final String description;
@@ -504,7 +505,17 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                 item.getItemDetails())
                           );
             }
-            return result;
+            return new AdditionalItemsResult() {
+                @Override
+                public List<InvoiceItem> getAdditionalItems() {
+                    return result;
+                }
+
+                @Override
+                public Iterable<PluginProperty> getAdjustedPluginProperties() {
+                    return null;
+                }
+            };
         }
 
         @Override
