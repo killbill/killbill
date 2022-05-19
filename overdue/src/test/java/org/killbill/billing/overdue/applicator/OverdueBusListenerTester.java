@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import org.killbill.billing.events.OverdueChangeInternalEvent;
 
+// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
 import com.google.common.eventbus.Subscribe;
 
 public class OverdueBusListenerTester {

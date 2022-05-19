@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
@@ -44,8 +46,6 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.mockito.Mockito;
 import org.testng.Assert;
-
-import com.google.inject.Inject;
 
 public class TestOverdueHelper {
 

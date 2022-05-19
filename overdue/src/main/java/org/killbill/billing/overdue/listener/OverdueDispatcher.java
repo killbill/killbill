@@ -18,6 +18,8 @@ package org.killbill.billing.overdue.listener;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.overdue.wrapper.OverdueWrapperFactory;
 import org.killbill.billing.callcontext.InternalCallContext;
-
-import com.google.inject.Inject;
 
 public class OverdueDispatcher {
 
