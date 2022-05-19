@@ -93,6 +93,7 @@ public class TestDefaultOverdueCheckPoster extends OverdueTestSuiteWithEmbeddedD
                                                                                                      overdueQueue,
                                                                                                      OverdueCheckNotificationKey.class,
                                                                                                      internalCallContext);
+            // This will go through all results to close the connection
             return Iterables.toUnmodifiableList(result);
         });
     }
