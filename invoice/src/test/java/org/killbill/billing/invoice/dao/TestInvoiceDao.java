@@ -80,12 +80,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-
 import static org.killbill.billing.invoice.TestInvoiceHelper.FIVE;
 import static org.killbill.billing.invoice.TestInvoiceHelper.TEN;
 import static org.killbill.billing.invoice.TestInvoiceHelper.TWENTY;
@@ -131,9 +125,9 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceForExternalCharge.addInvoiceItem(externalCharge2);
         invoiceDao.createInvoices(Collections.singleton(invoiceForExternalCharge),
                                  null,
-                                 ImmutableSet.<InvoiceTrackingModelDao>of(),
+                                 Collections.emptySet(),
                                  new FutureAccountNotifications(),
-                                 new ExistingInvoiceMetadata(ImmutableList.<Invoice>of()),
+                                 new ExistingInvoiceMetadata(Collections.emptyList()),
                                  false,
                                  context);
 
@@ -160,9 +154,9 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceDao.createInvoices(invoices,
                                   null,
-                                  ImmutableSet.<InvoiceTrackingModelDao>of(),
+                                  Collections.emptySet(),
                                   new FutureAccountNotifications(),
-                                  new ExistingInvoiceMetadata(ImmutableList.<Invoice>of()),
+                                  new ExistingInvoiceMetadata(Collections.emptyList()),
                                   false,
                                   context);
 
@@ -306,7 +300,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCreateRefundOnNonExistingPayment() throws Exception {
         try {
-            invoiceDao.createRefund(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, false, ImmutableMap.<UUID, BigDecimal>of(), null, true, context);
+            invoiceDao.createRefund(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, false, Collections.emptyMap(), null, true, context);
             Assert.fail();
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND.getCode());
@@ -748,7 +742,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
 
-        invoiceDao.createRefund(paymentId, UUID.randomUUID(), refund1, withAdjustment, ImmutableMap.<UUID, BigDecimal>of(), UUID.randomUUID().toString(), true, context);
+        invoiceDao.createRefund(paymentId, UUID.randomUUID(), refund1, withAdjustment, Collections.emptyMap(), UUID.randomUUID().toString(), true, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
         if (withAdjustment) {
             assertEquals(balance.compareTo(BigDecimal.ZERO), 0);
@@ -937,7 +931,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceModelDao invoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false);
         final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(invoiceForExternalCharge.getId(), accountId, bundleId, description, clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD, null));
         invoiceForExternalCharge.addInvoiceItem(externalCharge);
-        final InvoiceItemModelDao charge = invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceForExternalCharge), null, ImmutableSet.of(), null, null, true, context).get(0);
+        final InvoiceItemModelDao charge = invoiceDao.createInvoices(List.of(invoiceForExternalCharge), null, Collections.emptySet(), null, null, true, context).get(0);
 
         InvoiceModelDao newInvoice = invoiceDao.getById(charge.getInvoiceId(), context);
         List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
@@ -974,7 +968,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceModelDao draftInvoiceForExternalCharge = new InvoiceModelDao(accountId, clock.getUTCToday(), clock.getUTCToday(), Currency.USD, false, InvoiceStatus.DRAFT);
         final InvoiceItemModelDao externalCharge = new InvoiceItemModelDao(new ExternalChargeInvoiceItem(draftInvoiceForExternalCharge.getId(), accountId, bundleId, description, clock.getUTCToday(), clock.getUTCToday(), new BigDecimal("15.0"), Currency.USD, null));
         draftInvoiceForExternalCharge.addInvoiceItem(externalCharge);
-        final InvoiceItemModelDao charge = invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(draftInvoiceForExternalCharge), null, ImmutableSet.of(),null, null, true, context).get(0);
+        final InvoiceItemModelDao charge = invoiceDao.createInvoices(List.of(draftInvoiceForExternalCharge), null, Collections.emptySet(), null, null, true, context).get(0);
 
         InvoiceModelDao newInvoice = invoiceDao.getById(charge.getInvoiceId(), context);
         List<InvoiceItemModelDao> items = newInvoice.getInvoiceItems();
@@ -1685,7 +1679,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00, context);
 
         // Refund Payment before we can deleted CBA
-        invoiceDao.createRefund(paymentId, UUID.randomUUID(), new BigDecimal("10.0"), false, ImmutableMap.<UUID, BigDecimal>of(), UUID.randomUUID().toString(), true, context);
+        invoiceDao.createRefund(paymentId, UUID.randomUUID(), new BigDecimal("10.0"), false, Collections.emptyMap(), UUID.randomUUID().toString(), true, context);
 
         // Verify all three invoices were affected
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 0.00);
@@ -1759,7 +1753,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00, context);
         invoiceUtil.verifyInvoice(invoice3.getId(), 0.00, -5.00, context);
 
-        invoiceDao.createRefund(paymentId, UUID.randomUUID(), paymentAmount, false, ImmutableMap.<UUID, BigDecimal>of(), UUID.randomUUID().toString(), true, context);
+        invoiceDao.createRefund(paymentId, UUID.randomUUID(), paymentAmount, false, Collections.emptyMap(), UUID.randomUUID().toString(), true, context);
 
         // Verify all three invoices were affected
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 0.00);
@@ -1835,12 +1829,9 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(res.getInvoiceItems().size(), 2);
         Assert.assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(res).compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(InvoiceModelDaoHelper.getCBAAmount(res).compareTo(BigDecimal.ZERO), 0);
-        final InvoiceItemModelDao cbaAdj = Iterables.tryFind(res.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
-            @Override
-            public boolean apply(final InvoiceItemModelDao input) {
-                return input.getType() == InvoiceItemType.CBA_ADJ && input.getAmount().compareTo(BigDecimal.ZERO) == 0;
-            }
-        }).orNull();
+        final InvoiceItemModelDao cbaAdj = res.getInvoiceItems().stream()
+                .filter(input -> input.getType() == InvoiceItemType.CBA_ADJ && input.getAmount().compareTo(BigDecimal.ZERO) == 0)
+                .findFirst().orElse(null);
         Assert.assertNotNull(cbaAdj);
 
     }
@@ -1899,7 +1890,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                           invoiceModelDao.getCurrency(),
                                                                           null);
         invoiceModelDao.addInvoiceItem(new InvoiceItemModelDao(invoiceItem));
-        return invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), null, ImmutableSet.of(), null, null, true, context).get(0);
+        return invoiceDao.createInvoices(List.of(invoiceModelDao), null, Collections.emptySet(), null, null, true, context).get(0);
     }
 
     @Test(groups = "slow")
@@ -1931,7 +1922,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         InvoiceItem parentInvoiceItem = new ParentInvoiceItem(UUID.randomUUID(), today, parentInvoice.getId(), parentAccountId, childAccountId, BigDecimal.TEN, account.getCurrency(), "");
         parentInvoice.addInvoiceItem(new InvoiceItemModelDao(parentInvoiceItem));
 
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(parentInvoice), null, ImmutableSet.of(), null, null, true, context);
+        invoiceDao.createInvoices(List.of(parentInvoice), null, Collections.emptySet(), null, null, true, context);
 
         final InvoiceModelDao parentDraftInvoice = invoiceDao.getParentDraftInvoice(parentAccountId, context);
 

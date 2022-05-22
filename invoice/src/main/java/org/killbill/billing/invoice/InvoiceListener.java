@@ -58,7 +58,7 @@ import org.killbill.queue.retry.RetryableSubscriber.SubscriberQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// FIXME-1615 : EventBus - Back to this later. AllowConcurrentEvents is easy. Subscribe? I believe I missed some conversation about that.
+// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 

@@ -18,6 +18,7 @@
 
 package org.killbill.billing.overdue;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
@@ -46,7 +47,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 public abstract class OverdueTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEmbeddedDB {

@@ -21,6 +21,7 @@ package org.killbill.billing.overdue.listener;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
@@ -58,9 +59,9 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 
 public class OverdueListener {
 
