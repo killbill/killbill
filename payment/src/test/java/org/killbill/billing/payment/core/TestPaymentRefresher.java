@@ -111,7 +111,7 @@ public class TestPaymentRefresher extends PaymentTestSuiteNoDB {
         return toMock;
     }
 
-    @Test
+    @Test(groups = "fast")
     public void testSearchPayments() throws PaymentApiException, PaymentPluginApiException {
         final boolean withPluginInfo = true;
         final boolean withAttempts = true;
