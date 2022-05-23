@@ -36,6 +36,18 @@ import org.killbill.billing.util.Preconditions;
 public final class Iterables {
 
     /**
+     * <p>Verbatim copy of {@code com.google.common.collect.Iterables#getLast(Iterable)}. Guava's suggestion on javadoc
+     * to use stream's {@code <any_collection>.stream().findFirst()} sometimes not working if {@code findFirst()}
+     * return null.</p>
+     *
+     * <p>Returns the first element in {@code iterable} or {@code defaultValue} if the iterable is empty.
+     * The {@link Iterators} analog to this method is {@link Iterators#getNext}.</p>
+     */
+    public static <T> T getFirst(final Iterable<? extends T> iterable, final T defaultValue) {
+        return Iterators.getNext(iterable.iterator(), defaultValue);
+    }
+
+    /**
      * Verbatim copy of {@code com.google.common.collect.Iterables#getLast(Iterable)}.
      *
      * Returns the last element of {@code iterable}. If {@code iterable} is a {@link List} with {@link RandomAccess}
@@ -94,6 +106,17 @@ public final class Iterables {
      */
     public static <T> List<T> toUnmodifiableList(final Iterable<? extends T> iterable) {
         return toStream(iterable).collect(Collectors.toUnmodifiableList());
+    }
+
+    /**
+     * Convert {@link Iterable} to {@link List}. If any stream operation needed, use {@link #toStream(Iterable)} instead.
+     *
+     * @param iterable to convert
+     * @param <T> iterable element
+     * @return converted iterable as {@link List}
+     */
+    public static <T> List<T> toList(final Iterable<? extends T> iterable) {
+        return toStream(iterable).collect(Collectors.toList());
     }
 
     /**
