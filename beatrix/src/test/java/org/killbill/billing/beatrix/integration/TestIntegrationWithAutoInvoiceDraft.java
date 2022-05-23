@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -143,7 +144,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
 
         try {
             busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), startDate, callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), startDate, Collections.emptyList(), callContext);
             Assert.fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());

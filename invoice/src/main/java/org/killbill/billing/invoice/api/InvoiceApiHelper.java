@@ -37,6 +37,8 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoicePluginDispatcher;
+import org.killbill.billing.invoice.InvoicePluginDispatcher.AdditionalInvoiceItemsResult;
+import org.killbill.billing.invoice.InvoicePluginDispatcher.PriorCallResult;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
@@ -76,7 +78,7 @@ public class InvoiceApiHelper {
     public List<InvoiceItem> dispatchToInvoicePluginsAndInsertItems(final UUID accountId,
                                                                     final boolean isDryRun,
                                                                     final WithAccountLock withAccountLock,
-                                                                    final LinkedList<PluginProperty> properties,
+                                                                    final LinkedList<PluginProperty> inputProperties,
                                                                     final CallContext contextMaybeWithoutAccountId) throws InvoiceApiException {
         // Invoked by User API call
         final LocalDate targetDate = null;
@@ -86,10 +88,15 @@ public class InvoiceApiHelper {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(accountId, contextMaybeWithoutAccountId);
         final CallContext context = internalCallContextFactory.createCallContext(internalCallContext);
 
-        final DateTime rescheduleDate = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, properties, internalCallContext);
-        if (rescheduleDate != null) {
+        // Keep track of properties as they can be updated by plugins at each call
+        Iterable<PluginProperty> pluginProperties = inputProperties;
+
+        final PriorCallResult priorCallResult = invoicePluginDispatcher.priorCall(targetDate, existingInvoices, isDryRun, isRescheduled, context, pluginProperties, internalCallContext);
+        if (priorCallResult.getRescheduleDate() != null) {
             throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, "delayed scheduling is unsupported for API calls");
         }
+
+        pluginProperties = priorCallResult.getPluginProperties();
 
         boolean success = false;
         GlobalLock lock = null;
@@ -102,7 +109,9 @@ public class InvoiceApiHelper {
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
             for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
                 // Call plugin(s)
-                invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, properties, internalCallContext);
+                final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, pluginProperties, internalCallContext);
+                // Could be a bit weird for a plugin to keep updating properties for each invoice
+                pluginProperties = itemsResult.getPluginProperties();
 
                 // Transformation to InvoiceModelDao
                 final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoiceForPlugin);
@@ -128,10 +137,10 @@ public class InvoiceApiHelper {
             if (success) {
                 for (final Invoice invoiceForPlugin : invoicesForPlugins) {
                     final DefaultInvoice refreshedInvoice = new DefaultInvoice(dao.getById(invoiceForPlugin.getId(), internalCallContext));
-                    invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, context, properties, internalCallContext);
+                    invoicePluginDispatcher.onSuccessCall(targetDate, refreshedInvoice, existingInvoices, isDryRun, isRescheduled, context, pluginProperties, internalCallContext);
                 }
             } else {
-                invoicePluginDispatcher.onFailureCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, context, properties, internalCallContext);
+                invoicePluginDispatcher.onFailureCall(targetDate, null, existingInvoices, isDryRun, isRescheduled, context, pluginProperties, internalCallContext);
             }
         }
     }

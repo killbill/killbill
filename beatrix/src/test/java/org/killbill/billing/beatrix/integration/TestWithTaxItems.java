@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,6 +42,7 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
+import org.killbill.billing.invoice.plugin.api.AdditionalItemsResult;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
@@ -235,7 +237,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(UUID.randomUUID(), null, account.getId(), null, "Tax Item", new LocalDate(2012, 4, 1), BigDecimal.ONE, account.getCurrency()));
 
         // Verify dry-run scenario
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2012, 5, 1), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2012, 5, 1), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice,
                                             ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
                                                                                        new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")),
@@ -467,7 +469,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         }
 
         @Override
-        public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
             final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
             for (final TaxInvoiceItem item : taxItems) {
                 final String description;
@@ -503,7 +505,17 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                 item.getItemDetails())
                           );
             }
-            return result;
+            return new AdditionalItemsResult() {
+                @Override
+                public List<InvoiceItem> getAdditionalItems() {
+                    return result;
+                }
+
+                @Override
+                public Iterable<PluginProperty> getAdjustedPluginProperties() {
+                    return null;
+                }
+            };
         }
 
         @Override

@@ -229,7 +229,7 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
 
         // No dry-run and isApiCall=true
         try {
-            dispatcher.processAccount(true, accountId, target, null, false, false, context);
+            dispatcher.processAccount(true, accountId, target, null, false, false, Collections.emptyList(), context);
             Assert.fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.UNEXPECTED_ERROR.getCode());
@@ -254,14 +254,14 @@ public class TestInvoiceDispatcher extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertTrue(emptyInvoices2.isEmpty());
 
         // Dry-run and isApiCall=true: call goes through
-        final List<Invoice> invoices1 = dispatcher.processAccount(true, accountId, target, new DryRunFutureDateArguments(), false, false, context);
+        final List<Invoice> invoices1 = dispatcher.processAccount(true, accountId, target, new DryRunFutureDateArguments(), false, false, Collections.emptyList(), context);
         Assert.assertFalse(invoices1.isEmpty());
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, context).size(), 0);
         // Dry-run: still parked
         Assert.assertEquals(tagUserApi.getTagsForAccount(accountId, false, callContext).size(), 1);
 
         // No dry-run and isApiCall=true: call goes through
-        final List<Invoice> invoice2s = dispatcher.processAccount(true, accountId, target, null, false, false, context);
+        final List<Invoice> invoice2s = dispatcher.processAccount(true, accountId, target, null, false, false, Collections.emptyList(), context);
         Assert.assertFalse(invoice2s.isEmpty());
         Assert.assertEquals(invoiceDao.getInvoicesByAccount(false, context).size(), 1);
         // No dry-run: now unparked

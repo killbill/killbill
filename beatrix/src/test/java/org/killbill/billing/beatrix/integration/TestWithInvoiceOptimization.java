@@ -20,6 +20,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -136,7 +137,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Issue a series of dry-run starting on 2020-04-01
         DateTime nextDate = clock.getUTCNow().plusMonths(1);
         for (int i = 0; i < 5; i++) {
-            final Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+            final Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
             // Filter to eliminate CBA
             final int actualRecurring = Iterables.size(Iterables.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
                 @Override
@@ -349,7 +350,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 5, 1), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 5, 1), Collections.emptyList(), callContext);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 4, 1), new LocalDate(2020, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
@@ -468,7 +469,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
 
         // Bill run on the 2020-02-01 with targetDate end of month (EOM)
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 2, 28), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 2, 28), Collections.emptyList(), callContext);
 
         Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -496,7 +497,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
 
         // Bill run on the 2020-02-01 with targetDate end of month (EOM)
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 3, 31), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 3, 31), Collections.emptyList(), callContext);
 
         invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -810,7 +811,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addDays(16);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -821,7 +822,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
 
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -832,7 +833,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
 
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE,  NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -861,7 +862,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addDays(16);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -871,7 +872,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
 
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -881,7 +882,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
 
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.INVOICE,  NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -951,7 +952,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         Thread.sleep(1000);
 
         // Bill run on the 2021-02-01 with targetDate end of month (EOM)
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), Collections.emptyList(), callContext);
 
         Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -986,7 +987,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         recordUsageData(sub2.getId(), "tracking-2-b", "hours", new LocalDate(2021, 2, 25), BigDecimal.valueOf(1L), callContext);
 
 
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), Collections.emptyList(), callContext);
 
         invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -1015,7 +1016,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addDays(17);
         Thread.sleep(1000);
 
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), Collections.emptyList(), callContext);
 
         invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -1044,7 +1045,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addDays(16);
         Thread.sleep(1000);
 
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 5, 31), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 5, 31), Collections.emptyList(), callContext);
 
         invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -1099,7 +1100,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
 
         // Bill run on the 2020-02-01 with targetDate end of month (EOM)
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 2, 28), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 2, 28), Collections.emptyList(), callContext);
 
         Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -1127,7 +1128,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
 
         // Bill run on the 2020-03-01 with targetDate end of month (EOM)
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 3, 31), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 3, 31), Collections.emptyList(), callContext);
 
         invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -1150,7 +1151,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // We verify that with invoice optimization ON, only the last invoice will be 'seen' and although it contains a 'dangling' REPAIR_ADJ
         // this is correctly handled by the system -- InvoicePruner correctly discards such item prior we enter the tree.
         //
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 4, 30), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 4, 30), Collections.emptyList(), callContext);
 
         invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -1170,7 +1171,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addMonths(1);
 
         // Bill run on the 2020-03-01 with targetDate end of month (EOM)
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 5, 31), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 5, 31), Collections.emptyList(), callContext);
 
         invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
             @Override
@@ -1192,10 +1193,10 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
     private void checkNothingToInvoice(final UUID accountId, final LocalDate targetDate, final boolean isDryRun) {
         try {
             if (isDryRun) {
-                invoiceUserApi.triggerDryRunInvoiceGeneration(accountId, targetDate, new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+                invoiceUserApi.triggerDryRunInvoiceGeneration(accountId, targetDate, new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
             } else {
                 busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
-                invoiceUserApi.triggerInvoiceGeneration(accountId, targetDate, callContext);
+                invoiceUserApi.triggerInvoiceGeneration(accountId, targetDate, Collections.emptyList(), callContext);
             }
             Assert.fail("Should not generate any invoice");
         } catch (final InvoiceApiException e) {

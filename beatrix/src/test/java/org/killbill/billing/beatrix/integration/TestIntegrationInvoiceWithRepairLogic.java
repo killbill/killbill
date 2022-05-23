@@ -1139,7 +1139,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // __PARK__ account
         busHandler.pushExpectedEvents(NextEvent.TAG);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
             fail("Should not have generated an extra invoice");
         } catch (final InvoiceApiException e) { assertListenerStatus();
             assertTrue(e.getCause().getMessage().startsWith("Too many repairs for invoiceItemId"));
@@ -1208,7 +1208,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // __PARK__ account
         busHandler.pushExpectedEvents(NextEvent.TAG);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
             fail("Should not have generated an extra invoice");
         } catch (final InvoiceApiException e) { assertListenerStatus();
             assertTrue(e.getCause().getMessage().startsWith("Too many repairs for invoiceItemId"));

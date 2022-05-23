@@ -18,7 +18,9 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,6 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
@@ -56,6 +59,7 @@ import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.notification.DefaultNextBillingDateNotifier;
+import org.killbill.billing.invoice.plugin.api.AdditionalItemsResult;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroup;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
@@ -147,6 +151,22 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         }
     };
 
+    private static Function<Invoice, InvoiceGroupingResult> NullInvoiceGroupingResult = new Function<Invoice, InvoiceGroupingResult>() {
+        @Override
+        public InvoiceGroupingResult apply(final Invoice invoice) {
+            return null;
+        }
+    };
+
+
+    private static Function<Iterable<PluginProperty>, Boolean> NoCheckPluginProperties = new Function<Iterable<PluginProperty>, Boolean>() {
+        @Override
+        public Boolean apply(final Iterable<PluginProperty> pluginProperties) {
+            return Boolean.TRUE;
+        }
+    };
+
+
     @BeforeMethod(groups = "slow")
     public void setUp() throws Exception {
         if (hasFailed()) {
@@ -162,6 +182,8 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         testInvoicePluginApi.onSuccessInvocationCalls = 0;
         testInvoicePluginApi.taxItems = NoTaxItems;
         testInvoicePluginApi.grpResult = NullInvoiceGroupingResult;
+        testInvoicePluginApi.checkPluginProperties = NoCheckPluginProperties;
+
     }
 
     @Test(groups = "slow")
@@ -411,7 +433,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         // Trigger a manual invoice run
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
@@ -501,7 +523,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2017, 8, 18), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2017, 9, 25), BigDecimal.valueOf(100L), callContext);
 
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2018, 8, 15), new TestDryRunArguments(DryRunType.TARGET_DATE), callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2018, 8, 15), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
         assertEquals(dryRunInvoice.getInvoiceItems().size(), 16);
 
     }
@@ -600,7 +622,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         testInvoicePluginApi.rescheduleDate = new DateTime(clock.getUTCNow()).plusDays(30);
 
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
             Assert.fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
@@ -624,7 +646,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // Reschedule next invoice one month in the future
         testInvoicePluginApi.rescheduleDate = clock.getUTCNow().plusMonths(1);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), Collections.emptyList(), callContext);
             Assert.fail();
         } catch (final InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());
@@ -779,6 +801,85 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 4);
     }
 
+
+    @Test(groups = "slow")
+    public void testValidatePluginProperties() throws Exception {
+
+
+        // We take april as it has 30 days (easier to play with BCD)
+        // Set clock to the initial start date - we implicitly assume here that the account timezone is UTC
+        clock.setDay(new LocalDate(2012, 4, 1));
+
+        final AccountData accountData = getAccountData(1);
+        final Account account = createAccountWithNonOsgiPaymentMethod(accountData);
+        accountChecker.checkAccount(account.getId(), accountData, callContext);
+
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 0);
+
+        // Create original subscription (Trial PHASE) -> $0 invoice
+        final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
+        subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
+
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
+
+        // Abort invoice runs
+        testInvoicePluginApi.isAborted = true;
+
+        // Move to Evergreen PHASE
+        busHandler.pushExpectedEvents(NextEvent.PHASE);
+        clock.addDays(30);
+        assertListenerStatus();
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
+
+        // No notification, so by default, the account will not be re-invoiced
+        clock.addMonths(1);
+        assertListenerStatus();
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
+
+        // No notification, so by default, the account will not be re-invoiced
+        clock.addMonths(1);
+        assertListenerStatus();
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
+
+        // Re-enable invoicing
+        testInvoicePluginApi.isAborted = false;
+
+        final List<PluginProperty> expectedProperties = new ArrayList<>();
+        expectedProperties.add(new PluginProperty("tree", "leaf", true));
+        expectedProperties.add(new PluginProperty("shirt", "button", true));
+        expectedProperties.add(new PluginProperty("soccer", "ball", true));
+        testInvoicePluginApi.checkPluginProperties = new Function<Iterable<PluginProperty>, Boolean>() {
+            @Override
+            public Boolean apply(final Iterable<PluginProperty> pluginProperties) {
+                final BigInteger found = StreamSupport.stream(pluginProperties.spliterator(), false)
+                             .filter(p -> expectedProperties.contains(p))
+                             .map(p -> BigInteger.ONE)
+                             .reduce(BigInteger.ZERO, BigInteger::add);
+                return found.intValue() == expectedProperties.size();
+            }
+        };
+
+        // Trigger a manual invoice run
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), clock.getUTCToday(), expectedProperties, callContext);
+        assertListenerStatus();
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 3);
+
+    }
+
     @Test(groups = "slow")
     public void testInvoiceGrouping() throws Exception {
 
@@ -902,6 +1003,11 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             return invoiceGroups;
         }
 
+        @Override
+        public Iterable<PluginProperty> getAdjustedPluginProperties() {
+            return null;
+        }
+
         private static class TestInvoiceGroup implements InvoiceGroup {
 
             private final List<UUID> invoiceItemIds;
@@ -961,13 +1067,6 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         return ImmutableList.<NotificationEventWithMetadata>copyOf(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
     }
 
-    private static Function<Invoice, InvoiceGroupingResult> NullInvoiceGroupingResult = new Function<Invoice, InvoiceGroupingResult>() {
-        @Override
-        public InvoiceGroupingResult apply(final Invoice invoice) {
-            return null;
-        }
-    };
-
     public class TestInvoicePluginApi implements InvoicePluginApi {
 
         boolean shouldThrowException = false;
@@ -982,11 +1081,21 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Function<Invoice, List<InvoiceItem>> taxItems = NoTaxItems;
         Function<Invoice, InvoiceGroupingResult> grpResult = NullInvoiceGroupingResult;
 
+        Function<Iterable<PluginProperty>, Boolean> checkPluginProperties = NoCheckPluginProperties;
+
         @Override
-        public PriorInvoiceResult priorCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+        public PriorInvoiceResult priorCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> pluginProperties) {
             priorCallInvocationCalls++;
+
+            assertTrue(checkPluginProperties.apply(pluginProperties));
+
             wasRescheduled = invoiceContext.isRescheduled();
             return new PriorInvoiceResult() {
+
+                @Override
+                public Iterable<PluginProperty> getAdjustedPluginProperties() {
+                    return pluginProperties;
+                }
 
                 @Override
                 public boolean isAborted() {
@@ -1001,7 +1110,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+
+            assertTrue(checkPluginProperties.apply(pluginProperties));
 
             if (isDryRun) {
                 assertEquals(Iterables.size(pluginProperties), 2);
@@ -1022,12 +1133,13 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 assertTrue(p2.isPresent());
             }
 
+            final List<InvoiceItem> res;
             if (shouldThrowException) {
                 throw new InvoicePluginApiRetryException();
             } else if (additionalInvoiceItem != null) {
-                return ImmutableList.<InvoiceItem>of(additionalInvoiceItem);
+                res = ImmutableList.<InvoiceItem>of(additionalInvoiceItem);
             } else if (taxItems.apply(invoice) != null) {
-                return taxItems.apply(invoice);
+                res = taxItems.apply(invoice);
             } else if (shouldUpdateDescription) {
                 final List<InvoiceItem> updatedInvoiceItems = new LinkedList<InvoiceItem>();
                 for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
@@ -1035,25 +1147,42 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                     Mockito.when(updatedInvoiceItem.getDescription()).thenReturn(String.format("[plugin] %s", invoiceItem.getId()));
                     updatedInvoiceItems.add(updatedInvoiceItem);
                 }
-                return updatedInvoiceItems;
+                res = updatedInvoiceItems;
             } else {
-                return ImmutableList.<InvoiceItem>of();
+                res = ImmutableList.<InvoiceItem>of();
             }
+            return new AdditionalItemsResult() {
+                @Override
+                public List<InvoiceItem> getAdditionalItems() {
+                    return res;
+                }
+
+                @Override
+                public Iterable<PluginProperty> getAdjustedPluginProperties() {
+                    return null;
+                }
+            };
         }
 
         @Override
-        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> properties, final CallContext context) {
+        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> pluginProperties, final CallContext context) {
+            assertTrue(checkPluginProperties.apply(pluginProperties));
+
             return grpResult.apply(invoice);
         }
 
         @Override
-        public OnSuccessInvoiceResult onSuccessCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+        public OnSuccessInvoiceResult onSuccessCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> pluginProperties) {
             onSuccessInvocationCalls++;
+            assertTrue(checkPluginProperties.apply(pluginProperties));
+
             return null;
         }
 
         @Override
-        public OnFailureInvoiceResult onFailureCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> iterable) {
+        public OnFailureInvoiceResult onFailureCall(final InvoiceContext invoiceContext, final Iterable<PluginProperty> pluginProperties) {
+            assertTrue(checkPluginProperties.apply(pluginProperties));
+
             return null;
         }
     }

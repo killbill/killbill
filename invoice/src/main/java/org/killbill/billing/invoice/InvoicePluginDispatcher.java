@@ -55,10 +55,13 @@ import org.killbill.billing.invoice.model.InvoiceItemCatalogBase;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
+import org.killbill.billing.invoice.plugin.api.AdditionalItemsResult;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroup;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
+import org.killbill.billing.invoice.plugin.api.OnFailureInvoiceResult;
+import org.killbill.billing.invoice.plugin.api.OnSuccessInvoiceResult;
 import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -88,25 +91,45 @@ public class InvoicePluginDispatcher {
         this.invoiceConfig = invoiceConfig;
     }
 
-    public DateTime priorCall(final LocalDate targetDate,
+    public static final class PriorCallResult {
+
+        private final DateTime rescheduleDate;
+        private final Iterable<PluginProperty> pluginProperties;
+
+        public PriorCallResult(final DateTime rescheduleDate, final Iterable<PluginProperty> pluginProperties) {
+            this.rescheduleDate = rescheduleDate;
+            this.pluginProperties = pluginProperties;
+        }
+
+        public DateTime getRescheduleDate() {
+            return rescheduleDate;
+        }
+
+        public Iterable<PluginProperty> getPluginProperties() {
+            return pluginProperties;
+        }
+    }
+
+    public PriorCallResult priorCall(final LocalDate targetDate,
                               final List<Invoice> existingInvoices,
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
-                              // The pluginProperties list passed to plugins is mutable by the plugins
-                              @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                              final Iterable<PluginProperty> pluginProperties,
                               final InternalTenantContext internalTenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins priorCall: targetDate='{}', isDryRun='{}', isRescheduled='{}'", targetDate, isDryRun, isRescheduled);
+
+        Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         final Map<String, InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext);
         if (invoicePlugins.isEmpty()) {
-            return null;
+            return new PriorCallResult(null, inputPluginProperties);
         }
 
         DateTime earliestRescheduleDate = null;
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, null, existingInvoices, isDryRun, isRescheduled, callContext);
         for (final Entry<String, InvoicePluginApi> entry : invoicePlugins.entrySet()) {
             final String invoicePluginName = entry.getKey();
-            final PriorInvoiceResult priorInvoiceResult = entry.getValue().priorCall(invoiceContext, properties);
+            final PriorInvoiceResult priorInvoiceResult = entry.getValue().priorCall(invoiceContext, inputPluginProperties);
             log.debug("Invoice plugin {} returned priorInvoiceResult='{}'", invoicePluginName, priorInvoiceResult);
             if (priorInvoiceResult == null) {
                 // Naughty plugin...
@@ -123,9 +146,13 @@ public class InvoicePluginDispatcher {
                 log.info("Invoice plugin {} aborted invoice generation for targetDate {}", invoicePluginName, targetDate);
                 throw new InvoiceApiException(ErrorCode.INVOICE_PLUGIN_API_ABORTED, invoicePluginName);
             }
+
+            if (priorInvoiceResult.getAdjustedPluginProperties() != null) {
+                inputPluginProperties = priorInvoiceResult.getAdjustedPluginProperties();
+            }
         }
 
-        return earliestRescheduleDate;
+        return new PriorCallResult(earliestRescheduleDate, inputPluginProperties);
     }
 
     public void onSuccessCall(final LocalDate targetDate,
@@ -134,7 +161,7 @@ public class InvoicePluginDispatcher {
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
-                              final LinkedList<PluginProperty> properties,
+                              final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
         log.debug("Invoking invoice plugins onSuccessCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
         onCompletionCall(true, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
@@ -146,7 +173,7 @@ public class InvoicePluginDispatcher {
                               final boolean isDryRun,
                               final boolean isRescheduled,
                               final CallContext callContext,
-                              final LinkedList<PluginProperty> properties,
+                              final Iterable<PluginProperty> properties,
                               final InternalTenantContext internalTenantContext) {
         log.debug("Invoking invoice plugins onFailureCall: targetDate='{}', isDryRun='{}', isRescheduled='{}', invoice='{}'", targetDate, isDryRun, isRescheduled, invoice);
         onCompletionCall(false, targetDate, invoice, existingInvoices, isDryRun, isRescheduled, callContext, properties, internalTenantContext);
@@ -159,8 +186,7 @@ public class InvoicePluginDispatcher {
                                   final boolean isDryRun,
                                   final boolean isRescheduled,
                                   final CallContext callContext,
-                                  // The pluginProperties list passed to plugins is mutable by the plugins
-                                  @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                  final Iterable<PluginProperty> pluginProperties,
                                   final InternalTenantContext internalTenantContext) {
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(internalTenantContext).values();
         if (invoicePlugins.isEmpty()) {
@@ -171,74 +197,127 @@ public class InvoicePluginDispatcher {
         final Invoice clonedInvoice = originalInvoice == null ? null : (Invoice) originalInvoice.clone();
         final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, clonedInvoice, existingInvoices, isDryRun, isRescheduled, callContext);
 
+        Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             if (isSuccess) {
-                invoicePlugin.onSuccessCall(invoiceContext, properties);
+                final OnSuccessInvoiceResult res1 = invoicePlugin.onSuccessCall(invoiceContext, inputPluginProperties);
+                if (res1 != null && res1.getAdjustedPluginProperties() != null) {
+                    inputPluginProperties = res1.getAdjustedPluginProperties();
+                }
             } else {
-                invoicePlugin.onFailureCall(invoiceContext, properties);
+                final OnFailureInvoiceResult res2 = invoicePlugin.onFailureCall(invoiceContext, inputPluginProperties);
+                if (res2 != null && res2.getAdjustedPluginProperties() != null) {
+                    inputPluginProperties = res2.getAdjustedPluginProperties();
+                }
             }
         }
     }
 
-    public List<DefaultInvoice> splitInvoices(final DefaultInvoice originalInvoice,
+    public static class SplitInvoiceResult {
+
+        private final List<DefaultInvoice> invoices;
+        final Iterable<PluginProperty> pluginProperties;
+
+        public SplitInvoiceResult(final List<DefaultInvoice> invoices, final Iterable<PluginProperty> pluginProperties) {
+            this.invoices = invoices;
+            this.pluginProperties = pluginProperties;
+        }
+
+        public List<DefaultInvoice> getInvoices() {
+            return invoices;
+        }
+
+        public Iterable<PluginProperty> getPluginProperties() {
+            return pluginProperties;
+        }
+    }
+
+    public SplitInvoiceResult splitInvoices(final DefaultInvoice originalInvoice,
                                               final boolean isDryRun,
                                               final CallContext callContext,
-                                              // The pluginProperties list passed to plugins is mutable by the plugins
-                                              @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                              final Iterable<PluginProperty> pluginProperties,
                                               final InternalTenantContext tenantContext) {
         log.debug("Invoking invoice plugins for splitInvoices operation: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
+        Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
-            final InvoiceGroupingResult grpResult = invoicePlugin.getInvoiceGrouping(clonedInvoice, isDryRun, properties, callContext);
-            if (grpResult != null && grpResult.getInvoiceGroups() != null && grpResult.getInvoiceGroups().size() > 0) {
+            final InvoiceGroupingResult grpResult = invoicePlugin.getInvoiceGrouping(clonedInvoice, isDryRun, inputPluginProperties, callContext);
+            if (grpResult !=  null) {
 
-                final List<DefaultInvoice> result = new ArrayList<>();
-                final Map<UUID, InvoiceItem> itemMap = originalInvoice.getInvoiceItems()
-                                                                      .stream()
-                                                                      .map(new Function<InvoiceItem, SimpleEntry<UUID, InvoiceItem>>() {
-                                                                          @Override
-                                                                          public SimpleEntry<UUID, InvoiceItem> apply(final InvoiceItem invoiceItem) {
-                                                                              return new SimpleEntry<>(invoiceItem.getId(), invoiceItem);
-                                                                          }
-                                                                      }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-                final List<InvoiceGroup> groups = grpResult.getInvoiceGroups();
-                for (final InvoiceGroup grp : groups) {
-                    final DefaultInvoice grpInvoice = new DefaultInvoice(UUIDs.randomUUID(),
-                                                                         originalInvoice.getAccountId(),
-                                                                         null,
-                                                                         originalInvoice.getInvoiceDate(),
-                                                                         originalInvoice.getTargetDate(),
-                                                                         originalInvoice.getCurrency(),
-                                                                         originalInvoice.isMigrationInvoice(),
-                                                                         originalInvoice.getStatus());
-                    for (final UUID itemId : grp.getInvoiceItemIds()) {
-                        final InvoiceItem item = itemMap.get(itemId);
-                        final DefaultInvoiceItem.Builder tmp = new Builder().source(item);
-                        tmp.withInvoiceId(grpInvoice.getId());
-                        grpInvoice.addInvoiceItem(tmp.build());
-                    }
-                    result.add(grpInvoice);
+                if (grpResult.getAdjustedPluginProperties() != null) {
+                    inputPluginProperties = grpResult.getAdjustedPluginProperties();
                 }
-                return result;
+
+                if (grpResult.getInvoiceGroups() != null && grpResult.getInvoiceGroups().size() > 0) {
+
+                    final List<DefaultInvoice> result = new ArrayList<>();
+                    final Map<UUID, InvoiceItem> itemMap = originalInvoice.getInvoiceItems()
+                                                                          .stream()
+                                                                          .map(new Function<InvoiceItem, SimpleEntry<UUID, InvoiceItem>>() {
+                                                                              @Override
+                                                                              public SimpleEntry<UUID, InvoiceItem> apply(final InvoiceItem invoiceItem) {
+                                                                                  return new SimpleEntry<>(invoiceItem.getId(), invoiceItem);
+                                                                              }
+                                                                          }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+                    final List<InvoiceGroup> groups = grpResult.getInvoiceGroups();
+                    for (final InvoiceGroup grp : groups) {
+                        final DefaultInvoice grpInvoice = new DefaultInvoice(UUIDs.randomUUID(),
+                                                                             originalInvoice.getAccountId(),
+                                                                             null,
+                                                                             originalInvoice.getInvoiceDate(),
+                                                                             originalInvoice.getTargetDate(),
+                                                                             originalInvoice.getCurrency(),
+                                                                             originalInvoice.isMigrationInvoice(),
+                                                                             originalInvoice.getStatus());
+                        for (final UUID itemId : grp.getInvoiceItemIds()) {
+                            final InvoiceItem item = itemMap.get(itemId);
+                            final DefaultInvoiceItem.Builder tmp = new Builder().source(item);
+                            tmp.withInvoiceId(grpInvoice.getId());
+                            grpInvoice.addInvoiceItem(tmp.build());
+                        }
+                        result.add(grpInvoice);
+                    }
+                    return new SplitInvoiceResult(result, inputPluginProperties);
+                }
+
             }
+
         }
-        return Collections.singletonList(originalInvoice);
+        return new SplitInvoiceResult(Collections.singletonList(originalInvoice), inputPluginProperties);
     }
 
-    public boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
+    public static final class AdditionalInvoiceItemsResult {
+
+        private final boolean invoiceUpdated;
+        private final Iterable<PluginProperty> pluginProperties;
+
+        public AdditionalInvoiceItemsResult(final boolean invoiceUpdated, final Iterable<PluginProperty> pluginProperties) {
+            this.invoiceUpdated = invoiceUpdated;
+            this.pluginProperties = pluginProperties;
+        }
+
+        public boolean isInvoiceUpdated() {
+            return invoiceUpdated;
+        }
+
+        public Iterable<PluginProperty> getPluginProperties() {
+            return pluginProperties;
+        }
+    }
+
+    public AdditionalInvoiceItemsResult updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
                                                                final boolean isDryRun,
                                                                final CallContext callContext,
-                                                               // The pluginProperties list passed to plugins is mutable by the plugins
-                                                               @SuppressWarnings("TypeMayBeWeakened") final LinkedList<PluginProperty> properties,
+                                                               final Iterable<PluginProperty> pluginProperties,
                                                                final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         if (invoicePlugins.isEmpty()) {
-            return false;
+            return new AdditionalInvoiceItemsResult(false, pluginProperties);
         }
 
         // Look-up map for performance
@@ -247,26 +326,33 @@ public class InvoicePluginDispatcher {
             invoiceItemsByItemId.put(invoiceItem.getId(), invoiceItem);
         }
 
+        Iterable<PluginProperty> inputPluginProperties = pluginProperties;
         boolean invoiceUpdated = false;
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             // We clone the original invoice so plugins don't remove/add items
             final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
-            final List<InvoiceItem> additionalInvoiceItemsForPlugin = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, properties, callContext);
+            final AdditionalItemsResult res = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, inputPluginProperties, callContext);
 
-            if (additionalInvoiceItemsForPlugin != null && !additionalInvoiceItemsForPlugin.isEmpty()) {
-                final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
-                for (final InvoiceItem additionalInvoiceItem : additionalInvoiceItemsForPlugin) {
-                    final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice.getId(),
-                                                                                                      invoiceItemsByItemId,
-                                                                                                      additionalInvoiceItem,
-                                                                                                      invoicePlugin);
-                    additionalInvoiceItems.add(sanitizedInvoiceItem);
+            if (res != null) {
+                if (res.getAdditionalItems() != null &&
+                    !res.getAdditionalItems().isEmpty()) {
+                    final Collection<InvoiceItem> additionalInvoiceItems = new LinkedList<InvoiceItem>();
+                    for (final InvoiceItem additionalInvoiceItem : res.getAdditionalItems()) {
+                        final InvoiceItem sanitizedInvoiceItem = validateAndSanitizeInvoiceItemFromPlugin(originalInvoice.getId(),
+                                                                                                          invoiceItemsByItemId,
+                                                                                                          additionalInvoiceItem,
+                                                                                                          invoicePlugin);
+                        additionalInvoiceItems.add(sanitizedInvoiceItem);
+                    }
+                    invoiceUpdated = updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems) || invoiceUpdated;
                 }
-                invoiceUpdated = updateOriginalInvoiceWithPluginInvoiceItems(originalInvoice, additionalInvoiceItems) || invoiceUpdated;
+
+                if (res.getAdjustedPluginProperties() != null) {
+                    inputPluginProperties = res.getAdjustedPluginProperties();
+                }
             }
         }
-
-        return invoiceUpdated;
+        return new AdditionalInvoiceItemsResult(invoiceUpdated, inputPluginProperties);
     }
 
     private boolean updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice, final Collection<InvoiceItem> additionalInvoiceItems) {

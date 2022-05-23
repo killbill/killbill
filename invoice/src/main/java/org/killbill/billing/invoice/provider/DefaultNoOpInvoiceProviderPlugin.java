@@ -24,6 +24,7 @@ import javax.inject.Inject;
 
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.plugin.api.AdditionalItemsResult;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
 import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
 import org.killbill.billing.invoice.plugin.api.NoOpInvoicePluginApi;
@@ -45,8 +46,8 @@ public class DefaultNoOpInvoiceProviderPlugin implements NoOpInvoicePluginApi {
     }
 
     @Override
-    public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> properties, final CallContext context) {
-        return Collections.emptyList();
+    public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> properties, final CallContext context) {
+        return null;
     }
 
     @Override
