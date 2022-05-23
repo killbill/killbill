@@ -78,6 +78,11 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
+    public InvoiceStatus getInvoiceStatus(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
+        return dao.getInvoiceStatus(invoiceId, context);
+    }
+
+    @Override
     public Invoice getInvoiceById(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
         return getInvoiceByIdInternal(invoiceId, context);
     }

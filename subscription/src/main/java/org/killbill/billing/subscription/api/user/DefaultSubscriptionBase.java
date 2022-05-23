@@ -846,27 +846,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         this.events = inputEvents;
 
-
-        Collections.sort(inputEvents, new Comparator<SubscriptionBaseEvent>() {
-            @Override
-            public int compare(final SubscriptionBaseEvent o1, final SubscriptionBaseEvent o2) {
-                final int res = o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-                if (res != 0) {
-                    return res;
-                }
-
-                // In-memory events have a total order of 0, make sure they are after on disk event
-                if (o1.getTotalOrdering() == 0 && o2.getTotalOrdering() > 0) {
-                    return 1;
-                } else if (o1.getTotalOrdering() > 0 && o2.getTotalOrdering() == 0) {
-                    return -1;
-                } else if (o1.getTotalOrdering() == o2.getTotalOrdering()) {
-                    return 0;
-                } else {
-                    return o1.getTotalOrdering() < (o2.getTotalOrdering()) ? -1 : 1;
-                }
-            }
-        });
+        Collections.sort(inputEvents);
 
         removeEverythingPastCancelEvent(events);
 

@@ -324,14 +324,16 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
     private PriorPaymentControlResult getPluginPurchaseResult(final PaymentControlContext paymentControlPluginContext, final Iterable<PluginProperty> pluginProperties, final InternalCallContext internalContext) throws PaymentControlApiException {
         try {
             final UUID invoiceId = getInvoiceId(pluginProperties);
-            final Invoice invoice = getAndSanitizeInvoice(invoiceId, paymentControlPluginContext.getAttemptPaymentId(), internalContext);
 
-            if (!InvoiceStatus.COMMITTED.equals(invoice.getStatus())) {
+            // Optimize case where we have a Draft invoice to avoid pulling the whole thing.
+            final InvoiceStatus status = invoiceApi.getInvoiceStatus(invoiceId, internalContext);
+            if (!InvoiceStatus.COMMITTED.equals(status)) {
                 // abort payment if the invoice status is not COMMITTED
-                log.info("Aborting payment: invoiceId='{}' is NOT COMMITTED", invoice.getId());
+                log.info("Aborting payment: invoiceId='{}' is NOT COMMITTED", invoiceId);
                 return new DefaultPriorPaymentControlResult(true);
             }
 
+            final Invoice invoice = getAndSanitizeInvoice(invoiceId, paymentControlPluginContext.getAttemptPaymentId(), internalContext);
             // Get account and check if it is child and payment is delegated to parent => abort
             final AccountData accountData = accountApi.getAccountById(invoice.getAccountId(), internalContext);
             if (((accountData != null) && (accountData.getParentAccountId() != null) && accountData.isPaymentDelegatedToParent()) || // Valid when we initially create the child invoice (even if parent invoice does not exist yet)
