@@ -22,11 +22,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -56,6 +59,7 @@ import org.killbill.billing.payment.provider.DefaultNoOpPaymentMethodPlugin;
 import org.killbill.billing.payment.provider.DefaultPaymentMethodInfoPlugin;
 import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.Joiner;
 import org.killbill.billing.util.PluginProperties;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -71,15 +75,8 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// FIXME-1615 : DefaultPaginationHelper
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.payment.dispatcher.PaymentPluginDispatcher.dispatchWithExceptionHandling;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
@@ -161,12 +158,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                                                                         private void validateUniqueExternalPaymentMethod(final UUID accountId, final String pluginName) throws PaymentApiException {
                                                                                                             if (ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(pluginName)) {
                                                                                                                 final List<PaymentMethodModelDao> accountPaymentMethods = paymentDao.getPaymentMethods(context);
-                                                                                                                if (Iterables.any(accountPaymentMethods, new Predicate<PaymentMethodModelDao>() {
-                                                                                                                    @Override
-                                                                                                                    public boolean apply(final PaymentMethodModelDao input) {
-                                                                                                                        return ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(input.getPluginName());
-                                                                                                                    }
-                                                                                                                })) {
+                                                                                                                if (accountPaymentMethods.stream().anyMatch(input -> ExternalPaymentProviderPlugin.PLUGIN_NAME.equals(input.getPluginName()))) {
                                                                                                                     throw new PaymentApiException(ErrorCode.PAYMENT_EXTERNAL_PAYMENT_METHOD_ALREADY_EXISTS, accountId);
                                                                                                                 }
                                                                                                             }
@@ -443,7 +435,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                           );
             } catch (final PaymentApiException e) {
                 log.warn("Unable to search through payment methods", e);
-                return new DefaultPagination<PaymentMethod>(offset, limit, null, null, ImmutableSet.<PaymentMethod>of().iterator());
+                return new DefaultPagination<PaymentMethod>(offset, limit, null, null, Collections.emptyIterator());
             }
         }
     }
@@ -560,7 +552,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (final Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
         }
     }
 
@@ -591,7 +583,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                 }
             });
         } catch (final Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
         }
     }
 
@@ -615,7 +607,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
             // The method should never return null by convention, but let's not trust the plugin...
             if (pluginPms == null) {
                 log.debug("No payment methods defined on the account {} for plugin {}", account.getId(), pluginName);
-                return ImmutableList.<PaymentMethod>of();
+                return Collections.emptyList();
             }
         } catch (final PaymentPluginApiException e) {
             throw new PaymentApiException(e, ErrorCode.PAYMENT_REFRESH_PAYMENT_METHOD, account.getId(), e.getErrorMessage());
@@ -663,18 +655,15 @@ public class PaymentMethodProcessor extends ProcessorBase {
                     } catch (final AccountApiException e) {
                         throw new PaymentApiException(e);
                     }
-                    final List<PaymentMethod> result = ImmutableList.<PaymentMethod>copyOf(Collections2.transform(refreshedPaymentMethods, new Function<PaymentMethodModelDao, PaymentMethod>() {
-                        @Override
-                        public PaymentMethod apply(final PaymentMethodModelDao input) {
-                            return new DefaultPaymentMethod(input, null);
-                        }
-                    }));
+                    final List<PaymentMethod> result = refreshedPaymentMethods.stream()
+                            .map(input -> new DefaultPaymentMethod(input, null))
+                            .collect(Collectors.toUnmodifiableList());
                     return PluginDispatcher.createPluginDispatcherReturnType(result);
                 }
             });
             return result.getReturnType();
         } catch (final Exception e) {
-            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
         }
     }
 

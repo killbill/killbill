@@ -37,6 +37,7 @@ import org.killbill.billing.payment.dao.PaymentMethodModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -112,7 +113,8 @@ public abstract class ProcessorBase {
         return paymentPluginServiceRegistration.getAvailablePlugins();
     }
 
-    protected PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {
+    @VisibleForTesting
+    PaymentPluginApi getPaymentPluginApi(final String pluginName) throws PaymentApiException {
         return paymentPluginServiceRegistration.getPaymentPluginApi(pluginName);
     }
 

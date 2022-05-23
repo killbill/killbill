@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -46,8 +47,6 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
-
-import com.google.common.base.MoreObjects;
 
 import static org.killbill.billing.payment.dispatcher.PaymentPluginDispatcher.dispatchWithExceptionHandling;
 
@@ -119,7 +118,7 @@ public class PaymentGatewayProcessor extends ProcessorBase {
                                                              final HostedPaymentPageFormDescriptor result = plugin.buildFormDescriptor(account.getId(), customFields, properties, callContext);
                                                              return PluginDispatcher.createPluginDispatcherReturnType(result == null ? new DefaultNoOpHostedPaymentPageFormDescriptor(account.getId()) : result);
                                                          } catch (final RuntimeException e) {
-                                                             throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+                                                             throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
                                                          } catch (final PaymentPluginApiException e) {
                                                              throw new PaymentApiException(e, ErrorCode.PAYMENT_PLUGIN_EXCEPTION, e.getErrorMessage());
                                                          }
