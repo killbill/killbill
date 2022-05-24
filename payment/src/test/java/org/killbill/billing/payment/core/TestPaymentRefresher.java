@@ -27,7 +27,10 @@ import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.DefaultPayment;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
+import org.killbill.billing.payment.api.PaymentAttempt;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
@@ -40,16 +43,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestPaymentRefresher extends PaymentTestSuiteNoDB {
-
-    private static final Payment ANY_PAYMENT = new DefaultPayment(UUIDs.randomUUID(),
-                                                                  DateTime.now(),
-                                                                  DateTime.now(),
-                                                                  UUIDs.randomUUID(),
-                                                                  UUIDs.randomUUID(),
-                                                                  1,
-                                                                  "ext-key",
-                                                                  Collections.emptyList(),
-                                                                  Collections.emptyList());
 
     private static final String SEARCH_KEY = "any";
     private static final Long OFFSET = 1L;
@@ -79,6 +72,16 @@ public class TestPaymentRefresher extends PaymentTestSuiteNoDB {
         return new DefaultPagination<>(LIMIT, infoPlugins.iterator());
     }
 
+    private Payment anyPayment() {
+        final UUID uuid = UUIDs.randomUUID();
+        final DateTime now = DateTime.now();
+        final PaymentTransaction paymentTransaction = Mockito.mock(PaymentTransaction.class);
+        Mockito.when(paymentTransaction.getTransactionType()).thenReturn(TransactionType.AUTHORIZE);
+        final PaymentAttempt paymentAttempt = Mockito.mock(PaymentAttempt.class);
+
+        return new DefaultPayment(uuid, now, now, uuid, uuid, 1, "ext-key", List.of(paymentTransaction), List.of(paymentAttempt));
+    }
+
     private PaymentPluginApi createPaymentPluginApi(final Pagination<PaymentTransactionInfoPlugin> infoPlugins) throws PaymentPluginApiException {
         final PaymentPluginApi paymentPluginApi = Mockito.mock(PaymentPluginApi.class);
         Mockito.when(paymentPluginApi.searchPayments(SEARCH_KEY, OFFSET, LIMIT, PLUGIN_PROPERTIES, callContext))
@@ -102,7 +105,7 @@ public class TestPaymentRefresher extends PaymentTestSuiteNoDB {
                                                              null, // notificationQueueService
                                                              null /* incompletePaymentTransactionTask */);
         final PaymentRefresher toMock = Mockito.spy(result);
-        Mockito.doReturn(ANY_PAYMENT)
+        Mockito.doReturn(anyPayment())
                .when(toMock).toPayment(Mockito.any(UUID.class),
                                        Mockito.anyIterable(),
                                        Mockito.anyBoolean(),
