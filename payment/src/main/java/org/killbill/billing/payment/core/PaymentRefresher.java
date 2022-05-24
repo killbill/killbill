@@ -304,7 +304,7 @@ public class PaymentRefresher extends ProcessorBase {
                                                if (!withPluginInfo) {
                                                    pluginApi = null;
                                                } else {
-                                                   if (paymentMethodIdToPaymentPluginApi.get(paymentModelDao.getPaymentMethodId()).isEmpty()) {
+                                                   if (paymentMethodIdToPaymentPluginApi.get(paymentModelDao.getPaymentMethodId()) == null) {
                                                        try {
                                                            final PaymentPluginApi paymentProviderPlugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, internalTenantContext);
                                                            paymentMethodIdToPaymentPluginApi.put(paymentModelDao.getPaymentMethodId(), Optional.of(paymentProviderPlugin));
