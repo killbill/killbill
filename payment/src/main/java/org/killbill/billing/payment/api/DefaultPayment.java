@@ -102,12 +102,12 @@ public class DefaultPayment extends EntityBase implements Payment {
 
         if (transactionToUseForCurrency == null) {
             // No successful one, take the last non-successful one then
-            transactionToUseForCurrency = transactions
-                    .stream()
+            final List<PaymentTransaction> nonSuccessfulTransactions = transactions.stream()
                     .filter(transaction -> transaction.getTransactionType() == TransactionType.AUTHORIZE ||
                                            transaction.getTransactionType() == TransactionType.PURCHASE ||
                                            transaction.getTransactionType() == TransactionType.CREDIT)
-                    .findFirst().orElse(null);
+                    .collect(Collectors.toUnmodifiableList());
+            transactionToUseForCurrency = Iterables.getLast(nonSuccessfulTransactions);
         }
 
         this.currency = transactionToUseForCurrency == null ? null : transactionToUseForCurrency.getCurrency();
