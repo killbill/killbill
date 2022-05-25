@@ -112,7 +112,7 @@ public class TestCatalogNewEntries extends TestIntegrationBase {
 
         final PlanPhaseSpecifier bazookaSpec = new PlanPhaseSpecifier("bazooka-monthly");
         try {
-            bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(bazookaSpec), (LocalDate)null, null, callContext);
+            bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(bazookaSpec), (LocalDate) null, null, callContext);
             Assert.fail("Change plan should fail because plan does not yet exist");
         } catch (EntitlementApiException ignore) {
         }
