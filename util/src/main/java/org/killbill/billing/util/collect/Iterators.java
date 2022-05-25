@@ -147,4 +147,16 @@ public final class Iterators {
         }
         return false;
     }
+
+    /**
+     * Verbatim copy of {@code com.google.common.collect.Iterators#getLast(Iterator, Object)}.
+     *
+     * Advances {@code iterator} to the end, returning the last element or {@code defaultValue} if the iterator is empty.
+     *
+     * @param defaultValue the default value to return if the iterator is empty
+     * @return the last element of {@code iterator}
+     */
+    public static <T> T getLast(final Iterator<? extends T> iterator, final T defaultValue) {
+        return iterator.hasNext() ? getLast(iterator) : defaultValue;
+    }
 }
