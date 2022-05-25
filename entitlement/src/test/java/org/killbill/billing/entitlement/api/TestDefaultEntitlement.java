@@ -20,6 +20,7 @@
 package org.killbill.billing.entitlement.api;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -36,9 +37,14 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
+import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.audit.ChangeType;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
 public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
@@ -98,10 +104,10 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
-        assertEquals(entitlement2.getEffectiveEndDate(), cancelDateTime);
+        assertEquals(entitlement2.getEffectiveEndDate().compareTo(cancelDateTime), 0);
         assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
         Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
-        assertEquals(subscription2.getBillingEndDate(), cancelDateTime);
+        assertEquals(subscription2.getBillingEndDate().compareTo(cancelDateTime), 0);
     }
 
     @Test(groups = "slow")
@@ -129,10 +135,10 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
-        assertEquals(entitlement2.getEffectiveEndDate(), cancelDateTime);
+        assertEquals(entitlement2.getEffectiveEndDate().compareTo(cancelDateTime), 0);
         assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
         Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
-        assertEquals(subscription2.getBillingEndDate(), cancelDateTime);
+        assertEquals(subscription2.getBillingEndDate().compareTo(cancelDateTime), 0);
         
     }
 
@@ -161,14 +167,14 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         clock.addDays(5);
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-        assertEquals(entitlement2.getEffectiveEndDate(), entitlementDateTime);
+        assertEquals(entitlement2.getEffectiveEndDate().compareTo(entitlementDateTime), 0); 
 
         clock.setTime(billingDateTime);
         testListener.pushExpectedEvents(NextEvent.CANCEL);
         assertEquals(entitlement2.getState(), EntitlementState.CANCELLED);
         assertEquals(entitlement2.getSourceType(), EntitlementSourceType.NATIVE);
         Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
-        assertEquals(subscription2.getBillingEndDate(), billingDateTime);
+        assertEquals(subscription2.getBillingEndDate().compareTo(billingDateTime), 0);
         
     }
 
@@ -466,4 +472,83 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         assertEquals(entitlement1.getLastActiveProduct().getName(), "Pistol");
 
     }
+    
+    @Test(groups = "slow")
+    public void testChangePlanWithDateTime() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final DateTime initialDateTime = new DateTime(2013, 8, 7, 10, 30);
+        clock.setTime(initialDateTime);
+    	
+        final Account account = createAccount(getAccountData(7));
+
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planPhaseSpecifier), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
+
+        testListener.pushExpectedEvents(NextEvent.CHANGE);
+        final DateTime changeDateTime = new DateTime(2013, 8, 12, 11, 15); 
+        clock.setTime(changeDateTime);
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly", null);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), changeDateTime, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement2.getLastActiveProduct().getName(), "Pistol");
+
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(entitlement.getBundleId(), callContext);
+        final List<SubscriptionEvent> events = bundle.getTimeline().getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.CHANGE);
+        assertEquals(events.get(2).getEffectiveDate().compareTo(changeDateTime), 0);  
+    }   
+    
+    @Test(groups = "slow")
+    public void testChangePlanWithDateTimeInFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final DateTime initialDateTime = new DateTime(2013, 8, 7, 10, 30);
+        clock.setTime(initialDateTime);
+    	
+        final Account account = createAccount(getAccountData(7));
+
+        
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+
+        // Create entitlement and check each field
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planPhaseSpecifier), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
+        
+        final DateTime changeDateTime = new DateTime(2013, 8, 12, 11, 15); //DateTime in the future
+        final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly", null);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), changeDateTime, Collections.emptyList(), callContext);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Shotgun");
+        
+        testListener.pushExpectedEvents(NextEvent.CHANGE);
+        clock.setTime(changeDateTime);
+        assertListenerStatus();
+
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement2.getLastActiveProduct().getName(), "Pistol");
+        
+        final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(entitlement.getBundleId(), callContext);
+        final List<SubscriptionEvent> events = bundle.getTimeline().getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.CHANGE);
+        assertEquals(events.get(2).getEffectiveDate().compareTo(changeDateTime), 0);        
+
+    }     
+    
 }
