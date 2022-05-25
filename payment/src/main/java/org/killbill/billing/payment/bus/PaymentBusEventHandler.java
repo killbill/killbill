@@ -19,8 +19,11 @@
 package org.killbill.billing.payment.bus;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -32,7 +35,6 @@ import org.killbill.billing.events.PaymentInternalEvent;
 import org.killbill.billing.payment.api.InvoicePaymentInternalApi;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.PaymentOptions;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
@@ -42,10 +44,10 @@ import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
+
+// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 
 public class PaymentBusEventHandler {
 
@@ -107,7 +109,7 @@ public class PaymentBusEventHandler {
                                                                           null,
                                                                           null,
                                                                           null,
-                                                                          ImmutableList.<PluginProperty>of(),
+                                                                          Collections.emptyList(),
                                                                           new PaymentOptions() {
                                                                               @Override
                                                                               public boolean isExternalPayment() {
