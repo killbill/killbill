@@ -779,6 +779,73 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         };
         return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
     }
+    
+    @Override 
+    public Entitlement changePlanWithDate(final EntitlementSpecifier spec, @Nullable final DateTime effectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+
+        logChangePlan(log, this, spec, effectiveDate, null);
+
+        checkForPermissions(Permission.ENTITLEMENT_CAN_CHANGE_PLAN, callContext);
+
+        // Get the latest state from disk
+        refresh(callContext);
+
+        final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CHANGE_PLAN,
+                                                                               getAccountId(),
+                                                                               null,
+                                                                               null, //TODO_1375 - modified to pass null instead of baseEntitlementWithAddOnsSpecifierList as this would require changing baseEntitlementWithAddOnsSpecifier to return DateTime which is not required for now. Revisit later
+                                                                               null,
+                                                                               properties,
+                                                                               callContext);
+
+        final WithEntitlementPlugin<Entitlement> changePlanWithPlugin = new WithEntitlementPlugin<Entitlement>() {
+            @Override
+            public Entitlement doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
+
+                if (effectiveDate != null && effectiveDate.compareTo(eventsStream.getEntitlementEffectiveStartDateTime()) < 0) {
+                    throw new EntitlementApiException(ErrorCode.SUB_CHANGE_NON_ACTIVE, getId(), getState());
+                }
+
+                final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+
+                final DateTime effectiveChangeDate = effectiveDate;
+
+                final DateTime resultingEffectiveDate;
+                try {
+                    resultingEffectiveDate = subscriptionInternalApi.getDryRunChangePlanEffectiveDate(getSubscriptionBase(), spec, effectiveChangeDate, null, context);
+                } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                } catch (final CatalogApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                }
+
+                try {
+                    checker.checkBlockedChange(getSubscriptionBase(), resultingEffectiveDate, context);
+                } catch (final BlockingApiException e) {
+                    throw new EntitlementApiException(e, e.getCode(), e.getMessage());
+                }
+
+                try {
+                    getSubscriptionBase().changePlanWithDate(spec, resultingEffectiveDate, callContext);
+                } catch (final SubscriptionBaseApiException e) {
+                    throw new EntitlementApiException(e);
+                }
+
+                final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
+                final Iterable<BlockingState> addOnsBlockingStates = computeAddOnBlockingStates(resultingEffectiveDate, notificationEvents, callContext, context);
+
+                // Record the new state first, then insert the notifications to avoid race conditions
+                setBlockingStates(addOnsBlockingStates, context);
+                for (final NotificationEvent notificationEvent : notificationEvents) {
+                    recordFutureNotification(resultingEffectiveDate, notificationEvent, context);
+                }
+
+                return entitlementApi.getEntitlementForId(getId(), callContext);
+            }
+        };
+        return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
+    }
+    
 
     @Override
     public Entitlement changePlanOverrideBillingPolicy(final EntitlementSpecifier spec, final LocalDate unused, final BillingActionPolicy actionPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
