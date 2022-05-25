@@ -19,6 +19,7 @@ package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -76,8 +77,6 @@ import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
-
-import com.google.common.base.MoreObjects;
 
 public class PaymentAutomatonRunner {
 
@@ -166,7 +165,7 @@ public class PaymentAutomatonRunner {
                     final PaymentAutomatonDAOHelper daoHelper,
                     @Nullable final String currentStateNameOrNull,
                     final TransactionType transactionType) throws PaymentApiException {
-        final String currentStateName = MoreObjects.firstNonNull(currentStateNameOrNull, paymentSMHelper.getInitStateNameForTransaction());
+        final String currentStateName = Objects.requireNonNullElse(currentStateNameOrNull, paymentSMHelper.getInitStateNameForTransaction());
 
         final OperationCallback operationCallback;
         final LeavingStateCallback leavingStateCallback;
@@ -248,11 +247,11 @@ public class PaymentAutomatonRunner {
             throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INVALID_OPERATION, transactionType, initialStateName);
         } catch (final OperationException e) {
             if (e.getCause() == null) {
-                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+                throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
             } else if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
             } else {
-                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
             }
         }
     }

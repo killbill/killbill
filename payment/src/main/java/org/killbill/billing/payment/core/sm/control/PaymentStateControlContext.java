@@ -35,9 +35,6 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.util.callcontext.CallContext;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-
 public class PaymentStateControlContext extends PaymentStateContext {
 
     private final Boolean isSuccess;
@@ -130,12 +127,11 @@ public class PaymentStateControlContext extends PaymentStateContext {
         if (result == null || result.getTransactions() == null) {
             return null;
         }
-        return Iterables.tryFind(result.getTransactions(), new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                final DefaultPaymentTransaction defaultPaymentTransaction = (DefaultPaymentTransaction) input;
-                return defaultPaymentTransaction.getAttemptId() == null ? getAttemptId() == null : defaultPaymentTransaction.getAttemptId().equals(getAttemptId());
-            }
-        }).orNull();
+        return result.getTransactions().stream()
+                .filter(input -> {
+                    final DefaultPaymentTransaction defaultPaymentTransaction = (DefaultPaymentTransaction) input;
+                    return defaultPaymentTransaction.getAttemptId() == null ? getAttemptId() == null : defaultPaymentTransaction.getAttemptId().equals(getAttemptId());
+                })
+                .findFirst().orElse(null);
     }
 }

@@ -20,6 +20,8 @@ package org.killbill.billing.payment.invoice;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -34,9 +36,9 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 
 public class PaymentTagHandler {
 
