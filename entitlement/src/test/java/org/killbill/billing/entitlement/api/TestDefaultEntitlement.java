@@ -492,7 +492,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvents(NextEvent.CHANGE);
         final DateTime changeDateTime = new DateTime(2013, 8, 12, 11, 15); 
-        clock.setTime(changeDateTime);
+        clock.setTime(changeDateTime.plusMinutes(5));
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly", null);
         entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), changeDateTime, Collections.emptyList(), callContext);
         assertListenerStatus();
