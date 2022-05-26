@@ -17,15 +17,13 @@
 
 package org.killbill.billing.payment.provider;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class DefaultNoOpGatewayNotification implements GatewayNotification {
 
@@ -46,11 +44,11 @@ public class DefaultNoOpGatewayNotification implements GatewayNotification {
 
     @Override
     public Map<String, List<String>> getHeaders() {
-        return ImmutableMap.<String, List<String>>of();
+        return Collections.emptyMap();
     }
 
     @Override
     public List<PluginProperty> getProperties() {
-        return ImmutableList.<PluginProperty>of();
+        return Collections.emptyList();
     }
 }

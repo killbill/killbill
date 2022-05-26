@@ -17,6 +17,7 @@
 package org.killbill.billing.payment.provider;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,8 +27,6 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
-
-import com.google.common.collect.ImmutableList;
 
 public class DefaultNoOpPaymentInfoPlugin implements PaymentTransactionInfoPlugin {
 
@@ -47,7 +46,7 @@ public class DefaultNoOpPaymentInfoPlugin implements PaymentTransactionInfoPlugi
 
     public DefaultNoOpPaymentInfoPlugin(final UUID kbPaymentId, final UUID kbTransactionPaymentId, final TransactionType transactionType, final BigDecimal amount, final Currency currency, final DateTime effectiveDate,
                                         final DateTime createdDate, final PaymentPluginStatus status, final String gatewayErrorCode, final String gatewayError) {
-        this(kbPaymentId, kbTransactionPaymentId, transactionType, amount, currency, effectiveDate, createdDate, status, gatewayErrorCode, gatewayError, null, null, ImmutableList.<PluginProperty>of());
+        this(kbPaymentId, kbTransactionPaymentId, transactionType, amount, currency, effectiveDate, createdDate, status, gatewayErrorCode, gatewayError, null, null, Collections.emptyList());
     }
 
     public DefaultNoOpPaymentInfoPlugin(final UUID kbPaymentId,
