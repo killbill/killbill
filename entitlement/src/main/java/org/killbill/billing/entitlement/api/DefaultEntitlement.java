@@ -337,11 +337,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                                                                                callContext);
         
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
-        
-        final DateTime billingEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(billingEffectiveDate, getEventsStream().getSubscriptionBase().getStartDate(), pluginContext.getCreatedDate(), contextWithValidAccountRecordId);
+
         final DateTime entitlementEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), pluginContext.getCreatedDate(), contextWithValidAccountRecordId);
-        
-        return cancelEntitlementWithDate(entitlementEffectiveCancelDate, billingEffectiveCancelDate, overrideBillingEffectiveDate, properties, callContext);
+        final DateTime billingEffectiveCancelDate = overrideBillingEffectiveDate ? entitlementEffectiveCancelDate : null;
+
+        return cancelEntitlementWithDateInternal(entitlementEffectiveCancelDate, billingEffectiveCancelDate, properties, callContext);
 
     }
     
@@ -349,13 +349,13 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     public Entitlement cancelEntitlementWithDate(final DateTime entitlementEffectiveDate, final DateTime billingEffectiveDate,
                                                  final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         logCancelEntitlement(log, this, entitlementEffectiveDate, billingEffectiveDate, null, null, null); 
-        return cancelEntitlementWithDate(entitlementEffectiveDate, billingEffectiveDate, true, properties, callContext);
+        return cancelEntitlementWithDateInternal(entitlementEffectiveDate, billingEffectiveDate, properties, callContext);
     }
     
     
     
-    private Entitlement cancelEntitlementWithDate(final DateTime entitlementEffectiveDate, final DateTime billingEffectiveDate, final boolean overrideBillingEffectiveDate, 
-                                                 final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+    private Entitlement cancelEntitlementWithDateInternal(final DateTime entitlementEffectiveDate, final DateTime billingEffectiveDate,
+                                                          final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
         logCancelEntitlement(log, this, entitlementEffectiveDate, billingEffectiveDate, null, null, null); 
         checkForPermissions(Permission.ENTITLEMENT_CAN_CANCEL, callContext);
         // Get the latest state from disk
@@ -363,7 +363,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         if (entitlementEffectiveDate == null || (entitlementEffectiveDate != null && entitlementEffectiveDate.compareTo(getEffectiveStartDate()) < 0)) {
             throw new EntitlementApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, entitlementEffectiveDate, getEffectiveStartDate());
         }
-        if (billingEffectiveDate == null || (billingEffectiveDate != null && billingEffectiveDate.compareTo(getSubscriptionBase().getStartDate()) < 0)) { //TODO_1375 - Added this check for billingEffectiveDate similar to the check above for entitlementEffectiveDate. Is the comparison to getSubscriptionBase().getStartDate() correct?
+        if (billingEffectiveDate != null && billingEffectiveDate.compareTo(getSubscriptionBase().getStartDate()) < 0) { //TODO_1375 - Added this check for billingEffectiveDate similar to the check above for entitlementEffectiveDate. Is the comparison to getSubscriptionBase().getStartDate() correct?
             throw new EntitlementApiException(ErrorCode.SUB_INVALID_REQUESTED_DATE, entitlementEffectiveDate, getEffectiveStartDate());
         }
         final EntitlementContext pluginContext = new DefaultEntitlementContext(OperationType.CANCEL_SUBSCRIPTION,
@@ -381,7 +381,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 }
                 final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
                 try {
-                    if (overrideBillingEffectiveDate) {
+                    if (billingEffectiveDate != null) {
                         getSubscriptionBase().cancelWithDate(billingEffectiveDate, callContext);
                     } else {
                         getSubscriptionBase().cancel(callContext);
