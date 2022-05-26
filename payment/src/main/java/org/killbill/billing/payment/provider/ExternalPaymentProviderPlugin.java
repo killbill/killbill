@@ -174,7 +174,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     private boolean isPropertySet(final Iterable<PluginProperty> properties, final String targetProperty) {
-        return Iterables.toStream(properties).anyMatch(input -> input.getKey().equals(targetProperty) && input.getValue().equals("true"));
+        return Iterables.toStream(properties).anyMatch(input -> targetProperty.equals(input.getKey()) && "true".equals(input.getValue()));
     }
 
 }

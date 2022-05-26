@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.dispatcher;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -31,8 +32,6 @@ import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcher
 import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.MoreObjects;
 
 public class PaymentPluginDispatcher {
 
@@ -55,7 +54,7 @@ public class PaymentPluginDispatcher {
             Thread.currentThread().interrupt();
             final String errorMessage = String.format("Call was interrupted for accountId='%s' accountExternalKey='%s' plugin='%s'", accountId, accountExternalKey, pluginNames);
             log.warn(errorMessage, e);
-            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), errorMessage));
+            throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), errorMessage));
         } catch (final ExecutionException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
@@ -65,7 +64,7 @@ public class PaymentPluginDispatcher {
                 throw new PaymentApiException(ErrorCode.PAYMENT_INTERNAL_ERROR, format);
             } else {
                 // Unwraps the ExecutionException (e.getCause()), since it's a dispatch implementation detail
-                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
             }
         }
     }

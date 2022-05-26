@@ -18,7 +18,10 @@
 
 package org.killbill.billing.payment;
 
+import java.util.Collections;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -52,9 +55,6 @@ import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.clock.Clock;
 import org.mockito.Mockito;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 public class TestPaymentHelper {
 
@@ -171,7 +171,7 @@ public class TestPaymentHelper {
     }
 
     public Account addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo) throws Exception {
-        return addTestPaymentMethod(account, paymentMethodInfo, ImmutableList.<PluginProperty>of());
+        return addTestPaymentMethod(account, paymentMethodInfo, Collections.emptyList());
     }
 
     public Account addTestPaymentMethod(final Account account, final PaymentMethodPlugin paymentMethodInfo, final Iterable<PluginProperty> pluginProperties) throws Exception {

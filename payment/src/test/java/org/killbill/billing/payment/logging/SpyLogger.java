@@ -19,6 +19,7 @@ package org.killbill.billing.payment.logging;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
@@ -27,13 +28,11 @@ import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 import org.slf4j.helpers.SubstituteLogger;
 
-import com.google.common.base.Optional;
-
 public class SpyLogger extends SubstituteLogger {
 
-    private final List<LogMessage> logMessageList = new ArrayList<LogMessage>();
+    private final List<LogMessage> logMessageList = new ArrayList<>();
 
-    public SpyLogger(String loggerName) {
+    public SpyLogger(final String loggerName) {
         super(loggerName, new LinkedBlockingQueue<SubstituteLoggingEvent>(), false);
     }
 
@@ -243,10 +242,10 @@ public class SpyLogger extends SubstituteLogger {
      * @param logLevel log level that the message should have.
      * @return true if a message has been found, false if no has been found
      */
-    public boolean contains(String regex, Optional<String> logLevel) {
-        Pattern pattern = Pattern.compile(regex);
+    public boolean contains(final String regex, final Optional<String> logLevel) {
+        final Pattern pattern = Pattern.compile(regex);
 
-        for (LogMessage logMessage : logMessageList) {
+        for (final LogMessage logMessage : logMessageList) {
             final boolean messageMatches = pattern.matcher(logMessage.message).find();
             final boolean logLevelMatches = logLevel.isPresent() ? logLevel.get().equals(logMessage.logLevel) : true;
 
@@ -257,21 +256,21 @@ public class SpyLogger extends SubstituteLogger {
         return false;
     }
 
-    private void formatAndSave(String logLevel, String format, Object arg1, Object arg2) {
-        FormattingTuple tp = MessageFormatter.format(format, arg1, arg2);
+    private void formatAndSave(final String logLevel, final String format, final Object arg1, final Object arg2) {
+        final FormattingTuple tp = MessageFormatter.format(format, arg1, arg2);
         save(logLevel, tp.getMessage(), tp.getThrowable());
     }
 
-    private void formatAndSave(String logLevel, String format, Object... arguments) {
-        FormattingTuple tp = MessageFormatter.arrayFormat(format, arguments);
+    private void formatAndSave(final String logLevel, final String format, final Object... arguments) {
+        final FormattingTuple tp = MessageFormatter.arrayFormat(format, arguments);
         save(logLevel, tp.getMessage(), tp.getThrowable());
     }
 
-    private void save(String logLevel, String message, Throwable t) {
+    private void save(final String logLevel, final String message, final Throwable t) {
         logMessageList.add(new LogMessage(logLevel, message, t));
     }
 
-    public class LogMessage {
+    public static class LogMessage {
 
         public final String logLevel;
 

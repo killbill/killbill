@@ -18,10 +18,12 @@
 
 package org.killbill.billing.payment;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
@@ -60,9 +62,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import static org.killbill.billing.payment.provider.MockPaymentControlProviderPlugin.PLUGIN_NAME;
@@ -127,7 +127,7 @@ public abstract class PaymentTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
 
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of();
+            return Collections.emptyList();
         }
     };
 

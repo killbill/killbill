@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.janitor;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +29,6 @@ import org.killbill.billing.account.api.AccountInternalApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.PaymentTransactionInfoPluginConverter;
@@ -54,20 +54,13 @@ import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 // Janitor implementation for payment transactions only (see IncompletePaymentAttemptTask for payments going through the control APIs).
 // Invoked on-the-fly or as part of the Janitor notification queue
 public class IncompletePaymentTransactionTask {
 
     private static final Logger log = LoggerFactory.getLogger(IncompletePaymentTransactionTask.class);
 
-    static final ImmutableList<TransactionStatus> TRANSACTION_STATUSES_TO_CONSIDER = ImmutableList.<TransactionStatus>builder().add(TransactionStatus.PENDING)
-                                                                                                                               .add(TransactionStatus.UNKNOWN)
-                                                                                                                               .build();
+    static final List<TransactionStatus> TRANSACTION_STATUSES_TO_CONSIDER = List.of(TransactionStatus.PENDING, TransactionStatus.UNKNOWN);
 
     private final PaymentConfig paymentConfig;
     private final PaymentDao paymentDao;
@@ -253,18 +246,11 @@ public class IncompletePaymentTransactionTask {
         PaymentTransactionInfoPlugin paymentTransactionInfoPlugin;
         try {
             final PaymentPluginApi paymentPluginApi = paymentPluginServiceRegistration.getPaymentPluginApi(payment.getPaymentMethodId(), false, internalTenantContext);
-            final List<PaymentTransactionInfoPlugin> result = paymentPluginApi.getPaymentInfo(payment.getAccountId(), payment.getId(), ImmutableList.<PluginProperty>of(), tenantContext);
-            paymentTransactionInfoPlugin = Iterables.tryFind(result, new Predicate<PaymentTransactionInfoPlugin>() {
-                @Override
-                public boolean apply(final PaymentTransactionInfoPlugin input) {
-                    return input.getKbTransactionPaymentId().equals(paymentTransaction.getId());
-                }
-            }).or(new Supplier<PaymentTransactionInfoPlugin>() {
-                @Override
-                public PaymentTransactionInfoPlugin get() {
-                    return undefinedPaymentTransaction;
-                }
-            });
+            final List<PaymentTransactionInfoPlugin> result = paymentPluginApi.getPaymentInfo(payment.getAccountId(), payment.getId(), Collections.emptyList(), tenantContext);
+            paymentTransactionInfoPlugin = result.stream()
+                    .filter(input -> input.getKbTransactionPaymentId().equals(paymentTransaction.getId()))
+                    .findFirst()
+                    .orElse(undefinedPaymentTransaction);
         } catch (final Exception e) {
             paymentTransactionInfoPlugin = undefinedPaymentTransaction;
         }
