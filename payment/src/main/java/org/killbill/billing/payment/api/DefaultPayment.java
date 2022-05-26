@@ -269,6 +269,8 @@ public class DefaultPayment extends EntityBase implements Payment {
         final Collection<Currency> currencies = candidateTransactions
                 .stream()
                 .map(paymentTrx -> useProcessedValues ? paymentTrx.getProcessedCurrency() : paymentTrx.getCurrency())
+                // use toSet() instead of toUnmodifiableSet() because returned collection may return null.
+                // See also TestRetryablePayment to confirm
                 .collect(Collectors.toSet());
 
         // See Iterables.getFirst() javadoc on why not just use stream.findFirst().

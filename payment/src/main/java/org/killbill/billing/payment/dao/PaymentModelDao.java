@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.dao;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -27,8 +28,6 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 import org.killbill.billing.util.UUIDs;
-
-import com.google.common.base.MoreObjects;
 
 public class PaymentModelDao extends EntityModelDaoBase implements EntityModelDao<Payment> {
 
@@ -49,7 +48,7 @@ public class PaymentModelDao extends EntityModelDaoBase implements EntityModelDa
         this.accountId = accountId;
         this.paymentMethodId = paymentMethodId;
         this.paymentNumber = paymentNumber;
-        this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());
+        this.externalKey = Objects.requireNonNullElse(externalKey, id.toString());
     }
 
     public PaymentModelDao(final UUID id, @Nullable final DateTime createdDate, @Nullable final DateTime updatedDate, final UUID accountId,

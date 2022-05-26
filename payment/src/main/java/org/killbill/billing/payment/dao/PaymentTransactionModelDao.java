@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.dao;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -31,8 +32,6 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
-
-import com.google.common.base.MoreObjects;
 
 public class PaymentTransactionModelDao extends EntityModelDaoBase implements EntityModelDao<PaymentTransaction> {
 
@@ -57,7 +56,7 @@ public class PaymentTransactionModelDao extends EntityModelDaoBase implements En
                                       final TransactionStatus paymentStatus, final BigDecimal amount, final Currency currency, final String gatewayErrorCode, final String gatewayErrorMsg) {
         super(id, createdDate, updatedDate);
         this.attemptId = attemptId;
-        this.transactionExternalKey = MoreObjects.firstNonNull(transactionExternalKey, id.toString());
+        this.transactionExternalKey = Objects.requireNonNullElse(transactionExternalKey, id.toString());
         this.paymentId = paymentId;
         this.transactionType = transactionType;
         this.effectiveDate = effectiveDate;

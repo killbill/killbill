@@ -22,8 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -52,9 +51,6 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 
 public abstract class ProcessorBase {
 
@@ -90,14 +86,7 @@ public abstract class ProcessorBase {
 
     protected boolean isAccountAutoPayOff(final UUID accountId, final InternalTenantContext context) {
         final List<Tag> accountTags = tagInternalApi.getTags(accountId, ObjectType.ACCOUNT, context);
-
-        return ControlTagType.isAutoPayOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
-            @Nullable
-            @Override
-            public UUID apply(@Nullable final Tag tag) {
-                return tag.getTagDefinitionId();
-            }
-        }));
+        return ControlTagType.isAutoPayOff(accountTags.stream().map(Tag::getTagDefinitionId).collect(Collectors.toList()));
     }
 
     protected void setAccountAutoPayOff(final UUID accountId, final InternalCallContext context) throws PaymentApiException {

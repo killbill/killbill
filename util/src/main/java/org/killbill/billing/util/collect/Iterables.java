@@ -68,6 +68,29 @@ public final class Iterables {
     }
 
     /**
+     * Verbatim copy of {@code com.google.common.collect.Iterables#getLast(Iterable, Object)}.
+     *
+     * Returns the last element of {@code iterable} or {@code defaultValue} if the iterable is empty.
+     * If {@code iterable} is a {@link List} with {@link RandomAccess} support, then this operation is
+     * guaranteed to be {@code O(1)}.
+     *
+     * @param defaultValue the value to return if {@code iterable} is empty
+     * @return the last element of {@code iterable} or the default value
+     */
+    public static <T> T getLast(final Iterable<? extends T> iterable, final T defaultValue) {
+        if (iterable instanceof Collection) {
+            final Collection<? extends T> c = (Collection<? extends T>) iterable;
+            if (c.isEmpty()) {
+                return defaultValue;
+            } else if (iterable instanceof List) {
+                final List<? extends T> list = (List<? extends T>) iterable;
+                return list.get(list.size() - 1);
+            }
+        }
+        return Iterators.getLast(iterable.iterator(), defaultValue);
+    }
+
+    /**
      * Concat two or more iterable into single {@link Iterable}.
      *
      * @param iterables two or more iterable to concat
