@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -45,7 +46,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
+// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
 import com.google.common.eventbus.Subscribe;
 import org.awaitility.Awaitility;
 
@@ -54,7 +55,7 @@ import static java.math.BigDecimal.ZERO;
 public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
 
     private static final boolean SHOULD_LOCK_ACCOUNT = true;
-    private static final ImmutableList<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+    private static final List<PluginProperty> PLUGIN_PROPERTIES = Collections.emptyList();
     private static final BigDecimal FIVE = new BigDecimal("5");
     private static final BigDecimal TEN = new BigDecimal("10");
     private static final Currency CURRENCY = Currency.BTC;
@@ -80,7 +81,7 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
     public void testGetAccountPaymentsWithJanitor() throws Exception {
         final String paymentExternalKey = UUID.randomUUID().toString();
 
-        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToUnknown = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToUnknown = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
 
         final String authorizationKey = UUID.randomUUID().toString();
         final Payment authorization = paymentProcessor.createAuthorization(true, null, account, null, null, TEN, CURRENCY, null, paymentExternalKey, authorizationKey,
@@ -103,7 +104,7 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
     public void testClassicFlow() throws Exception {
         final String paymentExternalKey = UUID.randomUUID().toString();
 
-        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToPending = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToPending = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         // AUTH pre-3DS
         final String authorizationKey = UUID.randomUUID().toString();
@@ -207,7 +208,7 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testInvalidTransition() throws Exception {
         final String paymentExternalKey = UUID.randomUUID().toString();
-        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToPending = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.ERROR, false));
+        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToPending = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.ERROR, false));
 
         // AUTH
         final String authorizationKey = UUID.randomUUID().toString();
@@ -236,7 +237,7 @@ public class TestPaymentProcessor extends PaymentTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testNotifyPendingPaymentOfStateChanged() throws Exception {
         final String paymentExternalKey = UUID.randomUUID().toString();
-        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToPending = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+        final Iterable<PluginProperty> pluginPropertiesToDriveTransationToPending = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         // Create Pending AUTH
         final String authorizationKey = UUID.randomUUID().toString();

@@ -18,6 +18,7 @@
 
 package org.killbill.billing.payment.core;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,8 +32,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestPaymentMethodProcessorNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
@@ -43,7 +42,7 @@ public class TestPaymentMethodProcessorNoDB extends PaymentTestSuiteNoDB {
         Mockito.when(account.getExternalKey()).thenReturn(accountId.toString());
 
         final PaymentMethodPlugin paymentMethodPlugin = Mockito.mock(PaymentMethodPlugin.class);
-        final Iterable<PluginProperty> properties = ImmutableList.<PluginProperty>of();
+        final Iterable<PluginProperty> properties = Collections.emptyList();
 
         // By default, the external payment plugin sets the external payment method id to "unknown"
         final UUID paymentMethodId2 = paymentMethodProcessor.addPaymentMethod(null, "__EXTERNAL_PAYMENT__", account, false, paymentMethodPlugin, properties, callContext, internalCallContext);
@@ -53,7 +52,7 @@ public class TestPaymentMethodProcessorNoDB extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testGetExternalPaymentProviderPlugin() throws Exception {
-        final Iterable<PluginProperty> properties = ImmutableList.<PluginProperty>of();
+        final Iterable<PluginProperty> properties = Collections.emptyList();
         final UUID accountId = UUID.randomUUID();
         final Account account = Mockito.mock(Account.class);
         Mockito.when(account.getId()).thenReturn(accountId);

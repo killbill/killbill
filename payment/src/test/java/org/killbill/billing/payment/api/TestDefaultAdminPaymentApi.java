@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,8 +41,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
@@ -99,7 +98,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
             @Override
             public List<String> getPaymentControlPluginNames() {
-                return ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME);
+                return List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME);
             }
         };
         final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account,
@@ -110,7 +109,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                                  null,
                                                                                  UUID.randomUUID().toString(),
                                                                                  UUID.randomUUID().toString(),
-                                                                                 ImmutableList.<PluginProperty>of(),
+                                                                                 Collections.emptyList(),
                                                                                  paymentOptions,
                                                                                  callContext);
         Assert.assertEquals(payment.getTransactions().size(), 1);
@@ -130,9 +129,9 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(paymentAttemptModelDaos.get(0).getAmount().compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(paymentAttemptModelDaos.get(0).getCurrency(), Currency.EUR);
 
-        adminPaymentApi.fixPaymentTransactionState(payment, payment.getTransactions().get(0), TransactionStatus.PAYMENT_FAILURE, null, "AUTH_ERRORED", ImmutableList.<PluginProperty>of(), callContext);
+        adminPaymentApi.fixPaymentTransactionState(payment, payment.getTransactions().get(0), TransactionStatus.PAYMENT_FAILURE, null, "AUTH_ERRORED", Collections.emptyList(), callContext);
 
-        Assert.assertEquals(paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getTransactions().size(), 1);
+        Assert.assertEquals(paymentApi.getPayment(payment.getId(), false, false, Collections.emptyList(), callContext).getTransactions().size(), 1);
         final PaymentModelDao refreshedPaymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
         final PaymentTransactionModelDao refreshedPaymentTransactionModelDao = paymentDao.getPaymentTransaction(payment.getTransactions().get(0).getId(), internalCallContext);
         Assert.assertEquals(refreshedPaymentModelDao.getStateName(), "AUTH_ERRORED");
@@ -153,9 +152,9 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Verify subsequent payment retries work
-        retryService.retryPaymentTransaction(refreshedPaymentTransactionModelDao.getAttemptId(), ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
+        retryService.retryPaymentTransaction(refreshedPaymentTransactionModelDao.getAttemptId(), List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
 
-        final Payment retriedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment retriedPayment = paymentApi.getPayment(payment.getId(), false, false, Collections.emptyList(), callContext);
         Assert.assertEquals(retriedPayment.getTransactions().size(), 2);
         final PaymentModelDao retriedPaymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
         final PaymentTransactionModelDao retriedPaymentTransactionModelDao = paymentDao.getPaymentTransaction(retriedPayment.getTransactions().get(1).getId(), internalCallContext);
@@ -186,7 +185,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                null,
                                                                UUID.randomUUID().toString(),
                                                                UUID.randomUUID().toString(),
-                                                               ImmutableList.<PluginProperty>of(),
+                                                               Collections.emptyList(),
                                                                callContext);
 
         final PaymentModelDao paymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
@@ -201,7 +200,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
 
         try {
             // Since no transaction status is passed, PaymentTransactionInfoPlugin should be set
-            adminPaymentApi.fixPaymentTransactionState(payment, Mockito.mock(DefaultPaymentTransaction.class), null, null, "AUTH_ERRORED", ImmutableList.<PluginProperty>of(), callContext);
+            adminPaymentApi.fixPaymentTransactionState(payment, Mockito.mock(DefaultPaymentTransaction.class), null, null, "AUTH_ERRORED", Collections.emptyList(), callContext);
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_PARAMETER.getCode());
         }
@@ -217,7 +216,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                null,
                                                                UUID.randomUUID().toString(),
                                                                UUID.randomUUID().toString(),
-                                                               ImmutableList.<PluginProperty>of(),
+                                                               Collections.emptyList(),
                                                                callContext);
 
         final PaymentModelDao paymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
@@ -256,7 +255,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                                                        infoPlugin.getGatewayErrorCode(),
                                                                                        infoPlugin.getGatewayError(),
                                                                                        infoPlugin);
-        adminPaymentApi.fixPaymentTransactionState(payment, newPaymentTransaction, null, null, "AUTH_ERRORED", ImmutableList.<PluginProperty>of(), callContext);
+        adminPaymentApi.fixPaymentTransactionState(payment, newPaymentTransaction, null, null, "AUTH_ERRORED", Collections.emptyList(), callContext);
 
         final PaymentModelDao refreshedPaymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
         final PaymentTransactionModelDao refreshedPaymentTransactionModelDao = paymentDao.getPaymentTransaction(payment.getTransactions().get(0).getId(), internalCallContext);
@@ -279,7 +278,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                           null,
                                                           UUID.randomUUID().toString(),
                                                           UUID.randomUUID().toString(),
-                                                          ImmutableList.<PluginProperty>of(),
+                                                          Collections.emptyList(),
                                                           callContext);
 
         final PaymentModelDao paymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
@@ -294,7 +293,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                        payment.getCurrency(),
                                                        null,
                                                        UUID.randomUUID().toString(),
-                                                       ImmutableList.<PluginProperty>of(),
+                                                       Collections.emptyList(),
                                                        callContext);
 
         final PaymentModelDao paymentModelDao2 = paymentDao.getPayment(payment.getId(), internalCallContext);
@@ -308,7 +307,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                    TransactionStatus.PAYMENT_FAILURE,
                                                    null, /* Let Kill Bill figure it out */
                                                    null, /* Let Kill Bill figure it out */
-                                                   ImmutableList.<PluginProperty>of(),
+                                                   Collections.emptyList(),
                                                    callContext);
 
         final PaymentModelDao paymentModelDao3 = paymentDao.getPayment(payment.getId(), internalCallContext);
@@ -328,7 +327,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                           null,
                                                           UUID.randomUUID().toString(),
                                                           UUID.randomUUID().toString(),
-                                                          ImmutableList.<PluginProperty>of(),
+                                                          Collections.emptyList(),
                                                           callContext);
 
         final PaymentModelDao paymentModelDao = paymentDao.getPayment(payment.getId(), internalCallContext);
@@ -343,7 +342,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                        payment.getCurrency(),
                                                        null,
                                                        UUID.randomUUID().toString(),
-                                                       ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.ERROR.toString(), false)),
+                                                       List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.ERROR.toString(), false)),
                                                        callContext);
 
         final PaymentModelDao paymentModelDao2 = paymentDao.getPayment(payment.getId(), internalCallContext);
@@ -357,7 +356,7 @@ public class TestDefaultAdminPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
                                                    TransactionStatus.SUCCESS,
                                                    null, /* Let Kill Bill figure it out */
                                                    null, /* Let Kill Bill figure it out */
-                                                   ImmutableList.<PluginProperty>of(),
+                                                   Collections.emptyList(),
                                                    callContext);
 
         final PaymentModelDao paymentModelDao3 = paymentDao.getPayment(payment.getId(), internalCallContext);

@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -36,8 +37,6 @@ import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedDB {
 
@@ -130,7 +129,7 @@ public class TestPaymentAutomatonDAOHelper extends PaymentTestSuiteWithEmbeddedD
                                                       null,
                                                       false,
                                                       null,
-                                                      ImmutableList.<PluginProperty>of(),
+                                                      Collections.emptyList(),
                                                       internalCallContext,
                                                       callContext);
 
