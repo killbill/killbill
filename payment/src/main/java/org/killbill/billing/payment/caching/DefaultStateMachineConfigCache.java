@@ -39,11 +39,10 @@ import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.cache.TenantStateMachineConfigCacheLoader.LoaderCallback;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.billing.util.io.IOUtils;
 import org.killbill.xmlloader.XMLLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.io.Resources;
 
 public class DefaultStateMachineConfigCache implements StateMachineConfigCache {
 
@@ -79,7 +78,7 @@ public class DefaultStateMachineConfigCache implements StateMachineConfigCache {
     public void loadDefaultPaymentStateMachineConfig(final String url) throws PaymentApiException {
         if (url != null) {
             try {
-                defaultPaymentStateMachineConfig = XMLLoader.getObjectFromString(Resources.getResource(url).toExternalForm(), DefaultStateMachineConfig.class);
+                defaultPaymentStateMachineConfig = XMLLoader.getObjectFromString(IOUtils.getResourceAsURL(url).toExternalForm(), DefaultStateMachineConfig.class);
             } catch (final Exception e) {
                 // TODO 0.17 proper error code
                 throw new PaymentApiException(e, ErrorCode.PAYMENT_INTERNAL_ERROR, "Invalid default payment state machine config");

@@ -17,18 +17,15 @@
 
 package org.killbill.billing.payment.api;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
-
-import com.google.common.collect.ImmutableList;
 
 public class DefaultApiBase {
 
@@ -56,7 +53,7 @@ public class DefaultApiBase {
         } else if (controlPluginNames != null && !controlPluginNames.isEmpty()) {
             return controlPluginNames;
         } else {
-            return ImmutableList.<String>of();
+            return Collections.emptyList();
         }
     }
 

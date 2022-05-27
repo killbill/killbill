@@ -38,6 +38,15 @@ import org.killbill.billing.util.Preconditions;
 public final class Iterators {
 
     /**
+     * Verbatim copy of Guava's {@code com.google.common.collect.Iterators#getNext(Iterator, Object)}.
+     *
+     * Returns the next element in {@code iterator} or {@code defaultValue} if the iterator is empty.
+     */
+    public static <T> T getNext(final Iterator<? extends T> iterator, final T defaultValue) {
+        return iterator.hasNext() ? iterator.next() : defaultValue;
+    }
+
+    /**
      * Verbatim copy of Guava's {@code com.google.common.collect.Iterators#getLast(Iterator)}
      *
      * Advances {@code iterator} to the end, returning the last element.
