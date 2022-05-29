@@ -339,7 +339,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final InternalCallContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
 
         final DateTime entitlementEffectiveCancelDate = dateHelper.fromLocalDateAndReferenceTimeWithMinimum(entitlementEffectiveDate, getEventsStream().getEntitlementEffectiveStartDateTime(), pluginContext.getCreatedDate(), contextWithValidAccountRecordId);
-        final DateTime billingEffectiveCancelDate = overrideBillingEffectiveDate ? entitlementEffectiveCancelDate : null;
+        final DateTime billingEffectiveCancelDate = overrideBillingEffectiveDate ? dateHelper.fromLocalDateAndReferenceTimeWithMinimum(billingEffectiveDate, getEventsStream().getSubscriptionBase().getStartDate(), pluginContext.getCreatedDate(), contextWithValidAccountRecordId) : null;
 
         return cancelEntitlementWithDateInternal(entitlementEffectiveCancelDate, billingEffectiveCancelDate, properties, callContext);
 
