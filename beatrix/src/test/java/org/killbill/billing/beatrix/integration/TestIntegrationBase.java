@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -128,6 +129,7 @@ import org.killbill.billing.usage.api.UnitUsageRecord;
 import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
+import org.killbill.billing.util.Joiner;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagApiException;
@@ -162,12 +164,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
@@ -194,7 +190,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+            return List.of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
     protected static final PaymentOptions EXTERNAL_PAYMENT_OPTIONS = new PaymentOptions() {
@@ -205,11 +201,11 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.<String>of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+            return List.of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
 
-    protected final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+    protected final Iterable<PluginProperty> PLUGIN_PROPERTIES = Collections.emptyList();
 
     @Inject
     @Named("osgi")
@@ -644,10 +640,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                                                         null,
                                                                                                         paymentExternalKey,
                                                                                                         transactionExternalKey,
-                                                                                                        ImmutableList.<PluginProperty>of(),
+                                                                                                        Collections.emptyList(),
                                                                                                         PAYMENT_OPTIONS,
                                                                                                         callContext);
-                return paymentApi.getPayment(invoicePayment.getPaymentId(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+                return paymentApi.getPayment(invoicePayment.getPaymentId(), false, true, Collections.emptyList(), callContext);
             }
         }, events);
     }
@@ -670,10 +666,10 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                                                                                             null,
                                                                                                             UUID.randomUUID().toString(),
                                                                                                             UUID.randomUUID().toString(),
-                                                                                                            ImmutableList.<PluginProperty>of(),
+                                                                                                            Collections.emptyList(),
                                                                                                             EXTERNAL_PAYMENT_OPTIONS,
                                                                                                             callContext);
-                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, Collections.emptyList(), callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -711,8 +707,8 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Payment apply(@Nullable final Void input) {
                 try {
                     final InvoicePayment invoicePayment = invoicePaymentApi.createRefundForInvoicePayment(true, iias, account, payment.getId(), amount, currency, null, UUID.randomUUID().toString(),
-                                                                                                          ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
-                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+                                                                                                          Collections.emptyList(), PAYMENT_OPTIONS, callContext);
+                    return paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, Collections.emptyList(), callContext);
                 } catch (final PaymentApiException e) {
                     fail(e.toString());
                     return null;
@@ -741,14 +737,13 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     }
 
     protected Payment createChargeBackReversalAndCheckForCompletion(final Account account, final Payment payment, final NextEvent... events) {
-        final PaymentTransaction chargeback = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
-                                                                                 new Predicate<PaymentTransaction>() {
-                                                                                     @Override
-                                                                                     public boolean apply(final PaymentTransaction input) {
-                                                                                         return TransactionType.CHARGEBACK.equals(input.getTransactionType()) &&
-                                                                                                TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
-                                                                                     }
-                                                                                 });
+        final List<PaymentTransaction> reversedPaymentTransactions = new ArrayList<>(payment.getTransactions());
+        Collections.reverse(reversedPaymentTransactions);
+        final PaymentTransaction chargeback = reversedPaymentTransactions.stream()
+                .filter(input -> TransactionType.CHARGEBACK.equals(input.getTransactionType()) &&
+                                 TransactionStatus.SUCCESS.equals(input.getTransactionStatus()))
+                .findFirst().get();
+
         return createChargeBackReversalAndCheckForCompletion(account, payment, chargeback.getExternalKey(), events);
     }
 
@@ -802,7 +797,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList, null);
-                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, new DefaultEntitlementSpecifier(spec, null, null, overrides), bundleExternalKey, null, billingEffectiveDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, new DefaultEntitlementSpecifier(spec, null, null, overrides), bundleExternalKey, null, billingEffectiveDate, false, true, Collections.emptyList(), callContext);
                     assertNotNull(entitlementId);
                     return entitlementApi.getEntitlementForId(entitlementId, callContext);
                 } catch (final EntitlementApiException e) {
@@ -845,7 +840,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-                    final UUID entitlementId = entitlementApi.addEntitlement(bundleId, new DefaultEntitlementSpecifier(spec), effectiveDate, effectiveDate, false, ImmutableList.<PluginProperty>of(), callContext);
+                    final UUID entitlementId = entitlementApi.addEntitlement(bundleId, new DefaultEntitlementSpecifier(spec), effectiveDate, effectiveDate, false, Collections.emptyList(), callContext);
                     assertNotNull(entitlementId);
                     return entitlementApi.getEntitlementForId(entitlementId, callContext);
                 } catch (final EntitlementApiException e) {
@@ -870,9 +865,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList);
                     if (billingPolicy == null) {
-                        refreshedEntitlement = refreshedEntitlement.changePlan(new DefaultEntitlementSpecifier(spec), ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlan(new DefaultEntitlementSpecifier(spec), Collections.emptyList(), callContext);
                     } else {
-                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(spec), null, billingPolicy, ImmutableList.<PluginProperty>of(), callContext);
+                        refreshedEntitlement = refreshedEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(spec), null, billingPolicy, Collections.emptyList(), callContext);
                     }
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
@@ -905,7 +900,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 try {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate, false, ImmutableList.<PluginProperty>of(), callContext);
+                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate, false, Collections.emptyList(), callContext);
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
                     fail(e.getMessage());
@@ -925,7 +920,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                 try {
                     // Need to fetch again to get latest CTD updated from the system
                     Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
-                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(entitlementActionPolicy, billingActionPolicy, ImmutableList.<PluginProperty>of(), callContext);
+                    refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(entitlementActionPolicy, billingActionPolicy, Collections.emptyList(), callContext);
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
                     fail(e.getMessage());
@@ -1034,7 +1029,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
     private <T, E extends Throwable> T doCallAndCheckForCompletionWithException(final FunctionWithException<Void, T, E> f, final NextEvent... events) throws E {
         final Joiner joiner = Joiner.on(", ");
-        log.debug("            ************    STARTING BUS HANDLER CHECK : {} ********************", joiner.join(events));
+        log.debug("            ************    STARTING BUS HANDLER CHECK : {} ********************", joiner.join(List.of(events)));
 
         busHandler.pushExpectedEvents(events);
 

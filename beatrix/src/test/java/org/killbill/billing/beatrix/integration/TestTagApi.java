@@ -18,6 +18,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -34,8 +35,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
-
-import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -102,7 +101,7 @@ public class TestTagApi extends TestIntegrationBase {
         // Create a new tag definition
         //
         busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION);
-        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", ImmutableSet.<ObjectType>of(ObjectType.ACCOUNT, ObjectType.INVOICE), callContext);
+        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", Set.of(ObjectType.ACCOUNT, ObjectType.INVOICE), callContext);
         assertListenerStatus();
 
         final TagDefinition tagDefinition2 = tagUserApi.getTagDefinition(tagDefinition.getId(), callContext);

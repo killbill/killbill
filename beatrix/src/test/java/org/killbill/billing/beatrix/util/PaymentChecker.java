@@ -19,8 +19,11 @@
 package org.killbill.billing.beatrix.util;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
@@ -30,18 +33,12 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 public class PaymentChecker {
 
@@ -59,7 +56,7 @@ public class PaymentChecker {
     }
 
     public Payment checkPayment(final UUID accountId, final int paymentOrderingNumber, final CallContext context, final ExpectedPaymentCheck expected) throws PaymentApiException {
-        final List<Payment> payments = paymentApi.getAccountPayments(accountId, false, false, ImmutableList.<PluginProperty>of(), context);
+        final List<Payment> payments = paymentApi.getAccountPayments(accountId, false, false, Collections.emptyList(), context);
         Assert.assertEquals(payments.size(), paymentOrderingNumber);
         final Payment payment = payments.get(paymentOrderingNumber - 1);
         final PaymentTransaction transaction = getPurchaseTransaction(payment);
@@ -72,12 +69,9 @@ public class PaymentChecker {
     }
 
     private PaymentTransaction getPurchaseTransaction(final Payment payment) {
-        return Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return input.getTransactionType() == TransactionType.PURCHASE;
-            }
-        }).get();
+        return payment.getTransactions().stream()
+                .filter(input -> input.getTransactionType() == TransactionType.PURCHASE)
+                .findFirst().orElse(null);
     }
 
     private void checkPayment(final UUID accountId, final Payment payment, final CallContext context, final ExpectedPaymentCheck expected) {
