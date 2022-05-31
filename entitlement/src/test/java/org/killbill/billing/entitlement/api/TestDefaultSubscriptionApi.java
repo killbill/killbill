@@ -404,7 +404,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         verifyBlockingStates(blockingStates6, List.of(createState, state1, state2, state3, state4), true);
         
     }
-    
+
     @Test(groups = "slow")
     public void testAddBlockingStateWithDate() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
 
@@ -462,6 +462,19 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.ACTIVE);
+
+        //Add new blocking state with null date and verify that entitlement is BLOCKED immediately
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState state3 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionBlock", "svc3", false, true, false, clock.getUTCNow());
+        subscriptionApi.addBlockingState(state3, (LocalDate) null, Collections.emptyList(), callContext);
+
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
+
+        //Verify that Blocking States are created
+        iterableForCreateState = subscriptionApi.getBlockingStates(account.getId(), List.of(BlockingStateType.SUBSCRIPTION), null, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, callContext);
+        verifyBlockingStates(iterableForCreateState, List.of(createState, state1, state2, state3), true);
+
     }
 
     @Test(groups = "slow")
@@ -486,7 +499,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final BlockingState createState = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "ENT_STARTED", "entitlement-service", false, false, false, initialDateTime);
         verifyBlockingStates(iterableForCreateState, List.of(createState), false);
 
-        //Add new blocking state with date 2013-08-12T11:15 and and verify that entitlement is still ACTIVE as effectiveDateTime is not reached
+        //Add new blocking state with date 2013-08-12T11:15 and verify that entitlement is still ACTIVE as effectiveDateTime is not reached
         DateTime effectiveDateTime = new DateTime(2013, 8, 12, 11, 15);
         final BlockingState state2 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionBlock", "svc2", false, true, false, effectiveDateTime); //effectiveDateTime used while creating state1 is ignored by the addBlockingState method, only the effectiveDateTime passed to it is used
         subscriptionApi.addBlockingState(state2, effectiveDateTime, Collections.emptyList(), callContext);
@@ -506,7 +519,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
-        //Add new blocking state with date 2013-08-12T11:45 and and verify that entitlement is still BLOCKED as effectiveDateTime is not reached
+        //Add new blocking state with date 2013-08-12T11:45 and verify that entitlement is still BLOCKED as effectiveDateTime is not reached
         effectiveDateTime = new DateTime(2013, 8, 12, 11, 45);
         final BlockingState state3 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionUnBlock", "svc2", false, false, false, effectiveDateTime);
         subscriptionApi.addBlockingState(state3, effectiveDateTime, Collections.emptyList(), callContext);
@@ -514,7 +527,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
-        //Verify that Blocking State is created
+        //Verify that Blocking States are created
         iterableForCreateState = subscriptionApi.getBlockingStates(account.getId(), List.of(BlockingStateType.SUBSCRIPTION), null, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, callContext);
         verifyBlockingStates(iterableForCreateState, List.of(createState, state2, state3), false);
 
@@ -525,6 +538,19 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.ACTIVE);
+
+        //Add new blocking state with null datetime and verify that entitlement is BLOCKED immediately
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        effectiveDateTime = null;
+        final BlockingState state4 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionBlock", "svc3", false, true, false, clock.getUTCNow());
+        subscriptionApi.addBlockingState(state4, effectiveDateTime, Collections.emptyList(), callContext);
+
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
+
+        //Verify that Blocking States are created
+        iterableForCreateState = subscriptionApi.getBlockingStates(account.getId(), List.of(BlockingStateType.SUBSCRIPTION), null, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, callContext);
+        verifyBlockingStates(iterableForCreateState, List.of(createState, state2, state3, state4), false);
 
     }
 

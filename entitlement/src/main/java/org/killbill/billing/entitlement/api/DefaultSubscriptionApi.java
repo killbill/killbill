@@ -298,7 +298,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-
         final LocalDate effectiveDate = internalCallContext.toLocalDate(callContext.getCreatedDate());
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
@@ -397,14 +396,15 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-        final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, inputEffectiveDate);
+        final DateTime effectiveDate = inputEffectiveDate == null ? callContext.getCreatedDate() : inputEffectiveDate;
+        final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, effectiveDate);
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
                 externalKey,
                 new ArrayList<EntitlementSpecifier>(),
-                internalCallContextWithValidAccountId.toLocalDate(inputEffectiveDate),
-                internalCallContextWithValidAccountId.toLocalDate(inputEffectiveDate),
+                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
+                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
                 false);
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
@@ -496,7 +496,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     public List<AuditLogWithHistory> getBlockingStateAuditLogsWithHistoryForId(final UUID blockingId, final AuditLevel auditLevel, final TenantContext context) {
         return blockingStateDao.getBlockingStateAuditLogsWithHistoryForId(blockingId, auditLevel, internalCallContextFactory.createInternalTenantContext(blockingId, ObjectType.BLOCKING_STATES, context));
     }
-
 
     private List<SubscriptionBundle> getSubscriptionBundlesForAccount(final UUID accountId, final TenantContext tenantContext) throws SubscriptionApiException {
         final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
