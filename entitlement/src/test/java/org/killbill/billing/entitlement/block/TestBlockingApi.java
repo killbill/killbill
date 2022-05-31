@@ -121,7 +121,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, stateNameBlock, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        subscriptionApi.addBlockingState(state1, null, List.of(), callContext);
+        subscriptionApi.addBlockingState(state1, (LocalDate) null, List.of(), callContext);
         assertListenerStatus();
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
@@ -137,7 +137,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state2 = new DefaultBlockingState(baseEntitlement.getBundleId(), BlockingStateType.SUBSCRIPTION_BUNDLE, stateNameBlock, service, blockChange, blockEntitlement, blockBilling, null);
-        subscriptionApi.addBlockingState(state2, null, List.of(), callContext);
+        subscriptionApi.addBlockingState(state2, (LocalDate) null, List.of(), callContext);
         assertListenerStatus();
 
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
@@ -147,7 +147,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state3 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, stateNameUnBlock, service, false, false, false, clock.getUTCNow());
-        subscriptionApi.addBlockingState(state3, null, List.of(), callContext);
+        subscriptionApi.addBlockingState(state3, (LocalDate) null, List.of(), callContext);
         assertListenerStatus();
 
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
@@ -157,7 +157,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         clock.addDays(1);
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state4 = new DefaultBlockingState(baseEntitlement.getBundleId(), BlockingStateType.SUBSCRIPTION_BUNDLE, stateNameUnBlock, service, false, false, false, null);
-        subscriptionApi.addBlockingState(state4, null, List.of(), callContext);
+        subscriptionApi.addBlockingState(state4, (LocalDate) null, List.of(), callContext);
         assertListenerStatus();
 
         baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
@@ -179,7 +179,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState blockChangeAccount = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "State1", "Service1", true, false, false, clock.getUTCNow());
-        subscriptionApi.addBlockingState(blockChangeAccount, null, List.of(), callContext);
+        subscriptionApi.addBlockingState(blockChangeAccount, (LocalDate) null, List.of(), callContext);
         assertListenerStatus();
 
         // Try create subscription right now
@@ -222,7 +222,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState blockChangeAccount = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "State1", "Service1", true, false, false, clock.getUTCNow());
-        subscriptionApi.addBlockingState(blockChangeAccount, null, List.of(), callContext);
+        subscriptionApi.addBlockingState(blockChangeAccount, (LocalDate) null, List.of(), callContext);
         assertListenerStatus();
 
         // Try create subscription right now

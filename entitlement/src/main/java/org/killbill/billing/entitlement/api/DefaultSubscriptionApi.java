@@ -334,6 +334,17 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     public void addBlockingState(final BlockingState inputBlockingState, @Nullable final LocalDate inputEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         logAddBlockingState(log, inputBlockingState, inputEffectiveDate);
+        
+        final InternalCallContext internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), callContext); //TODO_1375 - Will this work or do we need to use internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.ACCOUNT, callContext) within a switch statement? 
+        final DateTime effectiveDate = inputEffectiveDate == null ? callContext.getCreatedDate() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
+        addBlockingState(inputBlockingState, effectiveDate, properties, callContext);
+
+    }
+    
+
+	@Override
+	public void addBlockingState(final BlockingState inputBlockingState, @Nullable final DateTime inputEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+        logAddBlockingState(log, inputBlockingState, inputEffectiveDate);
 
         // This is in no way an exhaustive arg validation, but to to ensure plugin would not hijack private entitlement state or service name
         if (inputBlockingState.getService() == null || inputBlockingState.getService().equals(KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName())) {
@@ -387,15 +398,14 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-        final DateTime effectiveDate = inputEffectiveDate == null ? callContext.getCreatedDate() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
-        final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, effectiveDate);
+        final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, inputEffectiveDate);
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
                 externalKey,
                 new ArrayList<EntitlementSpecifier>(),
-                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
-                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
+                internalCallContextWithValidAccountId.toLocalDate(inputEffectiveDate),
+                internalCallContextWithValidAccountId.toLocalDate(inputEffectiveDate),
                 false);
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
@@ -415,8 +425,9 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                 return null;
             }
         };
-        pluginExecution.executeWithPlugin(addBlockingStateWithPlugin, pluginContext);
-    }
+        pluginExecution.executeWithPlugin(addBlockingStateWithPlugin, pluginContext);		
+		
+	}    
 
     @Override
     public Iterable<BlockingState> getBlockingStates(final UUID accountId, @Nullable final List<BlockingStateType> typeFilter, @Nullable final List<String> svcsFilter, final OrderingType orderingType, final int timeFilter, final TenantContext tenantContext) throws EntitlementApiException {
@@ -547,4 +558,5 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }
         return subscriptionsPerBundle;
     }
+
 }
