@@ -685,7 +685,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         // effectiveDate is null (same as first case above), but **did**  reach the billing startDate (and entitlement startDate) so will succeed
         clock.addDeltaFromReality(1000); // Add one sec to make sure CHANGE event does not coincide with CREATE (realistic scenario), and therefore we do expect a CHANGE event
         testListener.pushExpectedEvents(NextEvent.CHANGE);
-        final Entitlement result = entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), null, Collections.emptyList(), callContext);
+        final Entitlement result = entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         assertEquals(result.getState(), EntitlementState.ACTIVE);
