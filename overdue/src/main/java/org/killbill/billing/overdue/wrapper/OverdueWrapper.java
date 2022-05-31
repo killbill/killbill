@@ -100,6 +100,11 @@ public class OverdueWrapper {
     }
 
     private OverdueState refreshWithLock(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
+        if (overdueStateApplicator.isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
+            log.debug("OverdueStateApplicator: apply returns because account (recordId={}) is set with OVERDUE_ENFORCEMENT_OFF", context.getAccountRecordId());
+            return null;
+        }
+
         final BillingState billingState = billingState(context);
         final BlockingState blockingStateForService = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context);
         final String previousOverdueStateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
