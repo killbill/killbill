@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -101,7 +102,7 @@ public class TestTagApi extends TestIntegrationBase {
         // Create a new tag definition
         //
         busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION);
-        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", Set.of(ObjectType.ACCOUNT, ObjectType.INVOICE), callContext);
+        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", new TreeSet<>(Set.of(ObjectType.ACCOUNT, ObjectType.INVOICE)), callContext);
         assertListenerStatus();
 
         final TagDefinition tagDefinition2 = tagUserApi.getTagDefinition(tagDefinition.getId(), callContext);
