@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -28,7 +29,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.PaymentPluginServiceRegistration;
 import org.killbill.billing.payment.core.sm.payments.PaymentOperation;
@@ -45,8 +45,6 @@ import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestPaymentOperation extends PaymentTestSuiteNoDB {
 
@@ -120,7 +118,8 @@ public class TestPaymentOperation extends PaymentTestSuiteNoDB {
                                                       null,
                                                       null,
                                                       false,
-                                                      null, ImmutableList.<PluginProperty>of(),
+                                                      null,
+                                                      Collections.emptyList(),
                                                       internalCallContext,
                                                       callContext);
 

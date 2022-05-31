@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.killbill.automaton.Operation.OperationCallback;
@@ -28,7 +29,6 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.payments.PaymentEnteringStateCallback;
@@ -39,8 +39,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestPaymentEnteringStateCallback extends PaymentTestSuiteWithEmbeddedDB {
 
@@ -67,7 +65,7 @@ public class TestPaymentEnteringStateCallback extends PaymentTestSuiteWithEmbedd
                                                       Currency.BRL,
                                                       null,
                                                       false,
-                                                      ImmutableList.<PluginProperty>of(),
+                                                      Collections.emptyList(),
                                                       internalCallContext,
                                                       callContext);
         daoHelper = new PaymentAutomatonDAOHelper(paymentStateContext, clock.getUTCNow(), paymentDao, paymentPluginServiceRegistration, internalCallContext, eventBus, paymentSMHelper);

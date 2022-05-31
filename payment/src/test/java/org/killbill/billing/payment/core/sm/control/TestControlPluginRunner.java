@@ -18,6 +18,8 @@
 package org.killbill.billing.payment.core.sm.control;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
@@ -33,8 +35,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
@@ -47,8 +47,8 @@ public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
         final String paymentTransactionExternalKey = UUIDs.randomUUID().toString();
         final BigDecimal amount = BigDecimal.ONE;
         final Currency currency = Currency.USD;
-        final ImmutableList<String> paymentControlPluginNames = ImmutableList.<String>of("not-registered");
-        final ImmutableList<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of();
+        final List<String> paymentControlPluginNames = List.of("not-registered");
+        final List<PluginProperty> pluginProperties = Collections.emptyList();
 
         final ControlPluginRunner controlPluginRunner = new ControlPluginRunner(new DefaultPaymentControlProviderPluginRegistry(), paymentConfig);
         final PriorPaymentControlResult paymentControlResult = controlPluginRunner.executePluginPriorCalls(account,
@@ -86,8 +86,8 @@ public class TestControlPluginRunner extends PaymentTestSuiteNoDB {
         final String paymentTransactionExternalKey = UUIDs.randomUUID().toString();
         final BigDecimal amount = BigDecimal.ONE;
         final Currency currency = Currency.USD;
-        final ImmutableList<String> paymentControlPluginNames = ImmutableList.<String>of("not-registered");
-        final ImmutableList<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of();
+        final List<String> paymentControlPluginNames = List.of("not-registered");
+        final List<PluginProperty> pluginProperties = Collections.emptyList();
 
         final ControlPluginRunner controlPluginRunner = new ControlPluginRunner(new DefaultPaymentControlProviderPluginRegistry(), paymentConfig);
         final PriorPaymentControlResult paymentControlResult = controlPluginRunner.executePluginPriorCalls(null,

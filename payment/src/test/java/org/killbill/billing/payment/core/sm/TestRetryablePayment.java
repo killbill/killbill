@@ -18,9 +18,12 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
@@ -66,11 +69,6 @@ import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 import static org.testng.Assert.assertEquals;
@@ -119,7 +117,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
     private final String paymentTransactionExternalKey = "foobar";
     private final BigDecimal amount = BigDecimal.ONE;
     private final Currency currency = Currency.EUR;
-    private final ImmutableList<PluginProperty> emptyProperties = ImmutableList.of();
+    private final List<PluginProperty> emptyProperties = Collections.emptyList();
     private final MockPaymentControlProviderPlugin mockRetryProviderPlugin = new MockPaymentControlProviderPlugin();
 
     private byte[] EMPTY_PROPERTIES;
@@ -154,7 +152,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                 return MockPaymentControlProviderPlugin.PLUGIN_NAME;
             }
         }, mockRetryProviderPlugin);
-        EMPTY_PROPERTIES = PluginPropertySerializer.serialize(ImmutableList.<PluginProperty>of());
+        EMPTY_PROPERTIES = PluginPropertySerializer.serialize(Collections.emptyList());
     }
 
     @BeforeMethod(groups = "fast")
@@ -190,7 +188,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                 paymentRefresher);
 
         paymentStateContext =
-                new PaymentStateControlContext(ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME),
+                new PaymentStateControlContext(List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME),
                                                true,
                                                null,
                                                null,
@@ -542,13 +540,7 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
 
         final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
         assertEquals(pas.size(), 2);
-        final PaymentAttemptModelDao successfulAttempt = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
-            @Override
-            public boolean apply(final PaymentAttemptModelDao input) {
-                return input.getTransactionType() == TransactionType.AUTHORIZE &&
-                       input.getStateName().equals("SUCCESS");
-            }
-        }).orNull();
+        final PaymentAttemptModelDao successfulAttempt = findSuccessPaymentAttempt(pas);
         assertNotNull(successfulAttempt);
     }
 
@@ -647,19 +639,13 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
             final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
             assertEquals(pas.size(), 2);
 
-            final PaymentAttemptModelDao failedAttempts = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
-                @Override
-                public boolean apply(final PaymentAttemptModelDao input) {
-                    return input.getTransactionType() == TransactionType.AUTHORIZE &&
-                           input.getStateName().equals("ABORTED");
-                }
-            }).orNull();
+            final PaymentAttemptModelDao failedAttempts = findAbortedPaymentAttempt(pas);
             assertNotNull(failedAttempts);
         }
     }
 
     @Test(groups = "fast")
-    public void testRetryLogicFromRetriedStateWithSuccess() throws PaymentApiException {
+    public void testRetryLogicFromRetriedStateWithSuccess() {
 
         mockRetryProviderPlugin
                 .setAborted(false)
@@ -685,18 +671,12 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                      new PaymentTransactionModelDao(transactionId, attempt.getId(), paymentTransactionExternalKey, utcNow, utcNow, paymentId, TransactionType.AUTHORIZE, utcNow, TransactionStatus.PAYMENT_FAILURE, amount, currency, "bla", "foo"),
                                                      internalCallContext);
 
-        processor.retryPaymentTransaction(attempt.getId(), ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
+        processor.retryPaymentTransaction(attempt.getId(), List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
 
         final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
         assertEquals(pas.size(), 2);
 
-        final PaymentAttemptModelDao successfulAttempt = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
-            @Override
-            public boolean apply(final PaymentAttemptModelDao input) {
-                return input.getTransactionType() == TransactionType.AUTHORIZE &&
-                       input.getStateName().equals("SUCCESS");
-            }
-        }).orNull();
+        final PaymentAttemptModelDao successfulAttempt = findSuccessPaymentAttempt(pas);
         assertNotNull(successfulAttempt);
     }
 
@@ -729,17 +709,11 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                      internalCallContext
                                                     );
 
-        processor.retryPaymentTransaction(attempt.getId(), ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
+        processor.retryPaymentTransaction(attempt.getId(), List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
 
         final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
         assertEquals(pas.size(), 2);
-        final PaymentAttemptModelDao failedAttempt = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
-            @Override
-            public boolean apply(final PaymentAttemptModelDao input) {
-                return input.getTransactionType() == TransactionType.AUTHORIZE &&
-                       input.getStateName().equals("ABORTED");
-            }
-        }).orNull();
+        final PaymentAttemptModelDao failedAttempt = findAbortedPaymentAttempt(pas);
         assertNotNull(failedAttempt);
     }
 
@@ -777,22 +751,28 @@ public class TestRetryablePayment extends PaymentTestSuiteNoDB {
                                                          internalCallContext
                                                         );
 
-            processor.retryPaymentTransaction(attempt.getId(), ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
+            processor.retryPaymentTransaction(attempt.getId(), List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME), internalCallContext);
 
             final List<PaymentAttemptModelDao> pas = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionExternalKey, internalCallContext);
             assertEquals(pas.size(), 2);
-            final PaymentAttemptModelDao failedAttempt = Iterables.tryFind(pas, new Predicate<PaymentAttemptModelDao>() {
-                @Override
-                public boolean apply(final PaymentAttemptModelDao input) {
-                    return input.getTransactionType() == TransactionType.AUTHORIZE &&
-                           input.getStateName().equals("ABORTED");
-                }
-            }).orNull();
+            final PaymentAttemptModelDao failedAttempt = findAbortedPaymentAttempt(pas);
             assertNotNull(failedAttempt);
         } finally {
             if (lock != null) {
                 lock.release();
             }
         }
+    }
+
+    private PaymentAttemptModelDao findSuccessPaymentAttempt(final Collection<PaymentAttemptModelDao> paymentAttempts) {
+        return paymentAttempts.stream()
+                              .filter(input -> input.getTransactionType() == TransactionType.AUTHORIZE && "SUCCESS".equals(input.getStateName()))
+                              .findFirst().orElse(null);
+    }
+
+    private PaymentAttemptModelDao findAbortedPaymentAttempt(final Collection<PaymentAttemptModelDao> paymentAttempts) {
+        return paymentAttempts.stream()
+                              .filter(input -> input.getTransactionType() == TransactionType.AUTHORIZE && "ABORTED".equals(input.getStateName()))
+                              .findFirst().orElse(null);
     }
 }

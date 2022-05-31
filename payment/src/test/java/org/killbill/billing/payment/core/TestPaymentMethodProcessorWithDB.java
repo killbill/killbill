@@ -17,30 +17,24 @@
 
 package org.killbill.billing.payment.core;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PaymentMethod;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.dao.PaymentMethodModelDao;
-import org.killbill.billing.payment.dao.PaymentMethodSqlDao;
-import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
-import org.killbill.billing.util.dao.EntityHistoryModelDao;
-import org.killbill.billing.util.dao.TableName;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestPaymentMethodProcessorWithDB extends PaymentTestSuiteWithEmbeddedDB {
 
-    private static final ImmutableList<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+    private static final List<PluginProperty> PLUGIN_PROPERTIES = Collections.emptyList();
 
     @Test(groups = "slow", expectedExceptions = PaymentApiException.class, expectedExceptionsMessageRegExp = ".*Payment method .* has a different account id")
     public void testSetDefaultPaymentMethodDifferentAccount() throws Exception {
@@ -83,7 +77,7 @@ public class TestPaymentMethodProcessorWithDB extends PaymentTestSuiteWithEmbedd
         Assert.assertEquals(history1.getExternalKey(), paymentMethodModelDao.getExternalKey());
         Assert.assertTrue(history1.isActive());
 
-        paymentMethodProcessor.deletedPaymentMethod(account, paymentMethodId, true, true, ImmutableList.<PluginProperty>of(), callContext, internalCallContext);
+        paymentMethodProcessor.deletedPaymentMethod(account, paymentMethodId, true, true, Collections.emptyList(), callContext, internalCallContext);
 
         auditLogsWithHistory = paymentDao.getPaymentMethodAuditLogsWithHistoryForId(paymentMethodModelDao.getId(), AuditLevel.FULL, internalCallContext);
         Assert.assertEquals(auditLogsWithHistory.size(), 2);
