@@ -215,7 +215,7 @@ public abstract class EntitlementLoggingHelper {
     }
 
     public static void logChangePlan(final Logger log, final Entitlement entitlement, final EntitlementSpecifier entitlementSpecifier,
-                                     final LocalDate entitlementEffectiveDate, final BillingActionPolicy actionPolicy) {
+                                     final Object entitlementEffectiveDate, final BillingActionPolicy actionPolicy) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Change Entitlement Plan: ")
                     .append(" id = '")
