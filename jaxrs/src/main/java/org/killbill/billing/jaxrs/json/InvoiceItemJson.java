@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -31,9 +32,7 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -142,12 +141,7 @@ public class InvoiceItemJson extends JsonBase {
         if (childItems == null) {
             return null;
         }
-        return ImmutableList.copyOf(Collections2.transform(childItems, new Function<InvoiceItem, InvoiceItemJson>() {
-            @Override
-            public InvoiceItemJson apply(final InvoiceItem input) {
-                return new InvoiceItemJson(input);
-            }
-        }));
+        return childItems.stream().map(InvoiceItemJson::new).collect(Collectors.toUnmodifiableList());
     }
 
     public InvoiceItem toInvoiceItem() {

@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
@@ -28,9 +29,7 @@ import org.killbill.billing.usage.api.UsageRecord;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -87,12 +86,9 @@ public class SubscriptionUsageRecordJson {
         }
 
         public UnitUsageRecord toUnitUsageRecord() {
-            final List<UsageRecord> tmp = ImmutableList.copyOf(Iterables.transform(usageRecords, new Function<UsageRecordJson, UsageRecord>() {
-                @Override
-                public UsageRecord apply(final UsageRecordJson input) {
-                    return input.toUsageRecord();
-                }
-            }));
+            final List<UsageRecord> tmp = usageRecords.stream()
+                    .map(UsageRecordJson::toUsageRecord)
+                    .collect(Collectors.toUnmodifiableList());
             return new UnitUsageRecord(unitType, tmp);
         }
     }
@@ -124,12 +120,9 @@ public class SubscriptionUsageRecordJson {
     }
 
     public SubscriptionUsageRecord toSubscriptionUsageRecord() {
-        final List<UnitUsageRecord> tmp = ImmutableList.copyOf(Iterables.transform(unitUsageRecords, new Function<UnitUsageRecordJson, UnitUsageRecord>() {
-            @Override
-            public UnitUsageRecord apply(final UnitUsageRecordJson input) {
-                return input.toUnitUsageRecord();
-            }
-        }));
+        final List<UnitUsageRecord> tmp = unitUsageRecords.stream()
+                .map(UnitUsageRecordJson::toUnitUsageRecord)
+                .collect(Collectors.toUnmodifiableList());
         return new SubscriptionUsageRecord(subscriptionId, trackingId, tmp);
     }
 }

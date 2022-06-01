@@ -17,20 +17,20 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.Listing;
 import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.jaxrs.json.CatalogJson.PriceJson;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(value="PlanDetail")
@@ -61,7 +61,7 @@ public class PlanDetailJson {
             this.product = null;
             this.plan = null;
             this.finalPhaseBillingPeriod = null;
-            this.finalPhaseRecurringPrice = ImmutableList.<PriceJson>of();
+            this.finalPhaseRecurringPrice = Collections.emptyList();
         } else {
             this.product = plan.getProduct() == null ? null : plan.getProduct().getName();
             this.plan = plan.getName();
@@ -70,19 +70,17 @@ public class PlanDetailJson {
                 plan.getFinalPhase().getRecurring() == null ||
                 plan.getFinalPhase().getRecurring().getRecurringPrice() == null ||
                 plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices().length == 0) {
-                this.finalPhaseRecurringPrice = ImmutableList.<PriceJson>of();
+                this.finalPhaseRecurringPrice = Collections.emptyList();
             } else {
-                this.finalPhaseRecurringPrice = Lists.transform(ImmutableList.<Price>copyOf(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices()),
-                                                                new Function<Price, PriceJson>() {
-                                                                    @Override
-                                                                    public PriceJson apply(final Price price) {
-                                                                        try {
-                                                                            return new PriceJson(price);
-                                                                        } catch (final CurrencyValueNull e) {
-                                                                            return new PriceJson(price.getCurrency(), BigDecimal.ZERO);
-                                                                        }
-                                                                    }
-                                                                });
+                this.finalPhaseRecurringPrice = Arrays.stream(plan.getFinalPhase().getRecurring().getRecurringPrice().getPrices())
+                        .map(price -> {
+                            try {
+                                return new PriceJson(price);
+                            } catch (final CurrencyValueNull e) {
+                                return new PriceJson(price.getCurrency(), BigDecimal.ZERO);
+                            }
+                        })
+                        .collect(Collectors.toUnmodifiableList());
             }
         }
         this.priceList = listing.getPriceList() == null ? null : listing.getPriceList().getName();
