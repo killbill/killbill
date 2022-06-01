@@ -295,7 +295,7 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
-    public static void logAddBlockingState(final Logger log, final BlockingState inputBlockingState, final LocalDate inputEffectiveDate) {
+    public static void logAddBlockingState(final Logger log, final BlockingState inputBlockingState, final Object inputEffectiveDate) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Add BlockingState Entitlement: ");
             logBlockingState(logLine, inputBlockingState);
