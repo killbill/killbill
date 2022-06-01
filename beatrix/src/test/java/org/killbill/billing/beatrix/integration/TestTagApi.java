@@ -102,7 +102,9 @@ public class TestTagApi extends TestIntegrationBase {
         // Create a new tag definition
         //
         busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION);
-        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", new TreeSet<>(Set.of(ObjectType.ACCOUNT, ObjectType.INVOICE)), callContext);
+        // wrap to TreeSet to guarantee ObjectTypes order so assertion in line ~112-113 will always valid
+        final Set<ObjectType> objectTypes = new TreeSet<>(Set.of(ObjectType.ACCOUNT, ObjectType.INVOICE));
+        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", objectTypes, callContext);
         assertListenerStatus();
 
         final TagDefinition tagDefinition2 = tagUserApi.getTagDefinition(tagDefinition.getId(), callContext);
