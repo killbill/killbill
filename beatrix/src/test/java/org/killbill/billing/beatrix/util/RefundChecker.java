@@ -20,10 +20,13 @@ package org.killbill.billing.beatrix.util;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
@@ -35,18 +38,11 @@ import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 public class RefundChecker {
 
@@ -67,14 +63,8 @@ public class RefundChecker {
 
     public PaymentTransaction checkRefund(final UUID paymentId, final CallContext context, ExpectedRefundCheck expected) throws PaymentApiException {
 
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), context);
-        final PaymentTransaction refund = Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return input.getTransactionType() == TransactionType.REFUND;
-            }
-        }).orNull();
-
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, Collections.emptyList(), context);
+        final PaymentTransaction refund = getRefundTransaction(payment);
         Assert.assertNotNull(refund);
 
         final InvoicePayment refundInvoicePayment = getInvoicePaymentEntry(paymentId, InvoicePaymentType.REFUND, context);
@@ -95,22 +85,17 @@ public class RefundChecker {
     }
 
     private PaymentTransaction getRefundTransaction(final Payment payment) {
-        return Iterables.tryFind(payment.getTransactions(), new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return input.getTransactionType() == TransactionType.REFUND;
-            }
-        }).get();
+        return payment.getTransactions().stream()
+                .filter(input -> input.getTransactionType() == TransactionType.REFUND)
+                .findFirst().orElse(null);
     }
 
     private InvoicePayment getInvoicePaymentEntry(final UUID paymentId, final InvoicePaymentType type, final CallContext context) {
         final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePayments(paymentId, context);
-        final Collection<InvoicePayment> refundInvoicePayments = Collections2.filter(invoicePayments, new Predicate<InvoicePayment>() {
-            @Override
-            public boolean apply(@Nullable final InvoicePayment invoicePayment) {
-                return invoicePayment.getType() == type && invoicePayment.getPaymentId().equals(paymentId);
-            }
-        });
+        final Collection<InvoicePayment> refundInvoicePayments = invoicePayments
+                .stream()
+                .filter(invoicePayment -> invoicePayment.getType() == type && invoicePayment.getPaymentId().equals(paymentId))
+                .collect(Collectors.toUnmodifiableList());
         Assert.assertEquals(refundInvoicePayments.size(), 1);
         return refundInvoicePayments.iterator().next();
     }
