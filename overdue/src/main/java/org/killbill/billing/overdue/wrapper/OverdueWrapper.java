@@ -79,16 +79,16 @@ public class OverdueWrapper {
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    public OverdueState refresh(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
+    public void refresh(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
         if (overdueStateSet.size() < 1) { // No configuration available
-            return overdueStateSet.getClearState();
+            return;
         }
 
         GlobalLock lock = null;
         try {
             lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), overdueable.getId().toString(), MAX_LOCK_RETRIES);
 
-            return refreshWithLock(effectiveDate, context);
+            refreshWithLock(effectiveDate, context);
         } catch (final LockFailedException e) {
             log.warn("Failed to process overdue for accountId='{}'", overdueable.getId(), e);
         } finally {
@@ -96,23 +96,26 @@ public class OverdueWrapper {
                 lock.release();
             }
         }
-        return null;
+        return;
     }
 
-    private OverdueState refreshWithLock(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
+    private void refreshWithLock(final DateTime effectiveDate, final InternalCallContext context) throws OverdueException, OverdueApiException {
         if (overdueStateApplicator.isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
             log.debug("OverdueStateApplicator: apply returns because account (recordId={}) is set with OVERDUE_ENFORCEMENT_OFF", context.getAccountRecordId());
-            return null;
+            return;
         }
 
         final BillingState billingState = billingState(context);
         final BlockingState blockingStateForService = api.getBlockingStateForService(overdueable.getId(), BlockingStateType.ACCOUNT, OverdueService.OVERDUE_SERVICE_NAME, context);
         final String previousOverdueStateName = blockingStateForService != null ? blockingStateForService.getStateName() : OverdueWrapper.CLEAR_STATE_NAME;
         final OverdueState currentOverdueState = overdueStateSet.findState(previousOverdueStateName);
-        final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, context.toLocalDate(context.getCreatedDate()));
+        final OverdueState nextOverdueState = getNextOverdueState(billingState, context);
 
         overdueStateApplicator.apply(effectiveDate, overdueStateSet, billingState, overdueable, currentOverdueState, nextOverdueState, context);
+    }
 
+    public OverdueState getNextOverdueState(final BillingState billingState, final InternalCallContext context) throws OverdueException, OverdueApiException {
+        final OverdueState nextOverdueState = overdueStateSet.calculateOverdueState(billingState, context.toLocalDate(context.getCreatedDate()));
         return nextOverdueState;
     }
 
