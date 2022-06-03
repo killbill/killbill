@@ -24,7 +24,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -46,20 +48,12 @@ import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
-import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.features.KillbillFeatures;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import static org.killbill.billing.ErrorCode.INVOICE_NOTHING_TO_DO;
 import static org.testng.Assert.assertEquals;
@@ -88,7 +82,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptySet(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -118,7 +112,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         //
         // We verify that invoice only tried to REPAIR from cutoff date -- and in particular the period 2020-01-15 - 2020-02-01 is left untouched.
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), new LocalDate(2020, 1, 15), ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), new LocalDate(2020, 1, 15), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
@@ -133,18 +127,14 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final DateTime nextDate1 = clock.getUTCNow().plusDays(1);
         checkNothingToInvoice(account.getId(), new LocalDate(nextDate1, testTimeZone), true);
 
-
         // Issue a series of dry-run starting on 2020-04-01
         DateTime nextDate = clock.getUTCNow().plusMonths(1);
         for (int i = 0; i < 5; i++) {
             final Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(nextDate, testTimeZone), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
             // Filter to eliminate CBA
-            final int actualRecurring = Iterables.size(Iterables.filter(invoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
-                @Override
-                public boolean apply(final InvoiceItem invoiceItem) {
-                    return invoiceItem.getInvoiceItemType() == InvoiceItemType.RECURRING;
-                }
-            }));
+            final int actualRecurring = (int) invoice.getInvoiceItems().stream()
+                    .filter(invoiceItem -> invoiceItem.getInvoiceItemType() == InvoiceItemType.RECURRING)
+                    .count();
             //
             assertEquals(actualRecurring, 1);
             nextDate = nextDate.plusMonths(1);
@@ -165,7 +155,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -181,21 +171,20 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose targetDt >= cutoffDt
         // - Proposed items correctly generate the 2 expected items but both are filtered because their startDt < cutoffDt
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday().minusDays(1), ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday().minusDays(1), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Do a change today => Only new item 2020-01-16 - 2020-02-01 gets generated
         // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose targetDt >= cutoffDt
         // - Proposed items correctly generate the 2 expected items but the first one is filtered because its start date  2020-01-15 < cutoffDt
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Double invoicing due to bad config! (no REPAIR)
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 16), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("10.30")));
     }
-
 
 
     @Test(groups = "slow")
@@ -210,7 +199,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2020-02-01
@@ -245,7 +234,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         //
         // We verify that invoice only tried to REPAIR from cutoff date -- and in particular the period 2020-01-15 - 2020-02-01 is left untouched.
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
-        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 15), true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 15), true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
@@ -266,14 +255,14 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Create another subscription so we keep having something to invoice after cancellation of the first one
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        // on-1615: return value of createBaseEntitlement (entitlementId2) never used, so it gets removed.
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something2", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-
 
         // 2020-02-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -284,30 +273,25 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
-
         // Cancel in the past (previous period)
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
-        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 28), true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 28), true, Collections.emptyList(), callContext);
         assertListenerStatus();
-
 
         // 2020-03-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
-
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 3, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("-12.90")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 2, 1), new LocalDate(2020, 3, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
-
 
         // 2020-04-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
-
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
@@ -328,7 +312,9 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2020-03-01
@@ -373,7 +359,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2021-02-01
@@ -412,7 +398,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Cancel on 2021-04-30
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         //busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
-        entitlement.cancelEntitlementWithDate(new LocalDate(2021, 4, 30), true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.cancelEntitlementWithDate(new LocalDate(2021, 4, 30), true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2021-05-01
@@ -462,7 +448,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2020-02-01
@@ -471,12 +457,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Bill run on the 2020-02-01 with targetDate end of month (EOM)
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 2, 28), Collections.emptyList(), callContext);
 
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 1;
-            }
-        }, 10);
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 1, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -490,7 +471,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Cancel in the past (previous period)
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
-        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 2, 15), true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 2, 15), true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2020-03-01
@@ -499,12 +480,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Bill run on the 2020-02-01 with targetDate end of month (EOM)
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 3, 31), Collections.emptyList(), callContext);
 
-        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 1;
-            }
-        }, 10);
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 1, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -552,7 +528,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2022, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
 
         // $0 invoice
         // 2020-06-01
@@ -562,7 +538,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Collections.emptySet(), internalCallContext);
 
         recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2021, 6, 1), BigDecimal.valueOf(50L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), BigDecimal.valueOf(300L), callContext);
@@ -581,7 +557,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 6, 1), new LocalDate(2021, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")),
                                                  // Re-invoiced.
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-3", "tracking-4"), internalCallContext);
     }
 
 
@@ -617,7 +593,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2022, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
 
         // $0 invoice
         // 2020-06-01
@@ -627,7 +603,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Collections.emptySet(), internalCallContext);
 
         recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2021, 6, 1), BigDecimal.valueOf(50L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), BigDecimal.valueOf(300L), callContext);
@@ -639,7 +615,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 6, 1), new LocalDate(2021, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-3", "tracking-4"), internalCallContext);
 
 
         recordUsageData(aoSubscription.getId(), "tracking-5", "bullets", new LocalDate(2021, 7, 2), BigDecimal.valueOf(40L), callContext);
@@ -652,7 +628,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 7, 1), new LocalDate(2021, 8, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-5", "tracking-6"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-5", "tracking-6"), internalCallContext);
 
     }
 
@@ -681,7 +657,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2020-02-01
@@ -739,7 +716,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Check initial invoice got created
@@ -748,13 +726,11 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // 2020-02-01
         clock.addDays(17);
 
-        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            // The first item is generated immediately as we create the subscription and the second as we move the clock but we have no event to sync on because of AUTO_INVOICING_DRAFT
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 2;
-            }
-        }, 10);
+        invoice = getCurrentDraftInvoice(account.getId(),
+                                         // The first item is generated immediately as we create the subscription and
+                                         // the second as we move the clock but we have no event to sync on because of AUTO_INVOICING_DRAFT
+                                         input -> input.getInvoiceItems().size() == 2,
+                                         10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -804,7 +780,9 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+
+        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2021-02-01
@@ -855,7 +833,8 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2021-02-01
@@ -925,15 +904,16 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final LocalDate effDt1 = new LocalDate(2020, 8, 15);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null), null, effDt1, effDt1, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        final Subscription sub1 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, callContext);
+        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
+        // on-1615: return value of getSubscriptionForEntitlementId (sub1) never used, so it gets removed.
+        subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, callContext);
         assertListenerStatus();
 
         // Create an in-arrear USAGE subscription
         final LocalDate effDt2 = new LocalDate(2020, 9, 1);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("training-usage-in-arrear");
-        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null), null, effDt2, effDt2, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null), null, effDt2, effDt2, false, true, Collections.emptyList(), callContext);
         final Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, callContext);
         assertListenerStatus();
 
@@ -954,12 +934,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Bill run on the 2021-02-01 with targetDate end of month (EOM)
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 2, 28), Collections.emptyList(), callContext);
 
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 3;
-            }
-        }, 10);
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 3, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -989,12 +964,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 3, 31), Collections.emptyList(), callContext);
 
-        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 2;
-            }
-        }, 10);
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 2, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -1009,7 +979,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addDays(14);
         Thread.sleep(1000);
 
-
         recordUsageData(sub2.getId(), "tracking-3", "hours", new LocalDate(2021, 3, 15), BigDecimal.valueOf(1L), callContext);
 
         // 2021-04-01
@@ -1018,21 +987,14 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 4, 30), Collections.emptyList(), callContext);
 
-        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 2;
-            }
-        }, 10);
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 2, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
 
-
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 15), new LocalDate(2021, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
-
 
         // 2021-04-15
         // Invoice notification on the 15 (Recurring subscription)
@@ -1047,12 +1009,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2021, 5, 31), Collections.emptyList(), callContext);
 
-        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 2;
-            }
-        }, 10);
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 2, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -1061,8 +1018,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 15), new LocalDate(2021, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 4, 1), new LocalDate(2021, 5, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
-
-
 
     }
 
@@ -1087,27 +1042,22 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Create another subscription so we keep having something to invoice after cancellation of the first one
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        // on-1615: return value of createBaseEntitlement (entitlementId2) never used, so it gets removed.
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something2", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2020-02-01
         clock.addMonths(1);
 
-
         // Bill run on the 2020-02-01 with targetDate end of month (EOM)
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 2, 28), Collections.emptyList(), callContext);
 
-        Invoice invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 2;
-            }
-        }, 10);
+        Invoice invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 2, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -1116,12 +1066,10 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
-
-
         // Cancel (full repair)
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
-        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 1), true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 1), true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2020-03-01
@@ -1130,12 +1078,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // Bill run on the 2020-03-01 with targetDate end of month (EOM)
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 3, 31), Collections.emptyList(), callContext);
 
-        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 2;
-            }
-        }, 10);
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 2, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -1153,12 +1096,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         //
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 4, 30), Collections.emptyList(), callContext);
 
-        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 1;
-            }
-        }, 10);
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 1, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
@@ -1166,26 +1104,19 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
-
         // 2020-05-01
         clock.addMonths(1);
 
         // Bill run on the 2020-03-01 with targetDate end of month (EOM)
         invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2020, 5, 31), Collections.emptyList(), callContext);
 
-        invoice = getCurrentDraftInvoice(account.getId(), new Function<Invoice, Boolean>() {
-            @Override
-            public Boolean apply(final Invoice invoice) {
-                return invoice.getInvoiceItems().size() == 1;
-            }
-        }, 10);
+        invoice = getCurrentDraftInvoice(account.getId(), input -> input.getInvoiceItems().size() == 1, 10);
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         invoiceUserApi.commitInvoice(invoice.getId(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 4, 1), new LocalDate(2020, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
-
 
     }
 

@@ -38,7 +38,6 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.entitlement.api.BlockingState;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
@@ -53,14 +52,9 @@ import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
-import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
 import org.killbill.billing.junction.DefaultBlockingState;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -76,7 +70,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
     private void insertInvoiceItems(final InvoiceModelDao invoice) {
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
-        invoiceDao.createInvoices(Collections.singletonList(invoice), null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, false,internalCallContext);
+        invoiceDao.createInvoices(Collections.singletonList(invoice), null, Collections.emptySet(), callbackDateTimePerSubscriptions, null, false,internalCallContext);
     }
 
     @Test(groups = "slow")
@@ -476,7 +470,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // This will generate the credit for the full period, bringing by account balance to 0
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         final BlockingState blockingState = new DefaultBlockingState(baseEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "COURTESY_BLOCK", "company.a.b.c", true, true, true, null);
-        subscriptionApi.addBlockingState(blockingState,  new LocalDate(2016, 5, 1),  ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState,  new LocalDate(2016, 5, 1),  Collections.emptyList(), callContext);
         assertListenerStatus();
 
 
@@ -496,7 +490,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE,  NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
         final BlockingState unblockingState = new DefaultBlockingState(baseEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "END_OF_COURTESY_BLOCK", "company.a.b.c", false, false, false, null);
-        subscriptionApi.addBlockingState(unblockingState,  new LocalDate(2016, 5, 16),  ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(unblockingState,  new LocalDate(2016, 5, 16),  Collections.emptyList(), callContext);
         assertListenerStatus();
 
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 16), new LocalDate(2016, 6, 16), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
@@ -580,10 +574,10 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         // Price override of $0
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
+        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, Collections.emptyList()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -606,7 +600,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // Change to the paying plan (alignment is CHANGE_OF_PLAN: we end up in TRIAL)
         final PlanPhaseSpecifier specWithTrial = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "trial", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(specWithTrial), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(specWithTrial), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Trial invoice
@@ -643,10 +637,10 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         // Price override of $0
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
+        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, Collections.emptyList()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Account accountBCD = accountUserApi.getAccountById(account.getId(), callContext);
         assertEquals(accountBCD.getBillCycleDayLocal(), (Integer) 1);
@@ -666,7 +660,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // Change to the paying plan (alignment is CHANGE_OF_PLAN: we end up in TRIAL)
         final PlanPhaseSpecifier specWithTrial = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "trial", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE,  NextEvent.INVOICE);
-        baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(specWithTrial), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(specWithTrial), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Trial invoice (with re-alignment invoice item from free plan)
@@ -703,10 +697,10 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         // Price override of $0
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
+        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, Collections.emptyList()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -728,7 +722,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         // Change to the paying plan
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(toSpec), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(toSpec), clock.getUTCToday(), BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // First paying invoice
@@ -768,7 +762,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         busHandler.pushExpectedEvents( NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
         // We will realign the BCD on the 15 as we create the subscription - ignoring the account setting on 21.
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -790,7 +784,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         // Change plan EOT
         // We will now realign the BCD on the 21 as we change the plan for the subscription.
-        entitlement.changePlan(new DefaultEntitlementSpecifier(spec2, 21, null, null), ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.changePlan(new DefaultEntitlementSpecifier(spec2, 21, null, null), Collections.emptyList(), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -891,11 +885,11 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final Integer billCycleDay = 1;
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.QUARTERLY, "notrial", null);
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-quarterly-notrial-evergreen", account.getCurrency(), BigDecimal.TEN, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
+        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-quarterly-notrial-evergreen", account.getCurrency(), BigDecimal.TEN, BigDecimal.ZERO, Collections.emptyList()));
         final DefaultEntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(spec, billCycleDay, UUID.randomUUID().toString(), overrides);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        entitlementApi.createBaseEntitlement(account.getId(), entitlementSpecifier, "134582864", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), entitlementSpecifier, "134582864", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -924,7 +918,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         busHandler.pushExpectedEvents( NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
         // We will realign the BCD on the 15 as we create the subscription - ignoring the account setting on 21.
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,

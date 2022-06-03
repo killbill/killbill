@@ -37,11 +37,9 @@ import org.killbill.billing.beatrix.util.PaymentChecker.ExpectedPaymentCheck;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
-import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -53,15 +51,12 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.mock.MockAccountBuilder;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.killbill.billing.ErrorCode.INVOICE_NOTHING_TO_DO;
 import static org.testng.Assert.assertEquals;
@@ -612,7 +607,7 @@ public class TestIntegration extends TestIntegrationBase {
         final SubscriptionBundle initialBundle = subscriptionApi.getActiveSubscriptionBundleForExternalKey("bundleKey", callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
-        baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final String newProductName = "Pistol";
@@ -634,7 +629,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // One more time
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
-        newBaseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        newBaseEntitlement.cancelEntitlementWithPolicy(EntitlementActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final String newerProductName = "Shotgun";
@@ -693,7 +688,7 @@ public class TestIntegration extends TestIntegrationBase {
         // PAUSE THE ENTITLEMENT
         DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
-        entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -710,7 +705,7 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS); // 2012-4-5
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.INVOICE);
-        entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
@@ -763,17 +758,17 @@ public class TestIntegration extends TestIntegrationBase {
         invoiceChecker.checkInvoice(accountId,
                                     1,
                                     callContext,
-                                    ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 2, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO)));
+                                    List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 2, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO)));
 
         invoiceChecker.checkInvoice(accountId,
                                     2,
                                     callContext,
-                                    ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95"))));
+                                    List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95"))));
 
         // Pause the entitlement between 2012-03-05 and 2012-03-15
         DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
-        entitlementApi.pause(entitlement.getBundleId(), new LocalDate(2012, 3, 5), ImmutableList.<PluginProperty>of(), callContext);
-        entitlementApi.resume(entitlement.getBundleId(), new LocalDate(2012, 3, 15), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.pause(entitlement.getBundleId(), new LocalDate(2012, 3, 5), Collections.emptyList(), callContext);
+        entitlementApi.resume(entitlement.getBundleId(), new LocalDate(2012, 3, 15), Collections.emptyList(), callContext);
 
         // Advance clock to 2012-03-07
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
@@ -783,13 +778,13 @@ public class TestIntegration extends TestIntegrationBase {
         invoiceChecker.checkInvoice(accountId,
                                     2,
                                     callContext,
-                                    ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95"))));
+                                    List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95"))));
 
         invoiceChecker.checkInvoice(accountId,
                                     3,
                                     callContext,
-                                    ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 5), new LocalDate(2012, 4, 2), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-225.76")),
-                                                                               new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 7), new LocalDate(2012, 3, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("225.76"))));
+                                    List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 5), new LocalDate(2012, 4, 2), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-225.76")),
+                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 7), new LocalDate(2012, 3, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("225.76"))));
 
         // Entitlement should be blocked
         entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
@@ -808,7 +803,7 @@ public class TestIntegration extends TestIntegrationBase {
 
         // Cancel entitlement start of term but with billing policy immediate (ENT_BLOCKED must be after ENT_CANCELLED to trigger the bug)
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
-        baseEntitlement.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(2012, 3, 2), BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        baseEntitlement.cancelEntitlementWithDateOverrideBillingPolicy(new LocalDate(2012, 3, 2), BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2012-03-16

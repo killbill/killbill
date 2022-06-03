@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -48,12 +49,9 @@ import org.killbill.billing.usage.api.svcs.DefaultRawUsage;
 import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.callcontext.TenantContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 
@@ -134,7 +132,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
 
         final RolledUpUsage result1 = usageUserApi.getUsageForSubscription(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 15), Collections.emptyList(), callContext);
         assertEquals(result1.getSubscriptionId(), aoSubscription.getId());
