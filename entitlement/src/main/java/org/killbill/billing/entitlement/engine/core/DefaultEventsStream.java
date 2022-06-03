@@ -473,10 +473,10 @@ public class DefaultEventsStream implements EventsStream {
 
     private void computeStateForEntitlement() {
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
-        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(internalTenantContext.toLocalDate(utcNow)) <= 0) {
+        if (entitlementEffectiveEndDateTime != null && entitlementEffectiveEndDateTime.compareTo(utcNow) <= 0) {
             entitlementState = EntitlementState.CANCELLED;
         } else {
-            if (entitlementEffectiveStartDate.compareTo(utcToday) > 0) {
+            if (entitlementEffectiveStartDateTime.compareTo(utcNow) > 0) {
                 entitlementState = EntitlementState.PENDING;
             } else {
                 // Gather states across all services and check if one of them is set to 'blockEntitlement'

@@ -253,7 +253,7 @@ public class TestSubscriptionHelper {
         final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle == null || !bundleExists ? null : bundle.getId(),
                                                                                                                                 bundle == null ? null : bundle.getExternalKey(),
                                                                                                                                 entitlementSpecifiers,
-                                                                                                                                requestedDate,
+                                                                                                                                requestedDate != null ? internalCallContext.toUTCDateTime(requestedDate) : null, //TODO_1375 Using internalCallContext.toUTCDateTime(requestedDate) and not dateHelper.fromLocalDateAndReferenceTime since we want to use the supplied date as it is and not default to now
                                                                                                                                 false);
 
         final SubscriptionBaseWithAddOns subscriptionBaseWithAddOns = subscriptionApi.createBaseSubscriptionsWithAddOns(catalog,

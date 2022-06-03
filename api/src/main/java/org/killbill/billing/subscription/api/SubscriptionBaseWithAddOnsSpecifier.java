@@ -19,7 +19,7 @@ package org.killbill.billing.subscription.api;
 
 import java.util.UUID;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 
 public class SubscriptionBaseWithAddOnsSpecifier {
@@ -27,13 +27,13 @@ public class SubscriptionBaseWithAddOnsSpecifier {
     private final UUID bundleId;
     private final String bundleExternalKey;
     private final Iterable<EntitlementSpecifier> entitlementSpecifiers;
-    private final LocalDate billingEffectiveDate;
+    private final DateTime billingEffectiveDate;
     private final boolean isMigrated;
 
     public SubscriptionBaseWithAddOnsSpecifier(final UUID bundleId,
                                                final String bundleExternalKey,
                                                final Iterable<EntitlementSpecifier> entitlementSpecifiers,
-                                               final LocalDate billingEffectiveDate,
+                                               final DateTime billingEffectiveDate,
                                                final boolean isMigrated) {
         this.bundleId = bundleId;
         this.bundleExternalKey = bundleExternalKey;
@@ -54,7 +54,7 @@ public class SubscriptionBaseWithAddOnsSpecifier {
         return entitlementSpecifiers;
     }
 
-    public LocalDate getBillingEffectiveDate() {
+    public DateTime getBillingEffectiveDate() {
         return billingEffectiveDate;
     }
 

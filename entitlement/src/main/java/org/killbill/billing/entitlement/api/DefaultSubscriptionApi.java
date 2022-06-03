@@ -298,8 +298,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-
-        final LocalDate effectiveDate = internalCallContext.toLocalDate(callContext.getCreatedDate());
+        final DateTime effectiveDate = callContext.getCreatedDate();
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
                 newExternalKey,
@@ -394,8 +393,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                 bundleId,
                 externalKey,
                 new ArrayList<EntitlementSpecifier>(),
-                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
-                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
+                effectiveDate,
+                effectiveDate, //TODO_1375 - Revisit after merging blocking state changes
                 false);
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
@@ -486,7 +485,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     public List<AuditLogWithHistory> getBlockingStateAuditLogsWithHistoryForId(final UUID blockingId, final AuditLevel auditLevel, final TenantContext context) {
         return blockingStateDao.getBlockingStateAuditLogsWithHistoryForId(blockingId, auditLevel, internalCallContextFactory.createInternalTenantContext(blockingId, ObjectType.BLOCKING_STATES, context));
     }
-
 
     private List<SubscriptionBundle> getSubscriptionBundlesForAccount(final UUID accountId, final TenantContext tenantContext) throws SubscriptionApiException {
         final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
