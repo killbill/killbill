@@ -17,7 +17,6 @@
 
 package org.killbill.billing.catalog.plugin;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -452,7 +451,7 @@ public class StandaloneCatalogMapper {
 
     private DefaultInternationalPrice toDefaultInternationalPrice(final InternationalPrice input) {
         DefaultInternationalPrice result = null;
-        if (input != null) {
+        if (input != null && input.getPrices() != null) {
             result = new DefaultInternationalPrice();
             result.setPrices(toDefaultPrices(ImmutableList.copyOf(input.getPrices())));
         }
