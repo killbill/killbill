@@ -351,8 +351,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
             final LocalDate resolvedEntitlementDate = toLocalDate(entitlementDate);
             final LocalDate resolvedBillingDate = toLocalDate(billingDate);
-            final DateTime entitlementDateTime = resolvedEntitlementDate != null ? resolvedEntitlementDate.toDateTimeAtCurrentTime() : null; //TODO_1375 could not find a way of accessing internalCallContext, so using toDateTimeAtCurrentTime
-            final DateTime billingDateTime = resolvedBillingDate != null ? resolvedBillingDate.toDateTimeAtCurrentTime() : null; //TODO_1375 could not find a way of accessing internalCallContext, so using toDateTimeAtCurrentTime
+            final DateTime entitlementDateTime = resolvedEntitlementDate != null ? resolvedEntitlementDate.toDateTimeAtCurrentTime() : null; //TODO_1375 Revisit once JAX_RS changes are done
+            final DateTime billingDateTime = resolvedBillingDate != null ? resolvedBillingDate.toDateTimeAtCurrentTime() : null; //TODO_1375 Revisit once JAX_RS changes are done
 
             final BaseEntitlementWithAddOnsSpecifier baseEntitlementSpecifierWithAddOns = buildBaseEntitlementWithAddOnsSpecifier(entitlementSpecifierList,
                                                                                                                                   entitlementDateTime,

@@ -401,7 +401,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                 externalKey,
                 new ArrayList<EntitlementSpecifier>(),
                 effectiveDate,
-                effectiveDate, //TODO_1375 - Revisit after merging blocking state changes
+                effectiveDate,
                 false);
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
