@@ -104,11 +104,6 @@ public class OverdueStateApplicator {
     public void apply(final DateTime effectiveDate, final OverdueStateSet overdueStateSet, final BillingState billingState,
                       final ImmutableAccountData account, final OverdueState previousOverdueState,
                       final OverdueState nextOverdueState, final InternalCallContext context) throws OverdueException, OverdueApiException {
-        if (isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(context)) {
-            log.debug("OverdueStateApplicator: apply returns because account (recordId={}) is set with OVERDUE_ENFORCEMENT_OFF", context.getAccountRecordId());
-            return;
-        }
-
         log.debug("OverdueStateApplicator: time={}, previousState={}, nextState={}, billingState={}", effectiveDate, previousOverdueState, nextOverdueState, billingState);
 
         final OverdueState firstOverdueState = overdueStateSet.getFirstState();
@@ -336,7 +331,7 @@ public class OverdueStateApplicator {
     //
     // Uses callcontext information to retrieve account matching the Overduable object and check whether we should do any overdue processing
     //
-    private boolean isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(final InternalCallContext context) throws OverdueException {
+    public boolean isAccountTaggedWith_OVERDUE_ENFORCEMENT_OFF(final InternalCallContext context) throws OverdueException {
 
         try {
             final UUID accountId = accountApi.getByRecordId(context.getAccountRecordId(), context);
