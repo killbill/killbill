@@ -18,6 +18,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -36,11 +37,8 @@ import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -64,7 +62,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-support-monthly-notrial", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
@@ -86,7 +84,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
 
         // Cancel 2020-03-01
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.of(), callContext);
+        entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
@@ -114,7 +112,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("basic-support-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2020-01-15
@@ -123,7 +121,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         // Pause subscription. System will invoice for 2020-01-01 -> 2020-01-15
         final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(entitlementId, callContext);
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -134,7 +132,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
 
         // Resume subscription.  System will invoice for remaining 2020-01-20 -> 2020-02-1
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.resume(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2020-02-01
@@ -165,7 +163,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         // CREATE BASE SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("premium-support-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
         assertNotNull(bpEntitlement);
@@ -176,7 +174,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         //CREATE ADDON SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
         Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
@@ -217,7 +215,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         // CREATE BASE SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("premium-support-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
         assertNotNull(bpEntitlement);
@@ -228,7 +226,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         //CREATE ADDON SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
         Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
@@ -275,7 +273,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         // CREATE BASE SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("premium-support-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
         assertNotNull(bpEntitlement);
@@ -286,7 +284,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         //CREATE ADDON SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
         Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
@@ -330,7 +328,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         // CREATE BASE SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("premium-support-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
         assertNotNull(bpEntitlement);
@@ -341,7 +339,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         //CREATE ADDON SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
         Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
@@ -377,7 +375,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         // CREATE BASE SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("premium-support-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
         assertNotNull(bpEntitlement);
@@ -388,7 +386,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         //CREATE ADDON SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
         Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
@@ -433,7 +431,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         // CREATE BASE SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("premium-support-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
         assertNotNull(bpEntitlement);
@@ -444,7 +442,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         //CREATE ADDON SUBSCRIPTION. SINCE IN_ARREAR BILLING IS USED, INVOICE IS NOT GENERATED
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
         Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");

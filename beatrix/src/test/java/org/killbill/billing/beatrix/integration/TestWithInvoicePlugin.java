@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -74,6 +75,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
@@ -84,11 +86,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -236,12 +233,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 1);
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
-        final InvoiceItem externalCharge = Iterables.tryFind(invoiceItems, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getInvoiceItemType() == InvoiceItemType.EXTERNAL_CHARGE;
-            }
-        }).orNull();
+        final InvoiceItem externalCharge = invoiceItems.stream()
+                .filter(input -> input.getInvoiceItemType() == InvoiceItemType.EXTERNAL_CHARGE)
+                .findFirst().orElse(null);
         assertNotNull(externalCharge);
         // verify the ID is the one passed by the plugin #818
         assertEquals(externalCharge.getId(), pluginInvoiceItemId);
@@ -278,12 +272,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         final List<Invoice> invoices2 = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         final List<InvoiceItem> invoiceItems2 = invoices2.get(0).getInvoiceItems();
-        final InvoiceItem externalCharge2 = Iterables.tryFind(invoiceItems2, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getInvoiceItemType() == InvoiceItemType.EXTERNAL_CHARGE;
-            }
-        }).orNull();
+        final InvoiceItem externalCharge2 = invoiceItems2.stream()
+                .filter(input -> input.getInvoiceItemType() == InvoiceItemType.EXTERNAL_CHARGE)
+                .findFirst().orElse(null);
         assertNotNull(externalCharge2);
 
         assertEquals(externalCharge2.getAmount().compareTo(BigDecimal.ONE), 0);
@@ -325,13 +316,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
-        final InvoiceItem recurringItem = Iterables.find(invoices.get(1).getInvoiceItems(),
-                                                         new Predicate<InvoiceItem>() {
-                                                             @Override
-                                                             public boolean apply(final InvoiceItem input) {
-                                                                 return InvoiceItemType.RECURRING.equals(input.getInvoiceItemType());
-                                                             }
-                                                         });
+        final InvoiceItem recurringItem = invoices.get(1).getInvoiceItems().stream()
+                .filter(input -> input.getInvoiceItemType() == InvoiceItemType.RECURRING)
+                .findFirst().get();
 
         // Item adjust the recurring item from the plugin
         final UUID pluginInvoiceItemId = UUID.randomUUID();
@@ -369,12 +356,9 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         final List<Invoice> refreshedInvoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         final List<InvoiceItem> invoiceItems = refreshedInvoices.get(1).getInvoiceItems();
-        final InvoiceItem invoiceItemAdjustment = Iterables.tryFind(invoiceItems, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ;
-            }
-        }).orNull();
+        final InvoiceItem invoiceItemAdjustment = invoiceItems.stream()
+                .filter(input -> input.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ)
+                .findFirst().orElse(null);
         assertNotNull(invoiceItemAdjustment);
         // verify the ID is the one passed by the plugin #818
         assertEquals(invoiceItemAdjustment.getId(), pluginInvoiceItemId);
@@ -484,7 +468,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
         bpSubscription.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE,
                                                                         BillingActionPolicy.START_OF_TERM,
-                                                                        ImmutableList.<PluginProperty>of(),
+                                                                        Collections.emptyList(),
                                                                         callContext);
         assertListenerStatus();
         final Invoice thirdInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -1054,17 +1038,17 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
     private List<NotificationEventWithMetadata> getFutureInvoiceNotifications() throws NoSuchNotificationQueue {
         final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(), DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
-        return ImmutableList.<NotificationEventWithMetadata>copyOf(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
+        return Iterables.toUnmodifiableList(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
     }
 
     private List<NotificationEventWithMetadata> getFutureInvoiceRetryableNotifications() throws NoSuchNotificationQueue {
         final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(RetryableService.RETRYABLE_SERVICE_NAME, DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
-        return ImmutableList.<NotificationEventWithMetadata>copyOf(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
+        return Iterables.toUnmodifiableList(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
     }
 
     private List<NotificationEventWithMetadata> getFutureInvoiceRetryableBusEvents() throws NoSuchNotificationQueue {
         final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(RetryableService.RETRYABLE_SERVICE_NAME, "invoice-listener");
-        return ImmutableList.<NotificationEventWithMetadata>copyOf(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
+        return Iterables.toUnmodifiableList(notificationQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId()));
     }
 
     public class TestInvoicePluginApi implements InvoicePluginApi {
@@ -1116,20 +1100,14 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
             if (isDryRun) {
                 assertEquals(Iterables.size(pluginProperties), 2);
-                final Optional<PluginProperty> p1 = Iterables.tryFind(pluginProperties, new Predicate<PluginProperty>() {
-                    @Override
-                    public boolean apply(final PluginProperty input) {
-                        return input.getKey().equals("DRY_RUN_CUR_DATE");
-                    }
-                });
+                final Optional<PluginProperty> p1 = Iterables.toStream(pluginProperties)
+                        .filter(input -> "DRY_RUN_CUR_DATE".equals(input.getKey()))
+                        .findFirst();
                 assertTrue(p1.isPresent());
 
-                final Optional<PluginProperty> p2 = Iterables.tryFind(pluginProperties, new Predicate<PluginProperty>() {
-                    @Override
-                    public boolean apply(final PluginProperty input) {
-                        return input.getKey().equals("DRY_RUN_TARGET_DATE");
-                    }
-                });
+                final Optional<PluginProperty> p2 = Iterables.toStream(pluginProperties)
+                        .filter(input -> "DRY_RUN_TARGET_DATE".equals(input.getKey()))
+                        .findFirst();
                 assertTrue(p2.isPresent());
             }
 
@@ -1137,11 +1115,11 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             if (shouldThrowException) {
                 throw new InvoicePluginApiRetryException();
             } else if (additionalInvoiceItem != null) {
-                res = ImmutableList.<InvoiceItem>of(additionalInvoiceItem);
+                res = List.of(additionalInvoiceItem);
             } else if (taxItems.apply(invoice) != null) {
                 res = taxItems.apply(invoice);
             } else if (shouldUpdateDescription) {
-                final List<InvoiceItem> updatedInvoiceItems = new LinkedList<InvoiceItem>();
+                final List<InvoiceItem> updatedInvoiceItems = new LinkedList<>();
                 for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
                     final InvoiceItem updatedInvoiceItem = Mockito.spy(invoiceItem);
                     Mockito.when(updatedInvoiceItem.getDescription()).thenReturn(String.format("[plugin] %s", invoiceItem.getId()));
@@ -1149,7 +1127,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 }
                 res = updatedInvoiceItems;
             } else {
-                res = ImmutableList.<InvoiceItem>of();
+                res = Collections.emptyList();
             }
             return new AdditionalItemsResult() {
                 @Override

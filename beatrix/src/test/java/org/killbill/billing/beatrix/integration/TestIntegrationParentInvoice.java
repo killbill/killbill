@@ -18,11 +18,10 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
-import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -40,7 +39,6 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
-import org.killbill.billing.invoice.api.DefaultInvoiceService;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
@@ -50,16 +48,12 @@ import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentNotifier;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.notificationq.api.NotificationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
-import org.killbill.notificationq.api.NotificationQueueService;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -263,7 +257,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // add credit to child account when invoice is still unpaid
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), clock.getUTCToday(), "some description", BigDecimal.TEN, Currency.USD, null);
-        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         final List<Invoice> childInvoices = invoiceUserApi.getInvoicesByAccount(childAccount.getId(), false, false, callContext);
@@ -345,7 +339,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // add credit to child account after invoice has been paid
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), clock.getUTCToday(), "some description", BigDecimal.TEN, Currency.USD, null);
-        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(childAccount.getId(), clock.getUTCToday(), List.of(inputCredit), true, null, callContext);
 
         assertListenerStatus();
 
@@ -987,7 +981,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, childAccount.getId(), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), "some description", new BigDecimal("250"), Currency.USD, null);
-        invoiceUserApi.insertCredits(childAccount.getId(), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(childAccount.getId(), new LocalDate(clock.getUTCNow(), childAccount.getTimeZone()), List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         BigDecimal childAccountCBA = invoiceUserApi.getAccountCBA(childAccount.getId(), callContext);
@@ -1130,7 +1124,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(parentInvoice.getBalance().compareTo(new BigDecimal("249.95")), 0);
         // The parent has attempted to pay the child invoice
         assertEquals(parentInvoice.getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      parentAccount.getPaymentMethodId());
 
         // Second child invoice over Recurring period
@@ -1174,7 +1168,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
                                                               null,
                                                               UUID.randomUUID().toString(),
                                                               UUID.randomUUID().toString(),
-                                                              ImmutableList.<PluginProperty>of(),
+                                                              Collections.emptyList(),
                                                               PAYMENT_OPTIONS,
                                                               callContext);
             Assert.fail("Payment should fail, invoice belongs to parent");
@@ -1201,7 +1195,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         // Even if the child-parent mapping has been removed, the parent has retried and successfully paid the summary invoice
         // TODO Should we automatically disable payment retries when un-parenting?
         assertEquals(parentInvoice.getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      parentAccount.getPaymentMethodId());
 
         // Second child invoice over Recurring period
@@ -1227,7 +1221,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoices.get(2).getBalance().compareTo(BigDecimal.ZERO), 0);
         // Verify the child paid the invoice this time
         assertEquals(childInvoices.get(2).getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(childInvoices.get(2).getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(childInvoices.get(2).getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      childAccount.getPaymentMethodId());
 
         // Verify balances
@@ -1287,7 +1281,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertEquals(childInvoices.size(), 2);
         assertEquals(childInvoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(childInvoices.get(1).getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(childInvoices.get(1).getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(childInvoices.get(1).getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      childAccount.getPaymentMethodId());
 
         // The child now delegates its payments
@@ -1321,7 +1315,7 @@ public class TestIntegrationParentInvoice extends TestIntegrationBase {
         assertTrue(parentInvoice.isParentInvoice());
         assertEquals(parentInvoice.getBalance().compareTo(BigDecimal.ZERO), 0);
         assertEquals(parentInvoice.getPayments().size(), 1);
-        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext).getPaymentMethodId(),
+        assertEquals(paymentApi.getPayment(parentInvoice.getPayments().get(0).getPaymentId(), false, false, Collections.emptyList(), callContext).getPaymentMethodId(),
                      parentAccount.getPaymentMethodId());
 
         // Third child invoice over Recurring period

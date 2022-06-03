@@ -52,13 +52,10 @@ import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.io.IOUtils;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -697,7 +694,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-06 => Create an external charge on a new invoice
         addDaysAndCheckForCompletion(5);
         final InvoiceItem externalCharge = new ExternalChargeInvoiceItem(null, account.getId(), bundle.getId(), "For overdue", new LocalDate(2012, 5, 6), new LocalDate(2012, 6, 6), BigDecimal.TEN, Currency.USD, null);
-        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), ImmutableList.<InvoiceItem>of(externalCharge), false, null, callContext).get(0);
+        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCToday(), List.of(externalCharge), false, null, callContext).get(0);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 6), new LocalDate(2012, 6, 6), InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
 
@@ -805,7 +802,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
 
         // Now, create a chargeback for the second (first non-zero dollar) invoice
         final InvoicePayment invoicePayment = invoicePaymentApi.getInvoicePayments(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).get(1).getPayments().get(0).getPaymentId(), callContext).get(0);
-        Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        Payment payment = paymentApi.getPayment(invoicePayment.getPaymentId(), false, false, Collections.emptyList(), callContext);
         payment = createChargeBackAndCheckForCompletion(account, payment, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         // We should now be in OD1
         checkODState("OD1");
@@ -959,7 +956,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
-        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/beatrix/overdueWithNumberOfUnpaidInvoicesCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(IOUtils.getResourceAsURL("org/killbill/billing/beatrix/overdueWithNumberOfUnpaidInvoicesCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
         overdueConfigCache.loadDefaultOverdueConfig(config);
 
         setupAccount();
@@ -1031,7 +1028,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         // 2012-05-01T00:03:42.000Z
         clock.setTime(new DateTime(2012, 5, 1, 0, 3, 42, 0));
 
-        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/beatrix/overdueWithTotalUnpaidInvoiceBalanceCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
+        final DefaultOverdueConfig config = XMLLoader.getObjectFromString(IOUtils.getResourceAsURL("org/killbill/billing/beatrix/overdueWithTotalUnpaidInvoiceBalanceCondition.xml").toExternalForm(), DefaultOverdueConfig.class);
         overdueConfigCache.loadDefaultOverdueConfig(config);
 
         setupAccount();
@@ -1145,7 +1142,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT, NextEvent.INVOICE_ADJUSTMENT, NextEvent.BLOCK);
 
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(2012, 06, 30), "credit invoice", accountBalance, account.getCurrency(), null);
-        invoiceUserApi.insertCredits(account.getId(), new LocalDate(2012, 06, 30), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(2012, 06, 30), List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
     }
@@ -1198,7 +1195,7 @@ public class TestOverdueIntegration extends TestOverdueBase {
         if (shouldFail) {
             try {
                 final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Pistol", term, PriceListSet.DEFAULT_PRICELIST_NAME);
-                entitlement.changePlan(new DefaultEntitlementSpecifier(spec), ImmutableList.<PluginProperty>of(), callContext);
+                entitlement.changePlan(new DefaultEntitlementSpecifier(spec), Collections.emptyList(), callContext);
             } catch (EntitlementApiException e) {
                 assertTrue(e.getCause() instanceof BlockingApiException || e.getCode() == ErrorCode.SUB_CHANGE_NON_ACTIVE.getCode(),
                            String.format("Cause is %s, message is %s", e.getCause(), e.getMessage()));

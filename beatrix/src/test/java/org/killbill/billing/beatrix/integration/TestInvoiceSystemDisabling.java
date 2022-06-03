@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -34,8 +35,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 
@@ -79,8 +78,8 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         // Dry-run generation
         Invoice invoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
         assertListenerStatus();
-        final ImmutableList<ExpectedInvoiceItemCheck> expected = ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO),
-                                                                                                            new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
+        final List<ExpectedInvoiceItemCheck> expected = List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.FIXED, BigDecimal.ZERO),
+                                                                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkInvoiceNoAudits(invoice, expected);
 
         // Still parked

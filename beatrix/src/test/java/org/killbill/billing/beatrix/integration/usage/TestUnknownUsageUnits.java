@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
@@ -35,19 +36,15 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class TestUnknownUsageUnits extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        final Map<String, String> allExtraProperties = new HashMap<>(extraProperties);
         allExtraProperties.putAll(DEFAULT_BEATRIX_PROPERTIES);
         allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testUnknownUsageUnits");
         return getConfigSource(null, allExtraProperties);
@@ -80,7 +77,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
 
         Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
 
@@ -116,7 +113,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("0")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("12")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-3", "tracking-4"), internalCallContext);
 
         // Record known capacity usage but unknown consumable usage for June
         recordUsageData(bpSubscription.getId(), "tracking-5", "server-hourly-type-2", new LocalDate(2012, 6, 1), BigDecimal.valueOf(99L), callContext);
@@ -148,7 +145,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("0")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("0")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-5", "tracking-6"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-5", "tracking-6"), internalCallContext);
 
         // Disable strict mode
         invoiceConfig.setShouldParkAccountsWithUnknownUsage(false);
@@ -167,7 +164,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("0")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("0")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("0")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Collections.emptySet(), internalCallContext);
 
         Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
 
@@ -194,11 +191,11 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
         recordUsageData(bpSubscription.getId(), "tracking-11", "bandwidth-type-2", new LocalDate(2012, 8, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
-        entitlementApi.pause(bpSubscription.getBundleId(), new LocalDate(2012, 8, 1), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.pause(bpSubscription.getBundleId(), new LocalDate(2012, 8, 1), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
-        entitlementApi.resume(bpSubscription.getBundleId(), new LocalDate(2012, 8, 2), ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.resume(bpSubscription.getBundleId(), new LocalDate(2012, 8, 2), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Disable strict mode
@@ -216,7 +213,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 9, 1), InvoiceItemType.USAGE, new BigDecimal("12")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 9, 1), InvoiceItemType.USAGE, new BigDecimal("0")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 8, 2), new LocalDate(2012, 9, 1), InvoiceItemType.USAGE, new BigDecimal("0")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-11"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-11"), internalCallContext);
     }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/pull/1279")
@@ -251,7 +248,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
 
         // Record known usage for May
         recordUsageData(bpSubscription.getId(), "tracking-3", "server-hourly-type-1", new LocalDate(2012, 5, 1), BigDecimal.valueOf(99L), callContext);
@@ -265,7 +262,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-3", "tracking-4"), internalCallContext);
 
         // Record known usage for June
         recordUsageData(bpSubscription.getId(), "tracking-5", "server-hourly-type-1", new LocalDate(2012, 6, 1), BigDecimal.valueOf(99L), callContext);
@@ -284,7 +281,7 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-5", "tracking-6"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-5", "tracking-6"), internalCallContext);
 
         // Record known and unknown usage for July (server-hourly-type-1 doesn't exist anymore)
         recordUsageData(bpSubscription.getId(), "tracking-7", "server-hourly-type-1", new LocalDate(2012, 7, 1), BigDecimal.valueOf(99L), callContext);
@@ -327,6 +324,6 @@ public class TestUnknownUsageUnits extends TestIntegrationBase {
                                                                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("0")),
                                                                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("99")),
                                                                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("10")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
     }
 }

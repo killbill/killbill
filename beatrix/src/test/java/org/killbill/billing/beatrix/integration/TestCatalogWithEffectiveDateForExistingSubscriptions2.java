@@ -17,8 +17,10 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -29,12 +31,8 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestIntegrationBase {
 
@@ -59,7 +57,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("water-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         recordUsageData(entitlementId, "t1", "liter", new LocalDate(2018, 1, 1), BigDecimal.valueOf(10L), callContext);
@@ -75,7 +73,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2018, 1, 1), new LocalDate(2018, 2, 1), InvoiceItemType.USAGE, new BigDecimal("30.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t1", "t2"), internalCallContext);
 
 
         recordUsageData(entitlementId, "t3", "liter", new LocalDate(2018, 2, 15), BigDecimal.valueOf(20L), callContext);
@@ -86,7 +84,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2018, 2, 1), new LocalDate(2018, 3, 1), InvoiceItemType.USAGE, new BigDecimal("30.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t3"), internalCallContext);
 
 
         recordUsageData(entitlementId, "t4", "liter", new LocalDate(2018, 3, 18), BigDecimal.valueOf(20L), callContext);
@@ -97,7 +95,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2018, 3, 1), new LocalDate(2018, 4, 1), InvoiceItemType.USAGE, new BigDecimal("30.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t4"), internalCallContext);
 
 
         recordUsageData(entitlementId, "t5", "liter", new LocalDate(2018, 4, 28), BigDecimal.valueOf(20L), callContext);
@@ -109,7 +107,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2018, 4, 1), new LocalDate(2018, 5, 1), InvoiceItemType.USAGE, new BigDecimal("30.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t5"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t5"), internalCallContext);
 
 
         recordUsageData(entitlementId, "t6", "liter", new LocalDate(2018, 5, 22), BigDecimal.valueOf(20L), callContext);
@@ -121,7 +119,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2018, 5, 1), new LocalDate(2018, 6, 1), InvoiceItemType.USAGE, new BigDecimal("30.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t6"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t6"), internalCallContext);
 
 
 
@@ -134,7 +132,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 6, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2018, 6, 1), new LocalDate(2018, 7, 1), InvoiceItemType.USAGE, new BigDecimal("30.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t7"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t7"), internalCallContext);
 
 
 
@@ -149,7 +147,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 7, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2018, 7, 1), new LocalDate(2018, 8, 1), InvoiceItemType.USAGE, new BigDecimal("30.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t8"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t8"), internalCallContext);
 
 
         recordUsageData(entitlementId, "t9", "liter", new LocalDate(2018, 8, 13), BigDecimal.valueOf(20L), callContext);
@@ -161,7 +159,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions2 extends TestI
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 8, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2018, 8, 1), new LocalDate(2018, 9, 1), InvoiceItemType.USAGE, new BigDecimal("70.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t9"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t9"), internalCallContext);
 
     }
 

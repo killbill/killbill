@@ -18,8 +18,11 @@
 package org.killbill.billing.beatrix.integration.usage;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -34,12 +37,8 @@ import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 
@@ -65,7 +64,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("electricity-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 1), BigDecimal.valueOf(143L), callContext);
@@ -77,7 +76,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("300.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t1", "t2"), internalCallContext);
 
         recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(100L), callContext); // -> Uses v1 : $150
 
@@ -91,7 +90,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 8), InvoiceItemType.USAGE, new BigDecimal("150.00")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 8), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("250.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3", "t4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t3", "t4"), internalCallContext);
 
         // Check items catalogEffectiveDate are correctly marked against each version
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
@@ -110,7 +109,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("electricity-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 1), BigDecimal.valueOf(143L), callContext);
@@ -122,7 +121,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("300.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t1", "t2"), internalCallContext);
 
         recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(100L), callContext); // -> Uses v1 : $150
 
@@ -139,7 +138,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 7), InvoiceItemType.USAGE, new BigDecimal("150.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t3"), internalCallContext);
 
         recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 10), BigDecimal.valueOf(100L), callContext); // -> Uses special plan : $100
 
@@ -149,7 +148,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 7), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("100.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t4"), internalCallContext);
 
         // Check item catalogEffectiveDate correctly reflects the first catalog where such plan is available
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
@@ -169,7 +168,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("electricity-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 5), BigDecimal.valueOf(1L), callContext);
@@ -181,7 +180,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("150.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t1", "t2"), internalCallContext);
 
         recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 1), BigDecimal.valueOf(100L), callContext);
         recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(900L), callContext);
@@ -196,7 +195,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 8), InvoiceItemType.USAGE, new BigDecimal("1900.00")),
                                                  // Second catalog version
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 8), new LocalDate(2016, 6, 1), InvoiceItemType.USAGE, new BigDecimal("0.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3", "t4", "t5"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t3", "t4", "t5"), internalCallContext);
 
         // Remove Usage data from period 2016-5-1 -> 2016-6-1 and verify there is no issue (readMaxRawUsagePreviousPeriod = 0 => We ignore any past invoiced period)
         // Full deletion on the second tier
@@ -213,9 +212,11 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         assertListenerStatus();
 
         // We invoice using catalog V2 now
-        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext, ImmutableList.<ExpectedInvoiceItemCheck>of(
-                new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 7, 1), InvoiceItemType.USAGE, new BigDecimal("2800.00"))));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t6", "t7", "t8", "t9"), internalCallContext);
+        curInvoice = invoiceChecker.checkInvoice(account.getId(),
+                                                 3,
+                                                 callContext,
+                                                 List.of(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 1), new LocalDate(2016, 7, 1), InvoiceItemType.USAGE, new BigDecimal("2800.00"))));
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t6", "t7", "t8", "t9"), internalCallContext);
 
         // Remove Usage data from period 2016-6-1 -> 2016-7-1 and verify there is no issue (readMaxRawUsagePreviousPeriod = 0 => We ignore any past invoiced period)
         // Partial deletion on the second tier
@@ -229,7 +230,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         // Check invoicing occurred and - i.e system did not detect deletion of passed invoiced data.
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 1), new LocalDate(2016, 8, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of(), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Collections.emptySet(), internalCallContext);
 
     }
 
@@ -246,7 +247,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("electricity-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 5), BigDecimal.valueOf(1L), callContext);
@@ -258,7 +259,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("150.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t1", "t2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t1", "t2"), internalCallContext);
 
         final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
@@ -277,7 +278,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 5, 8), InvoiceItemType.USAGE, new BigDecimal("150.00")),
                                                  // Reach the catalog version change date for this subscription
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 8), new LocalDate(2016, 5, 9), InvoiceItemType.USAGE, new BigDecimal("0.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t3"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t3"), internalCallContext);
 
         // Check items catalogEffectiveDate are correctly marked against each version
         assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
@@ -295,7 +296,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         // NOTE: Is using the new version of the catalog Utility-v2 (effectiveDateForExistingSubscriptions = 2016-05-08T00:00:00+00:00) what we want or is this a bug?
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 9), new LocalDate(2016, 6, 9), InvoiceItemType.USAGE, new BigDecimal("25.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("t4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t4"), internalCallContext);
 
         // Check items catalogEffectiveDate is correctly set against last version
         assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
