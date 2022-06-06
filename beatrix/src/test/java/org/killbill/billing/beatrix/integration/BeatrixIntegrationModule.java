@@ -19,6 +19,8 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.util.Objects;
+
 import javax.annotation.Nullable;
 
 import org.killbill.billing.GuicyKillbillTestWithEmbeddedDBModule;
@@ -75,8 +77,6 @@ import org.killbill.clock.ClockMock;
 import org.killbill.commons.metrics.api.MetricRegistry;
 import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 import org.skife.config.ConfigurationObjectFactory;
-
-import com.google.common.base.MoreObjects;
 
 public class BeatrixIntegrationModule extends KillBillModule {
 
@@ -154,7 +154,7 @@ public class BeatrixIntegrationModule extends KillBillModule {
 
         private DefaultInvoiceModuleWithSwitchRepairLogic(final KillbillConfigSource configSource) {
             super(configSource);
-            testFeatureInvoiceOptimization = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
+            testFeatureInvoiceOptimization = Boolean.valueOf(Objects.requireNonNullElse(configSource.getString(KillbillFeatures.PROP_FEATURE_INVOICE_OPTIMIZATION), "false"));
         }
 
         protected void installInvoiceOptimizer() {

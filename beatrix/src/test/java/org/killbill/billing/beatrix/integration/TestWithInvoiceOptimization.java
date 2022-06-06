@@ -1142,7 +1142,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         int curTry = nbTries;
         while (curTry-- > 0) {
             final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
-            if (invoices.size() > 0) {
+            if (!invoices.isEmpty()) {
                 final Invoice lastInvoice = invoices.get(invoices.size() - 1);
                 if (lastInvoice.getStatus() == InvoiceStatus.DRAFT &&
                     (condFn == null || condFn.apply(lastInvoice))) /* If we have a condition, let's check it satisfies */ {

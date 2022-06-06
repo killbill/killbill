@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,7 +34,6 @@ import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
-import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
@@ -46,12 +46,9 @@ import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.mock.MockAccountBuilder;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -86,7 +83,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         // Entitlement wil be created in PENDING state
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, Collections.emptyList(), callContext);
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.PENDING);
 
@@ -143,7 +140,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Entitlement wil be created in ACTIVE state because entitlementMigrationDate was set in the past
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
 
@@ -189,13 +186,13 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Entitlement wil be created in ACTIVE state because entitlementMigrationDate was set in the past
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
         // Perform the cancellation (we did not move the clock, the is is future cancellation done at the time we decide to migrate)
-        entitlement.cancelEntitlementWithDate(effectiveCancellationDate, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.cancelEntitlementWithDate(effectiveCancellationDate, true, Collections.emptyList(), callContext);
 
         // Billing starts straight on EVERGREEN
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -259,7 +256,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         final List<UUID> baseEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
                                                                                                    baseEntitlementWithAddOnsSpecifierList,
                                                                                                    true,
-                                                                                                   ImmutableList.<PluginProperty>of(),
+                                                                                                   Collections.emptyList(),
                                                                                                    callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlements.get(0), callContext);
@@ -312,7 +309,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         final List<UUID> baseEntitlements = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
                                                                                             baseEntitlementWithAddOnsSpecifierList,
                                                                                             true,
-                                                                                            ImmutableList.<PluginProperty>of(),
+                                                                                            Collections.emptyList(),
                                                                                             callContext);
         assertListenerStatus();
         Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlements.get(0), callContext).getState(), EntitlementState.ACTIVE);
@@ -349,21 +346,21 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
-        subscriptionApi.addBlockingState(blockingState1, (LocalDate) null, ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState1, (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         clock.addDays(1);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         clock.addMonths(1);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
-        subscriptionApi.addBlockingState(blockingState2, (LocalDate) null, ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState2, (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -384,15 +381,15 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         // Unlike the previous scenario, we create the subscription and set the blocking state at the same time
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
-        subscriptionApi.addBlockingState(blockingState1, (LocalDate) null, ImmutableList.<PluginProperty>of(), callContext);
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState1, (LocalDate) null, Collections.emptyList(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         clock.addMonths(1);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
-        subscriptionApi.addBlockingState(blockingState2, (LocalDate) null, ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState2, (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -424,7 +421,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Add less than a day between the CREATE and the BLOCK, to verify invoicing behavior
@@ -432,7 +429,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
-        subscriptionApi.addBlockingState(blockingState1, (LocalDate) null, ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState1, (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.NULL_INVOICE);
@@ -443,7 +440,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
-        subscriptionApi.addBlockingState(blockingState2, (LocalDate) null, ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState2, (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -461,14 +458,14 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final BlockingState blockingState1 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state1", "Service", false, false, true, null);
-        subscriptionApi.addBlockingState(blockingState1, (LocalDate) null, ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState1, (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         clock.addDays(1);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
 
@@ -477,14 +474,14 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Add an add-on while bundle is already blocked
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("cleaning-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(spec2), null, null, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(spec2), null, null, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         clock.addMonths(1);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final BlockingState blockingState2 = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state2", "Service", false, false, false, null);
-        subscriptionApi.addBlockingState(blockingState2, (LocalDate) null, ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState2, (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);

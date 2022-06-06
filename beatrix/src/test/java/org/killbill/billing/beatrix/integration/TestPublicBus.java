@@ -56,6 +56,8 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+
+// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
 import com.google.common.eventbus.Subscribe;
 
 import static java.util.concurrent.TimeUnit.SECONDS;

@@ -46,12 +46,9 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -112,7 +109,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         final BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance.compareTo(BigDecimal.ZERO) == 0);
 
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, Collections.emptyList(), callContext);
         assertEquals(payments.size(), 1);
 
         final Payment payment = payments.get(0);
@@ -156,14 +153,14 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), startDate, "credit invoice", new BigDecimal("20.00"), account.getCurrency(), null);
-        invoiceUserApi.insertCredits(account.getId(), startDate, ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), startDate, List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         final BigDecimal accountCBA1 = invoiceUserApi.getAccountCBA(account.getId(), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, startDate, startDate, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
         final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         assertListenerStatus();
 
@@ -175,7 +172,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         // 2013-07-01
         clock.addDays(16);
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
-        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final Invoice invoice3 = invoiceChecker.checkInvoice(account.getId(), 3, callContext,

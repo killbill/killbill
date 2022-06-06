@@ -38,6 +38,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
 import com.google.common.eventbus.Subscribe;
 
 import static java.util.concurrent.TimeUnit.SECONDS;

@@ -58,10 +58,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -150,12 +146,9 @@ public class TestWithTaxItems extends TestIntegrationBase {
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
         assertEquals(invoices.size(), 2);
         final List<InvoiceItem> invoiceItems = invoices.get(1).getInvoiceItems();
-        final InvoiceItem taxItem  = Iterables.tryFind(invoiceItems, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getInvoiceItemType() == InvoiceItemType.TAX;
-            }
-        }).orNull();
+        final InvoiceItem taxItem = invoiceItems.stream()
+                .filter(input -> input.getInvoiceItemType() == InvoiceItemType.TAX)
+                .findFirst().orElse(null);
         assertNotNull(taxItem);
         // verify the ID is the one passed by the plugin #818
         assertEquals(taxItem.getId(), pluginInvoiceItemId);
@@ -226,7 +219,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
 
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), clock.getUTCToday(), "VIP", new BigDecimal("100"), account.getCurrency(), null);
-        invoiceUserApi.insertCredits(account.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), clock.getUTCToday(), List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -239,9 +232,9 @@ public class TestWithTaxItems extends TestIntegrationBase {
         // Verify dry-run scenario
         final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), new LocalDate(2012, 5, 1), new TestDryRunArguments(DryRunType.TARGET_DATE), Collections.emptyList(), callContext);
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice,
-                                            ImmutableList.<ExpectedInvoiceItemCheck>of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
-                                                                                       new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")),
-                                                                                       new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("-30.95"))));
+                                            List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")),
+                                                    new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("-30.95"))));
 
         // Make sure TestInvoicePluginApi will return an additional TAX item
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(UUID.randomUUID(), null, account.getId(), null, "Tax Item", new LocalDate(2012, 5, 1), BigDecimal.ONE, account.getCurrency()));
@@ -284,18 +277,15 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                                                   new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
                                                                   new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.TAX, new BigDecimal("3.00")));
 
-        final InvoiceItem recurringItemId = Iterables.find(secondInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getInvoiceItemType() == InvoiceItemType.RECURRING;
-            }
-        });
+        final InvoiceItem recurringItemId = secondInvoice.getInvoiceItems().stream()
+                .filter(input -> input.getInvoiceItemType() == InvoiceItemType.RECURRING)
+                .findFirst().get();
 
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(UUID.randomUUID(), null, account.getId(), null, "Tax Item (refund)", new LocalDate(2012, 5, 8), new BigDecimal("-1.00"), account.getCurrency()));
 
         clock.addDays(7);
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
-        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), secondInvoice.getId(), recurringItemId.getId(), new LocalDate(2012, 5, 8), new BigDecimal("10"), account.getCurrency(), "", "", ImmutableList.of(), callContext);
+        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), secondInvoice.getId(), recurringItemId.getId(), new LocalDate(2012, 5, 8), new BigDecimal("10"), account.getCurrency(), "", "", Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -305,7 +295,6 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.TAX, new BigDecimal("3.00")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 8), null, InvoiceItemType.TAX, new BigDecimal("-1.00")));
     }
-
 
 
     @Test(groups = "slow")
@@ -333,7 +322,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), clock.getUTCToday(), "VIP", new BigDecimal("100"), account.getCurrency(), null);
-        invoiceUserApi.insertCredits(account.getId(), clock.getUTCToday(), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), clock.getUTCToday(), List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -429,7 +418,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         testInvoicePluginApi.addTaxItem(new TaxInvoiceItem(invoiceTaxItemId, null, account.getId(), null, "Tax Item", new LocalDate(2012, 4, 1), BigDecimal.ONE, account.getCurrency()));
 
         // Insert external charge autoCommit = false => Invoice will be in DRAFT
-        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCNow().toLocalDate(), ImmutableList.<InvoiceItem>of(new ExternalChargeInvoiceItem(null, account.getId(), null, "foo", new LocalDate(2012, 4, 1), null, new BigDecimal("33.80"),
+        invoiceUserApi.insertExternalCharges(account.getId(), clock.getUTCNow().toLocalDate(), List.of(new ExternalChargeInvoiceItem(null, account.getId(), null, "foo", new LocalDate(2012, 4, 1), null, new BigDecimal("33.80"),
                                                                                                                                                            account.getCurrency(), null)), false, null, callContext);
 
         // Make sure TestInvoicePluginApi **update** the original TAX item
@@ -532,13 +521,10 @@ public class TestWithTaxItems extends TestIntegrationBase {
                 for (final TaxInvoiceItem taxInvoiceItem : taxItems) {
                     // If we specified the invoiceItemId, we should be able to find such tax item
                     if (taxInvoiceItem.getId() != null) {
-                        final InvoiceItem createdTaxInvoiceItem = Iterables.<InvoiceItem>find(invoice.getInvoiceItems(),
-                                                                                              new Predicate<InvoiceItem>() {
-                                                                                                  @Override
-                                                                                                  public boolean apply(final InvoiceItem invoiceItem) {
-                                                                                                      return invoiceItem.getId().compareTo(taxInvoiceItem.getId()) == 0;
-                                                                                                  }
-                                                                                              });
+                        final InvoiceItem createdTaxInvoiceItem = invoice.getInvoiceItems().stream()
+                                .filter(input -> input.getId().compareTo(taxInvoiceItem.getId()) == 0)
+                                .findFirst().get();
+
                         Assert.assertNotNull(createdTaxInvoiceItem);
                     }
                     Assert.assertEquals(taxInvoiceItem.getAccountId(), taxInvoiceItem.getAccountId());

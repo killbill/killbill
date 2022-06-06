@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -43,16 +44,11 @@ import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
-import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
-import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 
@@ -109,7 +105,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("1000")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("xxx-1", "xxx-2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("xxx-1", "xxx-2"), internalCallContext);
 
         final DateTime firstExpectedCTD = account.getReferenceTime().withMonthOfYear(5).withDayOfMonth(1);
         assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(firstExpectedCTD), 0);
@@ -133,7 +129,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("100")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("xxx-3", "xxx-4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("xxx-3", "xxx-4"), internalCallContext);
 
         final DateTime thirdExpectedCTD = account.getReferenceTime().withMonthOfYear(7).withDayOfMonth(1);
         assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(thirdExpectedCTD), 0);
@@ -172,7 +168,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
 
         // No $0 invoice
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
@@ -202,7 +198,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 6, 1), new LocalDate(2012, 7, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-3", "tracking-4"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-3", "tracking-4"), internalCallContext);
 
         // Should be ignored because this is outside of optimization range (org.killbill.invoice.readMaxRawUsagePreviousPeriod = 2) => we will only look for items > 2012-7-1 - 2 months = 2012-5-1
         recordUsageData(aoSubscription.getId(), "tracking-5", "bullets", new LocalDate(2012, 4, 30), BigDecimal.valueOf(100L), callContext);
@@ -225,7 +221,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")),
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 7, 1), new LocalDate(2012, 8, 1), InvoiceItemType.USAGE, new BigDecimal("11.80")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-6", "tracking-7", "tracking-8"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-6", "tracking-7", "tracking-8"), internalCallContext);
 
     }
 
@@ -265,14 +261,14 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         final Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                                                new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")),
                                                                new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("0.00")));
-        invoiceChecker.checkTrackingIds(curInvoice, ImmutableSet.of("tracking-1", "tracking-2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
 
 
     }
 
         private void insertInvoiceItems(final InvoiceModelDao invoice) {
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
-        invoiceDao.createInvoices(Collections.singletonList(invoice), null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, false, internalCallContext);
+        invoiceDao.createInvoices(Collections.singletonList(invoice), null, Collections.emptySet(), callbackDateTimePerSubscriptions, null, false, internalCallContext);
     }
 
 }
