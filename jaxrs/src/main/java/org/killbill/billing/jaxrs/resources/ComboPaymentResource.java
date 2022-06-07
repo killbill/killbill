@@ -17,7 +17,9 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -41,10 +43,6 @@ import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.clock.Clock;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public abstract class ComboPaymentResource extends JaxRsResourceBase {
 
@@ -86,17 +84,12 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
         }
 
         // Get all payment methods for account
-        final List<PaymentMethod> accountPaymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<PaymentMethod> accountPaymentMethods = paymentApi.getAccountPaymentMethods(account.getId(), false, false, Collections.emptyList(), callContext);
 
         // If we were specified a paymentMethod id and we find it, we return it
         if (paymentMethodJson.getPaymentMethodId() != null) {
             final UUID match = paymentMethodJson.getPaymentMethodId();
-            if (Iterables.any(accountPaymentMethods, new Predicate<PaymentMethod>() {
-                @Override
-                public boolean apply(final PaymentMethod input) {
-                    return input.getId().equals(match);
-                }
-            })) {
+            if (accountPaymentMethods.stream().anyMatch(input -> input.getId().equals(match))) {
                 return match;
             }
             throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, match);
@@ -104,14 +97,12 @@ public abstract class ComboPaymentResource extends JaxRsResourceBase {
 
         // If we were specified a paymentMethod externalKey and we find it, we return it
         if (paymentMethodJson.getExternalKey() != null) {
-            final PaymentMethod match = Iterables.tryFind(accountPaymentMethods, new Predicate<PaymentMethod>() {
-                @Override
-                public boolean apply(final PaymentMethod input) {
-                    return input.getExternalKey().equals(paymentMethodJson.getExternalKey());
-                }
-            }).orNull();
-            if (match != null) {
-                return match.getId();
+            final Optional<PaymentMethod> paymentMethod = accountPaymentMethods.stream()
+                    .filter(input -> input.getExternalKey().equals(paymentMethodJson.getExternalKey()))
+                    .findFirst();
+
+            if (paymentMethod.isPresent()) {
+                return paymentMethod.get().getId();
             }
         }
 

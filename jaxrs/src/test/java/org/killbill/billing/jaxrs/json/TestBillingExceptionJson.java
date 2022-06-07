@@ -16,15 +16,13 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.Collections;
 import java.util.UUID;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
-import org.killbill.billing.jaxrs.json.BillingExceptionJson.StackTraceElementJson;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestBillingExceptionJson extends JaxrsTestSuiteNoDB {
 
@@ -36,7 +34,7 @@ public class TestBillingExceptionJson extends JaxrsTestSuiteNoDB {
         final String causeClassName = UUID.randomUUID().toString();
         final String causeMessage = UUID.randomUUID().toString();
 
-        final BillingExceptionJson exceptionJson = new BillingExceptionJson(className, code, message, causeClassName, causeMessage, ImmutableList.<StackTraceElementJson>of());
+        final BillingExceptionJson exceptionJson = new BillingExceptionJson(className, code, message, causeClassName, causeMessage, Collections.emptyList());
         Assert.assertEquals(exceptionJson.getClassName(), className);
         Assert.assertEquals(exceptionJson.getCode(), (Integer) code);
         Assert.assertEquals(exceptionJson.getMessage(), message);

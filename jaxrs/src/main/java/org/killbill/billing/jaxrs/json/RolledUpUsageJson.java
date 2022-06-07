@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.json;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.api.RolledUpUnit;
@@ -26,9 +27,7 @@ import org.killbill.billing.usage.api.RolledUpUsage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(value="RolledUpUsage")
@@ -51,12 +50,7 @@ public class RolledUpUsageJson {
     }
 
     public RolledUpUsageJson(final RolledUpUsage input) {
-        this(input.getSubscriptionId(), input.getStart(), input.getEnd(), ImmutableList.copyOf(Iterables.transform(input.getRolledUpUnits(), new Function<RolledUpUnit, RolledUpUnitJson>() {
-            @Override
-            public RolledUpUnitJson apply(final RolledUpUnit input) {
-                return new RolledUpUnitJson(input);
-            }
-        })));
+        this(input.getSubscriptionId(), input.getStart(), input.getEnd(), input.getRolledUpUnits().stream().map(RolledUpUnitJson::new).collect(Collectors.toUnmodifiableList()));
     }
 
     public UUID getSubscriptionId() {

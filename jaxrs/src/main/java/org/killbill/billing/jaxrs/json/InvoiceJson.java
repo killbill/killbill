@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -35,9 +36,7 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(value="Invoice", parent = JsonBase.class)
@@ -120,14 +119,11 @@ public class InvoiceJson extends JsonBase {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoice(input.getId())));
         this.items = new ArrayList<InvoiceItemJson>(input.getInvoiceItems().size());
         for (final InvoiceItem item : input.getInvoiceItems()) {
-            ImmutableList<InvoiceItem> childItemsFiltered = null;
+            List<InvoiceItem> childItemsFiltered = null;
             if (item.getInvoiceItemType().equals(InvoiceItemType.PARENT_SUMMARY) && !CollectionUtils.isEmpty(childItems)) {
-                childItemsFiltered = ImmutableList.copyOf(Iterables.filter(childItems, new Predicate<InvoiceItem>() {
-                    @Override
-                    public boolean apply(@Nullable final InvoiceItem invoice) {
-                        return invoice.getAccountId().equals(item.getChildAccountId());
-                    }
-                }));
+                childItemsFiltered = childItems.stream()
+                        .filter(invoiceItem -> invoiceItem.getAccountId().equals(item.getChildAccountId()))
+                        .collect(Collectors.toUnmodifiableList());
             }
             this.items.add(new InvoiceItemJson(item, childItemsFiltered, accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForInvoiceItem(item.getId())));
         }

@@ -18,14 +18,14 @@
 
 package org.killbill.billing.jaxrs.json;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.ImmutableList;
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.payment.api.PaymentMethod;
@@ -34,12 +34,9 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
+
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(value="PaymentMethod", parent = JsonBase.class)
 public class PaymentMethodJson extends JsonBase {
@@ -76,12 +73,9 @@ public class PaymentMethodJson extends JsonBase {
         if (pluginDetail != null) {
             List<PluginPropertyJson> properties = null;
             if (pluginDetail.getProperties() != null) {
-                properties = new ArrayList<PluginPropertyJson>(Collections2.transform(pluginDetail.getProperties(), new Function<PluginProperty, PluginPropertyJson>() {
-                    @Override
-                    public PluginPropertyJson apply(final PluginProperty input) {
-                        return new PluginPropertyJson(input.getKey(), input.getValue() == null ? null : input.getValue().toString(), input.getIsUpdatable());
-                    }
-                }));
+                properties = pluginDetail.getProperties().stream()
+                        .map(input -> new PluginPropertyJson(input.getKey(), input.getValue() == null ? null : input.getValue().toString(), input.getIsUpdatable()))
+                        .collect(Collectors.toUnmodifiableList());
             }
             pluginDetailJson = new PaymentMethodPluginDetailJson(pluginDetail.getExternalPaymentMethodId(),
                                                                  pluginDetail.isDefaultPaymentMethod(),
@@ -156,7 +150,7 @@ public class PaymentMethodJson extends JsonBase {
                             }
                             return result;
                         }
-                        return ImmutableList.of();
+                        return Collections.emptyList();
                     }
                 };
             }
