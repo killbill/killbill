@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -48,13 +49,10 @@ import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(value="Catalog")
@@ -115,7 +113,7 @@ public class CatalogJson {
             productJson.getPlans().add(planJson);
         }
 
-        products = ImmutableList.<ProductJson>copyOf(productMap.values());
+        products = List.copyOf(productMap.values());
 
         final PriceListSet priceLists = catalog.getPriceLists();
         for (PriceList childPriceList : priceLists.getAllPriceLists()) {
@@ -378,13 +376,7 @@ public class CatalogJson {
         }
 
         private List<String> toProductNames(final Collection<Product> in) {
-            return Lists.transform(ImmutableList.<Product>copyOf(in),
-                                   new Function<Product, String>() {
-                                       @Override
-                                       public String apply(final Product input) {
-                                           return input.getName();
-                                       }
-                                   });
+            return in.stream().map(Product::getName).collect(Collectors.toUnmodifiableList());
         }
     }
 
