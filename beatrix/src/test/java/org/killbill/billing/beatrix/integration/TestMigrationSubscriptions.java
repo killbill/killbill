@@ -282,12 +282,12 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         // We set both entitlement and billing date with desired value
-        final DateTime entitlementMigrationDateBundle1 = new DateTime(2015, 12, 20, 0, 0, 0);
-        final DateTime billingMigrationDateBundle1 = new DateTime(2016, 2, 1, 0, 0, 0);
+        final DateTime entitlementMigrationDateBundle1 = internalCallContext.toUTCDateTime(new LocalDate(2015, 12, 20));
+        final DateTime billingMigrationDateBundle1 = internalCallContext.toUTCDateTime(new LocalDate(2016, 2, 1));
 
         // We set both entitlement and billing date with desired value
-        final DateTime entitlementMigrationDateBundle2 = new DateTime(2015, 12, 20, 0, 0, 0);
-        final DateTime billingMigrationDateBundle2 = new DateTime(2016, 3, 1, 0, 0, 0);
+        final DateTime entitlementMigrationDateBundle2 = internalCallContext.toUTCDateTime(new LocalDate(2015, 12, 20));
+        final DateTime billingMigrationDateBundle2 = internalCallContext.toUTCDateTime(new LocalDate(2016, 3, 1));
 
         final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
         final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
