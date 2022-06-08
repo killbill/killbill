@@ -805,7 +805,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
         assertEquals(subscription.getBillingStartDate().compareTo(billingDatetime), 0);
 
-        //Move clock to BillingDateTime and verify that billing starts
+        //Move clock to billingStartDate and verify that billing starts
         testListener.pushExpectedEvents(NextEvent.CREATE);
         clock.setTime(billingDatetime);
         assertListenerStatus();
@@ -841,7 +841,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
         assertEquals(subscription.getBillingStartDate().compareTo(initialDateTime), 0);
 
-        //Move clock to EntitlmentDateTime and verify that entitlement starts
+        //Move clock to entitlementStartDate and verify that entitlement starts
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         clock.setTime(entitlementDateTime);
         assertListenerStatus();
@@ -879,7 +879,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
         assertEquals(subscription.getBillingStartDate().compareTo(billingDatetime), 0);
 
-        //Move clock to EntitlementDateTime and verify that entitlement starts
+        //Move clock to entitlementStartDate and verify that entitlement starts
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         clock.setTime(entitlementDateTime);
         assertListenerStatus();
@@ -888,7 +888,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
-        //Move clock to BillingDateTime and verify that subscription starts
+        //Move clock to billingStartDate and verify that subscription starts
         testListener.pushExpectedEvents(NextEvent.CREATE);
         clock.setTime(billingDatetime);
         assertListenerStatus();

@@ -53,6 +53,7 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.account.api.ImmutableAccountData;
+import org.killbill.billing.callcontext.TimeAwareContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.entitlement.api.BaseEntitlementWithAddOnsSpecifier;
@@ -103,6 +104,7 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 import org.killbill.clock.Clock;
+import org.killbill.clock.ClockUtil;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -351,9 +353,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
             final LocalDate resolvedEntitlementDate = toLocalDate(entitlementDate);
             final LocalDate resolvedBillingDate = toLocalDate(billingDate);
-            final DateTime entitlementDateTime = resolvedEntitlementDate != null ? resolvedEntitlementDate.toDateTimeAtCurrentTime() : null; //TODO_1375 Revisit once JAX_RS changes are done
-            final DateTime billingDateTime = resolvedBillingDate != null ? resolvedBillingDate.toDateTimeAtCurrentTime() : null; //TODO_1375 Revisit once JAX_RS changes are done
-
+            
+            final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
+            final DateTime entitlementDateTime = resolvedEntitlementDate != null ? timeAwareContext.toUTCDateTime(resolvedEntitlementDate) : null;
+            final DateTime billingDateTime = resolvedBillingDate != null ? timeAwareContext.toUTCDateTime(resolvedBillingDate) : null;
             final BaseEntitlementWithAddOnsSpecifier baseEntitlementSpecifierWithAddOns = buildBaseEntitlementWithAddOnsSpecifier(entitlementSpecifierList,
                                                                                                                                   entitlementDateTime,
                                                                                                                                   billingDateTime,
