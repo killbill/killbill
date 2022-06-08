@@ -68,8 +68,8 @@ public abstract class EntitlementLoggingHelper {
     private static void logCreateEntitlementWithAOs(final StringBuilder logLine,
                                                     final String externalKey,
                                                     final Iterable<EntitlementSpecifier> entitlementSpecifiers,
-                                                    final LocalDate entitlementDate,
-                                                    final LocalDate billingDate) {
+                                                    final Object entitlementDate,
+                                                    final Object billingDate) {
         if (externalKey != null) {
             logLine.append("bundleKey='")
                    .append(externalKey)

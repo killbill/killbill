@@ -399,7 +399,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         assertEquals(internalCallContext.toLocalDate(events.get(5).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
         assertEquals(internalCallContext.toLocalDate(events.get(6).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
         assertEquals(internalCallContext.toLocalDate(events.get(7).getEffectiveDate()).compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(internalCallContext.toLocalDate(events.get(8).getEffectiveDate()).compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);//TODO_1375 - Revisit
+        assertEquals(internalCallContext.toLocalDate(events.get(8).getEffectiveDate()).compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);

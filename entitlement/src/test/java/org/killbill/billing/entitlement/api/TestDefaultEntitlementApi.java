@@ -745,6 +745,154 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         clock.addDays(5);
         assertListenerStatus();
     }
+    
+    @Test(groups = "slow")
+    public void testCreateBaseEntitlementWithCurrentDateTime() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final DateTime initialDateTime = new DateTime(2013, 8, 7, 10, 30);
+        clock.setTime(initialDateTime);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
+        final List<EntitlementSpecifier> specs = List.of(spec);
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, null, specs, initialDateTime, initialDateTime, false);
+        final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers = List.of(baseEntitlementWithAddOnsSpecifier);
+
+        //create entitlement with current datetime
+        testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE); //entitlement created immediately
+        final List<UUID> entitlementIds = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, true, Collections.emptyList(), callContext);
+        assertEquals(entitlementIds.size(), 1);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+        assertListenerStatus();
+
+        //Verify that state is ACTIVE
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+        //Verify entitlementStartDate and billingStartDate
+        assertEquals(entitlement.getEffectiveStartDate().compareTo(initialDateTime), 0);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        assertEquals(subscription.getBillingStartDate().compareTo(initialDateTime), 0);
+
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseEntitlementWithBillingDateTimeInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final DateTime initialDateTime = new DateTime(2013, 8, 7, 10, 30);
+        clock.setTime(initialDateTime);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final DateTime billingDatetime = initialDateTime.plusMinutes(30); //future datetime
+        final DateTime entitlementDatetime = initialDateTime; //current datetime
+
+        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
+        final List<EntitlementSpecifier> specs = List.of(spec);
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, null, specs, entitlementDatetime, billingDatetime, false);
+        final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers = List.of(baseEntitlementWithAddOnsSpecifier);
+
+        //create entitlement with future datetime for billing and current datetime for entitlement
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        final List<UUID> entitlementIds = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, true, Collections.emptyList(), callContext);
+        assertEquals(entitlementIds.size(), 1);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+        assertListenerStatus();
+
+        //Verify that state is ACTIVE since entitlement is created with current datetime
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+        //Verify entitlementStartDate and billingStartDate
+        assertEquals(entitlement.getEffectiveStartDate().compareTo(entitlementDatetime), 0);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        assertEquals(subscription.getBillingStartDate().compareTo(billingDatetime), 0);
+
+        //Move clock to billingStartDate and verify that billing starts
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        clock.setTime(billingDatetime);
+        assertListenerStatus();
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseEntitlementWithEntitlementDateTimeInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final DateTime initialDateTime = new DateTime(2013, 8, 7, 10, 30);
+        clock.setTime(initialDateTime);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final DateTime entitlementDateTime = initialDateTime.plusMinutes(20); //future datetime
+        final DateTime billingDatetime = null; //should default to now
+
+        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
+        final List<EntitlementSpecifier> specs = List.of(spec);
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, null, specs, entitlementDateTime, billingDatetime, false);
+        final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers = List.of(baseEntitlementWithAddOnsSpecifier);
+
+        //create entitlement with future datetime for entitlement and current datetime for billing
+        testListener.pushExpectedEvents(NextEvent.CREATE); ////Since entitlementDatetime is in the future, only CREATE event is specified here
+        final List<UUID> entitlementIds = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, true, Collections.emptyList(), callContext);
+        assertEquals(entitlementIds.size(), 1);
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+        assertListenerStatus();
+
+        //Verify that state is PENDING since entitlementDateTime is not reached
+        assertEquals(entitlement.getState(), EntitlementState.PENDING);
+
+        //Verify entitlementStartDate and billingStartDate
+        assertEquals(entitlement.getEffectiveStartDate().compareTo(entitlementDateTime), 0);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        assertEquals(subscription.getBillingStartDate().compareTo(initialDateTime), 0);
+
+        //Move clock to entitlementStartDate and verify that entitlement starts
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        clock.setTime(entitlementDateTime);
+        assertListenerStatus();
+
+        //Verify that state is now ACTIVE
+        entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+    }
+
+    @Test(groups = "slow")
+    public void testCreateBaseEntitlementWithDateTimeInTheFuture() throws AccountApiException, EntitlementApiException, SubscriptionApiException {
+        final DateTime initialDateTime = new DateTime(2013, 8, 7, 10, 30);
+        clock.setTime(initialDateTime);
+
+        final Account account = createAccount(getAccountData(7));
+
+        final DateTime entitlementDateTime = initialDateTime.plusMinutes(20); //future Datetime
+        final DateTime billingDatetime = initialDateTime.plusMinutes(30); //future Datetime
+
+        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
+        final List<EntitlementSpecifier> specs = List.of(spec);
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, null, specs, entitlementDateTime, billingDatetime, false);
+        final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers = List.of(baseEntitlementWithAddOnsSpecifier);
+
+        //create entitlement future datetime for entitlement and billing
+        final List<UUID> entitlementIds = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, true, Collections.emptyList(), callContext);
+        assertEquals(entitlementIds.size(), 1);
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+
+        //Verify that state is PENDING since entitlementDateTime is not reached
+        assertEquals(entitlement.getState(), EntitlementState.PENDING);
+
+        //Verify entitlementStartDate and billingStartDate
+        assertEquals(entitlement.getEffectiveStartDate().compareTo(entitlementDateTime), 0);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        assertEquals(subscription.getBillingStartDate().compareTo(billingDatetime), 0);
+
+        //Move clock to entitlementStartDate and verify that entitlement starts
+        testListener.pushExpectedEvents(NextEvent.BLOCK);
+        clock.setTime(entitlementDateTime);
+        assertListenerStatus();
+
+        //Verify that state is now ACTIVE
+        entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+
+        //Move clock to billingStartDate and verify that subscription starts
+        testListener.pushExpectedEvents(NextEvent.CREATE);
+        clock.setTime(billingDatetime);
+        assertListenerStatus();
+    }
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1158")
     public void testCreateBaseWithEntitlementInTheFutureAndChangeBCD() throws AccountApiException, EntitlementApiException, SubscriptionApiException {

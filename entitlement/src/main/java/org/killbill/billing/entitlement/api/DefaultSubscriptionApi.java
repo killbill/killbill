@@ -298,7 +298,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-        final LocalDate effectiveDate = internalCallContext.toLocalDate(callContext.getCreatedDate());
+        final DateTime effectiveDate = callContext.getCreatedDate();
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
                 newExternalKey,
@@ -400,8 +400,8 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                 bundleId,
                 externalKey,
                 new ArrayList<EntitlementSpecifier>(),
-                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
-                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
+                effectiveDate,
+                effectiveDate,
                 false);
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);

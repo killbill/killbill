@@ -112,11 +112,13 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
                 continue;
             }
 
+            final DateTime effectiveDateTime = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, callContext.getCreatedDate(), internalCallContext);
+
             final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                     entitlement.getBundleId(),
                     entitlement.getBundleExternalKey(),
                     null,
-                    effectiveDate,
+                    effectiveDateTime,
                     null,
                     false);
             final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
@@ -224,7 +226,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         @Override
         public Entitlement doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
-            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate(), updatedPluginContext.getCreatedDate(), internalCallContext);
+            DateTime effectiveDate = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate();
 
             //
             // If the entitlementDate provided is ahead we default to the effective subscriptionBase cancellationDate to avoid weird timing issues.

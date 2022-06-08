@@ -46,6 +46,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.account.api.Account;
@@ -103,6 +104,7 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 import org.killbill.clock.Clock;
+import org.killbill.clock.ClockUtil;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -215,7 +217,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final List<AuditLogWithHistory> auditLogWithHistory = subscriptionApi.getSubscriptionEventAuditLogsWithHistoryForId(eventId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
-
 
     @TimedResource
     @POST
@@ -352,10 +353,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
             final LocalDate resolvedEntitlementDate = toLocalDate(entitlementDate);
             final LocalDate resolvedBillingDate = toLocalDate(billingDate);
-
+            
+            final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
+            final DateTime entitlementDateTime = resolvedEntitlementDate != null ? timeAwareContext.toUTCDateTime(resolvedEntitlementDate) : null;
+            final DateTime billingDateTime = resolvedBillingDate != null ? timeAwareContext.toUTCDateTime(resolvedBillingDate) : null;
             final BaseEntitlementWithAddOnsSpecifier baseEntitlementSpecifierWithAddOns = buildBaseEntitlementWithAddOnsSpecifier(entitlementSpecifierList,
-                                                                                                                                  resolvedEntitlementDate,
-                                                                                                                                  resolvedBillingDate,
+                                                                                                                                  entitlementDateTime,
+                                                                                                                                  billingDateTime,
                                                                                                                                   bundleId,
                                                                                                                                   bundleExternalKey,
                                                                                                                                   isMigrated);
@@ -518,7 +522,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
 
-             private boolean isImmediateOp = true;
+            private boolean isImmediateOp = true;
 
             @Override
             public Response doOperation(final CallContext ctx) throws EntitlementApiException,
@@ -632,7 +636,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(newEntitlement.getId(), ctx);
                 if (subscription.getBillingEndDate() != null) {
                     final Account account = accountUserApi.getAccountById(subscription.getAccountId(), callContext);
-                    final boolean inTheFuture = isInTheFuture(subscription.getBillingEndDate().toLocalDate(), account); //TODO_1375 - Converting to LocalDate for comparison, should we instead change isInTheFuture to accept DateTime? Also, not sure how to access internalCallContext here so I've used toLocalDate
+                    final boolean inTheFuture = isInTheFuture(subscription.getBillingEndDate(), account);
                     if (inTheFuture) {
                         isImmediateOp = false;
                     }
@@ -970,9 +974,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return ObjectType.SUBSCRIPTION;
     }
 
-    private boolean isInTheFuture(final LocalDate effectiveDate, final ImmutableAccountData account) {
-        final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
-        return timeAwareContext.toUTCDateTime(effectiveDate).isAfter(clock.getUTCNow());
+    private boolean isInTheFuture(final DateTime effectiveDate, final ImmutableAccountData account) {
+        return effectiveDate.isAfter(clock.getUTCNow());
     }
 
     private Account getAccountFromSubscriptionJson(final SubscriptionJson entitlementJson, final CallContext callContext) throws SubscriptionApiException, AccountApiException, EntitlementApiException {

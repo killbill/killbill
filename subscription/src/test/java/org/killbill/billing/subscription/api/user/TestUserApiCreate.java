@@ -304,7 +304,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle.getId(),
                                                                                                                                 bundle.getExternalKey(),
                                                                                                                                 specifiers,
-                                                                                                                                init.toLocalDate(),
+                                                                                                                                init,
                                                                                                                                 false);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BCD_CHANGE);

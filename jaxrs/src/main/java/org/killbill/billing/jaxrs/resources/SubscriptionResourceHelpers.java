@@ -25,7 +25,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -245,8 +245,8 @@ public class SubscriptionResourceHelpers {
     }
 
     public static BaseEntitlementWithAddOnsSpecifier buildBaseEntitlementWithAddOnsSpecifier(final Iterable<EntitlementSpecifier> entitlementSpecifierList,
-                                                                                             final LocalDate resolvedEntitlementDate,
-                                                                                             final LocalDate resolvedBillingDate,
+                                                                                             final DateTime resolvedEntitlementDate,
+                                                                                             final DateTime resolvedBillingDate,
                                                                                              @Nullable final UUID bundleId,
                                                                                              @Nullable final String bundleExternalKey,
                                                                                              final Boolean isMigrated) {
@@ -267,12 +267,12 @@ public class SubscriptionResourceHelpers {
             }
 
             @Override
-            public LocalDate getEntitlementEffectiveDate() {
+            public DateTime getEntitlementEffectiveDate() {
                 return resolvedEntitlementDate;
             }
 
             @Override
-            public LocalDate getBillingEffectiveDate() {
+            public DateTime getBillingEffectiveDate() {
                 return resolvedBillingDate;
             }
 

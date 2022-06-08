@@ -234,9 +234,9 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         // We set both entitlement and billing date with desired value
-        final LocalDate entitlementMigrationDate = new LocalDate(2015, 12, 20);
-        final LocalDate billingMigrationDate = new LocalDate(2016, 2, 1);
-
+        final DateTime entitlementMigrationDate = internalCallContext.toUTCDateTime(new LocalDate(2015, 12, 20));
+        final DateTime billingMigrationDate = internalCallContext.toUTCDateTime(new LocalDate(2016, 2, 1));
+        
         final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
         final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
 
@@ -279,12 +279,12 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         accountChecker.checkAccount(account.getId(), accountData, callContext);
 
         // We set both entitlement and billing date with desired value
-        final LocalDate entitlementMigrationDateBundle1 = new LocalDate(2015, 12, 20);
-        final LocalDate billingMigrationDateBundle1 = new LocalDate(2016, 2, 1);
+        final DateTime entitlementMigrationDateBundle1 = internalCallContext.toUTCDateTime(new LocalDate(2015, 12, 20));
+        final DateTime billingMigrationDateBundle1 = internalCallContext.toUTCDateTime(new LocalDate(2016, 2, 1));
 
         // We set both entitlement and billing date with desired value
-        final LocalDate entitlementMigrationDateBundle2 = new LocalDate(2015, 12, 20);
-        final LocalDate billingMigrationDateBundle2 = new LocalDate(2016, 3, 1);
+        final DateTime entitlementMigrationDateBundle2 = internalCallContext.toUTCDateTime(new LocalDate(2015, 12, 20));
+        final DateTime billingMigrationDateBundle2 = internalCallContext.toUTCDateTime(new LocalDate(2016, 3, 1));
 
         final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
         final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
@@ -489,32 +489,37 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         assertListenerStatus();
     }
 
-    private BaseEntitlementWithAddOnsSpecifier buildBaseEntitlementWithAddOnsSpecifier(final LocalDate entitlementMigrationDate, final LocalDate billingMigrationDate, final String externalKey, final List<EntitlementSpecifier> specifierList) {
+    private BaseEntitlementWithAddOnsSpecifier buildBaseEntitlementWithAddOnsSpecifier(final DateTime entitlementMigrationDate, final DateTime billingMigrationDate, final String externalKey, final List<EntitlementSpecifier> specifierList) {
         return new BaseEntitlementWithAddOnsSpecifier() {
-                @Override
-                public UUID getBundleId() {
-                    return null;
-                }
-                @Override
-                public String getBundleExternalKey() {
-                    return externalKey;
-                }
-                @Override
-                public Iterable<EntitlementSpecifier> getEntitlementSpecifier() {
-                    return specifierList;
-                }
-                @Override
-                public LocalDate getEntitlementEffectiveDate() {
-                    return entitlementMigrationDate;
-                }
-                @Override
-                public LocalDate getBillingEffectiveDate() {
-                    return billingMigrationDate;
-                }
-                @Override
-                public boolean isMigrated() {
-                    return false;
-                }
-            };
+            @Override
+            public UUID getBundleId() {
+                return null;
+            }
+
+            @Override
+            public String getBundleExternalKey() {
+                return externalKey;
+            }
+
+            @Override
+            public Iterable<EntitlementSpecifier> getEntitlementSpecifier() {
+                return specifierList;
+            }
+
+            @Override
+            public DateTime getEntitlementEffectiveDate() {
+                return entitlementMigrationDate;
+            }
+
+            @Override
+            public DateTime getBillingEffectiveDate() {
+                return billingMigrationDate;
+            }
+
+            @Override
+            public boolean isMigrated() {
+                return false;
+            }
+        };
     }
 }
