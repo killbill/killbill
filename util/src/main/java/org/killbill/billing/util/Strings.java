@@ -67,4 +67,14 @@ public final class Strings {
     public static String nullToEmpty(@CheckForNull final String string) {
         return (string == null) ? "" : string;
     }
+
+    /**
+     * Return true if {@code str} contains upper-case.
+     */
+    public static boolean containsUpperCase(final String str) {
+        if (isNullOrEmpty(str)) {
+            return false;
+        }
+        return !str.equals(str.toLowerCase());
+    }
 }
