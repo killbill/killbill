@@ -39,8 +39,11 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
 
     private CustomFieldUserApi customFieldUserApi;
 
-    @BeforeMethod(groups = "fast", alwaysRun = true)
+    @BeforeMethod(groups = "fast")
     public void beforeMethod() {
+        if (hasFailed()) {
+            return;
+        }
         customFieldUserApi = Mockito.mock(CustomFieldUserApi.class);
     }
 
