@@ -29,6 +29,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.util.Joiner;
+import org.killbill.billing.util.Strings;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
@@ -92,7 +93,7 @@ public class DefaultTagUserApi implements TagUserApi {
 
     @Override
     public TagDefinition createTagDefinition(final String definitionName, final String description, final Set<ObjectType> applicableObjectTypes, final CallContext context) throws TagDefinitionApiException {
-        if (definitionName.matches(".*[A-Z].*")) {
+        if (Strings.containsUpperCase(definitionName)) {
             throw new TagDefinitionApiException(ErrorCode.TAG_DEFINITION_HAS_UPPERCASE, definitionName);
         }
         final TagDefinitionModelDao tagDefinitionModelDao = tagDefinitionDao.create(definitionName, description, JOINER.join(applicableObjectTypes), internalCallContextFactory.createInternalCallContextWithoutAccountRecordId(context));
