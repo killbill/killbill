@@ -28,7 +28,6 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.CustomFieldApiException;
 import org.killbill.billing.util.api.CustomFieldUserApi;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.customfield.CustomField;
 import org.mockito.Mockito;
@@ -40,7 +39,7 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
 
     private CustomFieldUserApi customFieldUserApi;
 
-    @BeforeMethod
+    @BeforeMethod(groups = "fast", alwaysRun = true)
     public void beforeMethod() {
         customFieldUserApi = Mockito.mock(CustomFieldUserApi.class);
     }
@@ -118,10 +117,11 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
                 .collect(Collectors.toUnmodifiableList());
 
         final JaxRsResourceBase base = createJaxRsResourceBase();
-        Mockito.when(customFieldUserApi.getCustomFieldsForObject(id, null, callContext)).thenReturn(fromDatabase);
+        Mockito.when(customFieldUserApi.getCustomFieldsForObject(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(fromDatabase);
+
         base.deleteCustomFields(id, idsToCheck, callContext);
 
-        Mockito.verify(customFieldUserApi, Mockito.times(1)).removeCustomFields(Mockito.anyList(), Mockito.any(CallContext.class));
+        Mockito.verify(customFieldUserApi, Mockito.times(1)).removeCustomFields(Mockito.anyList(), Mockito.any());
     }
 
     @Test(groups = "fast")
@@ -131,10 +131,11 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
         final List<UUID> idsToCheck = List.of(UUIDs.randomUUID(), UUIDs.randomUUID(), UUIDs.randomUUID());
 
         final JaxRsResourceBase base = createJaxRsResourceBase();
-        Mockito.when(customFieldUserApi.getCustomFieldsForObject(id, null, callContext)).thenReturn(fromDatabase);
+        Mockito.when(customFieldUserApi.getCustomFieldsForObject(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(fromDatabase);
+
         base.deleteCustomFields(id, idsToCheck, callContext);
 
-        Mockito.verify(customFieldUserApi, Mockito.never()).removeCustomFields(Mockito.anyList(), Mockito.any(CallContext.class));
+        Mockito.verify(customFieldUserApi, Mockito.never()).removeCustomFields(Mockito.anyList(), Mockito.any());
     }
 
     @Test(groups = "fast")
@@ -144,10 +145,11 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
         final List<UUID> idsToCheck = Collections.emptyList();
 
         final JaxRsResourceBase base = createJaxRsResourceBase();
-        Mockito.when(customFieldUserApi.getCustomFieldsForObject(id, null, callContext)).thenReturn(fromDatabase);
+        Mockito.when(customFieldUserApi.getCustomFieldsForObject(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(fromDatabase);
+
         base.deleteCustomFields(id, idsToCheck, callContext);
 
-        Mockito.verify(customFieldUserApi, Mockito.times(1)).removeCustomFields(Mockito.anyList(), Mockito.any(CallContext.class));
+        Mockito.verify(customFieldUserApi, Mockito.times(1)).removeCustomFields(Mockito.anyList(), Mockito.any());
     }
 
     @Test(groups = "fast")
@@ -156,9 +158,10 @@ public class TestJaxRsResourceBase extends JaxrsTestSuiteNoDB {
         final List<CustomField> fromDatabase = createCustomFields();
 
         final JaxRsResourceBase base = createJaxRsResourceBase();
-        Mockito.when(customFieldUserApi.getCustomFieldsForObject(id, null, callContext)).thenReturn(fromDatabase);
+        Mockito.when(customFieldUserApi.getCustomFieldsForObject(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(fromDatabase);
+
         base.deleteCustomFields(id, null, callContext);
 
-        Mockito.verify(customFieldUserApi, Mockito.times(1)).removeCustomFields(Mockito.anyList(), Mockito.any(CallContext.class));
+        Mockito.verify(customFieldUserApi, Mockito.times(1)).removeCustomFields(Mockito.anyList(), Mockito.any());
     }
 }
