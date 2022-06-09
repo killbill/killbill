@@ -21,6 +21,7 @@ import javax.servlet.ServletRequest;
 import javax.ws.rs.core.Response;
 
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.overdue.api.OverdueApi;
@@ -41,7 +42,7 @@ import com.google.common.io.Resources;
 
 import static org.mockito.Mockito.*;
 
-public class TestOverdueResource extends TestJaxRsResourceBase {
+public class TestOverdueResource extends JaxrsTestSuiteNoDB {
 
     private final ServletRequest servletRequest = mock(ServletRequest.class);
     private final TenantContext tenantContext = mock(TenantContext.class);
