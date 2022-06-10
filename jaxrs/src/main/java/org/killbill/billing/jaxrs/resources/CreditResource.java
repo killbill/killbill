@@ -18,8 +18,10 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -58,9 +60,6 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -102,7 +101,7 @@ public class CreditResource extends JaxRsResourceBase {
                               @javax.ws.rs.core.Context final HttpServletRequest request) throws InvoiceApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final InvoiceItem credit = invoiceUserApi.getCreditById(creditId, tenantContext);
-        final InvoiceItemJson creditJson = new InvoiceItemJson(credit, ImmutableList.of(), null);
+        final InvoiceItemJson creditJson = new InvoiceItemJson(credit, Collections.emptyList(), null);
         return Response.status(Response.Status.OK).entity(creditJson).build();
     }
 
@@ -134,13 +133,9 @@ public class CreditResource extends JaxRsResourceBase {
         final Iterable<InvoiceItem> inputItems = validateSanitizeAndTranformInputItems(account.getCurrency(), json);
 
         final List<InvoiceItem> createdCredits = invoiceUserApi.insertCredits(account.getId(), effectiveDate, inputItems, autoCommit, pluginProperties, callContext);
-        final List<InvoiceItemJson> createdCreditsJson = Lists.<InvoiceItem, InvoiceItemJson>transform(createdCredits, new Function<InvoiceItem, InvoiceItemJson>() {
-                                                                                                           @Override
-                                                                                                           public InvoiceItemJson apply(final InvoiceItem input) {
-                                                                                                               return new InvoiceItemJson(input);
-                                                                                                           }
-                                                                                                       }
-                                                                                                      );
+        final List<InvoiceItemJson> createdCreditsJson = createdCredits.stream()
+                .map(InvoiceItemJson::new)
+                .collect(Collectors.toUnmodifiableList());
 
         return Response.status(Status.OK).entity(createdCreditsJson).build();
     }
