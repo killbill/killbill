@@ -349,29 +349,51 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testAddRemoveWrittenOffTag() throws Exception {
-
         final Account account = invoiceUtil.createAccount(callContext);
-        final UUID accountId = account.getId();
-        final UUID invoiceId = invoiceUtil.generateRegularInvoice(account, null, callContext);
+        final UUID originalInvoiceId = invoiceUtil.generateRegularInvoice(account, null, callContext);
 
-        final Invoice originalInvoice = invoiceUserApi.getInvoice(invoiceId, callContext);
-        assertEquals(originalInvoice.getBalance().compareTo(BigDecimal.ZERO), 1);
+        // Generate two non-$0 invoices
+        final Invoice firstInvoice = invoiceUserApi.getInvoice(originalInvoiceId, callContext);
+        assertEquals(firstInvoice.getBalance().compareTo(BigDecimal.ZERO), 1);
 
-        invoiceUserApi.tagInvoiceAsWrittenOff(invoiceId, callContext);
+        BigDecimal accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        Assert.assertEquals(accountBalance, firstInvoice.getBalance());
 
-        List<Tag> tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, false, callContext);
+        final Invoice secondInvoice = invoiceUtil.generateInvoice(account.getId(), firstInvoice.getTargetDate().plusMonths(1), null, internalCallContext);
+        assertEquals(secondInvoice.getBalance().compareTo(BigDecimal.ZERO), 1);
+
+        accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        Assert.assertEquals(accountBalance, firstInvoice.getBalance().add(secondInvoice.getBalance()));
+
+        // Write off the second one
+        invoiceUserApi.tagInvoiceAsWrittenOff(secondInvoice.getId(), callContext);
+
+        List<Tag> tags = tagUserApi.getTagsForObject(secondInvoice.getId(), ObjectType.INVOICE, false, callContext);
         assertEquals(tags.size(), 1);
         assertEquals(tags.get(0).getTagDefinitionId(), ControlTagType.WRITTEN_OFF.getId());
 
-        final Invoice invoiceWithTag = invoiceUserApi.getInvoice(invoiceId, callContext);
+        final Invoice invoiceWithoutTag = invoiceUserApi.getInvoice(firstInvoice.getId(), callContext);
+        assertEquals(invoiceWithoutTag.getBalance().compareTo(BigDecimal.ZERO), 1);
+
+        final Invoice invoiceWithTag = invoiceUserApi.getInvoice(secondInvoice.getId(), callContext);
         assertEquals(invoiceWithTag.getBalance().compareTo(BigDecimal.ZERO), 0);
 
-        invoiceUserApi.tagInvoiceAsNotWrittenOff(invoiceId, callContext);
-        tags = tagUserApi.getTagsForObject(invoiceId, ObjectType.INVOICE, false, callContext);
+        accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        Assert.assertEquals(accountBalance, firstInvoice.getBalance());
+
+        // Remove the WRITTEN_OFF tag
+        invoiceUserApi.tagInvoiceAsNotWrittenOff(secondInvoice.getId(), callContext);
+        tags = tagUserApi.getTagsForObject(secondInvoice.getId(), ObjectType.INVOICE, false, callContext);
         assertEquals(tags.size(), 0);
 
-        final Invoice invoiceAfterTagRemoval = invoiceUserApi.getInvoice(invoiceId, callContext);
-        assertEquals(invoiceAfterTagRemoval.getBalance().compareTo(BigDecimal.ZERO), 1);
+        final Invoice firstInvoiceAfterTagRemoval = invoiceUserApi.getInvoice(firstInvoice.getId(), callContext);
+        assertEquals(firstInvoiceAfterTagRemoval.getBalance().compareTo(BigDecimal.ZERO), 1);
+
+        final Invoice secondInvoiceAfterTagRemoval = invoiceUserApi.getInvoice(secondInvoice.getId(), callContext);
+        assertEquals(secondInvoiceAfterTagRemoval.getBalance().compareTo(BigDecimal.ZERO), 1);
+
+        accountBalance = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        Assert.assertEquals(accountBalance, firstInvoice.getBalance().add(secondInvoice.getBalance()));
     }
 
     @Test(groups = "slow")
