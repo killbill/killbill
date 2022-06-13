@@ -17,10 +17,13 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -53,21 +56,17 @@ import org.killbill.billing.usage.api.RolledUpUsage;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UsageApiException;
 import org.killbill.billing.usage.api.UsageUserApi;
+import org.killbill.billing.util.Preconditions;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
-import com.google.inject.Singleton;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -118,7 +117,8 @@ public class UsageResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "SubscriptionUsageRecordJson body should be specified");
         verifyNonNullOrEmpty(json.getSubscriptionId(), "SubscriptionUsageRecordJson subscriptionId needs to be set",
                              json.getUnitUsageRecords(), "SubscriptionUsageRecordJson unitUsageRecords needs to be set");
-        Preconditions.checkArgument(!json.getUnitUsageRecords().isEmpty());
+        Preconditions.checkArgument(!json.getUnitUsageRecords().isEmpty(), "json.getUnitUsageRecords() is empty");
+
         for (final UnitUsageRecordJson unitUsageRecordJson : json.getUnitUsageRecords()) {
             verifyNonNullOrEmpty(unitUsageRecordJson.getUnitType(), "UnitUsageRecordJson unitType need to be set");
             Preconditions.checkArgument(Iterables.size(unitUsageRecordJson.getUsageRecords()) > 0,
@@ -145,24 +145,12 @@ public class UsageResource extends JaxRsResourceBase {
 
     @VisibleForTesting
     LocalDate getHighestRecordDate(final List<UnitUsageRecordJson> records) {
-        final Iterable<Iterable<LocalDate>> recordedDates = Iterables.transform(records, new Function<UnitUsageRecordJson, Iterable<LocalDate>>() {
-
-            @Override
-            public Iterable<LocalDate> apply(final UnitUsageRecordJson input) {
-                final Iterable<LocalDate> result = Iterables.transform(input.getUsageRecords(), new Function<UsageRecordJson, LocalDate>() {
-                    @Override
-                    public LocalDate apply(final UsageRecordJson input) {
-                        return input.getRecordDate();
-                    }
-                });
-                return result;
-            }
-        });
-        final Iterable<LocalDate> sortedRecordedDates = Ordering.<LocalDate>natural()
-                .reverse()
-                .sortedCopy(Iterables.concat(recordedDates));
-
-        return Iterables.getFirst(sortedRecordedDates, null);
+        return records.stream()
+                      .map(UnitUsageRecordJson::getUsageRecords) // stream of List<UsageRecordJson>
+                      .flatMap(Collection::stream) // flattened, so UsageRecordJson instead of List<UsageRecordJson>
+                      .map(UsageRecordJson::getRecordDate) // get "recordDate"
+                      .max(Comparator.naturalOrder()) // Same as ".sorted(Comparator.reverseOrder()).findFirst()"
+                      .orElse(null);
     }
 
     @TimedResource
@@ -213,7 +201,7 @@ public class UsageResource extends JaxRsResourceBase {
         final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);
 
         // The current JAXRS API only allows to look for one transition
-        final List<LocalDate> startEndDate = ImmutableList.<LocalDate>builder().add(usageStartDate).add(usageEndDate).build();
+        final List<LocalDate> startEndDate = List.of(usageStartDate, usageEndDate);
         final List<RolledUpUsage> usage = usageUserApi.getAllUsageForSubscription(subscriptionId, startEndDate, pluginProperties, tenantContext);
         final RolledUpUsageJson result = new RolledUpUsageJson(usage.get(0));
         return Response.status(Status.OK).entity(result).build();

@@ -42,8 +42,7 @@ import org.killbill.billing.jaxrs.json.PhasePriceJson;
 import org.killbill.billing.jaxrs.json.SubscriptionJson;
 import org.killbill.billing.jaxrs.json.TierPriceJson;
 import org.killbill.billing.jaxrs.json.UsagePriceJson;
-
-import com.google.common.base.Preconditions;
+import org.killbill.billing.util.Preconditions;
 
 public class SubscriptionResourceHelpers {
 
@@ -85,12 +84,12 @@ public class SubscriptionResourceHelpers {
     public static List<PlanPhasePriceOverride> buildPlanPhasePriceOverrides(final Iterable<PhasePriceJson> priceOverrides,
                                                                             final Currency currency,
                                                                             final PlanPhaseSpecifier planPhaseSpecifier) {
-        final List<PlanPhasePriceOverride> overrides = new LinkedList<PlanPhasePriceOverride>();
+        final List<PlanPhasePriceOverride> overrides = new LinkedList<>();
         if (priceOverrides != null) {
             for (final PhasePriceJson input : priceOverrides) {
                 Preconditions.checkNotNull(input);
 
-                final List<UsagePriceOverride> usagePrices = new LinkedList<UsagePriceOverride>();
+                final List<UsagePriceOverride> usagePrices = new LinkedList<>();
                 if (input.getUsagePrices() != null) {
                     buildUsagePrices(currency, input, usagePrices);
                 }

@@ -37,8 +37,6 @@ import org.killbill.clock.DefaultClock;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.killbill.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
 public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
@@ -85,8 +83,8 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 new DateTime(),
                                                                                 new DateTime(),
                                                                                 null,
-                                                                                ImmutableList.<EventSubscriptionJson>of(newEvent),
-                                                                                ImmutableList.of(priceOverride),
+                                                                                List.of(newEvent),
+                                                                                List.of(priceOverride),
                                                                                 null,
                                                                                 auditLogs);
         final String asJson = mapper.writeValueAsString(entitlementJsonWithEvents);
