@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -94,9 +95,6 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-
-// FIXME-1615 : CacheController
-import com.google.common.base.Function;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
