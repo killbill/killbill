@@ -200,12 +200,6 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
 
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(fromInternalCallContext);
             final DateTime effectiveTransferDate = transferDate == null ? context.getCreatedDate() : transferDate;
-            if (effectiveTransferDate.isAfter(context.getCreatedDate())) {
-                // The transfer event for the migrated bundle will be the first one, which cannot be in the future
-                // (subscription always expects the first event to be in the past)
-                throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_TRANSFER_INVALID_EFF_DATE, effectiveTransferDate);
-            }
-
             final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getActiveBundleForKey(catalog.getCatalog(), bundleKey, fromInternalCallContext);
             if (bundle == null) {
                 throw new SubscriptionBaseTransferApiException(ErrorCode.SUB_CREATE_NO_BUNDLE, bundleKey);
