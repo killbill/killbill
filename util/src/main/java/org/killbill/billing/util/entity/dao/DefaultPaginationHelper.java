@@ -19,6 +19,7 @@ package org.killbill.billing.util.entity.dao;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.util.collect.Iterables;
@@ -29,9 +30,6 @@ import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-// FIXME-1615 : Used in method parameters, and the methods use in several modules
-import com.google.common.base.Function;
 
 public class DefaultPaginationHelper {
 
