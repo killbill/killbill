@@ -18,6 +18,7 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -27,8 +28,6 @@ import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
@@ -50,7 +49,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(UUID.randomUUID(),
                                                                              UUID.randomUUID(),
                                                                              UUID.randomUUID().toString(),
-                                                                             ImmutableList.<EventSubscriptionJson>of(event),
+                                                                             List.of(event),
                                                                              null);
 
         final String asJson = mapper.writeValueAsString(bundleTimelineJson);

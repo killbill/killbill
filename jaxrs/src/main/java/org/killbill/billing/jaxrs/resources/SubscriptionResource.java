@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -89,6 +90,7 @@ import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -100,20 +102,15 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 import org.killbill.clock.Clock;
-import org.killbill.clock.ClockUtil;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -238,7 +235,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                        @HeaderParam(HDR_COMMENT) final String comment,
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
-        final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns = ImmutableList.of(new BulkSubscriptionsBundleJson(ImmutableList.<SubscriptionJson>of(subscription)));
+        final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns = List.of(new BulkSubscriptionsBundleJson(List.of(subscription)));
         return createSubscriptionsWithAddOnsInternal(entitlementsWithAddOns, entitlementDate, billingDate, isMigrated, skipResponse, renameKeyIfExistsAndUnused, callCompletion, timeoutSec, pluginPropertiesString, createdBy, reason, comment, request, uriInfo, ObjectType.SUBSCRIPTION);
     }
 
@@ -263,7 +260,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                  @HeaderParam(HDR_COMMENT) final String comment,
                                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws EntitlementApiException, AccountApiException, SubscriptionApiException {
-        final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns = ImmutableList.of(new BulkSubscriptionsBundleJson(entitlements));
+        final List<BulkSubscriptionsBundleJson> entitlementsWithAddOns = List.of(new BulkSubscriptionsBundleJson(entitlements));
         return createSubscriptionsWithAddOnsInternal(entitlementsWithAddOns, entitlementDate, billingDate, isMigrated, skipResponse, renameKeyIfExistsAndUnused, callCompletion, timeoutSec, pluginPropertiesString, createdBy, reason, comment, request, uriInfo, ObjectType.BUNDLE);
     }
 
@@ -311,7 +308,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        Preconditions.checkArgument(Iterables.size(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns()) > 0, "SubscriptionJson body should be specified");
+        Preconditions.checkArgument(Iterables.size(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns()) > 0,
+                                    "SubscriptionJson body should be specified");
+
         final Account account = accountUserApi.getAccountById(entitlementsWithAddOns.get(0).getBaseEntitlementAndAddOns().get(0).getAccountId(), callContextNoAccountId);
         final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
 
@@ -342,7 +341,9 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     bundleId = entitlement.getBundleId();
                 }
                 // Can be set on a single element (e.g. BASE + ADD_ON for a new bundle)
-                Preconditions.checkArgument(bundleExternalKey == null || entitlement.getBundleExternalKey() == null || bundleExternalKey.equals(entitlement.getBundleExternalKey()), "SubscriptionJson externalKey should be the same for each element");
+                Preconditions.checkArgument(bundleExternalKey == null || entitlement.getBundleExternalKey() == null || bundleExternalKey.equals(entitlement.getBundleExternalKey()),
+                                            "SubscriptionJson externalKey should be the same for each element");
+
                 if (bundleExternalKey == null) {
                     bundleExternalKey = entitlement.getBundleExternalKey();
                 }
@@ -732,12 +733,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
             // We do the checks in onBlockingState, as it's always guaranteed to be fired, unlike onSubscriptionBaseTransition.
 
             // Check to see if billing is off for the account, in which case, we won't have to wait for any invoice
-            final boolean found_AUTO_INVOICING_OFF = ControlTagType.isAutoInvoicingOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
-                @Override
-                public UUID apply(final Tag tag) {
-                    return tag.getTagDefinitionId();
-                }
-            }));
+            final boolean found_AUTO_INVOICING_OFF = ControlTagType.isAutoInvoicingOff(accountTags.stream().map(Tag::getTagDefinitionId).collect(Collectors.toUnmodifiableList()));
             if (found_AUTO_INVOICING_OFF) {
                 notifyForCompletion();
                 return;
@@ -765,12 +761,8 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 notifyForCompletion();
             }
 
-            final boolean found_AUTO_PAY_OFF = ControlTagType.isAutoPayOff(Collections2.transform(accountTags, new Function<Tag, UUID>() {
-                @Override
-                public UUID apply(final Tag tag) {
-                    return tag.getTagDefinitionId();
-                }
-            }));
+            final boolean found_AUTO_PAY_OFF = ControlTagType.isAutoPayOff(accountTags.stream().map(Tag::getTagDefinitionId).collect(Collectors.toUnmodifiableList()));
+
             // For AUTO_PAY_OFF, we've decided not to send an event in InvoicePaymentControlPluginApi (https://github.com/killbill/killbill/issues/812)
             if (found_AUTO_PAY_OFF) {
                 notifyForCompletion();
