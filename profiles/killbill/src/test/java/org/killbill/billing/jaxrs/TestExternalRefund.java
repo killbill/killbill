@@ -18,6 +18,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,8 +39,6 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -118,7 +117,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentRequest.setAccountId(accountJson.getAccountId());
         invoicePaymentRequest.setCurrency(unpaidInvoice.getCurrency());
         invoicePaymentRequest.setPurchasedAmount(unpaidInvoice.getAmount());
-        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, Collections.emptyList(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayment.getPurchasedAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(invoicePayment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
 
@@ -152,7 +151,7 @@ public class TestExternalRefund extends TestJaxrsBase {
         invoicePaymentRequest.setAccountId(accountJson.getAccountId());
         invoicePaymentRequest.setCurrency(unpaidInvoice.getCurrency());
         invoicePaymentRequest.setPurchasedAmount(unpaidInvoice.getAmount());
-        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment invoicePayment = invoiceApi.createInstantPayment(unpaidInvoice.getInvoiceId(), invoicePaymentRequest, true, Collections.emptyList(), NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(invoicePayment.getPurchasedAmount().compareTo(BigDecimal.valueOf(249.95)), 0);
         assertEquals(invoicePayment.getRefundedAmount().compareTo(BigDecimal.ZERO), 0);
 
