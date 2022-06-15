@@ -18,6 +18,7 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +39,6 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -153,12 +149,10 @@ public class TestBundle extends TestJaxrsBase {
     }
 
     private void assertSubscriptionState(final Bundles bundles, final UUID bundleId, final EntitlementState expectedState) {
-        final Bundle bundle = Iterables.tryFind(bundles, new Predicate<Bundle>() {
-            @Override
-            public boolean apply(final Bundle input) {
-                return input.getBundleId().equals(bundleId);
-            }
-        }).orNull();
+        final Bundle bundle = bundles.stream()
+                .filter(input -> bundleId.equals(input.getBundleId()))
+                .findFirst()
+                .orElse(null);
 
         assertNotNull(bundle);
         assertEquals(bundle.getSubscriptions().get(0).getState(), expectedState);
@@ -185,7 +179,7 @@ public class TestBundle extends TestJaxrsBase {
         assertEquals(bundle.getExternalKey(), bundleExternalKey);
 
         final BlockingState blockingState = new BlockingState(bundle.getBundleId(), "block", "service", false, true, true, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        bundleApi.addBundleBlockingState(bundle.getBundleId(), blockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), requestOptions);
+        bundleApi.addBundleBlockingState(bundle.getBundleId(), blockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), Collections.emptyMap(), requestOptions);
 
         final Subscription subscription = subscriptionApi.getSubscription(entitlement.getSubscriptionId(), requestOptions);
         assertEquals(subscription.getState(), EntitlementState.BLOCKED);
@@ -193,15 +187,15 @@ public class TestBundle extends TestJaxrsBase {
         clock.addDays(1);
 
         final BlockingState unblockingState = new BlockingState(bundle.getBundleId(), "unblock", "service", false, false, false, null, BlockingStateType.SUBSCRIPTION_BUNDLE, null);
-        bundleApi.addBundleBlockingState(bundle.getBundleId(), unblockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), ImmutableMap.<String, String>of(), requestOptions);
+        bundleApi.addBundleBlockingState(bundle.getBundleId(), unblockingState, clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), Collections.emptyMap(), requestOptions);
 
         final Subscription subscription2 = subscriptionApi.getSubscription(entitlement.getSubscriptionId(), requestOptions);
         assertEquals(subscription2.getState(), EntitlementState.ACTIVE);
 
-        final BlockingStates blockingStates = accountApi.getBlockingStates(accountJson.getAccountId(), null, ImmutableList.<String>of("service"), AuditLevel.FULL, requestOptions);
+        final BlockingStates blockingStates = accountApi.getBlockingStates(accountJson.getAccountId(), null, List.of("service"), AuditLevel.FULL, requestOptions);
         Assert.assertEquals(blockingStates.size(), 2);
 
-        final BlockingStates blockingStates2 = accountApi.getBlockingStates(accountJson.getAccountId(), ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL, requestOptions);
+        final BlockingStates blockingStates2 = accountApi.getBlockingStates(accountJson.getAccountId(), List.of(BlockingStateType.SUBSCRIPTION_BUNDLE), null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(blockingStates2.size(), 2);
 
         final BlockingStates blockingStates3 = accountApi.getBlockingStates(accountJson.getAccountId(), null, null, AuditLevel.FULL, requestOptions);
