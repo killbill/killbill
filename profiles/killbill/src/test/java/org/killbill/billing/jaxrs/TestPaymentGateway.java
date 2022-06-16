@@ -17,6 +17,7 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.util.Collections;
 import java.util.UUID;
 
 import org.killbill.billing.client.model.gen.Account;
@@ -25,11 +26,8 @@ import org.killbill.billing.client.model.gen.HostedPaymentPageFields;
 import org.killbill.billing.client.model.gen.HostedPaymentPageFormDescriptor;
 import org.killbill.billing.client.model.gen.PaymentMethod;
 import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
-import org.killbill.billing.client.model.gen.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestPaymentGateway extends TestJaxrsBase {
 
@@ -53,7 +51,7 @@ public class TestPaymentGateway extends TestJaxrsBase {
 
         final HostedPaymentPageFields hppFields = new HostedPaymentPageFields();
 
-        final ComboHostedPaymentPage comboHostedPaymentPage = new ComboHostedPaymentPage(account, paymentMethod, hppFields, ImmutableList.<PluginProperty>of(), null);
+        final ComboHostedPaymentPage comboHostedPaymentPage = new ComboHostedPaymentPage(account, paymentMethod, hppFields, Collections.emptyList(), null);
 
         final HostedPaymentPageFormDescriptor hostedPaymentPageFormDescriptor = paymentGatewayApi.buildComboFormDescriptor(comboHostedPaymentPage, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertNotNull(hostedPaymentPageFormDescriptor.getKbAccountId());

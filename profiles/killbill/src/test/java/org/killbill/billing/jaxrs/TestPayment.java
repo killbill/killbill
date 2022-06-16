@@ -20,13 +20,15 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
@@ -44,7 +46,6 @@ import org.killbill.billing.client.model.gen.Payment;
 import org.killbill.billing.client.model.gen.PaymentMethod;
 import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.gen.PaymentTransaction;
-import org.killbill.billing.client.model.gen.PluginProperty;
 import org.killbill.billing.client.model.gen.TagDefinition;
 import org.killbill.billing.control.plugin.api.PaymentControlPluginApi;
 import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
@@ -62,11 +63,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.MoreObjects;
+// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -216,7 +214,7 @@ public class TestPayment extends TestJaxrsBase {
             accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(),
                                       NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
             fail();
-        } catch (KillBillClientException e) {
+        } catch (final KillBillClientException e) {
             assertEquals(504, e.getResponse().statusCode());
         }
     }
@@ -229,7 +227,7 @@ public class TestPayment extends TestJaxrsBase {
         final Invoice failedInvoice = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, null, RequestOptions.empty()).get(1);
 
         // Verify initial state
-        final Payments initialPayments = accountApi.getPaymentsForAccount(account.getAccountId(), true, false, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions);
+        final Payments initialPayments = accountApi.getPaymentsForAccount(account.getAccountId(), true, false, Collections.emptyMap(), AuditLevel.NONE, requestOptions);
         Assert.assertEquals(initialPayments.size(), 1);
         Assert.assertEquals(initialPayments.get(0).getTransactions().size(), 1);
         Assert.assertEquals(initialPayments.get(0).getTransactions().get(0).getStatus(), TransactionStatus.PAYMENT_FAILURE);
@@ -243,7 +241,7 @@ public class TestPayment extends TestJaxrsBase {
         // Trigger manually an invoice payment but make the control plugin abort it
         mockPaymentControlProviderPlugin.setAborted(true);
         final HashMultimap<String, String> queryParams = HashMultimap.create();
-        queryParams.putAll("controlPluginName", Arrays.<String>asList(MockPaymentControlProviderPlugin.PLUGIN_NAME));
+        queryParams.putAll("controlPluginName", List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME));
         final RequestOptions inputOptions = RequestOptions.builder()
                                                           .withCreatedBy(createdBy)
                                                           .withReason(reason)
@@ -253,11 +251,11 @@ public class TestPayment extends TestJaxrsBase {
         invoicePayment.setPurchasedAmount(failedInvoice.getBalance());
         invoicePayment.setAccountId(failedInvoice.getAccountId());
         invoicePayment.setTargetInvoiceId(failedInvoice.getInvoiceId());
-        final InvoicePayment invoicePaymentNull = invoiceApi.createInstantPayment(failedInvoice.getInvoiceId(), invoicePayment, ImmutableList.of(), null, inputOptions);
+        final InvoicePayment invoicePaymentNull = invoiceApi.createInstantPayment(failedInvoice.getInvoiceId(), invoicePayment, Collections.emptyList(), null, inputOptions);
         Assert.assertNull(invoicePaymentNull);
 
         // Verify new state
-        final Payments updatedPayments = accountApi.getPaymentsForAccount(account.getAccountId(), true, false, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions);
+        final Payments updatedPayments = accountApi.getPaymentsForAccount(account.getAccountId(), true, false, Collections.emptyMap(), AuditLevel.NONE, requestOptions);
         Assert.assertEquals(updatedPayments.size(), 1);
         Assert.assertEquals(updatedPayments.get(0).getPaymentId(), initialPayments.get(0).getPaymentId());
         final InvoicePayments updatedInvoicePayments = invoiceApi.getPaymentsForInvoice(failedInvoice.getInvoiceId(), requestOptions);
@@ -270,15 +268,15 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
         // Getting Invoice #2 (first after Trial period)
-        UUID failedInvoiceId = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, null, RequestOptions.empty()).get(1).getInvoiceId();
+        final UUID failedInvoiceId = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, null, RequestOptions.empty()).get(1).getInvoiceId();
 
-        HashMultimap<String, String> queryParams = HashMultimap.create();
+        final HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
-        RequestOptions inputOptions = RequestOptions.builder()
-                                                    .withCreatedBy(createdBy)
-                                                    .withReason(reason)
-                                                    .withComment(comment)
-                                                    .withQueryParams(queryParams).build();
+        final RequestOptions inputOptions = RequestOptions.builder()
+                                                          .withCreatedBy(createdBy)
+                                                          .withReason(reason)
+                                                          .withComment(comment)
+                                                          .withQueryParams(queryParams).build();
 
         InvoicePayments invoicePayments = invoiceApi.getPaymentsForInvoice(failedInvoiceId, inputOptions);
 
@@ -300,15 +298,15 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        HashMultimap<String, String> queryParams = HashMultimap.create();
+        final HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
-        RequestOptions inputOptions = RequestOptions.builder()
-                                                    .withCreatedBy(createdBy)
-                                                    .withReason(reason)
-                                                    .withComment(comment)
-                                                    .withQueryParams(queryParams).build();
+        final RequestOptions inputOptions = RequestOptions.builder()
+                                                          .withCreatedBy(createdBy)
+                                                          .withReason(reason)
+                                                          .withComment(comment)
+                                                          .withQueryParams(queryParams).build();
 
-        Payments payments = accountApi.getPaymentsForAccount(account.getAccountId(), NULL_PLUGIN_PROPERTIES, inputOptions);
+        final Payments payments = accountApi.getPaymentsForAccount(account.getAccountId(), NULL_PLUGIN_PROPERTIES, inputOptions);
 
         Assert.assertNotNull(payments.get(0).getPaymentAttempts());
         Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
@@ -320,15 +318,15 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        HashMultimap<String, String> queryParams = HashMultimap.create();
+        final HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
-        RequestOptions inputOptions = RequestOptions.builder()
-                                                    .withCreatedBy(createdBy)
-                                                    .withReason(reason)
-                                                    .withComment(comment)
-                                                    .withQueryParams(queryParams).build();
+        final RequestOptions inputOptions = RequestOptions.builder()
+                                                          .withCreatedBy(createdBy)
+                                                          .withReason(reason)
+                                                          .withComment(comment)
+                                                          .withQueryParams(queryParams).build();
 
-        Payments payments = paymentApi.getPayments(0L, 100L, null, false, true, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, inputOptions);
+        final Payments payments = paymentApi.getPayments(0L, 100L, null, false, true, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, inputOptions);
 
         Assert.assertNotNull(payments.get(0).getPaymentAttempts());
         Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
@@ -340,15 +338,15 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        HashMultimap<String, String> queryParams = HashMultimap.create();
+        final HashMultimap<String, String> queryParams = HashMultimap.create();
         queryParams.put("withAttempts", "true");
-        RequestOptions inputOptions = RequestOptions.builder()
-                                                    .withCreatedBy(createdBy)
-                                                    .withReason(reason)
-                                                    .withComment(comment)
-                                                    .withQueryParams(queryParams).build();
+        final RequestOptions inputOptions = RequestOptions.builder()
+                                                          .withCreatedBy(createdBy)
+                                                          .withReason(reason)
+                                                          .withComment(comment)
+                                                          .withQueryParams(queryParams).build();
 
-        Payments payments = paymentApi.searchPayments("", 0L, 100L, false, true, null, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, inputOptions);
+        final Payments payments = paymentApi.searchPayments("", 0L, 100L, false, true, null, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, inputOptions);
 
         Assert.assertNotNull(payments.get(0).getPaymentAttempts());
         Assert.assertEquals(payments.get(0).getPaymentAttempts().get(0).getStateName(), "RETRIED");
@@ -360,9 +358,9 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        Payments payments = paymentApi.searchPayments("", 0L, 100L, false, true, null, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, requestOptions);
+        final Payments payments = paymentApi.searchPayments("", 0L, 100L, false, true, null, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, requestOptions);
         Assert.assertNotNull(payments.get(0));
-        Payment payment = paymentApi.getPayment(payments.get(0).getPaymentId(), false, true, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, requestOptions);
+        final Payment payment = paymentApi.getPayment(payments.get(0).getPaymentId(), false, true, NULL_PLUGIN_PROPERTIES, AuditLevel.NONE, requestOptions);
 
         Assert.assertNotNull(payment.getPaymentAttempts());
         Assert.assertEquals(payment.getPaymentAttempts().get(0).getStateName(), "RETRIED");
@@ -374,14 +372,14 @@ public class TestPayment extends TestJaxrsBase {
         final Account account = createAccountWithDefaultPaymentMethod();
         final UUID paymentMethodId = account.getPaymentMethodId();
 
-        RequestOptions inputOptions = RequestOptions.builder()
-                                                    .withCreatedBy(createdBy)
-                                                    .withReason(reason)
-                                                    .withComment(comment).build();
+        final RequestOptions inputOptions = RequestOptions.builder()
+                                                          .withCreatedBy(createdBy)
+                                                          .withReason(reason)
+                                                          .withComment(comment).build();
 
         paymentMethodApi.deletePaymentMethod(paymentMethodId, true, false, NULL_PLUGIN_PROPERTIES, inputOptions);
 
-        Tags accountTags = accountApi.getAccountTags(account.getAccountId(), inputOptions);
+        final Tags accountTags = accountApi.getAccountTags(account.getAccountId(), inputOptions);
 
         Assert.assertNotNull(accountTags);
         Assert.assertEquals(accountTags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
@@ -408,10 +406,10 @@ public class TestPayment extends TestJaxrsBase {
         final BigDecimal amount = BigDecimal.TEN;
 
         final String pending = PaymentPluginStatus.PENDING.toString();
-        final ImmutableMap<String, String> pluginProperties = ImmutableMap.<String, String>of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
+        final Map<String, String> pluginProperties = Map.of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
 
         int paymentNb = 0;
-        for (final TransactionType transactionType : ImmutableList.<TransactionType>of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {
+        for (final TransactionType transactionType : List.of(TransactionType.AUTHORIZE, TransactionType.PURCHASE, TransactionType.CREDIT)) {
             final BigDecimal authAmount = BigDecimal.ZERO;
             final String paymentExternalKey = UUID.randomUUID().toString();
             final String authTransactionExternalKey = UUID.randomUUID().toString();
@@ -459,11 +457,11 @@ public class TestPayment extends TestJaxrsBase {
         final BigDecimal amount = BigDecimal.TEN;
 
         final String pending = PaymentPluginStatus.PENDING.toString();
-        final ImmutableMap<String, String> pendingPluginProperties = ImmutableMap.<String, String>of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
+        final Map<String, String> pendingPluginProperties = Map.of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
 
-        final ImmutableMap<String, String> pluginProperties = ImmutableMap.of();
+        final Map<String, String> pluginProperties = Collections.emptyMap();
 
-        TransactionType transactionType = TransactionType.AUTHORIZE;
+        final TransactionType transactionType = TransactionType.AUTHORIZE;
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String authTransactionExternalKey = UUID.randomUUID().toString();
 
@@ -484,11 +482,11 @@ public class TestPayment extends TestJaxrsBase {
         final BigDecimal amount = BigDecimal.TEN;
 
         final String pending = PaymentPluginStatus.PENDING.toString();
-        final ImmutableMap<String, String> pendingPluginProperties = ImmutableMap.<String, String>of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
+        final Map<String, String> pendingPluginProperties = Map.of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
 
-        final ImmutableMap<String, String> pluginProperties = ImmutableMap.of();
+        final Map<String, String> pluginProperties = Collections.emptyMap();
 
-        TransactionType transactionType = TransactionType.AUTHORIZE;
+        final TransactionType transactionType = TransactionType.AUTHORIZE;
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String authTransactionExternalKey = UUID.randomUUID().toString();
 
@@ -518,11 +516,11 @@ public class TestPayment extends TestJaxrsBase {
         final BigDecimal amount = BigDecimal.TEN;
 
         final String pending = PaymentPluginStatus.PENDING.toString();
-        final ImmutableMap<String, String> pendingPluginProperties = ImmutableMap.<String, String>of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
+        final Map<String, String> pendingPluginProperties = Map.of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
 
-        final ImmutableMap<String, String> pluginProperties = ImmutableMap.of();
+        final Map<String, String> pluginProperties = Collections.emptyMap();
 
-        TransactionType transactionType = TransactionType.AUTHORIZE;
+        final TransactionType transactionType = TransactionType.AUTHORIZE;
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String authTransactionExternalKey = UUID.randomUUID().toString();
 
@@ -552,11 +550,11 @@ public class TestPayment extends TestJaxrsBase {
         final BigDecimal amount = BigDecimal.TEN;
 
         final String pending = PaymentPluginStatus.PENDING.toString();
-        final ImmutableMap<String, String> pendingPluginProperties = ImmutableMap.<String, String>of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
+        final Map<String, String> pendingPluginProperties = Map.of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
 
-        final ImmutableMap<String, String> pluginProperties = ImmutableMap.of();
+        final Map<String, String> pluginProperties = Collections.emptyMap();
 
-        TransactionType transactionType = TransactionType.AUTHORIZE;
+        final TransactionType transactionType = TransactionType.AUTHORIZE;
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String authTransactionExternalKey = UUID.randomUUID().toString();
 
@@ -587,11 +585,11 @@ public class TestPayment extends TestJaxrsBase {
         final BigDecimal amount = BigDecimal.TEN;
 
         final String pending = PaymentPluginStatus.PENDING.toString();
-        final ImmutableMap<String, String> pendingPluginProperties = ImmutableMap.<String, String>of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
+        final Map<String, String> pendingPluginProperties = Map.of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
 
-        final ImmutableMap<String, String> pluginProperties = ImmutableMap.of();
+        final Map<String, String> pluginProperties = Collections.emptyMap();
 
-        TransactionType transactionType = TransactionType.AUTHORIZE;
+        final TransactionType transactionType = TransactionType.AUTHORIZE;
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String authTransactionExternalKey = UUID.randomUUID().toString();
 
@@ -611,9 +609,9 @@ public class TestPayment extends TestJaxrsBase {
         final UUID paymentMethodId = account.getPaymentMethodId();
         final BigDecimal amount = BigDecimal.TEN;
 
-        final ImmutableMap<String, String> pluginProperties = ImmutableMap.of();
+        final Map<String, String> pluginProperties = Collections.emptyMap();
 
-        TransactionType transactionType = TransactionType.AUTHORIZE;
+        final TransactionType transactionType = TransactionType.AUTHORIZE;
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String authTransactionExternalKey = UUID.randomUUID().toString();
 
@@ -635,10 +633,10 @@ public class TestPayment extends TestJaxrsBase {
 
         // Create a successful purchase
         final Payment authPayment = createVerifyTransaction(account, paymentMethodId, paymentExternalKey, purchaseTransactionExternalKey, TransactionType.PURCHASE,
-                                                            TransactionStatus.SUCCESS, purchaseAmount, BigDecimal.ZERO, ImmutableMap.<String, String>of(), 1);
+                                                            TransactionStatus.SUCCESS, purchaseAmount, BigDecimal.ZERO, Collections.emptyMap(), 1);
 
         final String pending = PaymentPluginStatus.PENDING.toString();
-        final ImmutableMap<String, String> pluginProperties = ImmutableMap.<String, String>of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
+        final Map<String, String> pluginProperties = Map.of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
 
         // Trigger a pending refund
         final String refundTransactionExternalKey = UUID.randomUUID().toString();
@@ -679,7 +677,7 @@ public class TestPayment extends TestJaxrsBase {
 
         // Void payment using externalKey
         final String voidTransactionExternalKey = UUID.randomUUID().toString();
-        PaymentTransaction voidTransaction = new PaymentTransaction();
+        final PaymentTransaction voidTransaction = new PaymentTransaction();
         voidTransaction.setTransactionExternalKey(voidTransactionExternalKey);
         voidTransaction.setPaymentExternalKey(paymentExternalKey);
         paymentApi.voidPaymentByExternalKey(voidTransaction, NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
@@ -697,9 +695,9 @@ public class TestPayment extends TestJaxrsBase {
 
         mockPaymentControlProviderPlugin.setAborted(true);
         try {
-            paymentApi.createComboPayment(comboPaymentTransaction, Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME), requestOptions);
+            paymentApi.createComboPayment(comboPaymentTransaction, List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME), requestOptions);
             fail();
-        } catch (KillBillClientException e) {
+        } catch (final KillBillClientException e) {
             assertEquals(e.getResponse().statusCode(), 422);
         }
         assertFalse(mockPaymentControlProviderPlugin.isOnFailureCallExecuted());
@@ -726,10 +724,10 @@ public class TestPayment extends TestJaxrsBase {
         comboPaymentTransaction.setTransaction(authTransactionJson);
         comboPaymentTransaction.setTransaction(authTransactionJson);
 
-        final Payment payment = paymentApi.createComboPayment(comboPaymentTransaction, ImmutableList.<String>of(MockPaymentControlProviderPlugin.PLUGIN_NAME), requestOptions);
+        final Payment payment = paymentApi.createComboPayment(comboPaymentTransaction, List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME), requestOptions);
         verifyComboPayment(payment, paymentExternalKey, BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, 1, 1);
 
-        assertEquals(paymentApi.getPayment(payment.getPaymentId(), false, true, ImmutableMap.<String, String>of(), AuditLevel.NONE, requestOptions).getPaymentAttempts().size(), 1);
+        assertEquals(paymentApi.getPayment(payment.getPaymentId(), false, true, Collections.emptyMap(), AuditLevel.NONE, requestOptions).getPaymentAttempts().size(), 1);
     }
 
     @Test(groups = "slow")
@@ -741,9 +739,9 @@ public class TestPayment extends TestJaxrsBase {
 
         mockPaymentControlProviderPlugin.throwsException(new IllegalStateException());
         try {
-            paymentApi.createComboPayment(comboPaymentTransaction, Arrays.asList(MockPaymentControlProviderPlugin.PLUGIN_NAME), requestOptions);
+            paymentApi.createComboPayment(comboPaymentTransaction, List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME), requestOptions);
             fail();
-        } catch (KillBillClientException e) {
+        } catch (final KillBillClientException e) {
             assertEquals(e.getResponse().statusCode(), 500);
         }
     }
@@ -766,7 +764,7 @@ public class TestPayment extends TestJaxrsBase {
         authTransactionJson.setTransactionExternalKey(authTransactionExternalKey);
         authTransactionJson.setTransactionType(TransactionType.AUTHORIZE);
 
-        return new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of(), null);
+        return new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson, Collections.emptyList(), Collections.emptyList(), null);
     }
 
     @Test(groups = "slow")
@@ -784,7 +782,7 @@ public class TestPayment extends TestJaxrsBase {
         paymentMethodJson.setIsDefault(true);
         paymentMethodJson.setPaymentMethodId(paymentMethodId);
 
-        final ComboPaymentTransaction comboPaymentTransaction = new ComboPaymentTransaction(accountJson, paymentMethodJson, new PaymentTransaction(), ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of(), null);
+        final ComboPaymentTransaction comboPaymentTransaction = new ComboPaymentTransaction(accountJson, paymentMethodJson, new PaymentTransaction(), Collections.emptyList(), Collections.emptyList(), null);
 
         final Payment payment = paymentApi.createComboPayment(comboPaymentTransaction, NULL_PLUGIN_NAMES, requestOptions);
         // Client returns null in case of a 404
@@ -793,9 +791,9 @@ public class TestPayment extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testGetTagsForPaymentTransaction() throws Exception {
-        UUID tagDefinitionId = UUID.randomUUID();
-        String tagDefinitionName = "payment-transaction";
-        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", ImmutableList.<ObjectType>of(ObjectType.TRANSACTION), null);
+        final UUID tagDefinitionId = UUID.randomUUID();
+        final String tagDefinitionName = "payment-transaction";
+        final TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", List.of(ObjectType.TRANSACTION), null);
         final TagDefinition createdTagDefinition = tagDefinitionApi.createTagDefinition(tagDefinition, requestOptions);
 
         final Account account = createAccountWithDefaultPaymentMethod();
@@ -805,8 +803,8 @@ public class TestPayment extends TestJaxrsBase {
         final Payment payment = paymentApi.getPaymentByExternalKey(externalPaymentKey, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(payment.getPaymentId(), paymentId);
 
-        UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
-        paymentTransactionApi.createTransactionTags(paymentTransactionId, ImmutableList.<UUID>of(createdTagDefinition.getId()), requestOptions);
+        final UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
+        paymentTransactionApi.createTransactionTags(paymentTransactionId, List.of(createdTagDefinition.getId()), requestOptions);
 
         final Tags paymentTransactionTags = paymentTransactionApi.getTransactionTags(paymentTransactionId, requestOptions);
 
@@ -816,9 +814,9 @@ public class TestPayment extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testCreateTagForPaymentTransaction() throws Exception {
-        UUID tagDefinitionId = UUID.randomUUID();
-        String tagDefinitionName = "payment-transaction";
-        TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", ImmutableList.<ObjectType>of(ObjectType.TRANSACTION), null);
+        final UUID tagDefinitionId = UUID.randomUUID();
+        final String tagDefinitionName = "payment-transaction";
+        final TagDefinition tagDefinition = new TagDefinition(tagDefinitionId, false, tagDefinitionName, "description", List.of(ObjectType.TRANSACTION), null);
         final TagDefinition createdTagDefinition = tagDefinitionApi.createTagDefinition(tagDefinition, requestOptions);
 
         final Account account = createAccountWithDefaultPaymentMethod();
@@ -828,8 +826,8 @@ public class TestPayment extends TestJaxrsBase {
         final Payment payment = paymentApi.getPaymentByExternalKey(externalPaymentKey, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(payment.getPaymentId(), paymentId);
 
-        UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
-        final Tags paymentTransactionTag = paymentTransactionApi.createTransactionTags(paymentTransactionId, ImmutableList.<UUID>of(createdTagDefinition.getId()), requestOptions);
+        final UUID paymentTransactionId = payment.getTransactions().get(0).getTransactionId();
+        final Tags paymentTransactionTag = paymentTransactionApi.createTransactionTags(paymentTransactionId, List.of(createdTagDefinition.getId()), requestOptions);
 
         Assert.assertNotNull(paymentTransactionTag);
         Assert.assertEquals(paymentTransactionTag.get(0).getTagDefinitionName(), tagDefinitionName);
@@ -881,7 +879,7 @@ public class TestPayment extends TestJaxrsBase {
         // Authorization
         final String authTransactionExternalKey = UUID.randomUUID().toString();
         final Payment authPayment = createVerifyTransaction(account, paymentMethodId, paymentExternalKey, authTransactionExternalKey, TransactionType.AUTHORIZE,
-                                                            TransactionStatus.SUCCESS, BigDecimal.TEN, BigDecimal.TEN, ImmutableMap.<String, String>of(), paymentNb);
+                                                            TransactionStatus.SUCCESS, BigDecimal.TEN, BigDecimal.TEN, Collections.emptyMap(), paymentNb);
 
         // Capture 1
         final String capture1TransactionExternalKey = UUID.randomUUID().toString();
@@ -995,7 +993,7 @@ public class TestPayment extends TestJaxrsBase {
                                             final int nbTransactions,
                                             final int paymentNb) throws KillBillClientException {
         assertEquals(payment.getAccountId(), account.getAccountId());
-        assertEquals(payment.getPaymentMethodId(), MoreObjects.firstNonNull(paymentMethodId, account.getPaymentMethodId()));
+        assertEquals(payment.getPaymentMethodId(), Objects.requireNonNullElse(paymentMethodId, account.getPaymentMethodId()));
         Assert.assertNotNull(payment.getPaymentId());
         Assert.assertNotNull(payment.getPaymentNumber());
         assertEquals(payment.getPaymentExternalKey(), paymentExternalKey);
