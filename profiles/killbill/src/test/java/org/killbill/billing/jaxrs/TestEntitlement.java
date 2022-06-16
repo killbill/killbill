@@ -1789,7 +1789,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         //Retrieve account blocking states
         final BlockingStates blockingStates = accountApi.getBlockingStates(accountJson.getAccountId(),
-                                                                           ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE),
+                                                                           List.of(BlockingStateType.SUBSCRIPTION_BUNDLE),
                                                                            null,
                                                                            AuditLevel.FULL,
                                                                            requestOptions);
@@ -1851,7 +1851,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         //Retrieve account blocking states
         final BlockingStates blockingStates = accountApi.getBlockingStates(accountJson.getAccountId(),
-                                                                           ImmutableList.<BlockingStateType>of(BlockingStateType.SUBSCRIPTION_BUNDLE),
+                                                                           List.of(BlockingStateType.SUBSCRIPTION_BUNDLE),
                                                                            null,
                                                                            AuditLevel.FULL,
                                                                            requestOptions);
