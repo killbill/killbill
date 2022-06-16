@@ -35,8 +35,6 @@ import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -69,7 +67,7 @@ public class TestCustomField extends TestJaxrsBase {
         Assert.assertEquals(allCustomFields.get(0).getName(), "MyName");
         Assert.assertEquals(allCustomFields.get(0).getValue(), "NewValue");
 
-        accountApi.deleteAccountCustomFields(account.getAccountId(), ImmutableList.<UUID>of(allCustomFields.get(0).getCustomFieldId()), requestOptions);
+        accountApi.deleteAccountCustomFields(account.getAccountId(), List.of(allCustomFields.get(0).getCustomFieldId()), requestOptions);
         allCustomFields = accountApi.getAccountCustomFields(account.getAccountId(), requestOptions);
         Assert.assertEquals(allCustomFields.size(), 0);
     }

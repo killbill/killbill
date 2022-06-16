@@ -22,6 +22,7 @@ package org.killbill.billing.server.modules;
 import java.util.Collection;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -61,8 +62,6 @@ import org.killbill.billing.util.security.shiro.realm.KillBillOktaRealm;
 import org.skife.config.ConfigSource;
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
@@ -99,7 +98,7 @@ public class KillBillShiroWebModule extends ShiroWebModuleWith435 {
 
         final SecurityConfig securityConfig = new ConfigurationObjectFactory(configSource).build(SecurityConfig.class);
         final Collection<Realm> realms = defaultSecurityManager.getRealms() != null ? defaultSecurityManager.getRealms() :
-                                         ImmutableSet.<Realm>of(new IniRealm(securityConfig.getShiroResourcePath())); // Mainly for testing
+                                         Set.of(new IniRealm(securityConfig.getShiroResourcePath())); // Mainly for testing
         for (final Realm realm : realms) {
             bindRealm().toInstance(realm);
         }

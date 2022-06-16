@@ -19,6 +19,7 @@ package org.killbill.billing.jaxrs.util;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -33,18 +34,16 @@ import org.killbill.billing.jaxrs.resources.JaxRsResourceBase;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
 
-import com.google.common.base.MoreObjects;
-
 public class JaxrsUriBuilder {
 
     private final JaxrsConfig jaxrsConfig;
-    private final Map<Class, UriBuilder> classToUriBuilder = new HashMap<Class, UriBuilder>();
-    private final Map<String, UriBuilder> classAndMethodToUriBuilder = new HashMap<String, UriBuilder>();
-    private final Map<String, UriBuilder> pathAndClassToUriBuilder = new HashMap<String, UriBuilder>();
-    private final Map<String, UriBuilder> pathClassAndMethodToUriBuilder = new HashMap<String, UriBuilder>();
+    private final Map<Class<?>, UriBuilder> classToUriBuilder = new HashMap<>();
+    private final Map<String, UriBuilder> classAndMethodToUriBuilder = new HashMap<>();
+    private final Map<String, UriBuilder> pathAndClassToUriBuilder = new HashMap<>();
+    private final Map<String, UriBuilder> pathClassAndMethodToUriBuilder = new HashMap<>();
 
     @Inject
-    public JaxrsUriBuilder(JaxrsConfig jaxrsConfig) {
+    public JaxrsUriBuilder(final JaxrsConfig jaxrsConfig) {
         this.jaxrsConfig = jaxrsConfig;
     }
 
@@ -106,7 +105,7 @@ public class JaxrsUriBuilder {
                 // Use "remote" value to support X-Forwarded headers (assumes RemoteIpValve or similar is configured)
                 // See https://github.com/killbill/killbill/issues/566
                 uriBuilder.scheme(request.getScheme())
-                          .host(MoreObjects.firstNonNull(jaxrsConfig.getJaxrsLocationHost(), request.getServerName()))
+                          .host(Objects.requireNonNullElse(jaxrsConfig.getJaxrsLocationHost(), request.getServerName()))
                           .port(request.getServerPort());
             } else {
                 uriBuilder.scheme(uriInfo.getAbsolutePath().getScheme())
@@ -140,11 +139,11 @@ public class JaxrsUriBuilder {
     }
 
     private UriBuilder getUriBuilder(final String path, final Class<? extends JaxrsResource> theClassMaybeEnhanced, @Nullable final String getMethodName) {
-        final Class theClass = getNonEnhancedClass(theClassMaybeEnhanced);
-        return getMethodName != null ? fromPath(path.equals("/") ? path.substring(1) : path, theClass, getMethodName) : fromPath(path, theClass);
+        final Class<?> theClass = getNonEnhancedClass(theClassMaybeEnhanced);
+        return getMethodName != null ? fromPath("/".equals(path) ? path.substring(1) : path, theClass, getMethodName) : fromPath(path, theClass);
     }
 
-    private UriBuilder fromPath(final String path, final Class theClass, final String getMethodName) {
+    private UriBuilder fromPath(final String path, final Class<?> theClass, final String getMethodName) {
         final String key = path + theClass.getName() + getMethodName;
 
         UriBuilder uriBuilder = pathClassAndMethodToUriBuilder.get(key);
@@ -160,7 +159,7 @@ public class JaxrsUriBuilder {
         return uriBuilder.clone();
     }
 
-    private UriBuilder fromPath(final String path, final Class theClass) {
+    private UriBuilder fromPath(final String path, final Class<?> theClass) {
         final String key = path + theClass.getName();
 
         UriBuilder uriBuilder = pathAndClassToUriBuilder.get(key);
@@ -177,11 +176,11 @@ public class JaxrsUriBuilder {
     }
 
     private UriBuilder getUriBuilder(final Class<? extends JaxrsResource> theClassMaybeEnhanced, @Nullable final String getMethodName) {
-        final Class theClass = getNonEnhancedClass(theClassMaybeEnhanced);
+        final Class<?> theClass = getNonEnhancedClass(theClassMaybeEnhanced);
         return getMethodName != null ? fromResource(theClass, getMethodName) : fromResource(theClass);
     }
 
-    private UriBuilder fromResource(final Class theClass, final String getMethodName) {
+    private UriBuilder fromResource(final Class<?> theClass, final String getMethodName) {
         final String key = theClass.getName() + getMethodName;
 
         UriBuilder uriBuilder = classAndMethodToUriBuilder.get(key);
@@ -197,7 +196,7 @@ public class JaxrsUriBuilder {
         return uriBuilder.clone();
     }
 
-    private UriBuilder fromResource(final Class theClass) {
+    private UriBuilder fromResource(final Class<?> theClass) {
         UriBuilder uriBuilder = classToUriBuilder.get(theClass);
         if (uriBuilder == null) {
             synchronized (classToUriBuilder) {
@@ -211,10 +210,10 @@ public class JaxrsUriBuilder {
         return uriBuilder.clone();
     }
 
-    private Class getNonEnhancedClass(final Class<? extends JaxrsResource> theClassMaybeEnhanced) {
+    private Class<?> getNonEnhancedClass(final Class<? extends JaxrsResource> theClassMaybeEnhanced) {
         // If Guice is proxying the class for example ($EnhancerByGuice$), we want the real class.
         // See https://java.net/projects/jersey/lists/users/archive/2008-10/message/291
-        Class theClass = theClassMaybeEnhanced;
+        Class<?> theClass = theClassMaybeEnhanced;
         while (theClass.getAnnotation(Path.class) == null && JaxRsResourceBase.class.isAssignableFrom(theClass)) {
             theClass = theClass.getSuperclass();
         }

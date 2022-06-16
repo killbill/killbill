@@ -83,9 +83,6 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.MetricTag;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-// FIXME-1615 : Wait until JaxRsResourceBase#buildStreamingPaginationResponse() refactored
-import com.google.common.base.Function;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -189,16 +186,13 @@ public class PaymentResource extends ComboPaymentResource {
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<>(new HashMap<UUID, AccountAuditLogs>());
 
         return buildStreamingPaginationResponse(payments,
-                                                new Function<Payment, PaymentJson>() {
-                                                    @Override
-                                                    public PaymentJson apply(final Payment payment) {
-                                                        // Cache audit logs per account
-                                                        if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
-                                                            accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
-                                                        }
-                                                        final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(payment.getAccountId());
-                                                        return new PaymentJson(payment, accountAuditLogs);
+                                                payment -> {
+                                                    // Cache audit logs per account
+                                                    if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
+                                                        accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
                                                     }
+                                                    final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(payment.getAccountId());
+                                                    return new PaymentJson(payment, accountAuditLogs);
                                                 },
                                                 nextPageUri
                                                );
@@ -240,16 +234,13 @@ public class PaymentResource extends ComboPaymentResource {
         final AtomicReference<Map<UUID, AccountAuditLogs>> accountsAuditLogs = new AtomicReference<>(new HashMap<UUID, AccountAuditLogs>());
 
         return buildStreamingPaginationResponse(payments,
-                                                new Function<Payment, PaymentJson>() {
-                                                    @Override
-                                                    public PaymentJson apply(final Payment payment) {
-                                                        // Cache audit logs per account
-                                                        if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
-                                                            accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
-                                                        }
-                                                        final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(payment.getAccountId());
-                                                        return new PaymentJson(payment, accountAuditLogs);
+                                                payment -> {
+                                                    // Cache audit logs per account
+                                                    if (accountsAuditLogs.get().get(payment.getAccountId()) == null) {
+                                                        accountsAuditLogs.get().put(payment.getAccountId(), auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext));
                                                     }
+                                                    final AccountAuditLogs accountAuditLogs = accountsAuditLogs.get().get(payment.getAccountId());
+                                                    return new PaymentJson(payment, accountAuditLogs);
                                                 },
                                                 nextPageUri
                                                );

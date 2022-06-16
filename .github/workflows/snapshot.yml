@@ -1,7 +1,6 @@
 name: snapshot
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:

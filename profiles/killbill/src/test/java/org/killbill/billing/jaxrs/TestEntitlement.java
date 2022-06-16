@@ -61,8 +61,6 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -911,7 +909,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // assign autoPaymentOff tag to account
         callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
-        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 1L)), requestOptions);
+        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), List.of(new UUID(0L, 1L)), requestOptions);
         assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_PAY_OFF");
         callbackServlet.assertListenerStatus();
 
@@ -989,7 +987,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // assign autoInvoicingOff tag to account
         callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
-        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 2L)), requestOptions);
+        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), List.of(new UUID(0L, 2L)), requestOptions);
         assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_INVOICING_OFF");
         callbackServlet.assertListenerStatus();
 
@@ -1075,7 +1073,7 @@ public class TestEntitlement extends TestJaxrsBase {
 
         // assign AUTO_INVOICING_DRAFT tag to account
         callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
-        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0L, 8L)), requestOptions);
+        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), List.of(new UUID(0L, 8L)), requestOptions);
         assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_INVOICING_DRAFT");
         callbackServlet.assertListenerStatus();
 

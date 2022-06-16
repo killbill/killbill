@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,11 +54,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.util.Strings;
 
-import com.google.common.base.Predicate;
+// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 import static org.testng.Assert.assertEquals;
@@ -309,12 +308,10 @@ public class TestInvoice extends TestJaxrsBase {
         final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
         assertEquals(invoices.size(), 2);
 
-        final Invoice invoiceWithPositiveAmount = Iterables.tryFind(invoices, new Predicate<Invoice>() {
-            @Override
-            public boolean apply(final Invoice input) {
-                return input.getAmount().compareTo(BigDecimal.ZERO) > 0;
-            }
-        }).orNull();
+        final Invoice invoiceWithPositiveAmount = invoices.stream()
+                .filter(input -> input.getAmount().compareTo(BigDecimal.ZERO) > 0)
+                .findFirst()
+                .orElse(null);
         Assert.assertNotNull(invoiceWithPositiveAmount);
 
         final InvoicePayments objFromJson = invoiceApi.getPaymentsForInvoice(invoiceWithPositiveAmount.getInvoiceId(), requestOptions);
@@ -343,7 +340,7 @@ public class TestInvoice extends TestJaxrsBase {
             invoicePayment.setPurchasedAmount(cur.getBalance());
             invoicePayment.setAccountId(accountJson.getAccountId());
             invoicePayment.setTargetInvoiceId(cur.getInvoiceId());
-            final InvoicePayment objFromJson = invoiceApi.createInstantPayment(cur.getInvoiceId(), invoicePayment, true, ImmutableList.of(), null, requestOptions);
+            final InvoicePayment objFromJson = invoiceApi.createInstantPayment(cur.getInvoiceId(), invoicePayment, true, Collections.emptyList(), null, requestOptions);
             assertEquals(cur.getBalance().compareTo(objFromJson.getPurchasedAmount()), 0);
         }
     }
@@ -367,7 +364,7 @@ public class TestInvoice extends TestJaxrsBase {
         invoicePayment.setPurchasedAmount(BigDecimal.TEN);
         invoicePayment.setAccountId(accountJson.getAccountId());
         invoicePayment.setTargetInvoiceId(invoiceId);
-        invoiceApi.createInstantPayment(invoiceId, invoicePayment, true, ImmutableList.of(), null, requestOptions);
+        invoiceApi.createInstantPayment(invoiceId, invoicePayment, true, Collections.emptyList(), null, requestOptions);
 
         // Verify we indeed got the invoicePayment
         final List<InvoicePayment> paymentsFromJson = accountApi.getInvoicePayments(accountJson.getAccountId(), null, requestOptions);
@@ -415,12 +412,10 @@ public class TestInvoice extends TestJaxrsBase {
         final Invoice adjustedInvoice = invoiceApi.getInvoice(invoice.getInvoiceId(), false, AuditLevel.FULL, requestOptions);
         assertEquals(adjustedInvoice.getAmount().compareTo(BigDecimal.ZERO), 0);
 
-        final InvoiceItem createdAdjustment = Iterables.find(adjustedInvoice.getItems(), new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return InvoiceItemType.ITEM_ADJ.equals(input.getItemType());
-            }
-        });
+        final InvoiceItem createdAdjustment = adjustedInvoice.getItems().stream()
+                .filter(input -> InvoiceItemType.ITEM_ADJ.equals(input.getItemType()))
+                .findFirst().get();
+
         assertEquals(createdAdjustment.getItemDetails(), itemDetails);
 
         // Verify invoice audit logs
@@ -912,7 +907,7 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(originalInvoices.size(), 2);
         final UUID invoiceId = originalInvoices.get(0).getInvoiceId();
 
-        invoiceApi.createInvoiceTags(invoiceId, ImmutableList.<UUID>of(ControlTagType.WRITTEN_OFF.getId()), requestOptions);
+        invoiceApi.createInvoiceTags(invoiceId, List.of(ControlTagType.WRITTEN_OFF.getId()), requestOptions);
 
         final Tags tagsWithAudit = invoiceApi.getInvoiceTags(invoiceId, false, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(tagsWithAudit.size(), 1);

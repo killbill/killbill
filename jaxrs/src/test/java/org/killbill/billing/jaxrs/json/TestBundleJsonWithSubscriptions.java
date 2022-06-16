@@ -35,8 +35,6 @@ import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.killbill.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
 public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
@@ -84,12 +82,12 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    new DateTime(),
                                                                    new DateTime(),
                                                                    null,
-                                                                   ImmutableList.<EventSubscriptionJson>of(event),
-                                                                   ImmutableList.of(priceOverride),
+                                                                   List.of(event),
+                                                                   List.of(priceOverride),
                                                                    null,
                                                                    auditLogs);
 
-        final BundleJson bundleJson = new BundleJson(someUUID, bundleId, bundleExternalKey, ImmutableList.<SubscriptionJson>of(subscription), null, auditLogs);
+        final BundleJson bundleJson = new BundleJson(someUUID, bundleId, bundleExternalKey, List.of(subscription), null, auditLogs);
         Assert.assertEquals(bundleJson.getBundleId(), bundleId);
         Assert.assertEquals(bundleJson.getExternalKey(), bundleExternalKey);
         Assert.assertEquals(bundleJson.getSubscriptions().size(), 1);

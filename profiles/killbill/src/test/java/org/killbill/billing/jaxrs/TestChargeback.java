@@ -38,8 +38,6 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
@@ -151,7 +149,7 @@ public class TestChargeback extends TestJaxrsBase {
         chargeback.setAmount(BigDecimal.TEN);
 
         final InvoicePayment chargebackJson = invoicePaymentApi.createChargeback(payment.getPaymentId(), chargeback, NULL_PLUGIN_PROPERTIES, requestOptions);
-        final List<PaymentTransaction> chargebackTransactions = getInvoicePaymentTransactions(ImmutableList.of(chargebackJson), TransactionType.CHARGEBACK);
+        final List<PaymentTransaction> chargebackTransactions = getInvoicePaymentTransactions(List.of(chargebackJson), TransactionType.CHARGEBACK);
         assertEquals(chargebackTransactions.size(), 1);
 
         assertEquals(chargebackTransactions.get(0).getAmount().compareTo(chargeback.getAmount()), 0);

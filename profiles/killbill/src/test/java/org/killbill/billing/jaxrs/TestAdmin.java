@@ -49,6 +49,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+
+// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
 import com.google.common.collect.ImmutableMultimap;
 
 import static org.testng.Assert.assertEquals;

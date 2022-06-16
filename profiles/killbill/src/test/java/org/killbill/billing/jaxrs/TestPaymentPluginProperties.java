@@ -19,12 +19,14 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.KillBillHttpClient;
@@ -52,11 +54,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.inject.Inject;
 
 public class TestPaymentPluginProperties extends TestJaxrsBase {
 
@@ -96,13 +96,13 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         }
 
         public void clearExpectPluginProperties() {
-            this.expectedProperties = ImmutableList.of();
+            this.expectedProperties = Collections.emptyList();
         }
 
         private void assertPluginProperties(final Iterable<org.killbill.billing.payment.api.PluginProperty> properties) {
-            for (org.killbill.billing.payment.api.PluginProperty input : properties) {
+            for (final org.killbill.billing.payment.api.PluginProperty input : properties) {
                 boolean found = false;
-                for (org.killbill.billing.payment.api.PluginProperty expect : expectedProperties) {
+                for (final org.killbill.billing.payment.api.PluginProperty expect : expectedProperties) {
                     if (expect.getKey().equals(input.getKey()) && expect.getValue().equals(input.getValue())) {
                         found = true;
                         break;
@@ -111,9 +111,9 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
                 Assert.assertTrue(found);
             }
 
-            for (org.killbill.billing.payment.api.PluginProperty expect : expectedProperties) {
+            for (final org.killbill.billing.payment.api.PluginProperty expect : expectedProperties) {
                 boolean found = false;
-                for (org.killbill.billing.payment.api.PluginProperty input : properties) {
+                for (final org.killbill.billing.payment.api.PluginProperty input : properties) {
                     if (expect.getKey().equals(input.getKey()) && expect.getValue().equals(input.getValue())) {
                         found = true;
                         break;
@@ -170,7 +170,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         addProperty("key3", "val3", queryProperties, expectProperties);
         addProperty("key4", "val4", queryProperties, expectProperties);
 
-        final List<PluginProperty> bodyProperties = new ArrayList<PluginProperty>();
+        final List<PluginProperty> bodyProperties = new ArrayList<>();
 
         testInternal(queryProperties, bodyProperties, expectProperties);
 
@@ -178,11 +178,11 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testWithBodyPropertiesOnly() throws Exception {
-        final List<org.killbill.billing.payment.api.PluginProperty> expectProperties = new ArrayList<org.killbill.billing.payment.api.PluginProperty>();
+        final List<org.killbill.billing.payment.api.PluginProperty> expectProperties = new ArrayList<>();
 
-        final Map<String, String> queryProperties = new HashMap<String, String>();
+        final Map<String, String> queryProperties = new HashMap<>();
 
-        final List<PluginProperty> bodyProperties = new ArrayList<PluginProperty>();
+        final List<PluginProperty> bodyProperties = new ArrayList<>();
         addProperty("keyXXX1", "valXXXX1", bodyProperties, expectProperties);
         addProperty("keyXXX2", "valXXXX2", bodyProperties, expectProperties);
         addProperty("keyXXX3", "valXXXX3", bodyProperties, expectProperties);
@@ -193,15 +193,15 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
 
     @Test(groups = "slow")
     public void testWithBodyAndQueryProperties() throws Exception {
-        final List<org.killbill.billing.payment.api.PluginProperty> expectProperties = new ArrayList<org.killbill.billing.payment.api.PluginProperty>();
+        final List<org.killbill.billing.payment.api.PluginProperty> expectProperties = new ArrayList<>();
 
-        final Map<String, String> queryProperties = new HashMap<String, String>();
+        final Map<String, String> queryProperties = new HashMap<>();
         addProperty("key1", "val1", queryProperties, expectProperties);
         addProperty("key2", "val2", queryProperties, expectProperties);
         addProperty("key3", "val3", queryProperties, expectProperties);
         addProperty("key4", "val4", queryProperties, expectProperties);
 
-        final List<PluginProperty> bodyProperties = new ArrayList<PluginProperty>();
+        final List<PluginProperty> bodyProperties = new ArrayList<>();
         addProperty("keyXXX1", "valXXXX1", bodyProperties, expectProperties);
         addProperty("keyXXX2", "valXXXX2", bodyProperties, expectProperties);
         addProperty("keyXXX3", "valXXXX3", bodyProperties, expectProperties);
@@ -215,9 +215,9 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         final BigDecimal amount = BigDecimal.TEN;
 
         final String pending = PaymentPluginStatus.PENDING.toString();
-        final ImmutableMap<String, String> pluginProperties = ImmutableMap.<String, String>of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
+        final Map<String, String> pluginProperties = Map.of(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, pending);
 
-        TransactionType transactionType = TransactionType.AUTHORIZE;
+        final TransactionType transactionType = TransactionType.AUTHORIZE;
         final String paymentExternalKey = UUID.randomUUID().toString();
         final String authTransactionExternalKey = UUID.randomUUID().toString();
 
@@ -231,8 +231,9 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         completeTransactionByPaymentId.setProperties(bodyProperties);
 
         final RequestOptions basicRequestOptions = requestOptions;
+        // FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
         final Multimap<String, String> params = LinkedListMultimap.create(basicRequestOptions.getQueryParams());
-        params.putAll(KillBillHttpClient.CONTROL_PLUGIN_NAME, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME));
+        params.putAll(KillBillHttpClient.CONTROL_PLUGIN_NAME, List.of(PluginPropertiesVerificator.PLUGIN_NAME));
 
         final RequestOptions requestOptionsWithParams = basicRequestOptions.extend()
                                                                            .withQueryParams(params).build();
@@ -245,7 +246,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         captureTransaction.setProperties(bodyProperties);
         captureTransaction.setAmount(BigDecimal.TEN);
         captureTransaction.setCurrency(account.getCurrency());
-        paymentApi.captureAuthorization(initialPayment.getPaymentId(), captureTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
+        paymentApi.captureAuthorization(initialPayment.getPaymentId(), captureTransaction, List.of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
 
         //Refund the payment
         final PaymentTransaction refundTransaction = new PaymentTransaction();
@@ -253,7 +254,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         refundTransaction.setProperties(bodyProperties);
         refundTransaction.setAmount(BigDecimal.TEN);
         refundTransaction.setCurrency(account.getCurrency());
-        paymentApi.refundPayment(initialPayment.getPaymentId(), refundTransaction, ImmutableList.<String>of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
+        paymentApi.refundPayment(initialPayment.getPaymentId(), refundTransaction, List.of(PluginPropertiesVerificator.PLUGIN_NAME), queryProperties, requestOptions);
     }
 
     private Payment createVerifyTransaction(final Account account,
@@ -278,7 +279,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         expectProperties.add(new org.killbill.billing.payment.api.PluginProperty(key, value, false));
     }
 
-    private void addProperty(final String key, final String value, List<PluginProperty> bodyProperties, final List<org.killbill.billing.payment.api.PluginProperty> expectProperties) {
+    private void addProperty(final String key, final String value, final List<PluginProperty> bodyProperties, final List<org.killbill.billing.payment.api.PluginProperty> expectProperties) {
         bodyProperties.add(new PluginProperty(key, value, false));
         expectProperties.add(new org.killbill.billing.payment.api.PluginProperty(key, value, false));
     }

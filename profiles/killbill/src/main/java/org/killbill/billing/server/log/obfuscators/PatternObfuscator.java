@@ -19,16 +19,17 @@ package org.killbill.billing.server.log.obfuscators;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.common.collect.ImmutableList;
 
 public class PatternObfuscator extends Obfuscator {
 
     // Hide by default sensitive bank, PCI and PII data. For PANs, see LuhnMaskingObfuscator
-    private static final Collection<String> DEFAULT_SENSITIVE_KEYS = ImmutableList.of(
+    private static final Collection<String> DEFAULT_SENSITIVE_KEYS = List.of(
             "accountnumber",
             "authenticationdata",
             "bankaccountnumber",
@@ -52,20 +53,19 @@ public class PatternObfuscator extends Obfuscator {
             "password",
             "xid");
 
-    private final Collection<Pattern> patterns = new LinkedList<Pattern>();
+    private final Collection<Pattern> patterns = new LinkedList<>();
 
     public PatternObfuscator() {
-        this(ImmutableList.<Pattern>of(), ImmutableList.<String>of());
+        this(Collections.emptyList(), Collections.emptyList());
     }
 
     public PatternObfuscator(final Collection<String> extraKeywords) {
-        this(ImmutableList.<Pattern>of(), extraKeywords);
+        this(Collections.emptyList(), extraKeywords);
     }
 
     public PatternObfuscator(final Collection<Pattern> extraPatterns, final Collection<String> extraKeywords) {
         super();
-        Collection<String> keywords = new ArrayList<String>();
-        keywords.addAll(DEFAULT_SENSITIVE_KEYS);
+        final Collection<String> keywords = new ArrayList<>(DEFAULT_SENSITIVE_KEYS);
         if (extraKeywords != null) {
             keywords.addAll(extraKeywords);
         }
