@@ -207,7 +207,7 @@ public class TestInvoice extends TestJaxrsBase {
         // Then create a dryRun for next upcoming invoice
         final InvoiceDryRun dryRunArg = new InvoiceDryRun().setDryRunType(DryRunType.UPCOMING_INVOICE);
 
-        final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), null, requestOptions);
+        final Invoice dryRunInvoice = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), null, NULL_PLUGIN_PROPERTIES, requestOptions);
         assertEquals(dryRunInvoice.getBalance(), new BigDecimal("249.95"));
         assertEquals(dryRunInvoice.getTargetDate(), new LocalDate(2012, 6, 25));
         assertEquals(dryRunInvoice.getItems().size(), 1);
@@ -217,7 +217,7 @@ public class TestInvoice extends TestJaxrsBase {
 
         final LocalDate futureDate = dryRunInvoice.getTargetDate();
         // The one more time with no DryRun
-        invoiceApi.createFutureInvoice(accountJson.getAccountId(), futureDate, requestOptions);
+        invoiceApi.createFutureInvoice(accountJson.getAccountId(), futureDate, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         // Check again # invoices, should be 3 this time
         final List<Invoice> newInvoiceList = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
@@ -290,12 +290,12 @@ public class TestInvoice extends TestJaxrsBase {
                                                           null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, effDt, null, null);
 
         final LocalDate targetDt1 = effDt;
-        final Invoice dryRunInvoice1 = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), targetDt1, requestOptions);
+        final Invoice dryRunInvoice1 = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), targetDt1, NULL_PLUGIN_PROPERTIES, requestOptions);
         // One item for the FIXED price
         assertEquals(dryRunInvoice1.getItems().size(), 1);
 
         final LocalDate targetDt2 = effDt.plusDays(30);
-        final Invoice dryRunInvoice2 = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), targetDt2, requestOptions);
+        final Invoice dryRunInvoice2 = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), targetDt2, NULL_PLUGIN_PROPERTIES, requestOptions);
         // Two items for the FIXED & RECURRING price validating the future targetDate
         assertEquals(dryRunInvoice2.getItems().size(), 2);
     }
@@ -935,14 +935,14 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(accountInvoices1.size(), 2);
 
         // Follow location to return the list of invoices
-        final Invoices invoices2 = invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), new LocalDate(2022, 7, 4), requestOptions.extend()
+        final Invoices invoices2 = invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), new LocalDate(2022, 7, 4), NULL_PLUGIN_PROPERTIES, requestOptions.extend()
                                                                                                                                              .withQueryParamsForFollow(ImmutableMultimap.of(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId().toString()))
                                                                                                                                              .withFollowLocation(true).build());
         // We expect only one invoice as there is no grouping plugin
         assertEquals(invoices2.size(), 1);
 
         // Do it again for following month but without any follow up
-        invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), new LocalDate(2022, 8, 4), requestOptions);
+        invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), new LocalDate(2022, 8, 4), NULL_PLUGIN_PROPERTIES, requestOptions);
 
         final Invoices accountInvoices2 = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.FULL, requestOptions);
         assertEquals(accountInvoices2.size(), 4);

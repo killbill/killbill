@@ -104,7 +104,6 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 import org.killbill.clock.Clock;
-import org.killbill.clock.ClockUtil;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -351,12 +350,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 entitlementSpecifierList.add(spec);
             }
 
-            final LocalDate resolvedEntitlementDate = toLocalDate(entitlementDate);
-            final LocalDate resolvedBillingDate = toLocalDate(billingDate);
-            
             final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
-            final DateTime entitlementDateTime = resolvedEntitlementDate != null ? timeAwareContext.toUTCDateTime(resolvedEntitlementDate) : null;
-            final DateTime billingDateTime = resolvedBillingDate != null ? timeAwareContext.toUTCDateTime(resolvedBillingDate) : null;
+
+            final DateTime entitlementDateTime = getDateTimeFromInput(entitlementDate, timeAwareContext);
+            final DateTime billingDateTime = getDateTimeFromInput(billingDate, timeAwareContext);
             final BaseEntitlementWithAddOnsSpecifier baseEntitlementSpecifierWithAddOns = buildBaseEntitlementWithAddOnsSpecifier(entitlementSpecifierList,
                                                                                                                                   entitlementDateTime,
                                                                                                                                   billingDateTime,
@@ -428,6 +425,17 @@ public class SubscriptionResource extends JaxRsResourceBase {
         };
         final EntitlementCallCompletion<List<UUID>> callCompletionCreation = new EntitlementCallCompletion<List<UUID>>();
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
+    }
+
+    private DateTime getDateTimeFromInput(final String inputDate, final TimeAwareContext timeAwareContext) {
+        if (inputDate == null) {
+            return null;
+        }
+        if (isDateTime(inputDate)) {
+            return toDateTime(inputDate);
+        } else {
+            return timeAwareContext.toUTCDateTime(toLocalDate(inputDate));
+        }
     }
 
     private Map<String, String> buildBundlesFilterQueryParam(final Collection<String> bundleIdList) {
@@ -527,7 +535,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
             @Override
             public Response doOperation(final CallContext ctx) throws EntitlementApiException,
                                                                       AccountApiException {
-                final LocalDate inputLocalDate = toLocalDate(requestedDate);
                 final Entitlement newEntitlement;
 
                 final Account account = accountUserApi.getAccountById(current.getAccountId(), callContext);
@@ -535,7 +542,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 if (requestedDate == null && billingPolicy == null) {
                     newEntitlement = current.changePlan(spec, pluginProperties, ctx);
                 } else if (billingPolicy == null) {
-                    newEntitlement = current.changePlanWithDate(spec, inputLocalDate, pluginProperties, ctx);
+                    newEntitlement = isDateTime(requestedDate) ? current.changePlanWithDate(spec, toDateTime(requestedDate), pluginProperties, ctx) : current.changePlanWithDate(spec, toLocalDate(requestedDate), pluginProperties, ctx);
                 } else {
                     newEntitlement = current.changePlanOverrideBillingPolicy(spec, null, billingPolicy, pluginProperties, ctx);
                 }
@@ -621,14 +628,17 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     throws EntitlementApiException,
                            SubscriptionApiException,
                            AccountApiException {
-                final LocalDate inputLocalDate = toLocalDate(requestedDate);
+
                 final Entitlement newEntitlement;
                 if (billingPolicy == null && entitlementPolicy == null) {
-                    newEntitlement = current.cancelEntitlementWithDate(inputLocalDate, useRequestedDateForBilling, pluginProperties, ctx);
+                    newEntitlement = isDateTime(requestedDate) ? current.cancelEntitlementWithDate(toDateTime(requestedDate), toDateTime(requestedDate), pluginProperties, ctx) : current.cancelEntitlementWithDate(toLocalDate(requestedDate), useRequestedDateForBilling, pluginProperties, ctx);                
                 } else if (billingPolicy == null && entitlementPolicy != null) {
                     newEntitlement = current.cancelEntitlementWithPolicy(entitlementPolicy, pluginProperties, ctx);
                 } else if (billingPolicy != null && entitlementPolicy == null) {
-                    newEntitlement = current.cancelEntitlementWithDateOverrideBillingPolicy(inputLocalDate, billingPolicy, pluginProperties, ctx);
+                    final Account account = accountUserApi.getAccountById(current.getAccountId(), callContextNoAccountId);
+                    final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
+                    //TODO_1375, Since we do not have DateTime version of cancelEntitlementWithDateOverrideBillingPolicy, I've added the following code which converts input DateTime to LocalDate and uses it. If in the future we add a DateTime version of this method, the code below needs to be updated accordingly
+                    newEntitlement = isDateTime(requestedDate) ? current.cancelEntitlementWithDateOverrideBillingPolicy(timeAwareContext.toLocalDate(toDateTime(requestedDate)), billingPolicy, pluginProperties, ctx) : current.cancelEntitlementWithDateOverrideBillingPolicy(toLocalDate(requestedDate), billingPolicy, pluginProperties, ctx);                	
                 } else {
                     newEntitlement = current.cancelEntitlementWithPolicyOverrideBillingPolicy(entitlementPolicy, billingPolicy, pluginProperties, ctx);
                 }

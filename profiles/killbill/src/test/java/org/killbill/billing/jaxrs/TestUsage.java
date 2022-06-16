@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -95,7 +96,7 @@ public class TestUsage extends TestJaxrsBase {
                                            ExtBusEventType.SUBSCRIPTION_CREATION,
                                            ExtBusEventType.INVOICE_CREATION);
 
-        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, (LocalDate) null, (LocalDate) null, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
         final UUID addOnSubscriptionId = findSubscriptionIdByProductCategory(bundle.getSubscriptions(), ProductCategory.ADD_ON);
 
@@ -159,7 +160,7 @@ public class TestUsage extends TestJaxrsBase {
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         final Subscriptions body = createSubscriptions(accountJson);
 
-        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, (LocalDate) null, (LocalDate) null, NULL_PLUGIN_PROPERTIES, requestOptions);
         final UUID addOnSubscriptionId = findSubscriptionIdByProductCategory(bundle.getSubscriptions(), ProductCategory.ADD_ON);
 
         final UsageRecord usageRecord1 = new UsageRecord(clock.getUTCToday().minusDays(1), BigDecimal.TEN);
@@ -182,7 +183,7 @@ public class TestUsage extends TestJaxrsBase {
     public void testRecordUsageWithDecimal() throws Exception {
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         final Subscriptions body = createSubscriptions(accountJson);
-        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, (LocalDate) null, (LocalDate) null, NULL_PLUGIN_PROPERTIES, requestOptions);
         final UUID addOnSubscriptionId = findSubscriptionIdByProductCategory(bundle.getSubscriptions(), ProductCategory.ADD_ON);
 
         clock.addDays(2);
@@ -210,7 +211,7 @@ public class TestUsage extends TestJaxrsBase {
     public void testRecordUsageWithBigDecimalValue() throws Exception {
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         final Subscriptions body = createSubscriptions(accountJson);
-        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, null, null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, (LocalDate) null, (LocalDate) null, NULL_PLUGIN_PROPERTIES, requestOptions);
         final UUID addOnSubscriptionId = findSubscriptionIdByProductCategory(bundle.getSubscriptions(), ProductCategory.ADD_ON);
 
         clock.addDays(2);
