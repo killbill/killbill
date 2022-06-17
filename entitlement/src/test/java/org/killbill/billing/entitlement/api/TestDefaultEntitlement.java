@@ -164,7 +164,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
         entitlement.cancelEntitlementWithDate(entitlementDateTime, billingDateTime, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        clock.addDays(5);
+        clock.setTime(entitlementDateTime);
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getEffectiveEndDate().compareTo(entitlementDateTime), 0); 
@@ -499,7 +499,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement2.getLastActiveProduct().getName(), "Pistol");
+        assertEquals(entitlement2.getLastActiveProduct().getName(), "Pistol"); //new plan
 
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(entitlement.getBundleId(), callContext);
         final List<SubscriptionEvent> events = bundle.getTimeline().getSubscriptionEvents();
@@ -539,7 +539,7 @@ public class TestDefaultEntitlement extends EntitlementTestSuiteWithEmbeddedDB {
 
         final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
         assertEquals(entitlement2.getState(), EntitlementState.ACTIVE);
-        assertEquals(entitlement2.getLastActiveProduct().getName(), "Pistol");
+        assertEquals(entitlement2.getLastActiveProduct().getName(), "Pistol"); //new plan
         
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(entitlement.getBundleId(), callContext);
         final List<SubscriptionEvent> events = bundle.getTimeline().getSubscriptionEvents();

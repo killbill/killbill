@@ -429,17 +429,6 @@ public class SubscriptionResource extends JaxRsResourceBase {
         return callCompletionCreation.withSynchronization(callback, timeoutSec, callCompletion, callContext);
     }
 
-    private DateTime getDateTimeFromInput(final String inputDate, final TimeAwareContext timeAwareContext) {
-        if (inputDate == null) {
-            return null;
-        }
-        if (isDateTime(inputDate)) {
-            return toDateTime(inputDate);
-        } else {
-            return timeAwareContext.toUTCDateTime(toLocalDate(inputDate));
-        }
-    }
-
     private Map<String, String> buildBundlesFilterQueryParam(final Collection<String> bundleIdList) {
         final Map<String, String> queryParams = new HashMap<String, String>();
 
@@ -639,7 +628,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                 } else if (billingPolicy != null && entitlementPolicy == null) {
                     final Account account = accountUserApi.getAccountById(current.getAccountId(), callContextNoAccountId);
                     final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
-                    //TODO_1375, Since we do not have DateTime version of cancelEntitlementWithDateOverrideBillingPolicy, I've added the following code which converts input DateTime to LocalDate and uses it. If in the future we add a DateTime version of this method, the code below needs to be updated accordingly
+                    //Since there is no DateTime version of cancelEntitlementWithDateOverrideBillingPolicy currently, the code below converts input DateTime to LocalDate and uses it. If in the future a DateTime version of this method is added, the code below needs to be updated accordingly
                     newEntitlement = isDateTime(requestedDate) ? current.cancelEntitlementWithDateOverrideBillingPolicy(timeAwareContext.toLocalDate(toDateTime(requestedDate)), billingPolicy, pluginProperties, ctx) : current.cancelEntitlementWithDateOverrideBillingPolicy(toLocalDate(requestedDate), billingPolicy, pluginProperties, ctx);                	
                 } else {
                     newEntitlement = current.cancelEntitlementWithPolicyOverrideBillingPolicy(entitlementPolicy, billingPolicy, pluginProperties, ctx);
@@ -993,5 +982,16 @@ public class SubscriptionResource extends JaxRsResourceBase {
             accountId = subscriptionBundle.getAccountId();
         }
         return accountUserApi.getAccountById(accountId, callContext);
+    }
+    
+    private DateTime getDateTimeFromInput(final String inputDate, final TimeAwareContext timeAwareContext) {
+        if (inputDate == null || (inputDate != null && inputDate.isEmpty())) {
+            return null;
+        }
+        if (isDateTime(inputDate)) {
+            return toDateTime(inputDate);
+        } else {
+            return timeAwareContext.toUTCDateTime(toLocalDate(inputDate));
+        }
     }
 }

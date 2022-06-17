@@ -48,6 +48,7 @@ import org.killbill.billing.client.model.gen.AccountTimeline;
 import org.killbill.billing.client.model.gen.BlockingState;
 import org.killbill.billing.client.model.gen.BulkSubscriptionsBundle;
 import org.killbill.billing.client.model.gen.Bundle;
+import org.killbill.billing.client.model.gen.EventSubscription;
 import org.killbill.billing.client.model.gen.Invoice;
 import org.killbill.billing.client.model.gen.PhasePrice;
 import org.killbill.billing.client.model.gen.Subscription;
@@ -1696,8 +1697,14 @@ public class TestEntitlement extends TestJaxrsBase {
         clock.setDay(changeDate);
         subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         Assert.assertEquals(newSubscriptionPlan.getPlanName(), subscription.getPlanName()); //now on new plan
-
-        //TODO_1375 - Is there some way of verifying the change dates?
+        
+        final List<EventSubscription> events = subscription.getEvents();
+        assertNotNull(events);
+        assertEquals(events.get(0).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getEventType(), SubscriptionEventType.CHANGE);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()), changeDate);  
+        
     }
 
     @Test(groups = "slow")
@@ -1745,8 +1752,13 @@ public class TestEntitlement extends TestJaxrsBase {
         clock.setTime(changeDateTime);
         subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         Assert.assertEquals(newSubscriptionPlan.getPlanName(), subscription.getPlanName()); //now on new plan
-
-        //TODO_1375 - Is there some way of verifying the change dates?
+        
+        final List<EventSubscription> events = subscription.getEvents();
+        assertNotNull(events);
+        assertEquals(events.get(0).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getEventType(), SubscriptionEventType.CHANGE);
+        assertEquals(events.get(2).getEffectiveDate().compareTo(changeDateTime), 0);  
     }
 
     @Test(groups = "slow")

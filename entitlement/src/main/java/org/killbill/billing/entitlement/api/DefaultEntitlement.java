@@ -555,7 +555,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
             default:
                 throw new RuntimeException("Unsupported policy " + entitlementPolicy);
         }
-        return (cancellationDate.compareTo(internalTenantContext.toLocalDate(getEffectiveStartDate())) < 0) ? internalTenantContext.toLocalDate(getEffectiveStartDate()) : cancellationDate; //TODO_1375 - Return LocalDate for now. Revisit later to check if this method should return DateTime
+        return (cancellationDate.compareTo(internalTenantContext.toLocalDate(getEffectiveStartDate())) < 0) ? internalTenantContext.toLocalDate(getEffectiveStartDate()) : cancellationDate; 
     }
 
     @Override
