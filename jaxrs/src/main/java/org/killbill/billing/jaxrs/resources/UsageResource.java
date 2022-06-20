@@ -38,8 +38,10 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
+import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
+import org.killbill.billing.callcontext.TimeAwareContext;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApi;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
@@ -133,7 +135,9 @@ public class UsageResource extends JaxRsResourceBase {
         final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), callContext);
         if (entitlement.getEffectiveEndDate() != null) {
             final LocalDate highestRecordDate = getHighestRecordDate(json.getUnitUsageRecords());
-            if (entitlement.getEffectiveEndDate().toLocalDate().compareTo(highestRecordDate) < 0) { //TODO_1375 - Converting to LocalDate for comparison, should we instead convert highestRecordDate to DateTime and use it? Also, not sure how to access internalCallContext here so I've used toLocalDate
+            final Account account = accountUserApi.getAccountById(entitlement.getAccountId(), callContext);
+            final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
+            if (timeAwareContext.toLocalDate(entitlement.getEffectiveEndDate()).compareTo(highestRecordDate) < 0) { 
                 return Response.status(Status.BAD_REQUEST).build();
             }
         }

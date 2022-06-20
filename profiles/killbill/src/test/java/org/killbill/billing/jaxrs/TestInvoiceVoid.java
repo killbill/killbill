@@ -89,7 +89,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         // After invoice was voided verify the subscription is re-invoiced on a new invoice
         // trigger an invoice generation
         callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_CREATION);
-        invoiceApi.createFutureInvoice(accountJson.getAccountId(), clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), requestOptions);
+        invoiceApi.createFutureInvoice(accountJson.getAccountId(), clock.getToday(DateTimeZone.forID(accountJson.getTimeZone())), NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
 
         // Get the invoices excluding voided
@@ -165,7 +165,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
         // trigger an invoice generation
         callbackServlet.pushExpectedEvent(ExtBusEventType.INVOICE_CREATION);
-        invoiceApi.createFutureInvoice(childAccount1.getAccountId(), triggeredDate, requestOptions);
+        invoiceApi.createFutureInvoice(childAccount1.getAccountId(), triggeredDate, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
         List<Invoice> child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, true, null, AuditLevel.NONE, requestOptions);
         assertEquals(child1Invoices.size(), 2);
@@ -217,7 +217,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
 
         // trigger an invoice generation
         callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION);
-        invoiceApi.createFutureInvoice(childAccount1.getAccountId(), triggeredDate, requestOptions);
+        invoiceApi.createFutureInvoice(childAccount1.getAccountId(), triggeredDate, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
         List<Invoice> child1Invoices = accountApi.getInvoicesForAccount(childAccount1.getAccountId(), null, null, false, false, true, null, AuditLevel.NONE, requestOptions);
         assertEquals(child1Invoices.size(), 2);

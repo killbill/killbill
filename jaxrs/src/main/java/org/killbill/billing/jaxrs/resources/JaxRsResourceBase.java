@@ -46,6 +46,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -186,9 +187,12 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
         final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
 
-        final LocalDate resolvedRequestedDate = toLocalDate(requestedDate);
         final BlockingState input = new DefaultBlockingState(blockableId, type, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, null);
-        subscriptionApi.addBlockingState(input, resolvedRequestedDate, pluginProperties, callContext);
+        if (isDateTime(requestedDate)) {
+            subscriptionApi.addBlockingState(input, toDateTime(requestedDate), pluginProperties, callContext);
+        } else {
+            subscriptionApi.addBlockingState(input, toLocalDate(requestedDate), pluginProperties, callContext);
+        }
         return uriInfo != null ?
                uriBuilder.buildResponse(uriInfo, AccountResource.class, "getBlockingStates", accountId, Map.of(QUERY_BLOCKING_STATE_TYPES, type.name()) , request) :
                null;
@@ -492,6 +496,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     // API for subscription and invoice generation: keep null, the lower layers will default to now()
     protected LocalDate toLocalDate(@Nullable final String inputDate) {
         return inputDate == null || inputDate.isEmpty() ? null : LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
+    }
+    
+    protected DateTime toDateTime(@Nullable final String inputDate) {
+        return inputDate == null || inputDate.isEmpty() ? null : DateTime.parse(inputDate, DATE_TIME_FORMATTER);
+    }  
+
+    protected boolean isDateTime(@Nullable final String inputDate) {
+    	return inputDate != null && inputDate.contains("T") ? true : false;
     }
 
     protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<PluginPropertyJson> pluginProperties) {
