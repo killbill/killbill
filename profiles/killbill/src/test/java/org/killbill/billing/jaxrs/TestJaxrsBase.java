@@ -19,17 +19,19 @@
 
 package org.killbill.billing.jaxrs;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.EventListener;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -90,6 +92,7 @@ import org.killbill.billing.tenant.api.TenantCacheInvalidation;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.config.definition.SecurityConfig;
+import org.killbill.billing.util.io.IOUtils;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.config.ConfigSource;
@@ -102,13 +105,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -386,14 +382,14 @@ public class TestJaxrsBase extends KillbillClient {
             @Override
             public Iterator<EventListener> iterator() {
                 // Note! This needs to be in sync with web.xml
-                return ImmutableList.<EventListener>of(listener).iterator();
+                return List.<EventListener>of(listener).iterator();
             }
         };
     }
 
     protected Map<FilterHolder, String> getFilters() {
         // Note! This needs to be in sync with web.xml
-        return ImmutableMap.<FilterHolder, String>of(new FilterHolder(new ShiroFilter()), "/*");
+        return Map.of(new FilterHolder(new ShiroFilter()), "/*");
     }
 
     @AfterSuite(groups = "slow")
@@ -406,32 +402,19 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     protected static List<PaymentTransaction> getInvoicePaymentTransactions(final List<InvoicePayment> payments, final TransactionType transactionType) {
-        final Iterable<PaymentTransaction> transform = Iterables.concat(Iterables.transform(payments, new Function<InvoicePayment, Iterable<PaymentTransaction>>() {
-            @Override
-            public Iterable<PaymentTransaction> apply(final InvoicePayment input) {
-                return input.getTransactions();
-            }
-        }));
-        return filterTransactions(transform, transactionType);
+        return payments.stream()
+                       .map(InvoicePayment::getTransactions)
+                       .flatMap(Collection::stream)
+                       .filter(input -> input.getTransactionType().equals(transactionType))
+                       .collect(Collectors.toUnmodifiableList());
     }
 
     protected static List<PaymentTransaction> getPaymentTransactions(final List<Payment> payments, final TransactionType transactionType) {
-        final Iterable<PaymentTransaction> transform = Iterables.concat(Iterables.transform(payments, new Function<Payment, Iterable<PaymentTransaction>>() {
-            @Override
-            public Iterable<PaymentTransaction> apply(final Payment input) {
-                return input.getTransactions();
-            }
-        }));
-        return filterTransactions(transform, transactionType);
-    }
-
-    protected static List<PaymentTransaction> filterTransactions(final Iterable<PaymentTransaction> paymentTransaction, final TransactionType transactionType) {
-        return ImmutableList.copyOf(Iterables.filter(paymentTransaction, new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return input.getTransactionType().equals(transactionType);
-            }
-        }));
+        return payments.stream()
+                       .map(Payment::getTransactions)
+                       .flatMap(Collection::stream)
+                       .filter(input -> input.getTransactionType().equals(transactionType))
+                       .collect(Collectors.toUnmodifiableList());
     }
 
     protected String uploadTenantCatalog(final String catalog, final boolean fetch) throws IOException, KillBillClientException {
@@ -448,9 +431,8 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     protected String getResourceBodyString(final String resource) throws IOException {
-        final String resourcePath = Resources.getResource(resource).getPath();
-        final File catalogFile = new File(resourcePath);
-        return Files.toString(catalogFile, Charset.forName("UTF-8"));
+        final String resourcePath = IOUtils.getResourceAsURL(resource).getPath();
+        return Files.readString(Path.of(resourcePath));
     }
 
     protected void printThreadDump() {

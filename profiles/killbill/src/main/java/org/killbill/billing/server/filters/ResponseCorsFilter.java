@@ -53,7 +53,8 @@ public class ResponseCorsFilter implements Filter {
                                              JaxrsResource.HDR_PAGINATION_MAX_NB_RECORDS,
                                              JaxrsResource.HDR_PAGINATION_NEXT_OFFSET,
                                              JaxrsResource.HDR_PAGINATION_NEXT_PAGE_URI,
-                                             JaxrsResource.HDR_PAGINATION_TOTAL_NB_RECORDS, JaxrsResource.HDR_REASON)
+                                             JaxrsResource.HDR_PAGINATION_TOTAL_NB_RECORDS,
+                                             JaxrsResource.HDR_REASON)
                                     );
     }
 

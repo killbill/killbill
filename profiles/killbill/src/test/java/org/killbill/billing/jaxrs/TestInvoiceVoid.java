@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,8 +41,6 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -257,7 +256,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
 
         callbackServlet.pushExpectedEvents(ExtBusEventType.PAYMENT_SUCCESS, ExtBusEventType.INVOICE_PAYMENT_SUCCESS);
-        final InvoicePayment result = invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
+        final InvoicePayment result = invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, Collections.emptyList(), NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
         assertEquals(result.getTransactions().size(), 1);
         assertTrue(result.getTransactions().get(0).getAmount().compareTo(payAmount) == 0);

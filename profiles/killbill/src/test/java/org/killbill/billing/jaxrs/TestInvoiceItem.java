@@ -18,7 +18,6 @@
 package org.killbill.billing.jaxrs;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.RequestOptions;
@@ -35,8 +34,8 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 
 public class TestInvoiceItem extends TestJaxrsBase {
@@ -54,7 +53,7 @@ public class TestInvoiceItem extends TestJaxrsBase {
         Assert.assertNotNull(invoiceItems);
 
         // Create tag definition
-        final TagDefinition input = new TagDefinition(null, false, "tagtest", "invoice item tag test", ImmutableList.<ObjectType>of(ObjectType.INVOICE_ITEM), null);
+        final TagDefinition input = new TagDefinition(null, false, "tagtest", "invoice item tag test", List.of(ObjectType.INVOICE_ITEM), null);
 
         final TagDefinition objFromJson = tagDefinitionApi.createTagDefinition(input, requestOptions);
         Assert.assertNotNull(objFromJson);
@@ -65,7 +64,7 @@ public class TestInvoiceItem extends TestJaxrsBase {
         final Multimap<String, String> followQueryParams = HashMultimap.create();
         followQueryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId().toString());
         final RequestOptions followRequestOptions = requestOptions.extend().withQueryParamsForFollow(followQueryParams).build();
-        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<UUID>of(objFromJson.getId()), followRequestOptions);
+        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), List.of(objFromJson.getId()), followRequestOptions);
 
         // Retrieves all tags
         final List<Tag> tags1 = invoiceItemApi.getInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
@@ -73,7 +72,7 @@ public class TestInvoiceItem extends TestJaxrsBase {
         Assert.assertEquals(tags1.get(0).getTagDefinitionId(), objFromJson.getId());
 
         // Verify adding the same tag a second time doesn't do anything
-        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<UUID>of(objFromJson.getId()), followRequestOptions);
+        invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), List.of(objFromJson.getId()), followRequestOptions);
 
         // Retrieves all tags again
         final List<Tag> tags2 = invoiceItemApi.getInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
@@ -90,15 +89,15 @@ public class TestInvoiceItem extends TestJaxrsBase {
         Assert.assertNotNull(auditLogJson.getUserToken());
 
         // remove it
-        invoiceItemApi.deleteInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), ImmutableList.<UUID>of(objFromJson.getId()), requestOptions);
+        invoiceItemApi.deleteInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), List.of(objFromJson.getId()), requestOptions);
         final List<Tag> tags3 = invoiceItemApi.getInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), accountJson.getAccountId(), null, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(tags3.size(), 0);
 
         tagDefinitionApi.deleteTagDefinition(objFromJson.getId(), requestOptions);
-        List<TagDefinition> objsFromJson = tagDefinitionApi.getTagDefinitions(requestOptions);
+        final List<TagDefinition> objsFromJson = tagDefinitionApi.getTagDefinitions(requestOptions);
         Assert.assertNotNull(objsFromJson);
-        Boolean isFound = false;
-        for (TagDefinition tagDefinition : objsFromJson) {
+        boolean isFound = false;
+        for (final TagDefinition tagDefinition : objsFromJson) {
             isFound |= tagDefinition.getId().equals(objFromJson.getId());
         }
         Assert.assertFalse(isFound);
