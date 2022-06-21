@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -74,9 +75,6 @@ import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-// FIXME-1615 : Cross module (affected org.killbill.billing.junction.plumbing.billing.TestBillingApi, TestBlockingCalculator)
-import com.google.common.base.Optional;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
@@ -182,7 +180,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     @Override
     public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
-            List<BlockingStateModelDao> states = entitySqlDaoWrapperFactory
+            final List<BlockingStateModelDao> states = entitySqlDaoWrapperFactory
                     .become(BlockingStateSqlDao.class)
                     .getBlockingActiveForAccount(context);
             return states.stream()
@@ -192,9 +190,9 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
     }
 
     @Override
-    public List<BlockingState> getByBlockingIds(Iterable<UUID> blockableIds, final InternalTenantContext context) {
+    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final InternalTenantContext context) {
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
-            List<BlockingStateModelDao> states = entitySqlDaoWrapperFactory
+            final List<BlockingStateModelDao> states = entitySqlDaoWrapperFactory
                     .become(BlockingStateSqlDao.class)
                     .getByBlockingIds(blockableIds, context);
             return states.stream()
@@ -213,7 +211,7 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
             int seqId = 0;
             for (final BlockingState state : states.keySet()) {
                 final DateTime upToDate = state.getEffectiveDate();
-                final UUID bundleId = states.get(state).orNull();
+                final UUID bundleId = states.get(state).orElse(null);
 
                 final boolean isBusEvent = state.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
                 final boolean shouldRecordNotification = (!isBusEvent || !groupBusEvents || seqId == 0);

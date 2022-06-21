@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -59,9 +60,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-// FIXME-1615 : BlockingStateDao
-import com.google.common.base.Optional;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -149,7 +147,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final BlockingState blockingState1 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now);
         final BlockingState blockingState2 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2));
 
-        final Map<BlockingState, Optional<UUID>> mapParams = Map.of(blockingState1, Optional.absent(), blockingState2, Optional.absent());
+        final Map<BlockingState, Optional<UUID>> mapParams = Map.of(blockingState1, Optional.empty(), blockingState2, Optional.empty());
         blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(mapParams, internalCallContext);
 
         blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalog, null, internalCallContext);
@@ -824,10 +822,10 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final BlockingState blockingState3 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 24).toDateTimeAtStartOfDay(DateTimeZone.UTC));
         final BlockingState blockingState4 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
 
-        final Map<BlockingState, Optional<UUID>> mapParams = Map.of(blockingState1, Optional.absent(),
-                                                                    blockingState2, Optional.absent(),
-                                                                    blockingState3, Optional.absent(),
-                                                                    blockingState4, Optional.absent());
+        final Map<BlockingState, Optional<UUID>> mapParams = Map.of(blockingState1, Optional.empty(),
+                                                                    blockingState2, Optional.empty(),
+                                                                    blockingState3, Optional.empty(),
+                                                                    blockingState4, Optional.empty());
         blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(mapParams, internalCallContext);
 
         blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalog, null, internalCallContext);

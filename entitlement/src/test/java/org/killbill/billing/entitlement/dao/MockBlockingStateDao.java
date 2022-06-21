@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -43,12 +44,8 @@ import org.killbill.billing.util.collect.MultiValueHashMap;
 import org.killbill.billing.util.collect.MultiValueMap;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 
-// FIXME-1615 : this class implements BlockingStateDao
-import com.google.common.base.Optional;
-
 public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDao, BlockingState, EntitlementApiException> implements BlockingStateDao {
 
-    // FIXME-1615 : Beware new MultiValueMap usage
     private final MultiValueMap<UUID, BlockingState> blockingStates = new MultiValueHashMap<>();
     private final MultiValueMap<Long, BlockingState> blockingStatesPerAccountRecordId = new MultiValueHashMap<>();
 

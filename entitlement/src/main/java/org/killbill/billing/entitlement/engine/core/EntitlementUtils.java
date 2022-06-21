@@ -20,6 +20,7 @@ package org.killbill.billing.entitlement.engine.core;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -37,9 +38,6 @@ import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.util.collect.Iterables;
 import org.killbill.notificationq.api.NotificationQueueService;
-
-// FIXME-1615 : have BlockingStateDao instance
-import com.google.common.base.Optional;
 
 public class EntitlementUtils {
 
@@ -59,7 +57,7 @@ public class EntitlementUtils {
 
     public void setBlockingStatesAndPostBlockingTransitionEvent(final Iterable<BlockingState> blockingStates, @Nullable final UUID bundleId, final InternalCallContext internalCallContext) {
         final Map<BlockingState, Optional<UUID>> states = new HashMap<>();
-        final Optional<UUID> bundleIdOptional = Optional.fromNullable(bundleId);
+        final Optional<UUID> bundleIdOptional = Optional.ofNullable(bundleId);
         for (final BlockingState blockingState : blockingStates) {
             states.put(blockingState, bundleIdOptional);
         }
@@ -69,7 +67,7 @@ public class EntitlementUtils {
     public void setBlockingStateAndPostBlockingTransitionEvent(final Map<BlockingState, UUID> blockingStates, final InternalCallContext internalCallContext) {
         final Map<BlockingState, Optional<UUID>> states = new HashMap<>();
         for (final BlockingState blockingState : blockingStates.keySet()) {
-            states.put(blockingState, Optional.fromNullable(blockingStates.get(blockingState)));
+            states.put(blockingState, Optional.ofNullable(blockingStates.get(blockingState)));
         }
         dao.setBlockingStatesAndPostBlockingTransitionEvent(states, internalCallContext);
     }
@@ -84,7 +82,7 @@ public class EntitlementUtils {
                 throw new RuntimeException(e);
             }
         }
-        dao.setBlockingStatesAndPostBlockingTransitionEvent(Map.<BlockingState, Optional<UUID>>of(state, Optional.fromNullable(bundleId)), context);
+        dao.setBlockingStatesAndPostBlockingTransitionEvent(Map.<BlockingState, Optional<UUID>>of(state, Optional.ofNullable(bundleId)), context);
     }
 
     /**
