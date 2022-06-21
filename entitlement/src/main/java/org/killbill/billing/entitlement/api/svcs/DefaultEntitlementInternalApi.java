@@ -149,10 +149,9 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         pluginExecution.executeWithPlugin(preCallbacksCallback, callbacks, pluginContexts);
 
-        // FIXME-1615 : Cross module. Needed so `blockingStates` could use Java 8 Optional.
-        final Map<BlockingState, com.google.common.base.Optional<UUID>> states = new HashMap<>();
-        for (Entry<BlockingState, Optional<UUID>> entry : blockingStates.entrySet()) {
-            states.put(entry.getKey(), com.google.common.base.Optional.of(entry.getValue().get()));
+        final Map<BlockingState, Optional<UUID>> states = new HashMap<>();
+        for (final Entry<BlockingState, Optional<UUID>> entry : blockingStates.entrySet()) {
+            states.put(entry.getKey(), Optional.of(entry.getValue().get()));
         }
         // Record the new states first, then insert the notifications to avoid race conditions
         blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(states, internalCallContext);

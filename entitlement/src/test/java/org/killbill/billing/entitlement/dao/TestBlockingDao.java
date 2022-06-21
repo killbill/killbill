@@ -20,6 +20,7 @@ package org.killbill.billing.entitlement.dao;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -34,9 +35,6 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.ChangeType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-// FIXME-1615 : Invoking BlockingStateDao method(s)
-import com.google.common.base.Optional;
 
 public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -54,7 +52,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state1 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state1, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state1, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         clock.addDays(1);
@@ -62,7 +60,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state2, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state2, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         Assert.assertEquals(blockingStateDao.getBlockingStateForService(accountId, BlockingStateType.ACCOUNT, service, internalCallContext).getStateName(), state2.getStateName());
@@ -92,7 +90,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state1 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, overdueStateName, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state1, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state1, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         clock.addDays(1);
@@ -101,7 +99,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, overdueStateName2, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state2, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state2, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         clock.addDays(1);
@@ -110,7 +108,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final String overdueStateName3 = "OhBoy!";
         final BlockingState state3 = new DefaultBlockingState(subscriptionId, BlockingStateType.SUBSCRIPTION, overdueStateName3, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state3, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state3, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         clock.addDays(1);
@@ -118,7 +116,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         final UUID subscriptionId2 = UUID.randomUUID();
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state4 = new DefaultBlockingState(subscriptionId2, BlockingStateType.SUBSCRIPTION, overdueStateName3, service, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state4, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state4, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
 
@@ -146,32 +144,32 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState stateA1 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, "warning", service, false, false, false, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateA1, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateA1, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         clock.addDays(1);
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState stateA2 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, "warning+", service, false, false, false, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateA2, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateA2, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         final UUID bundleId = UUID.randomUUID();
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState stateB1 = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, "block", service, true, true, true, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateB1, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateB1, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         clock.addDays(1);
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState stateA3 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, "warning++", service, false, false, false, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateA3, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateA3, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState stateB2 = new DefaultBlockingState(bundleId, BlockingStateType.SUBSCRIPTION_BUNDLE, "unblock", service, false, false, false, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateB2, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateB2, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         List<BlockingState> states = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
@@ -200,7 +198,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState state1 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service1, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state1, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state1, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         clock.setDeltaFromReality(1000 * 3600 * 24);
@@ -210,7 +208,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final String overdueStateName2 = "NoReallyThisCantGoOn";
         final BlockingState state2 = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName2, service2, blockChange, blockEntitlement, blockBilling, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state2, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(state2, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
         final List<BlockingState> history2 = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
@@ -228,7 +226,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState blockingState = new DefaultBlockingState(uuid, BlockingStateType.ACCOUNT, overdueStateName, service, false, true, false, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState, Optional.empty()), internalCallContext);
         assertListenerStatus();
 
 

@@ -20,6 +20,7 @@ package org.killbill.billing.entitlement.dao;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -35,9 +36,6 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.dao.EntityDao;
-
-// FIXME-1615 : Cross module (affected org.killbill.billing.junction.plumbing.billing.TestBillingApi)
-import com.google.common.base.Optional;
 
 public interface BlockingStateDao extends EntityDao<BlockingStateModelDao, BlockingState, EntitlementApiException> {
 

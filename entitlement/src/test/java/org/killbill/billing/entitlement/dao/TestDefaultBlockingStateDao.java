@@ -21,6 +21,7 @@ package org.killbill.billing.entitlement.dao;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -40,8 +41,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-// FIXME-1615 : Invoking BlockingStateDao method(s)
-import com.google.common.base.Optional;
 
 public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbeddedDB {
 
@@ -76,7 +75,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // Set a state in the future so no event
         final DateTime stateDateTime = new DateTime(2013, 5, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState = new DefaultBlockingState(entitlement.getId(), type, state, service, false, false, false, stateDateTime);
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState, Optional.<UUID>of(entitlement.getBundleId())), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState, Optional.of(entitlement.getBundleId())), internalCallContext);
         assertListenerStatus();
 
         Assert.assertEquals(blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext).size(), 2);
@@ -100,7 +99,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // Set a state for service A
         final DateTime stateDateTime = new DateTime(2013, 5, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState1 = new DefaultBlockingState(blockableId, type, state, serviceA, false, false, false, stateDateTime);
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState1, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState1, Optional.empty()), internalCallContext);
         final List<BlockingState> blockingStates1 = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
         Assert.assertEquals(blockingStates1.size(), 1);
         Assert.assertEquals(blockingStates1.get(0).getBlockedId(), blockableId);
@@ -109,7 +108,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         Assert.assertEquals(blockingStates1.get(0).getEffectiveDate(), stateDateTime);
 
         // Set the same state again - no change
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState1, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState1, Optional.empty()), internalCallContext);
         final List<BlockingState> blockingStates2 = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
         Assert.assertEquals(blockingStates2.size(), 1);
         Assert.assertEquals(blockingStates2.get(0).getBlockedId(), blockableId);
@@ -119,7 +118,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
 
         // Set the state for service B
         final BlockingState blockingState2 = new DefaultBlockingState(blockableId, type, state, serviceB, false, false, false, stateDateTime);
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState2, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState2, Optional.empty()), internalCallContext);
         final List<BlockingState> blockingStates3 = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
         Assert.assertEquals(blockingStates3.size(), 2);
         Assert.assertEquals(blockingStates3.get(0).getBlockedId(), blockableId);
@@ -134,7 +133,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // Set the state for service A in the future - there should be no change (already effective)
         final DateTime stateDateTime2 = new DateTime(2013, 6, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState3 = new DefaultBlockingState(blockableId, type, state, serviceA, false, false, false, stateDateTime2);
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState3, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState3, Optional.empty()), internalCallContext);
         final List<BlockingState> blockingStates4 = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
         Assert.assertEquals(blockingStates4.size(), 2);
         Assert.assertEquals(blockingStates4.get(0).getBlockedId(), blockableId);
@@ -149,7 +148,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // Set the state for service A in the past - the new effective date should be respected
         final DateTime stateDateTime3 = new DateTime(2013, 2, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState4 = new DefaultBlockingState(blockableId, type, state, serviceA, false, false, false, stateDateTime3);
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState4, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState4, Optional.empty()), internalCallContext);
         final List<BlockingState> blockingStates5 = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
         Assert.assertEquals(blockingStates5.size(), 2);
         Assert.assertEquals(blockingStates5.get(0).getBlockedId(), blockableId);
@@ -164,7 +163,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         // Set a new state for service A
         final DateTime state2DateTime = new DateTime(2013, 12, 6, 10, 11, 12, DateTimeZone.UTC);
         final BlockingState blockingState5 = new DefaultBlockingState(blockableId, type, state2, serviceA, false, false, false, state2DateTime);
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState5, Optional.absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(blockingState5, Optional.empty()), internalCallContext);
         final List<BlockingState> blockingStates6 = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalCallContext);
         Assert.assertEquals(blockingStates6.size(), 3);
         Assert.assertEquals(blockingStates6.get(0).getBlockedId(), blockableId);

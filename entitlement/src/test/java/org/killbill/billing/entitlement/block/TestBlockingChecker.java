@@ -19,6 +19,7 @@
 package org.killbill.billing.entitlement.block;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
@@ -36,9 +37,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-// FIXME-1615 : some test deal with BlockingStateDao
-import com.google.common.base.Optional;
 
 public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
@@ -81,12 +79,12 @@ public class TestBlockingChecker extends EntitlementTestSuiteNoDB {
 
     private void setStateBundle(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState bundleState = new DefaultBlockingState(bundle.getId(), BlockingStateType.SUBSCRIPTION_BUNDLE, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(bundleState, Optional.<UUID>absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(bundleState, Optional.<UUID>empty()), internalCallContext);
     }
 
     private void setStateAccount(final boolean bC, final boolean bE, final boolean bB) {
         final BlockingState accountState = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "state", "test-service", bC, bE, bB, clock.getUTCNow());
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(accountState, Optional.<UUID>absent()), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(accountState, Optional.<UUID>empty()), internalCallContext);
     }
 
     private void setStateSubscription(final boolean bC, final boolean bE, final boolean bB) {
