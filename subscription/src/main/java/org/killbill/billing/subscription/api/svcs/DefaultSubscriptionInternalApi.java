@@ -94,9 +94,6 @@ import org.killbill.clock.DefaultClock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// FIXME-1615 : (Part of) DefaultPaginationHelper
-import com.google.common.base.Function;
-
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreateApi implements SubscriptionBaseInternalApi {
@@ -223,12 +220,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
                                                       return dao.get(offset, limit, context);
                                                   }
                                               },
-                                              new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
-                                                  @Override
-                                                  public SubscriptionBaseBundle apply(final SubscriptionBundleModelDao bundleModelDao) {
-                                                      return SubscriptionBundleModelDao.toSubscriptionBundle(bundleModelDao);
-                                                  }
-                                              }
+                                              SubscriptionBundleModelDao::toSubscriptionBundle
                                              );
     }
 
@@ -241,12 +233,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
                                                       return dao.searchSubscriptionBundles(searchKey, offset, limit, context);
                                                   }
                                               },
-                                              new Function<SubscriptionBundleModelDao, SubscriptionBaseBundle>() {
-                                                  @Override
-                                                  public SubscriptionBaseBundle apply(final SubscriptionBundleModelDao bundleModelDao) {
-                                                      return SubscriptionBundleModelDao.toSubscriptionBundle(bundleModelDao);
-                                                  }
-                                              }
+                                              SubscriptionBundleModelDao::toSubscriptionBundle
                                              );
 
     }

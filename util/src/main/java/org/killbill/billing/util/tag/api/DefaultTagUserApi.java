@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -53,23 +54,16 @@ import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDao;
 import org.killbill.billing.util.tag.dao.TagModelDaoHelper;
 
-// FIXME-1615 : should replaced when working with DefaultPaginationHelper.getEntityPaginationNoException()
-import com.google.common.base.Function;
-
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultTagUserApi implements TagUserApi {
 
     private static final Joiner JOINER = Joiner.on(",");
 
-    private static final Function<TagModelDao, Tag> TAG_MODEL_DAO_TAG_FUNCTION = new Function<TagModelDao, Tag>() {
-        @Override
-        public Tag apply(final TagModelDao input) {
-            return TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
-                   new DefaultControlTag(input.getId(), ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
-                   new DescriptiveTag(input.getId(), input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
-        }
-    };
+    private static final Function<TagModelDao, Tag> TAG_MODEL_DAO_TAG_FUNCTION = input ->
+            TagModelDaoHelper.isControlTag(input.getTagDefinitionId()) ?
+               new DefaultControlTag(input.getId(), ControlTagType.getTypeFromId(input.getTagDefinitionId()), input.getObjectType(), input.getObjectId(), input.getCreatedDate()) :
+               new DescriptiveTag(input.getId(), input.getTagDefinitionId(), input.getObjectType(), input.getObjectId(), input.getCreatedDate());
 
     private final InternalCallContextFactory internalCallContextFactory;
     private final TagDefinitionDao tagDefinitionDao;

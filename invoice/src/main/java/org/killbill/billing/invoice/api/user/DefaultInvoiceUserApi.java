@@ -89,9 +89,6 @@ import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// FIXME-1615 : DefaultPaginationHelper
-import com.google.common.base.Function;
-
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultInvoiceUserApi implements InvoiceUserApi {
@@ -149,7 +146,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, boolean includesMigrated, final boolean includeVoidedInvoices, final TenantContext context) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final boolean includesMigrated, final boolean includeVoidedInvoices, final TenantContext context) {
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final List<InvoiceModelDao> invoicesByAccount = includesMigrated ?
@@ -194,13 +191,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                       return dao.get(offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
-                                              // FIXME-1615 : DefaultPaginationHelper
-                                              new Function<InvoiceModelDao, Invoice>() {
-                                                  @Override
-                                                  public Invoice apply(final InvoiceModelDao invoiceModelDao) {
-                                                      return new DefaultInvoice(invoiceModelDao);
-                                                  }
-                                              }
+                                              DefaultInvoice::new
                                              );
     }
 
@@ -214,13 +205,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                       return dao.searchInvoices(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
-                                              // FIXME-1615 : DefaultPaginationHelper
-                                              new Function<InvoiceModelDao, Invoice>() {
-                                                  @Override
-                                                  public Invoice apply(final InvoiceModelDao invoiceModelDao) {
-                                                      return new DefaultInvoice(invoiceModelDao);
-                                                  }
-                                              }
+                                              DefaultInvoice::new
                                              );
     }
 
@@ -539,10 +524,10 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                           final LinkedList<PluginProperty> properties,
                                           final CallContext context) throws InvoiceApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        ImmutableAccountData accountData;
+        final ImmutableAccountData accountData;
         try {
             accountData = accountUserApi.getImmutableAccountDataById(accountId, internalTenantContext);
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             throw new InvoiceApiException(e);
         }
 
@@ -714,7 +699,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(childAccountId, ObjectType.ACCOUNT, context);
         try {
             childAccount = accountUserApi.getAccountById(childAccountId, internalCallContext);
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             throw new InvoiceApiException(e);
         }
 

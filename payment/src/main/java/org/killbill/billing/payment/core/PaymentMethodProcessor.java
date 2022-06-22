@@ -75,9 +75,6 @@ import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// FIXME-1615 : DefaultPaginationHelper
-import com.google.common.base.Function;
-
 import static org.killbill.billing.payment.dispatcher.PaymentPluginDispatcher.dispatchWithExceptionHandling;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationFromPlugins;
@@ -381,25 +378,22 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                            return paymentDao.getPaymentMethods(pluginName, offset, limit, internalTenantContext);
                                        }
                                    },
-                                   new Function<PaymentMethodModelDao, PaymentMethod>() {
-                                       @Override
-                                       public PaymentMethod apply(final PaymentMethodModelDao paymentMethodModelDao) {
-                                           PaymentMethodPlugin paymentMethodPlugin = null;
-                                           if (pluginApi != null) {
-                                               try {
-                                                   paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), properties, tenantContext);
-                                               } catch (final PaymentPluginApiException e) {
-                                                   if (e.getCause() == null) {
-                                                       log.warn("Error retrieving paymentMethodId='{}', plugin='{}', errorMessage='{}', errorType='{}'", paymentMethodModelDao.getId(), pluginName, e.getErrorMessage(), e.getErrorType());
-                                                   } else {
-                                                       log.warn("Error retrieving paymentMethodId='{}', plugin='{}', errorMessage='{}', errorType='{}'", paymentMethodModelDao.getId(), pluginName, e.getErrorMessage(), e.getErrorType(), e);
-                                                   }
-                                                   // We still want to return a payment method object, even though the plugin details are missing
+                                   paymentMethodModelDao -> {
+                                       PaymentMethodPlugin paymentMethodPlugin = null;
+                                       if (pluginApi != null) {
+                                           try {
+                                               paymentMethodPlugin = pluginApi.getPaymentMethodDetail(paymentMethodModelDao.getAccountId(), paymentMethodModelDao.getId(), properties, tenantContext);
+                                           } catch (final PaymentPluginApiException e) {
+                                               if (e.getCause() == null) {
+                                                   log.warn("Error retrieving paymentMethodId='{}', plugin='{}', errorMessage='{}', errorType='{}'", paymentMethodModelDao.getId(), pluginName, e.getErrorMessage(), e.getErrorType());
+                                               } else {
+                                                   log.warn("Error retrieving paymentMethodId='{}', plugin='{}', errorMessage='{}', errorType='{}'", paymentMethodModelDao.getId(), pluginName, e.getErrorMessage(), e.getErrorType(), e);
                                                }
+                                               // We still want to return a payment method object, even though the plugin details are missing
                                            }
-
-                                           return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
                                        }
+
+                                       return new DefaultPaymentMethod(paymentMethodModelDao, paymentMethodPlugin);
                                    }
                                   );
     }
@@ -426,12 +420,7 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                                    return paymentDao.searchPaymentMethods(searchKey, offset, limit, internalTenantContext);
                                                }
                                            },
-                                           new Function<PaymentMethodModelDao, PaymentMethod>() {
-                                               @Override
-                                               public PaymentMethod apply(final PaymentMethodModelDao paymentMethodModelDao) {
-                                                   return new DefaultPaymentMethod(paymentMethodModelDao, null);
-                                               }
-                                           }
+                                           paymentMethodModelDao -> new DefaultPaymentMethod(paymentMethodModelDao, null)
                                           );
             } catch (final PaymentApiException e) {
                 log.warn("Unable to search through payment methods", e);
@@ -455,23 +444,20 @@ public class PaymentMethodProcessor extends ProcessorBase {
                                            }
                                        }
                                    },
-                                   new Function<PaymentMethodPlugin, PaymentMethod>() {
-                                       @Override
-                                       public PaymentMethod apply(final PaymentMethodPlugin paymentMethodPlugin) {
-                                           if (paymentMethodPlugin.getKbPaymentMethodId() == null) {
-                                               // Garbage from the plugin?
-                                               log.debug("Plugin {} returned a payment method without a kbPaymentMethodId for searchKey {}", pluginName, searchKey);
-                                               return null;
-                                           }
-
-                                           final PaymentMethodModelDao paymentMethodModelDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodPlugin.getKbPaymentMethodId(), internalTenantContext);
-                                           if (paymentMethodModelDao == null) {
-                                               log.warn("Unable to find payment method id " + paymentMethodPlugin.getKbPaymentMethodId() + " present in plugin " + pluginName);
-                                               return null;
-                                           }
-
-                                           return new DefaultPaymentMethod(paymentMethodModelDao, withPluginInfo ? paymentMethodPlugin : null);
+                                   paymentMethodPlugin -> {
+                                       if (paymentMethodPlugin.getKbPaymentMethodId() == null) {
+                                           // Garbage from the plugin?
+                                           log.debug("Plugin {} returned a payment method without a kbPaymentMethodId for searchKey {}", pluginName, searchKey);
+                                           return null;
                                        }
+
+                                       final PaymentMethodModelDao paymentMethodModelDao = paymentDao.getPaymentMethodIncludedDeleted(paymentMethodPlugin.getKbPaymentMethodId(), internalTenantContext);
+                                       if (paymentMethodModelDao == null) {
+                                           log.warn("Unable to find payment method id " + paymentMethodPlugin.getKbPaymentMethodId() + " present in plugin " + pluginName);
+                                           return null;
+                                       }
+
+                                       return new DefaultPaymentMethod(paymentMethodModelDao, withPluginInfo ? paymentMethodPlugin : null);
                                    }
                                   );
     }

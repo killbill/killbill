@@ -19,6 +19,7 @@ package org.killbill.billing.util.customfield.api;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -41,18 +42,9 @@ import org.killbill.billing.util.customfield.dao.DefaultCustomFieldDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
-// FIXME-1615 : Needed for DefaultPaginationHelper
-import com.google.common.base.Function;
-
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultCustomFieldUserApi implements CustomFieldUserApi {
-
-    /**
-     * FIXME-1615 : Cannot replaced by java.util.function.Function because
-     * {@link org.killbill.billing.util.entity.dao.DefaultPaginationHelper#getEntityPaginationNoException(Long, SourcePaginationBuilder, Function)}.
-     * used by several modules: (killbill-account, killbill-entitlement, killbill-invoice, killbill-subscription)
-     */
     private static final Function<CustomFieldModelDao, CustomField> CUSTOM_FIELD_MODEL_DAO_CUSTOM_FIELD_FUNCTION = StringCustomField::new;
 
     private final InternalCallContextFactory internalCallContextFactory;

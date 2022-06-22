@@ -49,9 +49,6 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
 
-// FIXME-1615 : DefaultPaginationHelper
-import com.google.common.base.Function;
-
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
 public class DefaultAccountUserApi extends DefaultAccountApiBase implements AccountUserApi {
@@ -120,12 +117,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                                       return accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
-                                              new Function<AccountModelDao, Account>() {
-                                                  @Override
-                                                  public Account apply(final AccountModelDao accountModelDao) {
-                                                      return new DefaultAccount(accountModelDao);
-                                                  }
-                                              }
+                                              DefaultAccount::new
                                              );
     }
 
@@ -138,12 +130,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                                       return accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
-                                              new Function<AccountModelDao, Account>() {
-                                                  @Override
-                                                  public Account apply(final AccountModelDao accountModelDao) {
-                                                      return new DefaultAccount(accountModelDao);
-                                                  }
-                                              }
+                                              DefaultAccount::new
                                              );
     }
 

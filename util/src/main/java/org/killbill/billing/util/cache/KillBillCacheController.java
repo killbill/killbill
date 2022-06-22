@@ -21,6 +21,7 @@ package org.killbill.billing.util.cache;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.cache.Cache;
@@ -31,9 +32,6 @@ import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-// FIXME-1615 : This one needed for CacheController
-import com.google.common.base.Function;
 
 public class KillBillCacheController<K, V> implements CacheController<K, V> {
 
@@ -108,9 +106,9 @@ public class KillBillCacheController<K, V> implements CacheController<K, V> {
     @Override
     public void remove(final Function<K, Boolean> keyMatcher) {
         final Set<K> toRemove = new HashSet<K>();
-        for (final Object key : getKeys()) {
-            if (keyMatcher.apply((K) key) == Boolean.TRUE) {
-                toRemove.add((K) key);
+        for (final K key : getKeys()) {
+            if (keyMatcher.apply(key) == Boolean.TRUE) {
+                toRemove.add(key);
             }
         }
         cache.removeAll(toRemove);
