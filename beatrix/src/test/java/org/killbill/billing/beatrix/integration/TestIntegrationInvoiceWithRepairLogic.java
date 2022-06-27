@@ -1451,7 +1451,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     }
 
     @Test(groups = "slow")
-    public void testWithAdjustementsAndCancellation() throws Exception {
+    public void testWithAdjustmentsAndCancellation() throws Exception {
 
         final DateTimeZone testTimeZone = DateTimeZone.UTC;
 
