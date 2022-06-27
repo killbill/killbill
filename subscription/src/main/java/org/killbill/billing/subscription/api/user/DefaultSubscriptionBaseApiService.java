@@ -682,17 +682,26 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 continue;
             }
 
-            final Plan addonCurrentPlan = cur.getCurrentPlan();
+            final Plan addonCurrentPlan = cur.getCurrentOrPendingPlan();
+            
             if (baseProduct == null ||
                 addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
                 !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
-                //
-                // Perform AO cancellation using the effectiveDate of the BP
-                //
-                final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                                                                                     .setSubscriptionId(cur.getId())
-                                                                                     .setEffectiveDate(effectiveDate)
-                                                                                     .setFromDisk(true));
+
+            	SubscriptionBaseEvent cancelEvent;
+            	if(cur.getState() == EntitlementState.PENDING) { // Perform AO cancellation using the future start date of ADDON
+            		cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                            .setSubscriptionId(cur.getId())
+                            .setEffectiveDate(cur.getAlignStartDate())
+                            .setFromDisk(true));                 		
+            	}
+            	else {  // Perform AO cancellation using the effectiveDate of the BP
+                    cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                            .setSubscriptionId(cur.getId())
+                            .setEffectiveDate(effectiveDate)
+                            .setFromDisk(true));        		
+            	}
+
                 subscriptionsToBeCancelled.add(cur);
                 events.add(cancelEvent);
             }
