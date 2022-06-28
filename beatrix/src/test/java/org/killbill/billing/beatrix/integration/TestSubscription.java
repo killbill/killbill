@@ -603,18 +603,17 @@ public class TestSubscription extends TestIntegrationBase {
         Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.PENDING);
         
-        //MOVE CLOCK TO 2015-09-06 AND CHANGE BASE PLAN
+        //MOVE CLOCK TO 2015-09-06 AND CHANGE BASE PLAN SUCH THAT THE ADDOS IS AVAILABLE ON THE NEW PLAN
         clock.addDays(5);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        //CHANGE TO A NEW PLAN WHERE ADDON IS AVAILABLE
         final PlanPhaseSpecifier newPlanSpec = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         baseEntitlement.changePlan(new DefaultEntitlementSpecifier(newPlanSpec), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         
+        //BASE PLAN CHANGED SUCCESSFULLY, ADDON STILL PENDING
         baseEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
         assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(baseEntitlement.getLastActiveProduct().getName(),"Assault-Rifle");
-        
         addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.PENDING);  
         
@@ -656,18 +655,17 @@ public class TestSubscription extends TestIntegrationBase {
         Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.PENDING);
         
-        //MOVE CLOCK TO 2015-09-06 AND CHANGE BASE PLAN
+        //MOVE CLOCK TO 2015-09-06 AND CHANGE BASE PLAN SUCH THAT THE ADDOS IS NOT AVAILABLE ON THE NEW PLAN
         clock.addDays(5);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        //CHANGE TO A NEW PLAN WHERE ADDON IS NOT AVAILABLE
         final PlanPhaseSpecifier newPlanSpec = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         baseEntitlement.changePlan(new DefaultEntitlementSpecifier(newPlanSpec), ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
         
+        //BASE PLAN CHANGED SUCCESSFULLY, ADDON CANCELLED
         baseEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
         assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(baseEntitlement.getLastActiveProduct().getName(),"Assault-Rifle");
-        
         addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
         assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);  
 
