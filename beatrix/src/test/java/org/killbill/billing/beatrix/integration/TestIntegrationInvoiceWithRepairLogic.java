@@ -1440,11 +1440,11 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR);
-        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2022, 7, 20), callContext);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2022, 7, 20), Collections.emptyList(), callContext);
         assertListenerStatus();
 
 
@@ -1459,12 +1459,12 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         // Adjust both RECURRING items
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         final InvoiceItem item1 = invoice.getInvoiceItems().get(0);
-        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), item1.getId(), new LocalDate(2022, 6, 20), new BigDecimal("29.95"), account.getCurrency(), "", "", ImmutableList.of(), callContext);
+        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), item1.getId(), new LocalDate(2022, 6, 20), new BigDecimal("29.95"), account.getCurrency(), "", "", Collections.emptyList(), callContext);
         assertListenerStatus();
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         final InvoiceItem item2 = invoice.getInvoiceItems().get(1);
-        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), item2.getId(), new LocalDate(2022, 6, 20), new BigDecimal("29.95"), account.getCurrency(), "", "", ImmutableList.of(), callContext);
+        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), item2.getId(), new LocalDate(2022, 6, 20), new BigDecimal("29.95"), account.getCurrency(), "", "", Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2022-06-21
@@ -1472,7 +1472,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
         Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
-        bpEntitlement.cancelEntitlementWithDate(new LocalDate(2022, 6, 21), true, ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement.cancelEntitlementWithDate(new LocalDate(2022, 6, 21), true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Verify the stability of the system by doing 2 invoice runs and verifying 1/ they work and 2/ nothing gets generated.
