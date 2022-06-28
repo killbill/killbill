@@ -346,15 +346,23 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, spec.getPlanPhaseSpecifier(), now, context);
             policyMaybeNull = planChangeResult.getPolicy();
         }
-
+        DateTime candidate;
         logger.debug("dryRunChangePlan: requestedPolicy='{}', actualPolicy='{}', requestedDateWithMs='{}'", requestedPolicy, policyMaybeNull, requestedDateWithMs);
         if (policyMaybeNull != null) {
-            return subscription.getEffectiveDateForPolicy(policyMaybeNull, null, -1, null);
+        	candidate = subscription.getEffectiveDateForPolicy(policyMaybeNull, null, -1, null);
         } else if (requestedDateWithMs != null) {
-            return DefaultClock.truncateMs(requestedDateWithMs);
+        	candidate = requestedDateWithMs;
         } else {
-            return now;
+        	candidate = now;
         }
+        
+        candidate = DefaultClock.truncateMs(candidate);
+        final SubscriptionBaseTransition previousTransition = subscription.getPreviousTransition();
+        final DateTime earliestValidDate = previousTransition != null ? previousTransition.getEffectiveTransitionTime() : subscription.getStartDate();
+        if (candidate.isBefore(earliestValidDate)) {
+        	candidate = earliestValidDate;
+        }
+        return candidate;
     }
 
     @Override
