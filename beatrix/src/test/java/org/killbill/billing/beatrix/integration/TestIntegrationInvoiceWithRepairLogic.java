@@ -976,6 +976,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
     }
 
 
+
     @Test(groups = "slow")
     public void testRepairWithFullItemAdjustmentInParts() throws Exception {
 
@@ -1421,5 +1422,70 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         checkNoMoreInvoiceToGenerate(account);
 
+    }
+
+    @Test(groups = "slow")
+    public void testWithAdjustmentsAndCancellation() throws Exception {
+
+        final DateTimeZone testTimeZone = DateTimeZone.UTC;
+
+        final DateTime initialDate = new DateTime(2022, 6, 20, 20, 38, 34, 0, testTimeZone);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account account = createAccount(getAccountData(0));
+        assertNotNull(account);
+
+        // In order to bill the next 2 periods by doing explicitly an invoice run
+        add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT_ERROR);
+        invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2022, 7, 20), Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+
+        Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                      new ExpectedInvoiceItemCheck(new LocalDate(2022, 6, 20), new LocalDate(2022, 7, 20), InvoiceItemType.RECURRING, new BigDecimal("29.95")),
+                                                      new ExpectedInvoiceItemCheck(new LocalDate(2022, 7, 20), new LocalDate(2022, 8, 20), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
+
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
+        assertListenerStatus();
+
+        // Adjust both RECURRING items
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        final InvoiceItem item1 = invoice.getInvoiceItems().get(0);
+        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), item1.getId(), new LocalDate(2022, 6, 20), new BigDecimal("29.95"), account.getCurrency(), "", "", Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
+        final InvoiceItem item2 = invoice.getInvoiceItems().get(1);
+        invoiceUserApi.insertInvoiceItemAdjustment(account.getId(), invoice.getId(), item2.getId(), new LocalDate(2022, 6, 20), new BigDecimal("29.95"), account.getCurrency(), "", "", Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        // 2022-06-21
+        clock.addDays(1);
+
+        busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        bpEntitlement.cancelEntitlementWithDate(new LocalDate(2022, 6, 21), true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        // Verify the stability of the system by doing 2 invoice runs and verifying 1/ they work and 2/ nothing gets generated.
+
+        // 2022-07-21
+        clock.addMonths(1);
+        checkNoMoreInvoiceToGenerate(account.getId());
+
+        // 2022-08-21
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
+
+        checkNoMoreInvoiceToGenerate(account.getId());
     }
 }
