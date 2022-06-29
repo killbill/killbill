@@ -629,6 +629,39 @@ public class TestSubscription extends TestIntegrationBase {
     
     @Test(groups = "slow",description="https://github.com/killbill/killbill/issues/1477")
     public void testChangeBPWithPendingAddonAndAddOnNotAvailableOnNewPlan() throws Exception {
+
+        //MOVE CLOCK BY A FEW MINUTES SO THAT SUBSCRIPTION START DATETIME IS A LITTLE AFTER INITIAL DATE TIME
+        clock.setTime(clock.getUTCNow().plusMinutes(2));
+
+        //CREATE PLAN
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
+                NextEvent.PAYMENT);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertNotNull(entitlementId);
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Pistol");
+        assertListenerStatus();
+        
+        clock.addDays(10);
+        
+        //CHANGE PLAN WITH START DATE
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier newPlanSpec = new PlanPhaseSpecifier("blowdart-monthly-notrial", null);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(newPlanSpec), initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        
+        //PLAN CHANGED SUCCESSFULLY
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Blowdart");        
+        assertEquals(entitlement.getEffectiveStartDate(), initialDate);   
+        assertListenerStatus();
+    }            
+
+    @Test(groups = "slow",description="https://github.com/killbill/killbill/issues/1631")
+    public void testChangePlanWithStartDate() throws Exception {
     	
         final LocalDate initialDate = new LocalDate(2015, 8, 1);
         clock.setDay(initialDate);
@@ -670,5 +703,6 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);  
 
     }        
+
     
 }
