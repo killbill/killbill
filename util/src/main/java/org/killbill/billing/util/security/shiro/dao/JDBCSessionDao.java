@@ -21,10 +21,11 @@ package org.killbill.billing.util.security.shiro.dao;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,24 +33,27 @@ import javax.inject.Named;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.entity.dao.DBRouter;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// FIXME-1615 : Cache: should discuss this.
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class JDBCSessionDao extends CachingSessionDAO {
 
+    private static final int MAX_CACHE_ENTRY = 5;
     private static final Logger log = LoggerFactory.getLogger(JDBCSessionDao.class);
 
     private final DBRouter<JDBCSessionSqlDao> dbRouter;
 
-    private final Cache<Serializable, Boolean> noUpdateSessionsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
+    @VisibleForTesting
+    final Map<Serializable, Boolean> noUpdateSessionsCache = new LinkedHashMap<>(MAX_CACHE_ENTRY + 1, .75F, true) {
+        public boolean removeEldestEntry(final Map.Entry eldest) {
+            return size() > MAX_CACHE_ENTRY;
+        }
+    };
 
     @Inject
     public JDBCSessionDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
@@ -115,12 +119,13 @@ public class JDBCSessionDao extends CachingSessionDAO {
     }
 
     public void enableUpdatesForSession(final Session session) {
-        noUpdateSessionsCache.invalidate(session.getId());
+        noUpdateSessionsCache.remove(session.getId());
         doUpdate(session);
     }
 
-    private boolean shouldUpdateSession(final Session session) {
-        return noUpdateSessionsCache.getIfPresent(session.getId()) == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
+    @VisibleForTesting
+    boolean shouldUpdateSession(final Session session) {
+        return noUpdateSessionsCache.get(session.getId()) == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
     }
 
     private Session toSession(final SessionModelDao sessionModelDao) {

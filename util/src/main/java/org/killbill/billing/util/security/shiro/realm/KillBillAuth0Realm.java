@@ -40,12 +40,10 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -71,10 +69,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-// FIXME-1615 : Cache: should discuss this.
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Clock;
 import io.jsonwebtoken.Jws;
@@ -94,9 +88,8 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
     private static final String USER_AGENT = "KillBill/1.0";
 
     private static final int CACHE_MAXIMUM_SIZE = 15;
-    private static final int CACHE_TIMEOUT_MINUTES = 15;
 
-    private final Cache<String, PublicKey> keys;
+    private final Map<String, PublicKey> keys;
 
     private final SecurityConfig securityConfig;
     private final HttpClient httpClient;
@@ -141,17 +134,7 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
                                          throw new SignatureException("Key ID is required");
                                      }
 
-                                     final PublicKey publicKey;
-                                     try {
-                                         publicKey = keys.get(keyId, new Callable<PublicKey>() {
-                                             @Override
-                                             public PublicKey call() throws Exception {
-                                                 return loadPublicKey(keyId);
-                                             }
-                                         });
-                                     } catch (final ExecutionException e) {
-                                         throw new SignatureException("Unknown signing key ID");
-                                     }
+                                     final PublicKey publicKey = keys.getOrDefault(keyId, loadPublicKey(keyId));
 
                                      if (publicKey == null) {
                                          throw new SignatureException("Unknown signing key ID");
@@ -161,10 +144,11 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
                                  }
                              })
                              .build();
-        this.keys = CacheBuilder.newBuilder()
-                                .maximumSize(CACHE_MAXIMUM_SIZE)
-                                .expireAfterWrite(CACHE_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-                                .build();
+        this.keys = new LinkedHashMap<>(CACHE_MAXIMUM_SIZE, .75f, true) {
+            public boolean removeEldestEntry(final Map.Entry eldest) {
+                return size() > CACHE_MAXIMUM_SIZE;
+            }
+        };
     }
 
     @Override
@@ -216,7 +200,7 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
                 // Should never be null (initialized via init())
                 if (authorizationCache != null) {
                     final SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo(null);
-                    final Set<String> permissions = new HashSet<String>();
+                    final Set<String> permissions = new HashSet<>();
                     for (final Object permission : (Iterable) claims.get("permissions")) {
                         permissions.add(permission.toString());
                     }
