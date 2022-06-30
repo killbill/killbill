@@ -78,7 +78,7 @@ public class BaseUserApi {
 
                 final DebugMap debugMap = new DebugMap(startDate, endDate, logger);
                 for (final RawUsageRecord cur : result) {
-                    if (cur.getDate().compareTo(startDate) < 0 || cur.getDate().compareTo(endDate) >= 0) {
+                    if (cur.getDate().compareTo(startDate.toDateTimeAtCurrentTime()) < 0 || cur.getDate().compareTo(endDate.toDateTimeAtCurrentTime()) >= 0) { //TODO_1375_Usage
                         logger.warn("Usage plugin returned usage data with date {}, not in the specified range [{} -> {}[",
                                     cur.getDate(), startDate, endDate);
                     }

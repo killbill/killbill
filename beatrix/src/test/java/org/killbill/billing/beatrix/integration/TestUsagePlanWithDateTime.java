@@ -98,7 +98,7 @@ public class TestUsagePlanWithDateTime extends TestIntegrationBase {
         final PlanPhaseSpecifier newSpec = new PlanPhaseSpecifier("server-monthly-premium");
         DefaultEntitlementSpecifier defaultEntitlementSpecifier = new DefaultEntitlementSpecifier(newSpec);
         //No invoice generated since plan change is on the same day
-        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
         entitlement.changePlanWithDate(defaultEntitlementSpecifier, changeTime, Collections.emptyList(), callContext);
         assertListenerStatus();
         
