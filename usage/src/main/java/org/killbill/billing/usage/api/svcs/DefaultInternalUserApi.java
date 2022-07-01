@@ -76,6 +76,7 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
         }
 
         final List<RolledUpUsageModelDao> usage = rolledUpUsageDao.getRawUsageForAccount(startDate, endDate, internalTenantContext);
+        //TODO_1375_usage: Using LocalDate for now. 
         return usage.stream()
                 .map(input -> new DefaultRawUsage(input.getSubscriptionId(), input.getRecordDate(), input.getUnitType(), input.getAmount(), input.getTrackingId()))
                 .collect(Collectors.toUnmodifiableList());
