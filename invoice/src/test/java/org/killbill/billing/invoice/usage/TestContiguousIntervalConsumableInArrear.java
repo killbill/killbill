@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
@@ -338,10 +339,10 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // 2 items for startDate - firstBCDDate
         final List<RawUsageRecord> rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "unit", BigDecimal.valueOf(130L), "tracking-1"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "unit", BigDecimal.valueOf(271L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(130L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(271L), "tracking-1"));
         // 1 items for firstBCDDate - endDate
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit", BigDecimal.valueOf(199L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(199L), "tracking-2"));
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(block);
@@ -432,21 +433,21 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate targetDate = t3;
 
         // Prev t0
-        final RawUsageRecord raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01), "unit", BigDecimal.valueOf(12L), "tracking-1");
+        final RawUsageRecord raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(12L), "tracking-1");
 
         // t0 - t1
-        final RawUsageRecord raw2 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 15), "unit", BigDecimal.valueOf(6L), "tracking-1");
-        final RawUsageRecord raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 25), "unit", BigDecimal.valueOf(4L), "tracking-1");
+        final RawUsageRecord raw2 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 15).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(6L), "tracking-1");
+        final RawUsageRecord raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 25).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(4L), "tracking-1");
 
         // t1 - t2 nothing
 
         // t2 - t3
-        final RawUsageRecord raw4 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 15), "unit", BigDecimal.valueOf(13L), "tracking-2");
-        final RawUsageRecord oraw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 21), "unit2", BigDecimal.valueOf(21L), "tracking-2");
-        final RawUsageRecord raw5 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 31), "unit", BigDecimal.valueOf(7L), "tracking-2");
+        final RawUsageRecord raw4 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 15).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(13L), "tracking-2");
+        final RawUsageRecord oraw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 21).toDateTimeAtStartOfDay(), "unit2", BigDecimal.valueOf(21L), "tracking-2");
+        final RawUsageRecord raw5 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, 31).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(7L), "tracking-2");
 
         // after t3
-        final RawUsageRecord raw6 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 06, 15), "unit", BigDecimal.valueOf(100L), "tracking-3");
+        final RawUsageRecord raw6 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 06, 15).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(100L), "tracking-3");
 
         final List<RawUsageRecord> rawUsageRecord = List.of(raw1, raw2, raw3, raw4, oraw1, raw5, raw6);
 
@@ -459,24 +460,24 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
                 .sorted(TEST_ROLLED_UP_FIRST_USAGE_COMPARATOR)
                 .collect(Collectors.toUnmodifiableList());
 
-        Assert.assertEquals(rolledUpUsage.get(0).getStart().compareTo(t0), 0);
-        Assert.assertEquals(rolledUpUsage.get(0).getEnd().compareTo(t1), 0);
+        Assert.assertEquals(rolledUpUsage.get(0).getStart().toLocalDate().compareTo(t0), 0);
+        Assert.assertEquals(rolledUpUsage.get(0).getEnd().toLocalDate().compareTo(t1), 0);
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getUnitType(), "unit");
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(0).getAmount(), BigDecimal.valueOf(10L));
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getUnitType(), "unit2");
         Assert.assertEquals(rolledUpUsage.get(0).getRolledUpUnits().get(1).getAmount(), BigDecimal.valueOf(0L));
 
-        Assert.assertEquals(rolledUpUsage.get(1).getStart().compareTo(t1), 0);
-        Assert.assertEquals(rolledUpUsage.get(1).getEnd().compareTo(t2), 0);
+        Assert.assertEquals(rolledUpUsage.get(1).getStart().toLocalDate().compareTo(t1), 0);
+        Assert.assertEquals(rolledUpUsage.get(1).getEnd().toLocalDate().compareTo(t2), 0);
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getUnitType(), "unit");
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(0).getAmount(), BigDecimal.valueOf(0L));
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getUnitType(), "unit2");
         Assert.assertEquals(rolledUpUsage.get(1).getRolledUpUnits().get(1).getAmount(), BigDecimal.valueOf(0L));
 
-        Assert.assertEquals(rolledUpUsage.get(2).getStart().compareTo(t2), 0);
-        Assert.assertEquals(rolledUpUsage.get(2).getEnd().compareTo(t3), 0);
+        Assert.assertEquals(rolledUpUsage.get(2).getStart().toLocalDate().compareTo(t2), 0);
+        Assert.assertEquals(rolledUpUsage.get(2).getEnd().toLocalDate().compareTo(t3), 0);
         Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().size(), 2);
         Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getUnitType(), "unit");
         Assert.assertEquals(rolledUpUsage.get(2).getRolledUpUnits().get(0).getAmount(), BigDecimal.valueOf(20L));
@@ -513,8 +514,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 1
         List<RawUsageRecord> rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(99L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(99L), "tracking-1"));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, Collections.emptyList());
         assertEquals(result.size(), 1);
@@ -538,8 +539,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 2
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-2"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-2"));
 
         result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, Collections.emptyList());
         assertEquals(result.size(), 1);
@@ -569,8 +570,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(75L), "tracking-3"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-4"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(75L), "tracking-3"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-4"));
 
         result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.ALL_TIERS, UsageDetailMode.AGGREGATE, Collections.emptyList());
         assertEquals(result.size(), 1);
@@ -615,8 +616,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 1
         List<RawUsageRecord> rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(99L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(99L), "tracking-1"));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL, Collections.emptyList());
         assertEquals(result.size(), 2);
@@ -631,8 +632,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 2
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-1"));
 
         result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL, Collections.emptyList());
         assertEquals(result.size(), 3);
@@ -651,8 +652,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(75L), "tracking-2"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(75L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-2"));
 
         result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.ALL_TIERS, UsageDetailMode.DETAIL, Collections.emptyList());
         assertEquals(result.size(), 5);
@@ -683,8 +684,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 1
         List<RawUsageRecord> rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(99L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(99L), "tracking-1"));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE, Collections.emptyList());
         assertEquals(result.size(), 1);
@@ -707,8 +708,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 2
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-2"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-2"));
 
         result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE, Collections.emptyList());
         assertEquals(result.size(), 1);
@@ -732,8 +733,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(76L), "tracking-3"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-3"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(76L), "tracking-3"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-3"));
 
         result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.TOP_TIER, UsageDetailMode.AGGREGATE, Collections.emptyList());
         assertEquals(result.size(), 1);
@@ -760,8 +761,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 1
         List<RawUsageRecord> rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(99L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(99L), "tracking-2"));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL, Collections.emptyList());
         assertEquals(result.size(), 2);
@@ -776,8 +777,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 2
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-3"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-4"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-3"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-4"));
 
         result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL, Collections.emptyList());
         assertEquals(result.size(), 2);
@@ -792,8 +793,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         // Case 3
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(76L), "tracking-5"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-6"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(76L), "tracking-5"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-6"));
 
         result = produceInvoiceItems(rawUsageRecords, TierBlockPolicy.TOP_TIER, UsageDetailMode.DETAIL, Collections.emptyList());
         assertEquals(result.size(), 2);
@@ -832,8 +833,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         // Create usage data points (will include already billed + add new usage data)
         //
         List<RawUsageRecord> rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(50L /* already built */ + 20L), "tracking-1")); // tier 3
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(80L /* already built */ + 120L), "tracking-1")); // tier 2
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(50L /* already built */ + 20L), "tracking-1")); // tier 3
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(80L /* already built */ + 120L), "tracking-1")); // tier 2
 
         final List<InvoiceItem> existingItems = new ArrayList<InvoiceItem>();
         final InvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usageName, null,
@@ -907,8 +908,8 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final List<RawUsageRecord> rawUsageRecords = new ArrayList<>();
         final BigDecimal rawUsageAmount1 = BigDecimal.valueOf(50L /* already built */ + 20L);
         final BigDecimal rawUsageAmount2 = BigDecimal.valueOf(80L /* already built */ + 120L);
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", rawUsageAmount1, "tracking-1")); // tier 3
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", rawUsageAmount2, "tracking-1")); // tier 2
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", rawUsageAmount1, "tracking-1")); // tier 3
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", rawUsageAmount2, "tracking-1")); // tier 2
 
         // FOO : 10 (tier 1) + 40 (tier 2) = 50
         final BigDecimal existingFooUsageAmount1 = BigDecimal.valueOf(10L);
@@ -1001,7 +1002,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate targetDate = t1;
 
         // Prev t0
-        final RawUsageRecord raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01), "unit", BigDecimal.valueOf(12L), "tracking-1");
+        final RawUsageRecord raw1 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 03, 01).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(12L), "tracking-1");
 
         final List<RawUsageRecord> rawUsageRecord = List.of(raw1);
 
@@ -1023,16 +1024,16 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
 
         // 2015-03-15T18:10:17Z
-        final LocalDate t0 = new LocalDate(2015, 03, BCD);
-        final BillingEvent eventT0 = createMockBillingEvent(t0.toDateTime(new LocalTime(18, 10, 17), DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        final DateTime t0 = new DateTime(2015, 03, BCD, 18, 10, 17, DateTimeZone.UTC);
+        final BillingEvent eventT0 = createMockBillingEvent(t0, BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
         Mockito.when(eventT0.getTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
 
         // 2015-04-01T11:22:30Z
-        final LocalDate t1 = new LocalDate(2015, 04, 01);
-        final BillingEvent eventT1 = createMockBillingEvent(t1.toDateTime(new LocalTime(11, 22, 30), DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        final DateTime t1 = new DateTime(2015, 04, 01, 11, 22, 30, DateTimeZone.UTC);
+        final BillingEvent eventT1 = createMockBillingEvent(t1, BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
         Mockito.when(eventT1.getTransitionType()).thenReturn(SubscriptionBaseTransitionType.CANCEL);
 
-        final LocalDate targetDate = t1;
+        final LocalDate targetDate = internalCallContext.toLocalDate(t1);
 
         // At t0
         final RawUsageRecord raw1 = new DefaultRawUsage(subscriptionId, t0, "unit", BigDecimal.valueOf(12L), "tracking-1");
@@ -1041,7 +1042,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final RawUsageRecord raw2 = new DefaultRawUsage(subscriptionId, t1, "unit", BigDecimal.valueOf(10L), "tracking-2");
 
         // Should be ignored
-        final RawUsageRecord raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 04, 02), "unit", BigDecimal.valueOf(100L), "tracking-3");
+        final RawUsageRecord raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 04, 02).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(100L), "tracking-3");
 
         final List<RawUsageRecord> rawUsageRecord = List.of(raw1, raw2, raw3);
 
@@ -1065,16 +1066,17 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
 
         // 2015-03-15T18:10:17Z
-        final LocalDate t0 = new LocalDate(2015, 03, BCD);
-        final BillingEvent eventT0 = createMockBillingEvent(t0.toDateTime(new LocalTime(18, 10, 17), DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        final DateTime t0 = new DateTime(2015, 03, BCD, 18, 10, 17, DateTimeZone.UTC);
+        final BillingEvent eventT0 = createMockBillingEvent(t0, BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
         Mockito.when(eventT0.getTransitionType()).thenReturn(SubscriptionBaseTransitionType.CREATE);
 
-        // 2015-04-15T11:22:30Z
-        final LocalDate t1 = new LocalDate(2015, 04, BCD);
-        final BillingEvent eventT1 = createMockBillingEvent(t1.toDateTime(new LocalTime(11, 22, 30), DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
+        // 2015-04-01T11:22:30Z
+        final DateTime t1 = new DateTime(2015, 04, 01, 11, 22, 30, DateTimeZone.UTC);
+        final BillingEvent eventT1 = createMockBillingEvent(t1, BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
         Mockito.when(eventT1.getTransitionType()).thenReturn(SubscriptionBaseTransitionType.CANCEL);
 
-        final LocalDate targetDate = t1;
+        final LocalDate targetDate = internalCallContext.toLocalDate(t1);
+
 
         // At t0
         final RawUsageRecord raw1 = new DefaultRawUsage(subscriptionId, t0, "unit", BigDecimal.valueOf(12L), "tracking-1");
@@ -1083,7 +1085,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final RawUsageRecord raw2 = new DefaultRawUsage(subscriptionId, t1, "unit", BigDecimal.valueOf(10L), "tracking-2");
 
         // Should be ignored
-        final RawUsageRecord raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, BCD), "unit", BigDecimal.valueOf(100L), "tracking-3");
+        final RawUsageRecord raw3 = new DefaultRawUsage(subscriptionId, new LocalDate(2015, 05, BCD).toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(100L), "tracking-3");
 
         final List<RawUsageRecord> rawUsageRecord = List.of(raw1, raw2, raw3);
 
@@ -1110,7 +1112,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate firstBCDDate = new LocalDate(2014, 04, 15);
 
         final List<RawUsageRecord> rawUsages = new ArrayList<RawUsageRecord>();
-        rawUsages.add(new DefaultRawUsage(subscriptionId, startDate, "unit", BigDecimal.valueOf(55L), "tracking-1"));
+        rawUsages.add(new DefaultRawUsage(subscriptionId, startDate.toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(55L), "tracking-1"));
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 1, 100, new BigDecimal("0.067"));
         final DefaultTier tier = createDefaultTierWithBlocks(block);
@@ -1189,7 +1191,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final LocalDate rawUsageRecordStartDate = new LocalDate(2015, 10, 16);
 
         final List<RawUsageRecord> rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, startDate, "unit", BigDecimal.valueOf(130L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, startDate.toDateTimeAtStartOfDay(), "unit", BigDecimal.valueOf(130L), "tracking-1"));
 
         final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
         final DefaultTier tier = createDefaultTierWithBlocks(block);
@@ -1198,7 +1200,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
         final BillingEvent event2 = createMockBillingEvent(new LocalDate(2014, 10, 16).toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsageRecords, EMPTY_EXISTING_TRACKING_IDS, targetDate, rawUsageRecordStartDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, rawUsageRecords, EMPTY_EXISTING_TRACKING_IDS, targetDate, rawUsageRecordStartDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, Set.of("unit"));
@@ -1222,7 +1224,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, Set.of("unit"));
@@ -1230,7 +1232,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(false);
         assertEquals(res.transitionTimes.size(), 1);
         // We won't bill anything because we don't an interval -- only one transition
-        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
     }
 
@@ -1247,16 +1249,16 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, Set.of("unit"));
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(false);
         assertEquals(res.transitionTimes.size(), 2);
-        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(res.transitionTimes.get(1).getDate().compareTo(new LocalDate(2021, 5, 15)), 0);
+        assertEquals(res.transitionTimes.get(1).getDate().toLocalDate().compareTo(new LocalDate(2021, 5, 15)), 0);
         assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
     }
 
@@ -1273,16 +1275,16 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, Set.of("unit"));
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(false);
         assertEquals(res.transitionTimes.size(), 2);
-        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(res.transitionTimes.get(1).getDate().compareTo(targetDate), 0);
+        assertEquals(res.transitionTimes.get(1).getDate().toLocalDate().compareTo(targetDate), 0);
         assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
     }
 
@@ -1299,18 +1301,18 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addAllSeenUnitTypesForBillingEvent(event1, Set.of("unit"));
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(false);
         assertEquals(res.transitionTimes.size(), 3);
-        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(res.transitionTimes.get(1).getDate().compareTo(new LocalDate(2021, 5, 15)), 0);
+        assertEquals(res.transitionTimes.get(1).getDate().toLocalDate().compareTo(new LocalDate(2021, 5, 15)), 0);
         assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(res.transitionTimes.get(2).getDate().compareTo(targetDate), 0);
+        assertEquals(res.transitionTimes.get(2).getDate().toLocalDate().compareTo(targetDate), 0);
         assertEquals(res.transitionTimes.get(2).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
     }
 
@@ -1329,7 +1331,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate);
         final BillingEvent event2 = createMockBillingEvent(BCD, endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addBillingEvent(event2);
@@ -1337,9 +1339,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(true);
         assertEquals(res.transitionTimes.size(), 2);
-        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(res.transitionTimes.get(1).getDate().compareTo(targetDate), 0);
+        assertEquals(res.transitionTimes.get(1).getDate().toLocalDate().compareTo(targetDate), 0);
         // Verify this points to the correct CANCEL event
         assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
     }
@@ -1362,7 +1364,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final BillingEvent event2 = createMockBillingEvent(BCD, changeDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
         final BillingEvent event3 = createMockBillingEvent(BCD, endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addBillingEvent(event2);
@@ -1371,9 +1373,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(true);
         assertEquals(res.transitionTimes.size(), 2);
-        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(res.transitionTimes.get(1).getDate().compareTo(endDate), 0);
+        assertEquals(res.transitionTimes.get(1).getDate().toLocalDate().compareTo(endDate), 0);
         assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
     }
 
@@ -1395,7 +1397,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final BillingEvent event2 = createMockBillingEvent(BCD, changeDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
         final BillingEvent event3 = createMockBillingEvent(BCD, endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addBillingEvent(event2);
@@ -1404,11 +1406,11 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(true);
         assertEquals(res.transitionTimes.size(), 3);
-        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(res.transitionTimes.get(1).getDate().compareTo(new LocalDate(2021, 6, 15)), 0);
+        assertEquals(res.transitionTimes.get(1).getDate().toLocalDate().compareTo(new LocalDate(2021, 6, 15)), 0);
         assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
-        assertEquals(res.transitionTimes.get(2).getDate().compareTo(endDate), 0);
+        assertEquals(res.transitionTimes.get(2).getDate().toLocalDate().compareTo(endDate), 0);
         assertEquals(res.transitionTimes.get(2).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
     }
 
@@ -1430,7 +1432,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final BillingEvent event2 = createMockBillingEvent(BCD, changeDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
         final BillingEvent event3 = createMockBillingEvent(BCD, endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addBillingEvent(event2);
@@ -1439,15 +1441,15 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(false);
         assertEquals(res.transitionTimes.size(), 4);
-        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(res.transitionTimes.get(1).getDate().compareTo(new LocalDate(2021, 6, 15)), 0);
+        assertEquals(res.transitionTimes.get(1).getDate().toLocalDate().compareTo(new LocalDate(2021, 6, 15)), 0);
         assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
-        assertEquals(res.transitionTimes.get(2).getDate().compareTo(new LocalDate(2021, 7, 15)), 0);
+        assertEquals(res.transitionTimes.get(2).getDate().toLocalDate().compareTo(new LocalDate(2021, 7, 15)), 0);
         assertEquals(res.transitionTimes.get(2).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
         // In practise this does not happen because we don't end up with 2 CANCEL for same subscriptions but usage code (mostly) disregard the
         // billing event type, so this transition is expected.
-        assertEquals(res.transitionTimes.get(3).getDate().compareTo(new LocalDate(2021, 8, 15)), 0);
+        assertEquals(res.transitionTimes.get(3).getDate().toLocalDate().compareTo(new LocalDate(2021, 8, 15)), 0);
         assertEquals(res.transitionTimes.get(3).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
     }
 
@@ -1465,7 +1467,7 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
         final BillingEvent event1 = createMockBillingEvent(startDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate);
         final BillingEvent event2 = createMockBillingEvent(BCD, endDate.toDateTimeAtStartOfDay(DateTimeZone.UTC), BillingPeriod.MONTHLY, Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CANCEL);
 
-        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate, usageDetailMode, invoiceConfig, false, internalCallContext);
+        final ContiguousIntervalUsageInArrear intervalConsumableInArrear = new ContiguousIntervalConsumableUsageInArrear(usage, accountId, invoiceId, Collections.emptyList(), EMPTY_EXISTING_TRACKING_IDS, targetDate, startDate.toDateTimeAtStartOfDay(), usageDetailMode, invoiceConfig, false, internalCallContext);
 
         intervalConsumableInArrear.addBillingEvent(event1);
         intervalConsumableInArrear.addBillingEvent(event2);
@@ -1473,9 +1475,9 @@ public class TestContiguousIntervalConsumableInArrear extends TestUsageInArrearB
 
         final ContiguousIntervalUsageInArrear res = intervalConsumableInArrear.build(true);
         assertEquals(res.transitionTimes.size(), 2);
-        assertEquals(res.transitionTimes.get(0).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(0).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(0).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(res.transitionTimes.get(1).getDate().compareTo(startDate), 0);
+        assertEquals(res.transitionTimes.get(1).getDate().toLocalDate().compareTo(startDate), 0);
         assertEquals(res.transitionTimes.get(1).getTargetBillingEvent().getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
     }
 }

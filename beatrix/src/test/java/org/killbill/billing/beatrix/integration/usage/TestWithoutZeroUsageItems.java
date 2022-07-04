@@ -158,7 +158,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -189,7 +189,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         assertListenerStatus();
 
 
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2012, 6, 1), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", clock.getUTCNow(), BigDecimal.valueOf(50L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2012, 6, 16), BigDecimal.valueOf(300L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -250,7 +250,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Pellets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "pellets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "pellets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "pellets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);

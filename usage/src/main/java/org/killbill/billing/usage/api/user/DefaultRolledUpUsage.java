@@ -19,6 +19,7 @@ package org.killbill.billing.usage.api.user;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
@@ -26,11 +27,11 @@ import org.killbill.billing.usage.api.RolledUpUsage;
 public class DefaultRolledUpUsage implements RolledUpUsage {
 
     private final UUID subscriptionId;
-    private final LocalDate startDate;
-    private final LocalDate endDate;
+    private final DateTime startDate;
+    private final DateTime endDate;
     private final List<RolledUpUnit> rolledUpUnits;
 
-    public DefaultRolledUpUsage(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits) {
+    public DefaultRolledUpUsage(final UUID subscriptionId, final DateTime startDate, final DateTime endDate, final List<RolledUpUnit> rolledUpUnits) {
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -43,12 +44,12 @@ public class DefaultRolledUpUsage implements RolledUpUsage {
     }
 
     @Override
-    public LocalDate getStart() {
+    public DateTime getStart() {
         return startDate;
     }
 
     @Override
-    public LocalDate getEnd() {
+    public DateTime getEnd() {
         return endDate;
     }
 

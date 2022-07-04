@@ -1059,8 +1059,9 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, trackingId, unitUsageRecords);
         usageUserApi.recordRolledUpUsage(record, context);
     }
-    
-    // TODO_1375_Usage: Added for backward compatibility for now
+
+    // Provide a backward compatible test method to record usage points using LocalDate
+    // and transforming such date using account#referenceTime
     protected void recordUsageData(final UUID subscriptionId,
             final String trackingId,
             final String unitType,

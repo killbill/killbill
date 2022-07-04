@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson.UnitUsageRecordJson;
@@ -34,7 +35,7 @@ public class TestSubscriptionUsageRecordJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
-        final LocalDate localDate = new LocalDate();
+        final DateTime localDate = new DateTime();
         final UUID subscriptionId = UUID.randomUUID();
         final String trackingId = UUID.randomUUID().toString();
         final List<UnitUsageRecordJson> unitUsageRecords = new ArrayList<>();

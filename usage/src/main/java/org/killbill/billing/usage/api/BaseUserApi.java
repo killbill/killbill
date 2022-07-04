@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -51,15 +52,15 @@ public class BaseUserApi {
     //   and the usage module will look for data inside its own table.
     // * If not, a possibly empty (or not) list should be returned (and the usage module will *not* look for data inside its own table)
     //
-    protected List<RawUsageRecord> getAccountUsageFromPlugin(final LocalDate startDate, final LocalDate endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
+    protected List<RawUsageRecord> getAccountUsageFromPlugin(final DateTime startDate, final DateTime endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
         return getUsageFromPlugin(null, startDate, endDate, properties, usageContext);
     }
 
-    protected List<RawUsageRecord> getSubscriptionUsageFromPlugin(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
+    protected List<RawUsageRecord> getSubscriptionUsageFromPlugin(final UUID subscriptionId, final DateTime startDate, final DateTime endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
         return getUsageFromPlugin(subscriptionId, startDate, endDate, properties, usageContext);
     }
 
-    private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
+    private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final DateTime startDate, final DateTime endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
         Preconditions.checkNotNull(usageContext.getAccountId(), "UsageContext has no accountId");
 
         final Set<String> allServices = pluginRegistry.getAllServices();
@@ -78,7 +79,7 @@ public class BaseUserApi {
 
                 final DebugMap debugMap = new DebugMap(startDate, endDate, logger);
                 for (final RawUsageRecord cur : result) {
-                    if (cur.getDate().compareTo(startDate.toDateTimeAtCurrentTime()) < 0 || cur.getDate().compareTo(endDate.toDateTimeAtCurrentTime()) >= 0) { //TODO_1375_Usage
+                    if (cur.getDate().compareTo(startDate) < 0 || cur.getDate().compareTo(endDate) >= 0) {
                         logger.warn("Usage plugin returned usage data with date {}, not in the specified range [{} -> {}[",
                                     cur.getDate(), startDate, endDate);
                     }
@@ -96,10 +97,10 @@ public class BaseUserApi {
 
         private final Map<UUID, List<RawUsageRecord>> perSubscriptionRecords;
         private final Logger logger;
-        private final LocalDate startDate;
-        private final LocalDate endDate;
+        private final DateTime startDate;
+        private final DateTime endDate;
 
-        public DebugMap(final LocalDate startDate, final LocalDate endDate, final Logger logger) {
+        public DebugMap(final DateTime startDate, final DateTime endDate, final Logger logger) {
             this.logger = logger;
             this.startDate = startDate;
             this.endDate = endDate;
