@@ -20,7 +20,6 @@ package org.killbill.billing.subscription.api.user;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -642,7 +641,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                 DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
                                 final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
 
-                                nextEffectiveDate = alignToNextBCD(plan, planPhase, nextEffectiveDate, catalog, null, context);
+                                nextEffectiveDate = alignToNextBCDIfRequired(plan, planPhase, nextEffectiveDate, catalog, null, context);
 
                                 // Computed from the nextPlan
                                 final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
@@ -691,7 +690,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
 
-    private DateTime alignToNextBCD(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime originalDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
+    private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime originalDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
+
+        if (!apiService.isEffectiveDateForExistingSubscriptionsAlignedToBCD(context)) {
+            return originalDate;
+        }
 
         final BillingAlignment billingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
                                                                            originalDate, originalDate);
