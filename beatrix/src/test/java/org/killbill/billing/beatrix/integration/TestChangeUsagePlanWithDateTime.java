@@ -105,7 +105,7 @@ public class TestChangeUsagePlanWithDateTime extends TestIntegrationBase {
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(specStandard), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        // Record usage for original plan
+        // Record usage for original plan 'standard'
         recordUsageData(entitlementId, "t1", "server-hourly-type-1", clock.getUTCNow(), BigDecimal.valueOf(10L), callContext);
 
         // Move clock by few hours and change plan to premium
@@ -141,7 +141,7 @@ public class TestChangeUsagePlanWithDateTime extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, Set.of("t2"), internalCallContext);
 
 
-        // Record usage for plan standard
+        // Record usage for plan
         recordUsageData(entitlementId, "t3", "server-hourly-type-1", clock.getUTCNow(), BigDecimal.valueOf(10L), callContext);
 
         // Move clock by few hours and change plan back to premium
@@ -157,8 +157,24 @@ public class TestChangeUsagePlanWithDateTime extends TestIntegrationBase {
 
         invoiceChecker.checkTrackingIds(curInvoice, Set.of("t3"), internalCallContext);
 
-        // Record usage for new plan premium
+        // Record usage for new plan
         recordUsageData(entitlementId, "t4", "server-hourly-type-1", clock.getUTCNow(), BigDecimal.valueOf(20L), callContext);
+
+
+        // Move clock by few hours and change plan back to premium
+        final DateTime changeTime4 = clock.getUTCNow().plusHours(2);
+        clock.setTime(changeTime4);
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(specStandard), changeTime4, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 1, 11), new LocalDate(2018, 1, 11), InvoiceItemType.USAGE, new BigDecimal("40.00")));
+
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t4"), internalCallContext);
+
+        // Record usage for new plan
+        recordUsageData(entitlementId, "t5", "server-hourly-type-1", clock.getUTCNow(), BigDecimal.valueOf(10L), callContext);
 
 
         // Move clock to next BCD
@@ -166,10 +182,10 @@ public class TestChangeUsagePlanWithDateTime extends TestIntegrationBase {
         clock.addDays(21);
         assertListenerStatus();
 
-        curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 1, 11), new LocalDate(2018, 2, 1), InvoiceItemType.USAGE, new BigDecimal("40.00")));
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 5, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 1, 11), new LocalDate(2018, 2, 1), InvoiceItemType.USAGE, new BigDecimal("10.00")));
+        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t5"), internalCallContext);
 
-        invoiceChecker.checkTrackingIds(curInvoice, Set.of("t4"), internalCallContext);
 
         checkNoMoreInvoiceToGenerate(account.getId());
 

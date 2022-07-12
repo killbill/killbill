@@ -304,7 +304,6 @@ public abstract class ContiguousIntervalUsageInArrear {
 
             final LocalDate ruStartLocal = internalTenantContext.toLocalDate(ru.getStart());
             final LocalDate ruEndLocal = internalTenantContext.toLocalDate(ru.getEnd());
-
             final InvoiceItem existingOverlappingItem = isContainedIntoExistingUsage(ruStartLocal, ruEndLocal, existingUsage);
             if (existingOverlappingItem != null) {
                 // In case of blocking situations, when re-running the invoicing code, already billed usage maybe have another start and end date
@@ -341,6 +340,12 @@ public abstract class ContiguousIntervalUsageInArrear {
     private InvoiceItem isContainedIntoExistingUsage(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> existingUsage) {
         Preconditions.checkState(isBuilt.get(), "#isContainedIntoExistingUsage(): isBuilt");
         if (existingUsage.isEmpty()) {
+            return null;
+        }
+
+        // If we bill usage on the same day (e.g Plan change on the same day), this check becomes invalid so we disable it.
+        final boolean isSameDay = startDate.compareTo(endDate) == 0;
+        if (isSameDay) {
             return null;
         }
 
@@ -574,12 +579,23 @@ public abstract class ContiguousIntervalUsageInArrear {
     List<InvoiceItem> getBilledItems(final LocalDate startDate, final LocalDate endDate, final List<InvoiceItem> existingUsage) {
         Preconditions.checkState(isBuilt.get(), "#getBilledItems(): isBuilt");
 
+
         return existingUsage.stream().filter(input -> {
             if (input.getInvoiceItemType() != InvoiceItemType.USAGE) {
                 return false;
             }
+
             // STEPH what happens if we discover usage period that overlap (one side or both side) the [startDate, endDate] interval
             final UsageInvoiceItem usageInput = (UsageInvoiceItem) input;
+
+            // If we encounter items that were already built on the same day (e.g previous change of Plan on the same day)
+            // but we are now billing for a larger period, we want to exclude such existing invoice item as they were already
+            // billed for their own usage records - see TestChangeUsagePlanWithDateTime#testChangePlanOnSameDayAndRecordUsage
+            final boolean isSameDay = startDate.compareTo(endDate) == 0;
+            if (!isSameDay &&
+                (usageInput.getStartDate().compareTo(usageInput.getEndDate()) == 0)) {
+                return false;
+            }
 
             return usageInput.getUsageName().equals(usage.getName()) &&
                    usageInput.getStartDate().compareTo(startDate) >= 0 &&
