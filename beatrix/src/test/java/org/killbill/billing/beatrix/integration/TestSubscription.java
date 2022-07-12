@@ -574,5 +574,139 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(subscription.getBillingEndDate().compareTo(new LocalDate(2015, 8, 31)), 0);
 
     }
+    
+    @Test(groups = "slow",description="https://github.com/killbill/killbill/issues/1477")
+    public void testChangeBPWithPendingAddonAndAddOnAvailableOnNewPlan() throws Exception {
+    	
+        final LocalDate initialDate = new LocalDate(2015, 8, 1);
+        clock.setDay(initialDate);
 
+        Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+
+        //CREATE BASE PLAN: 2015-08-01
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement baseEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
+        assertListenerStatus();
+        
+        //MOVE PAST TRIAL PHASE: 2015-09-01
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+        
+        //CREATE ADDON WITH FUTURE DATE OF 2015-09-10
+        final LocalDate addOnDate = new LocalDate(2015, 9, 10);
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        UUID addOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), addOnDate, addOnDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
+        assertEquals(addOnEntitlement.getState(), EntitlementState.PENDING);
+        
+        //MOVE CLOCK TO 2015-09-06 AND CHANGE BASE PLAN SUCH THAT THE ADDOS IS AVAILABLE ON THE NEW PLAN
+        clock.addDays(5);
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier newPlanSpec = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        baseEntitlement.changePlan(new DefaultEntitlementSpecifier(newPlanSpec), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        
+        //BASE PLAN CHANGED SUCCESSFULLY, ADDON STILL PENDING
+        baseEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(baseEntitlement.getLastActiveProduct().getName(),"Assault-Rifle");
+        addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
+        assertEquals(addOnEntitlement.getState(), EntitlementState.PENDING);  
+        
+        //MOVE CLOCK TO 2015-09-10 AND VERIFY THAT ADDON IS ACTIVE
+        clock.addDays(5);
+        addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
+        assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);  
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        assertListenerStatus();
+        
+        
+    }    
+    
+    @Test(groups = "slow",description="https://github.com/killbill/killbill/issues/1477")
+    public void testChangeBPWithPendingAddonAndAddOnNotAvailableOnNewPlan() throws Exception {
+    	
+        final LocalDate initialDate = new LocalDate(2015, 8, 1);
+        clock.setDay(initialDate);
+
+        Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+
+        //CREATE BASE PLAN: 2015-08-01
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement baseEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
+        assertListenerStatus();
+        
+        //MOVE PAST TRIAL PHASE: 2015-09-01
+        busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addDays(30);
+        assertListenerStatus();
+        
+        //CREATE ADDON WITH FUTURE DATE OF 2015-09-10
+        final LocalDate addOnDate = new LocalDate(2015, 9, 10);
+        final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Holster", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        UUID addOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), addOnDate, addOnDate, false, ImmutableList.<PluginProperty>of(), callContext);
+        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
+        assertEquals(addOnEntitlement.getState(), EntitlementState.PENDING);
+        
+        //MOVE CLOCK TO 2015-09-06 AND CHANGE BASE PLAN SUCH THAT THE ADDOS IS NOT AVAILABLE ON THE NEW PLAN
+        clock.addDays(5);
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier newPlanSpec = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        baseEntitlement.changePlan(new DefaultEntitlementSpecifier(newPlanSpec), ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+        
+        //BASE PLAN CHANGED SUCCESSFULLY, ADDON CANCELLED
+        baseEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(baseEntitlement.getLastActiveProduct().getName(),"Assault-Rifle");
+        addOnEntitlement = entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
+        assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);  
+
+    }        
+
+    @Test(groups = "slow",description="https://github.com/killbill/killbill/issues/1631")
+    public void testChangePlanWithStartDate() throws Exception {
+    	
+        final LocalDate initialDate = new LocalDate(2015, 8, 1);
+        clock.setDay(initialDate);
+
+        Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
+        
+        //MOVE CLOCK BY A FEW MINUTES SO THAT SUBSCRIPTION START DATETIME IS A LITTLE AFTER INITIAL DATE TIME
+        clock.setTime(clock.getUTCNow().plusMinutes(2));
+
+        //CREATE PLAN
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
+                NextEvent.PAYMENT);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        assertNotNull(entitlementId);
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Pistol");
+        assertListenerStatus();
+        
+        clock.addDays(10);
+        
+        //CHANGE PLAN WITH START DATE
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier newPlanSpec = new PlanPhaseSpecifier("blowdart-monthly-notrial", null);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(newPlanSpec), initialDate, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        
+        //PLAN CHANGED SUCCESSFULLY
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getLastActiveProduct().getName(), "Blowdart");        
+        assertEquals(entitlement.getEffectiveStartDate(), initialDate);   
+        assertListenerStatus();
+    }            
+    
 }

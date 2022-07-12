@@ -343,16 +343,24 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             final PlanChangeResult planChangeResult = getPlanChangeResult(subscription, spec.getPlanPhaseSpecifier(), now, context);
             policyMaybeNull = planChangeResult.getPolicy();
         }
-
+        DateTime candidate;
         logger.debug("dryRunChangePlan: requestedPolicy='{}', actualPolicy='{}', requestedDateWithMs='{}'", requestedPolicy, policyMaybeNull, requestedDateWithMs);
         if (policyMaybeNull != null) {
             final InternalTenantContext internalCallContext = createTenantContextFromBundleId(subscription.getBundleId(), context);
-            return subscription.getEffectiveDateForPolicy(policyMaybeNull, null, internalCallContext);
+            candidate = subscription.getEffectiveDateForPolicy(policyMaybeNull, null, internalCallContext);
         } else if (requestedDateWithMs != null) {
-            return DefaultClock.truncateMs(requestedDateWithMs);
+        	candidate = requestedDateWithMs;
         } else {
-            return now;
+        	candidate = now;
         }
+        
+        candidate = DefaultClock.truncateMs(candidate);
+        final SubscriptionBaseTransition previousTransition = subscription.getPreviousTransition();
+        final DateTime earliestValidDate = previousTransition != null ? previousTransition.getEffectiveTransitionTime() : subscription.getStartDate();
+        if (candidate.isBefore(earliestValidDate)) {
+        	candidate = earliestValidDate;
+        }
+        return candidate;
     }
 
     @Override
@@ -690,17 +698,25 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                 continue;
             }
 
-            final Plan addonCurrentPlan = cur.getCurrentPlan();
+            final Plan addonCurrentPlan = cur.getCurrentOrPendingPlan();
+
             if (baseProduct == null ||
                 addonUtils.isAddonIncluded(baseProduct, addonCurrentPlan) ||
                 !addonUtils.isAddonAvailable(baseProduct, addonCurrentPlan)) {
-                //
-                // Perform AO cancellation using the effectiveDate of the BP
-                //
-                final SubscriptionBaseEvent cancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                                                                                     .setSubscriptionId(cur.getId())
-                                                                                     .setEffectiveDate(effectiveDate)
-                                                                                     .setFromDisk(true));
+
+                final SubscriptionBaseEvent cancelEvent;
+                final DateTime cancellationDateTime;
+
+                if (effectiveDate.isAfter(cur.getAlignStartDate())) {
+                    cancellationDateTime = effectiveDate;
+                } else {
+                    cancellationDateTime = cur.getAlignStartDate();
+                }
+
+                cancelEvent = new ApiEventCancel(new ApiEventBuilder()
+                                                         .setSubscriptionId(cur.getId())
+                                                         .setEffectiveDate(cancellationDateTime)
+                                                         .setFromDisk(true));
                 subscriptionsToBeCancelled.add(cur);
                 events.add(cancelEvent);
             }

@@ -26,6 +26,7 @@ import org.killbill.billing.overdue.OverdueTestSuiteWithEmbeddedDB;
 import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.caching.MockOverdueConfigCache;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
+import org.killbill.billing.overdue.config.api.BillingState;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -84,8 +85,11 @@ public class TestOverdueWrapper extends OverdueTestSuiteWithEmbeddedDB {
         state = config.getOverdueStatesAccount().findState(OverdueWrapper.CLEAR_STATE_NAME);
         account = testOverdueHelper.createAccount(clock.getUTCToday().minusDays(31));
         wrapper = overdueWrapperFactory.createOverdueWrapperFor(account, internalCallContext);
-        final OverdueState result = wrapper.refresh(clock.getUTCNow(), internalCallContext);
+        wrapper.refresh(clock.getUTCNow(), internalCallContext);
 
+
+        final BillingState billingState = calculatorBundle.calculateBillingState(account, internalCallContext);
+        final OverdueState result = wrapper.getNextOverdueState(billingState, internalCallContext);
         Assert.assertEquals(result.getName(), state.getName());
         Assert.assertEquals(result.isBlockChanges(), state.isBlockChanges());
         Assert.assertEquals(result.isDisableEntitlementAndChangesBlocked(), state.isDisableEntitlementAndChangesBlocked());

@@ -677,15 +677,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertListenerStatus();
 
 
-        // effectiveDate = entitlementDate prior billingDate
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("Pistol",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        try {
-            entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), entitlementDate, ImmutableList.<PluginProperty>of(), callContext);
-            Assert.fail("Change plan prior billingStartDate should fail");
-        } catch (EntitlementApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_INVALID_REQUESTED_DATE.getCode());
-        }
-
         // effectiveDate is null (same as first case above), but **did**  reach the billing startDate (and entitlement startDate) so will succeed
         clock.addDeltaFromReality(1000); // Add one sec to make sure CHANGE event does not coincide with CREATE (realistic scenario), and therefore we do expect a CHANGE event
         testListener.pushExpectedEvents(NextEvent.CHANGE);

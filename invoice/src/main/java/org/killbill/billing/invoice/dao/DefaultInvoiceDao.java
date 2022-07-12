@@ -603,7 +603,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                              InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur.getParentInvoice()).compareTo(BigDecimal.ZERO) == 0);
 
                     // invoices that are WRITTEN_OFF or paid children invoices are excluded from balance computation but the cba summation needs to be included
-                    accountBalance = cur.isWrittenOff() || hasZeroParentBalance ? BigDecimal.ZERO : accountBalance.add(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur));
+                    final BigDecimal invoiceBalance = cur.isWrittenOff() || hasZeroParentBalance ? BigDecimal.ZERO : InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(cur);
+                    accountBalance = accountBalance.add(invoiceBalance);
                     cba = cba.add(InvoiceModelDaoHelper.getCBAAmount(cur));
                 }
                 return accountBalance.subtract(cba);
