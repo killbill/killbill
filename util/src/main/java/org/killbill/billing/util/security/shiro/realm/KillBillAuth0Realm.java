@@ -43,9 +43,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -65,15 +62,13 @@ import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.killbill.billing.util.Strings;
 import org.killbill.billing.util.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.SecurityConfig;
+import org.killbill.commons.utils.cache.Cache;
+import org.killbill.commons.utils.cache.DefaultCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-// FIXME-1615 : Cache: should discuss this.
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Clock;
@@ -116,6 +111,7 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
         if (securityConfig.getShiroAuth0Issuer() != null) {
             jwtParserBuilder.requireIssuer(securityConfig.getShiroAuth0Issuer());
         }
+        this.keys = new DefaultCache<>(CACHE_MAXIMUM_SIZE, CACHE_TIMEOUT_MINUTES * 60, this::loadPublicKey);
         this.jwtParser = jwtParserBuilder
                              .setClock(new Clock() {
                                  @Override
@@ -141,30 +137,20 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
                                          throw new SignatureException("Key ID is required");
                                      }
 
-                                     final PublicKey publicKey;
-                                     try {
-                                         publicKey = keys.get(keyId, new Callable<PublicKey>() {
-                                             @Override
-                                             public PublicKey call() throws Exception {
-                                                 return loadPublicKey(keyId);
-                                             }
-                                         });
-                                     } catch (final ExecutionException e) {
-                                         throw new SignatureException("Unknown signing key ID");
+                                     PublicKey publicKey = keys.get(keyId);
+                                     if (publicKey == null) {
+                                         publicKey = loadPublicKey(keyId);
                                      }
 
                                      if (publicKey == null) {
                                          throw new SignatureException("Unknown signing key ID");
+                                     } else {
+                                         keys.put(keyId, publicKey);
+                                         return publicKey;
                                      }
-
-                                     return publicKey;
                                  }
                              })
                              .build();
-        this.keys = CacheBuilder.newBuilder()
-                                .maximumSize(CACHE_MAXIMUM_SIZE)
-                                .expireAfterWrite(CACHE_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-                                .build();
     }
 
     @Override
