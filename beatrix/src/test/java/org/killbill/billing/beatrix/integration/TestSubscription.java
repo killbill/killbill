@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
@@ -567,5 +568,65 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()).compareTo(new LocalDate(2015, 8, 31)), 0);
 
     }
+    
+    @Test(groups = "slow")
+    public void testCreateChangeCancelSubscriptionWithDateTime() throws Exception {
+        
+    	final DateTime initialDateTime = new DateTime(2012, 5, 1, 10, 30);
+        clock.setTime(initialDateTime);
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+        
+        final DateTime createDateTime = initialDateTime.plusMinutes(30); //2012-05-01T10:30
+        
+        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("pistol-monthly-notrial"));
+        final List<EntitlementSpecifier> specs = List.of(spec);
+        final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, null, specs, createDateTime, createDateTime, false);
+        final Iterable<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifiers = List.of(baseEntitlementWithAddOnsSpecifier);
+
+        //create subscription:2012-05-01T10:30
+        final List<UUID> entitlementIds = entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), baseEntitlementWithAddOnsSpecifiers, true, Collections.emptyList(), callContext);
+        assertEquals(entitlementIds.size(), 1);
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+        assertEquals(entitlement.getState(), EntitlementState.PENDING);
+        
+        //move clock to 2012-05-01T10:30 and verify that the subscription creation is successful
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.setTime(createDateTime);
+        assertListenerStatus();
+        entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getLastActivePlan().getName(), "pistol-monthly-notrial");
+        invoiceChecker.checkInvoice(account.getId(), 1, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
+        
+        // change plan:2012-05-01T11:30
+        final DateTime changeDateTime = createDateTime.plusHours(1);
+        final EntitlementSpecifier newSpec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("blowdart-monthly-notrial"));
+        entitlement.changePlanWithDate(newSpec, changeDateTime, Collections.emptyList(), callContext);
+        
+        //move clock to 2012-05-01T11:30 and verify that plan change is successful
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.setTime(changeDateTime);
+        assertListenerStatus();
+        entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+        assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
+        assertEquals(entitlement.getLastActivePlan().getName(), "blowdart-monthly-notrial");
+        
+        invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-19.95")));
+        
+        //cancel subscription: 2012-05-01T13:30
+        final DateTime cancelDateTime = changeDateTime.plusHours(2);
+        entitlement.cancelEntitlementWithDate(cancelDateTime, cancelDateTime, Collections.emptyList(), callContext);
+        
+        // Move clock to 2012-05-01T11:30 and verify that cancel is successful
+        busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
+        clock.setTime(cancelDateTime);
+        assertListenerStatus();
+        entitlement = entitlementApi.getEntitlementForId(entitlementIds.get(0), callContext);
+        assertEquals(entitlement.getState(), EntitlementState.CANCELLED);
+       
+        invoiceChecker.checkInvoice(account.getId(), 3, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-29.95")), new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 1), InvoiceItemType.CBA_ADJ, new BigDecimal("29.95")));
+        
+ 
+    }	    
 
 }
