@@ -572,7 +572,7 @@ public class TestSubscription extends TestIntegrationBase {
     @Test(groups = "slow")
     public void testCreateChangeCancelSubscriptionWithDateTime() throws Exception {
         
-    	final DateTime initialDateTime = new DateTime(2012, 5, 1, 10, 30);
+    	final DateTime initialDateTime = new DateTime(2012, 5, 1, 10, 0);
         clock.setTime(initialDateTime);
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
         
