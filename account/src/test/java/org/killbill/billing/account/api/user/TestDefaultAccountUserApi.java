@@ -40,11 +40,9 @@ import org.killbill.billing.tenant.dao.TenantSqlDao;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.commons.eventbus.Subscribe;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-// FIXME-1615 : Wait until killbill-commons eventbus fixed
-import com.google.common.eventbus.Subscribe;
 
 import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.SECONDS;

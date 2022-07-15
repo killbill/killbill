@@ -55,6 +55,7 @@ import org.killbill.billing.util.nodes.NodeInfo;
 import org.killbill.billing.util.nodes.NodeInfoMapper;
 import org.killbill.billing.util.nodes.PluginNodeCommandMetadata;
 import org.killbill.billing.util.nodes.SystemNodeCommandType;
+import org.killbill.commons.eventbus.Subscribe;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.launch.Framework;
@@ -65,9 +66,6 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-
-// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
-import com.google.common.eventbus.Subscribe;
 
 import com.google.inject.Binder;
 import com.google.inject.Guice;
