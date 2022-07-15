@@ -673,7 +673,6 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertListenerStatus();
 
 
-        // effectiveDate = entitlementDate prior billingDate
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("Pistol",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
             entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), entitlementDate, Collections.emptyList(), callContext);
