@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.DryRunInfo;
@@ -59,7 +60,7 @@ public class DefaultInternalUserApi extends BaseUserApi implements InternalUserA
     }
 
     @Override
-    public List<RawUsageRecord> getRawUsageForAccount(final LocalDate startDate, final LocalDate endDate, @Nullable final DryRunInfo dryRunInfo, final InternalTenantContext internalTenantContext) {
+    public List<RawUsageRecord> getRawUsageForAccount(final DateTime startDate, final DateTime endDate, @Nullable final DryRunInfo dryRunInfo, final InternalTenantContext internalTenantContext) {
 
         log.info("GetRawUsageForAccount startDate='{}', endDate='{}'", startDate, endDate);
 

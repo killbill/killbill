@@ -67,7 +67,7 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         final LocalDate targetDate = new LocalDate(2013, 6, 23);
 
-        final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, Collections.emptyList(), Collections.emptySet(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), usageDetailMode, invoiceConfig, internalCallContext);
+        final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, Collections.emptyList(), Collections.emptySet(), targetDate, dt1, usageDetailMode, invoiceConfig, internalCallContext);
         final List<ContiguousIntervalUsageInArrear> result = foo.computeInArrearUsageInterval(false);
         assertEquals(result.size(), 3);
 
@@ -77,9 +77,9 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         assertEquals(firstResult.getUsage().getName(), usageName2);
         assertEquals(firstResult.getTransitionTimes().size(), 3);
-        assertTrue(firstResult.getTransitionTimes().get(0).compareTo(new LocalDate(2013, 3, 23)) == 0);
-        assertTrue(firstResult.getTransitionTimes().get(1).compareTo(new LocalDate(2013, 4, 15)) == 0);
-        assertTrue(firstResult.getTransitionTimes().get(2).compareTo(new LocalDate(2013, 4, 23)) == 0);
+        assertTrue(firstResult.getTransitionTimes().get(0).compareTo(dt1) == 0);
+        assertTrue(internalCallContext.toLocalDate(firstResult.getTransitionTimes().get(1)).compareTo(new LocalDate(2013, 4, 15)) == 0);
+        assertTrue(firstResult.getTransitionTimes().get(2).compareTo(dt2) == 0);
 
         final ContiguousIntervalUsageInArrear secondResult = result.stream()
                 .filter(input -> input.getUsage().getName().equals(usageName1))
@@ -87,10 +87,10 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         assertEquals(secondResult.getUsage().getName(), usageName1);
         assertEquals(secondResult.getTransitionTimes().size(), 4);
-        assertTrue(secondResult.getTransitionTimes().get(0).compareTo(new LocalDate(2013, 3, 23)) == 0);
-        assertTrue(secondResult.getTransitionTimes().get(1).compareTo(new LocalDate(2013, 4, 15)) == 0);
-        assertTrue(secondResult.getTransitionTimes().get(2).compareTo(new LocalDate(2013, 5, 15)) == 0);
-        assertTrue(secondResult.getTransitionTimes().get(3).compareTo(new LocalDate(2013, 6, 15)) == 0);
+        assertTrue(secondResult.getTransitionTimes().get(0).compareTo(dt1) == 0);
+        assertTrue(internalCallContext.toLocalDate(secondResult.getTransitionTimes().get(1)).compareTo(new LocalDate(2013, 4, 15)) == 0);
+        assertTrue(internalCallContext.toLocalDate(secondResult.getTransitionTimes().get(2)).compareTo(new LocalDate(2013, 5, 15)) == 0);
+        assertTrue(internalCallContext.toLocalDate(secondResult.getTransitionTimes().get(3)).compareTo(new LocalDate(2013, 6, 15)) == 0);
 
         final ContiguousIntervalUsageInArrear thirdResult = result.stream()
                 .filter(input -> input.getUsage().getName().equals(usageName2) && input.transitionTimes.size() == 2)
@@ -98,7 +98,7 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
 
         assertEquals(thirdResult.getUsage().getName(), usageName2);
         assertEquals(thirdResult.getTransitionTimes().size(), 2);
-        assertTrue(thirdResult.getTransitionTimes().get(0).compareTo(new LocalDate(2013, 5, 23)) == 0);
-        assertTrue(thirdResult.getTransitionTimes().get(1).compareTo(new LocalDate(2013, 6, 15)) == 0);
+        assertTrue(thirdResult.getTransitionTimes().get(0).compareTo(dt3) == 0);
+        assertTrue(internalCallContext.toLocalDate(thirdResult.getTransitionTimes().get(1)).compareTo(new LocalDate(2013, 6, 15)) == 0);
     }
 }

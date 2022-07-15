@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.UsageTestSuiteWithEmbeddedDB;
 import org.killbill.billing.util.UUIDs;
@@ -37,8 +39,8 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
     public void testSimple() {
         final UUID subscriptionId = UUID.randomUUID();
         final String unitType = "foo";
-        final LocalDate startDate = new LocalDate(2013, 1, 1);
-        final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final DateTime startDate = new LocalDate(2013, 1, 1).toDateTimeAtStartOfDay();
+        final DateTime endDate = new LocalDate(2013, 2, 1).toDateTimeAtStartOfDay();
         final BigDecimal amount1 = BigDecimal.valueOf(10L);
         final BigDecimal amount2 = BigDecimal.valueOf(5L);
 
@@ -66,8 +68,8 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final UUID subscriptionId = UUID.randomUUID();
         final String unitType1 = "foo";
         final String unitType2 = "bar";
-        final LocalDate startDate = new LocalDate(2013, 1, 1);
-        final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final DateTime startDate = new LocalDate(2013, 1, 1).toDateTimeAtStartOfDay();
+        final DateTime endDate = new LocalDate(2013, 2, 1).toDateTimeAtStartOfDay();
         final BigDecimal amount1 = BigDecimal.valueOf(10L);
         final BigDecimal amount2 = BigDecimal.valueOf(5L);
         final BigDecimal amount3 = BigDecimal.valueOf(13L);
@@ -101,8 +103,8 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
     public void testNoEntries() {
         final UUID subscriptionId = UUID.randomUUID();
         final String unitType = "foo";
-        final LocalDate startDate = new LocalDate(2013, 1, 1);
-        final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final DateTime startDate = new LocalDate(2013, 1, 1).toDateTimeAtStartOfDay();
+        final DateTime endDate = new LocalDate(2013, 2, 1).toDateTimeAtStartOfDay();
         final BigDecimal amount = BigDecimal.valueOf(9L);
 
         RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType, endDate, amount, UUID.randomUUID().toString());
@@ -115,12 +117,32 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
+    public void testWithOneEntry() {
+        final UUID subscriptionId = UUID.randomUUID();
+        final String unitType = "foo";
+        final DateTime startDate = new LocalDate(2013, 1, 1).toDateTimeAtStartOfDay();
+        final DateTime endDate = new LocalDate(2013, 2, 1).toDateTimeAtStartOfDay();
+        final BigDecimal amount = BigDecimal.valueOf(9L);
+
+        RolledUpUsageModelDao usage1 = new RolledUpUsageModelDao(subscriptionId, unitType, new DateTime(2013, 1, 1, 13, 15, 46, DateTimeZone.UTC), amount, UUID.randomUUID().toString());
+        List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
+        usages.add(usage1);
+        rolledUpUsageDao.record(usages, internalCallContext);
+
+        final List<RolledUpUsageModelDao> result = rolledUpUsageDao.getUsageForSubscription(subscriptionId, startDate, endDate, unitType, internalCallContext);
+        assertEquals(result.size(), 1);
+        // Verify the exact datetime provided is returned
+        assertEquals(result.get(0).getRecordDate().compareTo(usage1.getRecordDate()), 0);
+    }
+
+
+    @Test(groups = "slow")
     public void testDuplicateRecords() {
         final UUID subscriptionId = UUID.randomUUID();
         final String unitType1 = "foo";
         final String unitType2 = "bar";
-        final LocalDate startDate = new LocalDate(2013, 1, 1);
-        final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final DateTime startDate = new LocalDate(2013, 1, 1).toDateTimeAtStartOfDay();
+        final DateTime endDate = new LocalDate(2013, 2, 1).toDateTimeAtStartOfDay();
         final BigDecimal amount1 = BigDecimal.valueOf(10L);
         final BigDecimal amount2 = BigDecimal.valueOf(5L);
         final BigDecimal amount3 = BigDecimal.valueOf(13L);
@@ -151,8 +173,8 @@ public class TestDefaultRolledUpUsageDao extends UsageTestSuiteWithEmbeddedDB {
         final UUID subscriptionId = UUIDs.randomUUID();
         final String unitType1 = "foo";
         final String unitType2 = "bar";
-        final LocalDate startDate = new LocalDate(2013, 1, 1);
-        final LocalDate endDate = new LocalDate(2013, 2, 1);
+        final DateTime startDate = new LocalDate(2013, 1, 1).toDateTimeAtStartOfDay();
+        final DateTime endDate = new LocalDate(2013, 2, 1).toDateTimeAtStartOfDay();
         final BigDecimal amount1 = BigDecimal.valueOf(10L);
         final BigDecimal amount2 = BigDecimal.valueOf(5L);
         final BigDecimal amount3 = BigDecimal.valueOf(13L);

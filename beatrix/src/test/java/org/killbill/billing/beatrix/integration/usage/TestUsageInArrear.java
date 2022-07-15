@@ -78,7 +78,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // 2012-05-01
@@ -134,12 +134,12 @@ public class TestUsageInArrear extends TestIntegrationBase {
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
         // This point should be taken into account
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         // This point should not be taken into account as it is past cancellation date
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        aoSubscription.cancelEntitlementWithDate(new LocalDate(2012, 4, 1), true, Collections.emptyList(), callContext);
+        aoSubscription.cancelEntitlementWithDate(clock.getUTCNow(), clock.getUTCNow(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
 
@@ -174,7 +174,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // 2012-05-01
@@ -301,7 +301,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -477,7 +477,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "t1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "t1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "t2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -587,23 +587,23 @@ public class TestUsageInArrear extends TestIntegrationBase {
         subscriptionChecker.checkSubscriptionCreated(bp2.getId(), internalCallContext);
 
         final List<UsageRecord> bp1StoneRecords1 = new ArrayList<>();
-        bp1StoneRecords1.add(new UsageRecord(new LocalDate(2012, 4, 5), BigDecimal.valueOf(5L)));
-        bp1StoneRecords1.add(new UsageRecord(new LocalDate(2012, 4, 15), BigDecimal.valueOf(10L)));
-        bp1StoneRecords1.add(new UsageRecord(new LocalDate(2012, 4, 16), BigDecimal.valueOf(15L)));
+        bp1StoneRecords1.add(new UsageRecord(new LocalDate(2012, 4, 5).toDateTimeAtStartOfDay(), BigDecimal.valueOf(5L)));
+        bp1StoneRecords1.add(new UsageRecord(new LocalDate(2012, 4, 15).toDateTimeAtStartOfDay(), BigDecimal.valueOf(10L)));
+        bp1StoneRecords1.add(new UsageRecord(new LocalDate(2012, 4, 16).toDateTimeAtStartOfDay(), BigDecimal.valueOf(15L)));
         final SubscriptionUsageRecord bp1UsageRecord1 = new SubscriptionUsageRecord(bp1.getId(), "bp1-tracking-1", List.of(new UnitUsageRecord("stones", bp1StoneRecords1)));
         recordUsageData(bp1UsageRecord1, callContext);
 
         final List<UsageRecord> bp1StoneRecords2 = new ArrayList<>();
-        bp1StoneRecords2.add(new UsageRecord(new LocalDate(2012, 4, 23), BigDecimal.valueOf(10L)));
+        bp1StoneRecords2.add(new UsageRecord(new LocalDate(2012, 4, 23).toDateTimeAtStartOfDay(), BigDecimal.valueOf(10L)));
         // Outside of range for this period -> Its tracking ID spreads across 2 invoices
-        bp1StoneRecords2.add(new UsageRecord(new LocalDate(2012, 5, 1), BigDecimal.valueOf(101L)));
+        bp1StoneRecords2.add(new UsageRecord(new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(), BigDecimal.valueOf(101L)));
         final SubscriptionUsageRecord bp1UsageRecord2 = new SubscriptionUsageRecord(bp1.getId(), "bp1-tracking-2", List.of(new UnitUsageRecord("stones", bp1StoneRecords2)));
         recordUsageData(bp1UsageRecord2, callContext);
 
         final List<UsageRecord> bp2StoneRecords = new ArrayList<>();
-        bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 5), BigDecimal.valueOf(85L)));
-        bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 15), BigDecimal.valueOf(150L)));
-        bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 16), BigDecimal.valueOf(39L)));
+        bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 5).toDateTimeAtStartOfDay(), BigDecimal.valueOf(85L)));
+        bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 15).toDateTimeAtStartOfDay(), BigDecimal.valueOf(150L)));
+        bp2StoneRecords.add(new UsageRecord(new LocalDate(2012, 4, 16).toDateTimeAtStartOfDay(), BigDecimal.valueOf(39L)));
         final SubscriptionUsageRecord bp2UsageRecord = new SubscriptionUsageRecord(bp2.getId(), "bp2-tracking-1", List.of(new UnitUsageRecord("stones", bp2StoneRecords)));
         recordUsageData(bp2UsageRecord, callContext);
 
@@ -705,7 +705,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 18), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -755,7 +755,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);

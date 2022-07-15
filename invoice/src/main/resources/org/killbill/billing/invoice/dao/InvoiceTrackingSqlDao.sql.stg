@@ -46,7 +46,7 @@ select
 from <tableName()>
 where
 record_date >= :startDate
-and record_date \< :endDate
+and record_date \<= :endDate
 and <accountRecordIdField("")> = :accountRecordId
 and is_active = TRUE
 <AND_CHECK_TENANT("")>

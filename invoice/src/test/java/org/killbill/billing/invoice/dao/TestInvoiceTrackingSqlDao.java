@@ -66,7 +66,7 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
         final InvoiceTrackingModelDao input2 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId2", invoiceId1, subscriptionId, "unit", new LocalDate(2018, 8, 5));
         final InvoiceTrackingModelDao input3 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId3", invoiceId2, subscriptionId, "unit", new LocalDate(2018, 9, 1));
 
-        // After desired range
+        // Inclusive
         final InvoiceTrackingModelDao input4 = new InvoiceTrackingModelDao(UUID.randomUUID(), clock.getUTCNow(), "trackingId4", invoiceId1, subscriptionId, "unit", endRange);
 
         final List<InvoiceTrackingModelDao> inputs = new ArrayList<>();
@@ -85,7 +85,7 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                             dao.create(inputs, internalCallContext);
 
                                             final List<InvoiceTrackingModelDao> result = dao.getTrackingsByDateRange(startRange.toDate(), endRange.toDate(), internalCallContext);
-                                            Assert.assertEquals(result.size(), 3);
+                                            Assert.assertEquals(result.size(), 4);
 
                                             Assert.assertEquals(result.get(0).getTrackingId(), "trackingId1");
                                             Assert.assertEquals(result.get(0).getInvoiceId(), invoiceId1);
@@ -101,6 +101,11 @@ public class TestInvoiceTrackingSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                             Assert.assertEquals(result.get(2).getInvoiceId(), invoiceId2);
                                             Assert.assertEquals(result.get(2).getRecordDate(), new LocalDate(2018, 9, 1));
                                             Assert.assertEquals(result.get(2).getSubscriptionId(), subscriptionId);
+
+                                            Assert.assertEquals(result.get(3).getTrackingId(), "trackingId4");
+                                            Assert.assertEquals(result.get(3).getInvoiceId(), invoiceId1);
+                                            Assert.assertEquals(result.get(3).getRecordDate(), endRange);
+                                            Assert.assertEquals(result.get(3).getSubscriptionId(), subscriptionId);
 
                                             return null;
                                         }

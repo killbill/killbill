@@ -19,7 +19,9 @@ package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.List;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultTier;
@@ -69,11 +71,43 @@ public class TestContiguousIntervalUsageInArrear extends TestUsageInArrearBase {
                                                                                                                                 billingEvent3,
                                                                                                                                 billingEvent4);
 
+        // TODO Why don't we see the transition on 2019-1-31 (already the case prior the change ?)
         Assert.assertEquals(intervalConsumableInArrear.getTransitionTimes().size(), 5);
-        Assert.assertEquals(intervalConsumableInArrear.getTransitionTimes().get(0), new LocalDate(2019, 1, 1));
-        Assert.assertEquals(intervalConsumableInArrear.getTransitionTimes().get(1), new LocalDate(2019, 2, 1));
-        Assert.assertEquals(intervalConsumableInArrear.getTransitionTimes().get(2), new LocalDate(2019, 2, 5));
-        Assert.assertEquals(intervalConsumableInArrear.getTransitionTimes().get(3), new LocalDate(2019, 3, 5));
-        Assert.assertEquals(intervalConsumableInArrear.getTransitionTimes().get(4), new LocalDate(2019, 3, 10));
+        Assert.assertEquals(intervalConsumableInArrear.getTransitionTimes().get(0), billingEvent1.getEffectiveDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(intervalConsumableInArrear.getTransitionTimes().get(1)), new LocalDate(2019, 2, 1));
+        Assert.assertEquals(intervalConsumableInArrear.getTransitionTimes().get(2), billingEvent3.getEffectiveDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(intervalConsumableInArrear.getTransitionTimes().get(3)), new LocalDate(2019, 3, 5));
+        Assert.assertEquals(intervalConsumableInArrear.getTransitionTimes().get(4), billingEvent4.getEffectiveDate());
+    }
+
+
+    @Test(groups = "fast")
+    public void testVerifyTransitionTimes2() throws Exception {
+        final DefaultTieredBlock block = createDefaultTieredBlock("unit", 100, 1000, BigDecimal.ONE);
+        final DefaultTier tier = createDefaultTierWithBlocks(block);
+        final DefaultUsage usage = createConsumableInArrearUsage(usageName, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier);
+
+        final LocalDate targetDate = new LocalDate(2018, 1, 1);
+
+        final BillingEvent billingEvent1 = createMockBillingEvent(1,
+                                                                  new DateTime(2018, 1, 1, 8, 30, 45, DateTimeZone.UTC),
+                                                                  BillingPeriod.MONTHLY,
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CREATE);
+        final BillingEvent billingEvent2 = createMockBillingEvent(1,
+                                                                  new DateTime(2018, 1, 1, 10, 30, 45, DateTimeZone.UTC),
+                                                                  BillingPeriod.MONTHLY,
+                                                                  Collections.<Usage>emptyList(), catalogEffectiveDate, SubscriptionBaseTransitionType.CHANGE);
+
+        final ContiguousIntervalConsumableUsageInArrear intervalConsumableInArrear = createContiguousIntervalConsumableInArrear(usage,
+                                                                                                                                Collections.emptyList(),
+                                                                                                                                targetDate,
+                                                                                                                                false,
+                                                                                                                                billingEvent1,
+                                                                                                                                billingEvent2);
+
+        final List<DateTime> transitionTimes = intervalConsumableInArrear.getTransitionTimes();
+        Assert.assertEquals(transitionTimes.size(), 2);
+        Assert.assertEquals(transitionTimes.get(0), billingEvent1.getEffectiveDate());
+        Assert.assertEquals(transitionTimes.get(1), billingEvent2.getEffectiveDate());
     }
 }

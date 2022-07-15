@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.usage.api.SubscriptionUsageRecord;
 import org.killbill.billing.usage.api.UnitUsageRecord;
@@ -96,17 +97,17 @@ public class SubscriptionUsageRecordJson {
     @ApiModel(value="UsageRecord")
     public static class UsageRecordJson {
 
-        private final LocalDate recordDate;
+        private final DateTime recordDate;
         private final BigDecimal amount;
 
         @JsonCreator
-        public UsageRecordJson(@JsonProperty("recordDate") final LocalDate recordDate,
+        public UsageRecordJson(@JsonProperty("recordDate") final DateTime recordDate,
                                @JsonProperty("amount") final BigDecimal amount) {
             this.recordDate = recordDate;
             this.amount = amount;
         }
 
-        public LocalDate getRecordDate() {
+        public DateTime getRecordDate() {
             return recordDate;
         }
 

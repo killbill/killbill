@@ -17,7 +17,6 @@
 
 package org.killbill.billing.invoice.usage;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.DefaultLimit;
@@ -33,10 +31,8 @@ import org.killbill.billing.catalog.DefaultTier;
 import org.killbill.billing.catalog.DefaultUnit;
 import org.killbill.billing.catalog.DefaultUsage;
 import org.killbill.billing.catalog.api.BillingPeriod;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.Usage;
-import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecordId;
 import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
@@ -78,13 +74,13 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
                                                                                                                  );
 
         final List<InvoiceItem> existingUsage = new ArrayList<>();
-        final UsageInvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), null,  startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii1 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), null, startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii1);
-        final UsageInvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), null,  startDate, endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii2 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), null, startDate, endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii2);
 
         // Will be ignored as is starts one day earlier.
-        final UsageInvoiceItem ii3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), null,  startDate.minusDays(1), endDate, BigDecimal.TEN, currency);
+        final UsageInvoiceItem ii3 = new UsageInvoiceItem(invoiceId, accountId, bundleId, subscriptionId, productName, planName, phaseName, usage.getName(), null, startDate.minusDays(1), endDate, BigDecimal.TEN, currency);
         existingUsage.add(ii3);
 
         // Will be ignored as it is for a different udsage section
@@ -160,7 +156,6 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         assertTrue(result.getAmount().compareTo(new BigDecimal("30.0")) == 0);
     }
 
-
     @Test(groups = "fast")
     public void testComputeMissingItems() throws Exception {
 
@@ -174,18 +169,18 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         // First period: startDate - firstBCDDate
         //
         // 2 items for unit1
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "unit1", BigDecimal.valueOf(130L), "tracking-1"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "unit1", BigDecimal.valueOf(271L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "unit1", BigDecimal.valueOf(130L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "unit1", BigDecimal.valueOf(271L), "tracking-2"));
         // 1 items for unit2
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 24), "unit2", BigDecimal.valueOf(10L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 24).toDateTimeAtStartOfDay(), "unit2", BigDecimal.valueOf(10L), "tracking-1"));
 
         //
         // Second period: firstBCDDate - endDate
         //
         // 1 items unit1
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit1", BigDecimal.valueOf(199L), "tracking-4"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15).toDateTimeAtStartOfDay(), "unit1", BigDecimal.valueOf(199L), "tracking-4"));
         // 1 items unit2
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15), "unit2", BigDecimal.valueOf(20L), "tracking-5"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 04, 15).toDateTimeAtStartOfDay(), "unit2", BigDecimal.valueOf(20L), "tracking-5"));
 
         final DefaultUnit unit1 = new DefaultUnit().setName("unit1");
         final DefaultLimit limit1 = new DefaultLimit().setUnit(unit1).setMax(BigDecimal.valueOf(-1));
@@ -254,8 +249,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         // Case 1
         List<RawUsageRecord> rawUsageRecords = new ArrayList<>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(99L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(99L), "tracking-2"));
 
         List<InvoiceItem> result = produceInvoiceItems(rawUsageRecords, usageDetailMode, Collections.emptyList());
         assertEquals(result.size(), 1);
@@ -279,8 +274,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         // Case 2
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-2"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(5L), "tracking-1"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-2"));
         result = produceInvoiceItems(rawUsageRecords, usageDetailMode, Collections.emptyList());
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(BigDecimal.TEN), 0, String.format("%s != 10.0", result.get(0).getAmount()));
@@ -304,8 +299,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         // Case 3
         rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(75L), "tracking-3"));
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(101L), "tracking-3"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(75L), "tracking-3"));
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(101L), "tracking-3"));
         result = produceInvoiceItems(rawUsageRecords, usageDetailMode, Collections.emptyList());
         assertEquals(result.size(), 1);
         assertEquals(result.get(0).getAmount().compareTo(new BigDecimal("100.0")), 0, String.format("%s != 100.0", result.get(0).getAmount()));
@@ -337,8 +332,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
         final UsageInArrearTierUnitDetail existingBarUsageTier2 = new UsageInArrearTierUnitDetail(2, "BAR", BigDecimal.TEN, BigDecimal.valueOf(200L));
 
         List<RawUsageRecord> rawUsageRecords = new ArrayList<RawUsageRecord>();
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20), "FOO", BigDecimal.valueOf(60L), "tracking-1")); // tier 3
-        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21), "BAR", BigDecimal.valueOf(200L), "tracking-1")); // tier 2
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 20).toDateTimeAtStartOfDay(), "FOO", BigDecimal.valueOf(60L), "tracking-1")); // tier 3
+        rawUsageRecords.add(new DefaultRawUsage(subscriptionId, new LocalDate(2014, 03, 21).toDateTimeAtStartOfDay(), "BAR", BigDecimal.valueOf(200L), "tracking-1")); // tier 2
 
         final List<UsageInArrearTierUnitDetail> existingUsage = List.of(existingFooUsageTier1, existingBarUsageTier2);
 
@@ -406,8 +401,8 @@ public class TestContiguousIntervalCapacityInArrear extends TestUsageInArrearBas
 
         final List<InvoiceItem> rawResults = usageResult.getInvoiceItems();
         final List<InvoiceItem> result = rawResults.stream()
-                .filter(input -> input.getAmount().compareTo(BigDecimal.ZERO) > 0)
-                .collect(Collectors.toUnmodifiableList());
+                                                   .filter(input -> input.getAmount().compareTo(BigDecimal.ZERO) > 0)
+                                                   .collect(Collectors.toUnmodifiableList());
 
         for (final InvoiceItem item : result) {
             assertEquals(item.getCurrency(), Currency.USD);

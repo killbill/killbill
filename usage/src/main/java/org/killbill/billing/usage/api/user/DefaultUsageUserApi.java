@@ -26,6 +26,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -91,7 +92,7 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     @Override
-    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final LocalDate startDate, final LocalDate endDate, final Iterable<PluginProperty> properties, final TenantContext tenantContextNoAccountId) {
+    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final DateTime startDate, final DateTime endDate, final Iterable<PluginProperty> properties, final TenantContext tenantContextNoAccountId) {
         final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContextNoAccountId);
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalCallContext);
         final UsageContext usageContext = new DefaultUsageContext(null, null, tenantContext);
@@ -107,14 +108,14 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     @Override
-    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final List<LocalDate> transitionTimes, final Iterable<PluginProperty> properties, final TenantContext tenantContextNoAccountId) {
+    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final List<DateTime> transitionTimes, final Iterable<PluginProperty> properties, final TenantContext tenantContextNoAccountId) {
         final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContextNoAccountId);
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalCallContext);
         final UsageContext usageContext = new DefaultUsageContext(null, null, tenantContext);
 
         final List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
-        LocalDate prevDate = null;
-        for (final LocalDate curDate : transitionTimes) {
+        DateTime prevDate = null;
+        for (final DateTime curDate : transitionTimes) {
             if (prevDate != null) {
 
                 final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, prevDate, curDate, properties, usageContext);
