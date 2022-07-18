@@ -44,15 +44,13 @@ import org.killbill.billing.events.TagDefinitionInternalEvent;
 import org.killbill.billing.events.TagInternalEvent;
 import org.killbill.billing.util.Joiner;
 import org.killbill.clock.Clock;
+import org.killbill.commons.eventbus.Subscribe;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-
-// FIXME-1615 : Maybe need to migrate as well?
-import com.google.common.eventbus.Subscribe;
 
 import static org.awaitility.Awaitility.await;
 import static org.testng.Assert.assertTrue;

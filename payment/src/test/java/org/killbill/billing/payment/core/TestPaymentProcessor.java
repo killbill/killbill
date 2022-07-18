@@ -42,12 +42,11 @@ import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.commons.eventbus.Subscribe;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
-import com.google.common.eventbus.Subscribe;
 import org.awaitility.Awaitility;
 
 import static java.math.BigDecimal.ZERO;

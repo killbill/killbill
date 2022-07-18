@@ -23,10 +23,8 @@ import java.util.List;
 import org.killbill.billing.events.BusInternalEvent;
 import org.killbill.billing.util.userrequest.CompletionUserRequest;
 import org.killbill.billing.util.userrequest.CompletionUserRequestNotifier;
-
-// FIXME-1615 : eventbus - See https://github.com/killbill/killbill/issues/1615#issuecomment-1128229812
-import com.google.common.eventbus.AllowConcurrentEvents;
-import com.google.common.eventbus.Subscribe;
+import org.killbill.commons.eventbus.AllowConcurrentEvents;
+import org.killbill.commons.eventbus.Subscribe;
 
 public class KillbillEventHandler {
 
