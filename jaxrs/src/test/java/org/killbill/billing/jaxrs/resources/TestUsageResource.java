@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs.resources;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
 import org.killbill.billing.jaxrs.json.SubscriptionUsageRecordJson.UnitUsageRecordJson;
@@ -52,32 +53,32 @@ public class TestUsageResource extends JaxrsTestSuiteNoDB {
         final UsageResource usageResource = createUsageResource();
 
         final List<UsageRecordJson> fooRecords = List.of(
-                new UsageRecordJson(new LocalDate(2018, 03, 04), BigDecimal.valueOf(28L)),
-                new UsageRecordJson(new LocalDate(2018, 03, 05), BigDecimal.valueOf(2L)),
-                new UsageRecordJson(new LocalDate(2018, 03, 01), BigDecimal.valueOf(1L)),
-                new UsageRecordJson(new LocalDate(2018, 04, 06), BigDecimal.valueOf(24L)));
+                new UsageRecordJson(new LocalDate(2018, 03, 04).toDateTimeAtStartOfDay(), BigDecimal.valueOf(28L)),
+                new UsageRecordJson(new LocalDate(2018, 03, 05).toDateTimeAtStartOfDay(), BigDecimal.valueOf(2L)),
+                new UsageRecordJson(new LocalDate(2018, 03, 01).toDateTimeAtStartOfDay(), BigDecimal.valueOf(1L)),
+                new UsageRecordJson(new LocalDate(2018, 04, 06).toDateTimeAtStartOfDay(), BigDecimal.valueOf(24L)));
 
         final UnitUsageRecordJson unitRecordFoo = new UnitUsageRecordJson("foo", fooRecords);
 
         final List<UsageRecordJson> barRecords = List.of(
-                new UsageRecordJson(new LocalDate(2018, 02, 04), BigDecimal.valueOf(28L)),
-                new UsageRecordJson(new LocalDate(2018, 03, 06), BigDecimal.valueOf(2L)),
-                new UsageRecordJson(new LocalDate(2018, 04, 18), BigDecimal.valueOf(1L)), // Highest date point
-                new UsageRecordJson(new LocalDate(2018, 04, 13), BigDecimal.valueOf(24L)));
+                new UsageRecordJson(new LocalDate(2018, 02, 04).toDateTimeAtStartOfDay(), BigDecimal.valueOf(28L)),
+                new UsageRecordJson(new LocalDate(2018, 03, 06).toDateTimeAtStartOfDay(), BigDecimal.valueOf(2L)),
+                new UsageRecordJson(new LocalDate(2018, 04, 18).toDateTimeAtStartOfDay(), BigDecimal.valueOf(1L)), // Highest date point
+                new UsageRecordJson(new LocalDate(2018, 04, 13).toDateTimeAtStartOfDay(), BigDecimal.valueOf(24L)));
 
         final UnitUsageRecordJson unitRecordBar = new UnitUsageRecordJson("bar", barRecords);
 
         final List<UsageRecordJson> zooRecords = List.of(
-                new UsageRecordJson(new LocalDate(2018, 02, 04), BigDecimal.valueOf(28L)),
-                new UsageRecordJson(new LocalDate(2018, 03, 06), BigDecimal.valueOf(2L)),
-                new UsageRecordJson(new LocalDate(2018, 04, 17), BigDecimal.valueOf(1L)),
-                new UsageRecordJson(new LocalDate(2018, 04, 12), BigDecimal.valueOf(24L)));
+                new UsageRecordJson(new LocalDate(2018, 02, 04).toDateTimeAtStartOfDay(), BigDecimal.valueOf(28L)),
+                new UsageRecordJson(new LocalDate(2018, 03, 06).toDateTimeAtStartOfDay(), BigDecimal.valueOf(2L)),
+                new UsageRecordJson(new LocalDate(2018, 04, 17).toDateTimeAtStartOfDay(), BigDecimal.valueOf(1L)),
+                new UsageRecordJson(new LocalDate(2018, 04, 12).toDateTimeAtStartOfDay(), BigDecimal.valueOf(24L)));
 
         final UnitUsageRecordJson unitRecordZoo = new UnitUsageRecordJson("zoo", zooRecords);
 
         final List<UnitUsageRecordJson> input = List.of(unitRecordFoo, unitRecordBar, unitRecordZoo);
-        final LocalDate result = usageResource.getHighestRecordDate(input);
+        final DateTime result = usageResource.getHighestRecordDate(input);
 
-        Assert.assertTrue(result.compareTo(new LocalDate(2018, 04, 18)) == 0);
+        Assert.assertTrue(result.compareTo(new LocalDate(2018, 04, 18).toDateTimeAtStartOfDay()) == 0);
     }
 }

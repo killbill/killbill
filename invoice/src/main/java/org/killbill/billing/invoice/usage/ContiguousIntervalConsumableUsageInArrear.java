@@ -69,7 +69,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                                                      final List<RawUsageRecord> rawSubscriptionUsage,
                                                      final Set<TrackingRecordId> existingTrackingId,
                                                      final LocalDate targetDate,
-                                                     final LocalDate rawUsageStartDate,
+                                                     final DateTime rawUsageStartDate,
                                                      final UsageDetailMode usageDetailMode,
                                                      final InvoiceConfig invoiceConfig,
                                                      final boolean isDryRun,
@@ -78,7 +78,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     }
 
     @Override
-    protected void populateResults(final LocalDate startDate, final LocalDate endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
+    protected void populateResults(final DateTime startDate, final DateTime endDate, final DateTime catalogEffectiveDate, final BigDecimal billedUsage, final BigDecimal toBeBilledUsage, final UsageInArrearAggregate toBeBilledUsageDetails, final boolean areAllBilledItemsWithDetails, final boolean isPeriodPreviouslyBilled, final List<InvoiceItem> result) throws InvoiceApiException {
         // In the case past invoice items showed the details (areAllBilledItemsWithDetails=true), billed usage has already been taken into account
         // as it part of the reconciliation logic, so no need to subtract it here
         final BigDecimal amountToBill = (usage.getTierBlockPolicy() == TierBlockPolicy.ALL_TIERS && areAllBilledItemsWithDetails) ? toBeBilledUsage : toBeBilledUsage.subtract(billedUsage);
@@ -91,6 +91,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                                               String.format("ILLEGAL INVOICING STATE: Usage period start='%s', end='%s', amountToBill='%s', (previously billed amount='%s', new proposed amount='%s')",
                                                             startDate, endDate, amountToBill, billedUsage, toBeBilledUsage));
             }
+
         } else /* amountToBill.compareTo(BigDecimal.ZERO) >= 0 */ {
             if (!isPeriodPreviouslyBilled || amountToBill.compareTo(BigDecimal.ZERO) > 0) {
                 if (UsageDetailMode.DETAIL == usageDetailMode) {
@@ -99,13 +100,14 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
                         final String itemDetails = toJson(toBeBilledUsageDetail);
                         final BigDecimal quantity = toBeBilledUsageDetail.getQuantity();
                         final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                                      getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), quantity, itemDetails);
+                                                                      getPhaseName(), usage.getName(), catalogEffectiveDate, startDate.toLocalDate(), endDate.toLocalDate(), toBeBilledUsageDetail.getAmount(), toBeBilledUsageDetail.getTierPrice(), getCurrency(), quantity, itemDetails);
                         result.add(item);
                     }
                 } else {
                     final String itemDetails = toJson(toBeBilledUsageDetails);
+
                     final InvoiceItem item = new UsageInvoiceItem(invoiceId, accountId, getBundleId(), getSubscriptionId(), getProductName(), getPlanName(),
-                                                                  getPhaseName(), usage.getName(), catalogEffectiveDate, startDate, endDate, amountToBill, null, getCurrency(), null, itemDetails);
+                                                                  getPhaseName(), usage.getName(), catalogEffectiveDate, startDate.toLocalDate(), endDate.toLocalDate(), amountToBill, null, getCurrency(), null, itemDetails);
                     result.add(item);
                 }
             }
@@ -113,7 +115,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
     }
 
     @Override
-    protected UsageInArrearAggregate getToBeBilledUsageDetails(final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
+    protected UsageInArrearAggregate getToBeBilledUsageDetails(final DateTime startDate, final DateTime endDate, final List<RolledUpUnit> rolledUpUnits, final Iterable<InvoiceItem> billedItems, final boolean areAllBilledItemsWithDetails) throws CatalogApiException {
 
         final Map<String, List<UsageConsumableInArrearTierUnitAggregate>> previousUnitsUsage;
         if (usageDetailMode == UsageDetailMode.DETAIL || areAllBilledItemsWithDetails) {
@@ -134,7 +136,7 @@ public class ContiguousIntervalConsumableUsageInArrear extends ContiguousInterva
             }
             final List<UsageConsumableInArrearTierUnitAggregate> previousUsage = previousUnitsUsage.containsKey(cur.getUnitType()) ? previousUnitsUsage.get(cur.getUnitType()) : Collections.emptyList();
 
-            final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledConsumableInArrear = computeToBeBilledConsumableInArrear(startDate, endDate, cur, previousUsage);
+            final List<UsageConsumableInArrearTierUnitAggregate> toBeBilledConsumableInArrear = computeToBeBilledConsumableInArrear(startDate.toLocalDate(), endDate.toLocalDate(), cur, previousUsage);
             usageConsumableInArrearTierUnitAggregates.addAll(toBeBilledConsumableInArrear);
         }
         return new UsageConsumableInArrearAggregate(usageConsumableInArrearTierUnitAggregates);

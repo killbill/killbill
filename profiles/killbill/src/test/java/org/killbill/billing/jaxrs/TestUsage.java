@@ -102,8 +102,8 @@ public class TestUsage extends TestJaxrsBase {
 
         clock.addDays(1);
 
-        final UsageRecord usageRecord1 = new UsageRecord(clock.getUTCToday().minusDays(1), BigDecimal.TEN);
-        final UsageRecord usageRecord2 = new UsageRecord(clock.getUTCToday(), new BigDecimal("5"));
+        final UsageRecord usageRecord1 = new UsageRecord(clock.getUTCNow().minusDays(1), BigDecimal.TEN);
+        final UsageRecord usageRecord2 = new UsageRecord(clock.getUTCNow(), new BigDecimal("5"));
         final UnitUsageRecord unitUsageRecord = new UnitUsageRecord("bullets", List.of(usageRecord1, usageRecord2));
         final SubscriptionUsageRecord usage = new SubscriptionUsageRecord(addOnSubscriptionId, null, List.of(unitUsageRecord));
 
@@ -163,7 +163,7 @@ public class TestUsage extends TestJaxrsBase {
         final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, (LocalDate) null, (LocalDate) null, NULL_PLUGIN_PROPERTIES, requestOptions);
         final UUID addOnSubscriptionId = findSubscriptionIdByProductCategory(bundle.getSubscriptions(), ProductCategory.ADD_ON);
 
-        final UsageRecord usageRecord1 = new UsageRecord(clock.getUTCToday().minusDays(1), BigDecimal.TEN);
+        final UsageRecord usageRecord1 = new UsageRecord(clock.getUTCNow().minusDays(1), BigDecimal.TEN);
         final UnitUsageRecord unitUsageRecord = new UnitUsageRecord("bullets", List.of(usageRecord1));
         final SubscriptionUsageRecord usage = new SubscriptionUsageRecord(addOnSubscriptionId,
                                                                           UUID.randomUUID().toString(),
@@ -188,9 +188,9 @@ public class TestUsage extends TestJaxrsBase {
 
         clock.addDays(2);
 
-        final UsageRecord record1 = new UsageRecord(clock.getUTCToday().minusDays(1), new BigDecimal("4.75"));
-        final UsageRecord record2 = new UsageRecord(clock.getUTCToday(), new BigDecimal("6.25"));
-        final UsageRecord record3 = new UsageRecord(clock.getUTCToday().plusDays(1), new BigDecimal("8.5"));
+        final UsageRecord record1 = new UsageRecord(clock.getUTCNow().minusDays(1), new BigDecimal("4.75"));
+        final UsageRecord record2 = new UsageRecord(clock.getUTCNow(), new BigDecimal("6.25"));
+        final UsageRecord record3 = new UsageRecord(clock.getUTCNow().plusDays(1), new BigDecimal("8.5"));
 
         final UnitUsageRecord unitUsageRecord = new UnitUsageRecord("bullets", List.of(record1, record2, record3));
         final SubscriptionUsageRecord usage = new SubscriptionUsageRecord(addOnSubscriptionId, null, List.of(unitUsageRecord));
@@ -216,9 +216,9 @@ public class TestUsage extends TestJaxrsBase {
 
         clock.addDays(2);
 
-        final UsageRecord record1 = new UsageRecord(clock.getUTCToday().minusDays(1), new BigDecimal("111111111.111111111"));
-        final UsageRecord record2 = new UsageRecord(clock.getUTCToday(), new BigDecimal("222222222.222222222"));
-        final UsageRecord record3 = new UsageRecord(clock.getUTCToday().plusDays(1), new BigDecimal("333333333.333333333"));
+        final UsageRecord record1 = new UsageRecord(clock.getUTCNow().minusDays(1), new BigDecimal("111111111.111111111"));
+        final UsageRecord record2 = new UsageRecord(clock.getUTCNow(), new BigDecimal("222222222.222222222"));
+        final UsageRecord record3 = new UsageRecord(clock.getUTCNow().plusDays(1), new BigDecimal("333333333.333333333"));
 
         final UnitUsageRecord unitUsageRecord = new UnitUsageRecord("bullets", List.of(record1, record2, record3));
         final SubscriptionUsageRecord usage = new SubscriptionUsageRecord(addOnSubscriptionId, null, List.of(unitUsageRecord));

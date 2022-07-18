@@ -80,7 +80,7 @@ public class SubscriptionUsageInArrear {
     private final LocalDate targetDate;
     private final List<RawUsageRecord> rawSubscriptionUsage;
     private final Set<TrackingRecordId> existingTrackingIds;
-    private final LocalDate rawUsageStartDate;
+    private final DateTime rawUsageStartDate;
     private final InternalTenantContext internalTenantContext;
     private final UsageDetailMode usageDetailMode;
     private final InvoiceConfig invoiceConfig;
@@ -91,7 +91,7 @@ public class SubscriptionUsageInArrear {
                                      final List<RawUsageRecord> rawUsage,
                                      final Set<TrackingRecordId> existingTrackingIds,
                                      final LocalDate targetDate,
-                                     final LocalDate rawUsageStartDate,
+                                     final DateTime rawUsageStartDate,
                                      final UsageDetailMode usageDetailMode,
                                      final InvoiceConfig invoiceConfig,
                                      final InternalTenantContext internalTenantContext) {

@@ -850,7 +850,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 5, 5), InvoiceItemType.USAGE, BigDecimal.ZERO));
 
         // Record usage for second month
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2012, 5, 5), BigDecimal.valueOf(100L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", clock.getUTCNow(), BigDecimal.valueOf(100L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2012, 6, 4), BigDecimal.valueOf(100L), callContext);
 
         // 2012-06-01

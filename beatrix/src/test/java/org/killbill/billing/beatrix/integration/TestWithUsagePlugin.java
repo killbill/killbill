@@ -29,6 +29,8 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountData;
@@ -116,14 +118,14 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
-        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
+        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new DateTime(2012, 4, 1, 13,25,14, DateTimeZone.UTC), BigDecimal.valueOf(99L), callContext);
+        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new DateTime(2012, 4, 15, 3, 5, 12, DateTimeZone.UTC), BigDecimal.valueOf(100L), callContext);
 
         // Wrong subscription - should be ignored...
-        testUsagePluginApi.recordUsageData(UUID.randomUUID(), "tracking-3", "bullets", new LocalDate(2012, 4, 5), BigDecimal.valueOf(100L), callContext);
+        testUsagePluginApi.recordUsageData(UUID.randomUUID(), "tracking-3", "bullets", new LocalDate(2012, 4, 5).toDateTimeAtStartOfDay(), BigDecimal.valueOf(100L), callContext);
 
         // Wrong unit - should be ignored...
-        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-3", "bullets2", new LocalDate(2012, 4, 6), BigDecimal.valueOf(200L), callContext);
+        testUsagePluginApi.recordUsageData(aoSubscription.getId(), "tracking-3", "bullets2", new LocalDate(2012, 4, 6).toDateTimeAtStartOfDay(), BigDecimal.valueOf(200L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
@@ -134,46 +136,51 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
         invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
 
-        final RolledUpUsage result1 = usageUserApi.getUsageForSubscription(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1), new LocalDate(2012, 4, 15), Collections.emptyList(), callContext);
+        final RolledUpUsage result1 = usageUserApi.getUsageForSubscription(aoSubscription.getId(), "bullets", new LocalDate(2012, 4, 1).toDateTimeAtStartOfDay(), new LocalDate(2012, 4, 15).toDateTimeAtStartOfDay(), Collections.emptyList(), callContext);
         assertEquals(result1.getSubscriptionId(), aoSubscription.getId());
         assertEquals(result1.getRolledUpUnits().size(), 1);
         assertEquals(result1.getRolledUpUnits().get(0).getUnitType(), "bullets");
         assertEquals(result1.getRolledUpUnits().get(0).getAmount().longValue(), 99L);
 
-        final List<LocalDate> transitionDates = new ArrayList<>();
-        transitionDates.add(new LocalDate(2012, 4, 1));
-        transitionDates.add(new LocalDate(2012, 4, 5));
-        transitionDates.add(new LocalDate(2012, 4, 6));
-        transitionDates.add(new LocalDate(2012, 4, 15));
-        transitionDates.add(new LocalDate(2012, 4, 17));
+        final List<DateTime> transitionDates = new ArrayList<>();
+        final DateTime t1 = new DateTime(2012, 4, 1, 0, 0, 0, 0, DateTimeZone.UTC);
+        transitionDates.add(t1);
+        final DateTime t2 = new DateTime(2012, 4, 5, 0, 0, 0, 0, DateTimeZone.UTC);
+        transitionDates.add(t2);
+        final DateTime t3 = new DateTime(2012, 4, 6, 0, 0, 0, 0, DateTimeZone.UTC);
+        transitionDates.add(t3);
+        final DateTime t4 = new DateTime(2012, 4, 15, 0, 0, 0, 0, DateTimeZone.UTC);
+        transitionDates.add(t4);
+        final DateTime t5 = new DateTime(2012, 4, 17, 0, 0, 0, 0, DateTimeZone.UTC);
+        transitionDates.add(t5);
 
         final List<RolledUpUsage> result2 = usageUserApi.getAllUsageForSubscription(aoSubscription.getId(), transitionDates, Collections.emptyList(), callContext);
         assertEquals(result2.size(), 4);
 
         assertEquals(result2.get(0).getSubscriptionId(), aoSubscription.getId());
-        assertEquals(result2.get(0).getStart(), new LocalDate(2012, 4, 1));
-        assertEquals(result2.get(0).getEnd(), new LocalDate(2012, 4, 5));
+        assertEquals(result2.get(0).getStart(), t1);
+        assertEquals(result2.get(0).getEnd(), t2);
         assertEquals(result2.get(0).getRolledUpUnits().size(), 1);
         assertEquals(result2.get(0).getRolledUpUnits().get(0).getUnitType(), "bullets");
         assertEquals(result2.get(0).getRolledUpUnits().get(0).getAmount().longValue(), 99L);
 
         // Usage was for wrong subscriptionId
         assertEquals(result2.get(1).getSubscriptionId(), aoSubscription.getId());
-        assertEquals(result2.get(1).getStart(), new LocalDate(2012, 4, 5));
-        assertEquals(result2.get(1).getEnd(), new LocalDate(2012, 4, 6));
+        assertEquals(result2.get(1).getStart(), t2);
+        assertEquals(result2.get(1).getEnd(), t3);
         assertEquals(result2.get(1).getRolledUpUnits().size(), 0);
 
         // We see the wrong bullet2 unit
         assertEquals(result2.get(2).getSubscriptionId(), aoSubscription.getId());
-        assertEquals(result2.get(2).getStart(), new LocalDate(2012, 4, 6));
-        assertEquals(result2.get(2).getEnd(), new LocalDate(2012, 4, 15));
+        assertEquals(result2.get(2).getStart(), t3);
+        assertEquals(result2.get(2).getEnd(), t4);
         assertEquals(result2.get(2).getRolledUpUnits().size(), 1);
         assertEquals(result2.get(2).getRolledUpUnits().get(0).getUnitType(), "bullets2");
         assertEquals(result2.get(2).getRolledUpUnits().get(0).getAmount().longValue(), 200L);
 
         assertEquals(result2.get(3).getSubscriptionId(), aoSubscription.getId());
-        assertEquals(result2.get(3).getStart(), new LocalDate(2012, 4, 15));
-        assertEquals(result2.get(3).getEnd(), new LocalDate(2012, 4, 17));
+        assertEquals(result2.get(3).getStart(), t4);
+        assertEquals(result2.get(3).getEnd(), t5);
         assertEquals(result2.get(3).getRolledUpUnits().size(), 1);
         assertEquals(result2.get(3).getRolledUpUnits().get(0).getUnitType(), "bullets");
         assertEquals(result2.get(3).getRolledUpUnits().get(0).getAmount().longValue(), 100L);
@@ -182,17 +189,17 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
 
     public static class TestUsagePluginApi implements UsagePluginApi {
 
-        private final SortedMap<LocalDate, List<RawUsageRecord>> usageData;
+        private final SortedMap<DateTime, List<RawUsageRecord>> usageData;
 
         public TestUsagePluginApi() {
             this.usageData = new TreeMap<>();
         }
 
         @Override
-        public List<RawUsageRecord> getUsageForAccount(final LocalDate startDate, final LocalDate endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
+        public List<RawUsageRecord> getUsageForAccount(final DateTime startDate, final DateTime endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
 
             final List<RawUsageRecord> result = new LinkedList<>();
-            for (final LocalDate curDate : usageData.keySet()) {
+            for (final DateTime curDate : usageData.keySet()) {
                 if (curDate.compareTo(startDate) >= 0 && curDate.compareTo(endDate) < 0) {
                     final List<RawUsageRecord> rawUsageRecords = usageData.get(curDate);
                     if (rawUsageRecords != null && !rawUsageRecords.isEmpty()) {
@@ -204,7 +211,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public List<RawUsageRecord> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
+        public List<RawUsageRecord> getUsageForSubscription(final UUID subscriptionId, final DateTime startDate, final DateTime endDate, final UsageContext usageContext, final Iterable<PluginProperty> properties) {
 
             final List<RawUsageRecord> result = new ArrayList<>();
             final List<RawUsageRecord> usageForAccount = getUsageForAccount(startDate, endDate, usageContext, properties);
@@ -216,7 +223,7 @@ public class TestWithUsagePlugin extends TestIntegrationBase {
             return result;
         }
 
-        public void recordUsageData(final UUID subscriptionId, final String trackingId, final String unitType, final LocalDate startDate, final BigDecimal amount, final CallContext context) throws UsageApiException {
+        public void recordUsageData(final UUID subscriptionId, final String trackingId, final String unitType, final DateTime startDate, final BigDecimal amount, final CallContext context) throws UsageApiException {
 
             List<RawUsageRecord> record = usageData.get(startDate);
             if (record == null) {

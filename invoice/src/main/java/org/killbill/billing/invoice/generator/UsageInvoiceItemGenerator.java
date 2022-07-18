@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -92,7 +93,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
             // Pretty-print the generated invoice items from the junction events
             final InvoiceItemGeneratorLogger invoiceItemGeneratorLogger = new InvoiceItemGeneratorLogger(invoiceId, account.getId(), "usage", log);
             final UsageDetailMode usageDetailMode = invoiceConfig.getItemResultBehaviorMode(internalCallContext);
-            final LocalDate minBillingEventDate = getMinBillingEventDate(eventSet, internalCallContext);
+            final DateTime minBillingEventDate = getMinBillingEventDate(eventSet, internalCallContext);
 
             final Set<TrackingRecordId> trackingIds = new HashSet<>();
             final List<InvoiceItem> items = new ArrayList<>();
@@ -124,7 +125,7 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
                     // opposed to not enough, leading to double invoicing.
                     //
                     // Ask Kill Bill team for an optimal configuration based on your use case ;-)
-                    if (existingInvoices.getCutoffDate() != null && existingInvoices.getCutoffDate().compareTo(rawUsgRes.getRawUsageStartDate()) > 0) {
+                    if (existingInvoices.getCutoffDate() != null && existingInvoices.getCutoffDate().toDateTimeAtStartOfDay(DateTimeZone.UTC).compareTo(rawUsgRes.getRawUsageStartDate()) > 0) {
                         log.warn("Detected an invoice cuttOff date={}, and usage optimized start date= {} that could lead to some issues", existingInvoices.getCutoffDate(), rawUsgRes.getRawUsageStartDate());
                     }
 
@@ -171,14 +172,14 @@ public class UsageInvoiceItemGenerator extends InvoiceItemGenerator {
         }
     }
 
-    private LocalDate getMinBillingEventDate(final BillingEventSet eventSet, final InternalCallContext internalCallContext) {
+    private DateTime getMinBillingEventDate(final BillingEventSet eventSet, final InternalCallContext internalCallContext) {
         DateTime minDate = null;
         for (final BillingEvent cur : eventSet) {
             if (minDate == null || minDate.compareTo(cur.getEffectiveDate()) > 0) {
                 minDate = cur.getEffectiveDate();
             }
         }
-        return internalCallContext.toLocalDate(minDate);
+        return minDate;
     }
 
     private void updatePerSubscriptionNextNotificationUsageDate(final UUID subscriptionId, final Map<String, LocalDate> nextBillingCycleDates, final BillingMode usageBillingMode, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDates) {

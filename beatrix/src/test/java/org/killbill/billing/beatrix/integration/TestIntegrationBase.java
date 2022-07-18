@@ -55,6 +55,7 @@ import org.killbill.billing.beatrix.util.PaymentChecker;
 import org.killbill.billing.beatrix.util.RefundChecker;
 import org.killbill.billing.beatrix.util.SubscriptionChecker;
 import org.killbill.billing.callcontext.DefaultCallContext;
+import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -1048,7 +1049,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
     protected void recordUsageData(final UUID subscriptionId,
                                    final String trackingId,
                                    final String unitType,
-                                   final LocalDate startDate,
+                                   final DateTime startDate,
                                    final BigDecimal amount,
                                    final CallContext context) throws UsageApiException {
         final List<UsageRecord> usageRecords = new ArrayList<>();
@@ -1058,6 +1059,22 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, trackingId, unitUsageRecords);
         usageUserApi.recordRolledUpUsage(record, context);
     }
+
+    // Provide a backward compatible test method to record usage points using LocalDate
+    // and transforming such date using account#referenceTime
+    protected void recordUsageData(final UUID subscriptionId,
+            final String trackingId,
+            final String unitType,
+            final LocalDate startDate,
+            final BigDecimal amount,
+            final CallContext context) throws UsageApiException {
+    	final List<UsageRecord> usageRecords = new ArrayList<>();
+    	usageRecords.add(new UsageRecord(internalCallContext.toUTCDateTime(startDate), amount));
+    	final List<UnitUsageRecord> unitUsageRecords = new ArrayList<>();
+    	unitUsageRecords.add(new UnitUsageRecord(unitType, usageRecords));
+    	final SubscriptionUsageRecord record = new SubscriptionUsageRecord(subscriptionId, trackingId, unitUsageRecords);
+    	usageUserApi.recordRolledUpUsage(record, context);
+    }    
 
 
     protected void recordUsageData(final SubscriptionUsageRecord usageRecord, final CallContext context) throws UsageApiException {

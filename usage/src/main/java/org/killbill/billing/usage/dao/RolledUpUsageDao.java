@@ -19,7 +19,7 @@ package org.killbill.billing.usage.dao;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 
@@ -29,9 +29,9 @@ public interface RolledUpUsageDao {
 
     Boolean recordsWithTrackingIdExist(UUID subscriptionId, String trackingId, InternalTenantContext context);
 
-    List<RolledUpUsageModelDao> getUsageForSubscription(UUID subscriptionId, LocalDate startDate, LocalDate endDate, String unitType, InternalTenantContext context);
+    List<RolledUpUsageModelDao> getUsageForSubscription(UUID subscriptionId, DateTime startDate, DateTime endDate, String unitType, InternalTenantContext context);
 
-    List<RolledUpUsageModelDao> getAllUsageForSubscription(UUID subscriptionId, LocalDate startDate, LocalDate endDate, InternalTenantContext context);
+    List<RolledUpUsageModelDao> getAllUsageForSubscription(UUID subscriptionId, DateTime startDate, DateTime endDate, InternalTenantContext context);
 
-    List<RolledUpUsageModelDao> getRawUsageForAccount(LocalDate startDate, LocalDate endDate, InternalTenantContext context);
+    List<RolledUpUsageModelDao> getRawUsageForAccount(DateTime startDate, DateTime endDate, InternalTenantContext context);
 }

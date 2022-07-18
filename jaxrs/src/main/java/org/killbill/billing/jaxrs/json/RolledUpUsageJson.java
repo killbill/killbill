@@ -21,27 +21,26 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.annotations.ApiModel;
 
-@ApiModel(value="RolledUpUsage")
+@ApiModel(value = "RolledUpUsage")
 public class RolledUpUsageJson {
 
     private final UUID subscriptionId;
-    private final LocalDate startDate;
-    private final LocalDate endDate;
+    private final DateTime startDate;
+    private final DateTime endDate;
     private final List<RolledUpUnitJson> rolledUpUnits;
 
     @JsonCreator
     public RolledUpUsageJson(@JsonProperty("subscriptionId") final UUID subscriptionId,
-                             @JsonProperty("startDate") final LocalDate startDate,
-                             @JsonProperty("endDate") final LocalDate endDate,
+                             @JsonProperty("startDate") final DateTime startDate,
+                             @JsonProperty("endDate") final DateTime endDate,
                              @JsonProperty("rolledUpUnits") final List<RolledUpUnitJson> rolledUpUnits) {
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
@@ -57,11 +56,11 @@ public class RolledUpUsageJson {
         return subscriptionId;
     }
 
-    public LocalDate getStartDate() {
+    public DateTime getStartDate() {
         return startDate;
     }
 
-    public LocalDate getEndDate() {
+    public DateTime getEndDate() {
         return endDate;
     }
 
@@ -69,7 +68,7 @@ public class RolledUpUsageJson {
         return rolledUpUnits;
     }
 
-    @ApiModel(value="RolledUpUnit")
+    @ApiModel(value = "RolledUpUnit")
     public static class RolledUpUnitJson {
 
         private final String unitType;

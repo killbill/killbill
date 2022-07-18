@@ -24,6 +24,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -52,17 +53,18 @@ public class DefaultRolledUpUsageDao implements RolledUpUsageDao {
     }
 
     @Override
-    public List<RolledUpUsageModelDao> getUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final String unitType, final InternalTenantContext context) {
+    public List<RolledUpUsageModelDao> getUsageForSubscription(final UUID subscriptionId, final DateTime startDate, final DateTime endDate, final String unitType, final InternalTenantContext context) {
         return dbRouter.onDemand(true).getUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), unitType, context);
     }
 
     @Override
-    public List<RolledUpUsageModelDao> getAllUsageForSubscription(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final InternalTenantContext context) {
+    public List<RolledUpUsageModelDao> getAllUsageForSubscription(final UUID subscriptionId, final DateTime startDate, final DateTime endDate, final InternalTenantContext context) {
         return dbRouter.onDemand(true).getAllUsageForSubscription(subscriptionId, startDate.toDate(), endDate.toDate(), context);
     }
 
+
     @Override
-    public List<RolledUpUsageModelDao> getRawUsageForAccount(final LocalDate startDate, final LocalDate endDate, final InternalTenantContext context) {
+    public List<RolledUpUsageModelDao> getRawUsageForAccount(final DateTime startDate, final DateTime endDate, final InternalTenantContext context) {
         return dbRouter.onDemand(true).getRawUsageForAccount(startDate.toDate(), endDate.toDate(), context);
     }
 }

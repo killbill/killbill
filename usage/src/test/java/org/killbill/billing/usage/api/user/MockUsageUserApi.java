@@ -19,6 +19,7 @@ package org.killbill.billing.usage.api.user;
 import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.api.RolledUpUsage;
@@ -41,12 +42,12 @@ public class MockUsageUserApi implements UsageUserApi {
     }
 
     @Override
-    public RolledUpUsage getUsageForSubscription(final UUID uuid, final String s, final LocalDate localDate, final LocalDate localDate2, final Iterable<PluginProperty> properties, final TenantContext tenantContext) {
+    public RolledUpUsage getUsageForSubscription(final UUID uuid, final String s, final DateTime localDate, final DateTime localDate2, final Iterable<PluginProperty> properties, final TenantContext tenantContext) {
         return null;
     }
 
     @Override
-    public List<RolledUpUsage> getAllUsageForSubscription(final UUID uuid, final List<LocalDate> localDates, final Iterable<PluginProperty> properties, final TenantContext tenantContext) {
+    public List<RolledUpUsage> getAllUsageForSubscription(final UUID uuid, final List<DateTime> localDates, final Iterable<PluginProperty> properties, final TenantContext tenantContext) {
         return null;
     }
 }

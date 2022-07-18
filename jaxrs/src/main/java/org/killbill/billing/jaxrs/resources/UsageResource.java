@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -134,10 +135,9 @@ public class UsageResource extends JaxRsResourceBase {
         // Verify subscription exists..
         final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), callContext);
         if (entitlement.getEffectiveEndDate() != null) {
-            final LocalDate highestRecordDate = getHighestRecordDate(json.getUnitUsageRecords());
+            final DateTime highestRecordDate = getHighestRecordDate(json.getUnitUsageRecords());
             final Account account = accountUserApi.getAccountById(entitlement.getAccountId(), callContext);
-            final TimeAwareContext timeAwareContext = new TimeAwareContext(account.getFixedOffsetTimeZone(), account.getReferenceTime());
-            if (timeAwareContext.toLocalDate(entitlement.getEffectiveEndDate()).compareTo(highestRecordDate) < 0) { 
+            if (entitlement.getEffectiveEndDate().compareTo(highestRecordDate) < 0) {
                 return Response.status(Status.BAD_REQUEST).build();
             }
         }
@@ -148,7 +148,7 @@ public class UsageResource extends JaxRsResourceBase {
     }
 
     @VisibleForTesting
-    LocalDate getHighestRecordDate(final List<UnitUsageRecordJson> records) {
+    DateTime getHighestRecordDate(final List<UnitUsageRecordJson> records) {
         return records.stream()
                       .map(UnitUsageRecordJson::getUsageRecords) // stream of List<UsageRecordJson>
                       .flatMap(Collection::stream) // flattened, so UsageRecordJson instead of List<UsageRecordJson>
@@ -175,8 +175,8 @@ public class UsageResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
-        final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
-        final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);
+        final DateTime usageStartDate = DATE_TIME_FORMATTER.parseDateTime(startDate);
+        final DateTime usageEndDate = DATE_TIME_FORMATTER.parseDateTime(endDate);
 
         final RolledUpUsage usage = usageUserApi.getUsageForSubscription(subscriptionId, unitType, usageStartDate, usageEndDate, pluginProperties, tenantContext);
         final RolledUpUsageJson result = new RolledUpUsageJson(usage);
@@ -201,11 +201,11 @@ public class UsageResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
-        final LocalDate usageStartDate = LOCAL_DATE_FORMATTER.parseLocalDate(startDate);
-        final LocalDate usageEndDate = LOCAL_DATE_FORMATTER.parseLocalDate(endDate);
+        final DateTime usageStartDate = DATE_TIME_FORMATTER.parseDateTime(startDate);
+        final DateTime usageEndDate = DATE_TIME_FORMATTER.parseDateTime(endDate);
 
         // The current JAXRS API only allows to look for one transition
-        final List<LocalDate> startEndDate = List.of(usageStartDate, usageEndDate);
+        final List<DateTime> startEndDate = List.of(usageStartDate, usageEndDate);
         final List<RolledUpUsage> usage = usageUserApi.getAllUsageForSubscription(subscriptionId, startEndDate, pluginProperties, tenantContext);
         final RolledUpUsageJson result = new RolledUpUsageJson(usage.get(0));
         return Response.status(Status.OK).entity(result).build();
