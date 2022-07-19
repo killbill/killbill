@@ -26,14 +26,19 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
 import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
+import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -87,6 +92,47 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2018, 5, 15), new LocalDate(2018, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
+    }
+
+    // This is a similar test than testSubscriptionNotAlignedWithVersionChange except we also test when we have a local BCD that aligns with start date.
+    @Test(groups = "slow")
+    public void testSubscriptionNotAlignedWithVersionChange2() throws Exception {
+
+        final LocalDate today = new LocalDate(2018, 3, 15);
+        clock.setDay(today);
+
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+
+        // We chose 20 (> local BCD = 15) to ensure test fails if local bcd is not correct taken into account
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(20));
+        busHandler.pushExpectedEvents( NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("plumber-insurance-monthly-no-trial");
+
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+
+       Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2018, 3, 15), new LocalDate(2018, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1); // 2018-04-15
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 4, 15), new LocalDate(2018, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1); // 2018-05-15
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 5, 15), new LocalDate(2018, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
     }
 

@@ -38,7 +38,6 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.skife.config.Param;
 
 public interface SubscriptionBaseApiService {
 
@@ -111,6 +110,6 @@ public interface SubscriptionBaseApiService {
 
     int getAccountBCD(InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    // If we expose more than one config, we should not instead return the SubscriptionConfig object
-    boolean isEffectiveDateForExistingSubscriptionsAlignedToBCD(@Param("dummy") final InternalTenantContext tenantContext);
+    // If we expose more than one config, we should instead return the SubscriptionConfig object
+    boolean isEffectiveDateForExistingSubscriptionsAlignedToBCD(final InternalTenantContext tenantContext);
 }
