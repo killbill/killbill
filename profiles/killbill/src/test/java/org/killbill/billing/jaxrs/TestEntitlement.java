@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -1762,7 +1763,7 @@ public class TestEntitlement extends TestJaxrsBase {
     }
 
     @Test(groups = "slow")
-    public void testBlockWithDate() throws Exception {
+    public void testBlockBundleWithDate() throws Exception {
         final LocalDate initialDate = new LocalDate(2012, 4, 25);
         clock.setDay(initialDate);
 
@@ -1807,7 +1808,6 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                            requestOptions);
         assertNotNull(blockingStates);
         Assert.assertEquals(blockingStates.size(), 1);
-        Assert.assertEquals(blockingStates.size(), 1);
 
         state = blockingStates.iterator().next();
         Assert.assertEquals(state.getStateName(), "STATE1");
@@ -1822,9 +1822,11 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getState(), EntitlementState.BLOCKED); //now blocked
 
     }
+    
+ 
 
     @Test(groups = "slow")
-    public void testBlockWithDateTime() throws Exception {
+    public void testBlockBundleWithDateTime() throws Exception {
         final LocalDate initialDate = new LocalDate(2012, 4, 25);
         clock.setDay(initialDate);
 
@@ -1869,7 +1871,6 @@ public class TestEntitlement extends TestJaxrsBase {
                                                                            requestOptions);
         assertNotNull(blockingStates);
         Assert.assertEquals(blockingStates.size(), 1);
-        Assert.assertEquals(blockingStates.size(), 1);
 
         state = blockingStates.iterator().next();
         Assert.assertEquals(state.getStateName(), "STATE1");
@@ -1884,6 +1885,140 @@ public class TestEntitlement extends TestJaxrsBase {
         Assert.assertEquals(subscription.getState(), EntitlementState.BLOCKED); //now blocked
 
     }
+    
+    @Test(groups = "slow")
+    public void testBlockSubscriptionWithDate() throws Exception {
+        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        clock.setDay(initialDate);
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Shotgun");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                initialDate,
+                                                                                null,
+                                                                                false,
+                                                                                false,
+                                                                                false,
+                                                                                true,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
+
+        Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+
+        final LocalDate blockDate = clock.getUTCToday().plusDays(5);
+
+        BlockingState state = new BlockingState();
+        state.setIsBlockBilling(true);
+        state.setIsBlockChange(true);
+        state.setIsBlockEntitlement(true);
+        state.setService("service1");
+        state.setStateName("STATE1");
+        subscriptionApi.addSubscriptionBlockingState(entitlementJson.getSubscriptionId(), state, blockDate, NULL_PLUGIN_PROPERTIES, requestOptions);
+
+        //Retrieve account blocking states
+        final BlockingStates blockingStates = accountApi.getBlockingStates(accountJson.getAccountId(),
+                                                                           List.of(BlockingStateType.SUBSCRIPTION),
+                                                                           null,
+                                                                           AuditLevel.FULL,
+                                                                           requestOptions);
+        assertNotNull(blockingStates);
+        Assert.assertEquals(blockingStates.size(), 2);
+        
+        Iterator<BlockingState> itr = blockingStates.iterator();
+
+        state = itr.next();
+        Assert.assertEquals(state.getStateName(), "ENT_STARTED");
+        Assert.assertEquals(internalCallContext.toLocalDate(state.getEffectiveDate()), initialDate);
+        
+        state = itr.next();
+        Assert.assertEquals(state.getStateName(), "STATE1");
+        Assert.assertEquals(internalCallContext.toLocalDate(state.getEffectiveDate()), blockDate);        
+
+        Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getState(), EntitlementState.ACTIVE); //state still ACTIVE since blockDate is not reached
+
+        clock.addDays(5);
+
+        subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getState(), EntitlementState.BLOCKED); //now blocked
+
+    }    
+    
+    @Test(groups = "slow")
+    public void testBlockSubscriptionWithDateTime() throws Exception {
+        final LocalDate initialDate = new LocalDate(2012, 4, 25);
+        clock.setDay(initialDate);
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Shotgun");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final Subscription entitlementJson = subscriptionApi.createSubscription(input,
+                                                                                initialDate,
+                                                                                null,
+                                                                                false,
+                                                                                false,
+                                                                                false,
+                                                                                true,
+                                                                                DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                NULL_PLUGIN_PROPERTIES,
+                                                                                requestOptions);
+
+        Assert.assertEquals(entitlementJson.getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getBillingStartDate()), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementJson.getStartDate()), initialDate);
+
+        final DateTime blockDateTime = new DateTime(2012, 4, 30, 11, 45);
+
+        BlockingState state = new BlockingState();
+        state.setIsBlockBilling(true);
+        state.setIsBlockChange(true);
+        state.setIsBlockEntitlement(true);
+        state.setService("service1");
+        state.setStateName("STATE1");
+        subscriptionApi.addSubscriptionBlockingState(entitlementJson.getSubscriptionId(), state, blockDateTime, NULL_PLUGIN_PROPERTIES, requestOptions);
+
+        //Retrieve account blocking states
+        final BlockingStates blockingStates = accountApi.getBlockingStates(accountJson.getAccountId(),
+                                                                           List.of(BlockingStateType.SUBSCRIPTION),
+                                                                           null,
+                                                                           AuditLevel.FULL,
+                                                                           requestOptions);
+        assertNotNull(blockingStates);
+        Assert.assertEquals(blockingStates.size(), 2);
+        
+        Iterator<BlockingState> itr = blockingStates.iterator();
+
+        state = itr.next();
+        Assert.assertEquals(state.getStateName(), "ENT_STARTED");
+        Assert.assertEquals(internalCallContext.toLocalDate(state.getEffectiveDate()), initialDate);
+        
+        state = itr.next();
+        Assert.assertEquals(state.getStateName(), "STATE1");
+        Assert.assertEquals(state.getEffectiveDate().compareTo(blockDateTime), 0);        
+
+        Subscription subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getState(), EntitlementState.ACTIVE); //state still ACTIVE since blockDate is not reached
+
+        clock.setTime(blockDateTime);
+
+        subscription = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(subscription.getState(), EntitlementState.BLOCKED); //now blocked
+
+    }        
 
     private void verifyChargedThroughDate(final UUID subscriptionId, final LocalDate ctd) {
         // The call completion may return after the INVOICE event was received and prior the CTD was updated as it
