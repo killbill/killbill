@@ -674,7 +674,7 @@ public class TestSubscription extends TestIntegrationBase {
                                       NextEvent.PAYMENT);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", initialDate, initialDate, false, true, Collections.emptyList(), callContext);
         assertNotNull(entitlementId);
         Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
@@ -692,7 +692,7 @@ public class TestSubscription extends TestIntegrationBase {
         //PLAN CHANGED SUCCESSFULLY
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(entitlement.getLastActiveProduct().getName(), "Blowdart");
-        assertEquals(entitlement.getEffectiveStartDate(), initialDate);
+        assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), initialDate);
         assertListenerStatus();
     }
 
