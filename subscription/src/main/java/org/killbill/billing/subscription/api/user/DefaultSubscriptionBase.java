@@ -694,14 +694,15 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
 
-    private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime originalDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
+    private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime originalTransitionDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
 
         if (!apiService.isEffectiveDateForExistingSubscriptionsAlignedToBCD(context)) {
-            return originalDate;
+            return originalTransitionDate;
         }
 
+        // TODO Does it make sense to pass originalTransitionDate twice ?
         final BillingAlignment billingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
-                                                                           originalDate, originalDate);
+                                                                           originalTransitionDate, originalTransitionDate);
 
         final int accountBillCycleDayLocal = apiService.getAccountBCD(context);
         Integer bcd = bcdLocal;
@@ -709,14 +710,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             bcd = BillCycleDayCalculator.calculateBcdForAlignment(null, this, this, billingAlignment, context, accountBillCycleDayLocal);
         }
 
-        // TODO : no Recurring PlanPhase, Usage sections, ...
-        final BillingPeriod billingPeriod = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
-        DateTime proposedDate = chargedThroughDate != null ? chargedThroughDate : originalDate;
-        while (proposedDate != null && proposedDate.isBefore(originalDate)) {
-            proposedDate = proposedDate.plus(billingPeriod.getPeriod());
-        }
 
-        final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, context);
+        final BillingPeriod billingPeriod = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+        final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedBillCycleDate(originalTransitionDate, bcd, billingPeriod, context);
         final DateTime candidateResult = context.toUTCDateTime(resultingLocalDate);
         return candidateResult;
     }
