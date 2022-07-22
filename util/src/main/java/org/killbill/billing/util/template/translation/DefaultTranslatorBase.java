@@ -16,7 +16,6 @@
 
 package org.killbill.billing.util.template.translation;
 
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -41,15 +40,13 @@ public abstract class DefaultTranslatorBase implements Translator {
         this.properties = new HashMap<>();
 
         if (this.bundle != null) {
-            for (Enumeration<String> e = bundle.getKeys(); e.hasMoreElements();) {
-                String key = e.nextElement();
+            for (String key : bundle.keySet()) {
                 this.properties.put(key, getTranslation(key));
             }
         }
 
         if (this.defaultBundle != null) {
-            for (Enumeration<String> e = defaultBundle.getKeys(); e.hasMoreElements();) {
-                String key = e.nextElement();
+            for (String key : defaultBundle.keySet()) {
                 this.properties.put(key, getTranslation(key));
             }
         }

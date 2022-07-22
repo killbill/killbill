@@ -16,6 +16,9 @@
 
 package org.killbill.billing.util.template.translation;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.UUID;
 
@@ -39,6 +42,18 @@ public class TestDefaultTranslatorBase extends UtilTestSuiteNoDB {
     public void testResourceDoesNotExist() throws Exception {
         final TestTranslatorBase translator = new TestTranslatorBase(Mockito.mock(TranslatorConfig.class), Mockito.mock(ResourceBundle.class));
         final String originalText = UUID.randomUUID().toString();
+        Assert.assertEquals(translator.getTranslation(originalText), originalText);
+    }
+
+    @Test(groups = "fast")
+    public void testPropertyResourceBundle() throws Exception {
+        String propStr = "invoiceDate=Date\ncustomKey=Anything";
+	    InputStream propStrStream = new ByteArrayInputStream(propStr.getBytes());
+        final TestTranslatorBase translator = new TestTranslatorBase(Mockito.mock(TranslatorConfig.class), new PropertyResourceBundle(propStrStream));
+        final String originalText = UUID.randomUUID().toString();
+        Assert.assertEquals(translator.getProperties().size(), 2);
+        Assert.assertEquals(translator.getProperties().get("invoiceDate"), "Date");
+        Assert.assertEquals(translator.getProperties().get("customKey"), "Anything");
         Assert.assertEquals(translator.getTranslation(originalText), originalText);
     }
 }
