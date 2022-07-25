@@ -108,6 +108,20 @@
             </dependency>
             <!-- Temporary until 0.24.x is released -->
             <dependency>
+                <groupId>org.kill-bill.billing</groupId>
+                <artifactId>killbill-platform-server</artifactId>
+                <version>0.41.0-8593f21-SNAPSHOT</version>
+                <classifier>classes</classifier>
+            </dependency>
+            <!-- Temporary until 0.24.x is released -->
+            <dependency>
+                <groupId>org.kill-bill.billing</groupId>
+                <artifactId>killbill-platform-test</artifactId>
+                <version>0.41.0-8593f21-SNAPSHOT</version>
+                <scope>test</scope>
+            </dependency>
+            <!-- Temporary until 0.24.x is released -->
+            <dependency>
                 <groupId>org.kill-bill.commons</groupId>
                 <artifactId>killbill-clock</artifactId>
                 <version>0.25.1-775465f-SNAPSHOT</version>
