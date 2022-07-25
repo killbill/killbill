@@ -16,8 +16,6 @@
 
 package org.killbill.billing.util.template.translation;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.annotation.Nullable;
@@ -25,35 +23,26 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.samskivert.mustache.Mustache.Lambda;
+
 public abstract class DefaultTranslatorBase implements Translator {
 
     protected final Logger log = LoggerFactory.getLogger(DefaultTranslatorBase.class);
 
     private final ResourceBundle bundle;
     private final ResourceBundle defaultBundle;
-    private final Map<String, String> properties;
 
     public DefaultTranslatorBase(@Nullable final ResourceBundle bundle,
                                  @Nullable final ResourceBundle defaultBundle) {
         this.bundle = bundle;
         this.defaultBundle = defaultBundle;
-        this.properties = new HashMap<>();
-
-        if (this.bundle != null) {
-            for (String key : bundle.keySet()) {
-                this.properties.put(key, getTranslation(key));
-            }
-        }
-
-        if (this.defaultBundle != null) {
-            for (String key : defaultBundle.keySet()) {
-                this.properties.put(key, getTranslation(key));
-            }
-        }
     }
 
-    public Map<String, String> getProperties() {
-        return this.properties;
+    public Lambda properties() {
+        return (frag, out) -> {
+            String template = frag.execute();
+            out.write(this.getTranslation(template));
+        };
     }
 
     @Override
