@@ -148,7 +148,7 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         final int bcd = 17;
 
         final LocalDate result = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, internalCallContext);
-        Assert.assertEquals(result, new LocalDate(2022, 7, 19));
+        Assert.assertEquals(result, new LocalDate(2022, 7, 17));
     }
 
     private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {

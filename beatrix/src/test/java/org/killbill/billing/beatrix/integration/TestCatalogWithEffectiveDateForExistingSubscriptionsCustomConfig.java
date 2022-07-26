@@ -47,7 +47,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
         final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
-        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogWithEffectiveDateForExistingSubscriptions");
+        allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig");
         // Custom subscription config to test the alignment for the catalog effectiveDateForExistingSubscriptions
         allExtraProperties.put("org.killbill.subscription.align.effectiveDateForExistingSubscriptions", "true");
         return super.getConfigSource(null, allExtraProperties);
@@ -56,7 +56,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
     @Test(groups = "slow")
     public void testSubscriptionNotAlignedWithVersionChange1() throws Exception {
 
-        final LocalDate today = new LocalDate(2018, 3, 15);
+        final LocalDate today = new LocalDate(2022, 3, 15);
         clock.setDay(today);
 
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
@@ -64,31 +64,31 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
 
         final DefaultEntitlement bpEntitlement =
-                createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey1", "PlumberInsurance",
+                createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey1", "Liability",
                                                            ProductCategory.BASE, BillingPeriod.MONTHLY,
                                                            NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
         assertNotNull(bpEntitlement);
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2018, 3, 15), new LocalDate(2018, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2022, 3, 15), new LocalDate(2022, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addMonths(1); // 2018-04-15
+        clock.addMonths(1); // 2022-04-15
         assertListenerStatus();
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 4, 15), new LocalDate(2018, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 4, 15), new LocalDate(2022, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        // Catalog v2 is 2018-04-01, but PlumberInsurance effDt is 2018-05-01
+        // Catalog v2 is 2022-04-01, but Liability effDt is 2022-05-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addMonths(1); // 2018-05-15
+        clock.addMonths(1); // 2022-05-15
         assertListenerStatus();
 
         // We expect to see no pro-ration because of property 'align.effectiveDateForExistingSubscriptions' and new price
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 5, 15), new LocalDate(2018, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 5, 15), new LocalDate(2022, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
     }
@@ -97,7 +97,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
     @Test(groups = "slow")
     public void testSubscriptionNotAlignedWithVersionChange2() throws Exception {
 
-        final LocalDate today = new LocalDate(2018, 3, 15);
+        final LocalDate today = new LocalDate(2022, 3, 15);
         clock.setDay(today);
 
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
@@ -106,31 +106,31 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(20));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("plumber-insurance-monthly-no-trial");
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("liability-monthly-no-trial");
 
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2018, 3, 15), new LocalDate(2018, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2022, 3, 15), new LocalDate(2022, 4, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addMonths(1); // 2018-04-15
+        clock.addMonths(1); // 2022-04-15
         assertListenerStatus();
 
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 4, 15), new LocalDate(2018, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 4, 15), new LocalDate(2022, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
 
-        // Catalog v2 is 2018-04-01, but PlumberInsurance effDt is 2018-05-01
+        // Catalog v2 is 2022-04-01, but Liability effDt is 2022-05-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addMonths(1); // 2018-05-15
+        clock.addMonths(1); // 2022-05-15
         assertListenerStatus();
 
         // We expect to see no pro-ration because of property 'align.effectiveDateForExistingSubscriptions' and new price
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 5, 15), new LocalDate(2018, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 5, 15), new LocalDate(2022, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
     }
@@ -138,8 +138,8 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
     @Test(groups = "slow")
     public void testSubscriptionNotAlignedWithVersionChange3() throws Exception {
 
-        // Catalog v2 is 2018-04-01, but PlumberInsurance effDt is 2018-05-01
-        final LocalDate today = new LocalDate(2018, 4, 15);
+        // Catalog v2 is 2022-04-01 so new price applies right away
+        final LocalDate today = new LocalDate(2022, 4, 15);
         clock.setDay(today);
 
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
@@ -148,23 +148,64 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(20));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
-        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("plumber-insurance-monthly-no-trial");
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("liability-monthly-no-trial");
 
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
         assertListenerStatus();
 
         // We expect the C2 price right away as we started after C2 effDt
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
-                                                         new ExpectedInvoiceItemCheck(new LocalDate(2018, 4, 15), new LocalDate(2018, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2022, 4, 15), new LocalDate(2022, 5, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        clock.addMonths(1); // 2018-05-15
+        clock.addMonths(1); // 2022-05-15
         assertListenerStatus();
 
         // We expect to see no pro-ration because of property 'align.effectiveDateForExistingSubscriptions' and new price
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 5, 15), new LocalDate(2018, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 5, 15), new LocalDate(2022, 6, 15), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+    }
+
+
+    @Test(groups = "slow")
+    public void testSubscriptionNotAlignedWithVersionChange4() throws Exception {
+
+        // Catalog v2 is 2022-04-01, but Collision effDt is 2022-05-15
+        final LocalDate today = new LocalDate(2022, 3, 5);
+        clock.setDay(today);
+
+        final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
+
+        // We chose 20 (> local BCD = 15) to ensure test fails if local bcd is not correct taken into account
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(20));
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+
+        final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("collision-monthly-no-trial");
+
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 5, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        assertListenerStatus();
+
+        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
+                                                         new ExpectedInvoiceItemCheck(new LocalDate(2022, 3, 5), new LocalDate(2022, 4, 5), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1); // 2022-04-05
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 2, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 4, 5), new LocalDate(2022, 5, 5), InvoiceItemType.RECURRING, new BigDecimal("49.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()), 0);
+
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        clock.addMonths(1); // 2022-05-05
+        assertListenerStatus();
+
+        curInvoice = invoiceChecker.checkInvoice(account.getId(), 3, callContext,
+                                                 new ExpectedInvoiceItemCheck(new LocalDate(2022, 5, 5), new LocalDate(2022, 6, 5), InvoiceItemType.RECURRING, new BigDecimal("59.95")));
+        Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
+
     }
 }

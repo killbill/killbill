@@ -644,7 +644,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                 DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
                                 final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
 
-                                nextEffectiveDate = alignToNextBCDIfRequired(plan, planPhase, nextEffectiveDate, catalog, bcdLocal, context);
+                                nextEffectiveDate = alignToNextBCDIfRequired(plan, planPhase, nextEffectiveDate, cur.getEffectiveTransitionTime(), catalog, bcdLocal, context);
 
                                 // Computed from the nextPlan
                                 final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
@@ -652,7 +652,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                                                                                                           cur.getTotalOrdering(), bcdLocal, catalogEffectiveDateForNextPlan);
                                 candidatesCatalogChangeEvents.add(newBillingTransition);
                         	}
-                            // TODO so not optimized, we keep reparsing catalogs from the start...
+                            // TODO not so optimized as we keep parsing catalogs from the start...
                             nextPlan = catalog.getNextPlanVersion(nextPlan);
                         }
                     }
@@ -694,22 +694,20 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     }
 
 
-    private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime originalTransitionDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
+    private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime originalTransitionDate, final DateTime lastTransitionDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
 
         if (!apiService.isEffectiveDateForExistingSubscriptionsAlignedToBCD(context)) {
             return originalTransitionDate;
         }
 
-        // TODO Does it make sense to pass originalTransitionDate twice ?
         final BillingAlignment billingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
-                                                                           originalTransitionDate, originalTransitionDate);
-
+                                                                           originalTransitionDate, lastTransitionDate);
         final int accountBillCycleDayLocal = apiService.getAccountBCD(context);
         Integer bcd = bcdLocal;
         if (bcd == null) {
+            // TODO If we have an add-on subscription with a BUNDLE alignment, this is incorrect as we need access to the base subscription
             bcd = BillCycleDayCalculator.calculateBcdForAlignment(null, this, this, billingAlignment, context, accountBillCycleDayLocal);
         }
-
 
         final BillingPeriod billingPeriod = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
         final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedBillCycleDate(originalTransitionDate, bcd, billingPeriod, context);
