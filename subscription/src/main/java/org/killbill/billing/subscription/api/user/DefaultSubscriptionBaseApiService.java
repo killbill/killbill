@@ -528,12 +528,13 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                              final String newPriceList, final DateTime effectiveDate,
                                                              final boolean addCancellationAddOnForEventsIfRequired,
                                                              final Integer bcd,
+                                                             final PhaseType requestedPhaseType,
                                                              final SubscriptionCatalog fullCatalog,
                                                              final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
         final Collection<DefaultSubscriptionBase> addOnSubscriptionsToBeCancelled = new ArrayList<DefaultSubscriptionBase>();
         final Collection<SubscriptionBaseEvent> addOnCancelEvents = new ArrayList<SubscriptionBaseEvent>();
 
-        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, effectiveDate, addCancellationAddOnForEventsIfRequired, addOnSubscriptionsToBeCancelled, addOnCancelEvents, null, bcd, fullCatalog, internalTenantContext);
+        final List<SubscriptionBaseEvent> changeEvents = getEventsOnChangePlan(subscription, newPlan, newPriceList, effectiveDate, addCancellationAddOnForEventsIfRequired, addOnSubscriptionsToBeCancelled, addOnCancelEvents, requestedPhaseType, bcd, fullCatalog, internalTenantContext);
         changeEvents.addAll(addOnCancelEvents);
         return changeEvents;
     }

@@ -96,6 +96,7 @@ public interface SubscriptionBaseApiService {
                                                              String newPriceList, DateTime effectiveDate,
                                                              boolean addCancellationAddOnForEventsIfRequired,
                                                              Integer bcd,
+                                                             PhaseType requestedPhaseType,
                                                              SubscriptionCatalog catalog,
                                                              InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
