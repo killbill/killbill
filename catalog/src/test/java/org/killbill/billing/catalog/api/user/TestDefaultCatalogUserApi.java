@@ -28,7 +28,6 @@ import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
-import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.billing.util.io.IOUtils;
 import org.killbill.xmlloader.UriAccessor;
@@ -37,8 +36,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import static org.testng.Assert.*;
 
 public class TestDefaultCatalogUserApi extends CatalogTestSuiteNoDB {
 
