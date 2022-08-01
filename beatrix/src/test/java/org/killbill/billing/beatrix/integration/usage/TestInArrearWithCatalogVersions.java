@@ -67,7 +67,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 1), BigDecimal.valueOf(143L), callContext);
+        recordUsageData(entitlementId, "t1", "kilowatt-hour", clock.getUTCNow(), BigDecimal.valueOf(143L), callContext);
         recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 18), BigDecimal.valueOf(57L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -112,7 +112,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), null, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        recordUsageData(entitlementId, "t1", "kilowatt-hour", new LocalDate(2016, 4, 1), BigDecimal.valueOf(143L), callContext);
+        recordUsageData(entitlementId, "t1", "kilowatt-hour", clock.getUTCNow(), BigDecimal.valueOf(143L), callContext);
         recordUsageData(entitlementId, "t2", "kilowatt-hour", new LocalDate(2016, 4, 18), BigDecimal.valueOf(57L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -182,7 +182,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("150.00")));
         invoiceChecker.checkTrackingIds(curInvoice, Set.of("t1", "t2"), internalCallContext);
 
-        recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 1), BigDecimal.valueOf(100L), callContext);
+        recordUsageData(entitlementId, "t3", "kilowatt-hour", clock.getUTCNow(), BigDecimal.valueOf(100L), callContext);
         recordUsageData(entitlementId, "t4", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(900L), callContext);
         recordUsageData(entitlementId, "t5", "kilowatt-hour", new LocalDate(2016, 5, 3), BigDecimal.valueOf(200L), callContext); // Move to tier 2.
 
