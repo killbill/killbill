@@ -20,6 +20,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,9 +63,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
-import com.google.common.collect.HashMultimap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -240,8 +238,9 @@ public class TestPayment extends TestJaxrsBase {
 
         // Trigger manually an invoice payment but make the control plugin abort it
         mockPaymentControlProviderPlugin.setAborted(true);
-        final HashMultimap<String, String> queryParams = HashMultimap.create();
-        queryParams.putAll("controlPluginName", List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME));
+        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
+        final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("controlPluginName", List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME));
         final RequestOptions inputOptions = RequestOptions.builder()
                                                           .withCreatedBy(createdBy)
                                                           .withReason(reason)
@@ -270,8 +269,9 @@ public class TestPayment extends TestJaxrsBase {
         // Getting Invoice #2 (first after Trial period)
         final UUID failedInvoiceId = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, null, RequestOptions.empty()).get(1).getInvoiceId();
 
-        final HashMultimap<String, String> queryParams = HashMultimap.create();
-        queryParams.put("withAttempts", "true");
+        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
+        final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("withAttempts", List.of("true"));
         final RequestOptions inputOptions = RequestOptions.builder()
                                                           .withCreatedBy(createdBy)
                                                           .withReason(reason)
@@ -298,8 +298,9 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        final HashMultimap<String, String> queryParams = HashMultimap.create();
-        queryParams.put("withAttempts", "true");
+        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
+        final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("withAttempts", List.of("true"));
         final RequestOptions inputOptions = RequestOptions.builder()
                                                           .withCreatedBy(createdBy)
                                                           .withReason(reason)
@@ -318,8 +319,9 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        final HashMultimap<String, String> queryParams = HashMultimap.create();
-        queryParams.put("withAttempts", "true");
+        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
+        final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("withAttempts", List.of("true"));
         final RequestOptions inputOptions = RequestOptions.builder()
                                                           .withCreatedBy(createdBy)
                                                           .withReason(reason)
@@ -338,8 +340,9 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        final HashMultimap<String, String> queryParams = HashMultimap.create();
-        queryParams.put("withAttempts", "true");
+        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
+        final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
+        queryParams.put("withAttempts", List.of("true"));
         final RequestOptions inputOptions = RequestOptions.builder()
                                                           .withCreatedBy(createdBy)
                                                           .withReason(reason)

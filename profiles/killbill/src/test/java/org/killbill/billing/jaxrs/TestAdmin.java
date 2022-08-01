@@ -50,9 +50,6 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
-import com.google.common.collect.ImmutableMultimap;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -195,7 +192,7 @@ public class TestAdmin extends TestJaxrsBase {
         final String uri = "/1.0/kb/admin/invoices";
 
         final RequestOptions requestOptions = RequestOptions.builder()
-                                                            .withQueryParams(ImmutableMultimap.<String, String>of(JaxrsResource.QUERY_SEARCH_LIMIT, String.valueOf(limit)))
+                                                            .withQueryParams(Map.of(JaxrsResource.QUERY_SEARCH_LIMIT, List.of(String.valueOf(limit))))
                                                             .withCreatedBy(createdBy)
                                                             .withReason(reason)
                                                             .withComment(comment).build();

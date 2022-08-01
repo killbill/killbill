@@ -19,8 +19,10 @@ package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -53,10 +55,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
 
 public class TestPaymentPluginProperties extends TestJaxrsBase {
 
@@ -231,9 +229,9 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         completeTransactionByPaymentId.setProperties(bodyProperties);
 
         final RequestOptions basicRequestOptions = requestOptions;
-        // FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
-        final Multimap<String, String> params = LinkedListMultimap.create(basicRequestOptions.getQueryParams());
-        params.putAll(KillBillHttpClient.CONTROL_PLUGIN_NAME, List.of(PluginPropertiesVerificator.PLUGIN_NAME));
+        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
+        final Map<String, Collection<String>> params = new LinkedHashMap<>(basicRequestOptions.getQueryParamsForFollowAsMap());
+        params.put(KillBillHttpClient.CONTROL_PLUGIN_NAME, List.of(PluginPropertiesVerificator.PLUGIN_NAME));
 
         final RequestOptions requestOptionsWithParams = basicRequestOptions.extend()
                                                                            .withQueryParams(params).build();
