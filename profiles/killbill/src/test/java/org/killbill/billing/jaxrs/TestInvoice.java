@@ -19,8 +19,11 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -53,11 +56,6 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.util.Strings;
-
-// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -731,8 +729,9 @@ public class TestInvoice extends TestJaxrsBase {
         inputInvoice.add(externalCharge);
         final Account accountWithBalance = accountApi.getAccount(accountJson.getAccountId(), true, true, AuditLevel.NONE, requestOptions);
 
-        final Multimap<String, String> queryFollowParams = HashMultimap.<String, String>create(requestOptions.getQueryParamsForFollow());
-        queryFollowParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, "true");
+        // FIXME-1615 : Not using MultiValueMap because of line 736 (killbill-client-java still not support it)
+        final Map<String, Collection<String>> queryFollowParams = new LinkedHashMap<>(requestOptions.getQueryParamsForFollowAsMap());
+        queryFollowParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, List.of("true"));
 
         final Invoice migrationInvoice = invoiceApi.createMigrationInvoice(accountJson.getAccountId(), inputInvoice, null, requestOptions.extend().withQueryParamsForFollow(queryFollowParams).build());
         assertEquals(migrationInvoice.getBalance(), BigDecimal.ZERO);
@@ -930,9 +929,12 @@ public class TestInvoice extends TestJaxrsBase {
         assertEquals(accountInvoices1.size(), 2);
 
         // Follow location to return the list of invoices
-        final Invoices invoices2 = invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(), new LocalDate(2022, 7, 4), NULL_PLUGIN_PROPERTIES, requestOptions.extend()
-                                                                                                                                             .withQueryParamsForFollow(ImmutableMultimap.of(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId().toString()))
-                                                                                                                                             .withFollowLocation(true).build());
+        final Invoices invoices2 = invoiceApi.createFutureInvoiceGroup(accountJson.getAccountId(),
+                                                                       new LocalDate(2022, 7, 4),
+                                                                       NULL_PLUGIN_PROPERTIES,
+                                                                       requestOptions.extend()
+                                                                                     .withQueryParamsForFollow(Map.of(JaxrsResource.QUERY_ACCOUNT_ID, List.of(accountJson.getAccountId().toString())))
+                                                                                     .withFollowLocation(true).build());
         // We expect only one invoice as there is no grouping plugin
         assertEquals(invoices2.size(), 1);
 
