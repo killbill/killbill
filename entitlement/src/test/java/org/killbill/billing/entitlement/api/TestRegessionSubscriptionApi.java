@@ -49,7 +49,7 @@ public class TestRegessionSubscriptionApi extends EntitlementTestSuiteWithEmbedd
         final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(planPhaseSpecifier);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), entitlementEffectiveDate, null, false, true, Collections.emptyList(), callContext);
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         // Because of the BlockingState event ENT_STARTED, the entitlement date should be correctly set
         Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), entitlementEffectiveDate);
 
@@ -63,7 +63,7 @@ public class TestRegessionSubscriptionApi extends EntitlementTestSuiteWithEmbedd
         assertEquals(blockingStates.get(0).getStateName(), DefaultEntitlementApi.ENT_STATE_START);
         blockingStateDao.unactiveBlockingState(blockingStates.get(0).getId(), internalCallContext);
 
-        final Entitlement oldSchoolEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        final Entitlement oldSchoolEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         // Because the ENT_STARTED BlockingState has been invalidated, the startDate should now default to the billingDate
         Assert.assertEquals(internalCallContext.toLocalDate(oldSchoolEntitlement.getEffectiveStartDate()), initialDate);
 

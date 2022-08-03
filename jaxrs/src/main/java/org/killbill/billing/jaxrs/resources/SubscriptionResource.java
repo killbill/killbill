@@ -459,7 +459,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                              @HeaderParam(HDR_COMMENT) final String comment,
                                              @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, context.createCallContextNoAccountId(createdBy, reason, comment, request));
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, false, context.createCallContextNoAccountId(createdBy, reason, comment, request)); //TODO_1030: Backward compatibility
         current.uncancelEntitlement(pluginProperties, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.NO_CONTENT).build();
     }
@@ -479,7 +479,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                @HeaderParam(HDR_COMMENT) final String comment,
                                                @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, context.createCallContextNoAccountId(createdBy, reason, comment, request));
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, false, context.createCallContextNoAccountId(createdBy, reason, comment, request)); //TODO_1030: Backward compatibility
         current.undoChangePlan(pluginProperties, context.createCallContextNoAccountId(createdBy, reason, comment, request));
         return Response.status(Status.NO_CONTENT).build();
     }
@@ -516,7 +516,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContextNoAccountId);
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, false, callContextNoAccountId); //TODO_1030: Backward compatibility
         final CallContext callContext = context.createCallContextWithAccountId(current.getAccountId(), createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
@@ -579,7 +579,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                                  @javax.ws.rs.core.Context final HttpServletRequest request,
                                                  @javax.ws.rs.core.Context final UriInfo uriInfo) throws SubscriptionApiException, EntitlementApiException, AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(id, tenantContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(id, false, tenantContext); //TODO_1030: Backward compatibility
         return addBlockingState(json, entitlement.getAccountId(), id, BlockingStateType.SUBSCRIPTION, requestedDate, pluginPropertiesString, createdBy, reason, comment, request, uriInfo);
     }
 
@@ -607,7 +607,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
-        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, callContextNoAccountId);
+        final Entitlement current = entitlementApi.getEntitlementForId(subscriptionId, false, callContextNoAccountId); //TODO_1030: Backward compatibility
         final CallContext callContext = context.createCallContextWithAccountId(current.getAccountId(), createdBy, reason, comment, request);
 
         final EntitlementCallCompletionCallback<Response> callback = new EntitlementCallCompletionCallback<Response>() {
@@ -687,7 +687,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         LocalDate effectiveFromDate = toLocalDate(effectiveFromDateStr);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
 
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(subscriptionId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(subscriptionId, false, callContext); //TODO_1030: Backward compatibility
         if (effectiveFromDateStr != null) {
             final Account account = accountUserApi.getAccountById(entitlement.getAccountId(), callContext);
             final LocalDate accountToday = new LocalDate(callContext.getCreatedDate(), account.getTimeZone());
@@ -975,7 +975,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
         if (entitlementJson.getAccountId() != null) {
             accountId = entitlementJson.getAccountId();
         } else if (entitlementJson.getSubscriptionId() != null) {
-            final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementJson.getSubscriptionId(), callContext);
+            final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementJson.getSubscriptionId(), false, callContext); //TODO_1030: Backward compatibility
             accountId = entitlement.getAccountId();
         } else {
             final SubscriptionBundle subscriptionBundle = subscriptionApi.getSubscriptionBundle(entitlementJson.getBundleId(), callContext);

@@ -129,7 +129,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, List.of(), callContext);
         assertListenerStatus();
-        Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
 
@@ -140,7 +140,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         subscriptionApi.addBlockingState(state2, (LocalDate) null, List.of(), callContext);
         assertListenerStatus();
 
-        baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
 
         // Remove blocking at account level
@@ -150,7 +150,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         subscriptionApi.addBlockingState(state3, (LocalDate) null, List.of(), callContext);
         assertListenerStatus();
 
-        baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(baseEntitlement.getState(), EntitlementState.BLOCKED);
 
         // Remove blocking at bundle level.
@@ -160,7 +160,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         subscriptionApi.addBlockingState(state4, (LocalDate) null, List.of(), callContext);
         assertListenerStatus();
 
-        baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(baseEntitlement.getState(), EntitlementState.ACTIVE);
 
         final List<BlockingState> blockingAll = blockingInternalApi.getBlockingActiveForAccount(catalog, null, internalCallContext);
@@ -218,7 +218,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "xyzqe", null, initialDate.minusDays(3), false, true, List.of(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         testListener.pushExpectedEvent(NextEvent.BLOCK);
         final BlockingState blockChangeAccount = new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "State1", "Service1", true, false, false, clock.getUTCNow());
@@ -261,7 +261,7 @@ public class TestBlockingApi extends EntitlementTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "xyzqe", null, initialDate.minusDays(3), false, true, List.of(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         // Create future BlockingState
         final LocalDate blockingChange = initialDate.plusDays(3);

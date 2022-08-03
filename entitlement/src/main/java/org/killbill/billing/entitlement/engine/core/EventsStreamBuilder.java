@@ -131,7 +131,7 @@ public class EventsStreamBuilder {
 
     public EventsStream buildForEntitlement(final UUID entitlementId, final TenantContext tenantContext) throws EntitlementApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
-        return buildForEntitlement(entitlementId, internalTenantContext);
+        return buildForEntitlement(entitlementId, false, internalTenantContext); //TODO_1030: Backward compatibility
     }
 
     public AccountEventsStreams buildForAccount(final InternalTenantContext internalTenantContext) throws EntitlementApiException {
@@ -276,9 +276,9 @@ public class EventsStreamBuilder {
         return eventsStreams;
     }
 
-    public EventsStream buildForEntitlement(final UUID entitlementId, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+    public EventsStream buildForEntitlement(final UUID entitlementId, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         try {
-            final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, internalTenantContext);
+            final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, includeDeletedSubscriptionEvents, internalTenantContext);
             return buildForEntitlement(subscription, internalTenantContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);

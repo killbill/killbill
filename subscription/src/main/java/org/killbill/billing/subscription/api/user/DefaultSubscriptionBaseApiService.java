@@ -299,7 +299,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
             boolean allSubscriptionsCancelled = true;
             for (final DefaultSubscriptionBase subscription : subscriptions.keySet()) {
-                subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalog);
+                subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), false, internalCallContext), catalog); //false
                 allSubscriptionsCancelled = allSubscriptionsCancelled && (subscription.getState() == EntitlementState.CANCELLED);
             }
 
@@ -342,7 +342,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             }
 
             dao.uncancelSubscription(subscription, uncancelEvents, internalCallContext);
-            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalog);
+            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), false, internalCallContext), catalog); //TODO_1030: Backward compatibility
             return true;
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
@@ -484,7 +484,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
 
         dao.changePlan(subscription, changeEvents, addOnSubscriptionsToBeCancelled, addOnCancelEvents, catalog, internalCallContext);
 
-        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalog);
+        subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), false, internalCallContext), catalog); //TODO_1030: Backward compatibility
     }
 
     @Override
@@ -675,7 +675,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             }
 
             dao.undoChangePlan(subscription, undoChangePlanEvents, internalCallContext);
-            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), internalCallContext), catalog);
+            subscription.rebuildTransitions(dao.getEventsForSubscription(subscription.getId(), false, internalCallContext), catalog); //TODO_1030: Backward compatibility
             return true;
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);

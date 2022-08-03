@@ -205,9 +205,9 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     }
 
     @Override
-    public Entitlement getEntitlementForId(final UUID entitlementId, final TenantContext tenantContext) throws EntitlementApiException {
+    public Entitlement getEntitlementForId(final UUID entitlementId, final boolean includeDeletedSubscriptionEvents, final TenantContext tenantContext) throws EntitlementApiException {
         final InternalTenantContext contextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
-        return super.getEntitlementForId(entitlementId, contextWithValidAccountRecordId);
+        return super.getEntitlementForId(entitlementId, includeDeletedSubscriptionEvents, contextWithValidAccountRecordId);
     }
 
     @Override

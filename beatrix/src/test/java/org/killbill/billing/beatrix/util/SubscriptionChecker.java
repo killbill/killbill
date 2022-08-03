@@ -71,7 +71,7 @@ public class SubscriptionChecker {
         final UUID tenantId = nonEntityDao.retrieveIdFromObject(context.getTenantRecordId(), ObjectType.TENANT, objectIdCacheController);
         final CallContext callContext = context.toCallContext(null, tenantId);
 
-        final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, context);
+        final SubscriptionBase subscription = subscriptionApi.getSubscriptionFromId(subscriptionId, false, context); //TODO_1030: Backward compatibility
         Assert.assertNotNull(subscription);
         auditChecker.checkSubscriptionCreated(subscription.getBundleId(), subscriptionId, callContext);
 

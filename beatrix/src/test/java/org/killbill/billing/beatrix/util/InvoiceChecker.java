@@ -160,7 +160,7 @@ public class InvoiceChecker {
 
     public void checkChargedThroughDate(final UUID entitlementId, final LocalDate expectedLocalCTD, final CallContext context) {
         try {
-            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(entitlementId, context);
+            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(entitlementId, false, context); //TODO_1030: Backward compatibility
             final SubscriptionBase subscription = entitlement.getSubscriptionBase();
             if (expectedLocalCTD == null) {
                 assertNull(subscription.getChargedThroughDate());

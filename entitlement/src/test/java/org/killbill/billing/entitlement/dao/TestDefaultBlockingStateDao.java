@@ -63,7 +63,7 @@ public class TestDefaultBlockingStateDao extends EntitlementTestSuiteWithEmbedde
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         final BlockingStateType type = BlockingStateType.SUBSCRIPTION;
         final String state = "state";

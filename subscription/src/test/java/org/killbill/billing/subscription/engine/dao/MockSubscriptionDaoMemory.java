@@ -192,7 +192,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final SubscriptionCatalog catalog, final InternalTenantContext context) {
+    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final SubscriptionCatalog catalog, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) { 
         for (final SubscriptionBase cur : subscriptions) {
             if (cur.getId().equals(subscriptionId)) {
                 return buildSubscription((DefaultSubscriptionBase) cur, context);
@@ -213,7 +213,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
 
     @Override
     public UUID getBundleIdFromSubscriptionId(final UUID subscriptionId, final InternalTenantContext context) {
-        return getSubscriptionFromId(subscriptionId, null, context).getBundleId();
+        return getSubscriptionFromId(subscriptionId, null, false, context).getBundleId(); //TODO_1030: Backward compatibility
     }
 
     @Override
@@ -281,7 +281,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
+    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) {
         synchronized (events) {
             final List<SubscriptionBaseEvent> results = new LinkedList<SubscriptionBaseEvent>();
             for (final SubscriptionBaseEvent cur : events) {
@@ -330,7 +330,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(new SubscriptionBuilder(in), null, clock);
         if (!events.isEmpty()) {
             try {
-                subscription.rebuildTransitions(getEventsForSubscription(in.getId(), context), subscriptionCatalogApi.getFullCatalog(context));
+                subscription.rebuildTransitions(getEventsForSubscription(in.getId(), false, context), subscriptionCatalogApi.getFullCatalog(context)); //TODO_1030: Backward compatibility
             } catch (final CatalogApiException e) {
                 log.warn("Failed to rebuild subscription", e);
             }
@@ -402,7 +402,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     private void cancelNextPhaseEvent(final UUID subscriptionId,  final SubscriptionCatalog catalog, final InternalTenantContext context) {
-        final SubscriptionBase curSubscription = getSubscriptionFromId(subscriptionId, catalog, context);
+        final SubscriptionBase curSubscription = getSubscriptionFromId(subscriptionId, catalog, false, context); //TODO_1030: Backward compatibility
         if (curSubscription.getCurrentPhase() == null ||
             curSubscription.getCurrentPhase().getDuration().getUnit() == TimeUnit.UNLIMITED) {
             return;

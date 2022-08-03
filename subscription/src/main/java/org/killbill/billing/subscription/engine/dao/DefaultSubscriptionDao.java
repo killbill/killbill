@@ -284,7 +284,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                              .collect(Collectors.toUnmodifiableList());
                 for (final SubscriptionModelDao f : filtered) {
                     try {
-                        final SubscriptionBase s = buildSubscription(SubscriptionModelDao.toSubscription(f, cur.getExternalKey()), catalog, context);
+                        final SubscriptionBase s = buildSubscription(SubscriptionModelDao.toSubscription(f, cur.getExternalKey()), catalog, false, context); //TODO_1030: Backward compatibility
                         if (s.getState() != EntitlementState.CANCELLED) {
                             throw new SubscriptionBaseApiException(ErrorCode.SUB_CREATE_ACTIVE_BUNDLE_KEY_EXISTS, bundle.getExternalKey());
                         } else if (renameCancelledBundleIfExist) {
@@ -327,13 +327,13 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final SubscriptionCatalog kbCatalog, final InternalTenantContext context) throws CatalogApiException {
+    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final SubscriptionCatalog kbCatalog, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase shellSubscription = transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             final SubscriptionModelDao subscriptionModel = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getById(subscriptionId.toString(), context);
             final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getById(subscriptionModel.getBundleId().toString(), context);
             return SubscriptionModelDao.toSubscription(subscriptionModel, bundleModel.getExternalKey());
         });
-        return buildSubscription(shellSubscription, kbCatalog, context);
+        return buildSubscription(shellSubscription, kbCatalog, includeDeletedSubscriptionEvents, context);
     }
 
     @Override
@@ -346,7 +346,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getById(subscriptionModel.getBundleId().toString(), context);
             return SubscriptionModelDao.toSubscription(subscriptionModel, bundleModel.getExternalKey());
         });
-        return buildSubscription(shellSubscription, catalog, context);
+        return buildSubscription(shellSubscription, catalog, false, context); //TODO_1030: Backward compatibility
     }
 
     @Override
@@ -370,7 +370,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
 
     @Override
     public List<DefaultSubscriptionBase> getSubscriptions(final UUID bundleId, final List<SubscriptionBaseEvent> dryRunEvents, final SubscriptionCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
-        return buildBundleSubscriptions(getSubscriptionFromBundleId(bundleId, context), null, dryRunEvents, catalog, context);
+        return buildBundleSubscriptions(getSubscriptionFromBundleId(bundleId, context), null, dryRunEvents, catalog, false, context); //TODO_1030: Backward compatibility
     }
 
     private List<DefaultSubscriptionBase> getSubscriptionFromBundleId(final UUID bundleId, final InternalTenantContext context) {
@@ -399,7 +399,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
         for (final UUID bundleId : subscriptionsFromAccountId.keySet()) {
             final List<DefaultSubscriptionBase> subscriptionsForBundle = subscriptionsFromAccountId.get(bundleId);
-            result.put(bundleId, buildBundleSubscriptions(subscriptionsForBundle, eventsForSubscriptions, null, catalog, context));
+            result.put(bundleId, buildBundleSubscriptions(subscriptionsForBundle, eventsForSubscriptions, null, catalog, false, context)); //TODO_1030: Backward compatibility
         }
         return result;
     }
@@ -481,8 +481,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> getEventsForSubscriptionInTransaction(entitySqlDaoWrapperFactory, subscriptionId, context));
+    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> getEventsForSubscriptionInTransaction(entitySqlDaoWrapperFactory, subscriptionId, includeDeletedSubscriptionEvents, context));
     }
 
     @Override
@@ -781,7 +781,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
     }
 
-    private DefaultSubscriptionBase buildSubscription(final DefaultSubscriptionBase input, final SubscriptionCatalog catalog, final InternalTenantContext context) throws CatalogApiException {
+    private DefaultSubscriptionBase buildSubscription(final DefaultSubscriptionBase input, final SubscriptionCatalog catalog, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) throws CatalogApiException {
 
         if (input == null) {
             return null;
@@ -799,7 +799,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             bundleInput.add(input);
         }
 
-        final List<DefaultSubscriptionBase> reloadedSubscriptions = buildBundleSubscriptions(bundleInput, null, null, catalog, context);
+        final List<DefaultSubscriptionBase> reloadedSubscriptions = buildBundleSubscriptions(bundleInput, null, null, catalog, includeDeletedSubscriptionEvents, context);
         for (final DefaultSubscriptionBase cur : reloadedSubscriptions) {
             if (cur.getId().equals(input.getId())) {
                 return cur;
@@ -813,6 +813,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                    @Nullable final MultiValueMap<UUID, SubscriptionBaseEvent> eventsForSubscription,
                                                                    @Nullable final Collection<SubscriptionBaseEvent> dryRunEvents,
                                                                    final SubscriptionCatalog catalog,
+                                                                   final boolean includeDeletedSubscriptionEvents, 
                                                                    final InternalTenantContext context) throws CatalogApiException {
         if (input == null || input.isEmpty()) {
             return Collections.emptyList();
@@ -827,7 +828,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         for (final DefaultSubscriptionBase cur : input) {
             final List<SubscriptionBaseEvent> events = eventsForSubscription != null ?
                                                        (List<SubscriptionBaseEvent>) eventsForSubscription.get(cur.getId()) :
-                                                       getEventsForSubscription(cur.getId(), context);
+                                                       getEventsForSubscription(cur.getId(), includeDeletedSubscriptionEvents, context);
             mergeDryRunEvents(cur.getId(), events, dryRunEvents);
 
             DefaultSubscriptionBase reloaded = createSubscriptionForInternalUse(cur, events, catalog, context);
@@ -1026,7 +1027,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         final List<DefaultSubscriptionBase> subscriptions = getSubscriptionFromBundleId(bundleId, context);
         for (final DefaultSubscriptionBase cur : subscriptions) {
             if (cur.getCategory() == ProductCategory.BASE) {
-                return rebuildSubscription ? buildSubscription(cur, catalog, context) : cur;
+                return rebuildSubscription ? buildSubscription(cur, catalog, false, context) : cur; //TODO_1030: Backward compatibility
             }
         }
         return null;
@@ -1047,9 +1048,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
     }
 
-    private List<SubscriptionBaseEvent> getEventsForSubscriptionInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID subscriptionId, final InternalTenantContext context) {
+    private List<SubscriptionBaseEvent> getEventsForSubscriptionInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID subscriptionId, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) {
         final SubscriptionEventSqlDao eventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-        final SortedSet<SubscriptionEventModelDao> models = eventSqlDao.getActiveEventsForSubscription(subscriptionId.toString(), context);
+        final SortedSet<SubscriptionEventModelDao> models = includeDeletedSubscriptionEvents ? eventSqlDao.getAllEventsForSubscription(subscriptionId.toString(), context) : eventSqlDao.getActiveEventsForSubscription(subscriptionId.toString(), context);
         return filterSubscriptionBaseEvents(models);
     }
 
@@ -1058,7 +1059,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                            final SubscriptionBaseEvent immediateEvent, final int seqId, final SubscriptionCatalog catalog, final InternalCallContext context) {
         try {
             // We need to rehydrate the subscription, as some events might have been canceled on disk (e.g. future PHASE after while doing a change plan)
-            final List<SubscriptionBaseEvent> activeSubscriptionEvents = getEventsForSubscriptionInTransaction(entitySqlDaoWrapperFactory, subscription.getId(), context);
+            final List<SubscriptionBaseEvent> activeSubscriptionEvents = getEventsForSubscriptionInTransaction(entitySqlDaoWrapperFactory, subscription.getId(), false, context); //TODO_1030: Backward compatibility
             subscription.rebuildTransitions(activeSubscriptionEvents, catalog);
             notifyBusOfEffectiveImmediateChange(entitySqlDaoWrapperFactory, subscription, immediateEvent, seqId, context);
         } catch (final CatalogApiException e) {

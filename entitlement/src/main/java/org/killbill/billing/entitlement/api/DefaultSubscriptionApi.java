@@ -130,7 +130,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         try {
             final UUID accountId = internalCallContextFactory.getAccountId(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
             final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
-            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementInternalApi.getEntitlementForId(entitlementId, internalTenantContextWithValidAccountRecordId);
+            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementInternalApi.getEntitlementForId(entitlementId, false, internalTenantContextWithValidAccountRecordId); //TODO_1030: Backward compatibility
             return new DefaultSubscription(entitlement);
         } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
@@ -378,7 +378,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                     break;
 
                 case SUBSCRIPTION:
-                    final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(inputBlockingState.getBlockedId(), internalCallContextWithValidAccountId);
+                    final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(inputBlockingState.getBlockedId(), false, internalCallContextWithValidAccountId); //TODO_1030: Backward compatibility
                     bundleId = entitlement.getBundleId();
                     accountId = entitlement.getAccountId();
                     externalKey = null;

@@ -61,13 +61,13 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID entitlement1Id = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
-        final Entitlement entitlement1 = entitlementApi.getEntitlementForId(entitlement1Id, callContext);
+        final Entitlement entitlement1 = entitlementApi.getEntitlementForId(entitlement1Id, false, callContext); //TODO_1030: Backward compatibility
         // Move the clock 1.5 sec so the (truncated) created date are apart from each other and ordering in the bundle does not default on the UUID which is random.
         clock.addDeltaFromReality(1500);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID entitlement2Id = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement2Id, callContext);
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement2Id, false, callContext); //TODO_1030: Backward compatibility
 
         testListener.pushExpectedEvents(NextEvent.BLOCK);
         entitlementUtils.setBlockingStateAndPostBlockingTransitionEvent(new DefaultBlockingState(account.getId(), BlockingStateType.ACCOUNT, "stateName", "service", false, false, false, clock.getUTCNow()),
@@ -114,7 +114,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), externalKey, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(entitlement.getAccountId(), account.getId());
         assertEquals(entitlement.getBundleExternalKey(), externalKey);
 
@@ -149,7 +149,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID entitlement2Id = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2), externalKey, null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement2Id, callContext);
+        final Entitlement entitlement2 = entitlementApi.getEntitlementForId(entitlement2Id, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(entitlement2.getAccountId(), account.getId());
         assertEquals(entitlement2.getBundleExternalKey(), externalKey);
 
@@ -221,7 +221,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         // Get the phase event out of the way
         testListener.pushExpectedEvents(NextEvent.PHASE);
@@ -279,7 +279,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         // Create entitlement and check each field
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), externalKey, effectiveDate, effectiveDate, false, true, Collections.emptyList(), callContext);
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
 
@@ -312,11 +312,11 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         
         // No CREATE event as this is set in the future
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), futureDate, futureDate, false, true, Collections.emptyList(), callContext);
-        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(internalCallContext.toLocalDate(createdEntitlement.getEffectiveStartDate()).compareTo(futureDate), 0);
         assertEquals(createdEntitlement.getEffectiveEndDate(), null);
 
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(internalCallContext.toLocalDate(baseEntitlement.getEffectiveStartDate()).compareTo(futureDate), 0);
         assertEquals(baseEntitlement.getEffectiveEndDate(), null);
 
@@ -341,7 +341,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), initialDate, initialDate, false, true, Collections.emptyList(), callContext);
-        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         final Iterable<BlockingState> iterableForCreateState = subscriptionApi.getBlockingStates(account.getId(), List.of(BlockingStateType.SUBSCRIPTION), null, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, callContext);
         assertTrue(iterableForCreateState.iterator().hasNext());
@@ -354,7 +354,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         subscriptionApi.addBlockingState(state1, (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        Entitlement updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        Entitlement updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
         clock.addDays(1);
@@ -365,7 +365,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         assertListenerStatus();
 
         // Still blocked because this is a different service
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
         // Now we remove the blocking state for the same service but at the SUBSCRIPTION level
@@ -374,7 +374,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         subscriptionApi.addBlockingState(state3, (LocalDate) null, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
         final DateTime futureEffectiveDate = clock.getUTCNow().plusDays(1);
@@ -420,7 +420,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(createdEntitlement.getState(), EntitlementState.ACTIVE);
 
         //Verify that Blocking State is created
@@ -435,8 +435,8 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         subscriptionApi.addBlockingState(state1, initialDate, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        Entitlement updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        Entitlement updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext); //TODO_1030: Backward compatibility
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
         //Verify that Blocking States are created
@@ -448,7 +448,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final BlockingState state2 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionUnBlock", "svc2", false, false, false, futureDate.toDateTimeAtCurrentTime());
         subscriptionApi.addBlockingState(state2, futureDate, Collections.emptyList(), callContext);
 
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
         //Verify that Blocking States are created
@@ -460,7 +460,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         clock.addDays(2);
         assertListenerStatus();
 
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.ACTIVE);
 
         //Add new blocking state with null date and verify that entitlement is BLOCKED immediately
@@ -468,7 +468,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final BlockingState state3 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionBlock", "svc3", false, true, false, clock.getUTCNow());
         subscriptionApi.addBlockingState(state3, (LocalDate) null, Collections.emptyList(), callContext);
 
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
         //Verify that Blocking States are created
@@ -491,7 +491,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(createdEntitlement.getState(), EntitlementState.ACTIVE);
 
         //Verify that Blocking State is created
@@ -504,7 +504,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final BlockingState state2 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionBlock", "svc2", false, true, false, effectiveDateTime); //effectiveDateTime used while creating state1 is ignored by the addBlockingState method, only the effectiveDateTime passed to it is used
         subscriptionApi.addBlockingState(state2, effectiveDateTime, Collections.emptyList(), callContext);
 
-        Entitlement updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        Entitlement updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.ACTIVE);
 
         //Verify that Blocking State is created
@@ -516,7 +516,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         clock.setTime(effectiveDateTime.plusMinutes(5));
         assertListenerStatus();
 
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
         //Add new blocking state with date 2013-08-12T11:45 and verify that entitlement is still BLOCKED as effectiveDateTime is not reached
@@ -524,7 +524,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final BlockingState state3 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionUnBlock", "svc2", false, false, false, effectiveDateTime);
         subscriptionApi.addBlockingState(state3, effectiveDateTime, Collections.emptyList(), callContext);
 
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
         //Verify that Blocking States are created
@@ -536,7 +536,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         clock.setTime(effectiveDateTime.plusMinutes(5));
         assertListenerStatus();
 
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.ACTIVE);
 
         //Add new blocking state with null datetime and verify that entitlement is BLOCKED immediately
@@ -545,7 +545,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final BlockingState state4 = new DefaultBlockingState(createdEntitlement.getId(), BlockingStateType.SUBSCRIPTION, "subscriptionBlock", "svc3", false, true, false, clock.getUTCNow());
         subscriptionApi.addBlockingState(state4, effectiveDateTime, Collections.emptyList(), callContext);
 
-        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), callContext);
+        updateEntitlement = entitlementApi.getEntitlementForId(createdEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(updateEntitlement.getState(), EntitlementState.BLOCKED);
 
         //Verify that Blocking States are created
@@ -567,7 +567,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         clock.addDays(5);
 
@@ -642,7 +642,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         clock.addDays(1);
         clock.addDeltaFromReality(5000);
@@ -659,7 +659,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
             fail();
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.BLOCK_BLOCKED_ACTION.getCode());
-            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+            final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
             assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Shotgun");
         }
 
@@ -668,7 +668,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("Assault-Rifle", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        final Entitlement latestEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(latestEntitlement.getLastActivePlan().getProduct().getName(), "Assault-Rifle");
     }
 
@@ -684,7 +684,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.ANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         // 2013-08-10 : Stay in TRIAL to ensure IMMEDIATE billing policy is used
         clock.addDays(3);

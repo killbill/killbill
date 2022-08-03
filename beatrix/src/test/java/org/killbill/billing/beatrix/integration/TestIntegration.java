@@ -622,7 +622,7 @@ public class TestIntegration extends TestIntegrationBase {
         assertEquals(initialBundle.getAccountId(), newBundle.getAccountId());
         assertEquals(initialBundle.getExternalKey(), newBundle.getExternalKey());
 
-        final Entitlement refreshedBaseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        final Entitlement refreshedBaseEntitlement = entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(refreshedBaseEntitlement.getState(), EntitlementState.CANCELLED);
         assertEquals(newBaseEntitlement.getState(), EntitlementState.ACTIVE);
 
@@ -686,7 +686,7 @@ public class TestIntegration extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 2, callContext, new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
 
         // PAUSE THE ENTITLEMENT
-        DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), Collections.emptyList(), callContext);
         assertListenerStatus();
@@ -698,7 +698,7 @@ public class TestIntegration extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 4), new LocalDate(2012, 4, 2), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-233.82")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 4), new LocalDate(2012, 3, 4), InvoiceItemType.CBA_ADJ, new BigDecimal("233.82")));
 
-        entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
 
         // MOVE CLOCK FORWARD ADN CHECK THERE IS NO NEW INVOICE
@@ -766,7 +766,7 @@ public class TestIntegration extends TestIntegrationBase {
                                     List.of(new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 2), new LocalDate(2012, 4, 2), InvoiceItemType.RECURRING, new BigDecimal("249.95"))));
 
         // Pause the entitlement between 2012-03-05 and 2012-03-15
-        DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         entitlementApi.pause(entitlement.getBundleId(), new LocalDate(2012, 3, 5), Collections.emptyList(), callContext);
         entitlementApi.resume(entitlement.getBundleId(), new LocalDate(2012, 3, 15), Collections.emptyList(), callContext);
 
@@ -787,7 +787,7 @@ public class TestIntegration extends TestIntegrationBase {
                                             new ExpectedInvoiceItemCheck(new LocalDate(2012, 3, 7), new LocalDate(2012, 3, 7), InvoiceItemType.CBA_ADJ, new BigDecimal("225.76"))));
 
         // Entitlement should be blocked
-        entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
 
         // Advance clock to 2012-03-12, nothing should happen
@@ -795,7 +795,7 @@ public class TestIntegration extends TestIntegrationBase {
         assertListenerStatus();
 
         // Entitlement is still blocked
-        entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext);
+        entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);

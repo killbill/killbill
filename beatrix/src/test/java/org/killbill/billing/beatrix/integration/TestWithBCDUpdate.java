@@ -579,7 +579,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
@@ -644,7 +644,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
         final Account accountBCD = accountUserApi.getAccountById(account.getId(), callContext);
         assertEquals(accountBCD.getBillCycleDayLocal(), (Integer) 1);
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 1), new LocalDate(2016, 6, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
@@ -702,7 +702,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
@@ -778,7 +778,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2018, 7, 15), new LocalDate(2018, 8, 15), InvoiceItemType.RECURRING, new BigDecimal("19.95")));
 
 
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("blowdart-monthly-notrial");
 
@@ -833,9 +833,9 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 4, 1), new LocalDate(2012, 5, 1), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
         final DateTime bpExpectedCTD = new DateTime("2013-05-01T00:00:00.000Z");
-        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(bpExpectedCTD), 0);
+        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), false, internalCallContext).getChargedThroughDate().compareTo(bpExpectedCTD), 0); //TODO_1030: Backward compatibility
         DateTime aoExpectedCTD = new DateTime("2012-05-01T00:00:00.000Z");
-        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(aoExpectedCTD), 0);
+        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext).getChargedThroughDate().compareTo(aoExpectedCTD), 0); //TODO_1030: Backward compatibility
 
         // 2012-05-05
         clock.addDays(4);
@@ -867,7 +867,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 5), new LocalDate(2012, 6, 5), InvoiceItemType.USAGE, new BigDecimal("5.90")));
 
         aoExpectedCTD = new DateTime("2012-06-05T00:00:00.000Z");
-        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(aoSubscription.getId(), internalCallContext).getChargedThroughDate().compareTo(aoExpectedCTD), 0);
+        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext).getChargedThroughDate().compareTo(aoExpectedCTD), 0); //TODO_1030: Backward compatibility
     }
 
 
