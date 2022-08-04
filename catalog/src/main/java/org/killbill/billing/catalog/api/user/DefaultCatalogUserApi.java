@@ -1,7 +1,10 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
- * Ning licenses this file to you under the Apache License, version 2.0
+ * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
  * License.  You may obtain a copy of the License at:
  *
@@ -19,6 +22,7 @@ package org.killbill.billing.catalog.api.user;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -133,6 +137,20 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             throw new IllegalStateException(e);
         } catch (final SAXException e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    @Override
+    public void validateCatalog(final String catalogXML, final CallContext context) throws CatalogApiException {
+        final InternalTenantContext internalTenantContext = createInternalTenantContext(context);
+        try {
+            XMLLoader.getObjectFromStream(new ByteArrayInputStream(catalogXML.getBytes(StandardCharsets.UTF_8)), StandaloneCatalog.class);
+        } catch (final ValidationException e) {
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+        } catch (final JAXBException e) {
+            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

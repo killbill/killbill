@@ -207,7 +207,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         recordUsageData(aoSubscription.getId(), "tracking-6", "bullets", new LocalDate(2012, 5, 1), BigDecimal.valueOf(199L), callContext);
 
         // New usage for this past period
-        recordUsageData(aoSubscription.getId(), "tracking-7", "bullets", new LocalDate(2012, 7, 1), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-7", "bullets", clock.getUTCNow(), BigDecimal.valueOf(50L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-8", "bullets", new LocalDate(2012, 7, 16), BigDecimal.valueOf(300L), callContext);
 
         // Remove old data, should be ignored by the system because readMaxRawUsagePreviousPeriod = 2, so:
