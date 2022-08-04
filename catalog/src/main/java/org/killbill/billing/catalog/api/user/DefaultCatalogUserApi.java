@@ -224,10 +224,5 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         return internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
     }
 
-	@Override
-	public void validateCatalog(String catalogXML, CallContext context) throws CatalogApiException { //TODO_1030 method stub to get rid of compilation error
-		// TODO Auto-generated method stub
-		
-	}
 
 }
