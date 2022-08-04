@@ -1,7 +1,8 @@
 /*
  * Copyright 2010-2014 Ning, Inc.
  * Copyright 2014-2020 Groupon, Inc
- * Copyright 2014-2020 The Billing Project, LLC
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -229,6 +230,24 @@ public class CatalogResource extends JaxRsResourceBase {
                                      @javax.ws.rs.core.Context final HttpServletRequest request,
                                      @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         return uploadCatalogXmlOriginal(catalogXML, createdBy, reason, comment, request, uriInfo);
+    }
+
+    @TimedResource
+    @POST
+    @Path("/xml/validate")
+    @Consumes(TEXT_XML)
+    @ApiOperation(value = "Validate a XML catalog", response = String.class)
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Valid XML catalog"),
+                           @ApiResponse(code = 400, message = "Invalid XML catalog")})
+    public Response validateCatalogXml(final String catalogXML,
+                                       @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                       @HeaderParam(HDR_REASON) final String reason,
+                                       @HeaderParam(HDR_COMMENT) final String comment,
+                                       @javax.ws.rs.core.Context final HttpServletRequest request,
+                                       @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
+        final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
+        catalogUserApi.validateCatalog(catalogXML, callContext);
+        return Response.status(Status.OK).build();
     }
 
     @TimedResource

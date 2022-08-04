@@ -229,7 +229,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         //
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // 2012-05-01
@@ -243,7 +243,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, Set.of("tracking-1", "tracking-2"), internalCallContext);
 
         // Billed on 2012-06-01
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2012, 5, 1), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", clock.getUTCNow(), BigDecimal.valueOf(50L), callContext);
         // Billed on 2012-07-01
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2012, 6, 1), BigDecimal.valueOf(300L), callContext);
 
@@ -322,7 +322,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
         invoiceChecker.checkTrackingIds(curInvoice, Collections.emptySet(), internalCallContext);
 
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2012, 6, 1), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", clock.getUTCNow(), BigDecimal.valueOf(50L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2012, 6, 16), BigDecimal.valueOf(300L), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -340,7 +340,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         recordUsageData(aoSubscription.getId(), "tracking-6", "bullets", new LocalDate(2012, 5, 1), BigDecimal.valueOf(199L), callContext);
 
         // New usage for this past period
-        recordUsageData(aoSubscription.getId(), "tracking-7", "bullets", new LocalDate(2012, 7, 1), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-7", "bullets", clock.getUTCNow(), BigDecimal.valueOf(50L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-8", "bullets", new LocalDate(2012, 7, 16), BigDecimal.valueOf(300L), callContext);
 
         // Remove old data, should be ignored by the system because readMaxRawUsagePreviousPeriod = 2, so:
@@ -405,7 +405,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
                                                                                         new LocalDate(2012, 4, 1),
                                                                                         NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "t1", "bullets", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "t1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "t2", "bullets", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // Trigger future invoice
@@ -438,7 +438,7 @@ public class TestUsageInArrear extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(thirdInvoice, Collections.emptySet(), internalCallContext);
 
         // Add usage data
-        recordUsageData(aoSubscription.getId(), "u1", "slugs", new LocalDate(2012, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "u1", "slugs", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "u2", "slugs", new LocalDate(2012, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // Trigger future invoice
