@@ -158,8 +158,8 @@ public class DefaultEntitlementApiBase {
         return entitlements;
     }
 
-    public Entitlement getEntitlementForId(final UUID entitlementId, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext tenantContext) throws EntitlementApiException {
-        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(entitlementId, includeDeletedSubscriptionEvents, tenantContext);
+    public Entitlement getEntitlementForId(final UUID entitlementId, final boolean includeDeletedEvents, final InternalTenantContext tenantContext) throws EntitlementApiException {
+        final EventsStream eventsStream = eventsStreamBuilder.buildForEntitlement(entitlementId, includeDeletedEvents, tenantContext);
         return new DefaultEntitlement(eventsStream, eventsStreamBuilder, entitlementApi, pluginExecution,
                                       blockingStateDao, subscriptionInternalApi, checker, notificationQueueService,
                                       entitlementUtils, dateHelper, clock, securityApi, tenantContext, internalCallContextFactory);

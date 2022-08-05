@@ -192,7 +192,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final SubscriptionCatalog catalog, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) { 
+    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final SubscriptionCatalog catalog, final boolean includeDeletedEvents, final InternalTenantContext context) { 
         for (final SubscriptionBase cur : subscriptions) {
             if (cur.getId().equals(subscriptionId)) {
                 return buildSubscription((DefaultSubscriptionBase) cur, context);
@@ -281,7 +281,7 @@ public class MockSubscriptionDaoMemory extends MockEntityDaoBase<SubscriptionBun
     }
 
     @Override
-    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) {
+    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final boolean includeDeletedEvents, final InternalTenantContext context) {
         synchronized (events) {
             final List<SubscriptionBaseEvent> results = new LinkedList<SubscriptionBaseEvent>();
             for (final SubscriptionBaseEvent cur : events) {

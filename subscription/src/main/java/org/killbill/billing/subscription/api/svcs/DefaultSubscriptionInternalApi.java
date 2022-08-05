@@ -295,10 +295,10 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public SubscriptionBase getSubscriptionFromId(final UUID id, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBase getSubscriptionFromId(final UUID id, final boolean includeDeletedEvents, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            final SubscriptionBase result = dao.getSubscriptionFromId(id, catalog, includeDeletedSubscriptionEvents, context);
+            final SubscriptionBase result = dao.getSubscriptionFromId(id, catalog, includeDeletedEvents, context);
             if (result == null) {
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, id);
             }

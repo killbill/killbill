@@ -327,13 +327,13 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final SubscriptionCatalog kbCatalog, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) throws CatalogApiException {
+    public SubscriptionBase getSubscriptionFromId(final UUID subscriptionId, final SubscriptionCatalog kbCatalog, final boolean includeDeletedEvents, final InternalTenantContext context) throws CatalogApiException {
         final DefaultSubscriptionBase shellSubscription = transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             final SubscriptionModelDao subscriptionModel = entitySqlDaoWrapperFactory.become(SubscriptionSqlDao.class).getById(subscriptionId.toString(), context);
             final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getById(subscriptionModel.getBundleId().toString(), context);
             return SubscriptionModelDao.toSubscription(subscriptionModel, bundleModel.getExternalKey());
         });
-        return buildSubscription(shellSubscription, kbCatalog, includeDeletedSubscriptionEvents, context);
+        return buildSubscription(shellSubscription, kbCatalog, includeDeletedEvents, context);
     }
 
     @Override
@@ -481,8 +481,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> getEventsForSubscriptionInTransaction(entitySqlDaoWrapperFactory, subscriptionId, includeDeletedSubscriptionEvents, context));
+    public List<SubscriptionBaseEvent> getEventsForSubscription(final UUID subscriptionId, final boolean includeDeletedEvents, final InternalTenantContext context) {
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> getEventsForSubscriptionInTransaction(entitySqlDaoWrapperFactory, subscriptionId, includeDeletedEvents, context));
     }
 
     @Override
@@ -781,7 +781,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
     }
 
-    private DefaultSubscriptionBase buildSubscription(final DefaultSubscriptionBase input, final SubscriptionCatalog catalog, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) throws CatalogApiException {
+    private DefaultSubscriptionBase buildSubscription(final DefaultSubscriptionBase input, final SubscriptionCatalog catalog, final boolean includeDeletedEvents, final InternalTenantContext context) throws CatalogApiException {
 
         if (input == null) {
             return null;
@@ -799,7 +799,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             bundleInput.add(input);
         }
 
-        final List<DefaultSubscriptionBase> reloadedSubscriptions = buildBundleSubscriptions(bundleInput, null, null, catalog, includeDeletedSubscriptionEvents, context);
+        final List<DefaultSubscriptionBase> reloadedSubscriptions = buildBundleSubscriptions(bundleInput, null, null, catalog, includeDeletedEvents, context);
         for (final DefaultSubscriptionBase cur : reloadedSubscriptions) {
             if (cur.getId().equals(input.getId())) {
                 return cur;
@@ -813,7 +813,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                                                                    @Nullable final MultiValueMap<UUID, SubscriptionBaseEvent> eventsForSubscription,
                                                                    @Nullable final Collection<SubscriptionBaseEvent> dryRunEvents,
                                                                    final SubscriptionCatalog catalog,
-                                                                   final boolean includeDeletedSubscriptionEvents, 
+                                                                   final boolean includeDeletedEvents, 
                                                                    final InternalTenantContext context) throws CatalogApiException {
         if (input == null || input.isEmpty()) {
             return Collections.emptyList();
@@ -828,7 +828,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         for (final DefaultSubscriptionBase cur : input) {
             final List<SubscriptionBaseEvent> events = eventsForSubscription != null ?
                                                        (List<SubscriptionBaseEvent>) eventsForSubscription.get(cur.getId()) :
-                                                       getEventsForSubscription(cur.getId(), includeDeletedSubscriptionEvents, context);
+                                                       getEventsForSubscription(cur.getId(), includeDeletedEvents, context);
             mergeDryRunEvents(cur.getId(), events, dryRunEvents);
 
             DefaultSubscriptionBase reloaded = createSubscriptionForInternalUse(cur, events, catalog, context);
@@ -1048,9 +1048,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         }
     }
 
-    private List<SubscriptionBaseEvent> getEventsForSubscriptionInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID subscriptionId, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext context) {
+    private List<SubscriptionBaseEvent> getEventsForSubscriptionInTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final UUID subscriptionId, final boolean includeDeletedEvents, final InternalTenantContext context) {
         final SubscriptionEventSqlDao eventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-        final SortedSet<SubscriptionEventModelDao> models = includeDeletedSubscriptionEvents ? eventSqlDao.getAllEventsForSubscription(subscriptionId.toString(), context) : eventSqlDao.getActiveEventsForSubscription(subscriptionId.toString(), context);
+        final SortedSet<SubscriptionEventModelDao> models = includeDeletedEvents ? eventSqlDao.getAllEventsForSubscription(subscriptionId.toString(), context) : eventSqlDao.getActiveEventsForSubscription(subscriptionId.toString(), context);
         return filterSubscriptionBaseEvents(models);
     }
 

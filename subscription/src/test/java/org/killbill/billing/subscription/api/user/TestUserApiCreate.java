@@ -354,7 +354,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
         assertListenerStatus();
 
-        //retrieve events with includeDeletedSubscriptionEvents=false (no deleted events exist currently)
+        //retrieve events with includeDeletedEvents=false (no deleted events exist currently)
         final List<SubscriptionBaseEvent> activeEvents = dao.getEventsForSubscription(subscription.getId(), false, internalCallContext);
         assertNotNull(activeEvents);
         testUtil.printEvents(activeEvents);
@@ -370,7 +370,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
         assertListenerStatus();
         
-        //retrieve events with includeDeletedSubscriptionEvents=false 
+        //retrieve events with includeDeletedEvents=false 
         List<SubscriptionBaseEvent> eventsAfterChange = dao.getEventsForSubscription(subscription.getId(), false, internalCallContext);
         assertNotNull(eventsAfterChange);
         testUtil.printEvents(eventsAfterChange);
@@ -383,7 +383,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertTrue(event instanceof ApiEventBase);
         assertEquals(((ApiEventBase) event).getApiEventType(), ApiEventType.CHANGE);        
         
-        ///retrieve events with includeDeletedSubscriptionEvents=true 
+        ///retrieve events with includeDeletedEvents=true 
         eventsAfterChange = dao.getEventsForSubscription(subscription.getId(), true, internalCallContext);
         assertNotNull(eventsAfterChange);
         testUtil.printEvents(eventsAfterChange);

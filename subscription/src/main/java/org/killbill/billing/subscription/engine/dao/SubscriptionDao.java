@@ -66,7 +66,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     SubscriptionBaseBundle createSubscriptionBundle(DefaultSubscriptionBaseBundle bundle, final SubscriptionCatalog catalog, final boolean renameCancelledBundleIfExist, InternalCallContext context) throws SubscriptionBaseApiException;
 
-    SubscriptionBase getSubscriptionFromId(UUID subscriptionId, final SubscriptionCatalog catalog, boolean includeDeletedSubscriptionEvents, InternalTenantContext context) throws CatalogApiException;
+    SubscriptionBase getSubscriptionFromId(UUID subscriptionId, final SubscriptionCatalog catalog, boolean includeDeletedEvents, InternalTenantContext context) throws CatalogApiException;
 
     SubscriptionBase getSubscriptionFromExternalKey(String externalKey, final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
@@ -91,7 +91,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     SubscriptionBaseEvent getEventById(UUID eventId, InternalTenantContext context);
 
-    List<SubscriptionBaseEvent> getEventsForSubscription(UUID subscriptionId, boolean includeDeletedSubscriptionEvents, InternalTenantContext context);
+    List<SubscriptionBaseEvent> getEventsForSubscription(UUID subscriptionId, boolean includeDeletedEvents, InternalTenantContext context);
 
     List<SubscriptionBaseEvent> getPendingEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 

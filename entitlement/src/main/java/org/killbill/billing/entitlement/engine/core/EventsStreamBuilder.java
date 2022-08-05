@@ -276,9 +276,9 @@ public class EventsStreamBuilder {
         return eventsStreams;
     }
 
-    public EventsStream buildForEntitlement(final UUID entitlementId, final boolean includeDeletedSubscriptionEvents, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+    public EventsStream buildForEntitlement(final UUID entitlementId, final boolean includeDeletedEvents, final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         try {
-            final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, includeDeletedSubscriptionEvents, internalTenantContext);
+            final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlementId, includeDeletedEvents, internalTenantContext);
             return buildForEntitlement(subscription, internalTenantContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
