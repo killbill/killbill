@@ -125,12 +125,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
-    public Subscription getSubscriptionForEntitlementId(final UUID entitlementId, final TenantContext tenantContext) throws SubscriptionApiException {
+    public Subscription getSubscriptionForEntitlementId(final UUID entitlementId, final boolean includeDeletedEvents, final TenantContext tenantContext) throws SubscriptionApiException {
 
         try {
             final UUID accountId = internalCallContextFactory.getAccountId(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
             final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
-            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementInternalApi.getEntitlementForId(entitlementId, false, internalTenantContextWithValidAccountRecordId); //TODO_1030: Backward compatibility
+            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementInternalApi.getEntitlementForId(entitlementId, includeDeletedEvents, internalTenantContextWithValidAccountRecordId); //TODO_1030: Backward compatibility
             return new DefaultSubscription(entitlement);
         } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
@@ -143,7 +143,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         try {
             final InternalTenantContext contextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
             final UUID subscriptionId = subscriptionBaseInternalApi.getSubscriptionIdFromSubscriptionExternalKey(externalKey, contextWithoutAccountRecordId);
-            return getSubscriptionForEntitlementId(subscriptionId, tenantContext);
+            return getSubscriptionForEntitlementId(subscriptionId, false, tenantContext); //TODO_1030: check if this method needs to be modified too
         } catch (final SubscriptionBaseApiException e) {
             throw new SubscriptionApiException(e);
         }

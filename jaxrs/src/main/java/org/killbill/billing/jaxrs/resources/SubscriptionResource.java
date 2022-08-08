@@ -166,7 +166,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                     @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
         final TenantContext context = this.context.createTenantContextNoAccountId(request);
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, context);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, context);
         final Account account = accountUserApi.getAccountById(subscription.getAccountId(), context);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(subscription.getAccountId(), auditMode.getLevel(), context);
         final SubscriptionJson json = new SubscriptionJson(subscription, account.getCurrency(), accountAuditLogs);
@@ -634,7 +634,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     newEntitlement = current.cancelEntitlementWithPolicyOverrideBillingPolicy(entitlementPolicy, billingPolicy, pluginProperties, ctx);
                 }
 
-                final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(newEntitlement.getId(), ctx);
+                final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(newEntitlement.getId(), false, ctx);
                 if (subscription.getBillingEndDate() != null) {
                     final Account account = accountUserApi.getAccountById(subscription.getAccountId(), callContext);
                     final boolean inTheFuture = isInTheFuture(subscription.getBillingEndDate(), account);
@@ -923,7 +923,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                             @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException, SubscriptionApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, tenantContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, tenantContext);
         return super.getTags(subscription.getAccountId(), subscriptionId, auditMode, includedDeleted, tenantContext);
     }
 

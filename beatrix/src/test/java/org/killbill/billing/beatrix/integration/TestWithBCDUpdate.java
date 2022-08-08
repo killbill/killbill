@@ -130,7 +130,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final Entitlement cancelledEntitlement = baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.START_OF_TERM, null, callContext);
         assertListenerStatus();
 
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), false, callContext);
         assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(new LocalDate(2016, 5, 18)), 0);
         assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()).compareTo(new LocalDate(2016, 5, 15)), 0);
     }
@@ -208,7 +208,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final Entitlement cancelledEntitlement = baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.START_OF_TERM, null, callContext);
         assertListenerStatus();
 
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), false, callContext);
         assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(new LocalDate(2016, 7, 13)), 0);
         assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()).compareTo(new LocalDate(2016, 7, 10)), 0);
 

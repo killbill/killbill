@@ -80,7 +80,7 @@ public class TestCatalogWithEvents extends TestIntegrationBase {
 
         Assert.assertTrue(invoice1.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()) == 0);
 
-        final Subscription subscription1 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, callContext);
+        final Subscription subscription1 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, callContext);
         final List<SubscriptionEvent> events1 = subscription1.getSubscriptionEvents();
         Assert.assertEquals(events1.size(), 2);
         Assert.assertTrue(events1.get(0).getNextPlan().getCatalog().getEffectiveDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()) == 0);
@@ -92,7 +92,7 @@ public class TestCatalogWithEvents extends TestIntegrationBase {
         subscription1.changePlanWithDate(new DefaultEntitlementSpecifier(spec),  clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        final Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, callContext);
+        final Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, callContext);
         final List<SubscriptionEvent> events2 = subscription2.getSubscriptionEvents();
         Assert.assertEquals(events2.size(), 3);
         Assert.assertTrue(events2.get(0).getNextPlan().getCatalog().getEffectiveDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()) == 0);
@@ -112,7 +112,7 @@ public class TestCatalogWithEvents extends TestIntegrationBase {
 
 
 
-        final Subscription subscription3 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, callContext);
+        final Subscription subscription3 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, callContext);
         final List<SubscriptionEvent> events3 = subscription3.getSubscriptionEvents();
         Assert.assertEquals(events3.size(), 4);
         Assert.assertTrue(events3.get(0).getNextPlan().getCatalog().getEffectiveDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()) == 0);

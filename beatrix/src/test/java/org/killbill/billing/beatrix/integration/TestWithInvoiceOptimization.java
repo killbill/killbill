@@ -906,7 +906,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
         final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
         // on-1615: return value of getSubscriptionForEntitlementId (sub1) never used, so it gets removed.
-        subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, callContext);
+        subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, false, callContext);
         assertListenerStatus();
 
         // Create an in-arrear USAGE subscription
@@ -914,7 +914,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("training-usage-in-arrear");
         final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null), null, effDt2, effDt2, false, true, Collections.emptyList(), callContext);
-        final Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, callContext);
+        final Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, false, callContext);
         assertListenerStatus();
 
         // Generate some usage data for past months

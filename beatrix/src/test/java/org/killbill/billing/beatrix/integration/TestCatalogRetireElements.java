@@ -117,7 +117,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
 
 
-        final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, callContext);
+        final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, false, callContext);
         final List<SubscriptionEvent> events = bpSubscription.getSubscriptionEvents();
         // We are seeing START_ENTITLEMENT, START_BILLING, and the **last CHANGE**
         // Note that the PHASE and intermediate CHANGE are not being returned (is_active = FALSE) because all coincided on the same date. This is debatable

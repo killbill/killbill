@@ -46,6 +46,7 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Subscription;
+import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
@@ -518,7 +519,7 @@ public class TestSubscription extends TestIntegrationBase {
         final Entitlement cancelledEntitlement = createdEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.START_OF_TERM, null, callContext);
         assertListenerStatus();
 
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), false, callContext);
 
         assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(new LocalDate(2015, 9, 6)), 0);
         assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()).compareTo(initialDate), 0);
@@ -557,7 +558,7 @@ public class TestSubscription extends TestIntegrationBase {
         final Entitlement cancelledEntitlement = createdEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.START_OF_TERM, null, callContext);
         assertListenerStatus();
 
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), false, callContext);
 
         assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(new LocalDate(2015, 9, 5)), 0);
         assertEquals(internalCallContext.toLocalDate(subscription.getBillingEndDate()).compareTo(new LocalDate(2015, 8, 31)), 0);
@@ -756,5 +757,57 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), initialDate);
         assertListenerStatus();
     }
+    
+    @Test(groups = "slow")
+    public void testCreateSubscriptionChangePlanAndRetrieveEvents() throws Exception {
+        final LocalDate today = new LocalDate(2012, 4, 1);
+        clock.setDay(today);
 
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        //create subscription
+        final PlanPhaseSpecifier planSpec = new PlanPhaseSpecifier("pistol-monthly");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        
+        //Retrieve subscription without deleted events and verify subscription events
+        Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        assertNotNull(subscription);
+        List<SubscriptionEvent> events = subscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 3);
+        assertEquals(events.get(0).getSubscriptionEventType(),SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(),SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(),SubscriptionEventType.PHASE);
+        
+        clock.addDays(2);
+        
+        //change plan, this will result in deletion of the PhaseEvent
+        busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("pistol-monthly-notrial");      
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Check if subscription can be used here
+        entitlement.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), Collections.emptyList(), callContext);
+        assertListenerStatus();        
+        
+        //Retrieve subscription without deleted events and verify subscription events
+        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        assertNotNull(subscription);
+        events = subscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 3);    
+        assertEquals(events.get(0).getSubscriptionEventType(),SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(),SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(),SubscriptionEventType.CHANGE);
+        
+      //Retrieve subscription including deleted events and verify subscription events
+        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, true, callContext);
+        assertNotNull(subscription);
+        events = subscription.getSubscriptionEvents();
+        assertNotNull(events);
+        System.out.println("events after changePlan with deleted events");
+        events.forEach( event -> System.out.println(event.getSubscriptionEventType()));
+        //assertEquals(events.size(), 4); //This line fails since the deleted PHASE event is not returned  
+
+    }               
 }

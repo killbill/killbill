@@ -282,21 +282,21 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, testCallContext); //TODO_1030: Backward compatibility
 
-        Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 7, 1));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
 
-        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 8, 1));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE);
         clock.addMonths(1);
         assertListenerStatus();
 
-        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 9, 1));
 
         // Add another Plan in the catalog
@@ -316,20 +316,20 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 10, 1));
 
-        Subscription refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), testCallContext);
+        Subscription refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement2.getChargedThroughDate(), new LocalDate(2016, 10, 1));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
-        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 11, 1));
 
-        refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), testCallContext);
+        refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement2.getChargedThroughDate(), new LocalDate(2016, 11, 1));
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
@@ -340,20 +340,20 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 11, 1));
 
-        refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), testCallContext);
+        refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement2.getChargedThroughDate(), new LocalDate(2016, 12, 1));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
 
-        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 11, 1));
 
-        refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), testCallContext);
+        refreshedBaseEntitlement2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement2.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement2.getChargedThroughDate(), new LocalDate(2017, 1, 1));
     }
 
@@ -374,14 +374,14 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, testCallContext); //TODO_1030: Backward compatibility
 
-        Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 6, 1));
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addWeeks(1);
         assertListenerStatus();
 
-        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 7, 8));
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -389,7 +389,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
 
-        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), testCallContext);
+        refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 8, 8));
     }
 

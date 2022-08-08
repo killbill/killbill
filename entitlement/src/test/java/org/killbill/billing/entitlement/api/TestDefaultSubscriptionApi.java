@@ -281,7 +281,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), externalKey, effectiveDate, effectiveDate, false, true, Collections.emptyList(), callContext);
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
 
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), false, callContext);
 
         final List<SubscriptionEvent> events = subscription.getSubscriptionEvents();
         assertEquals(events.size(), 3);
@@ -323,7 +323,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final Entitlement cancelledEntitlement = baseEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, null, callContext);
         assertEquals(internalCallContext.toLocalDate(cancelledEntitlement.getEffectiveEndDate()).compareTo(futureDate), 0);
 
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(cancelledEntitlement.getId(), false, callContext);
         assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()).compareTo(futureDate), 0);
 
         assertListenerStatus();
@@ -696,7 +696,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         baseEntitlement.cancelEntitlementWithDate(cancelDate, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        final Subscription result1 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
+        final Subscription result1 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, callContext);
         assertEquals(internalCallContext.toLocalDate(result1.getBillingEndDate()).compareTo(new LocalDate(2013, 8, 10)), 0);
         assertEquals(internalCallContext.toLocalDate(result1.getEffectiveEndDate()).compareTo(new LocalDate(2013, 8, 14)), 0);
         assertEquals(result1.getLastActiveProduct().getName(), "Shotgun");
@@ -707,7 +707,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         clock.addDays(4);
         assertListenerStatus();
 
-        final Subscription result2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
+        final Subscription result2 = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, callContext);
         assertEquals(internalCallContext.toLocalDate(result2.getBillingEndDate()).compareTo(new LocalDate(2013, 8, 10)), 0);
         assertEquals(internalCallContext.toLocalDate(result2.getEffectiveEndDate()).compareTo(new LocalDate(2013, 8, 14)), 0);
         assertEquals(result2.getLastActiveProduct().getName(), "Shotgun");

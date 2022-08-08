@@ -284,7 +284,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final List<Entitlement> oldEntitlements = entitlementApi.getAllEntitlementsForBundle(bpEntitlement.getBundleId(), callContext);
         Assert.assertEquals(oldEntitlements.size(), 2);
         for (final Entitlement entitlement : oldEntitlements) {
-            final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+            final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), false, callContext);
             Assert.assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveStartDate()), startDate);
             Assert.assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveEndDate()), transferDay);
             Assert.assertEquals(internalCallContext.toLocalDate(subscription.getBillingStartDate()), startDate);
@@ -295,7 +295,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final List<Entitlement> newEntitlements = entitlementApi.getAllEntitlementsForBundle(newBundleId, callContext);
         Assert.assertEquals(newEntitlements.size(), 2);
         for (final Entitlement entitlement : newEntitlements) {
-            final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+            final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), false, callContext);
             Assert.assertEquals(internalCallContext.toLocalDate(subscription.getEffectiveStartDate()), transferDay);
             Assert.assertNull(subscription.getEffectiveEndDate());
             Assert.assertEquals(internalCallContext.toLocalDate(subscription.getBillingStartDate()), transferDay);

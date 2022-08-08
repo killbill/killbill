@@ -485,7 +485,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
         assertListenerStatus();
 
         // Not worth writing another test in TestDefaultSubscriptionApi just for that subscription call. We want to check that future PAUSE/RESUME events are visible
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, callContext);
         Assert.assertEquals(subscription.getSubscriptionEvents().size(), 7);
 
         Assert.assertEquals(subscription.getSubscriptionEvents().get(0).getServiceName(), "entitlement-service");
@@ -761,7 +761,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         //Verify entitlementStartDate and billingStartDate
         assertEquals(entitlement.getEffectiveStartDate().compareTo(initialDateTime), 0);
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), false, callContext);
         assertEquals(subscription.getBillingStartDate().compareTo(initialDateTime), 0);
 
     }
@@ -793,7 +793,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         //Verify entitlementStartDate and billingStartDate
         assertEquals(entitlement.getEffectiveStartDate().compareTo(entitlementDatetime), 0);
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), false, callContext);
         assertEquals(subscription.getBillingStartDate().compareTo(billingDatetime), 0);
 
         //Move clock to billingStartDate and verify that billing starts
@@ -829,7 +829,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         //Verify entitlementStartDate and billingStartDate
         assertEquals(entitlement.getEffectiveStartDate().compareTo(entitlementDateTime), 0);
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), false, callContext);
         assertEquals(subscription.getBillingStartDate().compareTo(initialDateTime), 0);
 
         //Move clock to entitlementStartDate and verify that entitlement starts
@@ -867,7 +867,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         //Verify entitlementStartDate and billingStartDate
         assertEquals(entitlement.getEffectiveStartDate().compareTo(entitlementDateTime), 0);
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), false, callContext);
         assertEquals(subscription.getBillingStartDate().compareTo(billingDatetime), 0);
 
         //Move clock to entitlementStartDate and verify that entitlement starts
@@ -1146,7 +1146,7 @@ public class TestDefaultEntitlementApi extends EntitlementTestSuiteWithEmbeddedD
 
         //Verify entitlementStartDate and billingStartDate
         assertEquals(entitlement.getEffectiveStartDate().compareTo(initialDateTime), 0);
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), callContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlement.getId(), false, callContext);
         assertEquals(subscription.getBillingStartDate().compareTo(initialDateTime), 0);
 
     }    
