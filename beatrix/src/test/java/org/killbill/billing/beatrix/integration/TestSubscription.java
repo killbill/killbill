@@ -800,13 +800,11 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(events.get(1).getSubscriptionEventType(),SubscriptionEventType.START_BILLING);
         assertEquals(events.get(2).getSubscriptionEventType(),SubscriptionEventType.CHANGE);
         
-      //Retrieve subscription including deleted events and verify subscription events
+        //Retrieve subscription including deleted events and verify subscription events
         subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, true, callContext);
         assertNotNull(subscription);
         events = subscription.getSubscriptionEvents();
         assertNotNull(events);
-        System.out.println("events after changePlan with deleted events");
-        events.forEach( event -> System.out.println(event.getSubscriptionEventType()));
         //assertEquals(events.size(), 4); //This line fails since the deleted PHASE event is not returned  
 
     }               
