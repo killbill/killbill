@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -54,9 +55,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
-import com.google.common.collect.ImmutableMultimap;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -101,7 +99,7 @@ public class TestAccount extends TestJaxrsBase {
                                                             .withComment(Base64.getEncoder().encodeToString(comment.getBytes(StandardCharsets.UTF_8)))
                                                             .withHeader("X-Killbill-Encoding", "base64")
                                                             .withFollowLocation(true)
-                                                            .withQueryParamsForFollow(ImmutableMultimap.of(JaxrsResource.QUERY_AUDIT, AuditLevel.MINIMAL.name()))
+                                                            .withQueryParamsForFollow(Map.of(JaxrsResource.QUERY_AUDIT, List.of(AuditLevel.MINIMAL.name())))
                                                             .build();
         final Account emptyAccount = new Account();
 

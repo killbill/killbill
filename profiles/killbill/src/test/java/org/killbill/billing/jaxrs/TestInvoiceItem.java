@@ -17,7 +17,10 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.client.RequestOptions;
@@ -33,10 +36,6 @@ import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-// FIXME-1615 : killbill-client-java : RequestOptions using MultiMap
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 public class TestInvoiceItem extends TestJaxrsBase {
 
@@ -61,8 +60,9 @@ public class TestInvoiceItem extends TestJaxrsBase {
         Assert.assertEquals(objFromJson.getDescription(), input.getDescription());
 
         // Add a tag
-        final Multimap<String, String> followQueryParams = HashMultimap.create();
-        followQueryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, accountJson.getAccountId().toString());
+        // FIXME-1615 : Not using MultiValueMap because of line 66 (killbill-client-java still not support it)
+        final Map<String, Collection<String>> followQueryParams = new LinkedHashMap<>();
+        followQueryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, List.of(accountJson.getAccountId().toString()));
         final RequestOptions followRequestOptions = requestOptions.extend().withQueryParamsForFollow(followQueryParams).build();
         invoiceItemApi.createInvoiceItemTags(invoiceItems.get(0).getInvoiceItemId(), List.of(objFromJson.getId()), followRequestOptions);
 
