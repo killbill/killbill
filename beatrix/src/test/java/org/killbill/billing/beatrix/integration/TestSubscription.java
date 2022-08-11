@@ -781,6 +781,16 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(events.get(1).getSubscriptionEventType(),SubscriptionEventType.START_BILLING);
         assertEquals(events.get(2).getSubscriptionEventType(),SubscriptionEventType.PHASE);
         
+        //Retrieve subscription with deleted events and verify that subscription events are the same as above
+        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, true, callContext);
+        assertNotNull(subscription);
+        events = subscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 3);
+        assertEquals(events.get(0).getSubscriptionEventType(),SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(),SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(),SubscriptionEventType.PHASE);        
+        
         clock.addDays(2);
         
         //change plan, this will result in deletion of the PhaseEvent
@@ -811,5 +821,6 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(events.get(1).getSubscriptionEventType(),SubscriptionEventType.START_BILLING);
         assertEquals(events.get(2).getSubscriptionEventType(),SubscriptionEventType.CHANGE);        
         assertEquals(events.get(3).getSubscriptionEventType(),SubscriptionEventType.PHASE);     
-    }               
+    }  
+    
 }
