@@ -333,7 +333,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             final SubscriptionBundleModelDao bundleModel = entitySqlDaoWrapperFactory.become(BundleSqlDao.class).getById(subscriptionModel.getBundleId().toString(), context);
             return SubscriptionModelDao.toSubscription(subscriptionModel, bundleModel.getExternalKey());
         });
-        return buildSubscription(shellSubscription, kbCatalog, includeDeletedEvents, context);
+        
+        DefaultSubscriptionBase subscriptionWithDeletedEventsFlag = new DefaultSubscriptionBase(shellSubscription, includeDeletedEvents);
+        return buildSubscription(subscriptionWithDeletedEventsFlag, kbCatalog, includeDeletedEvents, context);
     }
 
     @Override

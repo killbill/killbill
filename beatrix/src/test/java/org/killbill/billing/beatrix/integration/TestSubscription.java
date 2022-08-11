@@ -803,9 +803,13 @@ public class TestSubscription extends TestIntegrationBase {
         //Retrieve subscription including deleted events and verify subscription events
         subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, true, callContext);
         assertNotNull(subscription);
+        assertEquals(subscription.getState(), EntitlementState.ACTIVE); 
         events = subscription.getSubscriptionEvents();
         assertNotNull(events);
-        //assertEquals(events.size(), 4); //This line fails since the deleted PHASE event is not returned  
-
+        assertEquals(events.size(), 4); 
+        assertEquals(events.get(0).getSubscriptionEventType(),SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(),SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(),SubscriptionEventType.CHANGE);        
+        assertEquals(events.get(3).getSubscriptionEventType(),SubscriptionEventType.PHASE);     
     }               
 }

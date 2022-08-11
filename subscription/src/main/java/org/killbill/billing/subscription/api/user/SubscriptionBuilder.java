@@ -35,9 +35,7 @@ public class SubscriptionBuilder {
     private DateTime chargedThroughDate;
     private boolean migrated;
     private Integer subscriptionBCD;
-
-    public SubscriptionBuilder() {
-    }
+    private boolean includeDeletedEvents;
 
     public SubscriptionBuilder(final DefaultSubscriptionBase original) {
         this.id = original.getId();
@@ -49,6 +47,7 @@ public class SubscriptionBuilder {
         this.category = original.getCategory();
         this.chargedThroughDate = original.getChargedThroughDate();
         this.migrated = original.isMigrated();
+        this.includeDeletedEvents= original.getIncludeDeletedEvents();
     }
 
     public UUID getId() {
@@ -154,6 +153,18 @@ public class SubscriptionBuilder {
     public Integer getSubscriptionBCD() {
         return subscriptionBCD;
     }
+    
+	public boolean getIncludeDeletedEvents() {
+		return includeDeletedEvents;
+	}
+
+	public SubscriptionBuilder setIncludeDeletedEvents(boolean includeDeletedEvents) {
+		this.includeDeletedEvents = includeDeletedEvents;
+		return this;
+	}
+
+	public SubscriptionBuilder() {
+    }    
 
     public SubscriptionBuilder setSubscriptionBCD(final Integer subscriptionBCD) {
         this.subscriptionBCD = subscriptionBCD;

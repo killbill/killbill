@@ -103,13 +103,19 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     // the call completes
     //
     private LinkedList<SubscriptionBaseTransition> transitions;
+    
+    private boolean includeDeletedEvents;
 
-    // Low level events are ONLY used for Repair APIs
+	// Low level events are ONLY used for Repair APIs
     protected List<SubscriptionBaseEvent> events;
 
     public List<SubscriptionBaseEvent> getEvents() {
         return events;
     }
+
+    public boolean getIncludeDeletedEvents() {
+		return includeDeletedEvents;
+	}    
 
     // Transient object never returned at the API
     public DefaultSubscriptionBase(final SubscriptionBuilder builder) {
@@ -128,6 +134,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.category = builder.getCategory();
         this.chargedThroughDate = builder.getChargedThroughDate();
         this.migrated = builder.isMigrated();
+        this.includeDeletedEvents = builder.getIncludeDeletedEvents();
     }
 
     // Used for API to make sure we have a clock and an apiService set before we return the object
@@ -145,7 +152,14 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.migrated = internalSubscription.isMigrated();
         this.transitions = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions());
         this.events = internalSubscription.getEvents();
+        this.includeDeletedEvents = internalSubscription.getIncludeDeletedEvents();
     }
+    
+    // Used for API to make sure we have a clock and an apiService set before we return the object
+    public DefaultSubscriptionBase(final DefaultSubscriptionBase internalSubscription, final boolean includeDeletedEvents) {
+        this(internalSubscription, null, null);
+        this.includeDeletedEvents = includeDeletedEvents;
+    }    
 
     @Override
     public UUID getBundleId() {
@@ -835,7 +849,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         DateTime lastPlanChangeTime = null;
 
         for (final SubscriptionBaseEvent cur : inputEvents) {
-            if (!cur.isActive()) {
+        	
+            if (!includeDeletedEvents && !cur.isActive()) {
                 continue;
             }
 
@@ -906,9 +921,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             "Unexpected Event type = %s", cur.getType()));
             }
 
-            final Plan nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), lastPlanChangeTime) : null;
-            final PlanPhase nextPhase = (nextPlan != null && nextPhaseName != null) ? nextPlan.findPhase(nextPhaseName) : null;
-            final PriceList nextPriceList = (nextPlan != null) ? nextPlan.getPriceList() : null;
+            final Plan nextPlan = (nextPlanName != null && cur.isActive()) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), lastPlanChangeTime) : null;
+            final PlanPhase nextPhase = (nextPlan != null && nextPhaseName != null && cur.isActive()) ? nextPlan.findPhase(nextPhaseName) : null;
+            final PriceList nextPriceList = (nextPlan != null && cur.isActive()) ? nextPlan.getPriceList() : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, bundleExternalKey, cur.getType(), apiEventType,
