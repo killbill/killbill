@@ -67,14 +67,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
