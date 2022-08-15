@@ -119,11 +119,13 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public SubscriptionBaseTransition getPreviousTransition();
 
-    public List<SubscriptionBaseTransition> getAllTransitions();
+    public List<SubscriptionBaseTransition> getAllTransitions(boolean includeDeleted);
 
     public DateTime getDateOfFirstRecurringNonZeroCharge();
 
     public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(VersionedCatalog catalog) throws SubscriptionBaseApiException;
 
     public BillingAlignment getBillingAlignment(PlanPhaseSpecifier spec, DateTime transitionTime, VersionedCatalog catalog) throws SubscriptionBaseApiException;
+    
+    public boolean getIncludeDeletedEvents();
 }

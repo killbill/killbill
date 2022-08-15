@@ -476,7 +476,7 @@ public class EventsStreamBuilder {
     private SubscriptionBase findBaseSubscription(final Iterable<SubscriptionBase> subscriptions) {
         return Iterables.toStream(subscriptions)
                 .filter(input -> {
-                    final List<SubscriptionBaseTransition> allTransitions = input.getAllTransitions();
+                    final List<SubscriptionBaseTransition> allTransitions = input.getAllTransitions(false);
                     return !allTransitions.isEmpty() &&
                            allTransitions.get(0).getNextPlan() != null &&
                            allTransitions.get(0).getNextPlan().getProduct() != null &&

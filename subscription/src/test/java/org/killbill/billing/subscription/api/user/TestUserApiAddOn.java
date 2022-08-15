@@ -129,7 +129,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         assertTrue(baseSubscription.isFutureCancelled());
 
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        List<SubscriptionBaseTransition> aoTransitions = aoSubscription.getAllTransitions();
+        List<SubscriptionBaseTransition> aoTransitions = aoSubscription.getAllTransitions(false);
         assertEquals(aoTransitions.size(), 3);
         assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
         assertEquals(aoTransitions.get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
@@ -141,7 +141,7 @@ public class TestUserApiAddOn extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        aoTransitions = aoSubscription.getAllTransitions();
+        aoTransitions = aoSubscription.getAllTransitions(false);
         assertEquals(aoTransitions.size(), 3);
         assertEquals(aoTransitions.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
         assertEquals(aoTransitions.get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);

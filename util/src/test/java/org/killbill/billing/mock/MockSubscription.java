@@ -269,7 +269,12 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public List<SubscriptionBaseTransition> getAllTransitions() {
+    public List<SubscriptionBaseTransition> getAllTransitions(boolean includeDeleted) {
         return null;
     }
+
+	@Override
+	public boolean getIncludeDeletedEvents() {
+		return false;
+	}
 }

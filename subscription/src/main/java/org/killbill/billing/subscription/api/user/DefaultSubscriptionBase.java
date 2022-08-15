@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -104,6 +105,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     //
     private LinkedList<SubscriptionBaseTransition> transitions;
     
+    private LinkedList<SubscriptionBaseTransition> transitionsWithDeletedEvents;
+    
     private boolean includeDeletedEvents;
 
 	// Low level events are ONLY used for Repair APIs
@@ -113,10 +116,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return events;
     }
 
+    @Override
     public boolean getIncludeDeletedEvents() {
-		return includeDeletedEvents;
-	}    
-
+        return includeDeletedEvents;
+    }
+    
     // Transient object never returned at the API
     public DefaultSubscriptionBase(final SubscriptionBuilder builder) {
         this(builder, null, null);
@@ -150,8 +154,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.category = internalSubscription.getCategory();
         this.chargedThroughDate = internalSubscription.getChargedThroughDate();
         this.migrated = internalSubscription.isMigrated();
-        this.transitions = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions());
+        this.transitions = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions(false));
         this.events = internalSubscription.getEvents();
+        this.transitionsWithDeletedEvents = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions(true));//TODO_1030 - is this correct?
         this.includeDeletedEvents = internalSubscription.getIncludeDeletedEvents();
     }
     
@@ -159,7 +164,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     public DefaultSubscriptionBase(final DefaultSubscriptionBase internalSubscription, final boolean includeDeletedEvents) {
         this(internalSubscription, null, null);
         this.includeDeletedEvents = includeDeletedEvents;
-    }    
+    }
 
     @Override
     public UUID getBundleId() {
@@ -480,20 +485,25 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     public boolean isMigrated() {
         return migrated;
     }
-
+    
     @Override
-    public List<SubscriptionBaseTransition> getAllTransitions() {
-        if (transitions == null) {
-            return Collections.emptyList();
+    public List<SubscriptionBaseTransition> getAllTransitions(final boolean includeDeleted) {
+        if (includeDeleted) {
+            return transitionsWithDeletedEvents != null ? getSortedTransactions(transitionsWithDeletedEvents) : Collections.emptyList();
+        } else {
+            return transitions != null ? getSortedTransactions(transitions) : Collections.emptyList();
         }
+    }
+
+    private List<SubscriptionBaseTransition> getSortedTransactions(final LinkedList<SubscriptionBaseTransition> inputTransitions) {
         final List<SubscriptionBaseTransition> result = new ArrayList<SubscriptionBaseTransition>();
-        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(clock, transitions, Order.ASC_FROM_PAST, Visibility.ALL, TimeLimit.ALL);
+        final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(clock, inputTransitions, Order.ASC_FROM_PAST, Visibility.ALL, TimeLimit.ALL);
         while (it.hasNext()) {
             result.add(it.next());
         }
         return result;
     }
-
+    
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -826,6 +836,23 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
         removeEverythingPastCancelEvent(events);
 
+        transitions = new LinkedList<SubscriptionBaseTransition>();
+        transitionsWithDeletedEvents = new LinkedList<SubscriptionBaseTransition>();
+
+        final List<SubscriptionBaseEvent> activeEvents = inputEvents.stream().filter(event -> event.isActive()).collect(Collectors.toList());
+        rebuildTransitionsInternal(activeEvents, catalog, true);
+
+        if (includeDeletedEvents) {
+            final List<SubscriptionBaseEvent> nonActiveEvents = inputEvents.stream().filter(event -> !event.isActive()).collect(Collectors.toList());
+            rebuildTransitionsInternal(nonActiveEvents, catalog, false);
+        }
+    }
+
+    private void rebuildTransitionsInternal(final List<SubscriptionBaseEvent> inputEvents, final SubscriptionCatalog catalog, final boolean activeEvents) throws CatalogApiException {
+
+        if (inputEvents == null || inputEvents.size() == 0) {
+            return;
+        }
         final UUID nextUserToken = null;
 
         UUID nextEventId;
@@ -843,16 +870,10 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         PlanPhase previousPhase = null;
         Integer previousBillingCycleDayLocal = null;
 
-        transitions = new LinkedList<SubscriptionBaseTransition>();
-
         // Track each time we change Plan to fetch the Plan from the right catalog version
         DateTime lastPlanChangeTime = null;
 
         for (final SubscriptionBaseEvent cur : inputEvents) {
-        	
-            if (!includeDeletedEvents && !cur.isActive()) {
-                continue;
-            }
 
             ApiEventType apiEventType = null;
             boolean isFromDisk = true;
@@ -915,15 +936,15 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     nextState = EntitlementState.EXPIRED;
                     nextPlanName = null;
                     nextPhaseName = null;
-                	break;
+                    break;
                 default:
                     throw new SubscriptionBaseError(String.format(
                             "Unexpected Event type = %s", cur.getType()));
             }
 
-            final Plan nextPlan = (nextPlanName != null && cur.isActive()) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), lastPlanChangeTime) : null;
-            final PlanPhase nextPhase = (nextPlan != null && nextPhaseName != null && cur.isActive()) ? nextPlan.findPhase(nextPhaseName) : null;
-            final PriceList nextPriceList = (nextPlan != null && cur.isActive()) ? nextPlan.getPriceList() : null;
+            final Plan nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), lastPlanChangeTime) : null;
+            final PlanPhase nextPhase = (nextPlan != null && nextPhaseName != null) ? nextPlan.findPhase(nextPhaseName) : null;
+            final PriceList nextPriceList = (nextPlan != null) ? nextPlan.getPriceList() : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, bundleExternalKey, cur.getType(), apiEventType,
@@ -941,7 +962,13 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     nextUserToken,
                     isFromDisk);
 
-            transitions.add(transition);
+            if (activeEvents) {
+                transitions.add(transition);
+            }
+
+            if (includeDeletedEvents) {
+                transitionsWithDeletedEvents.add(transition);
+            }
 
             previousState = nextState;
             previousPlan = nextPlan;
@@ -952,6 +979,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             previousBillingCycleDayLocal = nextBillingCycleDayLocal;
 
         }
+
     }
 
     // Skip any event after a CANCEL event:

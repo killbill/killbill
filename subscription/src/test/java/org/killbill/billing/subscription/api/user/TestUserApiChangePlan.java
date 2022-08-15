@@ -569,9 +569,9 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         checkChangePlan(subscription, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PhaseType.TRIAL);
 
         final SubscriptionBase refreshedSubscription = subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        assertEquals(refreshedSubscription.getAllTransitions().size(), 2);
-        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).size(), 2);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
     }
 
     @Test(groups = "slow")
@@ -589,10 +589,10 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         checkChangePlan(subscription, "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, PhaseType.TRIAL);
 
         final SubscriptionBase refreshedSubscription = subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        assertEquals(refreshedSubscription.getAllTransitions().size(), 3);
-        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).size(), 3);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
     }
 
     @Test(groups = "slow")
@@ -608,10 +608,10 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier), targetDate, callContext);assertListenerStatus();
 
         DefaultSubscriptionBase refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        assertEquals(refreshedSubscription.getAllTransitions().size(), 3);
-        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).size(), 3);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
 
         clock.addDays(1);
 
@@ -630,9 +630,9 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
 
         refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        assertEquals(refreshedSubscription.getAllTransitions().size(), 2);
-        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).size(), 2);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
 
     }
 
@@ -653,11 +653,11 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         DefaultSubscriptionBase refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        assertEquals(refreshedSubscription.getAllTransitions().size(), 3);
-        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(2).getNextPlan().getName(), "pistol-monthly");
+        assertEquals(refreshedSubscription.getAllTransitions(false).size(), 3);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(1).getTransitionType(), SubscriptionBaseTransitionType.CHANGE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(2).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(2).getNextPlan().getName(), "pistol-monthly");
 
         clock.addDays(1);
 
@@ -681,10 +681,10 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
 
 
         refreshedSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        assertEquals(refreshedSubscription.getAllTransitions().size(), 2);
-        assertEquals(refreshedSubscription.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
-        assertEquals(refreshedSubscription.getAllTransitions().get(1).getNextPlan().getName(), "shotgun-monthly");
+        assertEquals(refreshedSubscription.getAllTransitions(false).size(), 2);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(1).getTransitionType(), SubscriptionBaseTransitionType.PHASE);
+        assertEquals(refreshedSubscription.getAllTransitions(false).get(1).getNextPlan().getName(), "shotgun-monthly");
 
     }
 

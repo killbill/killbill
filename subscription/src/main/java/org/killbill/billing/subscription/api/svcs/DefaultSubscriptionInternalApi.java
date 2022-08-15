@@ -339,7 +339,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
 
     @Override
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final SubscriptionBase subscription, final InternalTenantContext context) {
-        final List<SubscriptionBaseTransition> transitions = subscription.getAllTransitions();
+        final List<SubscriptionBaseTransition> transitions = subscription.getAllTransitions(false);
         return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
     }
 

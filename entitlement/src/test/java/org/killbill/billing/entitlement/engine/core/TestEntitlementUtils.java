@@ -94,7 +94,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Note! Make sure to align CTD and cancellation/change effective time with the phase event effective time to avoid timing issues in comparisons
-        baseEffectiveEOTCancellationOrChangeDateTime = baseEntitlement.getSubscriptionBase().getAllTransitions().get(1).getEffectiveTransitionTime().plusMonths(1);
+        baseEffectiveEOTCancellationOrChangeDateTime = baseEntitlement.getSubscriptionBase().getAllTransitions(false).get(1).getEffectiveTransitionTime().plusMonths(1);
         Assert.assertEquals(baseEffectiveEOTCancellationOrChangeDateTime.toLocalDate(), new LocalDate(2013, 10, 7));
         baseEffectiveCancellationOrChangeDate = baseEffectiveEOTCancellationOrChangeDateTime.toLocalDate();
         // Set manually since no invoice

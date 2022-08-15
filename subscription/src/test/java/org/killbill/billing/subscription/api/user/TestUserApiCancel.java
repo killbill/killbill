@@ -319,7 +319,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        Assert.assertEquals(subscription.getAllTransitions().size(), 3);
+        Assert.assertEquals(subscription.getAllTransitions(false).size(), 3);
 
 
         // Manually add a CANCEL event on the same EOT date as the previous one to verify the code is resilient enough to ignore it
@@ -334,7 +334,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
         // The extra cancel event is being ignored
         Assert.assertEquals(subscription.getEvents().size(), 3);
-        Assert.assertEquals(subscription.getAllTransitions().size(), 3);
+        Assert.assertEquals(subscription.getAllTransitions(false).size(), 3);
 
 
         // We expect only one CANCEL event, this other one is skipped
@@ -383,8 +383,8 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
-        Assert.assertEquals(subscription.getAllTransitions().get(subscription.getAllTransitions().size() - 1).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
-        Assert.assertEquals(new LocalDate(subscription.getAllTransitions().get(subscription.getAllTransitions().size() - 1).getEffectiveTransitionTime(), accountData.getTimeZone()), new LocalDate(2016, 12, 1));
+        Assert.assertEquals(subscription.getAllTransitions(false).get(subscription.getAllTransitions(false).size() - 1).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
+        Assert.assertEquals(new LocalDate(subscription.getAllTransitions(false).get(subscription.getAllTransitions(false).size() - 1).getEffectiveTransitionTime(), accountData.getTimeZone()), new LocalDate(2016, 12, 1));
     }
 
     @Test(groups = "slow")

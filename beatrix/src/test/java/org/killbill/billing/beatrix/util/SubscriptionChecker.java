@@ -84,6 +84,6 @@ public class SubscriptionChecker {
     }
 
     private List<SubscriptionBaseTransition> getSubscriptionEvents(final SubscriptionBase subscription) {
-        return subscription.getAllTransitions();
+        return subscription.getAllTransitions(false);
     }
 }

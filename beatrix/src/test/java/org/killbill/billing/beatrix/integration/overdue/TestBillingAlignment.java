@@ -72,17 +72,17 @@ public class TestBillingAlignment extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 4), new LocalDate(2012, 5, 25), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-174.97")));
         invoiceChecker.checkChargedThroughDate(bpEntitlement.getId(), new LocalDate(2013, 5, 1), callContext);
 
-        Assert.assertEquals(changedBpEntitlement.getSubscriptionBase().getAllTransitions().size(), 3);
+        Assert.assertEquals(changedBpEntitlement.getSubscriptionBase().getAllTransitions(false).size(), 3);
 
-        final SubscriptionBaseTransition trial = changedBpEntitlement.getSubscriptionBase().getAllTransitions().get(0);
+        final SubscriptionBaseTransition trial = changedBpEntitlement.getSubscriptionBase().getAllTransitions(false).get(0);
         Assert.assertEquals(trial.getEffectiveTransitionTime().toLocalDate().compareTo(new LocalDate(2012, 4, 1)), 0);
         Assert.assertEquals(trial.getNextPhase().getName(), "shotgun-monthly-trial");
 
-        final SubscriptionBaseTransition smEvergreen = changedBpEntitlement.getSubscriptionBase().getAllTransitions().get(1);
+        final SubscriptionBaseTransition smEvergreen = changedBpEntitlement.getSubscriptionBase().getAllTransitions(false).get(1);
         Assert.assertEquals(smEvergreen.getEffectiveTransitionTime().toLocalDate().compareTo(new LocalDate(2012, 5, 1)), 0);
         Assert.assertEquals(smEvergreen.getNextPhase().getName(), "shotgun-monthly-evergreen");
 
-        final SubscriptionBaseTransition saEvergreen = changedBpEntitlement.getSubscriptionBase().getAllTransitions().get(2);
+        final SubscriptionBaseTransition saEvergreen = changedBpEntitlement.getSubscriptionBase().getAllTransitions(false).get(2);
         // Verify the IMMEDIATE policy
         Assert.assertEquals(saEvergreen.getEffectiveTransitionTime().toLocalDate().compareTo(new LocalDate(2012, 5, 4)), 0);
         // Verify the START_OF_SUBSCRIPTION alignment (both plans have the same 30 days trial)
