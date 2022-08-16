@@ -104,9 +104,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
     // the call completes
     //
     private LinkedList<SubscriptionBaseTransition> transitions;
-    
+
     private LinkedList<SubscriptionBaseTransition> transitionsWithDeletedEvents;
-    
+
     private boolean includeDeletedEvents;
 
 	// Low level events are ONLY used for Repair APIs
@@ -839,16 +839,16 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         transitions = new LinkedList<SubscriptionBaseTransition>();
         transitionsWithDeletedEvents = new LinkedList<SubscriptionBaseTransition>();
 
-        final List<SubscriptionBaseEvent> activeEvents = inputEvents.stream().filter(event -> event.isActive()).collect(Collectors.toList());
-        rebuildTransitionsInternal(activeEvents, catalog, true);
-
-        if (includeDeletedEvents) {
-            final List<SubscriptionBaseEvent> nonActiveEvents = inputEvents.stream().filter(event -> !event.isActive()).collect(Collectors.toList());
-            rebuildTransitionsInternal(nonActiveEvents, catalog, false);
+        if (!includeDeletedEvents) {
+            rebuildTransitionsInternal(inputEvents, catalog, transitions, id, bundleId, bundleExternalKey);
+        } else {
+            rebuildTransitionsInternal(inputEvents.stream().filter(event -> event.isActive()).collect(Collectors.toList()), catalog, transitions, id, bundleId, bundleExternalKey); //use only active events to build transitions
+            rebuildTransitionsInternal(inputEvents, catalog, transitionsWithDeletedEvents, id, bundleId, bundleExternalKey); //use all events to build transitionsWithDeletedEvents
         }
+
     }
 
-    private void rebuildTransitionsInternal(final List<SubscriptionBaseEvent> inputEvents, final SubscriptionCatalog catalog, final boolean activeEvents) throws CatalogApiException {
+    private static void rebuildTransitionsInternal(final List<SubscriptionBaseEvent> inputEvents, final SubscriptionCatalog catalog, final LinkedList<SubscriptionBaseTransition> transitions, final UUID id, final UUID bundleId, final String bundleExternalKey) throws CatalogApiException {
 
         if (inputEvents == null || inputEvents.size() == 0) {
             return;
@@ -942,9 +942,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                             "Unexpected Event type = %s", cur.getType()));
             }
 
-            final Plan nextPlan = (nextPlanName != null) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), lastPlanChangeTime) : null;
-            final PlanPhase nextPhase = (nextPlan != null && nextPhaseName != null) ? nextPlan.findPhase(nextPhaseName) : null;
-            final PriceList nextPriceList = (nextPlan != null) ? nextPlan.getPriceList() : null;
+            final Plan nextPlan = (nextPlanName != null && cur.isActive()) ? catalog.findPlan(nextPlanName, cur.getEffectiveDate(), lastPlanChangeTime) : null;
+            final PlanPhase nextPhase = (nextPlan != null && nextPhaseName != null && cur.isActive()) ? nextPlan.findPhase(nextPhaseName) : null;
+            final PriceList nextPriceList = (nextPlan != null && cur.isActive()) ? nextPlan.getPriceList() : null;
 
             final SubscriptionBaseTransitionData transition = new SubscriptionBaseTransitionData(
                     cur.getId(), id, bundleId, bundleExternalKey, cur.getType(), apiEventType,
@@ -962,13 +962,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     nextUserToken,
                     isFromDisk);
 
-            if (activeEvents) {
-                transitions.add(transition);
-            }
-
-            if (includeDeletedEvents) {
-                transitionsWithDeletedEvents.add(transition);
-            }
+            transitions.add(transition);
 
             previousState = nextState;
             previousPlan = nextPlan;
@@ -981,7 +975,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         }
 
     }
-
+    
     // Skip any event after a CANCEL event:
     //
     //  * DefaultSubscriptionDao#buildBundleSubscriptions may have added an out-of-order cancellation event (https://github.com/killbill/killbill/issues/897)
