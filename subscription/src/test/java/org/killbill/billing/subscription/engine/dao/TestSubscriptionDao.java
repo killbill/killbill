@@ -318,7 +318,7 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         final List<SubscriptionBaseEvent> resultSubscriptions = createTestCanceledSubscription(bundle, externalKey, startDate, null);
         assertEquals(resultSubscriptions.size(), 1);
 
-        final SubscriptionBase s = dao.getSubscriptionFromId(resultSubscriptions.get(0).getSubscriptionId(), catalog, internalCallContext);
+        final SubscriptionBase s = dao.getSubscriptionFromId(resultSubscriptions.get(0).getSubscriptionId(), catalog, false, internalCallContext); //TODO_1030: Backward compatibility
         assertEquals(s.getExternalKey(), externalKey);
     }
 
@@ -484,11 +484,11 @@ public class TestSubscriptionDao extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(events.get(0).getType(), EventType.BCD_UPDATE);
         assertEquals(events.get(1).getType(), EventType.API_USER);
 
-        final SubscriptionBase s = dao.getSubscriptionFromId(events.get(0).getSubscriptionId(), catalog, internalCallContext);
+        final SubscriptionBase s = dao.getSubscriptionFromId(events.get(0).getSubscriptionId(), catalog, false, internalCallContext); //TODO_1030: Backward compatibility
         assertEquals(s.getExternalKey(), externalKey);
-        assertEquals(s.getAllTransitions().size(), 2);
-        assertEquals(s.getAllTransitions().get(0).getTransitionType(), SubscriptionBaseTransitionType.TRANSFER);
-        assertEquals(s.getAllTransitions().get(1).getTransitionType(), SubscriptionBaseTransitionType.BCD_CHANGE);
+        assertEquals(s.getAllTransitions(false).size(), 2);
+        assertEquals(s.getAllTransitions(false).get(0).getTransitionType(), SubscriptionBaseTransitionType.TRANSFER);
+        assertEquals(s.getAllTransitions(false).get(1).getTransitionType(), SubscriptionBaseTransitionType.BCD_CHANGE);
     }
 
     private List<SubscriptionBaseEvent> createTestTransferredWithBCDSubscription(final SubscriptionBaseBundle bundle, final String externalKey, final DateTime startDate) {

@@ -472,7 +472,7 @@ public class CatalogResource extends JaxRsResourceBase {
                                            clock.getUTCNow();
         final LocalDate requestedDate = requestedDateTime.toLocalDate();
 
-        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, tenantContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, tenantContext);
         SubscriptionEvent lastEventBeforeRequestedDate = null;
         for (final SubscriptionEvent subscriptionEvent : subscription.getSubscriptionEvents()) {
             if (lastEventBeforeRequestedDate == null) {

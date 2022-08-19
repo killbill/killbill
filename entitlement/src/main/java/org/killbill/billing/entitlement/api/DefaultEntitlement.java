@@ -389,7 +389,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 for (final NotificationEvent notificationEvent : notificationEvents) {
                     recordFutureNotification(entitlementEffectiveDate, notificationEvent, contextWithValidAccountRecordId);
                 }
-                return entitlementApi.getEntitlementForId(getId(), callContext);
+                return entitlementApi.getEntitlementForId(getId(), false, callContext); //TODO_1030: Backward compatibility
             }
         };
         return pluginExecution.executeWithPlugin(cancelEntitlementWithPlugin, pluginContext);
@@ -531,7 +531,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     recordFutureNotification(effectiveCancelDate, notificationEvent, contextWithValidAccountRecordId);
                 }
 
-                return entitlementApi.getEntitlementForId(getId(), callContext);
+                return entitlementApi.getEntitlementForId(getId(), false, callContext); //TODO_1030: Backward compatibility
             }
         };
         return pluginExecution.executeWithPlugin(cancelEntitlementWithPlugin, pluginContext);
@@ -623,7 +623,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                 for (final NotificationEvent notificationEvent : notificationEvents) {
                     recordFutureNotification(effectiveChangeDate, notificationEvent, context);
                 }
-                return entitlementApi.getEntitlementForId(getId(), callContext);
+                return entitlementApi.getEntitlementForId(getId(), false, callContext); //TODO_1030: Backward compatibility
             }
         };
         return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
@@ -751,7 +751,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     recordFutureNotification(resultingEffectiveDate, notificationEvent, context);
                 }
 
-                return entitlementApi.getEntitlementForId(getId(), callContext);
+                return entitlementApi.getEntitlementForId(getId(), false, callContext); //TODO_1030: Backward compatibility
             }
         };
         return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);
@@ -819,7 +819,7 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
                     recordFutureNotification(resultingEffectiveDate, notificationEvent, context);
                 }
 
-                return entitlementApi.getEntitlementForId(getId(), callContext);
+                return entitlementApi.getEntitlementForId(getId(), false, callContext); //TODO_1030: Backward compatibility
             }
         };
         return pluginExecution.executeWithPlugin(changePlanWithPlugin, pluginContext);

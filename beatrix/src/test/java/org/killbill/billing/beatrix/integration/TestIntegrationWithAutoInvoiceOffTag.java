@@ -120,7 +120,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertEquals(clock.getUTCNow().toDateTime(account.getTimeZone()).toLocalDate(), new LocalDate(2018, 12, 29));
         // Still in trial
         assertListenerStatus();
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getName(), "shotgun-monthly-trial");
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getName(), "shotgun-monthly-trial"); //TODO_1030: Backward compatibility
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
 
         // Adding / Removing AUTO_INVOICING_OFF shouldn't have any impact
@@ -128,7 +128,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.NULL_INVOICE);
 
         assertListenerStatus();
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getName(), "shotgun-monthly-trial");
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getName(), "shotgun-monthly-trial"); //TODO_1030: Backward compatibility
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);

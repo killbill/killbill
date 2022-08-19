@@ -82,7 +82,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         // Move out a month. Date > catalog V2
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -117,7 +117,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
 
 
-        final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, callContext);
+        final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, false, callContext);
         final List<SubscriptionEvent> events = bpSubscription.getSubscriptionEvents();
         // We are seeing START_ENTITLEMENT, START_BILLING, and the **last CHANGE**
         // Note that the PHASE and intermediate CHANGE are not being returned (is_active = FALSE) because all coincided on the same date. This is debatable
@@ -281,7 +281,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getLastActivePhase().getPhaseType(), PhaseType.TRIAL);
@@ -292,7 +292,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN); //TODO_1030: Backward compatibility
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 2);
 
         // 2015-08-05
@@ -306,7 +306,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT); //TODO_1030: Backward compatibility
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 3);
 
         // Move out after discount phase (happens on 2015-11-04)
@@ -324,7 +324,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // This verifies the PlanAligner.getNextTimedPhase codepath with a CHANGE transition type
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN); //TODO_1030: Backward compatibility
 
         // Move out a month (2015-12-05)
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -372,7 +372,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getLastActivePhase().getPhaseType(), PhaseType.TRIAL);
@@ -383,7 +383,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN); //TODO_1030: Backward compatibility
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 2);
 
         // 2015-08-05
@@ -397,7 +397,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT); //TODO_1030: Backward compatibility
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 3);
 
         // Cancel entitlement
@@ -420,7 +420,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // This verifies the PlanAligner.getNextTimedPhase codepath with a CHANGE transition type
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN); //TODO_1030: Backward compatibility
 
         // Move out a month (2015-12-05)
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -531,7 +531,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         assertNotNull(bpEntitlement);
         assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);

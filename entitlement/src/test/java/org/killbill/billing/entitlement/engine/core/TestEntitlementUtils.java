@@ -74,14 +74,14 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(baseSpec), account.getExternalKey(), null, null, false, true, List.of(), callContext);
         assertListenerStatus();
-        baseEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        baseEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         // Add ADD_ON
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final UUID addOnEntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), null, null, false, List.of(), callContext);
         assertListenerStatus();
-        addOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlementId, callContext);
+        addOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         // Verify the initial state
         checkFutureBlockingStatesToCancel(baseEntitlement, null, null);
@@ -94,7 +94,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Note! Make sure to align CTD and cancellation/change effective time with the phase event effective time to avoid timing issues in comparisons
-        baseEffectiveEOTCancellationOrChangeDateTime = baseEntitlement.getSubscriptionBase().getAllTransitions().get(1).getEffectiveTransitionTime().plusMonths(1);
+        baseEffectiveEOTCancellationOrChangeDateTime = baseEntitlement.getSubscriptionBase().getAllTransitions(false).get(1).getEffectiveTransitionTime().plusMonths(1);
         Assert.assertEquals(baseEffectiveEOTCancellationOrChangeDateTime.toLocalDate(), new LocalDate(2013, 10, 7));
         baseEffectiveCancellationOrChangeDate = baseEffectiveEOTCancellationOrChangeDateTime.toLocalDate();
         // Set manually since no invoice
@@ -122,7 +122,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Refresh the state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
@@ -173,7 +173,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Refresh the add-on state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
@@ -208,7 +208,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Refresh the add-on state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(cancelledBaseEntitlement, null, null);
@@ -252,7 +252,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Refresh the state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, null, null);
@@ -303,7 +303,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(1000);
 
         // Refresh the add-on state
-        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext);
+        final DefaultEntitlement cancelledAddOnEntitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
 
         // Verify we compute the right blocking states for the "read" path...
         checkFutureBlockingStatesToCancel(changedBaseEntitlement, null, null);
@@ -332,7 +332,7 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         final PlanPhaseSpecifier addOn2Spec = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final UUID addOn2EntitlementId = entitlementApi.addEntitlement(baseEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOn2Spec), initialDate, initialDate, false, List.of(), callContext);
         assertListenerStatus();
-        final Entitlement addOn2Entitlement = entitlementApi.getEntitlementForId(addOn2EntitlementId, callContext);
+        final Entitlement addOn2Entitlement = entitlementApi.getEntitlementForId(addOn2EntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         // Date prior to the base cancellation date to verify it is not impacted by the base cancellation (in contrary to the second add-on)
         final LocalDate addOn1CancellationDate = new LocalDate(2013, 9, 9);
@@ -342,21 +342,21 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         addOn2Entitlement.cancelEntitlementWithDate(addOn2CancellationDate, true, List.of(), callContext);
 
         // Before the base entitlement is cancelled, respect the specified cancellation date
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate()), addOn2CancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), false, callContext).getEffectiveEndDate()), addOn2CancellationDate); //TODO_1030: Backward compatibility
 
         final LocalDate baseCancellationDate = new LocalDate(2013, 10, 10);
         baseEntitlement.cancelEntitlementWithDate(baseCancellationDate, true, List.of(), callContext);
 
         // After the base entitlement is cancelled, verify the date is overridden
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate); //TODO_1030: Backward compatibility
 
         // No further event yet
         assertListenerStatus();
 
         // Verify the cancellation dates
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate()), addOn1CancellationDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate); //TODO_1030: Backward compatibility
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext).getEffectiveEndDate()), addOn1CancellationDate); //TODO_1030: Backward compatibility
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate); //TODO_1030: Backward compatibility
 
         // Move to addOn1CancellationDate
         testListener.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
@@ -369,9 +369,9 @@ public class TestEntitlementUtils extends EntitlementTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // Verify the cancellation dates
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), callContext).getEffectiveEndDate()), addOn1CancellationDate);
-        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), callContext).getEffectiveEndDate()), baseCancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate); //TODO_1030: Backward compatibility
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOnEntitlement.getId(), false, callContext).getEffectiveEndDate()), addOn1CancellationDate); //TODO_1030: Backward compatibility
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlementApi.getEntitlementForId(addOn2Entitlement.getId(), false, callContext).getEffectiveEndDate()), baseCancellationDate); //TODO_1030: Backward compatibility
     }
 
     // Test the "read" path

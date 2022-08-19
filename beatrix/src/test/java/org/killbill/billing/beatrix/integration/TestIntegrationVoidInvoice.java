@@ -161,7 +161,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.INVOICE);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
-        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertListenerStatus();
 
         final Invoice invoice2 = invoiceChecker.checkInvoice(account.getId(), 2, callContext,

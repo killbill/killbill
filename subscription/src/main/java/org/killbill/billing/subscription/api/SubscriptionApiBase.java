@@ -173,7 +173,7 @@ public class SubscriptionApiBase {
                 break;
 
             case CHANGE:
-                final DefaultSubscriptionBase subscriptionForChange = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), catalog, context);
+                final DefaultSubscriptionBase subscriptionForChange = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), catalog, false, context); //TODO_1030: Backward compatibility
 
                 DateTime changeEffectiveDate = getDryRunEffectiveDate(dryRunEffDt, subscriptionForChange, context);
                 if (changeEffectiveDate == null) {
@@ -189,7 +189,7 @@ public class SubscriptionApiBase {
                 break;
 
             case STOP_BILLING:
-                final DefaultSubscriptionBase subscriptionForCancellation = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), catalog, context);
+                final DefaultSubscriptionBase subscriptionForCancellation = (DefaultSubscriptionBase) dao.getSubscriptionFromId(dryRunArguments.getSubscriptionId(), catalog, false, context); //TODO_1030: Backward compatibility
 
                 DateTime cancelEffectiveDate = getDryRunEffectiveDate(dryRunEffDt, subscriptionForCancellation, context);
                 if (dryRunEffDt == null) {

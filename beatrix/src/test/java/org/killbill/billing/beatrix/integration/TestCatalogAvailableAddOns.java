@@ -66,7 +66,7 @@ public class TestCatalogAvailableAddOns extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         // Verify we cannot create an add-on Laser-Scope as it is not available in V1
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);

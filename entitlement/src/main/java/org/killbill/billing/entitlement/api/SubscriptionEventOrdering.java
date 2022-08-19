@@ -70,7 +70,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
         for (final Entitlement cur : entitlements) {
             Preconditions.checkState(cur instanceof DefaultEntitlement, "Entitlement %s is not a DefaultEntitlement", cur);
             final SubscriptionBase base = ((DefaultEntitlement) cur).getSubscriptionBase();
-            final List<SubscriptionBaseTransition> baseTransitions = base.getAllTransitions();
+            final List<SubscriptionBaseTransition> baseTransitions = base.getAllTransitions(base.getIncludeDeletedEvents());
             for (final SubscriptionBaseTransition tr : baseTransitions) {
                 final List<SubscriptionEventType> eventTypes = toEventTypes(tr.getTransitionType());
                 for (final SubscriptionEventType eventType : eventTypes) {

@@ -295,10 +295,10 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
-    public SubscriptionBase getSubscriptionFromId(final UUID id, final InternalTenantContext context) throws SubscriptionBaseApiException {
+    public SubscriptionBase getSubscriptionFromId(final UUID id, final boolean includeDeletedEvents, final InternalTenantContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            final SubscriptionBase result = dao.getSubscriptionFromId(id, catalog, context);
+            final SubscriptionBase result = dao.getSubscriptionFromId(id, catalog, includeDeletedEvents, context);
             if (result == null) {
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, id);
             }
@@ -339,7 +339,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
 
     @Override
     public List<EffectiveSubscriptionInternalEvent> getAllTransitions(final SubscriptionBase subscription, final InternalTenantContext context) {
-        final List<SubscriptionBaseTransition> transitions = subscription.getAllTransitions();
+        final List<SubscriptionBaseTransition> transitions = subscription.getAllTransitions(false);
         return convertEffectiveSubscriptionInternalEventFromSubscriptionTransitions(subscription, context, transitions);
     }
 
@@ -384,7 +384,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         try {
 
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            final SubscriptionBase subscription = dao.getSubscriptionFromId(subscriptionId, catalog, context);
+            final SubscriptionBase subscription = dao.getSubscriptionFromId(subscriptionId, catalog, false, context); //TODO_1030: Backward compatibility
             if (subscription == null) {
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, subscriptionId);
             }
@@ -440,7 +440,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
 
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
-            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, internalCallContext);
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, false, internalCallContext); //TODO_1030: Backward compatibility
             final DateTime effectiveDate = getEffectiveDateForNewBCD(bcd, effectiveFromDate, subscription.getStartDate(), internalCallContext);
             final BCDEvent bcdEvent = BCDEventData.createBCDEvent(subscription, effectiveDate, bcd);
             dao.createBCDChangeEvent(subscription, bcdEvent, catalog, internalCallContext);
@@ -579,7 +579,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
             return (DefaultSubscriptionBase) subscriptionBase;
         } else {
             // Safe cast, see above
-            return (DefaultSubscriptionBase) dao.getSubscriptionFromId(subscriptionBase.getId(), catalog, context);
+            return (DefaultSubscriptionBase) dao.getSubscriptionFromId(subscriptionBase.getId(), catalog, false, context); //TODO_1030: Backward compatibility
         }
     }
 }

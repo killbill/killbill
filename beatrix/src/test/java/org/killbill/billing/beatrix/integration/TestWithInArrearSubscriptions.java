@@ -64,7 +64,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         // 2020-02-01
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -119,7 +119,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         clock.addDays(14);
 
         // Pause subscription. System will invoice for 2020-01-01 -> 2020-01-15
-        final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         entitlementApi.pause(entitlement.getBundleId(), clock.getUTCNow().toLocalDate(), Collections.emptyList(), callContext);
         assertListenerStatus();
@@ -165,7 +165,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "premium-support-monthly-notrial");
@@ -175,7 +175,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
-        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
         assertListenerStatus();
@@ -189,10 +189,10 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.NULL_INVOICE); //TODO Why is NULL_INVOICE requires here? AFAIK, this event is required only when an invoice run does not generate an invoice and in this case an invoice is generated
         bpEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(newPlanSpec), null, BillingActionPolicy.END_OF_TERM, null, callContext);
         assertListenerStatus();
-        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext);
+        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "basic-support-monthly-notrial");
-        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -217,7 +217,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "premium-support-monthly-notrial");
@@ -227,7 +227,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
-        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
         assertListenerStatus();
@@ -250,10 +250,10 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.NULL_INVOICE); //TODO Why is NULL_INVOICE requires here? AFAIK, this event is required only when an invoice run does not generate an invoice and in this case an invoice is generated
         bpEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(newPlanSpec), null, BillingActionPolicy.END_OF_TERM, null, callContext);
         assertListenerStatus();
-        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext);
+        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "basic-support-monthly-notrial");
-        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -275,7 +275,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "premium-support-monthly-notrial");
@@ -285,7 +285,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
-        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
         assertListenerStatus();
@@ -304,10 +304,10 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         clock.addDays(20);
         assertListenerStatus();
 
-        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext);
+        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "basic-support-monthly-notrial");
-        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -330,7 +330,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "premium-support-monthly-notrial");
@@ -340,7 +340,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
-        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
         assertListenerStatus();
@@ -354,10 +354,10 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE); //TODO: should this be CHANGE instead of CREATE? Also, need to check if other events are correct once bug is fixed
         bpEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(newPlanSpec), null, BillingActionPolicy.START_OF_TERM, null, callContext);
         assertListenerStatus();
-        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext);
+        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "basic-support-monthly-notrial");
-        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);
         checkNoMoreInvoiceToGenerate(account);
 
@@ -377,7 +377,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "premium-support-monthly-notrial");
@@ -387,7 +387,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
-        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
         assertListenerStatus();
@@ -410,10 +410,10 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE); //TODO: should this be CHANGE instead of CREATE? Also, need to check if other events are correct once bug is fixed
         bpEntitlement.changePlanOverrideBillingPolicy(new DefaultEntitlementSpecifier(newPlanSpec), null, BillingActionPolicy.START_OF_TERM, null, callContext);
         assertListenerStatus();
-        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext);
+        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "basic-support-monthly-notrial");
-        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);
         checkNoMoreInvoiceToGenerate(account);
 
@@ -433,7 +433,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "premium-support-monthly-notrial");
@@ -443,7 +443,7 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("premium-support-addon-monthly-notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID addonEntitlementId = entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), today, today, false, Collections.emptyList(), callContext);
-        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        Entitlement addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(addOnEntitlement.getLastActivePlan().getName(), "premium-support-addon-monthly-notrial");
         assertListenerStatus();
@@ -459,10 +459,10 @@ public class TestWithInArrearSubscriptions extends TestIntegrationBase {
         bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(newPlanSpec), effectiveDate, null, callContext);
         assertListenerStatus();
 
-        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext);
+        bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertEquals(bpEntitlement.getLastActivePlan().getName(), "basic-support-monthly-notrial");
-        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, callContext);
+        addOnEntitlement = entitlementApi.getEntitlementForId(addonEntitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertEquals(addOnEntitlement.getState(), EntitlementState.CANCELLED);
         checkNoMoreInvoiceToGenerate(account);
     }

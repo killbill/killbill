@@ -84,7 +84,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         // Entitlement wil be created in PENDING state
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, Collections.emptyList(), callContext);
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(entitlement.getState(), EntitlementState.PENDING);
 
         // Move clock to entitlementMigrationDate (migration cutOverDate), and expect the associated event
@@ -92,7 +92,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         clock.addDays(10);
         assertListenerStatus();
 
-        final Entitlement activeEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        final Entitlement activeEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(activeEntitlement.getState(), EntitlementState.ACTIVE);
 
         // Move clock to billingMigrationDate and expect the CREATE event along a $0 invoice for the trial
@@ -142,7 +142,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
@@ -188,7 +188,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, PhaseType.EVERGREEN);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", entitlementMigrationDate, billingMigrationDate, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
         // Perform the cancellation (we did not move the clock, the is is future cancellation done at the time we decide to migrate)
@@ -211,7 +211,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         clock.addMonths(14);
         assertListenerStatus();
 
-        final Entitlement cancelledEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        final Entitlement cancelledEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(cancelledEntitlement.getState(), EntitlementState.CANCELLED);
     }
 
@@ -259,7 +259,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
                                                                                                    Collections.emptyList(),
                                                                                                    callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlements.get(0), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(baseEntitlements.get(0), false, callContext); //TODO_1030: Backward compatibility
         Assert.assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
 
         // Billing starts straight on EVERGREEN
@@ -312,8 +312,8 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
                                                                                             Collections.emptyList(),
                                                                                             callContext);
         assertListenerStatus();
-        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlements.get(0), callContext).getState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlements.get(1), callContext).getState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlements.get(0), false, callContext).getState(), EntitlementState.ACTIVE); //TODO_1030: Backward compatibility
+        Assert.assertEquals(entitlementApi.getEntitlementForId(baseEntitlements.get(1), false, callContext).getState(), EntitlementState.ACTIVE); //TODO_1030: Backward compatibility
 
         // Billing starts straight on EVERGREEN for Bundle 1 after 1 month
         clock.addMonths(1);
@@ -467,7 +467,7 @@ public class TestMigrationSubscriptions extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, callContext);
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext); //TODO_1030: Backward compatibility
 
         clock.addDays(1);
 

@@ -122,14 +122,14 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
             Assert.fail("Call changePlanWithPolicy should have failed");
         } catch (final SubscriptionBaseError error) {
             assertTrue(true);
-            assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
+            assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext).getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL); //TODO_1030: Backward compatibility
         }
 
         // Assume the call takes less than a second
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME);
         assertEquals(DefaultClock.truncateMs(subscription.changePlanWithPolicy(new DefaultEntitlementSpecifier(planPhaseSpecifier), BillingActionPolicy.IMMEDIATE, callContext)),
                      DefaultClock.truncateMs(clock.getUTCNow()));
-        assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext).getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
+        assertEquals(subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext).getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY); //TODO_1030: Backward compatibility
     }
 
     @Test(groups = "fast")
@@ -150,7 +150,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
         setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
 
-        subscription = subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        subscription = subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
 
         subscription.cancelWithPolicy(BillingActionPolicy.END_OF_TERM, callContext);
         try {
@@ -167,7 +167,7 @@ public class TestUserApiError extends SubscriptionTestSuiteNoDB {
     private void setChargedThroughDate(UUID subscriptionId, DateTime chargedThruDate, InternalCallContext context) throws SubscriptionBaseApiException {
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(subscriptionId, catalog, context);
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(subscriptionId, catalog, false, context); //TODO_1030: Backward compatibility
             final SubscriptionBuilder builder = new SubscriptionBuilder(subscription)
                                                                  .setChargedThroughDate(chargedThruDate);
             ((MockSubscriptionDaoMemory)dao).updateChargedThroughDate(new DefaultSubscriptionBase(builder), context);

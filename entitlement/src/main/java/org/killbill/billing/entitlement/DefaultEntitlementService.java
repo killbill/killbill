@@ -130,7 +130,7 @@ public class DefaultEntitlementService implements EntitlementService {
     private void processEntitlementNotification(final EntitlementNotificationKey key, final InternalCallContext internalCallContext, final CallContext callContext) {
         final Entitlement entitlement;
         try {
-            entitlement = entitlementInternalApi.getEntitlementForId(key.getEntitlementId(), internalCallContext);
+            entitlement = entitlementInternalApi.getEntitlementForId(key.getEntitlementId(), false, internalCallContext); //TODO_1030: Backward compatibility
         } catch (final EntitlementApiException e) {
             log.error("Error retrieving entitlementId='{}'", key.getEntitlementId(), e);
             return;

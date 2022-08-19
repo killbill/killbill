@@ -1270,7 +1270,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, correctStartDate, correctStartDate, false, false, Collections.emptyList(), callContext);
-        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertListenerStatus();
 
 
@@ -1321,7 +1321,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
-        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertListenerStatus();
 
 
@@ -1375,7 +1375,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.INVOICE);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
-        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         assertListenerStatus();
 
         final Invoice invoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -1471,7 +1471,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         clock.addDays(1);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.INVOICE);
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
         bpEntitlement.cancelEntitlementWithDate(new LocalDate(2022, 6, 21), true, Collections.emptyList(), callContext);
         assertListenerStatus();
 

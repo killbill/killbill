@@ -249,7 +249,7 @@ public class TestInvoiceHelper {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(uuid);
         Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
-        Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.eq(false), Mockito.<InternalTenantContext>any())).thenReturn(subscription); //TODO_1030: Backward compatibility
         return subscription;
     }
 

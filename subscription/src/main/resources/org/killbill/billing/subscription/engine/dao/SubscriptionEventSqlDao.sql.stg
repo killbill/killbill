@@ -96,6 +96,17 @@ and is_active = TRUE
 ;
 >>
 
+getAllEventsForSubscription() ::= <<
+select <allTableFields("")>
+, record_id as total_ordering
+from <tableName()>
+where
+subscription_id = :subscriptionId
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
+;
+>>
+
 getActiveByAccountRecordId() ::= <<
 select
 <allTableFields("se.")>
