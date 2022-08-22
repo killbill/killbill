@@ -858,8 +858,8 @@ public class TestSubscription extends TestIntegrationBase {
         final LocalDate cancelDate = creationDate.plusDays(2);
         subscription.cancelEntitlementWithDate(cancelDate, true, Collections.emptyList(), callContext);
 
-        //Retrieve subscription without deleted events and verify subscription events
-        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        //Retrieve subscription without deleted events (using external key) and verify subscription events
+        subscription = subscriptionApi.getSubscriptionForExternalKey(subscription.getExternalKey(), false, callContext);
         assertNotNull(subscription);
         assertEquals(subscription.getState(), EntitlementState.ACTIVE);
         events = subscription.getSubscriptionEvents();
@@ -871,8 +871,8 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
         assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
 
-        //Retrieve subscription with deleted events and and verify that deleted PHASE event is returned
-        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, true, callContext);
+        //Retrieve subscription with deleted events (using external key) and and verify that deleted PHASE event is returned
+        subscription = subscriptionApi.getSubscriptionForExternalKey(subscription.getExternalKey(), true, callContext);
         assertNotNull(subscription);
         assertEquals(subscription.getState(), EntitlementState.ACTIVE); //verify that state is returned correctly even after the deleted events change
         events = subscription.getSubscriptionEvents();

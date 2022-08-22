@@ -138,12 +138,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
-    public Subscription getSubscriptionForExternalKey(final String externalKey, final TenantContext tenantContext) throws SubscriptionApiException {
+    public Subscription getSubscriptionForExternalKey(final String externalKey, final boolean includeDeletedEvents, final TenantContext tenantContext) throws SubscriptionApiException {
 
         try {
             final InternalTenantContext contextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
             final UUID subscriptionId = subscriptionBaseInternalApi.getSubscriptionIdFromSubscriptionExternalKey(externalKey, contextWithoutAccountRecordId);
-            return getSubscriptionForEntitlementId(subscriptionId, false, tenantContext); //TODO_1030: check if this method needs to be modified too
+            return getSubscriptionForEntitlementId(subscriptionId, includeDeletedEvents, tenantContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new SubscriptionApiException(e);
         }

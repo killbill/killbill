@@ -182,7 +182,7 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, CatalogApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Subscription subscription = subscriptionApi.getSubscriptionForExternalKey(externalKey, tenantContext);
+        final Subscription subscription = subscriptionApi.getSubscriptionForExternalKey(externalKey, false, tenantContext);
         final Account account = accountUserApi.getAccountById(subscription.getAccountId(), tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(subscription.getAccountId(), auditMode.getLevel(), tenantContext);
         final SubscriptionJson json = new SubscriptionJson(subscription, account.getCurrency(), accountAuditLogs);
