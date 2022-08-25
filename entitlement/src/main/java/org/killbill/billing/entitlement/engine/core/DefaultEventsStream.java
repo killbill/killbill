@@ -56,6 +56,7 @@ public class DefaultEventsStream implements EventsStream {
     private final SubscriptionBaseBundle bundle;
     // All blocking states for the account, associated bundle or subscription
     private final Collection<BlockingState> blockingStates;
+    private final Collection<BlockingState> blockingStatesWithDeletedEvents; 
     private final BlockingChecker blockingChecker;
     // Base subscription for the bundle if it exists, null otherwise
     private final SubscriptionBase baseSubscription;
@@ -79,6 +80,8 @@ public class DefaultEventsStream implements EventsStream {
     private BlockingState entitlementStartEvent;
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
+    
+    private final boolean includeDeletedEvents;
 
     public DefaultEventsStream(final ImmutableAccountData account,
                                final SubscriptionBaseBundle bundle,
@@ -88,11 +91,10 @@ public class DefaultEventsStream implements EventsStream {
                                final SubscriptionBase subscription,
                                final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                @Nullable final Integer defaultBillCycleDayLocal,
-                               final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
+                               final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow, final boolean includeDeletedEvents) {
         sanityChecks(account, bundle, baseSubscription, subscription);
         this.account = account;
         this.bundle = bundle;
-        this.blockingStates = blockingStates;
         this.blockingChecker = blockingChecker;
         this.baseSubscription = baseSubscription;
         this.subscription = subscription;
@@ -101,6 +103,16 @@ public class DefaultEventsStream implements EventsStream {
         this.internalTenantContext = contextWithValidAccountRecordId;
         this.utcNow = utcNow;
         this.utcToday = contextWithValidAccountRecordId.toLocalDate(utcNow);
+        
+        this.includeDeletedEvents = includeDeletedEvents;
+        
+        if (includeDeletedEvents) {
+            this.blockingStatesWithDeletedEvents = blockingStates;
+            this.blockingStates = blockingStates.stream().filter(state -> state.isActive()).collect(Collectors.toList());
+        } else {
+            this.blockingStates = blockingStates;
+            this.blockingStatesWithDeletedEvents = Collections.emptyList();
+        }        	
 
         setup();
     }
@@ -239,7 +251,7 @@ public class DefaultEventsStream implements EventsStream {
 
     @Override
     public Collection<BlockingState> getBlockingStates() {
-        return blockingStates;
+        return includeDeletedEvents ? blockingStatesWithDeletedEvents : blockingStates;
     }
 
     @Override

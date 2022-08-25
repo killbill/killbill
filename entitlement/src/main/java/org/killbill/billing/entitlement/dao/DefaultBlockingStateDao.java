@@ -189,16 +189,27 @@ public class DefaultBlockingStateDao extends EntityDaoBase<BlockingStateModelDao
         });
     }
 
-    @Override
-    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
-            final List<BlockingStateModelDao> states = entitySqlDaoWrapperFactory
-                    .become(BlockingStateSqlDao.class)
-                    .getByBlockingIds(blockableIds, context);
-            return states.stream()
-                    .map(BlockingStateModelDao::toBlockingState)
-                    .collect(Collectors.toList());
-        });
+    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final boolean includeDeletedEvents, final InternalTenantContext context) {
+        if (includeDeletedEvents) {
+            return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
+                final List<BlockingStateModelDao> states = entitySqlDaoWrapperFactory
+                        .become(BlockingStateSqlDao.class)
+                        .getByBlockingIdsIncludingDeleted(blockableIds, context);
+                return states.stream()
+                             .map(BlockingStateModelDao::toBlockingState)
+                             .collect(Collectors.toList());
+            });
+        } else {
+            return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
+                final List<BlockingStateModelDao> states = entitySqlDaoWrapperFactory
+                        .become(BlockingStateSqlDao.class)
+                        .getByBlockingIds(blockableIds, context);
+                return states.stream()
+                             .map(BlockingStateModelDao::toBlockingState)
+                             .collect(Collectors.toList());
+            });
+        }
+
     }
 
     @Override

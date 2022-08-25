@@ -162,6 +162,17 @@ where blockable_id in (<ids>)
 ;
 >>
 
+getByBlockingIdsIncludingDeleted() ::= <<
+select
+<allTableFields("")>
+from
+<tableName()>
+where blockable_id in (<ids>)
+<AND_CHECK_TENANT("")>
+<defaultOrderBy("")>
+;
+>>
+
 
 unactiveEvent() ::= <<
 update

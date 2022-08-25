@@ -38,6 +38,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     private final DateTime effectiveDate;
     private final BlockingStateType type;
     private final Long totalOrdering;
+    private final boolean isActive;
 
     // Used by the DAO
     public DefaultBlockingState(final UUID id,
@@ -62,6 +63,34 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this.blockBilling = blockBilling;
         this.effectiveDate = effectiveDate;
         this.totalOrdering = totalOrdering;
+        this.isActive = true; //TODO_1030 - should this be false?
+
+    }
+    
+    public DefaultBlockingState(final UUID id,
+                                final UUID blockedId,
+                                final BlockingStateType type,
+                                final String stateName,
+                                final String service,
+                                final boolean blockChange,
+                                final boolean blockEntitlement,
+                                final boolean blockBilling,
+                                final DateTime effectiveDate,
+                                final DateTime createDate,
+                                final DateTime updatedDate,
+                                final Long totalOrdering,
+                                final boolean isActive) {
+        super(id, createDate, updatedDate);
+        this.blockedId = blockedId;
+        this.type = type;
+        this.stateName = stateName;
+        this.service = service;
+        this.blockChange = blockChange;
+        this.blockEntitlement = blockEntitlement;
+        this.blockBilling = blockBilling;
+        this.effectiveDate = effectiveDate;
+        this.totalOrdering = totalOrdering;
+        this.isActive = isActive;
     }
 
     public DefaultBlockingState(final UUID blockedId,
@@ -141,6 +170,11 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     public Long getTotalOrdering() {
         return totalOrdering;
     }
+    
+    @Override
+    public boolean isActive() {
+        return isActive;
+    }    
 
     // Notes:
     //  + we need to keep the same implementation here as DefaultBlockingStateDao.BLOCKING_STATE_MODEL_DAO_ORDERING
@@ -169,6 +203,8 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
             return comparison;
         }
     }
+    
+    //TODO_1030: Should isActive flag be used in equals and hashCode method?
 
     @Override
     public boolean equals(final Object o) {
@@ -252,6 +288,8 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     public String toString() {
         return "BlockingState [blockedId=" + blockedId + ", stateName=" + stateName + ", service="
                + service + ", blockChange=" + blockChange + ", blockEntitlement=" + blockEntitlement
-               + ", blockBilling=" + blockBilling + ", effectiveDate=" + effectiveDate + "]";
+               + ", blockBilling=" + blockBilling + ", effectiveDate=" + effectiveDate + ", isActive=" + isActive + "]";
     }
+
+
 }

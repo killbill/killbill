@@ -92,7 +92,7 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     }
 
     @Override
-    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final InternalTenantContext context) {
+    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final boolean includeDeletedEvents, final InternalTenantContext context) { //TODO_1030: Revisit later to check if changes are required for includeDeletedEvents
         final List<BlockingState> result = new ArrayList<>();
         for (final UUID cur : blockableIds) {
             final List<BlockingState> objs = blockingStates.get(cur);

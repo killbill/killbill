@@ -71,6 +71,7 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
      * @param allSubscriptionsForBundle         all subscriptions associated with that bundle
      * @param accountBCD                        account BCD
      * @param catalog                           full Catalog
+     * @param includeDeletedEvents              flag that specifies whether deleted events should be returned
      * @param context                           call context
      * @return blocking states for that subscription
      * @throws EntitlementApiException
@@ -84,6 +85,7 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
                                                         final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                                         final int accountBCD,
                                                         final VersionedCatalog catalog,
+                                                        final boolean includeDeletedEvents,
                                                         final InternalTenantContext context) throws EntitlementApiException {
         // blockable id points to a subscription, but make sure it's an add-on
         if (!ProductCategory.ADD_ON.equals(subscription.getCategory())) {
@@ -99,6 +101,7 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
                                                                                                      allSubscriptionsForBundle,
                                                                                                      accountBCD,
                                                                                                      catalog,
+                                                                                                     includeDeletedEvents,
                                                                                                      context));
 
         return addBlockingStatesNotOnDisk(subscription.getId(),
