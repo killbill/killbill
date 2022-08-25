@@ -33,7 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.killbill.billing.jaxrs.json.NotificationJson;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
-import org.killbill.billing.util.Joiner;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -89,7 +89,7 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
-import org.killbill.billing.util.Joiner;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.api.AuditLevel;
