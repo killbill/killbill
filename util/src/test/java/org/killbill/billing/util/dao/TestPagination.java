@@ -20,7 +20,7 @@ import java.util.List;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.commons.utils.collect.Iterables;
-import org.killbill.billing.util.collect.Iterators;
+import org.killbill.commons.utils.collect.Iterators;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

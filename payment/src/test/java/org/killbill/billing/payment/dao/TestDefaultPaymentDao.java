@@ -28,7 +28,7 @@ import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
-import org.killbill.billing.util.collect.Iterators;
+import org.killbill.commons.utils.collect.Iterators;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

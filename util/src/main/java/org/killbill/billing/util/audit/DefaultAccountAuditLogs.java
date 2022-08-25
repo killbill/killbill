@@ -26,8 +26,8 @@ import java.util.UUID;
 import org.killbill.billing.ObjectType;
 import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
-import org.killbill.billing.util.collect.AbstractIterator;
-import org.killbill.billing.util.collect.Iterators;
+import org.killbill.commons.utils.collect.AbstractIterator;
+import org.killbill.commons.utils.collect.Iterators;
 import org.killbill.billing.util.dao.TableName;
 
 public class DefaultAccountAuditLogs implements AccountAuditLogs {

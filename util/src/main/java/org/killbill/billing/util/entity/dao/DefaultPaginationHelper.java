@@ -23,7 +23,7 @@ import java.util.function.Function;
 
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.commons.utils.collect.Iterables;
-import org.killbill.billing.util.collect.Iterators;
+import org.killbill.commons.utils.collect.Iterators;
 import org.killbill.billing.util.customfield.ShouldntHappenException;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
