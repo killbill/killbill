@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.145.3-bb9d252-SNAPSHOT</version>
+        <version>0.145.3-17b5048-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.23.0-SNAPSHOT</version>
@@ -59,11 +59,12 @@
         <url>http://github.com/killbill/killbill</url>
     </issueManagement>
     <properties>
+        <check.skip-dependency-versions>true</check.skip-dependency-versions>
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
         <killbill-api.version>0.54.0-5b76bbc-SNAPSHOT</killbill-api.version>
         <killbill-client.version>1.3.0-4d44774-SNAPSHOT</killbill-client.version>
-        <killbill-commons.version>0.25.1-02e249b-SNAPSHOT</killbill-commons.version>
-        <killbill-plugin-api.version>0.27.0-af603fc-SNAPSHOT</killbill-plugin-api.version>
+        <killbill-commons.version>0.25.1-dbf60f3-SNAPSHOT</killbill-commons.version>
+        <killbill-platform.version>0.41.0-c58cad4-SNAPSHOT</killbill-platform.version>
         <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
         <!-- Temporary until upgrade to 2.x -->
@@ -105,43 +106,6 @@
                         <artifactId>jakarta.inject</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-            <!-- Temporary until 0.24.x is released -->
-            <dependency>
-                <groupId>org.kill-bill.billing</groupId>
-                <artifactId>killbill-platform-server</artifactId>
-                <version>0.41.0-8593f21-SNAPSHOT</version>
-                <classifier>classes</classifier>
-            </dependency>
-            <!-- Temporary until 0.24.x is released -->
-            <dependency>
-                <groupId>org.kill-bill.billing</groupId>
-                <artifactId>killbill-platform-test</artifactId>
-                <version>0.41.0-8593f21-SNAPSHOT</version>
-                <scope>test</scope>
-            </dependency>
-            <!-- Temporary until 0.24.x is released -->
-            <dependency>
-                <groupId>org.kill-bill.commons</groupId>
-                <artifactId>killbill-clock</artifactId>
-                <version>0.25.1-775465f-SNAPSHOT</version>
-                <type>test-jar</type>
-            </dependency>
-            <!-- Temporary until 0.24.x is released -->
-            <dependency>
-                <groupId>org.kill-bill.commons</groupId>
-                <artifactId>killbill-embeddeddb-mysql</artifactId>
-                <version>0.25.1-775465f-SNAPSHOT</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-            <!-- Temporary until 0.24.x is released -->
-            <dependency>
-                <groupId>org.kill-bill.commons</groupId>
-                <artifactId>killbill-embeddeddb-postgresql</artifactId>
-                <version>0.25.1-775465f-SNAPSHOT</version>
-                <type>test-jar</type>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.testng</groupId>

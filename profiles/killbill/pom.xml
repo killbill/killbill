@@ -38,12 +38,10 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -61,20 +59,27 @@
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
             <artifactId>jackson-jaxrs-json-provider</artifactId>
         </dependency>
+        <!--
+        adding jsr305 to 'compile' help weird various guice errors at runtime
+        (at least in embedded mode when mvn jetty:run invoked). In fact, 'provided' scope to jsr305 make guice "think"
+        that we're not add @Nullable to various dependency, eg:
+
+        [Guice/NullInjectedIntoNonNullable]: null returned by binding at KillbillServerModule.configure(KillbillServerModule.java:125)
+          but the 1st parameter sqlLog of DBIProvider.setSqlLog(DBIProvider.java:97) is not @Nullable
+
+        in this example, DBIProvider.setSqlLog() is already annotated by @Nullable, but reported as "not @Nullable".
+        -->
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-servlet</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
