@@ -35,7 +35,7 @@ import org.killbill.billing.client.RequestOptions;
 import org.killbill.billing.client.model.gen.RoleDefinition;
 import org.killbill.billing.client.model.gen.UserRoles;
 import org.killbill.billing.security.Permission;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -193,7 +193,7 @@ public class TestSecurity extends TestJaxrsBase {
 
         boolean success = false;
         try {
-            final String catalogPath = IOUtils.getResourceAsURL("org/killbill/billing/server/SpyCarBasic.xml").getPath();
+            final String catalogPath = Resources.getResource("org/killbill/billing/server/SpyCarBasic.xml").getPath();
             final String body = Files.readString(Path.of(catalogPath));
             catalogApi.uploadCatalogXml(body, requestOptions);
             success = true;

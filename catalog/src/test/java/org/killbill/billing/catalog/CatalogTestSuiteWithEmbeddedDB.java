@@ -24,7 +24,7 @@ import org.killbill.billing.catalog.caching.PriceOverridePattern;
 import org.killbill.billing.catalog.dao.CatalogOverrideDao;
 import org.killbill.billing.catalog.glue.TestCatalogModuleWithEmbeddedDB;
 import org.killbill.billing.catalog.override.PriceOverride;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.XMLLoader;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.annotations.BeforeClass;
@@ -56,6 +56,6 @@ public class CatalogTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuiteWithEm
     }
 
     protected StandaloneCatalog getCatalog(final String name) throws Exception {
-        return XMLLoader.getObjectFromString(IOUtils.getResourceAsURL("org/killbill/billing/catalog/" + name).toExternalForm(), StandaloneCatalog.class);
+        return XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/catalog/" + name).toExternalForm(), StandaloneCatalog.class);
     }
 }

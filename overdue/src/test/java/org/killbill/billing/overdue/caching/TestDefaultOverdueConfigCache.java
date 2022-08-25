@@ -30,7 +30,8 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.overdue.OverdueTestSuiteNoDB;
 import org.killbill.billing.overdue.api.OverdueApiException;
 import org.killbill.billing.overdue.api.OverdueConfig;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
+import org.killbill.commons.utils.io.CharStreams;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -78,7 +79,7 @@ public class TestDefaultOverdueConfigCache extends OverdueTestSuiteNoDB {
     //
     @Test(groups = "fast")
     public void testDefaultOverdueConfig() throws OverdueApiException {
-        overdueConfigCache.loadDefaultOverdueConfig(IOUtils.getResourceAsURL("org/killbill/billing/overdue/OverdueConfig.xml").toExternalForm());
+        overdueConfigCache.loadDefaultOverdueConfig(Resources.getResource("org/killbill/billing/overdue/OverdueConfig.xml").toExternalForm());
 
         final OverdueConfig result = overdueConfigCache.getOverdueConfig(internalCallContext);
         Assert.assertNotNull(result);
@@ -107,10 +108,10 @@ public class TestDefaultOverdueConfigCache extends OverdueTestSuiteNoDB {
         final Long multiTenantRecordId = multiTenantContext.getTenantRecordId();
         final Long otherMultiTenantRecordId = otherMultiTenantContext.getTenantRecordId();
 
-        final InputStream tenantInputOverdueConfig = UriAccessor.accessUri(new URI(IOUtils.getResourceAsURL("org/killbill/billing/overdue/OverdueConfig2.xml").toExternalForm()));
-        final String tenantOverdueConfigXML = IOUtils.toString(new InputStreamReader(tenantInputOverdueConfig, StandardCharsets.UTF_8));
-        final InputStream otherTenantInputOverdueConfig = UriAccessor.accessUri(new URI(IOUtils.getResourceAsURL("org/killbill/billing/overdue/OverdueConfig.xml").toExternalForm()));
-        final String otherTenantOverdueConfigXML = IOUtils.toString(new InputStreamReader(otherTenantInputOverdueConfig, StandardCharsets.UTF_8));
+        final InputStream tenantInputOverdueConfig = UriAccessor.accessUri(new URI(Resources.getResource("org/killbill/billing/overdue/OverdueConfig2.xml").toExternalForm()));
+        final String tenantOverdueConfigXML = CharStreams.toString(new InputStreamReader(tenantInputOverdueConfig, StandardCharsets.UTF_8));
+        final InputStream otherTenantInputOverdueConfig = UriAccessor.accessUri(new URI(Resources.getResource("org/killbill/billing/overdue/OverdueConfig.xml").toExternalForm()));
+        final String otherTenantOverdueConfigXML = CharStreams.toString(new InputStreamReader(otherTenantInputOverdueConfig, StandardCharsets.UTF_8));
         Mockito.when(tenantInternalApi.getTenantOverdueConfig(Mockito.any(InternalTenantContext.class))).thenAnswer(invocation -> {
             if (shouldThrow.get()) {
                 throw new RuntimeException();
@@ -142,7 +143,7 @@ public class TestDefaultOverdueConfigCache extends OverdueTestSuiteNoDB {
         shouldThrow.set(false);
 
         // Set a default config
-        overdueConfigCache.loadDefaultOverdueConfig(IOUtils.getResourceAsURL("org/killbill/billing/overdue/OverdueConfig.xml").toExternalForm());
+        overdueConfigCache.loadDefaultOverdueConfig(Resources.getResource("org/killbill/billing/overdue/OverdueConfig.xml").toExternalForm());
 
         // Verify the lookup for this tenant
         final OverdueConfig result = overdueConfigCache.getOverdueConfig(multiTenantContext);

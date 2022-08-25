@@ -19,7 +19,7 @@ package org.killbill.billing.payment;
 
 import org.killbill.automaton.DefaultStateMachineConfig;
 import org.killbill.automaton.dot.DefaultStateMachineConfigDOTGenerator;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.annotations.Test;
 
@@ -27,7 +27,7 @@ public class TestDefaultStateMachineConfigDOTGenerator extends PaymentTestSuiteN
 
     @Test(groups = "fast")
     public void testStateMachine() throws Exception {
-        final DefaultStateMachineConfig sms = XMLLoader.getObjectFromString(IOUtils.getResourceAsURL("org/killbill/billing/payment/PaymentStates.xml").toExternalForm(), DefaultStateMachineConfig.class);
+        final DefaultStateMachineConfig sms = XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/payment/PaymentStates.xml").toExternalForm(), DefaultStateMachineConfig.class);
 
         final DefaultStateMachineConfigDOTGenerator generator = new DefaultStateMachineConfigDOTGenerator("Payment", sms);
         generator.build();

@@ -43,7 +43,7 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.xmlloader.XMLLoader;
@@ -141,6 +141,6 @@ public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     }
 
     protected DefaultOverdueConfig getOverdueConfig(final String name) throws Exception {
-        return XMLLoader.getObjectFromString(IOUtils.getResourceAsURL("org/killbill/billing/overdue/" + name).toExternalForm(), DefaultOverdueConfig.class);
+        return XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/overdue/" + name).toExternalForm(), DefaultOverdueConfig.class);
     }
 }

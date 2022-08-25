@@ -29,7 +29,8 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.tenant.api.TenantUserApi;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
+import org.killbill.commons.utils.io.CharStreams;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.ValidationException;
 import org.mockito.Mockito;
@@ -70,7 +71,7 @@ public class TestDefaultCatalogUserApi extends CatalogTestSuiteNoDB {
     }
 
     private String getXMLCatalog(final String name) throws URISyntaxException, IOException {
-        final InputStream tenantInputCatalog = UriAccessor.accessUri(new URI(IOUtils.getResourceAsURL("org/killbill/billing/catalog/" + name).toExternalForm()));
-        return IOUtils.toString(new InputStreamReader(tenantInputCatalog, StandardCharsets.UTF_8));
+        final InputStream tenantInputCatalog = UriAccessor.accessUri(new URI(Resources.getResource("org/killbill/billing/catalog/" + name).toExternalForm()));
+        return CharStreams.toString(new InputStreamReader(tenantInputCatalog, StandardCharsets.UTF_8));
     }
 }

@@ -46,7 +46,7 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.CatalogConfig;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.commons.concurrent.Executors;
 import org.killbill.xmlloader.UriAccessor;
 import org.killbill.xmlloader.ValidationError;
@@ -118,7 +118,7 @@ public class VersionedCatalogLoader implements CatalogLoader, Closeable {
         } catch (final MalformedURLException ignore) {
         }
         // If not, this must be something on the classpath
-        return IOUtils.getResourceAsURL(urlString);
+        return Resources.getResource(urlString);
     }
 
     public VersionedCatalog load(final Collection<String> catalogXMLs, final boolean filterTemplateCatalog, final Long tenantRecordId) throws CatalogApiException {

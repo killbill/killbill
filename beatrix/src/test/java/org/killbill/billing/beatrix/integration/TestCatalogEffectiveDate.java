@@ -36,7 +36,8 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -82,7 +83,7 @@ public class TestCatalogEffectiveDate extends TestIntegrationBase {
     }
 
     private void uploadCatalog(final String name) throws CatalogApiException, IOException, URISyntaxException {
-        final Path path = Paths.get(IOUtils.getResourceAsURL("catalogs/testCatalogEffectiveDate/" + name).toURI());
+        final Path path = Paths.get(Resources.getResource("catalogs/testCatalogEffectiveDate/" + name).toURI());
         catalogUserApi.uploadCatalog(Files.readString(path), testCallContext);
     }
 }
