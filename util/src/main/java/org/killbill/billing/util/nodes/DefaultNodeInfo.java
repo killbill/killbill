@@ -25,7 +25,7 @@ import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginInfo;
 import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginServiceInfo;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginServiceInfo;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginServiceInfoModelJson;

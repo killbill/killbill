@@ -80,7 +80,7 @@ import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.tenant.PerTenantConfig;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.Tag;

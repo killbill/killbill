@@ -38,9 +38,9 @@ import org.killbill.billing.events.AccountCreationInternalEvent;
 import org.killbill.billing.tenant.dao.TenantModelDao;
 import org.killbill.billing.tenant.dao.TenantSqlDao;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.collect.Iterables;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.commons.eventbus.Subscribe;
+import org.killbill.commons.utils.collect.Iterables;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

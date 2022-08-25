@@ -56,7 +56,7 @@ import org.killbill.billing.invoice.usage.SubscriptionUsageInArrear.Subscription
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.collect.MultiValueHashMap;
 import org.killbill.billing.util.collect.MultiValueMap;
 import org.killbill.billing.util.config.definition.InvoiceConfig;

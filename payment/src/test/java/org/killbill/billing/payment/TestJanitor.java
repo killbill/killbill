@@ -62,7 +62,7 @@ import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE;
 import org.killbill.bus.api.PersistentBus.EventBusException;

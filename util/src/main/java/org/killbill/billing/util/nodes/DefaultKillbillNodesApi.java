@@ -29,7 +29,7 @@ import org.killbill.CreatorName;
 import org.killbill.billing.broadcast.BroadcastApi;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;

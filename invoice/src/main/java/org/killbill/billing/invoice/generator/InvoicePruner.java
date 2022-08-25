@@ -35,7 +35,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
 import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 //
 // This is invoked prior we build the tree of existing items to make sure we simplify the view,

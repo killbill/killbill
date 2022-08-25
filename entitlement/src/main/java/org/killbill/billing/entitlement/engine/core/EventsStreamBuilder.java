@@ -68,7 +68,7 @@ import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;

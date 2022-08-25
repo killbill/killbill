@@ -31,7 +31,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.usage.RawUsageOptimizer;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.mockito.Mockito;
 import org.testng.Assert;

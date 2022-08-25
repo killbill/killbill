@@ -62,7 +62,7 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.collect.MultiValueHashMap;
 import org.killbill.billing.util.collect.MultiValueMap;
 import org.killbill.billing.util.entity.DefaultPagination;

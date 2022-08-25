@@ -48,7 +48,7 @@ import org.killbill.billing.util.cache.CacheLoaderArgument;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class DefaultTenantUserApi implements TenantUserApi {
 

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;

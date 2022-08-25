@@ -45,7 +45,7 @@ import org.killbill.billing.catalog.api.rules.CaseChangePlanPolicy;
 import org.killbill.billing.catalog.api.rules.CaseCreateAlignment;
 import org.killbill.billing.catalog.api.rules.CasePriceList;
 import org.killbill.billing.catalog.api.rules.PlanRules;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class TestModelPlanRules implements PlanRules {
 

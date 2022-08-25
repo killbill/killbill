@@ -32,7 +32,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class ChargebackInitiated extends PaymentLeavingStateCallback {
 
