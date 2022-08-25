@@ -42,7 +42,7 @@ import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContextFactory;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;

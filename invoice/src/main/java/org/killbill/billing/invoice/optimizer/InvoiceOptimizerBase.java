@@ -28,7 +28,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.junction.BillingEventSet;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 

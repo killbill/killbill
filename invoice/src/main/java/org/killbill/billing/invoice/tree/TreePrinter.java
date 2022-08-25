@@ -28,7 +28,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 public class TreePrinter {
 

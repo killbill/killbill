@@ -29,7 +29,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 //
 // Compute all events based on blocking states events and base subscription events

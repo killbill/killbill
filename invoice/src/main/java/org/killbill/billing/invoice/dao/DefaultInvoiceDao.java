@@ -71,7 +71,7 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.util.Preconditions;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.audit.dao.AuditDao;

@@ -35,7 +35,7 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.request.Request;
 import org.killbill.commons.request.RequestData;
 

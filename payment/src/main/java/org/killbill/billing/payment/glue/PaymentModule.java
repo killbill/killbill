@@ -63,7 +63,7 @@ import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.DefaultRetryService.DefaultRetryServiceScheduler;
 import org.killbill.billing.payment.retry.RetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.glue.KillBillModule;

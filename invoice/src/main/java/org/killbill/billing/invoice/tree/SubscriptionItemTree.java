@@ -31,7 +31,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
 import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 /**
  * Tree of invoice items for a given subscription

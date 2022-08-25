@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.profiling.ProfilingFeature.ProfilingFeatureType;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;

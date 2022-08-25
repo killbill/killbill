@@ -40,7 +40,7 @@ import org.killbill.billing.catalog.plugin.api.CatalogPluginApi;
 import org.killbill.billing.catalog.plugin.api.VersionedPluginCatalog;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;

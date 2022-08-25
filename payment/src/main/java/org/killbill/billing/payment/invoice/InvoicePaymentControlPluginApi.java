@@ -69,7 +69,7 @@ import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
 import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;

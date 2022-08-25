@@ -59,7 +59,7 @@ import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.collect.MultiValueHashMap;
 import org.killbill.billing.util.collect.MultiValueMap;
 import org.killbill.billing.util.config.definition.InvoiceConfig;

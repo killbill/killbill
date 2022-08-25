@@ -73,7 +73,7 @@ import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventData;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.cache.AccountIdFromBundleIdCacheLoader;

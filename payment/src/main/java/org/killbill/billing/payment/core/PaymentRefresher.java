@@ -59,7 +59,7 @@ import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.PaymentRetryNotificationKey;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.collect.Iterables;

@@ -34,7 +34,7 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
 
 public class PaymentStateContext {
