@@ -17,7 +17,7 @@
 
 package org.killbill.billing;
 
-import org.killbill.billing.util.Strings;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;

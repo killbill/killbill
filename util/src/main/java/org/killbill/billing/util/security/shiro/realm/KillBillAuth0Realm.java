@@ -59,7 +59,7 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.MutablePrincipalCollection;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
-import org.killbill.billing.util.Strings;
+import org.killbill.commons.utils.Strings;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.killbill.commons.utils.cache.Cache;

@@ -38,7 +38,7 @@ import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.Resourc
 import org.killbill.billing.invoice.template.translator.DefaultInvoiceTranslator;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.LocaleUtils;
-import org.killbill.billing.util.Strings;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.email.templates.TemplateEngine;
 import org.killbill.billing.util.io.IOUtils;

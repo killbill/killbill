@@ -34,7 +34,7 @@ import org.killbill.billing.invoice.api.formatters.InvoiceItemFormatter;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
 import org.killbill.billing.util.LocaleUtils;
-import org.killbill.billing.util.Strings;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.template.translation.DefaultCatalogTranslator;
 import org.killbill.billing.util.template.translation.Translator;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
