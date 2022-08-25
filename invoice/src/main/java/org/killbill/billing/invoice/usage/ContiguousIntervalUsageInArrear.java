@@ -58,7 +58,7 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.InvoiceConfig;

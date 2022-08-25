@@ -22,7 +22,7 @@ import java.util.NoSuchElementException;
 
 import javax.annotation.CheckForNull;
 
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 /**
  * Verbatim copy of Guava AbstractIterator (v.31.0.1). See https://github.com/killbill/killbill/issues/1615

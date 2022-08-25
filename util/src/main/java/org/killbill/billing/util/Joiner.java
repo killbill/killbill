@@ -23,6 +23,8 @@ import java.util.Iterator;
 
 import javax.annotation.CheckForNull;
 
+import org.killbill.commons.utils.Preconditions;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -43,7 +45,7 @@ public final class Joiner {
     private final String separator;
 
     private Joiner(final String separator) {
-        this.separator = Preconditions.checkNotNull(separator);
+        this.separator = org.killbill.commons.utils.Preconditions.checkNotNull(separator);
     }
 
     /**

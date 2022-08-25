@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.profiling.ProfilingData;
 import org.killbill.commons.profiling.ProfilingData.LogLineType;
 import org.killbill.commons.profiling.ProfilingData.ProfilingDataItem;

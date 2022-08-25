@@ -19,7 +19,7 @@ package org.killbill.billing.util.collect;
 
 import java.util.Iterator;
 
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 abstract class TransformedIterator<F, T> implements Iterator<T> {
     final Iterator<? extends F> backingIterator;

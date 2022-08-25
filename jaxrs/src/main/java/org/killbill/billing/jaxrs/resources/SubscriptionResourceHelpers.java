@@ -42,7 +42,7 @@ import org.killbill.billing.jaxrs.json.PhasePriceJson;
 import org.killbill.billing.jaxrs.json.SubscriptionJson;
 import org.killbill.billing.jaxrs.json.TierPriceJson;
 import org.killbill.billing.jaxrs.json.UsagePriceJson;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 public class SubscriptionResourceHelpers {
 

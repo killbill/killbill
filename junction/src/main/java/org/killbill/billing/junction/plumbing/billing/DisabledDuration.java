@@ -18,7 +18,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import org.joda.time.DateTime;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 class DisabledDuration implements Comparable<DisabledDuration> {
 

@@ -30,7 +30,7 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.CheckForNull;
 
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 /**
  * Contains subset of Guava's {@code com.google.common.collect.Iterators} functionality.

@@ -69,7 +69,7 @@ import org.killbill.billing.invoice.notification.NextBillingDatePoster;
 import org.killbill.billing.invoice.notification.ParentInvoiceCommitmentPoster;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.AuditLevel;

@@ -79,7 +79,7 @@ import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.billing.subscription.events.user.ApiEventUncancel;
 import org.killbill.billing.subscription.events.user.ApiEventUndoChange;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;

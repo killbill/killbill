@@ -46,7 +46,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.dao.CounterMappings;

@@ -21,7 +21,7 @@ import javax.inject.Inject;
 
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.events.BusInternalEvent;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;

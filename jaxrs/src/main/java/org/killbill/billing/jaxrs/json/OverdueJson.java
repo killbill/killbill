@@ -27,7 +27,7 @@ import org.killbill.billing.overdue.config.DefaultDuration;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.config.DefaultOverdueState;
 import org.killbill.billing.overdue.config.DefaultOverdueStatesAccount;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

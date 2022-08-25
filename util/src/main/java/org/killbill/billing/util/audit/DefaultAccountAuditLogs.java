@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.collect.AbstractIterator;
 import org.killbill.billing.util.collect.Iterators;

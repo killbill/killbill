@@ -53,7 +53,7 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.utils.collect.Iterables;
 

@@ -25,8 +25,7 @@ import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.Queue;
 
-import static org.killbill.billing.util.Preconditions.checkArgument;
-import static org.killbill.billing.util.Preconditions.checkNotNull;
+import org.killbill.commons.utils.Preconditions;
 
 public final class IOUtils {
 
@@ -58,7 +57,7 @@ public final class IOUtils {
      * @throws IOException if an I/O error occurs
      */
     public static byte[] toByteArray(final InputStream in) throws IOException {
-        checkNotNull(in);
+        Preconditions.checkNotNull(in);
         return toByteArrayInternal(in, new ArrayDeque<byte[]>(TO_BYTE_ARRAY_DEQUE_SIZE), 0);
     }
 
@@ -154,7 +153,7 @@ public final class IOUtils {
     public static URL getResourceAsURL(final String resourceName) {
         final ClassLoader loader = Objects.requireNonNullElse(Thread.currentThread().getContextClassLoader(), IOUtils.class.getClassLoader());
         final URL url = loader.getResource(resourceName);
-        checkArgument(url != null, "resource %s not found.", resourceName);
+        Preconditions.checkArgument(url != null, "resource %s not found.", resourceName);
         return url;
     }
 
@@ -198,8 +197,8 @@ public final class IOUtils {
     }
 
     static long copyReaderToBuilder(final Reader from, final StringBuilder to) throws IOException {
-        checkNotNull(from);
-        checkNotNull(to);
+        Preconditions.checkNotNull(from);
+        Preconditions.checkNotNull(to);
         char[] buf = new char[DEFAULT_BUF_SIZE];
         int nRead;
         long total = 0;

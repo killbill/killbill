@@ -20,7 +20,7 @@ package org.killbill.billing.util.collect;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 public final class Sets {
 
