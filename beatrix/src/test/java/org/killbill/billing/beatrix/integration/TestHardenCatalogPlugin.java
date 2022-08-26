@@ -49,7 +49,7 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.billing.util.queue.QueueRetryException;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.XMLLoader;
@@ -238,7 +238,7 @@ public class TestHardenCatalogPlugin extends TestIntegrationBase {
         // This actually pulls catalog resources from `catalog` module and not the one from beatrix/src/test/resources//catalogs
         public void addCatalogVersion(final String catalogResource) throws Exception {
 
-            final StandaloneCatalog inputCatalogVersion = XMLLoader.getObjectFromString(IOUtils.getResourceAsURL(catalogResource).toExternalForm(), StandaloneCatalog.class);
+            final StandaloneCatalog inputCatalogVersion = XMLLoader.getObjectFromString(Resources.getResource(catalogResource).toExternalForm(), StandaloneCatalog.class);
             final StandaloneCatalogWithPriceOverride inputCatalogVersionWithOverride = new StandaloneCatalogWithPriceOverride(inputCatalogVersion, priceOverride, internalTenantContext.getTenantRecordId(), internalCallContextFactory);
 
             if (versionedCatalog == null) {

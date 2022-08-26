@@ -17,7 +17,7 @@
 
 package org.killbill.billing.util.entity.dao;
 
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;

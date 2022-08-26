@@ -33,8 +33,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.killbill.billing.jaxrs.json.NotificationJson;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
-import org.killbill.billing.util.Joiner;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.Joiner;
+import org.killbill.commons.utils.io.Resources;
+import org.killbill.commons.utils.io.CharStreams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -71,7 +72,7 @@ public class CallbackServlet extends HttpServlet {
             return;
         }
 
-        final String body = IOUtils.toString(new InputStreamReader(request.getInputStream(), StandardCharsets.UTF_8));
+        final String body = CharStreams.toString(new InputStreamReader(request.getInputStream(), StandardCharsets.UTF_8));
         response.setStatus(HttpServletResponse.SC_OK);
 
         final NotificationJson notification = objectMapper.readValue(body, NotificationJson.class);

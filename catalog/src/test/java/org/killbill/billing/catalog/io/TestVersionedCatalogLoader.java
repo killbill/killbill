@@ -32,7 +32,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.VersionedCatalog;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -111,7 +111,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoad() throws CatalogApiException {
-        final VersionedCatalog c = loader.loadDefaultCatalog(IOUtils.getResourceAsURL("org/killbill/billing/catalog/versionedCatalog").toString());
+        final VersionedCatalog c = loader.loadDefaultCatalog(Resources.getResource("org/killbill/billing/catalog/versionedCatalog").toString());
         Assert.assertEquals(c.getVersions().size(), 4);
         DateTime dt = new DateTime("2011-01-01T00:00:00+00:00");
         Assert.assertEquals(c.getVersions().get(0).getEffectiveDate(), dt.toDate());
@@ -153,7 +153,7 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testLoadCatalogFromExternalFile() throws CatalogApiException, IOException, URISyntaxException {
-        final File originFile = new File(IOUtils.getResourceAsURL("org/killbill/billing/catalog/SpyCarBasic.xml").toURI());
+        final File originFile = new File(Resources.getResource("org/killbill/billing/catalog/SpyCarBasic.xml").toURI());
         final File destinationFile = Files.createTempFile(null, "SpyCarBasicRelocated.xml").toFile();
         destinationFile.deleteOnExit();
         Files.copy(originFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);

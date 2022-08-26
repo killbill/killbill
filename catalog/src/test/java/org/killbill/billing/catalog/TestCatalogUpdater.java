@@ -38,7 +38,7 @@ import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.catalog.api.user.DefaultSimplePlanDescriptor;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.XMLLoader;
 import org.killbill.xmlloader.XMLWriter;
 import org.testng.Assert;
@@ -578,7 +578,7 @@ public class TestCatalogUpdater extends CatalogTestSuiteNoDB {
 
     private StandaloneCatalog enhanceOriginalCatalogForInvalidTestCases(final String catalogName) throws Exception {
 
-        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(IOUtils.getResourceAsURL(catalogName).toExternalForm(), StandaloneCatalog.class);
+        final StandaloneCatalog catalog = XMLLoader.getObjectFromString(Resources.getResource(catalogName).toExternalForm(), StandaloneCatalog.class);
 
         final MutableStaticCatalog mutableCatalog = new DefaultMutableStaticCatalog(catalog);
 

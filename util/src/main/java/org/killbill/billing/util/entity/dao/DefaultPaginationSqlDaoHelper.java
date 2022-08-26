@@ -23,7 +23,7 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;

@@ -29,7 +29,7 @@ import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.AccountCreationInternalEvent;
 import org.killbill.billing.events.BusEventBase;
-import org.killbill.billing.util.Strings;
+import org.killbill.commons.utils.Strings;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

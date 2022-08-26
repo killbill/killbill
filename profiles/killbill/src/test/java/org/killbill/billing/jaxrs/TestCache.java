@@ -32,7 +32,7 @@ import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.config.tenant.PerTenantConfig;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -107,7 +107,7 @@ public class TestCache extends TestJaxrsBase {
 
         // Uploading the test catalog using the new Tenant created before
         callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
-        final String catalogPath = IOUtils.getResourceAsURL("SpyCarAdvanced.xml").getPath();
+        final String catalogPath = Resources.getResource("SpyCarAdvanced.xml").getPath();
         final String body = Files.readString(Path.of(catalogPath));
         catalogApi.uploadCatalogXml(body, requestOptions);
         callbackServlet.assertListenerStatus();

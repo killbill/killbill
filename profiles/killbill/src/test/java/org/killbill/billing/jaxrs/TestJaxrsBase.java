@@ -92,7 +92,7 @@ import org.killbill.billing.tenant.api.TenantCacheInvalidation;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.config.definition.SecurityConfig;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.config.ConfigSource;
@@ -431,7 +431,7 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     protected String getResourceBodyString(final String resource) throws IOException {
-        final String resourcePath = IOUtils.getResourceAsURL(resource).getPath();
+        final String resourcePath = Resources.getResource(resource).getPath();
         return Files.readString(Path.of(resourcePath));
     }
 

@@ -63,11 +63,11 @@ import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.DefaultRetryService.DefaultRetryServiceScheduler;
 import org.killbill.billing.payment.retry.RetryService;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.util.glue.KillBillModule;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.XMLLoader;
 import org.skife.config.ConfigurationObjectFactory;
 
@@ -181,7 +181,7 @@ public class PaymentModule extends KillBillModule {
         @Override
         public StateMachineConfig get() {
             try {
-                return XMLLoader.getObjectFromString(IOUtils.getResourceAsURL(stateMachineConfig).toExternalForm(), DefaultStateMachineConfig.class);
+                return XMLLoader.getObjectFromString(Resources.getResource(stateMachineConfig).toExternalForm(), DefaultStateMachineConfig.class);
             } catch (final Exception e) {
                 throw new IllegalStateException(e);
             }

@@ -29,8 +29,8 @@ import java.util.UUID;
 
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.collect.Iterables;
 
 /**
  * Tree of invoice items for a given account.

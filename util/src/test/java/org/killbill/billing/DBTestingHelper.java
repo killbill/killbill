@@ -33,9 +33,9 @@ import javax.sql.DataSource;
 
 import org.killbill.billing.platform.test.PlatformDBTestingHelper;
 import org.killbill.billing.util.glue.IDBISetup;
-import org.killbill.billing.util.io.IOUtils;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.killbill.commons.jdbi.guice.DBIProvider;
+import org.killbill.commons.utils.io.IOUtils;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.ResultSetMapperFactory;

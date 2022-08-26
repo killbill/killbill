@@ -28,7 +28,7 @@ import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.util.callcontext.CallContext;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -88,7 +88,7 @@ public class TestCatalogValidation extends TestIntegrationBase {
     }
 
     private void uploadCatalog(final String name) throws CatalogApiException, IOException, URISyntaxException {
-        final Path path = Paths.get(IOUtils.getResourceAsURL("catalogs/testCatalogValidation/" + name).toURI());
+        final Path path = Paths.get(Resources.getResource("catalogs/testCatalogValidation/" + name).toURI());
         catalogUserApi.uploadCatalog(Files.readString(path), testCallContext);
     }
 
