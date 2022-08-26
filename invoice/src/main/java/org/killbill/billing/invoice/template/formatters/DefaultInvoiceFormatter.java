@@ -50,7 +50,7 @@ import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
-import org.killbill.billing.util.Strings;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

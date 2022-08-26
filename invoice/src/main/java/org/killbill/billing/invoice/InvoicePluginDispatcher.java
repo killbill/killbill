@@ -66,7 +66,7 @@ import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.slf4j.Logger;

@@ -60,7 +60,7 @@ import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
 import org.killbill.billing.subscription.events.user.ApiEventTransfer;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;

@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
-import org.killbill.billing.util.Joiner;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.net.HttpHeaders;
 
 @Singleton

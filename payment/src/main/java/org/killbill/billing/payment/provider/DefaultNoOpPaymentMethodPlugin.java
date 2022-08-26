@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class DefaultNoOpPaymentMethodPlugin implements PaymentMethodPlugin {
 

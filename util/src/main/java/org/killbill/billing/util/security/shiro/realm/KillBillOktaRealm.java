@@ -49,7 +49,7 @@ import org.apache.shiro.config.Ini;
 import org.apache.shiro.config.Ini.Section;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.killbill.billing.util.Strings;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

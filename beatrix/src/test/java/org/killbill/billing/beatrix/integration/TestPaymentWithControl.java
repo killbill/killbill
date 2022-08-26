@@ -47,7 +47,7 @@ import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;

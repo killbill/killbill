@@ -84,7 +84,7 @@ import org.killbill.billing.catalog.rules.DefaultCasePhase;
 import org.killbill.billing.catalog.rules.DefaultCasePriceList;
 import org.killbill.billing.catalog.rules.DefaultCaseStandardNaming;
 import org.killbill.billing.catalog.rules.DefaultPlanRules;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class StandaloneCatalogMapper {
 

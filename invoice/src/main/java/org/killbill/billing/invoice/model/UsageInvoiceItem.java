@@ -28,7 +28,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 public class UsageInvoiceItem extends InvoiceItemCatalogBase {
 

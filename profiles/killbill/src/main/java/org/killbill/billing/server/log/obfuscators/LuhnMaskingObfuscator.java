@@ -19,7 +19,7 @@ package org.killbill.billing.server.log.obfuscators;
 
 import java.util.regex.Pattern;
 
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 

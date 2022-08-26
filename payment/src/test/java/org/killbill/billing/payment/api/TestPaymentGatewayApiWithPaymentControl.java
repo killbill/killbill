@@ -38,7 +38,7 @@ import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

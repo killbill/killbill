@@ -65,7 +65,7 @@ import org.killbill.billing.payment.core.sm.control.RefundControlOperation;
 import org.killbill.billing.payment.core.sm.control.VoidControlOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.optimizer.BusOptimizer;

@@ -20,7 +20,7 @@ package org.killbill.billing.util.glue;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.RedisCacheConfig;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;

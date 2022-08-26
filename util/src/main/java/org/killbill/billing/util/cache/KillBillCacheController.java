@@ -29,7 +29,7 @@ import javax.cache.Cache.Entry;
 import javax.cache.CacheException;
 
 import org.killbill.billing.util.cache.Cachable.CacheType;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

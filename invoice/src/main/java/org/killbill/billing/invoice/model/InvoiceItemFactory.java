@@ -37,7 +37,7 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

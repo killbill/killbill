@@ -47,7 +47,7 @@ import org.killbill.billing.osgi.config.OSGIConfig;
 import org.killbill.billing.osgi.pluginconf.PluginConfigException;
 import org.killbill.billing.osgi.pluginconf.PluginFinder;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.billing.util.nodes.NodeCommand;
 import org.killbill.billing.util.nodes.NodeCommandMetadata;

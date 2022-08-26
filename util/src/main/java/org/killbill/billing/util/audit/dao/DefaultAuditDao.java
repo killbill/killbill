@@ -41,7 +41,7 @@ import org.killbill.billing.util.audit.DefaultAuditLog;
 import org.killbill.billing.util.audit.DefaultAuditLogWithHistory;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
-import org.killbill.billing.util.collect.Iterators;
+import org.killbill.commons.utils.collect.Iterators;
 import org.killbill.billing.util.dao.EntityHistoryModelDao;
 import org.killbill.billing.util.dao.HistorySqlDao;
 import org.killbill.billing.util.dao.NonEntityDao;

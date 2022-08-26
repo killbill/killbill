@@ -33,7 +33,7 @@ import org.killbill.billing.events.ControlTagCreationInternalEvent;
 import org.killbill.billing.events.ControlTagDeletionInternalEvent;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApiRetryException;
 import org.killbill.billing.util.UtilTestSuiteWithEmbeddedDB;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.tag.DefaultTagDefinition;
 import org.killbill.billing.util.tag.api.user.DefaultControlTagCreationEvent;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;

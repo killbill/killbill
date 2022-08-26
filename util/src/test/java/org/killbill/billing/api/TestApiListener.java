@@ -42,7 +42,7 @@ import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.events.TagDefinitionInternalEvent;
 import org.killbill.billing.events.TagInternalEvent;
-import org.killbill.billing.util.Joiner;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.clock.Clock;
 import org.killbill.commons.eventbus.Subscribe;
 import org.skife.jdbi.v2.Handle;

@@ -37,7 +37,7 @@ import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.tag.Tag;
 

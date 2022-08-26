@@ -36,7 +36,7 @@ import org.killbill.billing.payment.core.sm.control.ControlPluginRunner.DefaultP
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
-import org.killbill.billing.util.Joiner;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;

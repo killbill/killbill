@@ -53,7 +53,7 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.billing.util.Joiner;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;

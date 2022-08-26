@@ -48,8 +48,8 @@ import org.killbill.billing.invoice.usage.details.UsageConsumableInArrearTierUni
 import org.killbill.billing.invoice.usage.details.UsageInArrearAggregate;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
-import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.config.definition.InvoiceConfig.UsageDetailMode;
 import org.slf4j.Logger;

@@ -61,7 +61,7 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.catalog.CatalogDateHelper;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.dao.MockTagDao;
 import org.mockito.Mockito;

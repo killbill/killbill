@@ -28,7 +28,7 @@ import javax.cache.CacheManager;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.config.definition.CacheConfig;
 import org.slf4j.Logger;

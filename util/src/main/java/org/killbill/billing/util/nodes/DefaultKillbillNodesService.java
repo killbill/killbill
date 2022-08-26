@@ -31,7 +31,7 @@ import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.nodes.dao.NodeInfoDao;
 import org.killbill.billing.util.nodes.dao.NodeInfoModelDao;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;

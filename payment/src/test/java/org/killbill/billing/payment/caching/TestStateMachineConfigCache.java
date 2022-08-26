@@ -28,7 +28,8 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.glue.PaymentModule;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.ByteStreams;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -86,9 +87,9 @@ public class TestStateMachineConfigCache extends PaymentTestSuiteNoDB {
                 }
                 final InternalTenantContext internalContext = (InternalTenantContext) invocation.getArguments()[1];
                 if (multiTenantRecordId.equals(internalContext.getTenantRecordId())) {
-                    return new String(IOUtils.toByteArray(UriAccessor.accessUri(IOUtils.getResourceAsURL(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML).toExternalForm())));
+                    return new String(ByteStreams.toByteArray(UriAccessor.accessUri(Resources.getResource(PaymentModule.DEFAULT_STATE_MACHINE_PAYMENT_XML).toExternalForm())));
                 } else if (otherMultiTenantRecordId.equals(internalContext.getTenantRecordId())) {
-                    return new String(IOUtils.toByteArray(UriAccessor.accessUri(IOUtils.getResourceAsURL(PaymentModule.DEFAULT_STATE_MACHINE_RETRY_XML).toExternalForm())));
+                    return new String(ByteStreams.toByteArray(UriAccessor.accessUri(Resources.getResource(PaymentModule.DEFAULT_STATE_MACHINE_RETRY_XML).toExternalForm())));
                 } else {
                     return null;
                 }

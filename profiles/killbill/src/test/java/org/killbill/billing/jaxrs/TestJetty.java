@@ -29,7 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
+import org.killbill.commons.utils.io.CharStreams;
 
 public class TestJetty {
 
@@ -58,7 +59,7 @@ public class TestJetty {
 
         @Override
         protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-            final String body = IOUtils.toString(new InputStreamReader(request.getInputStream(), "UTF-8"));
+            final String body = CharStreams.toString(new InputStreamReader(request.getInputStream(), "UTF-8"));
             System.out.print("Got " + body);
 
             response.setContentType("application/json");

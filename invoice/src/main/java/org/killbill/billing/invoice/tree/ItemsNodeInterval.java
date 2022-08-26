@@ -35,8 +35,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
-import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.jackson.ObjectMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

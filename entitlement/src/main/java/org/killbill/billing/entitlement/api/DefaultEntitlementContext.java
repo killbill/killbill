@@ -33,7 +33,7 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.UserType;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class DefaultEntitlementContext implements EntitlementContext {
 

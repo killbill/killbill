@@ -40,9 +40,9 @@ import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
-import org.killbill.billing.util.collect.MultiValueHashMap;
-import org.killbill.billing.util.collect.MultiValueMap;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
+import org.killbill.commons.utils.collect.MultiValueHashMap;
+import org.killbill.commons.utils.collect.MultiValueMap;
 
 public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDao, BlockingState, EntitlementApiException> implements BlockingStateDao {
 

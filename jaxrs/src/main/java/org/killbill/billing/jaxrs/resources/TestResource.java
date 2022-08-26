@@ -51,7 +51,7 @@ import org.killbill.billing.util.api.RecordIdApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.BusEventWithMetadata;
 import org.killbill.bus.api.PersistentBus;

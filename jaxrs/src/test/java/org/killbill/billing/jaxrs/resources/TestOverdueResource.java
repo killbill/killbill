@@ -33,7 +33,7 @@ import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
@@ -70,7 +70,7 @@ public class TestOverdueResource extends JaxrsTestSuiteNoDB {
 
 
     protected DefaultOverdueConfig getOverdueConfig(final String name) throws Exception {
-        return XMLLoader.getObjectFromString(IOUtils.getResourceAsURL("org/killbill/billing/jaxrs/resources/overdue/" + name).toExternalForm(), DefaultOverdueConfig.class);
+        return XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/jaxrs/resources/overdue/" + name).toExternalForm(), DefaultOverdueConfig.class);
     }
 
     /**

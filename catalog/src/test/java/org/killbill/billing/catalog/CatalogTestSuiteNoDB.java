@@ -26,7 +26,7 @@ import org.killbill.billing.catalog.io.VersionedCatalogLoader;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
-import org.killbill.billing.util.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.annotations.BeforeClass;
 
@@ -64,6 +64,6 @@ public abstract class CatalogTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
     }
 
     protected StandaloneCatalog getCatalog(final String name) throws Exception {
-        return XMLLoader.getObjectFromString(IOUtils.getResourceAsURL("org/killbill/billing/catalog/" + name).toExternalForm(), StandaloneCatalog.class);
+        return XMLLoader.getObjectFromString(Resources.getResource("org/killbill/billing/catalog/" + name).toExternalForm(), StandaloneCatalog.class);
     }
 }

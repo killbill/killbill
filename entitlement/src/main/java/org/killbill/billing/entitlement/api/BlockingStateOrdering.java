@@ -43,8 +43,8 @@ import org.killbill.billing.entitlement.block.BlockingChecker.BlockingAggregator
 import org.killbill.billing.entitlement.block.DefaultBlockingChecker.DefaultBlockingAggregator;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
-import org.killbill.billing.util.Preconditions;
-import org.killbill.billing.util.annotation.VisibleForTesting;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 // Given an event stream (across one or multiple entitlements), insert the blocking events at the right place
 public class BlockingStateOrdering extends EntitlementOrderingBase {

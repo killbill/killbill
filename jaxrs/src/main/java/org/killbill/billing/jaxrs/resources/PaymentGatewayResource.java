@@ -50,7 +50,7 @@ import org.killbill.billing.payment.api.PaymentOptions;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.GatewayNotification;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
-import org.killbill.billing.util.Strings;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;

@@ -46,7 +46,7 @@ import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.core.sm.control.ControlPluginRunner.DefaultPaymentControlContext;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
-import org.killbill.billing.util.Joiner;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;

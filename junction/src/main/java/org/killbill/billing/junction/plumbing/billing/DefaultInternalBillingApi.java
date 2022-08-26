@@ -55,7 +55,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.killbill.billing.tag.TagInternalApi;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.tag.ControlTagType;

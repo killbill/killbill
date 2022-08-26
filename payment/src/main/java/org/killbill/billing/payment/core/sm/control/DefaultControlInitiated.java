@@ -36,7 +36,7 @@ import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
-import org.killbill.billing.util.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
 
 public class DefaultControlInitiated implements LeavingStateCallback {
