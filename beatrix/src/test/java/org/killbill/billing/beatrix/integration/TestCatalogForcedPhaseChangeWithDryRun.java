@@ -22,8 +22,11 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
-import org.killbill.billing.catalog.DefaultPlanPhasePriceOverride;
-import org.killbill.billing.catalog.api.*;
+import org.killbill.billing.catalog.api.BillingActionPolicy;
+import org.killbill.billing.catalog.api.BillingPeriod;
+import org.killbill.billing.catalog.api.PhaseType;
+import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
+import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
@@ -33,11 +36,14 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase {
 
@@ -62,16 +68,16 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
 
         final LocalDate futureDate = new LocalDate(2022, 7, 13);
         final DryRunArguments dryRunSubscriptionActionArg = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION,
-                                                                                    "Gun",
-                                                                                    ProductCategory.BASE,
-                                                                                    BillingPeriod.MONTHLY,
-                                                                                    null,
-                                                                                    PhaseType.EVERGREEN,
-                                                                                    SubscriptionEventType.CHANGE,
-                                                                                    createdEntitlement.getId(),
-                                                                                    createdEntitlement.getBundleId(),
-                                                                                    futureDate,
-                                                                                    BillingActionPolicy.IMMEDIATE);
+                "Gun",
+                ProductCategory.BASE,
+                BillingPeriod.MONTHLY,
+                null,
+                PhaseType.EVERGREEN,
+                SubscriptionEventType.CHANGE,
+                createdEntitlement.getId(),
+                createdEntitlement.getBundleId(),
+                futureDate,
+                BillingActionPolicy.IMMEDIATE);
         final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunSubscriptionActionArg, callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<>();
@@ -127,16 +133,16 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
         assertListenerStatus();
 
         final DryRunArguments dryRunSubscriptionActionArg = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION,
-                                                                                    "Gun",
-                                                                                    ProductCategory.BASE,
-                                                                                    BillingPeriod.MONTHLY,
-                                                                                    null,
-                                                                                    PhaseType.EVERGREEN,
-                                                                                    SubscriptionEventType.CHANGE,
-                                                                                    createdEntitlement.getId(),
-                                                                                    createdEntitlement.getBundleId(),
-                                                                                    initialDate,
-                                                                                    BillingActionPolicy.IMMEDIATE);
+                "Gun",
+                ProductCategory.BASE,
+                BillingPeriod.MONTHLY,
+                null,
+                PhaseType.EVERGREEN,
+                SubscriptionEventType.CHANGE,
+                createdEntitlement.getId(),
+                createdEntitlement.getBundleId(),
+                initialDate,
+                BillingActionPolicy.IMMEDIATE);
         final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), initialDate, dryRunSubscriptionActionArg, callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<>();
