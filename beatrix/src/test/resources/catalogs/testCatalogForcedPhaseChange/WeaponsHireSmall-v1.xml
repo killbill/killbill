@@ -19,7 +19,7 @@
 <catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="CatalogSchema.xsd ">
 
-    <effectiveDate>2022-07-28T00:00:00</effectiveDate>
+    <effectiveDate>2022-05-28T00:00:00</effectiveDate>
     <catalogName>WeaponsHireSmall</catalogName>
 
     <recurringBillingMode>IN_ADVANCE</recurringBillingMode>
