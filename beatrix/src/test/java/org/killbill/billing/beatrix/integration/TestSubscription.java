@@ -1008,5 +1008,118 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
         assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
         assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);
-    }    
+    } 
+    
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1030")
+    public void testCreateBaseAndAddOnCancelBaseAndRetrieveEvents() throws Exception {
+        final LocalDate initialDate = new LocalDate(2012, 4, 1);
+        clock.setDay(initialDate);
+
+        final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(1));
+
+        //create subscription
+        final PlanPhaseSpecifier planSpec = new PlanPhaseSpecifier("pistol-monthly-notrial");
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
+        assertListenerStatus();
+        
+        busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
+        Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        final PlanPhaseSpecifier addOnplanSpec = new PlanPhaseSpecifier("cleaning-monthly");
+        UUID addOnEntitlementId = entitlementApi.addEntitlement(subscription.getBundleId(), new DefaultEntitlementSpecifier(addOnplanSpec, null, null, null), null, null, false, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //Retrieve base subscription and verify subscription events
+        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        assertNotNull(subscription);
+        List<SubscriptionEvent> events = subscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 2);
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        
+        //Retrieve addon subscription and verify subscription events
+        Subscription addOnSubscription = subscriptionApi.getSubscriptionForEntitlementId(addOnEntitlementId, false, callContext);
+        events = addOnSubscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 2);
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);        
+        
+        //cancel base with future date
+        final LocalDate cancelDate = initialDate.plusDays(3); 
+        subscription.cancelEntitlementWithDate(cancelDate, true, Collections.emptyList(), callContext);
+
+        //Retrieve base subscription and verify subscription events
+        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        assertNotNull(subscription);
+        assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+        events = subscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 4);
+        
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);   
+        
+        //retrieve addon subscription and verify subscription events for addon
+        addOnSubscription = subscriptionApi.getSubscriptionForEntitlementId(addOnEntitlementId, false, callContext);
+        events = addOnSubscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 4);
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);               
+        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);   
+        
+        //uncancel base
+        busHandler.pushExpectedEvents(NextEvent.UNCANCEL);
+        subscription.uncancelEntitlement(Collections.emptyList(), callContext);
+        assertListenerStatus();
+        
+        //Retrieve base subscription without deleted events and verify subscription events
+        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
+        assertNotNull(subscription);
+        assertEquals(subscription.getState(), EntitlementState.ACTIVE);
+        events = subscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 2);
+        
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);      
+        
+        //Retrieve base subscription with deleted events
+        subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, true, callContext);
+        assertNotNull(subscription);
+        assertEquals(subscription.getState(), EntitlementState.ACTIVE); //verify that state is returned correctly even after the deleted events change
+        events = subscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 4);
+
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);        
+        
+        //retrieve addon subscription without deleted events and verify subscription events
+        addOnSubscription = subscriptionApi.getSubscriptionForEntitlementId(addOnEntitlementId, false, callContext);
+        events = addOnSubscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 2);
+        
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);        
+        
+        //retrieve addon subscription with deleted events and verify subscription events
+        addOnSubscription = subscriptionApi.getSubscriptionForEntitlementId(addOnEntitlementId, true, callContext);
+        events = addOnSubscription.getSubscriptionEvents();
+        assertNotNull(events);
+        assertEquals(events.size(), 4);
+        
+        assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
+        assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
+        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
+        assertEquals(events.get(3).getSubscriptionEventType(), SubscriptionEventType.STOP_BILLING);        
+    }      
 }

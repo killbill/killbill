@@ -795,7 +795,8 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                 return null;
             }
 
-            bundleInput.add(baseSubscription);
+            final DefaultSubscriptionBase baseSubscriptionWithDeletedEventsFlag = new DefaultSubscriptionBase(baseSubscription, input.getIncludeDeletedEvents());
+            bundleInput.add(baseSubscriptionWithDeletedEventsFlag);
             bundleInput.add(input);
         } else {
             bundleInput.add(input);
@@ -837,7 +838,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             switch (cur.getCategory()) {
                 case BASE:
                     for (final SubscriptionBaseEvent event : events) {
-                        if (!event.isActive()) {
+                    	if (!cur.getIncludeDeletedEvents() && !event.isActive()) { //TODO_1030 - revisit to see if this is correct
                             continue;
                         } else if (event instanceof ApiEventCancel) {
                             baseCancellationEvent = (ApiEventCancel) event;
@@ -874,17 +875,20 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     }
 
                     if (baseTriggerEventForAddOnCancellation != null) {
-                        final SubscriptionBaseEvent addOnCancelEvent = new ApiEventCancel(new ApiEventBuilder()
-                                                                                                  .setSubscriptionId(reloaded.getId())
-                                                                                                  .setEffectiveDate(baseTriggerEventForAddOnCancellation.getEffectiveDate())
-                                                                                                  .setCreatedDate(baseTriggerEventForAddOnCancellation.getCreatedDate())
-                                                                                                  // This event is only there to indicate the ADD_ON is future canceled, but it is not there
-                                                                                                  // on disk until the base plan cancellation becomes effective
-                                                                                                  .setFromDisk(false));
-
+                        
+                        ApiEventBuilder builder = new ApiEventBuilder()
+                                .setSubscriptionId(reloaded.getId())
+                                .setEffectiveDate(baseTriggerEventForAddOnCancellation.getEffectiveDate())
+                                .setCreatedDate(baseTriggerEventForAddOnCancellation.getCreatedDate())
+                                // This event is only there to indicate the ADD_ON is future canceled, but it is not there
+                                // on disk until the base plan cancellation becomes effective
+                                .setFromDisk(false);
+                        builder = cur.getIncludeDeletedEvents() ? builder.setActive(baseTriggerEventForAddOnCancellation.isActive()) : builder;
+                        final SubscriptionBaseEvent addOnCancelEvent = new ApiEventCancel(builder);
                         events.add(addOnCancelEvent);
-                        // Finally reload subscription with full set of events
+                         // Finally reload subscription with full set of events
                         reloaded = createSubscriptionForInternalUse(cur, events, catalog, context);
+
                     }
                     break;
                 default:
