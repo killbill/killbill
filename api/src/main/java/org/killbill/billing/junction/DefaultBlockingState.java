@@ -66,7 +66,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this.isActive = true; //TODO_1030 - should this be false?
 
     }
-    
+
     public DefaultBlockingState(final UUID id,
                                 final UUID blockedId,
                                 final BlockingStateType type,
@@ -170,11 +170,11 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
     public Long getTotalOrdering() {
         return totalOrdering;
     }
-    
+
     @Override
     public boolean isActive() {
         return isActive;
-    }    
+    }
 
     // Notes:
     //  + we need to keep the same implementation here as DefaultBlockingStateDao.BLOCKING_STATE_MODEL_DAO_ORDERING
@@ -203,8 +203,6 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
             return comparison;
         }
     }
-    
-    //TODO_1030: Should isActive flag be used in equals and hashCode method?
 
     @Override
     public boolean equals(final Object o) {
@@ -247,6 +245,9 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         if (type != that.type) {
             return false;
         }
+        if (isActive != that.isActive) {
+            return false;
+        }
 
         return true;
     }
@@ -264,6 +265,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
         result = 31 * result + (type != null ? type.hashCode() : 0);
         result = 31 * result + (totalOrdering != null ? totalOrdering.hashCode() : 0);
+        result = 31 * result + (isActive ? 1 : 0);
         return result;
     }
 

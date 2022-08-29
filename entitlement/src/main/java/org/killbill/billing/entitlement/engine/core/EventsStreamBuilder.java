@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -290,7 +291,7 @@ public class EventsStreamBuilder {
     public EventsStream buildForEntitlement(final SubscriptionBaseBundle bundle,
                                             final SubscriptionBase subscription,
                                             final Collection<SubscriptionBase> allSubscriptionsForBundle,
-                                            final boolean includeDeletedEvents, 
+                                            final boolean includeDeletedEvents,
                                             final InternalTenantContext internalTenantContext) throws EntitlementApiException {
         final int accountBCD;
         try {
@@ -410,8 +411,28 @@ public class EventsStreamBuilder {
         blockingStateSet.addAll(subscriptionBlockingStates);
         final List<BlockingState> blockingStates = ProxyBlockingStateDao.sortedCopy(blockingStateSet);
 
-        return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, blockingStates, accountBCD, bcdCache, catalog, includeDeletedEvents, internalTenantContext);
+        if(includeDeletedEvents) {
+            return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, blockingStates.stream().filter(state -> state.isActive()).collect(Collectors.toList()), blockingStates, accountBCD, bcdCache, catalog, internalTenantContext);
+        } else {
+            return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, blockingStates, Collections.emptyList(), accountBCD, bcdCache, catalog, internalTenantContext);
+        }
     }
+    
+    private EventsStream buildForEntitlement(final ImmutableAccountData account,
+            final SubscriptionBaseBundle bundle,
+            @Nullable final SubscriptionBase baseSubscription,
+            final SubscriptionBase subscription,
+            final Collection<SubscriptionBase> allSubscriptionsForBundle,
+            final Collection<BlockingState> blockingStates,
+            final int accountBCD,
+            final Map<UUID, Integer> bcdCache,
+            final VersionedCatalog catalog,
+            final boolean includeDeletedEvents,
+            final InternalTenantContext internalTenantContext) throws EntitlementApiException {
+    	
+    	return buildForEntitlement(account, bundle, baseSubscription, subscription, allSubscriptionsForBundle, blockingStates, Collections.emptyList(), accountBCD, bcdCache, catalog, internalTenantContext);
+    	
+    }   
 
     private EventsStream buildForEntitlement(final ImmutableAccountData account,
                                              final SubscriptionBaseBundle bundle,
@@ -419,10 +440,10 @@ public class EventsStreamBuilder {
                                              final SubscriptionBase subscription,
                                              final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                              final Collection<BlockingState> blockingStates,
+                                             final Collection<BlockingState> blockingStatesWithDeletedEvents,
                                              final int accountBCD,
                                              final Map<UUID, Integer> bcdCache,
                                              final VersionedCatalog catalog,
-                                             final boolean includeDeletedEvents,
                                              final InternalTenantContext internalTenantContext) throws EntitlementApiException {
 
         try {
@@ -435,13 +456,14 @@ public class EventsStreamBuilder {
             return new DefaultEventsStream(account,
                                            bundle,
                                            blockingStates,
+                                           blockingStatesWithDeletedEvents,
                                            checker,
                                            baseSubscription,
                                            subscription,
                                            allSubscriptionsForBundle,
                                            defaultAlignmentDay,
                                            internalTenantContext,
-                                           clock.getUTCNow(), includeDeletedEvents);
+                                           clock.getUTCNow());
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
