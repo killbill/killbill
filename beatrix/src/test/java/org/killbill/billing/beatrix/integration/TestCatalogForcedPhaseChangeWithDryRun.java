@@ -55,7 +55,7 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
     }
 
     @Test(groups = "slow")
-    public void testDryRunWithChangePlanInMiddleOfSubscriptionWithPhaseSpecifiedOnNewCatalog() throws Exception {
+    public void testDryRunWithChangePlanInMiddleOfSubscriptionWithPhaseSpecified() throws Exception {
         final LocalDate initialDate = new LocalDate(2022, 6, 28);
         clock.setDay(initialDate);
 
@@ -88,7 +88,7 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
     }
 
     @Test(groups = "slow")
-    public void testDryRunWithChangePlanInMiddleOfSubscriptionWithoutPhaseSpecifiedOnNewCatalog() throws Exception {
+    public void testDryRunWithChangePlanInMiddleOfSubscriptionWithoutPhaseSpecified() throws Exception {
         final LocalDate initialDate = new LocalDate(2022, 6, 28);
         clock.setDay(initialDate);
 
@@ -121,7 +121,7 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
     }
 
     @Test(groups = "slow")
-    public void testDryRunWithChangePlanOnStartOfSubscriptionWithPhaseSpecifiedOnNewCatalog() throws Exception {
+    public void testDryRunWithChangePlanOnStartOfSubscriptionWithPhaseSpecified() throws Exception {
         final LocalDate initialDate = new LocalDate(2022, 6, 28);
         clock.setDay(initialDate);
 
@@ -153,7 +153,7 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
     }
 
     @Test(groups = "slow")
-    public void testDryRunWithChangePlanOnStartOfSubscriptionWithoutPhaseSpecifiedOnNewCatalog() throws Exception {
+    public void testDryRunWithChangePlanOnStartOfSubscriptionWithoutPhaseSpecified() throws Exception {
         final LocalDate initialDate = new LocalDate(2022, 6, 28);
         clock.setDay(initialDate);
 
