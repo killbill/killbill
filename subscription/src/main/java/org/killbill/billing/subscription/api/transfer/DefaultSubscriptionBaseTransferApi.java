@@ -215,7 +215,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             DateTime bundleStartdate = null;
 
             for (final SubscriptionBaseTimeline cur : bundleBaseTimeline.getSubscriptions()) {
-                final DefaultSubscriptionBase oldSubscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(cur.getId(), catalog, false, fromInternalCallContext); //TODO_1030: Backward compatibility
+                final DefaultSubscriptionBase oldSubscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(cur.getId(), catalog, false, fromInternalCallContext);
                 // Skip already cancelled subscriptions
                 if (oldSubscription.getState() == EntitlementState.CANCELLED) {
                     continue;

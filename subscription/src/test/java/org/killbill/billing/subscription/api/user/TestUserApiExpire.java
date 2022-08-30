@@ -77,7 +77,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // REFETCH SUBSCRIPTION AND CHECK THAT IT IS EXPIRED
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.EXPIRED);
     }
 
@@ -106,7 +106,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM);
@@ -127,7 +127,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.EXPIRED);
     }
 
@@ -155,7 +155,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.DISCOUNT);
@@ -173,7 +173,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility 
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); 
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM);
@@ -194,7 +194,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.EXPIRED);
     }
 
@@ -222,7 +222,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.FIXEDTERM);
@@ -240,7 +240,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -286,7 +286,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // REFETCH SUBSCRIPTION AND CHECK THAT IT IS EXPIRED
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.EXPIRED);
     }
 
@@ -328,9 +328,9 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.EXPIRED);
-        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertEquals(baseSubscription.getState(), EntitlementState.ACTIVE);
 
         //MOVE PAST BASE SUBSCRIPTION FIXEDTERM PHASE AND CHECK THAT IT IS EXPIRED
@@ -339,7 +339,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertEquals(baseSubscription.getState(), EntitlementState.EXPIRED);
     }
 
@@ -381,9 +381,9 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertEquals(baseSubscription.getState(), EntitlementState.EXPIRED);
-        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.EXPIRED);
 
         //MOVE PAST ADDON FIXEDTERM PHASE AND CHECK THAT THERE ARE NO MORE EVENTS WHEN ADDON EXPIRES
@@ -433,9 +433,9 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertEquals(baseSubscription.getState(), EntitlementState.EXPIRED);
-        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.EXPIRED);
     }
 
@@ -471,7 +471,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.CANCEL);
         subscription.cancel(callContext);
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.CANCELLED);
         assertListenerStatus();
 
@@ -545,7 +545,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvents(NextEvent.CANCEL);
         subscription.cancelWithPolicy(BillingActionPolicy.END_OF_TERM, callContext);
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.CANCELLED);
         assertListenerStatus();
 
@@ -585,7 +585,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // REFETCH SUBSCRIPTION AND CHECK THAT IT IS EXPIRED
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.EXPIRED);
 
         //MOVE CLOCK BY FEW MONTHS
@@ -651,7 +651,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         //VERIFY THAT BASE SUBSCRIPTION IS CANCELLED AND EXPIRED EVENT IS NOT PRESENT
-        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertEquals(baseSubscription.getState(), EntitlementState.CANCELLED);
 
         events = dao.getPendingEventsForSubscription(baseSubscription.getId(), internalCallContext);
@@ -660,7 +660,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertTrue(events.size() == 0);
 
         //VERIFY THAT ADDON SUBSCRIPTION IS CANCELLED AND EXPIRED EVENT IS NOT PRESENT
-        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.CANCELLED);
 
         events = dao.getPendingEventsForSubscription(aoSubscription.getId(), internalCallContext);
@@ -697,9 +697,9 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.EXPIRED);
-        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertEquals(baseSubscription.getState(), EntitlementState.ACTIVE);
 
         //MOVE CLOCK BY 2 MONTHS
@@ -712,7 +712,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         //VERFIY THAT BASE SUBSCIPTION IS CANCELLED AND EXPIRED EVENT IS NOT PRESENT
-        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        baseSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertEquals(baseSubscription.getState(), EntitlementState.CANCELLED);
         final List<SubscriptionBaseEvent> events = dao.getPendingEventsForSubscription(baseSubscription.getId(), internalCallContext);
         assertNotNull(events);
@@ -720,7 +720,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertTrue(events.size() == 0);
 
         //VERIFY THAT ADDON REMAINS EXPIRED
-        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        aoSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(aoSubscription.getId(), false, internalCallContext);
         assertEquals(aoSubscription.getState(), EntitlementState.EXPIRED);
 
     }
@@ -885,7 +885,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // REFETCH SUBSCRIPTION AND CHECK THAT IT IS EXPIRED
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.EXPIRED);
 
         //MOVE CLOCK BY FEW MONTHS
@@ -958,7 +958,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // REFETCH SUBSCRIPTION AND CHECK THAT IT IS EXPIRED
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.EXPIRED);
 
     }
@@ -1011,7 +1011,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // REFETCH SUBSCRIPTION AND CHECK THAT IT IS EXPIRED
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.EXPIRED);
 
     }

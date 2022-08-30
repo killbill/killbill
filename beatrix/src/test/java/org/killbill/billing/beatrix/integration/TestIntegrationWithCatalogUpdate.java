@@ -280,7 +280,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(specZero), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, testCallContext); //TODO_1030: Backward compatibility
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, testCallContext);
 
         Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 7, 1));
@@ -310,7 +310,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         final UUID baseEntitlement2Id = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(specNonZero), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
-        final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement2Id, false, testCallContext); //TODO_1030: Backward compatibility
+        final Entitlement baseEntitlement2 = entitlementApi.getEntitlementForId(baseEntitlement2Id, false, testCallContext);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -372,7 +372,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(planPhaseSpec), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
-        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, testCallContext); //TODO_1030: Backward compatibility
+        final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, testCallContext);
 
         Subscription refreshedBaseEntitlement = subscriptionApi.getSubscriptionForEntitlementId(baseEntitlement.getId(), false, testCallContext);
         assertEquals(refreshedBaseEntitlement.getChargedThroughDate(), new LocalDate(2016, 6, 1));
@@ -407,6 +407,6 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         }
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
-        return entitlementApi.getEntitlementForId(entitlementId, false, testCallContext); //TODO_1030: Backward compatibility
+        return entitlementApi.getEntitlementForId(entitlementId, false, testCallContext);
     }
 }

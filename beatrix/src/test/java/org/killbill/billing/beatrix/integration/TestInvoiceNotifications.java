@@ -84,7 +84,7 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", null, billingDate, false, true, Collections.emptyList(), callContext);
         busHandler.assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         // Move to the notification before the start date =>  2018, 2, 21
         addDaysAndCheckForCompletion(21, NextEvent.INVOICE_NOTIFICATION);

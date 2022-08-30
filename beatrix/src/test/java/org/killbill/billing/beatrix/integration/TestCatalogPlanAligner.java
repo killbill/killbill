@@ -81,7 +81,7 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
         uploadCatalog("WeaponsHireSmall-v2.xml");
         assertListenerStatus();
 
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(subId, false, testCallContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(subId, false, testCallContext);
 
         // 2020-09-18T12:56:02 (WeaponsHireSmall-v2 is active)
         clock.addDays(1);

@@ -104,7 +104,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
 
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
         // Trigger a change way in the past (prior the cuttoff date)
@@ -161,7 +161,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
 
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
         // 2020-01-16
@@ -226,7 +226,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 3, 1), new LocalDate(2020, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         // Cancel way in the past (prior the cuttoff date)
         // org.killbill.invoice.maxInvoiceLimit= 1 month => cuttoff date = 2020-03-01
@@ -274,7 +274,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
         // Cancel in the past (previous period)
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
         entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 28), true, Collections.emptyList(), callContext);
         assertListenerStatus();
@@ -396,7 +396,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2021, 3, 1), new LocalDate(2021, 4, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
         // Cancel on 2021-04-30
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         //busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.INVOICE);
         entitlement.cancelEntitlementWithDate(new LocalDate(2021, 4, 30), true, Collections.emptyList(), callContext);
         assertListenerStatus();
@@ -469,7 +469,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         clock.addDays(14);
 
         // Cancel in the past (previous period)
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         entitlement.cancelEntitlementWithDate(new LocalDate(2020, 2, 15), true, Collections.emptyList(), callContext);
         assertListenerStatus();
@@ -1067,7 +1067,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.RECURRING, new BigDecimal("100.00")));
 
         // Cancel (full repair)
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK);
         entitlement.cancelEntitlementWithDate(new LocalDate(2020, 1, 1), true, Collections.emptyList(), callContext);
         assertListenerStatus();

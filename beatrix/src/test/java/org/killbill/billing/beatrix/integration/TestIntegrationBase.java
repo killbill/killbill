@@ -439,7 +439,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                     final BigDecimal amount, final DateTime chargeThroughDate,
                                     final int totalInvoiceItemCount) throws EntitlementApiException {
 
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(subscriptionId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(subscriptionId, false, callContext);
 
         final SubscriptionBase subscription = ((DefaultEntitlement) entitlement).getSubscriptionBase();
         final DateTime ctd = subscription.getChargedThroughDate();
@@ -799,7 +799,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList, null);
                     final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, new DefaultEntitlementSpecifier(spec, null, null, overrides), bundleExternalKey, null, billingEffectiveDate, false, true, Collections.emptyList(), callContext);
                     assertNotNull(entitlementId);
-                    return entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+                    return entitlementApi.getEntitlementForId(entitlementId, false, callContext);
                 } catch (final EntitlementApiException e) {
                     fail("Unable to create entitlement", e);
                     return null;
@@ -842,7 +842,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, PriceListSet.DEFAULT_PRICELIST_NAME, null);
                     final UUID entitlementId = entitlementApi.addEntitlement(bundleId, new DefaultEntitlementSpecifier(spec), effectiveDate, effectiveDate, false, Collections.emptyList(), callContext);
                     assertNotNull(entitlementId);
-                    return entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+                    return entitlementApi.getEntitlementForId(entitlementId, false, callContext);
                 } catch (final EntitlementApiException e) {
                     fail(e.getMessage());
                     return null;
@@ -862,7 +862,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
+                    Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext);
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList);
                     if (billingPolicy == null) {
                         refreshedEntitlement = refreshedEntitlement.changePlan(new DefaultEntitlementSpecifier(spec), Collections.emptyList(), callContext);
@@ -899,7 +899,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
+                    Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext);
                     refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithDate(requestedDate, false, Collections.emptyList(), callContext);
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {
@@ -919,7 +919,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     // Need to fetch again to get latest CTD updated from the system
-                    Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext); //TODO_1030: Backward compatibility
+                    Entitlement refreshedEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext);
                     refreshedEntitlement = refreshedEntitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(entitlementActionPolicy, billingActionPolicy, Collections.emptyList(), callContext);
                     return refreshedEntitlement;
                 } catch (final EntitlementApiException e) {

@@ -123,7 +123,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
         setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
 
         assertEquals(subscription.getLastActiveProduct().getName(), prod);
         assertEquals(subscription.getLastActivePriceList().getName(), planSet);
@@ -231,7 +231,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
         setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
 
         // CANCEL EOT
         subscription.cancel(callContext);
@@ -307,7 +307,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
         setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
 
         assertEquals(subscription.getLastActiveProduct().getName(), prod);
         assertEquals(subscription.getLastActivePriceList().getName(), planSet);
@@ -318,7 +318,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription.cancel(callContext);
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         Assert.assertEquals(subscription.getAllTransitions(false).size(), 3);
 
 
@@ -331,7 +331,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final SubscriptionEventSqlDao sqlDao = handle.attach(SubscriptionEventSqlDao.class);
         sqlDao.create(newCancelEvent, internalCallContext);
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         // The extra cancel event is being ignored
         Assert.assertEquals(subscription.getEvents().size(), 3);
         Assert.assertEquals(subscription.getAllTransitions(false).size(), 3);
@@ -374,7 +374,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(clock.getUTCNow(), ctd);
         setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
 
         // Move ahead a bit abd cancel START_OF_TERM
         clock.addDays(5);
@@ -382,7 +382,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         subscription.cancelWithPolicy(BillingActionPolicy.START_OF_TERM, callContext);
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         Assert.assertEquals(subscription.getAllTransitions(false).get(subscription.getAllTransitions(false).size() - 1).getTransitionType(), SubscriptionBaseTransitionType.CANCEL);
         Assert.assertEquals(new LocalDate(subscription.getAllTransitions(false).get(subscription.getAllTransitions(false).size() - 1).getEffectiveTransitionTime(), accountData.getTimeZone()), new LocalDate(2016, 12, 1));
     }
@@ -406,7 +406,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         for (int i = 0; i < 3; i++) {
             subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, callContext);
 
-            subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+            subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
             assertEquals(subscription.getState(), EntitlementState.PENDING);
 
             testListener.pushExpectedEvents(NextEvent.UNCANCEL);
@@ -419,7 +419,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(10);
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.ACTIVE);
 
         testListener.pushExpectedEvent(NextEvent.PHASE);
@@ -449,7 +449,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(5);
         assertListenerStatus();
 
-        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription2.getStartDate().compareTo(subscription.getStartDate()), 0);
         assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
         assertNull(subscription2.getCurrentPlan());
@@ -488,7 +488,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(5);
         assertListenerStatus();
 
-        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription2.getStartDate().compareTo(subscription.getStartDate()), 0);
         assertEquals(subscription2.getState(), Entitlement.EntitlementState.CANCELLED);
         assertNull(subscription2.getCurrentPlan());
@@ -510,7 +510,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
 
         subscription.cancelWithPolicy(BillingActionPolicy.IMMEDIATE, callContext);
         
-        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        final DefaultSubscriptionBase subscription2 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription2.getStartDate().compareTo(subscription.getStartDate()), 0);
         assertEquals(subscription2.getState(), Entitlement.EntitlementState.PENDING);
 
@@ -518,7 +518,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(5);
         assertListenerStatus();
 
-        final DefaultSubscriptionBase subscription3 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        final DefaultSubscriptionBase subscription3 = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription3.getStartDate().compareTo(subscription.getStartDate()), 0);
         assertEquals(subscription3.getState(), Entitlement.EntitlementState.CANCELLED);
         assertNull(subscription3.getCurrentPlan());
@@ -555,7 +555,7 @@ public class TestUserApiCancel extends SubscriptionTestSuiteWithEmbeddedDB {
         final Duration ctd = testUtil.getDurationMonth(1);
         final DateTime newChargedThroughDate = TestSubscriptionHelper.addDuration(expectedPhaseTrialChange, ctd);
         setChargedThroughDate(subscription.getId(), newChargedThroughDate, internalCallContext);
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext); //TODO_1030: Backward compatibility
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
 
         assertEquals(subscription.getLastActiveProduct().getName(), prod);
         assertEquals(subscription.getLastActivePriceList().getName(), planSet);

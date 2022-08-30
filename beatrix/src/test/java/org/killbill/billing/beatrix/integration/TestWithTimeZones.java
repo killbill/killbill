@@ -136,7 +136,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
         UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         // Cancel the next month specifying just a LocalDate
         final LocalDate cancellationDate = new LocalDate("2015-12-01", tz);
@@ -182,7 +182,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
         UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         // Cancel the next month specifying just a LocalDate
         final LocalDate cancellationDate = new LocalDate("2015-03-01", tz);
@@ -237,7 +237,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         // Pass a date of today, to trigger TimeAwareContext#toUTCDateTime
         final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "Something", clock.getUTCToday(), clock.getUTCToday(), false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()).compareTo(new LocalDate("2015-03-08")), 0);
         Assert.assertEquals(((DefaultEntitlement) entitlement).getBasePlanSubscriptionBase().getStartDate().compareTo(new DateTime("2015-03-08T02:00:00.000-08:00")), 0);

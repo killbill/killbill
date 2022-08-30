@@ -132,7 +132,7 @@ public class EventsStreamBuilder {
 
     public EventsStream buildForEntitlement(final UUID entitlementId, final TenantContext tenantContext) throws EntitlementApiException {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
-        return buildForEntitlement(entitlementId, false, internalTenantContext); //TODO_1030: Backward compatibility
+        return buildForEntitlement(entitlementId, false, internalTenantContext);
     }
 
     public AccountEventsStreams buildForAccount(final InternalTenantContext internalTenantContext) throws EntitlementApiException {

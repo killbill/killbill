@@ -65,7 +65,7 @@ public class TestChangeUsagePlanWithDateTime extends TestIntegrationBase {
         
         // Move clock by 1 day and change plan
         clock.addDays(1); 
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         final PlanPhaseSpecifier newSpec = new PlanPhaseSpecifier("server-monthly-premium");
         DefaultEntitlementSpecifier defaultEntitlementSpecifier = new DefaultEntitlementSpecifier(newSpec);
         //Since plan change is done the next day, it results in an invoice generation
@@ -111,7 +111,7 @@ public class TestChangeUsagePlanWithDateTime extends TestIntegrationBase {
         // Move clock by few hours and change plan to premium
         final DateTime changeTime1 = clock.getUTCNow().plusHours(2);
         clock.setTime(changeTime1);
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         final PlanPhaseSpecifier specPremium = new PlanPhaseSpecifier("server-monthly-premium");
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(specPremium), changeTime1, Collections.emptyList(), callContext);
@@ -210,7 +210,7 @@ public class TestChangeUsagePlanWithDateTime extends TestIntegrationBase {
         // Move clock by few hours and change plan
         final DateTime changeTime = clock.getUTCNow().plusHours(2);
         clock.setTime(changeTime);
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         final PlanPhaseSpecifier newSpec = new PlanPhaseSpecifier("server-monthly-standard-bandwidth");
         DefaultEntitlementSpecifier defaultEntitlementSpecifier = new DefaultEntitlementSpecifier(newSpec);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);

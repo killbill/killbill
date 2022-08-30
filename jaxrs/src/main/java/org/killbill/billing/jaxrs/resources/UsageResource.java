@@ -133,7 +133,7 @@ public class UsageResource extends JaxRsResourceBase {
         }
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         // Verify subscription exists..
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(json.getSubscriptionId(), false, callContext);
         if (entitlement.getEffectiveEndDate() != null) {
             final DateTime highestRecordDate = getHighestRecordDate(json.getUnitUsageRecords());
             final Account account = accountUserApi.getAccountById(entitlement.getAccountId(), callContext);
