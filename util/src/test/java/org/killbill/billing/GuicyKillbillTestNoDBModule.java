@@ -34,7 +34,6 @@ import org.killbill.billing.util.optimizer.BusOptimizerOn;
 import org.killbill.clock.ClockMock;
 import org.skife.jdbi.v2.IDBI;
 
-// FIXME-1615 : Should discuss
 import com.google.inject.Provides;
 
 public class GuicyKillbillTestNoDBModule extends GuicyKillbillTestModule {

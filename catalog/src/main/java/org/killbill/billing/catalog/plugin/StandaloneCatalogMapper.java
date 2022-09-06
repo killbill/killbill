@@ -515,7 +515,7 @@ public class StandaloneCatalogMapper {
         if (input == null || !input.iterator().hasNext()) {
             return null;
         }
-        // FIXME-1615 We need better approach
+
         final Iterable<C> tmp = Iterables.toStream(input).map(transformer).collect(Collectors.toUnmodifiableList());
         return toArray(tmp);
     }

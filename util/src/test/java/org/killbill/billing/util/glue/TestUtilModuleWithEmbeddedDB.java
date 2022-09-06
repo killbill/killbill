@@ -36,7 +36,6 @@ import org.killbill.clock.ClockMock;
 import org.killbill.commons.embeddeddb.EmbeddedDB;
 import org.mockito.Mockito;
 
-// FIXME-1615 : Should discuss
 import com.google.inject.Provides;
 
 public class TestUtilModuleWithEmbeddedDB extends TestUtilModule {

@@ -67,7 +67,6 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class TestPayment extends TestJaxrsBase {
@@ -131,7 +130,7 @@ public class TestPayment extends TestJaxrsBase {
         final Payment payment = accountApi.processPayment(account.getAccountId(), authTransaction, account.getPaymentMethodId(),
                                                           NULL_PLUGIN_NAMES, NULL_PLUGIN_PROPERTIES, requestOptions);
         final PaymentTransaction paymentTransaction = payment.getTransactions().get(0);
-        assertTrue(paymentTransaction.getEffectiveDate().compareTo(effectiveDate) == 0);
+        assertEquals(paymentTransaction.getEffectiveDate().compareTo(effectiveDate), 0);
     }
 
     @Test(groups = "slow")
@@ -238,7 +237,6 @@ public class TestPayment extends TestJaxrsBase {
 
         // Trigger manually an invoice payment but make the control plugin abort it
         mockPaymentControlProviderPlugin.setAborted(true);
-        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
         final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
         queryParams.put("controlPluginName", List.of(MockPaymentControlProviderPlugin.PLUGIN_NAME));
         final RequestOptions inputOptions = RequestOptions.builder()
@@ -269,7 +267,6 @@ public class TestPayment extends TestJaxrsBase {
         // Getting Invoice #2 (first after Trial period)
         final UUID failedInvoiceId = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, null, RequestOptions.empty()).get(1).getInvoiceId();
 
-        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
         final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
         queryParams.put("withAttempts", List.of("true"));
         final RequestOptions inputOptions = RequestOptions.builder()
@@ -298,7 +295,6 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
         final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
         queryParams.put("withAttempts", List.of("true"));
         final RequestOptions inputOptions = RequestOptions.builder()
@@ -319,7 +315,6 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
         final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
         queryParams.put("withAttempts", List.of("true"));
         final RequestOptions inputOptions = RequestOptions.builder()
@@ -340,7 +335,6 @@ public class TestPayment extends TestJaxrsBase {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice(false);
 
-        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
         final Map<String, Collection<String>> queryParams = new LinkedHashMap<>();
         queryParams.put("withAttempts", List.of("true"));
         final RequestOptions inputOptions = RequestOptions.builder()

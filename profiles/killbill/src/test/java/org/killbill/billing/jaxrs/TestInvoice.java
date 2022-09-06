@@ -729,8 +729,7 @@ public class TestInvoice extends TestJaxrsBase {
         inputInvoice.add(externalCharge);
         final Account accountWithBalance = accountApi.getAccount(accountJson.getAccountId(), true, true, AuditLevel.NONE, requestOptions);
 
-        // FIXME-1615 : Not using MultiValueMap because of line 736 (killbill-client-java still not support it)
-        final Map<String, Collection<String>> queryFollowParams = new LinkedHashMap<>(requestOptions.getQueryParamsForFollowAsMap());
+        final Map<String, Collection<String>> queryFollowParams = new LinkedHashMap<>(requestOptions.getQueryParamsForFollow());
         queryFollowParams.put(JaxrsResource.QUERY_INVOICE_WITH_ITEMS, List.of("true"));
 
         final Invoice migrationInvoice = invoiceApi.createMigrationInvoice(accountJson.getAccountId(), inputInvoice, null, requestOptions.extend().withQueryParamsForFollow(queryFollowParams).build());

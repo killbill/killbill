@@ -74,11 +74,10 @@ public class GuicyKillbillTestSuiteWithEmbeddedDB extends GuicyKillbillTestSuite
     protected CacheControllerDispatcher controlCacheDispatcher;
 
     @Nullable
-    @com.google.inject.Inject(optional = true)
+    @Inject
     protected CacheManager cacheManager;
 
     @Nullable
-    // FIXME-1615 : Originally, this injection is: @Inject(optional = true) . Let see if this broke something
     @Inject
     @Named(REDIS_CACHE_CLIENT)
     protected RedissonClient redissonCachingClient;

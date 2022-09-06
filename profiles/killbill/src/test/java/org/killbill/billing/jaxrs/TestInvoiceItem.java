@@ -60,7 +60,6 @@ public class TestInvoiceItem extends TestJaxrsBase {
         Assert.assertEquals(objFromJson.getDescription(), input.getDescription());
 
         // Add a tag
-        // FIXME-1615 : Not using MultiValueMap because of line 66 (killbill-client-java still not support it)
         final Map<String, Collection<String>> followQueryParams = new LinkedHashMap<>();
         followQueryParams.put(JaxrsResource.QUERY_ACCOUNT_ID, List.of(accountJson.getAccountId().toString()));
         final RequestOptions followRequestOptions = requestOptions.extend().withQueryParamsForFollow(followQueryParams).build();

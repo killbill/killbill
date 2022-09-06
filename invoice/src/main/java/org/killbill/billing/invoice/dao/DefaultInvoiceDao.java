@@ -780,7 +780,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             createAndRefresh(transactional, chargeBack, context);
 
             // Notify the bus since the balance of the invoice changed
-            // FIXME-1615 : Intellij report that this line and another line in #postChargebackReversal() contains the same logic
             final UUID accountId = transactional.getAccountIdFromInvoicePaymentId(chargeBack.getId().toString(), context);
 
             final CBALogicWrapper cbaWrapper = new CBALogicWrapper(accountId, invoicesTags, context, entitySqlDaoWrapperFactory);
@@ -968,9 +967,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         return getInvoiceItemById(creditId, context);
     }
 
-    // FIXME-1615 : accountId not used
-    private BigDecimal reclaimCreditFromTransaction(final UUID accountId,
-                                                    final BigDecimal amountToReclaim,
+    private BigDecimal reclaimCreditFromTransaction(final BigDecimal amountToReclaim,
                                                     final Set<UUID> invoiceIds,
                                                     final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                     final InternalCallContext context) throws InvoiceApiException, EntityPersistenceException {
@@ -1038,7 +1035,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     // If we don't have enough credit left on the account, we reclaim what is necessary
                     if (accountCBA.compareTo(cbaItem.getAmount()) < 0) {
                         final BigDecimal amountToReclaim = cbaItem.getAmount().subtract(accountCBA);
-                        final BigDecimal reclaimed = reclaimCreditFromTransaction(accountId, amountToReclaim, invoiceIds, entitySqlDaoWrapperFactory, context);
+                        final BigDecimal reclaimed = reclaimCreditFromTransaction(amountToReclaim, invoiceIds, entitySqlDaoWrapperFactory, context);
                         Preconditions.checkState(reclaimed.compareTo(amountToReclaim) == 0,
                                                  String.format("Unexpected state, reclaimed used credit [%s/%s]", reclaimed, amountToReclaim));
                     }
