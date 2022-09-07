@@ -229,8 +229,7 @@ public class TestPaymentPluginProperties extends TestJaxrsBase {
         completeTransactionByPaymentId.setProperties(bodyProperties);
 
         final RequestOptions basicRequestOptions = requestOptions;
-        // FIXME-1615 : Not using MultiValueMap because killbill-client-java still not support it
-        final Map<String, Collection<String>> params = new LinkedHashMap<>(basicRequestOptions.getQueryParamsForFollowAsMap());
+        final Map<String, Collection<String>> params = new LinkedHashMap<>(basicRequestOptions.getQueryParamsForFollow());
         params.put(KillBillHttpClient.CONTROL_PLUGIN_NAME, List.of(PluginPropertiesVerificator.PLUGIN_NAME));
 
         final RequestOptions requestOptionsWithParams = basicRequestOptions.extend()

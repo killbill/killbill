@@ -47,7 +47,6 @@ import org.killbill.billing.util.config.definition.CatalogConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 
-// FIXME-1615 : Part of internal DI system
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 

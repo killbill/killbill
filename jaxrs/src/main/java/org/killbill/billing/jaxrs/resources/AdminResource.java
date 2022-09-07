@@ -390,7 +390,6 @@ public class AdminResource extends JaxRsResourceBase {
         // getting Tenant Record Id
         final Long tenantRecordId = recordIdApi.getRecordId(tenantContext.getTenantId(), ObjectType.TENANT, tenantContext);
 
-        // FIXME-1615 : CacheController
         final Function<String, Boolean> tenantKeysMatcher = key -> key != null && key.endsWith("::" + tenantRecordId);
 
         // clear tenant-record-id cache by tenantId
