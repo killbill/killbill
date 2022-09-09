@@ -160,7 +160,6 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
                                                                                     BillingActionPolicy.END_OF_TERM,
                                                                                     overrides);
         final LocalDate targetDate = new LocalDate(2020, 11, 1);
-        // on-1615: return value of triggerDryRunInvoiceGeneration (dryRunInvoice) never used, so it gets removed.
         invoiceUserApi.triggerDryRunInvoiceGeneration(bpEntitlement.getAccountId(), targetDate, dryRunSubscriptionActionArg, Collections.emptyList(), callContext);
 
         // Future dry-run change on the same plan with only the recurring price overriden

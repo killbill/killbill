@@ -260,7 +260,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         // Create another subscription so we keep having something to invoice after cancellation of the first one
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        // on-1615: return value of createBaseEntitlement (entitlementId2) never used, so it gets removed.
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something2", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
@@ -313,7 +312,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
 
-        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
@@ -657,7 +655,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
@@ -716,7 +713,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
@@ -781,7 +777,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
 
-        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
@@ -833,7 +828,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
@@ -905,7 +899,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
         final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
-        // on-1615: return value of getSubscriptionForEntitlementId (sub1) never used, so it gets removed.
         subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, false, callContext);
         assertListenerStatus();
 
@@ -1047,7 +1040,6 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
 
         // Create another subscription so we keep having something to invoice after cancellation of the first one
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        // on-1615: return value of createBaseEntitlement (entitlementId2) never used, so it gets removed.
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something2", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
