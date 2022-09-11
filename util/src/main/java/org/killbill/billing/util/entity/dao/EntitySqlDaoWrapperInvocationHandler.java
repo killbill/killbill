@@ -85,22 +85,18 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private final Handle handle;
 
     private final CacheControllerDispatcher cacheControllerDispatcher;
-    // FIXME-1615 : Do we use this? I don't think so.
-    private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Profiling<Object, Throwable> prof;
 
     public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass,
                                                 final S sqlDao,
                                                 final Handle handle,
-                                                final Clock clock,
                                                 // Special DAO that don't require caching can invoke EntitySqlDaoWrapperInvocationHandler with no caching (e.g NoCachingTenantDao)
                                                 @Nullable final CacheControllerDispatcher cacheControllerDispatcher,
                                                 final InternalCallContextFactory internalCallContextFactory) {
         this.sqlDaoClass = sqlDaoClass;
         this.sqlDao = sqlDao;
         this.handle = handle;
-        this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
         this.prof = new Profiling<Object, Throwable>();

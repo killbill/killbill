@@ -726,7 +726,6 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // Create the monthly
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
-        // on-1615: return value of createBaseEntitlement (entitlementId) never used, so it gets removed.
         entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 

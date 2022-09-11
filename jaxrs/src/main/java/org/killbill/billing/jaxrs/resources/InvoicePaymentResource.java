@@ -19,7 +19,6 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -354,10 +353,6 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         }
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-
-        // FIXME-1615 : 'controlPluginNames' not used anywhere.
-        final List<String> controlPluginNames = new ArrayList<String>();
-        controlPluginNames.addAll(paymentControlPluginNames);
 
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), tenantContext);
         final BigDecimal amount = json == null ? null : json.getAmount();

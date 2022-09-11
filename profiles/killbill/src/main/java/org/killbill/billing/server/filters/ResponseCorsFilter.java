@@ -33,7 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.commons.utils.Joiner;
-import org.killbill.billing.util.net.HttpHeaders;
+import org.killbill.commons.utils.net.HttpHeaders;
 
 @Singleton
 public class ResponseCorsFilter implements Filter {

@@ -37,7 +37,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.testng.annotations.Test;
-import org.weakref.jmx.internal.guava.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 

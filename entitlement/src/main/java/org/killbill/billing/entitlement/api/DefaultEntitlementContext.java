@@ -116,8 +116,6 @@ public class DefaultEntitlementContext implements EntitlementContext {
     private static <T> Iterable<T> lastUnlessEmptyOrFirst(final Iterable<T> prevValues, final Iterable<T> newValues) {
         // Be lenient if a plugin returns an empty list (default behavior for Ruby plugins): at this point,
         // we know the isAborted flag hasn't been set, so let's assume the user actually wants to use the previous list
-        // FIXME-1615 : Instead of "iterableToList(newValues).isEmpty()", should we copy guava version to new class
-        //  "CollectionUtils.isIterableEmpty(Iterable)" ?
         if (newValues != null && !Iterables.isEmpty(newValues)) {
             return newValues;
         } else {

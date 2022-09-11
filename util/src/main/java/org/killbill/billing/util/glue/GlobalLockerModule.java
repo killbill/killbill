@@ -30,7 +30,6 @@ import org.killbill.commons.locker.memory.MemoryGlobalLocker;
 import org.killbill.commons.locker.mysql.MySqlGlobalLocker;
 import org.killbill.commons.locker.postgresql.PostgreSQLGlobalLocker;
 
-// FIXME-1615 : Need replacement for this
 import com.google.inject.Provides;
 
 public class GlobalLockerModule extends KillBillModule {

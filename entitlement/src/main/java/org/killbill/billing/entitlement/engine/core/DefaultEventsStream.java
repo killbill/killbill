@@ -386,11 +386,6 @@ public class DefaultEventsStream implements EventsStream {
                 .collect(Collectors.toUnmodifiableList());
     }
 
-    /**
-     * FIXME-1615: Complex logic. Need to test properly.
-     *
-     * @see {@link #computeAddonsBlockingStatesForSubscriptionBaseEvent(Product, DateTime)}
-     */
     private boolean isAddOnsNeedToBeBlocked(final SubscriptionBase subscription, final Product baseTransitionTriggerNextProduct) {
         // Compute included and available addons for the new product
         final Collection<String> includedAddonsForProduct;
