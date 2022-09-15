@@ -511,8 +511,7 @@ public class DefaultEventsStream implements EventsStream {
 
     private List<BlockingState> filterBlockingStatesForEntitlementService(final BlockingStateType blockingStateType,
                                                                           @Nullable final UUID blockableId) {
-    	final Collection<BlockingState> blockingStatesToConsider = includeDeletedEvents ? blockingStatesWithDeletedEvents : blockingStates;
-    	return blockingStatesToConsider.stream()
+    	return blockingStates.stream()
                 .filter(input -> blockingStateType.equals(input.getType()) &&
                                  KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName().equals(input.getService()) &&
                                  input.getBlockedId().equals(blockableId))

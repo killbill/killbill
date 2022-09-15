@@ -1115,10 +1115,9 @@ public class TestSubscription extends TestIntegrationBase {
         addOnSubscription = subscriptionApi.getSubscriptionForEntitlementId(addOnEntitlementId, true, callContext);
         events = addOnSubscription.getSubscriptionEvents();
         assertNotNull(events);
-        assertEquals(events.size(), 3);
+        assertEquals(events.size(), 2);
         
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
-        assertEquals(events.get(2).getSubscriptionEventType(), SubscriptionEventType.STOP_ENTITLEMENT);
     }      
 }
