@@ -125,7 +125,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
 
         recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(100L), callContext); // -> Uses v1 : $150
 
-        final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("electricity-monthly-special");
 
@@ -261,7 +261,7 @@ public class TestInArrearWithCatalogVersions extends TestIntegrationBase {
                                                          new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 1), new LocalDate(2016, 5, 1), InvoiceItemType.USAGE, new BigDecimal("150.00")));
         invoiceChecker.checkTrackingIds(curInvoice, Set.of("t1", "t2"), internalCallContext);
 
-        final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, false, callContext); //TODO_1030: Backward compatibility
+        final Entitlement bp = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         recordUsageData(entitlementId, "t3", "kilowatt-hour", new LocalDate(2016, 5, 2), BigDecimal.valueOf(100L), callContext);
 

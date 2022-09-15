@@ -108,7 +108,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, Set.of("xxx-1", "xxx-2"), internalCallContext);
 
         final DateTime firstExpectedCTD = account.getReferenceTime().withMonthOfYear(5).withDayOfMonth(1);
-        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), false, internalCallContext).getChargedThroughDate().compareTo(firstExpectedCTD), 0); //TODO_1030: Backward compatibility
+        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), false, internalCallContext).getChargedThroughDate().compareTo(firstExpectedCTD), 0);
 
         // Beause we don't have $0 usage item we see a null invoice
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
@@ -117,7 +117,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
 
 
         final DateTime secondExpectedCTD = account.getReferenceTime().withMonthOfYear(6).withDayOfMonth(1);
-        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), false, internalCallContext).getChargedThroughDate().compareTo(secondExpectedCTD), 0); //TODO_1030: Backward compatibility
+        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), false, internalCallContext).getChargedThroughDate().compareTo(secondExpectedCTD), 0);
 
         // Record usage for third month (verify invoicing resumes)
         recordUsageData(bpSubscription.getId(), "xxx-3", "stones", new LocalDate(2012, 6, 5), BigDecimal.valueOf(25L), callContext);
@@ -132,7 +132,7 @@ public class TestWithoutZeroUsageItems extends TestIntegrationBase {
         invoiceChecker.checkTrackingIds(curInvoice, Set.of("xxx-3", "xxx-4"), internalCallContext);
 
         final DateTime thirdExpectedCTD = account.getReferenceTime().withMonthOfYear(7).withDayOfMonth(1);
-        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), false, internalCallContext).getChargedThroughDate().compareTo(thirdExpectedCTD), 0); //TODO_1030: Backward compatibility
+        assertEquals(subscriptionBaseInternalApiApi.getSubscriptionFromId(bpSubscription.getId(), false, internalCallContext).getChargedThroughDate().compareTo(thirdExpectedCTD), 0);
     }
 
     @Test(groups = "slow")

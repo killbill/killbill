@@ -18,6 +18,8 @@
 
 package org.killbill.billing.entitlement.dao;
 
+import static org.testng.Assert.assertEquals;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,7 +73,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(states.get(0).getStateName(), overdueStateName);
         Assert.assertEquals(states.get(1).getStateName(), overdueStateName2);
 
-        final List<BlockingState> states2 = blockingStateDao.getByBlockingIds(List.of(accountId), internalCallContext);
+        final List<BlockingState> states2 = blockingStateDao.getByBlockingIds(List.of(accountId), false, internalCallContext);
         Assert.assertEquals(states2.size(), 2);
 
     }
@@ -129,7 +131,7 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertEquals(states.get(1).getStateName(), overdueStateName2);
         Assert.assertEquals(states.get(2).getStateName(), overdueStateName3);
 
-        final List<BlockingState> states2 = blockingStateDao.getByBlockingIds(List.of(accountId, bundleId, subscriptionId), internalCallContext);
+        final List<BlockingState> states2 = blockingStateDao.getByBlockingIds(List.of(accountId, bundleId, subscriptionId), false, internalCallContext);
         Assert.assertEquals(states2.size(), 3);
 
     }
@@ -253,4 +255,55 @@ public class TestBlockingDao extends EntitlementTestSuiteWithEmbeddedDB {
         Assert.assertFalse(secondBlockingState.getBlockBilling());
         Assert.assertFalse(secondBlockingState.isActive());
     }
+    
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1030")
+    public void testRetrieveActiveAndNonActiveBlockingStates() throws AccountApiException {
+
+        final UUID accountId = createAccount(getAccountData(1)).getId();
+        final String service = "Coco";
+
+        clock.setDay(new LocalDate(2022, 1, 18));
+
+        //create blocking state
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState stateA1 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, "warning", service, false, false, false, clock.getUTCNow());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateA1, Optional.empty()), internalCallContext);
+        assertListenerStatus();
+
+        clock.addDays(1);
+
+        //create another blocking state
+        testListener.pushExpectedEvent(NextEvent.BLOCK);
+        final BlockingState stateA2 = new DefaultBlockingState(accountId, BlockingStateType.ACCOUNT, "warning+", service, false, false, false, clock.getUTCNow());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(Map.of(stateA2, Optional.empty()), internalCallContext);
+        assertListenerStatus();
+
+        //retrieve blocking states (without deleted events) and verify that both states are returned
+        List<BlockingState> states = blockingStateDao.getByBlockingIds(List.of(accountId), false, internalCallContext);
+        Assert.assertEquals(states.size(), 2);
+        assertEquals(states.get(0).getStateName(), "warning");
+        assertEquals(states.get(1).getStateName(), "warning+");
+
+        // retrieve blocking states (without deleted events) and verify that the results are the same as above
+        states = blockingStateDao.getByBlockingIds(List.of(accountId), true, internalCallContext);
+        Assert.assertEquals(states.size(), 2);
+        assertEquals(states.get(0).getStateName(), "warning");
+        assertEquals(states.get(1).getStateName(), "warning+");
+
+        //make the first blocking state as inactive
+        blockingStateDao.unactiveBlockingState(stateA1.getId(), internalCallContext);
+
+        //retrieve blocking states (without deleted events) and verify that only one state is returned
+        states = blockingStateDao.getByBlockingIds(List.of(accountId), false, internalCallContext);
+        Assert.assertEquals(states.size(), 1);
+        assertEquals(states.get(0).getStateName(), "warning+");
+
+        //retrieve blocking states (with deleted events) and verify that both states are returned
+        states = blockingStateDao.getByBlockingIds(List.of(accountId), true, internalCallContext);
+        Assert.assertEquals(states.size(), 2);
+        assertEquals(states.get(0).getStateName(), "warning");
+        assertEquals(states.get(1).getStateName(), "warning+");
+
+    }
+    
 }

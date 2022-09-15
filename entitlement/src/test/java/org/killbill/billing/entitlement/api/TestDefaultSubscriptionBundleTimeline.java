@@ -1354,7 +1354,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         Mockito.when(result.getId()).thenReturn(entitlementId);
 
         final EventsStream eventsStream = Mockito.mock(EventsStream.class);
-        Mockito.when(eventsStream.getBlockingStates()).thenReturn(blockingStates);
+        Mockito.when(eventsStream.getBlockingStates(false)).thenReturn(blockingStates);
         Mockito.when(result.getEventsStream()).thenReturn(eventsStream);
 
         final SubscriptionBase base = Mockito.mock(SubscriptionBase.class);

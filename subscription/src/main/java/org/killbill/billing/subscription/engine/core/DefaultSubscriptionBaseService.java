@@ -161,7 +161,7 @@ public class DefaultSubscriptionBaseService implements EventListener, Subscripti
 
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), catalog, false, context); //TODO_1030: Backward compatibility
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) dao.getSubscriptionFromId(event.getSubscriptionId(), catalog, false, context);
             if (subscription == null) {
                 log.warn("Error retrieving subscriptionId='{}'", event.getSubscriptionId());
                 return;

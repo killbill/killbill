@@ -156,7 +156,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         this.migrated = internalSubscription.isMigrated();
         this.transitions = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions(false));
         this.events = internalSubscription.getEvents();
-        this.transitionsWithDeletedEvents = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions(true));//TODO_1030 - is this correct?
+        this.transitionsWithDeletedEvents = new LinkedList<SubscriptionBaseTransition>(internalSubscription.getAllTransitions(true));
         this.includeDeletedEvents = internalSubscription.getIncludeDeletedEvents();
     }
     

@@ -75,11 +75,13 @@ public interface EventsStream {
     BlockingState getEntitlementCancellationEvent();
 
     // All blocking states for the account, associated bundle or subscription
-    Collection<BlockingState> getBlockingStates();
+    Collection<BlockingState> getBlockingStates(boolean includeDeletedEvents);
 
     Collection<BlockingState> computeAddonsBlockingStatesForNextSubscriptionBaseEvent(DateTime effectiveDate);
 
     Collection<BlockingState> computeAddonsBlockingStatesForFutureSubscriptionBaseEvents();
 
     InternalTenantContext getInternalTenantContext();
+
+    boolean getIncludeDeletedEvents();
 }

@@ -56,6 +56,7 @@ public class DefaultEventsStream implements EventsStream {
     private final SubscriptionBaseBundle bundle;
     // All blocking states for the account, associated bundle or subscription
     private final Collection<BlockingState> blockingStates;
+    private final Collection<BlockingState> blockingStatesWithDeletedEvents;
     private final BlockingChecker blockingChecker;
     // Base subscription for the bundle if it exists, null otherwise
     private final SubscriptionBase baseSubscription;
@@ -80,9 +81,12 @@ public class DefaultEventsStream implements EventsStream {
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
 
+    private final boolean includeDeletedEvents;
+
     public DefaultEventsStream(final ImmutableAccountData account,
                                final SubscriptionBaseBundle bundle,
                                final Collection<BlockingState> blockingStates,
+                               final Collection<BlockingState> blockingStatesWithDeletedEvents,
                                final BlockingChecker blockingChecker,
                                @Nullable final SubscriptionBase baseSubscription,
                                final SubscriptionBase subscription,
@@ -92,7 +96,6 @@ public class DefaultEventsStream implements EventsStream {
         sanityChecks(account, bundle, baseSubscription, subscription);
         this.account = account;
         this.bundle = bundle;
-        this.blockingStates = blockingStates;
         this.blockingChecker = blockingChecker;
         this.baseSubscription = baseSubscription;
         this.subscription = subscription;
@@ -102,9 +105,26 @@ public class DefaultEventsStream implements EventsStream {
         this.utcNow = utcNow;
         this.utcToday = contextWithValidAccountRecordId.toLocalDate(utcNow);
 
+        this.blockingStates = blockingStates;
+        this.blockingStatesWithDeletedEvents = blockingStatesWithDeletedEvents;
+        this.includeDeletedEvents = !blockingStatesWithDeletedEvents.isEmpty();
+
         setup();
     }
 
+    public DefaultEventsStream(final ImmutableAccountData account,
+            				   final SubscriptionBaseBundle bundle,
+            				   final Collection<BlockingState> blockingStates,
+            				   final BlockingChecker blockingChecker,
+            				   @Nullable final SubscriptionBase baseSubscription,
+            				   final SubscriptionBase subscription,
+            				   final Collection<SubscriptionBase> allSubscriptionsForBundle,
+            				   @Nullable final Integer defaultBillCycleDayLocal,
+            				   final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
+    		this(account, bundle, blockingStates, Collections.emptyList(), blockingChecker, baseSubscription, subscription, allSubscriptionsForBundle, defaultBillCycleDayLocal, contextWithValidAccountRecordId, utcNow);
+    }
+
+    
     private void sanityChecks(@Nullable final ImmutableAccountData account,
                               @Nullable final SubscriptionBaseBundle bundle,
                               @Nullable final SubscriptionBase baseSubscription,
@@ -226,6 +246,11 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
+    public boolean getIncludeDeletedEvents() {
+    	return this.includeDeletedEvents;
+    }
+
+    @Override
     public boolean isBlockEntitlement(final DateTime effectiveDate) {
         Preconditions.checkState(effectiveDate != null);
         final BlockingAggregator aggregator = getBlockingAggregator(effectiveDate);
@@ -238,8 +263,8 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
-    public Collection<BlockingState> getBlockingStates() {
-        return blockingStates;
+    public Collection<BlockingState> getBlockingStates(final boolean includeDeletedEvents) {
+        return includeDeletedEvents ? blockingStatesWithDeletedEvents : blockingStates;
     }
 
     @Override
@@ -486,7 +511,7 @@ public class DefaultEventsStream implements EventsStream {
 
     private List<BlockingState> filterBlockingStatesForEntitlementService(final BlockingStateType blockingStateType,
                                                                           @Nullable final UUID blockableId) {
-        return blockingStates.stream()
+    	return blockingStates.stream()
                 .filter(input -> blockingStateType.equals(input.getType()) &&
                                  KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName().equals(input.getService()) &&
                                  input.getBlockedId().equals(blockableId))

@@ -39,6 +39,7 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhase;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.entitlement.block.BlockingChecker.BlockingAggregator;
 import org.killbill.billing.entitlement.block.DefaultBlockingChecker.DefaultBlockingAggregator;
 import org.killbill.billing.junction.DefaultBlockingState;
@@ -64,7 +65,8 @@ public class BlockingStateOrdering extends EntitlementOrderingBase {
         for (final Entitlement entitlement : entitlements) {
             allEntitlementUUIDs.add(entitlement.getId());
             Preconditions.checkState(entitlement instanceof DefaultEntitlement, "Entitlement %s is not a DefaultEntitlement", entitlement);
-            blockingStates.addAll(((DefaultEntitlement) entitlement).getEventsStream().getBlockingStates());
+            final EventsStream eventsStream = ((DefaultEntitlement) entitlement).getEventsStream();
+            blockingStates.addAll(eventsStream.getBlockingStates(eventsStream.getIncludeDeletedEvents()));
         }
 
         computeEvents(new LinkedList<UUID>(allEntitlementUUIDs), blockingStates, internalTenantContext, inputAndOutputResult);

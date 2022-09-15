@@ -247,8 +247,8 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     }
 
     @Override
-    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final InternalTenantContext context) {
-        return delegate.getByBlockingIds(blockableIds, context);
+    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final boolean includeDeletedEvents, final InternalTenantContext context) {
+        return delegate.getByBlockingIds(blockableIds, includeDeletedEvents, context);
     }
 
     @Override

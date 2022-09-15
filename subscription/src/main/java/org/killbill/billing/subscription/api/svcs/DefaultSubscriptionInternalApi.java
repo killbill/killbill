@@ -384,7 +384,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         try {
 
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(context);
-            final SubscriptionBase subscription = dao.getSubscriptionFromId(subscriptionId, catalog, false, context); //TODO_1030: Backward compatibility
+            final SubscriptionBase subscription = dao.getSubscriptionFromId(subscriptionId, catalog, false, context);
             if (subscription == null) {
                 throw new SubscriptionBaseApiException(ErrorCode.SUB_INVALID_SUBSCRIPTION_ID, subscriptionId);
             }
@@ -440,7 +440,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
 
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
-            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, false, internalCallContext); //TODO_1030: Backward compatibility
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, false, internalCallContext);
             final DateTime effectiveDate = getEffectiveDateForNewBCD(bcd, effectiveFromDate, subscription.getStartDate(), internalCallContext);
             final BCDEvent bcdEvent = BCDEventData.createBCDEvent(subscription, effectiveDate, bcd);
             dao.createBCDChangeEvent(subscription, bcdEvent, catalog, internalCallContext);
@@ -579,7 +579,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
             return (DefaultSubscriptionBase) subscriptionBase;
         } else {
             // Safe cast, see above
-            return (DefaultSubscriptionBase) dao.getSubscriptionFromId(subscriptionBase.getId(), catalog, false, context); //TODO_1030: Backward compatibility
+            return (DefaultSubscriptionBase) dao.getSubscriptionFromId(subscriptionBase.getId(), catalog, false, context);
         }
     }
 }
