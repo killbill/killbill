@@ -175,11 +175,14 @@ public abstract class ProcessorBase {
                 throws ExceptionType, LockFailedException {
             GlobalLock lock = null;
             try {
+                log.info("Account Lock requested for account {}", accountId.toString());
                 lock = locker.lockWithNumberOfTries(LockerType.ACCNT_INV_PAY.toString(), accountId.toString(), paymentConfig.getMaxGlobalLockRetries());
+                log.info("Account Lock held for account {}", accountId.toString());
                 return callback.doOperation();
             } finally {
                 if (lock != null) {
                     lock.release();
+                    log.info("Account Lock released for account {}", accountId.toString());
                 }
             }
         }
