@@ -229,7 +229,7 @@ public class PlanAligner extends BaseAligner {
                                      effectiveDate,
                                      // This method is only called while doing the change, hence we want to pass the change effective date
                                      effectiveDate,
-                                     subscription.getAllTransitions(false).get(0).getNextPhase().getPhaseType(), //TODO_1030 backward compatibility
+                                     subscription.getAllTransitions(false).get(0).getNextPhase().getPhaseType(),
                                      newPlanInitialPhaseType,
                                      which,
                                      catalog,

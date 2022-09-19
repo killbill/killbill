@@ -63,7 +63,7 @@ public class DefaultBlockingState extends EntityBase implements BlockingState {
         this.blockBilling = blockBilling;
         this.effectiveDate = effectiveDate;
         this.totalOrdering = totalOrdering;
-        this.isActive = true; //TODO_1030 - should this be false?
+        this.isActive = true;
 
     }
 

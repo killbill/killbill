@@ -387,7 +387,6 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         eventsAfterChange = dao.getEventsForSubscription(subscription.getId(), true, internalCallContext);
         assertNotNull(eventsAfterChange);
         testUtil.printEvents(eventsAfterChange);
-        //TODO_1030: Is the order of events correct? Revisit once the rest of the code is in place
         assertTrue(eventsAfterChange.size() == 3); //Returns PhaseEvent as well
         
         event = eventsAfterChange.get(0);
