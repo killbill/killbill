@@ -233,7 +233,7 @@ public class EventsStreamBuilder {
                                                                                      allSubscriptionsForBundle,
                                                                                      accountBCD,
                                                                                      catalog,
-                                                                                     false, //TODO_1030: Revisit to check if any modifications are needed here
+                                                                                     false, //includeDeletedEvents set to false since deleted events are not needed while building entitlements for account.
                                                                                      internalTenantContext);
 
                 }
@@ -253,7 +253,7 @@ public class EventsStreamBuilder {
                                                                      accountBCD,
                                                                      bcdCache,
                                                                      catalog,
-                                                                     false, //TODO_1030: Revisit to check if any modifications are needed here
+                                                                     false, //includeDeletedEvents - set to false since it does not matter while building entitlements for account.
                                                                      internalTenantContext);
                 eventsStreamPerBundle.get(bundleId).add(eventStream);
             }
@@ -274,7 +274,7 @@ public class EventsStreamBuilder {
 
         final List<EventsStream> eventsStreams = new LinkedList<EventsStream>();
         for (final SubscriptionBase subscription : subscriptionsForBundle) {
-            eventsStreams.add(buildForEntitlement(bundle, subscription, subscriptionsForBundle, false, internalTenantContext)); //TODO_1030-revisit to check if any modifications are needed here
+            eventsStreams.add(buildForEntitlement(bundle, subscription, subscriptionsForBundle, false, internalTenantContext)); //includeDeletedEvents is set to false since it does not matter while building entitlements for bundle.
         }
         return eventsStreams;
     }

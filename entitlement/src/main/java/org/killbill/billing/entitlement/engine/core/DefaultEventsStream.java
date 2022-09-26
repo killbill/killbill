@@ -297,7 +297,7 @@ public class DefaultEventsStream implements EventsStream {
 
     public Iterable<SubscriptionBaseTransition> getPendingSubscriptionEvents(final DateTime effectiveDatetime, final SubscriptionBaseTransitionType... types) {
         final List<SubscriptionBaseTransitionType> typeList = List.of(types);
-        return subscription.getAllTransitions(false) //TODO_1030 backward compatibility
+        return subscription.getAllTransitions(false)
                 .stream()
                 .filter(input -> !input.getEffectiveTransitionTime().isBefore(effectiveDatetime) &&
                                  typeList.contains(input.getTransitionType()))
