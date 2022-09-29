@@ -20,11 +20,12 @@ package org.killbill.billing.subscription.api.user;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -555,7 +556,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return it.hasNext() ? ((SubscriptionBaseTransitionData) it.next()).getTotalOrdering() : -1L;
     }
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog) throws SubscriptionBaseApiException {
+    @Override
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog, final InternalTenantContext context) throws SubscriptionBaseApiException {
 
         if (transitions == null) {
             return Collections.emptyList();
@@ -634,19 +636,23 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
                         final Plan currentPlan = catalogVersion.findPlan(billingTransition.getPlan().getName());
 
+                        final Integer bcdLocal = cur.getNextBillingCycleDayLocal();
                         // Iterate through all more recent version of the catalog to find possible effectiveDateForExistingSubscriptions transition for this Plan
                         Plan nextPlan = catalog.getNextPlanVersion(currentPlan);
                         while (nextPlan != null ) {
                             if (nextPlan.getEffectiveDateForExistingSubscriptions() != null) {
-                                final DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
+                                DateTime nextEffectiveDate = new DateTime(nextPlan.getEffectiveDateForExistingSubscriptions()).toDateTime(DateTimeZone.UTC);
                                 final PlanPhase nextPlanPhase = nextPlan.findPhase(planPhase.getName());
+
+                                nextEffectiveDate = alignToNextBCDIfRequired(plan, planPhase, nextEffectiveDate, cur.getEffectiveTransitionTime(), catalog, bcdLocal, context);
 
                                 // Computed from the nextPlan
                                 final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
                                 final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
-                                                                                                                      cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal(), catalogEffectiveDateForNextPlan);
+                                                                                                                          cur.getTotalOrdering(), bcdLocal, catalogEffectiveDateForNextPlan);
                                 candidatesCatalogChangeEvents.add(newBillingTransition);
                         	}
+                            // TODO not so optimized as we keep parsing catalogs from the start...
                             nextPlan = catalog.getNextPlanVersion(nextPlan);
                         }
                     }
@@ -685,6 +691,28 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
+    }
+
+
+    private DateTime alignToNextBCDIfRequired(final Plan curPlan, final PlanPhase curPlanPhase, final DateTime originalTransitionDate, final DateTime lastTransitionDate, final SubscriptionCatalog catalog, final Integer bcdLocal, final InternalTenantContext context) throws SubscriptionBaseApiException, CatalogApiException {
+
+        if (!apiService.isEffectiveDateForExistingSubscriptionsAlignedToBCD(context)) {
+            return originalTransitionDate;
+        }
+
+        final BillingAlignment billingAlignment = catalog.billingAlignment(new PlanPhaseSpecifier(curPlan.getName(), curPlanPhase.getPhaseType()),
+                                                                           originalTransitionDate, lastTransitionDate);
+        final int accountBillCycleDayLocal = apiService.getAccountBCD(context);
+        Integer bcd = bcdLocal;
+        if (bcd == null) {
+            // TODO If we have an add-on subscription with a BUNDLE alignment, this is incorrect as we need access to the base subscription
+            bcd = BillCycleDayCalculator.calculateBcdForAlignment(null, this, this, billingAlignment, context, accountBillCycleDayLocal);
+        }
+
+        final BillingPeriod billingPeriod = curPlanPhase.getRecurring() != null ? curPlanPhase.getRecurring().getBillingPeriod() : BillingPeriod.NO_BILLING_PERIOD;
+        final LocalDate resultingLocalDate = BillCycleDayCalculator.alignProposedBillCycleDate(originalTransitionDate, bcd, billingPeriod, context);
+        final DateTime candidateResult = context.toUTCDateTime(resultingLocalDate);
+        return candidateResult;
     }
 
     public SubscriptionBaseTransitionData getLastTransitionForCurrentPlan() {
@@ -729,8 +757,9 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return false;
     }
 
-    public DateTime getEffectiveDateForPolicy(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, @Nullable final Integer accountBillCycleDayLocal, final InternalTenantContext context) {
+    public DateTime getEffectiveDateForPolicy(final BillingActionPolicy policy, @Nullable final BillingAlignment alignment, final InternalTenantContext context) throws SubscriptionBaseApiException {
 
+        final Integer accountBillCycleDayLocal = apiService != null ? apiService.getAccountBCD(context) : null;
         final DateTime candidateResult;
         switch (policy) {
             case IMMEDIATE:
@@ -810,6 +839,31 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         return getStartDate();
     }
 
+    static class NextBillingCycleDayLocal {
+
+        private final SortedMap<DateTime, Integer> bcdMap;
+
+        public NextBillingCycleDayLocal(final List<SubscriptionBaseEvent> inputEvents) {
+            this.bcdMap = new TreeMap<DateTime, Integer>() {};
+
+            for (final SubscriptionBaseEvent cur : inputEvents) {
+                if (cur.getType() == EventType.BCD_UPDATE && cur.isActive()) {
+                    bcdMap.put(cur.getEffectiveDate(), ((BCDEvent)cur).getBillCycleDayLocal());
+                }
+            }
+        }
+
+        // Returns the BCD date applicable for a given input date
+        public Integer getNextBillingCycleDayLocal(final DateTime inputDate) {
+            final SortedMap<DateTime, Integer> map = bcdMap.headMap(inputDate.plusMillis(1));
+            final DateTime targetKey = map.isEmpty() ? null : map.lastKey();
+            if (targetKey == null) {
+                return null;
+            }
+            return bcdMap.get(targetKey);
+        }
+    }
+
     public void rebuildTransitions(final List<SubscriptionBaseEvent> inputEvents, final SubscriptionCatalog catalog) throws CatalogApiException {
 
         if (inputEvents == null) {
@@ -829,7 +883,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         EntitlementState nextState = null;
         String nextPlanName = null;
         String nextPhaseName = null;
-        Integer nextBillingCycleDayLocal = null;
+        Integer nextBcdLocal = null;
 
         UUID prevEventId = null;
         DateTime prevCreatedDate = null;
@@ -837,17 +891,22 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
         PriceList previousPriceList = null;
         Plan previousPlan = null;
         PlanPhase previousPhase = null;
-        Integer previousBillingCycleDayLocal = null;
+        Integer prevBcdLocal = null;
 
         transitions = new LinkedList<SubscriptionBaseTransition>();
 
         // Track each time we change Plan to fetch the Plan from the right catalog version
         DateTime lastPlanChangeTime = null;
 
+        final NextBillingCycleDayLocal nextBillingCycleDayLocal = new NextBillingCycleDayLocal(inputEvents);
+
+
         for (final SubscriptionBaseEvent cur : inputEvents) {
             if (!cur.isActive()) {
                 continue;
             }
+
+            nextBcdLocal = nextBillingCycleDayLocal.getNextBillingCycleDayLocal(cur.getEffectiveDate());
 
             ApiEventType apiEventType = null;
             boolean isFromDisk = true;
@@ -863,8 +922,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     break;
 
                 case BCD_UPDATE:
-                    final BCDEvent bcdEvent = (BCDEvent) cur;
-                    nextBillingCycleDayLocal = bcdEvent.getBillCycleDayLocal();
+                    // Skip, taken into account from NextBillingCycleDayLocal
                     break;
 
                 case API_USER:
@@ -921,11 +979,11 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     prevEventId, prevCreatedDate,
                     previousState, previousPlan, previousPhase,
                     previousPriceList,
-                    previousBillingCycleDayLocal,
+                    prevBcdLocal,
                     nextEventId, nextCreatedDate,
                     nextState, nextPlan, nextPhase,
                     nextPriceList,
-                    nextBillingCycleDayLocal,
+                    nextBcdLocal,
                     cur.getTotalOrdering(),
                     cur.getCreatedDate(),
                     nextUserToken,
@@ -939,7 +997,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
             previousPriceList = nextPriceList;
             prevEventId = nextEventId;
             prevCreatedDate = nextCreatedDate;
-            previousBillingCycleDayLocal = nextBillingCycleDayLocal;
+            prevBcdLocal = nextBcdLocal;
 
         }
     }

@@ -63,7 +63,6 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransitionData;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
-import org.killbill.billing.subscription.api.user.SubscriptionBuilder;
 import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
@@ -362,7 +361,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     @Override
     public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog, final SubscriptionBase subscription, final InternalTenantContext context) throws SubscriptionBaseApiException {
         final SubscriptionCatalog catalog = DefaultSubscriptionCatalogApi.wrapCatalog(publicCatalog, clock);
-        return subscription.getSubscriptionBillingEvents(catalog.getCatalog());
+        return subscription.getSubscriptionBillingEvents(catalog.getCatalog(), context);
     }
 
     @Override

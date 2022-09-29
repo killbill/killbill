@@ -22,11 +22,13 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.catalog.api.BillingAlignment;
+import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.mock.MockAccountBuilder;
@@ -127,6 +129,26 @@ public class TestBillCycleDayCalculator extends UtilTestSuiteNoDB {
         createAccountAndRefreshTimeAwareContext(accountTimeZone, startDate);
 
         verifyBCDCalculation(accountTimeZone, startDate, bcdLocal);
+    }
+
+    @Test(groups = "fast")
+    public void testAlignProposedBillCycleDate1() {
+        final DateTime proposedDate = new DateTime(2022, 7, 19, 17, 28, 0, DateTimeZone.UTC);
+        final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
+        final int bcd = 23;
+
+        final LocalDate result = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, internalCallContext);
+        Assert.assertEquals(result, new LocalDate(2022, 7, 23));
+    }
+
+    @Test(groups = "fast")
+    public void testAlignProposedBillCycleDate2() {
+        final DateTime proposedDate = new DateTime(2022, 7, 19, 17, 28, 0, DateTimeZone.UTC);
+        final BillingPeriod billingPeriod = BillingPeriod.MONTHLY;
+        final int bcd = 17;
+
+        final LocalDate result = BillCycleDayCalculator.alignProposedBillCycleDate(proposedDate, bcd, billingPeriod, internalCallContext);
+        Assert.assertEquals(result, new LocalDate(2022, 7, 17));
     }
 
     private void verifyBCDCalculation(final DateTimeZone accountTimeZone, final DateTime startDateUTC, final int bcdLocal) throws AccountApiException, CatalogApiException {
