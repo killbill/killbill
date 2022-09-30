@@ -101,14 +101,11 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
-import org.killbill.commons.utils.Joiner;
-import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.billing.util.optimizer.BusOptimizer;
@@ -117,6 +114,9 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.commons.locker.LockFailedException;
+import org.killbill.commons.utils.Joiner;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
@@ -609,6 +609,11 @@ public class InvoiceDispatcher {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    private static boolean isPropertyReuseDraftSet(final Iterable<PluginProperty> inputProperties) {
+        // Hack to allow reusing a draft invoice when invoked through api
+        return Iterables.toStream(inputProperties)
+                        .anyMatch(p -> p.getKey().equals("KB_AUTO_INVOICING_REUSE_DRAFT") && ((String) p.getValue()).equalsIgnoreCase("true"));
+    }
     private InvoicesWithFutureNotifications processAccountWithLockAndInputTargetDate(final UUID accountId,
                                                                                      final LocalDate originalTargetDate,
                                                                                      final BillingEventSet billingEvents,
@@ -645,8 +650,9 @@ public class InvoiceDispatcher {
             return null;
         }
 
+
         startNano = System.nanoTime();
-        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, null, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, null, isPropertyReuseDraftSet(inputProperties), internalCallContext);
         invoiceTimings.put(InvoiceTiming.INVOICE_GENERATION, System.nanoTime() - startNano);
 
         final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
@@ -822,7 +828,7 @@ public class InvoiceDispatcher {
         }
 
         startNano = System.nanoTime();
-        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, dryRunInfo, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, dryRunInfo, isPropertyReuseDraftSet(inputProperties), internalCallContext);
         invoiceTimings.put(InvoiceTiming.INVOICE_GENERATION, System.nanoTime() - startNano);
 
 
@@ -880,10 +886,10 @@ public class InvoiceDispatcher {
 
     }
 
-    private InvoiceWithMetadata generateKillBillInvoice(final ImmutableAccountData account, final LocalDate targetDate, final BillingEventSet billingEvents, final AccountInvoices accountInvoices, @Nullable final DryRunInfo dryRunInfo, final InternalCallContext context) throws InvoiceApiException {
+    private InvoiceWithMetadata generateKillBillInvoice(final ImmutableAccountData account, final LocalDate targetDate, final BillingEventSet billingEvents, final AccountInvoices accountInvoices, @Nullable final DryRunInfo dryRunInfo, final boolean reuseDraftIfExist, final InternalCallContext context) throws InvoiceApiException {
         final UUID targetInvoiceId;
         // Filter out DRAFT invoices for computation  of existing items unless Account is in AUTO_INVOICING_REUSE_DRAFT
-        if (billingEvents.isAccountAutoInvoiceReuseDraft()) {
+        if (billingEvents.isAccountAutoInvoiceReuseDraft() || reuseDraftIfExist) {
             final Invoice existingDraft = accountInvoices.getInvoices().stream()
                     .filter(input -> input.getStatus() == InvoiceStatus.DRAFT)
                     .findFirst()
