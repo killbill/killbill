@@ -25,7 +25,7 @@
         <version>0.144.84</version>
     </parent>
     <artifactId>killbill</artifactId>
-    <version>0.22.31-SNAPSHOT</version>
+    <version>0.22.31</version>
     <packaging>pom</packaging>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
@@ -51,7 +51,7 @@
     <scm>
         <connection>scm:git:git://github.com/killbill/killbill.git</connection>
         <developerConnection>scm:git:git@github.com:killbill/killbill.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>killbill-0.22.31</tag>
         <url>http://github.com/killbill/killbill/tree/master</url>
     </scm>
     <issueManagement>
