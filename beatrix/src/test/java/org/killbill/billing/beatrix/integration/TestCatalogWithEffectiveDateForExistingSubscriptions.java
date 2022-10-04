@@ -136,7 +136,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions extends TestIn
         clock.addMonths(1);
         assertListenerStatus();
         curInvoice = invoiceChecker.checkInvoice(account.getId(), 8, callContext,
-                                                 new ExpectedInvoiceItemCheck(new LocalDate(2018, 8, 1), new LocalDate(2018, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("69.95")));
+                                    new ExpectedInvoiceItemCheck(new LocalDate(2018, 8, 1), new LocalDate(2018, 9, 1), InvoiceItemType.RECURRING, new BigDecimal("69.95")));
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(2).getEffectiveDate()), 0);
 
     }
@@ -191,7 +191,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptions extends TestIn
 
     }
 
-        @Test(groups = "slow")
+    @Test(groups = "slow")
     public void testUsagePlan() throws Exception {
 
         final LocalDate today = new LocalDate(2018, 1, 1);
