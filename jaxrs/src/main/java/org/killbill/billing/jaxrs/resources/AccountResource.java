@@ -491,7 +491,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Callable<List<Invoice>> invoicesCallable = new Callable<List<Invoice>>() {
             @Override
             public List<Invoice> call() throws Exception {
-                return invoiceApi.getInvoicesByAccount(accountId, false, false, false, tenantContext); //TODO_1272: setting withInvoiceItems to false to optimize this call
+                return invoiceApi.getInvoicesByAccount(accountId, false, false, true, tenantContext); //TODO_1272: should withInvoiceItems be set to false to optimize this call? 
             }
         };
         final Callable<List<InvoicePayment>> invoicePaymentsCallable = new Callable<List<InvoicePayment>>() {
