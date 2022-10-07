@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -609,6 +610,15 @@ public class InvoiceDispatcher {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    private static UUID getReuseDraftInvoiceId(final Iterable<PluginProperty> inputProperties) {
+        // Hack to allow reusing a specific draft invoice
+        final Optional<String> invoiceId = Iterables.toStream(inputProperties)
+                                                    .filter(p -> p.getKey().equals("KB_REUSE_DRAFT_INVOICING_ID"))
+                                                    .map(p -> (String) p.getValue())
+                                                    .findAny();
+        return invoiceId.isPresent() ? UUID.fromString(invoiceId.get()) : null;
+    }
+
     private static boolean isPropertyReuseDraftSet(final Iterable<PluginProperty> inputProperties) {
         // Hack to allow reusing a draft invoice when invoked through api
         return Iterables.toStream(inputProperties)
@@ -652,7 +662,7 @@ public class InvoiceDispatcher {
 
 
         startNano = System.nanoTime();
-        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, null, isPropertyReuseDraftSet(inputProperties), internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, null, isPropertyReuseDraftSet(inputProperties), getReuseDraftInvoiceId(inputProperties), internalCallContext);
         invoiceTimings.put(InvoiceTiming.INVOICE_GENERATION, System.nanoTime() - startNano);
 
         final DefaultInvoice invoice = invoiceWithMetadata.getInvoice();
@@ -828,7 +838,7 @@ public class InvoiceDispatcher {
         }
 
         startNano = System.nanoTime();
-        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, dryRunInfo, isPropertyReuseDraftSet(inputProperties), internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = generateKillBillInvoice(account, originalTargetDate, billingEvents, accountInvoices, dryRunInfo, isPropertyReuseDraftSet(inputProperties), getReuseDraftInvoiceId(inputProperties), internalCallContext);
         invoiceTimings.put(InvoiceTiming.INVOICE_GENERATION, System.nanoTime() - startNano);
 
 
@@ -886,12 +896,12 @@ public class InvoiceDispatcher {
 
     }
 
-    private InvoiceWithMetadata generateKillBillInvoice(final ImmutableAccountData account, final LocalDate targetDate, final BillingEventSet billingEvents, final AccountInvoices accountInvoices, @Nullable final DryRunInfo dryRunInfo, final boolean reuseDraftIfExist, final InternalCallContext context) throws InvoiceApiException {
+    private InvoiceWithMetadata generateKillBillInvoice(final ImmutableAccountData account, final LocalDate targetDate, final BillingEventSet billingEvents, final AccountInvoices accountInvoices, @Nullable final DryRunInfo dryRunInfo, final boolean reuseDraftIfExist, @Nullable final UUID reuseInvoiceDraftId, final InternalCallContext context) throws InvoiceApiException {
         final UUID targetInvoiceId;
         // Filter out DRAFT invoices for computation  of existing items unless Account is in AUTO_INVOICING_REUSE_DRAFT
-        if (billingEvents.isAccountAutoInvoiceReuseDraft() || reuseDraftIfExist) {
+        if (billingEvents.isAccountAutoInvoiceReuseDraft() || reuseDraftIfExist || reuseInvoiceDraftId != null) {
             final Invoice existingDraft = accountInvoices.getInvoices().stream()
-                    .filter(input -> input.getStatus() == InvoiceStatus.DRAFT)
+                    .filter(input -> input.getStatus() == InvoiceStatus.DRAFT && (reuseInvoiceDraftId == null || reuseInvoiceDraftId.equals(input.getId())))
                     .findFirst()
                     .orElse(null);
             targetInvoiceId = existingDraft != null ? existingDraft.getId() : null;
