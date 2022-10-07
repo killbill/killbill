@@ -678,9 +678,11 @@ public class InvoiceResource extends JaxRsResourceBase {
             final Payment payment = paymentApi.getPayment(paymentId, withPluginInfo, withAttempts, Collections.emptyList(), tenantContext);
             payments.add(payment);
         }
+        
+        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(invoice.getAccountId(), auditMode.getLevel(), tenantContext);
 
         final Iterable<InvoicePaymentJson> result = payments.stream()
-                                                            .map(input -> new InvoicePaymentJson(input, invoice.getId(), null))
+                                                            .map(input -> new InvoicePaymentJson(input, invoice.getId(), accountAuditLogs))
                                                             .sorted(Comparator.comparing(o -> o.getTransactions().get(0).getEffectiveDate()))
                                                             .collect(Collectors.toUnmodifiableList());
 
