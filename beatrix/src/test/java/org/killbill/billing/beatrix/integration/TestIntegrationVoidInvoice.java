@@ -79,7 +79,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
 
         // Void the invoice
@@ -95,7 +95,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         assertListenerStatus();
 
         // get all invoices including the VOIDED; includeVoidedInvoices = true;
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, true, callContext);
         assertEquals(invoices.size(), 3);
         // verify integrity of the voided
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
@@ -131,7 +131,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(invoices.get(2).getId(), callContext);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, true, true, callContext);
         assertEquals(invoices.size(), 3);
         assertEquals(invoices.get(1).getStatus(), InvoiceStatus.VOID);
         assertEquals(invoices.get(2).getStatus(), InvoiceStatus.VOID);

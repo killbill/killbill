@@ -90,7 +90,7 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
 
         // Regular invoice (17th -> 17th)
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 17), new LocalDate(2016, 8, 17), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 17), new LocalDate(2016, 7, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("-25")));
         invoiceChecker.checkInvoice(invoices.get(5).getId(), callContext, expectedInvoices);
@@ -107,7 +107,7 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         // Regular invoice (17th -> 17th)
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 8, 17), new LocalDate(2016, 9, 17), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkInvoice(invoices.get(6).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
@@ -128,7 +128,7 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 4, 17), null, InvoiceItemType.FIXED, BigDecimal.ZERO));
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
@@ -148,7 +148,7 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         // Leading pro-ration to the new BCD
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 17), new LocalDate(2016, 5, 20), InvoiceItemType.RECURRING, new BigDecimal("25")));
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
@@ -159,7 +159,7 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         // Regular invoice (20th -> 20th)
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 5, 20), new LocalDate(2016, 6, 20), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
@@ -170,7 +170,7 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
 
         // Regular invoice (20th -> 20th)
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 20), new LocalDate(2016, 7, 20), InvoiceItemType.RECURRING, new BigDecimal("249.95")));
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
@@ -181,7 +181,7 @@ public class TestWithAccountBCDUpdate extends TestIntegrationBase {
         assertListenerStatus();
         assertEquals(accountUserApi.getAccountById(account.getId(), callContext).getBillCycleDayLocal(), (Integer) 17);
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 7, 17), new LocalDate(2016, 7, 20), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-25")));
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2016, 6, 20), new LocalDate(2016, 6, 20), InvoiceItemType.CBA_ADJ, new BigDecimal("25")));
         invoiceChecker.checkInvoice(invoices.get(4).getId(), callContext, expectedInvoices);

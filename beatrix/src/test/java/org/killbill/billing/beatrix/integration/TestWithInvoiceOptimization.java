@@ -1133,7 +1133,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
     private Invoice getCurrentDraftInvoice(final UUID accountId, @Nullable final Function<Invoice, Boolean> condFn, final int nbTries) {
         int curTry = nbTries;
         while (curTry-- > 0) {
-            final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+            final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
             if (!invoices.isEmpty()) {
                 final Invoice lastInvoice = invoices.get(invoices.size() - 1);
                 if (lastInvoice.getStatus() == InvoiceStatus.DRAFT &&

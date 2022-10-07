@@ -491,7 +491,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Callable<List<Invoice>> invoicesCallable = new Callable<List<Invoice>>() {
             @Override
             public List<Invoice> call() throws Exception {
-                return invoiceApi.getInvoicesByAccount(accountId, false, false, tenantContext);
+                return invoiceApi.getInvoicesByAccount(accountId, false, false, false, tenantContext); //TODO_1272: setting withInvoiceItems to false to optimize this call
             }
         };
         final Callable<List<InvoicePayment>> invoicePaymentsCallable = new Callable<List<InvoicePayment>>() {
@@ -654,6 +654,7 @@ public class AccountResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_WITH_MIGRATION_INVOICES) @DefaultValue("false") final boolean withMigrationInvoices,
                                           @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                           @QueryParam(QUERY_INCLUDE_VOIDED_INVOICES) @DefaultValue("false") final boolean includeVoidedInvoices,
+                                          @QueryParam(QUERY_INVOICE_WITH_INVOICE_ITEMS) @DefaultValue("false") final boolean withInvoiceItems,
                                           @QueryParam(QUERY_INVOICES_FILTER) final String invoicesFilter,
                                           @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
@@ -671,11 +672,11 @@ public class AccountResource extends JaxRsResourceBase {
 
         final List<Invoice> invoices;
         if (unpaidInvoicesOnly) {
-            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext));
+            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext)); //TODO_1272:  withInvoiceItems not passed here as it is not possible to get unpaid invoices without retrieving invoice items. Maybe add a check at the start to disallow passing both the unpaidInvoicesOnly and withInvoiceItems flags?  
         } else {
             invoices = startDate != null || endDate != null ?
-                       invoiceApi.getInvoicesByAccount(accountId, startDate, endDate, includeVoidedInvoices, tenantContext) :
-                       invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, tenantContext);
+                       invoiceApi.getInvoicesByAccount(accountId, startDate, endDate, includeVoidedInvoices, withInvoiceItems, tenantContext) :
+                       invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, withInvoiceItems, tenantContext);
         }
 
 

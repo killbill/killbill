@@ -146,20 +146,20 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final boolean includesMigrated, final boolean includeVoidedInvoices, final TenantContext context) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final boolean includesMigrated, final boolean includeVoidedInvoices, final boolean withInvoiceItems, final TenantContext context) {
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final List<InvoiceModelDao> invoicesByAccount = includesMigrated ?
-                                                        dao.getAllInvoicesByAccount(includeVoidedInvoices, internalTenantContext) :
-                                                        dao.getInvoicesByAccount(includeVoidedInvoices, internalTenantContext);
+                                                        dao.getAllInvoicesByAccount(includeVoidedInvoices, withInvoiceItems, internalTenantContext) :
+                                                        dao.getInvoicesByAccount(includeVoidedInvoices, withInvoiceItems, internalTenantContext);
 
         return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final LocalDate upToDate, final boolean includeVoidedInvoices, final TenantContext context) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final LocalDate upToDate, final boolean includeVoidedInvoices, final boolean withInvoiceItems, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(includeVoidedInvoices, fromDate, upToDate, internalTenantContext);
+        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(includeVoidedInvoices, fromDate, upToDate, withInvoiceItems, internalTenantContext);
         return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
