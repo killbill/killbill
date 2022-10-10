@@ -58,7 +58,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(noPaymentsFromJson.size(), 0);
 
         // Get the invoices
-        List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
+        List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.NONE, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         // verify account balance
@@ -92,7 +92,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // Get the invoices excluding voided
-        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.NONE, requestOptions);
         // the voided invoice should not be returned
         assertEquals(invoices.size(), 2);
 
@@ -130,7 +130,7 @@ public class TestInvoiceVoid extends TestJaxrsBase {
         assertEquals(noPaymentsFromJson.size(), 0);
 
         // Get the invoices
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.NONE, requestOptions);
         // 2 invoices but look for the non zero dollar one
         assertEquals(invoices.size(), 2);
         // verify account balance
