@@ -25,16 +25,21 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
+import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase.NextBillingCycleDayLocal;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
+import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
+import org.killbill.billing.subscription.events.bcd.BCDEventData;
 import org.killbill.billing.subscription.events.phase.PhaseEventBuilder;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
+import org.killbill.billing.subscription.events.user.ApiEventChange;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import static org.killbill.billing.subscription.events.user.ApiEventType.CHANGE;
 import static org.killbill.billing.subscription.events.user.ApiEventType.CREATE;
 
 public class TestDefaultSubscriptionBase extends SubscriptionTestSuiteNoDB {
@@ -130,4 +135,114 @@ public class TestDefaultSubscriptionBase extends SubscriptionTestSuiteNoDB {
         Assert.assertEquals(subscriptionBase.getAllTransitions().get(1).getNextState(), EntitlementState.CANCELLED);
         Assert.assertEquals(subscriptionBase.getAllTransitions().get(1).getEffectiveTransitionTime(), new DateTime(2012, 6, 1, 0, 0, DateTimeZone.UTC));
     }
+
+    @Test(groups = "fast")
+    public void testNextBillingCycleDayLocal1() {
+
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+
+        final DateTime startDate = new DateTime(2022, 7, 19, 10, 58, 54, DateTimeZone.UTC);
+
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEffectiveDate(startDate)
+                                                                .setActive(true)));
+
+        final NextBillingCycleDayLocal bcdLocal = new NextBillingCycleDayLocal(inputEvents);
+
+        Assert.assertNull(bcdLocal.getNextBillingCycleDayLocal(startDate.minusSeconds(1)));
+        Assert.assertNull(bcdLocal.getNextBillingCycleDayLocal(startDate));
+        Assert.assertNull(bcdLocal.getNextBillingCycleDayLocal(startDate.plusSeconds(1)));
+    }
+
+    @Test(groups = "fast")
+    public void testNextBillingCycleDayLocal2() {
+
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+
+        final DateTime startDate = new DateTime(2022, 7, 19, 10, 58, 54, DateTimeZone.UTC);
+        final DateTime bcdDate = startDate;
+
+        final Integer bcd = 11;
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEffectiveDate(startDate)
+                                                                .setActive(true)));
+
+        inputEvents.add(new BCDEventData(new BCDEventBuilder()
+                                                 .setBillCycleDayLocal(bcd)
+                                                 .setEffectiveDate(bcdDate)
+                                                 .setActive(true)));
+
+        final NextBillingCycleDayLocal bcdLocal = new NextBillingCycleDayLocal(inputEvents);
+
+        Assert.assertNull(bcdLocal.getNextBillingCycleDayLocal(startDate.minusSeconds(1)));
+        Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(startDate), bcd);
+        Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(startDate.plusSeconds(1)), bcd);
+    }
+
+    @Test(groups = "fast")
+    public void testNextBillingCycleDayLocal3() {
+
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+
+        final DateTime startDate = new DateTime(2022, 7, 19, 10, 58, 54, DateTimeZone.UTC);
+        final DateTime bcdDate = startDate.plusSeconds(1);
+
+        final Integer bcd = 11;
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEffectiveDate(startDate)
+                                                                .setActive(true)));
+
+        inputEvents.add(new BCDEventData(new BCDEventBuilder()
+                                                 .setBillCycleDayLocal(bcd)
+                                                 .setEffectiveDate(bcdDate)
+                                                 .setActive(true)));
+
+        final NextBillingCycleDayLocal bcdLocal = new NextBillingCycleDayLocal(inputEvents);
+
+        Assert.assertNull(bcdLocal.getNextBillingCycleDayLocal(startDate.minusSeconds(1)));
+        Assert.assertNull(bcdLocal.getNextBillingCycleDayLocal(startDate));
+        Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(bcdDate), bcd);
+    }
+
+    @Test(groups = "fast")
+    public void testNextBillingCycleDayLocal4() {
+
+        final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
+
+        final DateTime startDate = new DateTime(2022, 7, 19, 10, 58, 54, DateTimeZone.UTC);
+        final DateTime bcdDate1 = startDate;
+        final Integer bcd1 = 19;
+
+        final DateTime changeDate = new DateTime(2022, 7, 25, 11, 48, 22, DateTimeZone.UTC);
+        final DateTime bcdDate2 = changeDate;
+        final Integer bcd2 = 25;
+
+        inputEvents.add(new ApiEventCreate(new ApiEventBuilder().setApiEventType(CREATE)
+                                                                .setEffectiveDate(startDate)
+                                                                .setActive(true)));
+
+        inputEvents.add(new BCDEventData(new BCDEventBuilder()
+                                                 .setBillCycleDayLocal(bcd1)
+                                                 .setEffectiveDate(bcdDate1)
+                                                 .setActive(true)));
+
+        inputEvents.add(new ApiEventChange(new ApiEventBuilder().setApiEventType(CHANGE)
+                                                                .setEffectiveDate(changeDate)
+                                                                .setActive(true)));
+
+        inputEvents.add(new BCDEventData(new BCDEventBuilder()
+                                                 .setBillCycleDayLocal(bcd2)
+                                                 .setEffectiveDate(bcdDate2)
+                                                 .setActive(true)));
+
+
+        final NextBillingCycleDayLocal bcdLocal = new NextBillingCycleDayLocal(inputEvents);
+
+        Assert.assertNull(bcdLocal.getNextBillingCycleDayLocal(startDate.minusSeconds(1)));
+        Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(startDate), bcd1);
+        Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(startDate.plusDays(1)), bcd1);
+        Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(changeDate), bcd2);
+        Assert.assertEquals(bcdLocal.getNextBillingCycleDayLocal(changeDate.plusDays(1)), bcd2);
+    }
+
 }

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -121,7 +122,7 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public DateTime getDateOfFirstRecurringNonZeroCharge();
 
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(VersionedCatalog catalog) throws SubscriptionBaseApiException;
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(VersionedCatalog catalog, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public BillingAlignment getBillingAlignment(PlanPhaseSpecifier spec, DateTime transitionTime, VersionedCatalog catalog) throws SubscriptionBaseApiException;
 }
