@@ -17,5 +17,22 @@
 
 package org.killbill.billing.util.config.definition;
 
+import org.killbill.billing.callcontext.InternalTenantContext;
+import org.skife.config.Config;
+import org.skife.config.Default;
+import org.skife.config.Description;
+import org.skife.config.Param;
+
 public interface SubscriptionConfig extends KillbillConfig {
+
+    @Config("org.killbill.subscription.align.effectiveDateForExistingSubscriptions")
+    @Default("false")
+    @Description("Whether to align the per-plan effectiveDateForExistingSubscriptions with the next per-subscription BCD")
+    boolean isEffectiveDateForExistingSubscriptionsAlignedToBCD();
+
+    @Config("org.killbill.subscription.align.effectiveDateForExistingSubscriptions")
+    @Default("false")
+    @Description("Whether to align the per-plan effectiveDateForExistingSubscriptions with the next per-subscription BCD")
+    boolean isEffectiveDateForExistingSubscriptionsAlignedToBCD(@Param("dummy") final InternalTenantContext tenantContext);
+
 }
