@@ -281,7 +281,6 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                     throw new SubscriptionBaseApiException(ErrorCode.SUB_CANCEL_BAD_STATE, subscription.getId(), "PENDING CANCELLED");
                 }
                 // Similarly, if subscription is cancelled with date past the expiry date (in case of a FIXEDTERM phase), we disallow the operation
-                // FIXME-MERGE-MASTER-TO-WFR-023x: Is this should be exist?
                 if (pendingTransition != null &&
                     pendingTransition.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED &&
                     pendingTransition.getEffectiveTransitionTime().compareTo(effectiveDate) < 0) {
