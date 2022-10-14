@@ -661,7 +661,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         Preconditions.checkState(!unpaidInvoicesOnly || !withMigrationInvoices, "We don't support fetching unpaid invoices incl. migration");
         Preconditions.checkState(startDateStr == null || !withMigrationInvoices, "We don't support fetching migration invoices and specifying a start date");
-        Preconditions.checkState(unpaidInvoicesOnly  && includeInvoiceComponents, "We don't support fetching unpaid invoices without invoice components");
+        Preconditions.checkState(!unpaidInvoicesOnly  || !includeInvoiceComponents, "We don't support fetching unpaid invoices without invoice components");
 
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
