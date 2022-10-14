@@ -105,7 +105,7 @@ public interface JaxrsResource {
     String QUERY_UNPAID_INVOICES_ONLY = "unpaidInvoicesOnly";
     String QUERY_INCLUDE_VOIDED_INVOICES = "includeVoidedInvoices";
     String QUERY_INVOICE_WITH_CHILDREN_ITEMS = "withChildrenItems";
-    String QUERY_INVOICE_WITH_INVOICE_ITEMS = "withInvoiceItems";
+    String QUERY_INCLUDE_INVOICE_COMPONENTS = "includeInvoiceComponents";
 
     String QUERY_PAYMENT_EXTERNAL = "externalPayment";
     String QUERY_PAYMENT_AMOUNT = "paymentAmount";

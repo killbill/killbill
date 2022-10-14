@@ -268,7 +268,7 @@ public class InvoiceDaoHelper {
     }
 
     public List<InvoiceModelDao> getAllInvoicesByAccountFromTransaction(final Boolean includeVoidedInvoices,
-    																	final Boolean withInvoiceItems, 
+    																	final Boolean includeInvoiceComponents, 
                                                                         final List<Tag> invoicesTags,
                                                                         final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                                         final InternalTenantContext context) {
@@ -276,7 +276,7 @@ public class InvoiceDaoHelper {
         final List<InvoiceModelDao> filtered = invoices.stream()
                                                        .filter(invoice -> includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus()))
                                                        .collect(Collectors.toUnmodifiableList());
-        if (withInvoiceItems) {
+        if (includeInvoiceComponents) {
             populateChildren(filtered, invoicesTags, entitySqlDaoWrapperFactory, context);
         }
         return invoices;
