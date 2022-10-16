@@ -62,6 +62,7 @@ import org.killbill.billing.notification.plugin.api.InvoicePaymentMetadata;
 import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata.ActionType;
+import org.killbill.billing.notification.plugin.api.TagMetadata;
 import org.killbill.billing.notification.plugin.api.TenantMetadata;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -294,7 +295,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
-                metaData = realUserTagEventCr.getTagDefinition().getName();
+                final TagMetadata userTagCreationMetadata = new TagMetadata(realUserTagEventCr.getTagId(), realUserTagEventCr.getObjectId(), realUserTagEventCr.getObjectType(), realUserTagEventCr.getTagDefinition());
+                metaData = objectMapper.writeValueAsString(userTagCreationMetadata);
                 break;
 
             case CONTROL_TAG_CREATION:
@@ -302,7 +304,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
-                metaData = realTagEventCr.getTagDefinition().getName();
+                final TagMetadata controlTagCreationMetadata = new TagMetadata(realTagEventCr.getTagId(), realTagEventCr.getObjectId(), realTagEventCr.getObjectType(), realTagEventCr.getTagDefinition());
+                metaData = objectMapper.writeValueAsString(controlTagCreationMetadata);
                 break;
 
             case USER_TAG_DELETION:
@@ -310,7 +313,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                metaData = realUserTagEventDel.getTagDefinition().getName();
+                final TagMetadata userTagDeletionMetadata = new TagMetadata(realUserTagEventDel.getTagId(), realUserTagEventDel.getObjectId(), realUserTagEventDel.getObjectType(), realUserTagEventDel.getTagDefinition());
+                metaData = objectMapper.writeValueAsString(userTagDeletionMetadata);
                 break;
 
             case CONTROL_TAG_DELETION:
@@ -318,7 +322,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                metaData = realTagEventDel.getTagDefinition().getName();
+                final TagMetadata controlTagDeletionMetadata = new TagMetadata(realTagEventDel.getTagId(), realTagEventDel.getObjectId(), realTagEventDel.getObjectType(), realTagEventDel.getTagDefinition());
+                metaData = objectMapper.writeValueAsString(controlTagDeletionMetadata);
                 break;
 
             case CUSTOM_FIELD_CREATION:
