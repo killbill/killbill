@@ -199,7 +199,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride(plan.getFinalPhase().getName(), account.getCurrency(), null, BigDecimal.ONE, null));
         final Entitlement baseEntitlement = createEntitlement(spec, overrides, true);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, testCallContext);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getChargedAmount().compareTo(BigDecimal.ONE), 0);
 
@@ -207,7 +207,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, testCallContext);
         assertEquals(invoices.size(), 2);
         assertEquals(invoices.get(1).getChargedAmount().compareTo(BigDecimal.ONE), 0);
 
@@ -216,7 +216,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         baseEntitlement.changePlan( new DefaultEntitlementSpecifier(spec), Collections.emptyList(), testCallContext);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, testCallContext);
         assertEquals(invoices.size(), 3);
         assertEquals(invoices.get(2).getChargedAmount().compareTo(new BigDecimal("9.00")), 0); // 10 (recurring) - 1 (repair)
     }
@@ -235,7 +235,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
 
         createEntitlement(spec, null, true);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, testCallContext);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getChargedAmount().compareTo(BigDecimal.TEN), 0);
         assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
@@ -255,7 +255,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
             assertListenerStatus();
 
             LocalDate endDate = startDate.plusDays(30);
-            invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, testCallContext);
+            invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, testCallContext);
             assertEquals(invoices.size(), invoiceSize);
 
             expectedInvoices.add(new ExpectedInvoiceItemCheck(startDate, endDate, InvoiceItemType.RECURRING, BigDecimal.TEN));

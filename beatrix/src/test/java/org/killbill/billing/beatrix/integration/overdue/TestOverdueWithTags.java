@@ -81,7 +81,7 @@ public class TestOverdueWithTags extends TestOverdueBase {
         // DAY 30 have to get out of trial before first payment
         addDaysAndCheckForCompletion(30, NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT_ERROR, NextEvent.INVOICE_PAYMENT_ERROR);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
 
         final Invoice nonNullInvoice = invoices.get(1);

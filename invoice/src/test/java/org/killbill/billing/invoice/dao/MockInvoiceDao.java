@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -164,13 +165,16 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
             final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : invoices.values()) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.isMigrated()) {
+                    if (includeInvoiceComponents) {
+                        invoice.addInvoiceItems(items.values().stream().filter(item -> item.getInvoiceId().equals(invoice.getId())).collect(Collectors.toList()));
+                    }
                     result.add(invoice);
                 }
             }
@@ -179,13 +183,16 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoicesForAccount = new ArrayList<>();
         synchronized (monitor) {
             final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : getAll(context)) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrated() &&
-                    (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
+                    (includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
+                    if (includeInvoiceComponents) {
+                        invoice.addInvoiceItems(items.values().stream().filter(item -> item.getInvoiceId().equals(invoice.getId())).collect(Collectors.toList()));
+                    }
                     invoicesForAccount.add(invoice);
                 }
             }
@@ -335,13 +342,16 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<>();
 
         synchronized (monitor) {
             final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : invoices.values()) {
-                if (accountId.equals(invoice.getAccountId()) && (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
+                if (accountId.equals(invoice.getAccountId()) && (includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
+                    if (includeInvoiceComponents) {
+                        invoice.addInvoiceItems(items.values().stream().filter(item -> item.getInvoiceId().equals(invoice.getId())).collect(Collectors.toList()));
+                    }
                     result.add(invoice);
                 }
             }

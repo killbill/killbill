@@ -76,7 +76,7 @@ public class TestSubscription extends TestIntegrationBase {
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
@@ -85,7 +85,7 @@ public class TestSubscription extends TestIntegrationBase {
         clock.addDays(40);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
         List<ExpectedInvoiceItemCheck> toBeChecked = List.of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
@@ -106,7 +106,7 @@ public class TestSubscription extends TestIntegrationBase {
 
         changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.MONTHLY, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE);
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 3);
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
@@ -115,7 +115,7 @@ public class TestSubscription extends TestIntegrationBase {
         //
         changeEntitlementAndCheckForCompletion(bpEntitlement, productName, BillingPeriod.ANNUAL, BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE);
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 4);
 
         toBeChecked = List.of(
@@ -151,7 +151,7 @@ public class TestSubscription extends TestIntegrationBase {
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
@@ -160,7 +160,7 @@ public class TestSubscription extends TestIntegrationBase {
         clock.addDays(40);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
         List<ExpectedInvoiceItemCheck> toBeChecked = List.of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
@@ -171,7 +171,7 @@ public class TestSubscription extends TestIntegrationBase {
         // (Note that, the catalog is configured to use  CHANGE_OF_PLAN when moving to that plan and Not CHANGE_OF_PRICELIST which has not been implement;
         // this is a bit misleading since we are changing pricelist, but in that case pricelist change has no effect)
         changeEntitlementAndCheckForCompletion(bpEntitlement, "Assault-Rifle", BillingPeriod.ANNUAL, "rescue", BillingActionPolicy.IMMEDIATE, NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 3);
         toBeChecked = List.of(
                 new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2013, 5, 1), InvoiceItemType.RECURRING, new BigDecimal("2399.95")));
@@ -248,7 +248,7 @@ public class TestSubscription extends TestIntegrationBase {
         assertEquals(addOnEntitlement2.getLastActiveProduct().getName(), "Laser-Scope");
         assertEquals(addOnEntitlement2.getLastActiveProductCategory(), ProductCategory.ADD_ON);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1); // ONLY ONE INVOICE
         assertEquals(invoices.get(0).getInvoiceItems().size(), 6);
 
@@ -274,7 +274,7 @@ public class TestSubscription extends TestIntegrationBase {
 
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), externalKeyB, "Shotgun", ProductCategory.BASE, BillingPeriod.ANNUAL, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         final PlanPhaseSpecifier baseSpec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final PlanPhaseSpecifier addOnSpec1 = new PlanPhaseSpecifier("Telescopic-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);

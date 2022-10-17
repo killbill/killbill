@@ -72,7 +72,7 @@ public class InvoiceChecker {
     }
 
     public Invoice checkInvoice(final UUID accountId, final int invoiceOrderingNumber, final CallContext context, final List<ExpectedInvoiceItemCheck> expected) throws InvoiceApiException {
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, context);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, context);
         //Assert.assertEquals(invoices.size(), invoiceOrderingNumber);
         final Invoice invoice = invoices.get(invoiceOrderingNumber - 1);
         checkInvoice(invoice.getId(), context, expected);

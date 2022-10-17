@@ -82,14 +82,14 @@ public class TestIntegrationWithWrittenOffTag extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
         clock.addDays(31);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
 
         // Tag non $0 invoice with WRITTEN_OFF and remove AUTO_PAY_OFF => System should still not pay anything
