@@ -74,6 +74,7 @@ import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.ClockMock;
 import org.mockito.Mockito;
 import org.testng.Assert;
@@ -187,7 +188,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCreationAndRetrievalByAccountWithInvoiceComponents() throws EntityPersistenceException {
+    public void testRetrieveByAccountWithInvoiceComponents() throws EntityPersistenceException {
         final BigDecimal amount = BigDecimal.TEN;
         final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), amount);
 
@@ -204,7 +205,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCreationAndRetrievalByAccountWithoutInvoiceComponents() throws EntityPersistenceException {
+    public void testRetrieveByAccountWithoutInvoiceComponents() throws EntityPersistenceException {
         final BigDecimal amount = BigDecimal.TEN;
         final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), amount);
 
@@ -220,7 +221,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCreationAndRetrievalAllInvoicesByAccountWithInvoiceComponents() throws EntityPersistenceException {
+    public void testRetrieveAllInvoicesByAccountWithInvoiceComponents() throws EntityPersistenceException {
         final BigDecimal amount = BigDecimal.TEN;
         final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), amount);
 
@@ -236,7 +237,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     }
 
     @Test(groups = "slow")
-    public void testCreationAndRetrievalAllInvoicesByAccountWithoutInvoiceComponents() throws EntityPersistenceException {
+    public void testRetrieveAllInvoicesByAccountWithoutInvoiceComponents() throws EntityPersistenceException {
         final BigDecimal amount = BigDecimal.TEN;
         final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), amount);
 
@@ -250,6 +251,149 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         assertEquals(thisInvoice.getInvoiceItems().size(), 0);
         assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.ZERO), 0);
     }
+    
+    @Test(groups = "slow")
+    public void testRetrieveByAccountWithoutInvoiceItemsWithPagination() throws EntityPersistenceException {
+    	final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), BigDecimal.TEN);
+
+        final Pagination<InvoiceModelDao> invoices = invoiceDao.getPaginatedInvoicesByAccount(false, false, null, null, 0L, 5L, context);
+        assertNotNull(invoices);
+        assertEquals(invoices.getTotalNbRecords().longValue(), 1L);
+        
+        Assert.assertEquals(invoices.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(invoices.getNextOffset());
+        Assert.assertEquals(invoices.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(invoices.getTotalNbRecords(), (Long) 1L);
+        
+        final InvoiceModelDao thisInvoice = invoices.iterator().next();
+        assertEquals(createdInvoice.getAccountId(), account.getId());
+        assertEquals(thisInvoice.getInvoiceDate().compareTo(createdInvoice.getInvoiceDate()), 0);
+        assertEquals(thisInvoice.getCurrency(), Currency.USD);
+        assertEquals(thisInvoice.getInvoiceItems().size(), 0);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.ZERO), 0);
+    }  
+    
+    @Test(groups = "slow")
+    public void testRetrieveByAccountWithoutInvoiceItemsWithPagination2() throws EntityPersistenceException {
+    	final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), BigDecimal.TEN);
+
+        final Pagination<InvoiceModelDao> invoices = invoiceDao.getPaginatedInvoicesByAccount(false, false, 0L, 5L, context);
+        assertNotNull(invoices);
+        assertEquals(invoices.getTotalNbRecords().longValue(), 1L);
+        
+        Assert.assertEquals(invoices.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(invoices.getNextOffset());
+        Assert.assertEquals(invoices.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(invoices.getTotalNbRecords(), (Long) 1L);
+        
+        final InvoiceModelDao thisInvoice = invoices.iterator().next();
+        assertEquals(createdInvoice.getAccountId(), account.getId());
+        assertEquals(thisInvoice.getInvoiceDate().compareTo(createdInvoice.getInvoiceDate()), 0);
+        assertEquals(thisInvoice.getCurrency(), Currency.USD);
+        assertEquals(thisInvoice.getInvoiceItems().size(), 0);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.ZERO), 0);
+    }
+    
+    @Test(groups = "slow")
+    public void testRetrieveByAccountWithInvoiceItemsWithPagination() throws EntityPersistenceException {
+        final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), BigDecimal.TEN);
+
+        final Pagination<InvoiceModelDao> invoices = invoiceDao.getPaginatedInvoicesByAccount(false, true, null, null, 0L, 5L, context);
+        assertNotNull(invoices);
+        assertEquals(invoices.getTotalNbRecords().longValue(), 1L);
+        
+        Assert.assertEquals(invoices.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(invoices.getNextOffset());
+        Assert.assertEquals(invoices.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(invoices.getTotalNbRecords(), (Long) 1L);
+        
+        final InvoiceModelDao thisInvoice = invoices.iterator().next();
+        assertEquals(createdInvoice.getAccountId(), account.getId());
+        assertEquals(thisInvoice.getInvoiceDate().compareTo(createdInvoice.getInvoiceDate()), 0);
+        assertEquals(thisInvoice.getCurrency(), Currency.USD);
+        assertEquals(thisInvoice.getInvoiceItems().size(), 1);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.TEN), 0);
+    } 
+    
+    @Test(groups = "slow")
+    public void testRetrieveByAccountWithInvoiceItemsWithPagination2() throws EntityPersistenceException {
+        final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), BigDecimal.TEN);
+
+        final Pagination<InvoiceModelDao> invoices = invoiceDao.getPaginatedInvoicesByAccount(false, true, 0L, 5L, context);
+        assertNotNull(invoices);
+        assertEquals(invoices.getTotalNbRecords().longValue(), 1L);
+        
+        Assert.assertEquals(invoices.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(invoices.getNextOffset());
+        Assert.assertEquals(invoices.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(invoices.getTotalNbRecords(), (Long) 1L);
+        
+        final InvoiceModelDao thisInvoice = invoices.iterator().next();
+        assertEquals(createdInvoice.getAccountId(), account.getId());
+        assertEquals(thisInvoice.getInvoiceDate().compareTo(createdInvoice.getInvoiceDate()), 0);
+        assertEquals(thisInvoice.getCurrency(), Currency.USD);
+        assertEquals(thisInvoice.getInvoiceItems().size(), 1);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.TEN), 0);
+    }    
+    
+    @Test(groups = "slow")
+    public void testCreateMultipleInvoicesAndRetrieveByAccountWithPagination() throws EntityPersistenceException {
+    	
+    	for (int i= 0; i < 7; i++) { //create 7 invoices
+    		createAndGetInvoice(clock.getUTCToday(), clock.getUTCToday());
+    	}
+
+        final Pagination<InvoiceModelDao> invoices = invoiceDao.getPaginatedInvoicesByAccount(false, false, null, null, 0L, 5L, context);
+        assertNotNull(invoices);
+        assertEquals(invoices.getTotalNbRecords().longValue(), 7L);
+        
+        Assert.assertEquals(invoices.getCurrentOffset(), (Long) 0L);
+        Assert.assertEquals(invoices.getNextOffset(), (Long) 5L);
+        Assert.assertEquals(invoices.getMaxNbRecords(), (Long) 7L);
+        Assert.assertEquals(invoices.getTotalNbRecords(), (Long) 7L);
+    }     
+    
+    @Test(groups = "slow")
+    public void testRetrieveAllInvoicesByAccountWithoutInvoiceItemsWithPagination() throws EntityPersistenceException {
+        final Invoice createdInvoice = createAndGetInvoice(clock.getUTCToday(), clock.getUTCToday());
+
+        final Pagination<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccountWithPagination(false, false, 0L, 5L, context);
+        assertNotNull(invoices);
+        assertEquals(invoices.getTotalNbRecords().longValue(), 1L);
+        
+        Assert.assertEquals(invoices.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(invoices.getNextOffset());
+        Assert.assertEquals(invoices.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(invoices.getTotalNbRecords(), (Long) 1L);
+        
+        final InvoiceModelDao thisInvoice = invoices.iterator().next();
+        assertEquals(createdInvoice.getAccountId(), account.getId());
+        assertEquals(thisInvoice.getInvoiceDate().compareTo(createdInvoice.getInvoiceDate()), 0);
+        assertEquals(thisInvoice.getCurrency(), Currency.USD);
+        assertEquals(thisInvoice.getInvoiceItems().size(), 0);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.ZERO), 0);
+    }    
+    
+    @Test(groups = "slow")
+    public void testRetrieveAllInvoicesByAccountWithInvoiceItemsWithPagination() throws EntityPersistenceException {
+        final Invoice createdInvoice = createAndGetInvoice(clock.getUTCToday(), clock.getUTCToday());
+
+        final Pagination<InvoiceModelDao> invoices = invoiceDao.getAllInvoicesByAccountWithPagination(false, true, 0L, 5L, context);
+        assertNotNull(invoices);
+        assertEquals(invoices.getTotalNbRecords().longValue(), 1L);
+        
+        Assert.assertEquals(invoices.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(invoices.getNextOffset());
+        Assert.assertEquals(invoices.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(invoices.getTotalNbRecords(), (Long) 1L);
+        
+        final InvoiceModelDao thisInvoice = invoices.iterator().next();
+        assertEquals(createdInvoice.getAccountId(), account.getId());
+        assertEquals(thisInvoice.getInvoiceDate().compareTo(createdInvoice.getInvoiceDate()), 0);
+        assertEquals(thisInvoice.getCurrency(), Currency.USD);
+        assertEquals(thisInvoice.getInvoiceItems().size(), 0);
+        assertEquals(InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(thisInvoice).compareTo(BigDecimal.ZERO), 0);
+    }    
 
     @Test(groups = "slow")
     public void testGetInvoicesByAccountSorted() throws EntityPersistenceException {

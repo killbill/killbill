@@ -494,4 +494,31 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     public List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final InternalTenantContext context) {
         return null;
     }
+
+
+
+
+	@Override
+	public Pagination<InvoiceModelDao> getAllInvoicesByAccountWithPagination(Boolean includeVoidedInvoices,
+			Boolean includeInvoiceComponents, Long offset, Long limit, InternalTenantContext context) {
+		// TODO_1272: Revisit
+		return null;
+	}
+
+
+	@Override
+	public Pagination<InvoiceModelDao> getPaginatedInvoicesByAccount(Boolean includeVoidedInvoices,
+			Boolean includeInvoiceComponents, Long offset, Long limit, InternalTenantContext context) {
+		// TODO_1272: Revisit
+		return null;
+	}
+
+
+	@Override
+	public Pagination<InvoiceModelDao> getPaginatedInvoicesByAccount(Boolean includeVoidedInvoices,
+			Boolean includeInvoiceComponents, LocalDate fromDate, LocalDate upToDate, Long offset, Long limit,
+			InternalTenantContext context) {
+		// TODO_1272: Revisit
+		return null;
+	}
 }

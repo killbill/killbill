@@ -22,8 +22,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +45,7 @@ import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.Currency;
+import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
@@ -50,7 +53,11 @@ import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.dao.CounterMappings;
+import org.killbill.billing.util.entity.DefaultPagination;
+import org.killbill.billing.util.entity.Pagination;
+import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
+import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.slf4j.Logger;
@@ -61,6 +68,10 @@ public class InvoiceDaoHelper {
     private static final Logger log = LoggerFactory.getLogger(InvoiceDaoHelper.class);
 
     private final InternalCallContextFactory internalCallContextFactory;
+
+    private static final Comparator<InvoiceModelDao> INVOICE_MODEL_DAO_COMPARATOR = Comparator.comparing(invoice -> invoice.getTargetDate() == null ?
+            invoice.getCreatedDate().toLocalDate() :
+            invoice.getTargetDate());
 
     @Inject
     public InvoiceDaoHelper(final InternalCallContextFactory internalCallContextFactory) {
@@ -246,6 +257,7 @@ public class InvoiceDaoHelper {
         }
     }
 
+    //TODO_1272: Revisit to check if this method is required
     public void populateChildren(final Iterable<InvoiceModelDao> invoices, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         // !!! Anything updated here needs to also be reflected in   void populateChildren(final InvoiceModelDao invoice,...)
         if (Iterables.isEmpty(invoices)) {
@@ -259,19 +271,42 @@ public class InvoiceDaoHelper {
         setInvoicesRepaired(invoices, entitySqlDaoWrapperFactory, context);
 
         final Iterable<InvoiceModelDao> nonParentInvoices = Iterables.toStream(invoices)
-                .filter(invoice -> !invoice.isParentInvoice())
-                .collect(Collectors.toUnmodifiableList());
+                                                                     .filter(invoice -> !invoice.isParentInvoice())
+                                                                     .collect(Collectors.toUnmodifiableList());
 
         if (!Iterables.isEmpty(nonParentInvoices)) {
             setParentInvoice(nonParentInvoices, invoicesTags, entitySqlDaoWrapperFactory, context);
         }
+
     }
 
-    public List<InvoiceModelDao> getAllInvoicesByAccountFromTransaction(final Boolean includeVoidedInvoices,
-    																	final Boolean includeInvoiceComponents, 
-                                                                        final List<Tag> invoicesTags,
-                                                                        final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
-                                                                        final InternalTenantContext context) {
+    public Pagination<InvoiceModelDao> populateChildren(final Pagination<InvoiceModelDao> invoices, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
+        // !!! Anything updated here needs to also be reflected in   void populateChildren(final InvoiceModelDao invoice,...)
+        if (Iterables.isEmpty(invoices)) {
+            return null; //TODO_1272: Revisit
+        }
+
+        final List<InvoiceModelDao> invoicesList = Iterables.toUnmodifiableList(invoices);
+
+        setInvoiceItemsWithinTransaction(invoicesList, entitySqlDaoWrapperFactory, context);
+        setInvoicePaymentsWithinTransaction(invoicesList, entitySqlDaoWrapperFactory, context);
+        setTrackingIdsFromTransaction(invoicesList, entitySqlDaoWrapperFactory, context);
+        setInvoicesWrittenOff(invoicesList, invoicesTags);
+        setInvoicesRepaired(invoicesList, entitySqlDaoWrapperFactory, context);
+
+        final Iterable<InvoiceModelDao> nonParentInvoices = Iterables.toStream(invoicesList)
+                                                                     .filter(invoice -> !invoice.isParentInvoice())
+                                                                     .collect(Collectors.toUnmodifiableList());
+
+        if (!Iterables.isEmpty(nonParentInvoices)) {
+            setParentInvoice(nonParentInvoices, invoicesTags, entitySqlDaoWrapperFactory, context);
+        }
+
+        final Pagination<InvoiceModelDao> pagination = invoices.getNextOffset() != null ? new DefaultPagination<InvoiceModelDao>(invoices, invoices.getNextOffset(), invoicesList.iterator()) : new DefaultPagination<InvoiceModelDao>(invoices.getMaxNbRecords(), invoicesList.iterator()); //TODO_1272: Revisit to check if this is correct
+        return pagination;
+    }
+
+    public List<InvoiceModelDao> getAllInvoicesByAccountFromTransaction(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoices = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class).getByAccountRecordId(context);
         final List<InvoiceModelDao> filtered = invoices.stream()
                                                        .filter(invoice -> includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus()))
@@ -281,6 +316,73 @@ public class InvoiceDaoHelper {
         }
         return invoices;
     }
+
+    public Pagination<InvoiceModelDao> getAllInvoicesByAccountFromTransactionPaginated(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final Long offset, final Long limit, final DefaultPaginationSqlDaoHelper paginationHelper, final InternalTenantContext context) {
+        //TODO_1272: Revisit passing paginationHelper
+
+        final Pagination<InvoiceModelDao> invoices = paginationHelper.getPagination(InvoiceSqlDao.class,
+                                                                                    new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
+                                                                                        @Override
+                                                                                        public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
+                                                                                            return null;
+                                                                                        }
+
+                                                                                        @Override
+                                                                                        public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset,
+                                                                                                                               final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering,
+                                                                                                                               final InternalTenantContext context) {
+                                                                                            return invoiceSqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit,
+                                                                                                                                                           context);
+                                                                                        }
+                                                                                    }, offset, limit, context);
+
+        final List<InvoiceModelDao> filtered = Iterables.toStream(invoices)
+                                                        .filter(invoice -> includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus()))
+                                                        .collect(Collectors.toUnmodifiableList());
+
+        final Pagination<InvoiceModelDao> pagination = new DefaultPagination<InvoiceModelDao>(invoices, limit, filtered.iterator());
+
+        if (includeInvoiceComponents) {
+            return populateChildren(pagination, invoicesTags, entitySqlDaoWrapperFactory, context);
+        }
+
+        return pagination;
+    }
+
+    public Pagination<InvoiceModelDao> getInvoicesByAccountFromTransactionPaginated(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final List<Tag> invoicesTags, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final Long offset, final Long limit, final DefaultPaginationSqlDaoHelper paginationHelper, final InternalTenantContext context) {
+
+        //TODO_1272: Revisit passing paginationHelper
+        final Pagination<InvoiceModelDao> invoices = paginationHelper.getPagination(InvoiceSqlDao.class,
+                                                                                    new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
+                                                                                  @Override
+                                                                                  public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
+                                                                                      return null;
+                                                                                  }
+
+                                                                                  @Override
+                                                                                  public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset,
+                                                                                                                         final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering,
+                                                                                                                         final InternalTenantContext context) {
+                                                                                      return invoiceSqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit,
+                                                                                                                                                     context);
+                                                                                  }
+                                                                              }, offset, limit, context);
+
+        final List<InvoiceModelDao> filtered = Iterables.toStream(invoices)
+                                                        .filter(invoice -> !invoice.isMigrated() &&
+                                                                           (includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus())))
+                                                        .sorted(INVOICE_MODEL_DAO_COMPARATOR)
+                                                        .collect(Collectors.toUnmodifiableList());
+
+        final Pagination<InvoiceModelDao> pagination = new DefaultPagination<InvoiceModelDao>(invoices, limit, filtered.iterator());
+
+        if (includeInvoiceComponents) {
+            return populateChildren(pagination, invoicesTags, entitySqlDaoWrapperFactory, context);
+        }
+
+        return pagination;
+    }
+    
 
     public BigDecimal getRemainingAmountPaidFromTransaction(final UUID invoicePaymentId, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalTenantContext context) {
         final BigDecimal amount = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class).getRemainingAmountPaid(invoicePaymentId.toString(), context);
@@ -300,8 +402,8 @@ public class InvoiceDaoHelper {
 
     private Iterable<UUID> mapInvoicesToInvoiceIds(final Iterable<InvoiceModelDao> invoices) {
         return Iterables.toStream(invoices)
-                .map(InvoiceModelDao::getId)
-                .collect(Collectors.toUnmodifiableList());
+                        .map(InvoiceModelDao::getId)
+                        .collect(Collectors.toUnmodifiableList());
     }
 
 

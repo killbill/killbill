@@ -67,8 +67,12 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
     public List<InvoiceModelDao> getInvoicesByGroup(UUID groupId, InternalTenantContext context);
 
     List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, InternalTenantContext context);
+    
+    Pagination<InvoiceModelDao> getPaginatedInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Long offset, final Long limit, InternalTenantContext context);
 
     List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, LocalDate fromDate, LocalDate upToDate, final Boolean includeInvoiceComponents, InternalTenantContext context);
+    
+    Pagination<InvoiceModelDao> getPaginatedInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, LocalDate fromDate, LocalDate upToDate, final Long offset, final Long limit, InternalTenantContext context);
 
     List<InvoiceModelDao> getInvoicesBySubscription(UUID subscriptionId, InternalTenantContext context);
 
@@ -94,6 +98,8 @@ public interface InvoiceDao extends EntityDao<InvoiceModelDao, Invoice, InvoiceA
 
     // Include migrated invoices
     List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, InternalTenantContext context);
+    
+    Pagination<InvoiceModelDao> getAllInvoicesByAccountWithPagination(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Long offset, final Long limit, InternalTenantContext context);
 
     InvoicePaymentModelDao postChargeback(UUID paymentId, final UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 
