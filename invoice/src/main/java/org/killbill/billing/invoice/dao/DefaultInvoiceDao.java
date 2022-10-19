@@ -185,7 +185,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public Pagination<InvoiceModelDao> getPaginatedInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Long offset, final Long limit,final InternalTenantContext context) {
+    public Pagination<InvoiceModelDao> getPaginatedInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final Long offset, final Long limit, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getInvoicesByAccountFromTransactionPaginated(includeVoidedInvoices, includeInvoiceComponents, invoicesTags, entitySqlDaoWrapperFactory, offset, limit, paginationHelper, context));
     }
@@ -217,19 +217,19 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         });
     }
 
-    public Pagination<InvoiceModelDao> getPaginatedInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final LocalDate fromDate, final LocalDate upToDate, final Long offset, final Long limit, InternalTenantContext context) {
+    public Pagination<InvoiceModelDao> getPaginatedInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final LocalDate fromDate, final LocalDate upToDate, final Long offset, final Long limit, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
             final Pagination<InvoiceModelDao> invoices = getAllNonMigratedInvoicesByAccountAfterDateWithPagination(includeVoidedInvoices, invoiceDao, fromDate, upToDate, offset, limit, context);
-            if(includeInvoiceComponents) {
+            if (includeInvoiceComponents) {
                 return invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
             }
             return invoices;
         });
     }
-    
+
     private List<InvoiceModelDao> getAllNonMigratedInvoicesByAccountAfterDate(final Boolean includeVoidedInvoices,
                                                                               final InvoiceSqlDao invoiceSqlDao,
                                                                               final LocalDate fromDate,
@@ -247,28 +247,24 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 .collect(Collectors.toUnmodifiableList());
     }
     
-	private Pagination<InvoiceModelDao> getAllNonMigratedInvoicesByAccountAfterDateWithPagination(
-			final Boolean includeVoidedInvoices, final InvoiceSqlDao invoiceSqlDao, final LocalDate fromDate,
-			final LocalDate upToDate, final Long offset, final Long limit, final InternalTenantContext context) {
+    private Pagination<InvoiceModelDao> getAllNonMigratedInvoicesByAccountAfterDateWithPagination(
+            final Boolean includeVoidedInvoices, final InvoiceSqlDao invoiceSqlDao, final LocalDate fromDate,
+            final LocalDate upToDate, final Long offset, final Long limit, final InternalTenantContext context) {
 
-		return paginationHelper.getPagination(InvoiceSqlDao.class,
-				new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
-					@Override
-					public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
-						return null;
-					}
+        return paginationHelper.getPagination(InvoiceSqlDao.class,
+                                              new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
+                                                  @Override
+                                                  public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
+                                                      return null;
+                                                  }
 
-					@Override
-					public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset,
-							final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering,
-							final InternalTenantContext context) {
-						return invoiceSqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit,
-								context);
-					}
-				}, offset, limit, context);
-	
+                                                  @Override
+                                                  public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset, final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering, final InternalTenantContext context) {
+                                                      return invoiceSqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit, context);
+                                                  }
+                                              }, offset, limit, context);
 
-	}      
+    }
 
     @Override
     public InvoiceModelDao getById(final UUID invoiceId, final InternalTenantContext context) throws InvoiceApiException {
@@ -649,6 +645,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
         return transactionalSqlDao.execute(true, entityWrapperFactory -> invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(accountId, invoicesTags, entityWrapperFactory, startDate, upToDate, context));
     }
+    
+    @Override
+    public Pagination<InvoiceModelDao> getPaginatedUnpaidInvoicesByAccountId(final UUID accountId, @Nullable final LocalDate startDate, @Nullable final LocalDate upToDate, final Long offset, final Long limit, final InternalTenantContext context) {
+        final List<Tag> invoicesTags = getInvoicesTags(context);
+
+        return transactionalSqlDao.execute(true, entityWrapperFactory -> invoiceDaoHelper.getPaginatedUnpaidInvoicesByAccountFromTransaction(accountId, invoicesTags, entityWrapperFactory, startDate, upToDate, offset, limit, paginationHelper, context));
+    }
 
     @Override
     public UUID getInvoiceIdByPaymentId(final UUID paymentId, final InternalTenantContext context) {
@@ -667,7 +670,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
     @Override
     public List<InvoicePaymentModelDao> getInvoicePaymentsByInvoice(final UUID invoiceId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, daoWrapperFactory ->  daoWrapperFactory.become(InvoicePaymentSqlDao.class).getAllPaymentsForInvoiceIncludedInit(invoiceId.toString(), context));
+        return transactionalSqlDao.execute(true, daoWrapperFactory -> daoWrapperFactory.become(InvoicePaymentSqlDao.class).getAllPaymentsForInvoiceIncludedInit(invoiceId.toString(), context));
     }
 
     @Override

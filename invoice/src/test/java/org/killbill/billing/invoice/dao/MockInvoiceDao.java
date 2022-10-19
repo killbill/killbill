@@ -521,4 +521,12 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
 		// TODO_1272: Revisit
 		return null;
 	}
+
+
+	@Override
+	public Pagination<InvoiceModelDao> getPaginatedUnpaidInvoicesByAccountId(UUID accountId, LocalDate startDate,
+			LocalDate upToDate, Long offset, Long limit, InternalTenantContext context) {
+		// TODO_1272: Revisit
+		return null;
+	}
 }
