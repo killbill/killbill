@@ -16,7 +16,7 @@ Kill Bill offers a lot out of the box:
 * It is easy to run trials and accommodate even the briefest promotional discounts.
 * Your business doesn't need to rely on the uptime or processing speed of a third-party SaaS provider.
 * Kill Bill is not an all-in-one solution. Instead, it is highly modularized, enabling you to disable functionality you don't need or replace functionality with one of your existing systems.
-* On premise or in the cloud, Kill Bill will scale as your subscription business grows. You can also start with Kill Bill in one business area and slowly migrate it to other areas.
+* On premises or in the cloud, Kill Bill will scale as your subscription business grows. You can also start with Kill Bill in one business area and slowly migrate it to other areas.
 * Kill Bill provides an unmatched framework for extensibility.
 
 With Kill Bill, you get a SaaS-like subscription management and billing solution out of the box, but with the flexibility and peace of mind of running an open-source stack.
