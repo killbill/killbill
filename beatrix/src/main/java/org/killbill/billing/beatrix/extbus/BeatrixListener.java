@@ -345,7 +345,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TENANT_KVS;
                 objectId = realTenantConfigEventChg.getId();
                 eventBusType = ExtBusEventType.TENANT_CONFIG_CHANGE;
-                final TenantMetadata tenantConfigChangeMetadata = new TenantMetadata(realTenantConfigEventChg.getId(), realTenantConfigEventChg.getKey());
+                final TenantMetadata tenantConfigChangeMetadata = new TenantMetadata(realTenantConfigEventChg.getKey());
                 metaData = objectMapper.writeValueAsString(tenantConfigChangeMetadata);
                 break;
 
