@@ -295,7 +295,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
-                final TagMetadata userTagCreationMetadata = new TagMetadata(realUserTagEventCr.getTagId(), realUserTagEventCr.getObjectId(), objectType, realUserTagEventCr.getTagDefinition());
+                final TagMetadata userTagCreationMetadata = new TagMetadata(realUserTagEventCr.getTagDefinition().getName());
                 metaData = objectMapper.writeValueAsString(userTagCreationMetadata);
                 break;
 
@@ -304,7 +304,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
-                final TagMetadata controlTagCreationMetadata = new TagMetadata(realTagEventCr.getTagId(), realTagEventCr.getObjectId(), objectType, realTagEventCr.getTagDefinition());
+                final TagMetadata controlTagCreationMetadata = new TagMetadata(realUserTagEventCr.getTagDefinition().getName());
                 metaData = objectMapper.writeValueAsString(controlTagCreationMetadata);
                 break;
 
@@ -313,7 +313,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                final TagMetadata userTagDeletionMetadata = new TagMetadata(realUserTagEventDel.getTagId(), realUserTagEventDel.getObjectId(), objectType, realUserTagEventDel.getTagDefinition());
+                final TagMetadata userTagDeletionMetadata = new TagMetadata(realUserTagEventCr.getTagDefinition().getName());
                 metaData = objectMapper.writeValueAsString(userTagDeletionMetadata);
                 break;
 
@@ -322,7 +322,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                final TagMetadata controlTagDeletionMetadata = new TagMetadata(realTagEventDel.getTagId(), realTagEventDel.getObjectId(), objectType, realTagEventDel.getTagDefinition());
+                final TagMetadata controlTagDeletionMetadata = new TagMetadata(realUserTagEventCr.getTagDefinition().getName());
                 metaData = objectMapper.writeValueAsString(controlTagDeletionMetadata);
                 break;
 
