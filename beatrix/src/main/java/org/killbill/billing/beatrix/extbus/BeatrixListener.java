@@ -304,7 +304,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
-                final TagMetadata controlTagCreationMetadata = new TagMetadata(realUserTagEventCr.getTagDefinition().getName());
+                final TagMetadata controlTagCreationMetadata = new TagMetadata(realTagEventCr.getTagDefinition().getName());
                 metaData = objectMapper.writeValueAsString(controlTagCreationMetadata);
                 break;
 
@@ -313,7 +313,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                final TagMetadata userTagDeletionMetadata = new TagMetadata(realUserTagEventCr.getTagDefinition().getName());
+                final TagMetadata userTagDeletionMetadata = new TagMetadata(realUserTagEventDel.getTagDefinition().getName());
                 metaData = objectMapper.writeValueAsString(userTagDeletionMetadata);
                 break;
 
@@ -322,7 +322,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                final TagMetadata controlTagDeletionMetadata = new TagMetadata(realUserTagEventCr.getTagDefinition().getName());
+                final TagMetadata controlTagDeletionMetadata = new TagMetadata(realTagEventDel.getTagDefinition().getName());
                 metaData = objectMapper.writeValueAsString(controlTagDeletionMetadata);
                 break;
 
