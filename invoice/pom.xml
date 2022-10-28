@@ -67,8 +67,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.airlift</groupId>
-            <artifactId>testing-postgresql-server</artifactId>
+            <groupId>io.zonky.test</groupId>
+            <artifactId>embedded-postgres</artifactId>
             <!-- Technically, test-runtime -->
             <scope>test</scope>
         </dependency>
@@ -165,6 +165,12 @@
             <groupId>org.kill-bill.billing</groupId>
             <artifactId>killbill-util</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- Needed, otherwise get: java.lang.TypeNotPresentException: Type org.killbill.billing.catalog.plugin.api.CatalogPluginApi not present -->
+            <groupId>org.kill-bill.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-catalog</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -114,6 +114,12 @@
             <artifactId>killbill-util</artifactId>
         </dependency>
         <dependency>
+            <!-- Needed, otherwise get: java.lang.TypeNotPresentException: Type org.killbill.billing.catalog.plugin.api.CatalogPluginApi not present -->
+            <groupId>org.kill-bill.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-catalog</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-config-magic</artifactId>
         </dependency>
