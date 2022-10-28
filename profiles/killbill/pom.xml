@@ -99,14 +99,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.airlift</groupId>
-            <artifactId>testing-postgresql-server</artifactId>
-            <!-- Technically, test-runtime -->
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-jaxrs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.zonky.test</groupId>
+            <artifactId>embedded-postgres</artifactId>
+            <!-- Technically, test-runtime -->
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>it.ozimov</groupId>
@@ -256,6 +256,9 @@
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-server</artifactId>
+            <!-- We have jersey-server in oss-parent, but maven complaining:
+            error 'dependencies.dependency.version' for org.glassfish.jersey.core:jersey-server:jar is missing. -->
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.inject</groupId>
@@ -393,6 +396,12 @@
             <artifactId>killbill-util</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- Needed, otherwise get: java.lang.TypeNotPresentException: Type org.killbill.billing.catalog.plugin.api.CatalogPluginApi not present -->
+            <groupId>org.kill-bill.billing.plugin</groupId>
+            <artifactId>killbill-plugin-api-catalog</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.kill-bill.billing.plugin</groupId>
