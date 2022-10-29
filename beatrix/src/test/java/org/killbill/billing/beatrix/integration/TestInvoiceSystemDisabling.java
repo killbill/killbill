@@ -65,14 +65,14 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
                                                                                              NextEvent.TAG);
 
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
-        Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        Collection<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 0);
 
         // Move to end of trial =>  2012, 5, 1
         addDaysAndCheckForCompletion(30, NextEvent.PHASE);
 
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 0);
 
         // Dry-run generation
@@ -84,7 +84,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
 
         // Still parked
         Assert.assertTrue(parkedAccountsManager.isParked(internalCallContext));
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 0);
 
         // Non dry-run generation
@@ -95,7 +95,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         // Now unparked
         Assert.assertFalse(parkedAccountsManager.isParked(internalCallContext));
         invoiceChecker.checkInvoice(invoice, callContext, expected);
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
         invoiceChecker.checkInvoice(account.getId(), 1, callContext, expected);
 
@@ -103,7 +103,7 @@ public class TestInvoiceSystemDisabling extends TestIntegrationBase {
         invoiceConfig.setInvoicingSystemEnabled(true);
         addDaysAndCheckForCompletion(31, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
         invoiceChecker.checkInvoice(account.getId(),
                                     2,

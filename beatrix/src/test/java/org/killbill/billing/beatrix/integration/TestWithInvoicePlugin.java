@@ -230,7 +230,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
         final InvoiceItem externalCharge = invoiceItems.stream()
@@ -270,7 +270,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("29.95")));
 
-        final List<Invoice> invoices2 = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices2 = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         final List<InvoiceItem> invoiceItems2 = invoices2.get(0).getInvoiceItems();
         final InvoiceItem externalCharge2 = invoiceItems2.stream()
                 .filter(input -> input.getInvoiceItemType() == InvoiceItemType.EXTERNAL_CHARGE)
@@ -314,7 +314,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
         final InvoiceItem recurringItem = invoices.get(1).getInvoiceItems().stream()
                 .filter(input -> input.getInvoiceItemType() == InvoiceItemType.RECURRING)
@@ -354,7 +354,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 3);
 
-        final List<Invoice> refreshedInvoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> refreshedInvoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         final List<InvoiceItem> invoiceItems = refreshedInvoices.get(1).getInvoiceItems();
         final InvoiceItem invoiceItemAdjustment = invoiceItems.stream()
                 .filter(input -> input.getInvoiceItemType() == InvoiceItemType.ITEM_ADJ)
@@ -394,21 +394,21 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
 
         // No notification, so by default, the account will not be re-invoiced
         clock.addMonths(1);
         assertListenerStatus();
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
 
         // No notification, so by default, the account will not be re-invoiced
         clock.addMonths(1);
         assertListenerStatus();
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
 
@@ -552,7 +552,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
         Assert.assertFalse(testInvoicePluginApi.wasRescheduled);
@@ -674,7 +674,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         final DefaultEntitlement bpSubscription = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", "Pistol", ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK);
         subscriptionChecker.checkSubscriptionCreated(bpSubscription.getId(), internalCallContext);
         // Invoice failed to generate
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 0);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 0);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 1);
 
@@ -699,7 +699,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 3);
 
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
         invoiceChecker.checkInvoice(account.getId(),
                                     1,
                                     callContext,
@@ -713,7 +713,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 4);
 
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 2);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 2);
         invoiceChecker.checkInvoice(account.getId(),
                                     2,
                                     callContext,
@@ -729,7 +729,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 5);
 
         // Invoice failed to generate
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 2);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 2);
 
         // Verify notification has moved to the retry service
         checkRetryNotifications("2012-06-01T00:05:00", 1);
@@ -752,7 +752,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 7);
 
         // Invoice was generated
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 3);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 3);
         invoiceChecker.checkInvoice(account.getId(),
                                     3,
                                     callContext,
@@ -768,7 +768,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 8);
 
         // Invoice failed to generate
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 3);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 3);
 
         // Verify notification has moved to the retry service
         checkRetryNotifications("2012-07-01T00:05:00", 1);
@@ -782,7 +782,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 9);
 
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 4);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 4);
     }
 
 
@@ -815,21 +815,21 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30);
         assertListenerStatus();
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
 
         // No notification, so by default, the account will not be re-invoiced
         clock.addMonths(1);
         assertListenerStatus();
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
 
         // No notification, so by default, the account will not be re-invoiced
         clock.addMonths(1);
         assertListenerStatus();
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         Assert.assertEquals(testInvoicePluginApi.priorCallInvocationCalls, 2);
 
@@ -938,7 +938,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // On success was called for each split invoice.
         Assert.assertEquals(testInvoicePluginApi.onSuccessInvocationCalls, 8);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 6);
 
         // Verify we have indeed 3 split invoices for the targetDate 20122-05-1 and each having one RECURRING + its mathcing TAX item

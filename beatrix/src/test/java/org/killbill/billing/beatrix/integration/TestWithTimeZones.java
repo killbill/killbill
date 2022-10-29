@@ -152,7 +152,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01")
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -197,7 +197,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01"
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         Assert.assertEquals(invoices.size(), 1);
     }
 

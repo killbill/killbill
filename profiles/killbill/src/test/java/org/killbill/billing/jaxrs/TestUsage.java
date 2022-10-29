@@ -141,7 +141,7 @@ public class TestUsage extends TestJaxrsBase {
         clock.addMonths(1);
         callbackServlet.assertListenerStatus();
 
-        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.MINIMAL, requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.MINIMAL, requestOptions);
         Assert.assertEquals(invoices.size(), 2);
         // Verify system assigned one tracking ID and this is correctly returned
         Assert.assertEquals(invoices.get(1).getTrackingIds().size(), 1);
