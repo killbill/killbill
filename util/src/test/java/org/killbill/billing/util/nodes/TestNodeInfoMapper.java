@@ -32,8 +32,6 @@ import org.killbill.billing.util.nodes.json.PluginServiceInfoModelJson;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestNodeInfoMapper extends UtilTestSuiteNoDB {
 
     @Inject
@@ -61,9 +59,8 @@ public class TestNodeInfoMapper extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testNodeSystemCommandSerialization() throws Exception {
-
         final NodeCommandProperty prop = new NodeCommandProperty("something", "nothing");
-        final PluginNodeCommandMetadata nodeCommandMetadata = new PluginNodeCommandMetadata("foo", "key1", "1.2.3", ImmutableList.<NodeCommandProperty>of(prop));
+        final PluginNodeCommandMetadata nodeCommandMetadata = new PluginNodeCommandMetadata("foo", "key1", "1.2.3", List.of(prop));
 
         final String nodeCmdStr = nodeInfoMapper.serializeNodeCommand(nodeCommandMetadata);
 
@@ -81,7 +78,7 @@ public class TestNodeInfoMapper extends UtilTestSuiteNoDB {
     public void testNodeCommandSerialization() throws Exception {
 
         final NodeCommandProperty prop = new NodeCommandProperty("something", "nothing");
-        final NodeCommandMetadata nodeCommandMetadata = new DefaultNodeCommandMetadata(ImmutableList.<NodeCommandProperty>of(prop));
+        final NodeCommandMetadata nodeCommandMetadata = new DefaultNodeCommandMetadata(List.of(prop));
 
         final String nodeCmdStr = nodeInfoMapper.serializeNodeCommand(nodeCommandMetadata);
 

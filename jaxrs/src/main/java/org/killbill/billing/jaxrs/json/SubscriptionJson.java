@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -58,7 +59,7 @@ public class SubscriptionJson extends JsonBase {
     private final UUID subscriptionId;
     private final String externalKey;
     private final String bundleExternalKey;
-    private final LocalDate startDate;
+    private final DateTime startDate;
     @ApiModelProperty(required = true)
     private final String productName;
     private final ProductCategory productCategory;
@@ -71,10 +72,10 @@ public class SubscriptionJson extends JsonBase {
     private final String planName;
     private final EntitlementState state;
     private final EntitlementSourceType sourceType;
-    private final LocalDate cancelledDate;
+    private final DateTime cancelledDate;
     private final LocalDate chargedThroughDate;
-    private final LocalDate billingStartDate;
-    private final LocalDate billingEndDate;
+    private final DateTime billingStartDate;
+    private final DateTime billingEndDate;
     private final Integer billCycleDayLocal;
     private final List<EventSubscriptionJson> events;
     private final List<PhasePriceJson> prices;
@@ -85,7 +86,7 @@ public class SubscriptionJson extends JsonBase {
 
         private final UUID eventId;
         private final BillingPeriod billingPeriod;
-        private final LocalDate effectiveDate;
+        private final DateTime effectiveDate;
         private final String plan;
         private final String product;
         private final String priceList;
@@ -99,7 +100,7 @@ public class SubscriptionJson extends JsonBase {
         @JsonCreator
         public EventSubscriptionJson(@JsonProperty("eventId") final UUID eventId,
                                      @JsonProperty("billingPeriod") final BillingPeriod billingPeriod,
-                                     @JsonProperty("effectiveDate") final LocalDate effectiveDate,
+                                     @JsonProperty("effectiveDate") final DateTime effectiveDate,
                                      @JsonProperty("plan") final String plan,
                                      @JsonProperty("product") final String product,
                                      @JsonProperty("priceList") final String priceList,
@@ -169,7 +170,7 @@ public class SubscriptionJson extends JsonBase {
             return billingPeriod;
         }
 
-        public LocalDate getEffectiveDate() {
+        public DateTime getEffectiveDate() {
             return effectiveDate;
         }
 
@@ -303,7 +304,7 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("bundleExternalKey") @Nullable final String bundleExternalKey,
                             @JsonProperty("subscriptionId") @Nullable final UUID subscriptionId,
                             @JsonProperty("externalKey") @Nullable final String externalKey,
-                            @JsonProperty("startDate") @Nullable final LocalDate startDate,
+                            @JsonProperty("startDate") @Nullable final DateTime startDate,
                             @JsonProperty("productName") @Nullable final String productName,
                             @JsonProperty("productCategory") @Nullable final ProductCategory productCategory,
                             @JsonProperty("billingPeriod") @Nullable final BillingPeriod billingPeriod,
@@ -312,10 +313,10 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("planName") @Nullable final String planName,
                             @JsonProperty("state") @Nullable final EntitlementState state,
                             @JsonProperty("sourceType") @Nullable final EntitlementSourceType sourceType,
-                            @JsonProperty("cancelledDate") @Nullable final LocalDate cancelledDate,
+                            @JsonProperty("cancelledDate") @Nullable final DateTime cancelledDate,
                             @JsonProperty("chargedThroughDate") @Nullable final LocalDate chargedThroughDate,
-                            @JsonProperty("billingStartDate") @Nullable final LocalDate billingStartDate,
-                            @JsonProperty("billingEndDate") @Nullable final LocalDate billingEndDate,
+                            @JsonProperty("billingStartDate") @Nullable final DateTime billingStartDate,
+                            @JsonProperty("billingEndDate") @Nullable final DateTime billingEndDate,
                             @JsonProperty("billCycleDayLocal") @Nullable final Integer billCycleDayLocal,
                             @JsonProperty("events") @Nullable final List<EventSubscriptionJson> events,
                             @JsonProperty("priceOverrides") final List<PhasePriceJson> priceOverrides,
@@ -348,7 +349,7 @@ public class SubscriptionJson extends JsonBase {
 
     public SubscriptionJson(final Subscription subscription, @Nullable final Currency currency, @Nullable final AccountAuditLogs accountAuditLogs) throws CatalogApiException {
         super(toAuditLogJson(accountAuditLogs == null ? null : accountAuditLogs.getAuditLogsForSubscription(subscription.getId())));
-        this.startDate = subscription.getEffectiveStartDate();
+        this.startDate = subscription.getEffectiveStartDate() ; 
 
         // last* fields can be null if the subscription starts in the future - rely on the first available event instead
         final List<SubscriptionEvent> subscriptionEvents = subscription.getSubscriptionEvents();
@@ -450,7 +451,7 @@ public class SubscriptionJson extends JsonBase {
         return externalKey;
     }
 
-    public LocalDate getStartDate() {
+    public DateTime getStartDate() {
         return startDate;
     }
 
@@ -486,7 +487,7 @@ public class SubscriptionJson extends JsonBase {
         return sourceType;
     }
 
-    public LocalDate getCancelledDate() {
+    public DateTime getCancelledDate() {
         return cancelledDate;
     }
 
@@ -494,11 +495,11 @@ public class SubscriptionJson extends JsonBase {
         return chargedThroughDate;
     }
 
-    public LocalDate getBillingStartDate() {
+    public DateTime getBillingStartDate() {
         return billingStartDate;
     }
 
-    public LocalDate getBillingEndDate() {
+    public DateTime getBillingEndDate() {
         return billingEndDate;
     }
 

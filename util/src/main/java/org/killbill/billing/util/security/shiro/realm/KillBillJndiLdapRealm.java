@@ -17,11 +17,16 @@
 package org.killbill.billing.util.security.shiro.realm;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
@@ -39,23 +44,12 @@ import org.apache.shiro.realm.ldap.JndiLdapRealm;
 import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.ldap.LdapUtils;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.killbill.commons.utils.Strings;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.killbill.commons.utils.collect.Iterators;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 public class KillBillJndiLdapRealm extends JndiLdapRealm {
 
@@ -69,12 +63,10 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
         SUBTREE_SCOPE.setSearchScope(SearchControls.SUBTREE_SCOPE);
     }
 
-    private static final Splitter SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
-
     private final String searchBase;
     private final String groupSearchFilter;
     private final String groupNameId;
-    private final Map<String, Collection<String>> permissionsByGroup = Maps.newLinkedHashMap();
+    private final Map<String, Collection<String>> permissionsByGroup = new LinkedHashMap<>();
     private final String dnSearchFilter;
 
     @Inject
@@ -117,7 +109,7 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
             for (final Section section : ini.getSections()) {
                 for (final String rawRole : section.keySet()) {
                     // Un-escape manually = (required if the role name is a DN)
-                    final Collection<String> permissions = ImmutableList.<String>copyOf(SPLITTER.split(section.get(rawRole)));
+                    final Collection<String> permissions = Strings.split(section.get(rawRole), ",");
                     final String role = rawRole.replace("\\=", "=");
                     permissionsByGroup.put(role, permissions);
                 }
@@ -174,7 +166,7 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
             return findLDAPGroupsForUser(username, systemLdapCtx);
         } catch (final AuthenticationException ex) {
             log.info("LDAP authentication exception='{}'", ex.getLocalizedMessage());
-            return ImmutableSet.<String>of();
+            return Collections.emptySet();
         } finally {
             LdapUtils.closeContext(systemLdapCtx);
         }
@@ -186,54 +178,43 @@ public class KillBillJndiLdapRealm extends JndiLdapRealm {
                                                                            SUBTREE_SCOPE);
 
         if (!foundGroups.hasMoreElements()) {
-            return ImmutableSet.<String>of();
+            return Collections.emptySet();
         }
 
         // There should really only be one entry
         final SearchResult result = foundGroups.next();
 
         // Extract the name of all the groups
-        final Collection<String> finalGroupsNames = Collections2.<String>filter(extractGroupNamesFromSearchResult(result), Predicates.notNull());
+        final Collection<String> finalGroupsNames = extractGroupNamesFromSearchResult(result);
 
-        return Sets.newHashSet(finalGroupsNames);
+        return new HashSet<>(finalGroupsNames);
     }
 
     private Collection<String> extractGroupNamesFromSearchResult(final SearchResult searchResult) {
         // Get all attributes for that group
-        final Iterator<? extends Attribute> attributesIterator = Iterators.forEnumeration(searchResult.getAttributes().getAll());
+        final Iterator<? extends Attribute> attributesIterator = searchResult.getAttributes().getAll().asIterator();
 
-        // Find the attribute representing the group name
-        final Iterator<? extends Attribute> groupNameAttributesIterator = Iterators.filter(attributesIterator,
-                                                                                           new Predicate<Attribute>() {
-                                                                                               @Override
-                                                                                               public boolean apply(final Attribute attribute) {
-                                                                                                   return groupNameId.equalsIgnoreCase(attribute.getID());
-                                                                                               }
-                                                                                           });
-
-        // Extract the group name from the attribute
-        // Note: at this point, groupNameAttributesIterator should really contain a single element
-        final Iterator<Iterator<?>> groupNamesIterator = Iterators.transform(groupNameAttributesIterator,
-                                                                        new Function<Attribute, Iterator<?>>() {
-                                                                            @Override
-                                                                            public Iterator<?> apply(final Attribute groupNameAttribute) {
-                                                                                try {
-                                                                                    final NamingEnumeration<?> enumeration = groupNameAttribute.getAll();
-                                                                                    return Iterators.forEnumeration(enumeration);
-                                                                                } catch (final NamingException namingException) {
-                                                                                    log.warn("Unable to read group name(s)", namingException);
-                                                                                    return null;
-                                                                                }
-                                                                            }
-                                                                        });
-
-        final Iterator<?> finalGroupNamesIterator = Iterators.filter(Iterators.concat(groupNamesIterator), Predicates.notNull());
-
-        return ImmutableList.<String>copyOf(Iterators.transform(finalGroupNamesIterator, Functions.toStringFunction()));
+        return Iterators.toStream(attributesIterator)
+                        // Find the attribute representing the group name
+                        .filter(attribute -> groupNameId.equalsIgnoreCase(attribute.getID()))
+                        // Extract the group name from the attribute
+                        // Note: at this point, groupNameAttributesIterator should really contain a single element
+                        .map(groupNameAttribute -> {
+                            try {
+                                final NamingEnumeration<?> enumeration = groupNameAttribute.getAll();
+                                return enumeration.asIterator();
+                            } catch (final NamingException namingException) {
+                                log.warn("Unable to read group name(s)", namingException);
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .map(Object::toString)
+                        .collect(Collectors.toUnmodifiableSet());
     }
 
     private Set<String> groupsPermissions(final Set<String> groups) {
-        final Set<String> permissions = new HashSet<String>();
+        final Set<String> permissions = new HashSet<>();
         for (final String group : groups) {
             final Collection<String> permissionsForGroup = permissionsByGroup.get(group);
             if (permissionsForGroup != null) {

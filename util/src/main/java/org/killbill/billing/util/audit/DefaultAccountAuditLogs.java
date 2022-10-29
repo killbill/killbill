@@ -16,6 +16,7 @@
 
 package org.killbill.billing.util.audit;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -23,13 +24,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
+import org.killbill.commons.utils.collect.AbstractIterator;
+import org.killbill.commons.utils.collect.Iterators;
 import org.killbill.billing.util.dao.TableName;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.AbstractIterator;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
@@ -40,14 +39,14 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
     private final Map<ObjectType, DefaultAccountAuditLogsForObjectType> auditLogsCache = new HashMap<ObjectType, DefaultAccountAuditLogsForObjectType>();
 
     public DefaultAccountAuditLogs(final UUID accountId) {
-        this(accountId, AuditLevel.NONE, ImmutableSet.<AuditLog>of().iterator());
+        this(accountId, AuditLevel.NONE, Collections.emptyIterator());
     }
 
     public DefaultAccountAuditLogs(final UUID accountId, final AuditLevel auditLevel, final Iterator<AuditLog> accountAuditLogsOrderedByTableName) {
         this.accountId = accountId;
         this.auditLevel = auditLevel;
         // TODO pierre - lame, we should be smarter to avoid loading all entries in memory. It's a bit tricky though...
-        this.accountAuditLogs = ImmutableList.<AuditLog>copyOf(accountAuditLogsOrderedByTableName);
+        this.accountAuditLogs = Iterators.toUnmodifiableList(accountAuditLogsOrderedByTableName);
     }
 
     public void close() {
@@ -147,7 +146,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         DONE
     }
 
-    private final class ObjectTypeFilter extends AbstractIterator<AuditLog> {
+    private static final class ObjectTypeFilter extends AbstractIterator<AuditLog> {
 
         // For the transition between 0_20 to 0_22 we may end up with audit logs entries that are either
         // using history table (new 0_22 behavior) or not. To keep our optimization and avoiding going through all entries
@@ -171,10 +170,11 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         protected AuditLog computeNext() {
             while (accountAuditLogs.hasNext()) {
                 final AuditLog element = accountAuditLogs.next();
-                if (predicate.apply(element)) {
+                if (objectType.equals(element.getAuditedObjectType())) {
 
                     if (iteratorState == IteratorState.EXPECT_MORE) {
                         final TableName tableName = TableName.fromObjectType(element.getAuditedObjectType());
+                        Preconditions.checkNotNull(tableName, "tableName in ObjectTypeFilter#computeNext() is null");
                         iteratorState = tableName.hasHistoryTable() ? IteratorState.FIRST_OBJECT_TYPE_SEEN : IteratorState.FIRST_OBJECT_HISTORY_TYPE_SEEN;
                     }
 
@@ -200,12 +200,5 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
             return endOfData();
         }
-
-        private final Predicate<AuditLog> predicate = new Predicate<AuditLog>() {
-            @Override
-            public boolean apply(final AuditLog auditLog) {
-                return objectType.equals(auditLog.getAuditedObjectType());
-            }
-        };
     }
 }

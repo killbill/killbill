@@ -17,20 +17,22 @@
 
 package org.killbill.billing.invoice.provider;
 
+import java.util.Collections;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
+import org.killbill.billing.invoice.plugin.api.AdditionalItemsResult;
 import org.killbill.billing.invoice.plugin.api.InvoiceContext;
+import org.killbill.billing.invoice.plugin.api.InvoiceGroupingResult;
 import org.killbill.billing.invoice.plugin.api.NoOpInvoicePluginApi;
 import org.killbill.billing.invoice.plugin.api.OnFailureInvoiceResult;
 import org.killbill.billing.invoice.plugin.api.OnSuccessInvoiceResult;
 import org.killbill.billing.invoice.plugin.api.PriorInvoiceResult;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 public class DefaultNoOpInvoiceProviderPlugin implements NoOpInvoicePluginApi {
 
@@ -44,8 +46,13 @@ public class DefaultNoOpInvoiceProviderPlugin implements NoOpInvoicePluginApi {
     }
 
     @Override
-    public List<InvoiceItem> getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> properties, final CallContext context) {
-        return ImmutableList.<InvoiceItem>of();
+    public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> properties, final CallContext context) {
+        return null;
+    }
+
+    @Override
+    public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> properties, final CallContext context) {
+        return null;
     }
 
     @Override

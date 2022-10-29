@@ -18,6 +18,8 @@
 
 package org.killbill.billing.catalog.glue;
 
+import java.util.Objects;
+
 import org.killbill.billing.catalog.DefaultCatalogService;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
 import org.killbill.billing.catalog.api.CatalogService;
@@ -45,8 +47,6 @@ import org.killbill.billing.util.config.definition.CatalogConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
@@ -59,7 +59,7 @@ public class CatalogModule extends KillBillModule {
     public CatalogModule(final KillbillConfigSource configSource) {
         super(configSource);
         // Unless explicitly specified we keep current "-" delimiter for backward compatibility
-        final boolean useRECXMLNamesCompliant = Boolean.valueOf(MoreObjects.<String>firstNonNull(configSource.getString("org.killbill.catalog.price.override.delimiter.REC-xml-names-19990114.compliant"), "false"));
+        final boolean useRECXMLNamesCompliant = Boolean.valueOf(Objects.requireNonNullElse(configSource.getString("org.killbill.catalog.price.override.delimiter.REC-xml-names-19990114.compliant"), "false"));
         this.priceOverridePattern = new PriceOverridePattern(useRECXMLNamesCompliant);
     }
 

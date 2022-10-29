@@ -1,7 +1,8 @@
 /*
- * Copyright 2010-2013 Ning, Inc.
- * Copyright 2014-2015 Groupon, Inc
- * Copyright 2014-2015 The Billing Project, LLC
+ * Copyright 2010-2014 Ning, Inc.
+ * Copyright 2014-2020 Groupon, Inc
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -19,30 +20,36 @@
 package org.killbill.billing.server.notifications;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 
-import org.asynchttpclient.DefaultAsyncHttpClient;
-import org.asynchttpclient.DefaultAsyncHttpClientConfig.Builder;
 import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.jaxrs.json.NotificationJson;
 import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
-import org.killbill.billing.server.DefaultServerService;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.tenant.api.TenantUserApi;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContextFactory;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.config.definition.NotificationConfig;
 import org.killbill.clock.Clock;
+import org.killbill.commons.eventbus.AllowConcurrentEvents;
+import org.killbill.commons.eventbus.Subscribe;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
@@ -50,23 +57,14 @@ import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.asynchttpclient.AsyncCompletionHandler;
-import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.BoundRequestBuilder;
-import org.asynchttpclient.AsyncHttpClientConfig;
-import org.asynchttpclient.ListenableFuture;
-import org.asynchttpclient.Response;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.eventbus.AllowConcurrentEvents;
-import com.google.common.eventbus.Subscribe;
 
 public class PushNotificationListener {
 
     private static final Logger log = LoggerFactory.getLogger(PushNotificationListener.class);
+
+    private static final String USER_AGENT = "KillBill/1.0";
 
     @VisibleForTesting
     public static final String HTTP_HEADER_CONTENT_TYPE = "Content-Type";
@@ -77,7 +75,7 @@ public class PushNotificationListener {
 
     private final TenantUserApi tenantApi;
     private final CallContextFactory contextFactory;
-    private final AsyncHttpClient httpClient;
+    private final HttpClient httpClient;
     private final ObjectMapper mapper;
     private final NotificationQueueService notificationQueueService;
     private final InternalCallContextFactory internalCallContextFactory;
@@ -88,9 +86,8 @@ public class PushNotificationListener {
     public PushNotificationListener(final ObjectMapper mapper, final TenantUserApi tenantApi, final CallContextFactory contextFactory,
                                     final NotificationQueueService notificationQueueService, final InternalCallContextFactory internalCallContextFactory,
                                     final Clock clock, final NotificationConfig notificationConfig) {
-        this.httpClient = new DefaultAsyncHttpClient(new Builder()
-                                                             .setConnectTimeout(TIMEOUT_NOTIFICATION * 1000)
-                                                             .setRequestTimeout(TIMEOUT_NOTIFICATION * 1000).build());
+        this.httpClient = HttpClient.newBuilder()
+                                    .connectTimeout(Duration.of(TIMEOUT_NOTIFICATION, ChronoUnit.SECONDS)).build();
         this.tenantApi = tenantApi;
         this.contextFactory = contextFactory;
         this.mapper = mapper;
@@ -119,7 +116,6 @@ public class PushNotificationListener {
     }
 
     public void shutdown() throws IOException {
-        httpClient.close();
     }
 
     private void dispatchCallback(final UUID tenantId, final ExtBusEvent event, final Iterable<String> callbacks) throws IOException {
@@ -133,30 +129,27 @@ public class PushNotificationListener {
     private boolean doPost(final UUID tenantId, final String url, final String body, final NotificationJson notification,
                            final int timeoutSec, final int attemptRetryNumber) {
         log.info("Sending push notification url='{}', body='{}', attemptRetryNumber='{}'", url, body, attemptRetryNumber);
-        final BoundRequestBuilder builder = httpClient.preparePost(url);
-        builder.setBody(body == null ? "{}" : body);
-        builder.addHeader(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON);
+        final HttpRequest request = HttpRequest.newBuilder()
+                                               .uri(URI.create(url))
+                                               .header("User-Agent", USER_AGENT)
+                                               .header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+                                               .timeout(Duration.of(TIMEOUT_NOTIFICATION, ChronoUnit.SECONDS))
+                                               .POST(HttpRequest.BodyPublishers.ofString(body == null ? "{}" : body))
+                                               .build();
 
-        final Response response;
+        final HttpResponse<InputStream> response;
         try {
-            final ListenableFuture<Response> futureStatus =
-                    builder.execute(new AsyncCompletionHandler<Response>() {
-                        @Override
-                        public Response onCompleted(final Response response) throws Exception {
-                            return response;
-                        }
-                    });
-            response = futureStatus.get(timeoutSec, TimeUnit.SECONDS);
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (final Exception e) {
             log.warn("Failed to push notification url='{}', tenantId='{}'", url, tenantId, e);
             saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber, e.getMessage());
             return false;
         }
 
-        if (response.getStatusCode() >= 200 && response.getStatusCode() < 300) {
+        if (response.statusCode() >= 200 && response.statusCode() < 300) {
             return true;
         } else {
-            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber, "statusCode=" + response.getStatusCode());
+            saveRetryPushNotificationInQueue(tenantId, url, notification, attemptRetryNumber, "statusCode=" + response.statusCode());
             return false;
         }
     }
@@ -195,7 +188,7 @@ public class PushNotificationListener {
         final Long tenantRecordId = internalCallContextFactory.getRecordIdFromObject(key.getTenantId(), ObjectType.TENANT, tenantContext);
         try {
             final NotificationQueue notificationQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.SERVER_SERVICE.getServiceName(), PushNotificationRetryService.QUEUE_NAME);
-            notificationQueue.recordFutureNotification(nextNotificationTime, key, null, MoreObjects.firstNonNull(accountRecordId, new Long(0)), tenantRecordId);
+            notificationQueue.recordFutureNotification(nextNotificationTime, key, null, Objects.requireNonNullElse(accountRecordId, new Long(0)), tenantRecordId);
         } catch (final NoSuchNotificationQueue noSuchNotificationQueue) {
             log.error("Failed to push notification url='{}', tenantId='{}'", key.getUrl(), key.getTenantId(), noSuchNotificationQueue);
         } catch (final IOException e) {

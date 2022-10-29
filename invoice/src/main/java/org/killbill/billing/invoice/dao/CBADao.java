@@ -20,11 +20,13 @@ package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -35,14 +37,9 @@ import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.tag.Tag;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 
 public class CBADao {
 
@@ -88,26 +85,28 @@ public class CBADao {
         }
     }
 
-    private BigDecimal getInvoiceBalance(final InvoiceModelDao invoice) {
+    @VisibleForTesting
+    boolean isParentExistAndRawBalanceIsZero(final InvoiceModelDao invoice) {
+        return invoice.getParentInvoice() != null &&
+               InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice.getParentInvoice()).compareTo(BigDecimal.ZERO) == 0;
+    }
 
-        final InvoiceModelDao parentInvoice = invoice.getParentInvoice();
-        if ((parentInvoice != null) && (InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(parentInvoice).compareTo(BigDecimal.ZERO) == 0)) {
-            final Iterable<InvoiceItemModelDao> items = Iterables.filter(parentInvoice.getInvoiceItems(), new Predicate<InvoiceItemModelDao>() {
-                @Override
-                public boolean apply(final InvoiceItemModelDao input) {
-                    return input.getChildAccountId().equals(invoice.getAccountId());
-                }
-            });
+    @VisibleForTesting
+    BigDecimal getChildInvoiceAmountCharged(final InvoiceModelDao invoice) {
+        return InvoiceModelDaoHelper.getAmountCharged(invoice);
+    }
 
-            final BigDecimal childInvoiceAmountCharged = InvoiceModelDaoHelper.getAmountCharged(invoice);
-            BigDecimal parentInvoiceAmountChargedForChild = BigDecimal.ZERO;
+    @VisibleForTesting
+    BigDecimal getInvoiceBalance(final InvoiceModelDao invoice) {
+        if (isParentExistAndRawBalanceIsZero(invoice)) {
+            final BigDecimal parentInvoiceAmountChargedForChild = invoice.getParentInvoice().getInvoiceItems().stream()
+                    .filter(input -> input.getChildAccountId().equals(invoice.getAccountId()))
+                    .map(InvoiceItemModelDao::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            for (InvoiceItemModelDao itemModel : items) {
-                parentInvoiceAmountChargedForChild = parentInvoiceAmountChargedForChild.add(itemModel.getAmount());
-            }
+            final BigDecimal childInvoiceAmountCharged = getChildInvoiceAmountCharged(invoice);
 
             return childInvoiceAmountCharged.add(parentInvoiceAmountChargedForChild.negate());
-
         }
 
         return InvoiceModelDaoHelper.getRawBalanceForRegularInvoice(invoice);
@@ -133,7 +132,7 @@ public class CBADao {
     public Set<UUID> doCBAComplexityFromTransaction(final List<Tag> invoicesTags,
                                                                     final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                                     final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
-        return doCBAComplexityFromTransaction(ImmutableSet.of(), invoicesTags, entitySqlDaoWrapperFactory, context);
+        return doCBAComplexityFromTransaction(Collections.emptySet(), invoicesTags, entitySqlDaoWrapperFactory, context);
     }
 
     // Note! We expect an *up-to-date* invoice, with all the items and payments except the CBA, that we will compute in that method
@@ -175,22 +174,19 @@ public class CBADao {
                                                                     final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
                                                                     final InternalCallContext context) throws InvoiceApiException, EntityPersistenceException {
         if (accountCBA.compareTo(BigDecimal.ZERO) <= 0) {
-            return ImmutableList.of();
+            return Collections.emptyList();
         }
 
         final List<InvoiceItemModelDao> result = new ArrayList<>();
 
         // PERF: Computing the invoice balance is difficult to do in the DB, so we effectively need to retrieve all invoices on the account and filter the unpaid ones in memory.
         // This should be infrequent though because of the account CBA check above.
-        final List<InvoiceModelDao> allInvoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, invoicesTags, entitySqlDaoWrapperFactory, context);
+        final List<InvoiceModelDao> allInvoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, invoicesTags, entitySqlDaoWrapperFactory, context);
         final List<InvoiceModelDao> unpaidInvoices = invoiceDaoHelper.getUnpaidInvoicesByAccountFromTransaction(allInvoices, null, null);
         // We order the same os BillingStateCalculator-- should really share the comparator
-        final List<InvoiceModelDao> orderedUnpaidInvoices = Ordering.from(new Comparator<InvoiceModelDao>() {
-            @Override
-            public int compare(final InvoiceModelDao i1, final InvoiceModelDao i2) {
-                return i1.getInvoiceDate().compareTo(i2.getInvoiceDate());
-            }
-        }).immutableSortedCopy(unpaidInvoices);
+        final List<InvoiceModelDao> orderedUnpaidInvoices = unpaidInvoices.stream()
+                .sorted(Comparator.comparing(InvoiceModelDao::getInvoiceDate))
+                .collect(Collectors.toUnmodifiableList());
 
         BigDecimal remainingAccountCBA = accountCBA;
         for (final InvoiceModelDao unpaidInvoice : orderedUnpaidInvoices) {

@@ -16,33 +16,31 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value="RolledUpUsage")
+@ApiModel(value = "RolledUpUsage")
 public class RolledUpUsageJson {
 
     private final UUID subscriptionId;
-    private final LocalDate startDate;
-    private final LocalDate endDate;
+    private final DateTime startDate;
+    private final DateTime endDate;
     private final List<RolledUpUnitJson> rolledUpUnits;
 
     @JsonCreator
     public RolledUpUsageJson(@JsonProperty("subscriptionId") final UUID subscriptionId,
-                             @JsonProperty("startDate") final LocalDate startDate,
-                             @JsonProperty("endDate") final LocalDate endDate,
+                             @JsonProperty("startDate") final DateTime startDate,
+                             @JsonProperty("endDate") final DateTime endDate,
                              @JsonProperty("rolledUpUnits") final List<RolledUpUnitJson> rolledUpUnits) {
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
@@ -51,23 +49,18 @@ public class RolledUpUsageJson {
     }
 
     public RolledUpUsageJson(final RolledUpUsage input) {
-        this(input.getSubscriptionId(), input.getStart(), input.getEnd(), ImmutableList.copyOf(Iterables.transform(input.getRolledUpUnits(), new Function<RolledUpUnit, RolledUpUnitJson>() {
-            @Override
-            public RolledUpUnitJson apply(final RolledUpUnit input) {
-                return new RolledUpUnitJson(input);
-            }
-        })));
+        this(input.getSubscriptionId(), input.getStart(), input.getEnd(), input.getRolledUpUnits().stream().map(RolledUpUnitJson::new).collect(Collectors.toUnmodifiableList()));
     }
 
     public UUID getSubscriptionId() {
         return subscriptionId;
     }
 
-    public LocalDate getStartDate() {
+    public DateTime getStartDate() {
         return startDate;
     }
 
-    public LocalDate getEndDate() {
+    public DateTime getEndDate() {
         return endDate;
     }
 
@@ -75,15 +68,15 @@ public class RolledUpUsageJson {
         return rolledUpUnits;
     }
 
-    @ApiModel(value="RolledUpUnit")
+    @ApiModel(value = "RolledUpUnit")
     public static class RolledUpUnitJson {
 
         private final String unitType;
-        private final Long amount;
+        private final BigDecimal amount;
 
         @JsonCreator
         public RolledUpUnitJson(@JsonProperty("unitType") final String unitType,
-                                @JsonProperty("amount") final Long amount) {
+                                @JsonProperty("amount") final BigDecimal amount) {
             this.unitType = unitType;
             this.amount = amount;
         }
@@ -96,7 +89,7 @@ public class RolledUpUsageJson {
             return unitType;
         }
 
-        public Long getAmount() {
+        public BigDecimal getAmount() {
             return amount;
         }
     }

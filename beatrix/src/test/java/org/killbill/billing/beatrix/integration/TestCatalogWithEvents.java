@@ -18,40 +18,33 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
 import org.killbill.billing.beatrix.util.InvoiceChecker.ExpectedInvoiceItemCheck;
-import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
-import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.catalog.api.VersionedCatalog;
-import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-
-import static org.testng.Assert.assertNotNull;
 
 public class TestCatalogWithEvents extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        final Map<String, String> allExtraProperties = new HashMap<>(extraProperties);
         allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogWithEvents");
         return super.getConfigSource(null, allExtraProperties);
     }
@@ -69,11 +62,11 @@ public class TestCatalogWithEvents extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("water-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID subscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), clock.getUTCToday(), clock.getUTCToday(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID subscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), clock.getUTCToday(), clock.getUTCToday(), false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        recordUsageData(subscriptionId, "t1", "liter", new LocalDate(2020, 1, 1), 10L, callContext);
-        recordUsageData(subscriptionId, "t2", "liter", new LocalDate(2020, 1, 23), 10L, callContext);
+        recordUsageData(subscriptionId, "t1", "liter", new LocalDate(2020, 1, 1), BigDecimal.valueOf(10L), callContext);
+        recordUsageData(subscriptionId, "t2", "liter", new LocalDate(2020, 1, 23), BigDecimal.valueOf(10L), callContext);
 
         // 2020-2-1
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
@@ -82,12 +75,12 @@ public class TestCatalogWithEvents extends TestIntegrationBase {
 
         final Invoice invoice1 = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                                              new ExpectedInvoiceItemCheck(new LocalDate(2020, 1, 1), new LocalDate(2020, 2, 1), InvoiceItemType.USAGE, new BigDecimal("30.00")));
-        invoiceChecker.checkTrackingIds(invoice1, ImmutableSet.of("t1", "t2"), internalCallContext);
+        invoiceChecker.checkTrackingIds(invoice1, Set.of("t1", "t2"), internalCallContext);
 
 
         Assert.assertTrue(invoice1.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()) == 0);
 
-        final Subscription subscription1 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, callContext);
+        final Subscription subscription1 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, callContext);
         final List<SubscriptionEvent> events1 = subscription1.getSubscriptionEvents();
         Assert.assertEquals(events1.size(), 2);
         Assert.assertTrue(events1.get(0).getNextPlan().getCatalog().getEffectiveDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()) == 0);
@@ -96,10 +89,10 @@ public class TestCatalogWithEvents extends TestIntegrationBase {
         clock.addDays(15);
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        subscription1.changePlanWithDate(new DefaultEntitlementSpecifier(spec),  clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        subscription1.changePlanWithDate(new DefaultEntitlementSpecifier(spec),  clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        final Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, callContext);
+        final Subscription subscription2 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, callContext);
         final List<SubscriptionEvent> events2 = subscription2.getSubscriptionEvents();
         Assert.assertEquals(events2.size(), 3);
         Assert.assertTrue(events2.get(0).getNextPlan().getCatalog().getEffectiveDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()) == 0);
@@ -114,12 +107,12 @@ public class TestCatalogWithEvents extends TestIntegrationBase {
         clock.addDays(15);
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        subscription1.changePlanWithDate(new DefaultEntitlementSpecifier(spec),  clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        subscription1.changePlanWithDate(new DefaultEntitlementSpecifier(spec),  clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
 
 
-        final Subscription subscription3 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, callContext);
+        final Subscription subscription3 = subscriptionApi.getSubscriptionForEntitlementId(subscriptionId, false, callContext);
         final List<SubscriptionEvent> events3 = subscription3.getSubscriptionEvents();
         Assert.assertEquals(events3.size(), 4);
         Assert.assertTrue(events3.get(0).getNextPlan().getCatalog().getEffectiveDate().compareTo(catalog.getVersions().get(0).getEffectiveDate()) == 0);

@@ -41,7 +41,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     protected final BigDecimal amount;
     protected final Currency currency;
     protected final String usageName;
-    protected final Integer quantity;
+    protected final BigDecimal quantity;
     protected final String itemDetails;
     private final BigDecimal rate;
     private final UUID reversedItemId;
@@ -60,7 +60,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
 
     public MockRecurringInvoiceItem(final UUID id, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId, @Nullable final UUID subscriptionId, final String planName, final String phaseName,
                                     final String usageName, final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final Currency currency,
-                                    final BigDecimal rate, final UUID reversedItemId, final Integer quantity, final String itemDetails) {
+                                    final BigDecimal rate, final UUID reversedItemId, final BigDecimal quantity, final String itemDetails) {
         super(id);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -180,7 +180,7 @@ public class MockRecurringInvoiceItem extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public Integer getQuantity() { return quantity; }
+    public BigDecimal getQuantity() { return quantity; }
 
     @Override
     public String getItemDetails() { return itemDetails; }

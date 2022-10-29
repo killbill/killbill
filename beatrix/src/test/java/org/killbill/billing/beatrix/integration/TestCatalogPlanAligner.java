@@ -19,6 +19,11 @@ package org.killbill.billing.beatrix.integration;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -31,14 +36,10 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 
 public class TestCatalogPlanAligner extends TestIntegrationBase {
 
@@ -70,7 +71,7 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
         // 2020-09-17T12:56:02
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID subId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID subId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 17), null, InvoiceItemType.FIXED, new BigDecimal("0.00")));
@@ -80,7 +81,7 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
         uploadCatalog("WeaponsHireSmall-v2.xml");
         assertListenerStatus();
 
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(subId, testCallContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(subId, false, testCallContext);
 
         // 2020-09-18T12:56:02 (WeaponsHireSmall-v2 is active)
         clock.addDays(1);
@@ -89,7 +90,7 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
         // pistol-discount-monthly  has a 3 months discount period
         final PlanPhaseSpecifier spec2  = new PlanPhaseSpecifier("pistol-discount-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), testCallContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), Collections.emptyList(), testCallContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext,
@@ -104,7 +105,7 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
         clock.addDays(1);
 
         // Cancel way far in the future after the pending RECURRING phase
-        entitlement.cancelEntitlementWithDate(new LocalDate("2020-12-20"), true, ImmutableList.<PluginProperty>of(), testCallContext);
+        entitlement.cancelEntitlementWithDate(new LocalDate("2020-12-20"), true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
 
         // 2020-09-20T12:56:02
@@ -112,7 +113,7 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
 
         // We should see the pending RECURRING phase in the future
         busHandler.pushExpectedEvents(NextEvent.UNCANCEL);
-        entitlement.uncancelEntitlement(ImmutableList.<PluginProperty>of(), testCallContext);
+        entitlement.uncancelEntitlement(Collections.emptyList(), testCallContext);
         assertListenerStatus();
 
         // 2020-10-20T12:56:02 Move after TRIAL
@@ -150,7 +151,8 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
         checkNoMoreInvoiceToGenerate(account.getId(), testCallContext);
     }
 
-    private void uploadCatalog(final String name) throws CatalogApiException, IOException {
-        catalogUserApi.uploadCatalog(Resources.asCharSource(Resources.getResource("catalogs/testCatalogPlanAligner/" + name), Charsets.UTF_8).read(), testCallContext);
+    private void uploadCatalog(final String name) throws CatalogApiException, IOException, URISyntaxException {
+        final Path path = Paths.get(Resources.getResource("catalogs/testCatalogPlanAligner/" + name).toURI());
+        catalogUserApi.uploadCatalog(Files.readString(path), testCallContext);
     }
 }

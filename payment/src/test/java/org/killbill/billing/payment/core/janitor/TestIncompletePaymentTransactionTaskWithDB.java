@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.janitor;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.account.api.Account;
@@ -34,6 +35,7 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.provider.DefaultNoOpPaymentInfoPlugin;
 import org.killbill.billing.payment.provider.MockPaymentProviderPlugin;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.globallocker.LockerType;
 import org.killbill.commons.locker.GlobalLock;
 import org.killbill.commons.locker.LockFailedException;
@@ -43,9 +45,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuiteWithEmbeddedDB {
 
@@ -84,7 +83,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                                           null,
                                                           UUID.randomUUID().toString(),
                                                           UUID.randomUUID().toString(),
-                                                          ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING.toString(), false)),
+                                                          List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING.toString(), false)),
                                                           callContext);
 
         final UUID transactionId = payment.getTransactions().get(0).getId();
@@ -101,7 +100,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
 
             final Iterable<NotificationEventWithMetadata<NotificationEvent>> futureNotifications = incompletePaymentAttemptTask.janitorQueue.getFutureNotificationForSearchKeys(internalCallContext.getAccountRecordId(), internalCallContext.getTenantRecordId());
             Assert.assertFalse(Iterables.isEmpty(futureNotifications));
-            final NotificationEventWithMetadata<NotificationEvent> notificationEventWithMetadata = ImmutableList.<NotificationEventWithMetadata<NotificationEvent>>copyOf(futureNotifications).get(0);
+            final NotificationEventWithMetadata<NotificationEvent> notificationEventWithMetadata = Iterables.getFirst(futureNotifications, null);
             Assert.assertEquals(notificationEventWithMetadata.getUserToken(), userToken);
             Assert.assertEquals(notificationEventWithMetadata.getEvent().getClass(), JanitorNotificationKey.class);
             final JanitorNotificationKey event = (JanitorNotificationKey) notificationEventWithMetadata.getEvent();
@@ -129,7 +128,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                                           null,
                                                           UUID.randomUUID().toString(),
                                                           UUID.randomUUID().toString(),
-                                                          ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED.toString(), false)),
+                                                          List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED.toString(), false)),
                                                           callContext);
         final PaymentModelDao paymentModel = paymentDao.getPayment(payment.getId(), internalCallContext);
         final UUID transactionId = payment.getTransactions().get(0).getId();
@@ -160,7 +159,7 @@ public class TestIncompletePaymentTransactionTaskWithDB extends PaymentTestSuite
                                  Currency.EUR,
                                  null,
                                  UUID.randomUUID().toString(),
-                                 ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PROCESSED.toString(), false)),
+                                 List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PROCESSED.toString(), false)),
                                  callContext);
 
         final PaymentModelDao paymentAfterCapture = paymentDao.getPayment(payment.getId(), internalCallContext);

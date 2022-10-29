@@ -20,16 +20,21 @@ package org.killbill.billing.invoice.generator;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.ImmutableAccountData;
@@ -53,20 +58,15 @@ import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoic
 import org.killbill.billing.invoice.tree.AccountItemTree;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.killbill.commons.utils.collect.MultiValueHashMap;
+import org.killbill.commons.utils.collect.MultiValueMap;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.billing.util.currency.KillBillMoney;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Range;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateNumberOfWholeBillingPeriods;
 import static org.killbill.billing.invoice.generator.InvoiceDateUtils.calculateProRationAfterLastBillingCycleDate;
@@ -89,7 +89,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                 final Currency targetCurrency, final Map<UUID, SubscriptionFutureNotificationDates> perSubscriptionFutureNotificationDate,
                                                 final DryRunInfo dryRunInfo,
                                                 final InternalCallContext internalCallContext) throws InvoiceApiException {
-        final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription = LinkedListMultimap.<UUID, LocalDate>create();
+        final MultiValueMap<UUID, LocalDate> createdItemsPerDayPerSubscription = new MultiValueHashMap<>();
 
 
         final InvoicePruner invoicePruner = new InvoicePruner(existingInvoices);
@@ -112,7 +112,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         }
 
         // Generate list of proposed invoice items based on billing events from junction-- proposed items are ALL items since beginning of time
-        final List<InvoiceItem> proposedItems = new ArrayList<InvoiceItem>();
+        final List<InvoiceItem> proposedItems = new ArrayList<>();
         processRecurringBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, perSubscriptionFutureNotificationDate, internalCallContext);
         processFixedBillingEvents(invoiceId, account.getId(), eventSet, targetDate, targetCurrency, proposedItems, internalCallContext);
 
@@ -129,7 +129,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         final List<InvoiceItem> resultingItems = accountItemTree.getResultingItemList();
         safetyBounds(resultingItems, createdItemsPerDayPerSubscription, internalCallContext);
 
-        return new InvoiceGeneratorResult(resultingItems, ImmutableSet.of());
+        return new InvoiceGeneratorResult(resultingItems, Collections.emptySet());
     }
 
     private void processRecurringBillingEvents(final UUID invoiceId, final UUID accountId, final BillingEventSet events,
@@ -439,36 +439,17 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
     }
 
     @VisibleForTesting
-    void safetyBounds(final Iterable<InvoiceItem> resultingItems, final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalCallContext internalCallContext) throws InvoiceApiException {
+    void safetyBounds(final Iterable<InvoiceItem> resultingItems, final MultiValueMap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalCallContext internalCallContext) throws InvoiceApiException {
         // Trigger an exception if we detect the creation of similar items for a given subscription
         // See https://github.com/killbill/killbill/issues/664
         if (config.isSanitySafetyBoundEnabled(internalCallContext)) {
-            final Map<UUID, Multimap<LocalDate, InvoiceItem>> fixedItemsPerDateAndSubscription = new HashMap<UUID, Multimap<LocalDate, InvoiceItem>>();
-            final Map<UUID, Multimap<Range<LocalDate>, InvoiceItem>> recurringItemsPerServicePeriodAndSubscription = new HashMap<UUID, Multimap<Range<LocalDate>, InvoiceItem>>();
+            final Map<UUID, MultiValueMap<LocalDate, InvoiceItem>> fixedItemsPerDateAndSubscription = new HashMap<>();
+            final Map<UUID, MultiValueMap<Interval, InvoiceItem>> recurringItemsPerServicePeriodAndSubscription = new HashMap<>();
             for (final InvoiceItem resultingItem : resultingItems) {
                 if (resultingItem.getInvoiceItemType() == InvoiceItemType.FIXED) {
-                    if (fixedItemsPerDateAndSubscription.get(resultingItem.getSubscriptionId()) == null) {
-                        fixedItemsPerDateAndSubscription.put(resultingItem.getSubscriptionId(), LinkedListMultimap.<LocalDate, InvoiceItem>create());
-                    }
-                    fixedItemsPerDateAndSubscription.get(resultingItem.getSubscriptionId()).put(resultingItem.getStartDate(), resultingItem);
-
-                    final Collection<InvoiceItem> resultingInvoiceItems = fixedItemsPerDateAndSubscription.get(resultingItem.getSubscriptionId()).get(resultingItem.getStartDate());
-                    if (resultingInvoiceItems.size() > 1) {
-                        throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, String.format("SAFETY BOUND TRIGGERED Multiple FIXED items for subscriptionId='%s', startDate='%s', resultingItems=%s",
-                                                                                                resultingItem.getSubscriptionId(), resultingItem.getStartDate(), resultingInvoiceItems));
-                    }
+                    validateSafetyBoundsWithFixedInvoiceItem(fixedItemsPerDateAndSubscription, resultingItem);
                 } else if (resultingItem.getInvoiceItemType() == InvoiceItemType.RECURRING) {
-                    if (recurringItemsPerServicePeriodAndSubscription.get(resultingItem.getSubscriptionId()) == null) {
-                        recurringItemsPerServicePeriodAndSubscription.put(resultingItem.getSubscriptionId(), LinkedListMultimap.<Range<LocalDate>, InvoiceItem>create());
-                    }
-                    final Range<LocalDate> interval = Range.<LocalDate>closedOpen(resultingItem.getStartDate(), resultingItem.getEndDate());
-                    recurringItemsPerServicePeriodAndSubscription.get(resultingItem.getSubscriptionId()).put(interval, resultingItem);
-
-                    final Collection<InvoiceItem> resultingInvoiceItems = recurringItemsPerServicePeriodAndSubscription.get(resultingItem.getSubscriptionId()).get(interval);
-                    if (resultingInvoiceItems.size() > 1) {
-                        throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, String.format("SAFETY BOUND TRIGGERED Multiple RECURRING items for subscriptionId='%s', startDate='%s', endDate='%s', resultingItems=%s",
-                                                                                                resultingItem.getSubscriptionId(), resultingItem.getStartDate(), resultingItem.getEndDate(), resultingInvoiceItems));
-                    }
+                    validateSafetyBoundsWithRecurringInvoiceItem(recurringItemsPerServicePeriodAndSubscription, resultingItem);
                 }
             }
         }
@@ -499,14 +480,46 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
         }
     }
 
-    private LocalDate trackInvoiceItemCreatedDay(final InvoiceItem invoiceItem, final Multimap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalCallContext internalCallContext) {
+    @VisibleForTesting
+    void validateSafetyBoundsWithFixedInvoiceItem(final Map<UUID, MultiValueMap<LocalDate, InvoiceItem>> fixedItemsPerDateAndSubscription,
+                                                  final InvoiceItem resultingItem) throws InvoiceApiException {
+        if (fixedItemsPerDateAndSubscription.get(resultingItem.getSubscriptionId()) == null) {
+            fixedItemsPerDateAndSubscription.put(resultingItem.getSubscriptionId(), new MultiValueHashMap<>());
+        }
+        fixedItemsPerDateAndSubscription.get(resultingItem.getSubscriptionId()).putElement(resultingItem.getStartDate(), resultingItem);
+
+        final Collection<InvoiceItem> resultingInvoiceItems = fixedItemsPerDateAndSubscription.get(resultingItem.getSubscriptionId()).get(resultingItem.getStartDate());
+        if (resultingInvoiceItems.size() > 1) {
+            throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, String.format("SAFETY BOUND TRIGGERED Multiple FIXED items for subscriptionId='%s', startDate='%s', resultingItems=%s",
+                                                                                    resultingItem.getSubscriptionId(), resultingItem.getStartDate(), resultingInvoiceItems));
+        }
+    }
+
+    @VisibleForTesting
+    void validateSafetyBoundsWithRecurringInvoiceItem(final Map<UUID, MultiValueMap<Interval, InvoiceItem>> recurringItemsPerServicePeriodAndSubscription,
+                                                      final InvoiceItem resultingItem) throws InvoiceApiException {
+        if (recurringItemsPerServicePeriodAndSubscription.get(resultingItem.getSubscriptionId()) == null) {
+            recurringItemsPerServicePeriodAndSubscription.put(resultingItem.getSubscriptionId(), new MultiValueHashMap<>());
+        }
+        final Interval interval = new Interval(resultingItem.getStartDate().toDateTimeAtStartOfDay(DateTimeZone.UTC),
+                                               resultingItem.getEndDate().toDateTimeAtStartOfDay(DateTimeZone.UTC));
+        recurringItemsPerServicePeriodAndSubscription.get(resultingItem.getSubscriptionId()).putElement(interval, resultingItem);
+
+        final Collection<InvoiceItem> resultingInvoiceItems = recurringItemsPerServicePeriodAndSubscription.get(resultingItem.getSubscriptionId()).get(interval);
+        if (resultingInvoiceItems.size() > 1) {
+            throw new InvoiceApiException(ErrorCode.UNEXPECTED_ERROR, String.format("SAFETY BOUND TRIGGERED Multiple RECURRING items for subscriptionId='%s', startDate='%s', endDate='%s', resultingItems=%s",
+                                                                                    resultingItem.getSubscriptionId(), resultingItem.getStartDate(), resultingItem.getEndDate(), resultingInvoiceItems));
+        }
+    }
+
+    private LocalDate trackInvoiceItemCreatedDay(final InvoiceItem invoiceItem, final MultiValueMap<UUID, LocalDate> createdItemsPerDayPerSubscription, final InternalCallContext internalCallContext) {
         final UUID subscriptionId = invoiceItem.getSubscriptionId();
         if (subscriptionId == null) {
             return null;
         }
 
-        final LocalDate createdDay = internalCallContext.toLocalDate(MoreObjects.firstNonNull(invoiceItem.getCreatedDate(), internalCallContext.getCreatedDate()));
-        createdItemsPerDayPerSubscription.put(subscriptionId, createdDay);
+        final LocalDate createdDay = internalCallContext.toLocalDate(Objects.requireNonNullElse(invoiceItem.getCreatedDate(), internalCallContext.getCreatedDate()));
+        createdItemsPerDayPerSubscription.putElement(subscriptionId, createdDay);
         return createdDay;
     }
 }

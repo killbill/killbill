@@ -40,7 +40,7 @@ jobs:
       - name: Configure Java
         uses: actions/setup-java@v1
         with:
-          java-version: 8
+          java-version: 11
       - name: Configure Sonatype mirror
         uses: s4u/maven-settings-action@v2.3.0
         # Go to Sonatype directly to avoid delay syncs (could get rid of this if actions/setup-java were to support mirrors).
@@ -66,7 +66,7 @@ jobs:
       - name: Configure settings.xml for release
         uses: actions/setup-java@v1
         with:
-          java-version: 8
+          java-version: 11
           server-id: ossrh-releases
           server-username: OSSRH_USER
           server-password: OSSRH_PASS

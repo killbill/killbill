@@ -17,8 +17,11 @@
 
 package org.killbill.billing.jaxrs;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PriceListSet;
@@ -40,16 +43,9 @@ import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 public class TestUsage extends TestJaxrsBase {
 
-    @Test(groups = "slow", description = "Can record and retrieve usage data")
-    public void testRecordUsage() throws Exception {
-        final Account accountJson = createAccountWithDefaultPaymentMethod();
-
+    private  static Subscriptions createSubscriptions(final Account accountJson) {
         final Subscription base = new Subscription();
         base.setAccountId(accountJson.getAccountId());
         base.setProductName("Pistol");
@@ -63,6 +59,33 @@ public class TestUsage extends TestJaxrsBase {
         addOn.setProductCategory(ProductCategory.ADD_ON);
         addOn.setBillingPeriod(BillingPeriod.NO_BILLING_PERIOD);
         addOn.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+
+        final Subscriptions subscriptions = new Subscriptions();
+        subscriptions.add(base);
+        subscriptions.add(addOn);
+
+        return subscriptions;
+    }
+
+    private static UUID findSubscriptionIdByProductCategory(final List<Subscription> subscriptions, final ProductCategory category) {
+        return subscriptions.stream()
+                            .filter(subscription -> subscription.getProductCategory().equals(category))
+                            .findFirst().orElseThrow(() -> new RuntimeException("Cannot find subscriptionId in TestUsage"))
+                            .getSubscriptionId();
+    }
+
+    private static InvoiceItem findInvoiceItemByUsage(final Invoices invoices, final InvoiceItemType invoiceItemType) {
+        return invoices.get(1).getItems()
+                       .stream()
+                       .filter(invoiceItem -> invoiceItem.getItemType() == invoiceItemType)
+                       .findFirst()
+                       .orElse(null);
+    }
+
+    @Test(groups = "slow", description = "Can record and retrieve usage data")
+    public void testRecordUsage() throws Exception {
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+        final Subscriptions body = createSubscriptions(accountJson);
 
         callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE,
                                            ExtBusEventType.ENTITLEMENT_CREATION,
@@ -72,69 +95,44 @@ public class TestUsage extends TestJaxrsBase {
                                            ExtBusEventType.SUBSCRIPTION_CREATION,
                                            ExtBusEventType.SUBSCRIPTION_CREATION,
                                            ExtBusEventType.INVOICE_CREATION);
-        final Subscriptions body = new Subscriptions();
-        body.add(base);
-        body.add(addOn);
 
-        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body,
-                                                                           null,
-                                                                           null,
-                                                                           NULL_PLUGIN_PROPERTIES,
-                                                                           requestOptions);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, (LocalDate) null, (LocalDate) null, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
-        final UUID addOnSubscriptionId = Iterables.<Subscription>find(bundle.getSubscriptions(),
-                                                                      new Predicate<Subscription>() {
-                                                                          @Override
-                                                                          public boolean apply(final Subscription input) {
-                                                                              return ProductCategory.ADD_ON.equals(input.getProductCategory());
-                                                                          }
-                                                                      }).getSubscriptionId();
+        final UUID addOnSubscriptionId = findSubscriptionIdByProductCategory(bundle.getSubscriptions(), ProductCategory.ADD_ON);
 
         clock.addDays(1);
 
-        final UsageRecord usageRecord1 = new UsageRecord();
-        usageRecord1.setAmount(10L);
-        usageRecord1.setRecordDate(clock.getUTCToday().minusDays(1));
-
-        final UsageRecord usageRecord2 = new UsageRecord();
-        usageRecord2.setAmount(5L);
-        usageRecord2.setRecordDate(clock.getUTCToday());
-
-        final UnitUsageRecord unitUsageRecord = new UnitUsageRecord();
-        unitUsageRecord.setUnitType("bullets");
-        unitUsageRecord.setUsageRecords(ImmutableList.<UsageRecord>of(usageRecord1, usageRecord2));
-
-        final SubscriptionUsageRecord usage = new SubscriptionUsageRecord();
-        usage.setSubscriptionId(addOnSubscriptionId);
-        usage.setUnitUsageRecords(ImmutableList.<UnitUsageRecord>of(unitUsageRecord));
+        final UsageRecord usageRecord1 = new UsageRecord(clock.getUTCNow().minusDays(1), BigDecimal.TEN);
+        final UsageRecord usageRecord2 = new UsageRecord(clock.getUTCNow(), new BigDecimal("5"));
+        final UnitUsageRecord unitUsageRecord = new UnitUsageRecord("bullets", List.of(usageRecord1, usageRecord2));
+        final SubscriptionUsageRecord usage = new SubscriptionUsageRecord(addOnSubscriptionId, null, List.of(unitUsageRecord));
 
         usageApi.recordUsage(usage, requestOptions);
         callbackServlet.assertListenerStatus();
-
-        final RolledUpUsage retrievedUsage1 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday(), requestOptions);
+        final RolledUpUsage retrievedUsage1 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday(), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(retrievedUsage1.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage1.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage1.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
         // endDate is excluded
-        Assert.assertEquals((long) retrievedUsage1.getRolledUpUnits().get(0).getAmount(), 10);
+        Assert.assertEquals(BigDecimal.TEN.compareTo(retrievedUsage1.getRolledUpUnits().get(0).getAmount()), 0);
 
-        final RolledUpUsage retrievedUsage2 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(1), requestOptions);
+        final RolledUpUsage retrievedUsage2 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(1), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(retrievedUsage2.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage2.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage2.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
-        Assert.assertEquals((long) retrievedUsage2.getRolledUpUnits().get(0).getAmount(), 15);
+        Assert.assertEquals(new BigDecimal("15").compareTo(retrievedUsage2.getRolledUpUnits().get(0).getAmount()), 0);
 
-        final RolledUpUsage retrievedUsage3 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday(), clock.getUTCToday().plusDays(1), requestOptions);
+        final RolledUpUsage retrievedUsage3 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday(), clock.getUTCToday().plusDays(1), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(retrievedUsage3.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage3.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage3.getRolledUpUnits().get(0).getUnitType(), unitUsageRecord.getUnitType());
-        Assert.assertEquals((long) retrievedUsage3.getRolledUpUnits().get(0).getAmount(), 5);
+        Assert.assertEquals(new BigDecimal("5").compareTo(retrievedUsage3.getRolledUpUnits().get(0).getAmount()), 0);
 
-        final RolledUpUsage retrievedUsage4 = usageApi.getAllUsage(addOnSubscriptionId, clock.getUTCToday(), clock.getUTCToday().plusDays(1), requestOptions);
+        final RolledUpUsage retrievedUsage4 = usageApi.getAllUsage(addOnSubscriptionId, clock.getUTCToday(), clock.getUTCToday().plusDays(1), NULL_PLUGIN_PROPERTIES, requestOptions);
         Assert.assertEquals(retrievedUsage4.getSubscriptionId(), usage.getSubscriptionId());
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().size(), 1);
         Assert.assertEquals(retrievedUsage4.getRolledUpUnits().get(0).getUnitType(), "bullets");
-        Assert.assertEquals((long) retrievedUsage4.getRolledUpUnits().get(0).getAmount(), 5);
+        Assert.assertEquals(new BigDecimal("5").compareTo(retrievedUsage4.getRolledUpUnits().get(0).getAmount()), 0);
 
         callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_PHASE,
                                            ExtBusEventType.INVOICE_CREATION,
@@ -143,17 +141,13 @@ public class TestUsage extends TestJaxrsBase {
         clock.addMonths(1);
         callbackServlet.assertListenerStatus();
 
-        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, null, AuditLevel.MINIMAL, requestOptions);
+        final Invoices invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.MINIMAL, requestOptions);
         Assert.assertEquals(invoices.size(), 2);
         // Verify system assigned one tracking ID and this is correctly returned
         Assert.assertEquals(invoices.get(1).getTrackingIds().size(), 1);
 
-        final InvoiceItem usageItem = Iterables.tryFind(invoices.get(1).getItems(), new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getItemType() == InvoiceItemType.USAGE;
-            }
-        }).orNull();
+        final InvoiceItem usageItem = findInvoiceItemByUsage(invoices, InvoiceItemType.USAGE);
+
         Assert.assertNotNull(usageItem);
 
         Assert.assertEquals(usageItem.getPrettyPlanName(), "Bullet Monthly Plan");
@@ -163,53 +157,17 @@ public class TestUsage extends TestJaxrsBase {
 
     @Test(groups = "slow", description = "Test tracking ID already exists")
     public void testRecordUsageTrackingIdExists() throws Exception {
-
         final Account accountJson = createAccountWithDefaultPaymentMethod();
+        final Subscriptions body = createSubscriptions(accountJson);
 
-        final Subscription base = new Subscription();
-        base.setAccountId(accountJson.getAccountId());
-        base.setProductName("Pistol");
-        base.setProductCategory(ProductCategory.BASE);
-        base.setBillingPeriod(BillingPeriod.MONTHLY);
-        base.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, (LocalDate) null, (LocalDate) null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final UUID addOnSubscriptionId = findSubscriptionIdByProductCategory(bundle.getSubscriptions(), ProductCategory.ADD_ON);
 
-        final Subscription addOn = new Subscription();
-        addOn.setAccountId(accountJson.getAccountId());
-        addOn.setProductName("Bullets");
-        addOn.setProductCategory(ProductCategory.ADD_ON);
-        addOn.setBillingPeriod(BillingPeriod.NO_BILLING_PERIOD);
-        addOn.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-
-        final Subscriptions body = new Subscriptions();
-        body.add(base);
-        body.add(addOn);
-
-        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body,
-                                                                           null,
-                                                                           null,
-                                                                           NULL_PLUGIN_PROPERTIES, requestOptions);
-        final UUID addOnSubscriptionId = Iterables.<Subscription>find(bundle.getSubscriptions(),
-                                                                      new Predicate<Subscription>() {
-                                                                          @Override
-                                                                          public boolean apply(final Subscription input) {
-                                                                              return ProductCategory.ADD_ON.equals(input.getProductCategory());
-                                                                          }
-                                                                      }).getSubscriptionId();
-
-        final UsageRecord usageRecord1 = new UsageRecord();
-        usageRecord1.setAmount(10L);
-        usageRecord1.setRecordDate(clock.getUTCToday().minusDays(1));
-
-        final UnitUsageRecord unitUsageRecord = new UnitUsageRecord();
-        unitUsageRecord.setUnitType("bullets");
-        unitUsageRecord.setUsageRecords(ImmutableList.<UsageRecord>of(usageRecord1));
-
-        final SubscriptionUsageRecord usage = new SubscriptionUsageRecord();
-        usage.setSubscriptionId(addOnSubscriptionId);
-
-        final String trackingId = UUID.randomUUID().toString();
-        usage.setTrackingId(trackingId);
-        usage.setUnitUsageRecords(ImmutableList.<UnitUsageRecord>of(unitUsageRecord));
+        final UsageRecord usageRecord1 = new UsageRecord(clock.getUTCNow().minusDays(1), BigDecimal.TEN);
+        final UnitUsageRecord unitUsageRecord = new UnitUsageRecord("bullets", List.of(usageRecord1));
+        final SubscriptionUsageRecord usage = new SubscriptionUsageRecord(addOnSubscriptionId,
+                                                                          UUID.randomUUID().toString(),
+                                                                          List.of(unitUsageRecord));
 
         usageApi.recordUsage(usage, requestOptions);
 
@@ -219,6 +177,61 @@ public class TestUsage extends TestJaxrsBase {
         } catch (final KillBillClientException e) {
             Assert.assertEquals(e.getBillingException().getCode(), (Integer) ErrorCode.USAGE_RECORD_TRACKING_ID_ALREADY_EXISTS.getCode());
         }
+    }
 
+    @Test(groups = "slow")
+    public void testRecordUsageWithDecimal() throws Exception {
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+        final Subscriptions body = createSubscriptions(accountJson);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, (LocalDate) null, (LocalDate) null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final UUID addOnSubscriptionId = findSubscriptionIdByProductCategory(bundle.getSubscriptions(), ProductCategory.ADD_ON);
+
+        clock.addDays(2);
+
+        final UsageRecord record1 = new UsageRecord(clock.getUTCNow().minusDays(1), new BigDecimal("4.75"));
+        final UsageRecord record2 = new UsageRecord(clock.getUTCNow(), new BigDecimal("6.25"));
+        final UsageRecord record3 = new UsageRecord(clock.getUTCNow().plusDays(1), new BigDecimal("8.5"));
+
+        final UnitUsageRecord unitUsageRecord = new UnitUsageRecord("bullets", List.of(record1, record2, record3));
+        final SubscriptionUsageRecord usage = new SubscriptionUsageRecord(addOnSubscriptionId, null, List.of(unitUsageRecord));
+
+        usageApi.recordUsage(usage, requestOptions);
+
+        final RolledUpUsage retrievedUsage1 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(1), NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(new BigDecimal("11").compareTo(retrievedUsage1.getRolledUpUnits().get(0).getAmount()), 0);
+
+        final RolledUpUsage retrievedUsage2 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(2), NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(new BigDecimal("19.5").compareTo(retrievedUsage2.getRolledUpUnits().get(0).getAmount()), 0);
+
+        final RolledUpUsage retrievedUsage3 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday(), clock.getUTCToday().plusDays(2), NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(new BigDecimal("14.75").compareTo(retrievedUsage3.getRolledUpUnits().get(0).getAmount()), 0);
+    }
+
+    @Test(groups = "slow")
+    public void testRecordUsageWithBigDecimalValue() throws Exception {
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+        final Subscriptions body = createSubscriptions(accountJson);
+        final Bundle bundle = subscriptionApi.createSubscriptionWithAddOns(body, (LocalDate) null, (LocalDate) null, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final UUID addOnSubscriptionId = findSubscriptionIdByProductCategory(bundle.getSubscriptions(), ProductCategory.ADD_ON);
+
+        clock.addDays(2);
+
+        final UsageRecord record1 = new UsageRecord(clock.getUTCNow().minusDays(1), new BigDecimal("111111111.111111111"));
+        final UsageRecord record2 = new UsageRecord(clock.getUTCNow(), new BigDecimal("222222222.222222222"));
+        final UsageRecord record3 = new UsageRecord(clock.getUTCNow().plusDays(1), new BigDecimal("333333333.333333333"));
+
+        final UnitUsageRecord unitUsageRecord = new UnitUsageRecord("bullets", List.of(record1, record2, record3));
+        final SubscriptionUsageRecord usage = new SubscriptionUsageRecord(addOnSubscriptionId, null, List.of(unitUsageRecord));
+
+        usageApi.recordUsage(usage, requestOptions);
+
+        final RolledUpUsage retrievedUsage1 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(1), NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(new BigDecimal("333333333.333333333").compareTo(retrievedUsage1.getRolledUpUnits().get(0).getAmount()), 0);
+
+        final RolledUpUsage retrievedUsage2 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday().minusDays(1), clock.getUTCToday().plusDays(2), NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(new BigDecimal("666666666.666666666").compareTo(retrievedUsage2.getRolledUpUnits().get(0).getAmount()), 0);
+
+        final RolledUpUsage retrievedUsage3 = usageApi.getUsage(addOnSubscriptionId, unitUsageRecord.getUnitType(), clock.getUTCToday(), clock.getUTCToday().plusDays(2), NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(new BigDecimal("555555555.555555555").compareTo(retrievedUsage3.getRolledUpUnits().get(0).getAmount()), 0);
     }
 }

@@ -28,6 +28,8 @@ import org.killbill.billing.util.glue.KillBillShiroAopModule;
 import org.killbill.billing.util.glue.KillBillShiroModule;
 import org.killbill.billing.util.glue.SecurityModule;
 import org.killbill.billing.util.glue.TestUtilModuleNoDB.ShiroModuleNoDB;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 
 public class TestEntitlementModule extends DefaultEntitlementModule {
 
@@ -52,6 +54,7 @@ public class TestEntitlementModule extends DefaultEntitlementModule {
 
         install(new SecurityModule(configSource));
 
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 
 

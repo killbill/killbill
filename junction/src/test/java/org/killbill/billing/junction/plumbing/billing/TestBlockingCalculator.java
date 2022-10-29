@@ -26,11 +26,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -60,11 +60,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -143,7 +138,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final BillingEvent B = createRealEvent(subscription2, now.minusDays(1));
         final BillingEvent C = createRealEvent(subscription2, now.plusDays(1));
         final BillingEvent D = createRealEvent(subscription3, now.plusDays(3));
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
         billingEvents.add(A);
         billingEvents.add(B);
         billingEvents.add(C);
@@ -152,43 +147,39 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final BlockingState blockingState1 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, now);
         final BlockingState blockingState2 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, now.plusDays(2));
 
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(blockingState1, Optional.<UUID>absent(),
-                                                                                                                        blockingState2, Optional.<UUID>absent()),
-                                                                         internalCallContext);
+        final Map<BlockingState, Optional<UUID>> mapParams = Map.of(blockingState1, Optional.empty(), blockingState2, Optional.empty());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(mapParams, internalCallContext);
 
         blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalog, null, internalCallContext);
 
         assertEquals(billingEvents.size(), 7);
 
-        final Iterable<BillingEvent> s1Events = Iterables.filter(billingEvents, new Predicate<BillingEvent>() {
-            @Override
-            public boolean apply(@Nullable final BillingEvent input) {
-                return input != null && input.getSubscriptionId().equals(subscription1.getId());
-            }
-        });
+        final Iterable<BillingEvent> s1Events = billingEvents.stream()
+                .filter(input -> input != null && input.getSubscriptionId().equals(subscription1.getId()))
+                .collect(Collectors.toUnmodifiableList());
+
         final Iterator<BillingEvent> it1 = s1Events.iterator();
+
         assertEquals(it1.next(), A);
         assertEquals(it1.next().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
         assertEquals(it1.next().getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
 
-        final Iterable<BillingEvent> s2Events = Iterables.filter(billingEvents, new Predicate<BillingEvent>() {
-            @Override
-            public boolean apply(@Nullable final BillingEvent input) {
-                return input != null && input.getSubscriptionId().equals(subscription2.getId());
-            }
-        });
+        final Iterable<BillingEvent> s2Events = billingEvents.stream()
+                .filter(input -> input != null && input.getSubscriptionId().equals(subscription2.getId()))
+                .collect(Collectors.toUnmodifiableList());
+
         final Iterator<BillingEvent> it2 = s2Events.iterator();
+
         assertEquals(it2.next(), B);
         assertEquals(it2.next().getTransitionType(), SubscriptionBaseTransitionType.START_BILLING_DISABLED);
         assertEquals(it2.next().getTransitionType(), SubscriptionBaseTransitionType.END_BILLING_DISABLED);
 
-        final Iterable<BillingEvent> s3Events = Iterables.filter(billingEvents, new Predicate<BillingEvent>() {
-            @Override
-            public boolean apply(@Nullable final BillingEvent input) {
-                return input != null && input.getSubscriptionId().equals(subscription3.getId());
-            }
-        });
+        final Iterable<BillingEvent> s3Events = billingEvents.stream()
+                .filter(input -> input != null && input.getSubscriptionId().equals(subscription3.getId()))
+                .collect(Collectors.toUnmodifiableList());
+
         final Iterator<BillingEvent> it3 = s3Events.iterator();
+
         assertEquals(it3.next(), D);
     }
 
@@ -197,8 +188,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveOpenPrev() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(subscription1, now.minusDays(1)));
@@ -213,8 +204,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveOpenPrevFollow() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, null));
         final BillingEvent e1 = createRealEvent(subscription1, now.minusDays(1));
@@ -233,8 +224,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveOpenFollow() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, null));
         final BillingEvent e1 = createRealEvent(subscription1, now.plusDays(1));
@@ -251,8 +242,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveOpenSameTime() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, null));
         final BillingEvent e1 = createRealEvent(subscription1, now);
@@ -269,8 +260,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveClosedPrev() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         final BillingEvent e1 = createRealEvent(subscription1, now.minusDays(1));
@@ -286,8 +277,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveClosedPrevBetw() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         final BillingEvent e1 = createRealEvent(subscription1, now.minusDays(1));
@@ -306,8 +297,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveClosedPrevBetwNext() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         final BillingEvent e1 = createRealEvent(subscription1, now.minusDays(1));
@@ -328,8 +319,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveClosedBetwn() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         final BillingEvent e2 = createRealEvent(subscription1, now.plusDays(1));
@@ -346,8 +337,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveClosedBetweenFollow() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
 
@@ -367,8 +358,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testEventsToRemoveClosedFollow() {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
 
@@ -386,8 +377,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsOpenPrev() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(subscription1, now.minusDays(1)));
@@ -407,8 +398,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsOpenPrevFollow() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(subscription1, now.minusDays(1)));
@@ -429,8 +420,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsOpenFollow() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(subscription1, now.plusDays(1)));
@@ -445,8 +436,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsOpenSameTime() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, null));
         billingEvents.add(createRealEvent(subscription1, now));
@@ -461,8 +452,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsClosedPrev() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(subscription1, now.minusDays(1)));
@@ -485,8 +476,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsClosedPrevBetw() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(subscription1, now.minusDays(1)));
@@ -510,8 +501,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsClosedPrevBetwNext() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(subscription1, now.minusDays(1)));
@@ -536,8 +527,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsClosedBetwn() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(subscription1, now.plusDays(1)));
@@ -555,8 +546,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsClosedBetweenFollow() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(subscription1, now.plusDays(1)));
@@ -574,8 +565,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testCreateNewEventsClosedFollow() throws CatalogApiException {
         final DateTime now = clock.getUTCNow();
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(now, now.plusDays(2)));
         billingEvents.add(createRealEvent(subscription1, now.plusDays(3)));
@@ -589,8 +580,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     // -----X----Y-----[------------------------
     @Test(groups = "fast")
     public void testCreateNewEventsOpenFollowCancellation() throws CatalogApiException {
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(new DateTime(2020, 6, 1, 0, 0), null));
         billingEvents.add(createRealEvent(subscription1, new DateTime(2020, 1, 1, 0, 0), SubscriptionBaseTransitionType.CREATE));
@@ -605,8 +596,8 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     // -----X----[-----Y----]-------------------
     @Test(groups = "fast")
     public void testCreateNewEventsClosedWithInBetweenCancellation() throws CatalogApiException {
-        final List<DisabledDuration> disabledDuration = new ArrayList<DisabledDuration>();
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final List<DisabledDuration> disabledDuration = new ArrayList<>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
 
         disabledDuration.add(new DisabledDuration(new DateTime(2020, 6, 1, 0, 0), new DateTime(2020, 7, 1, 0, 0)));
         billingEvents.add(createRealEvent(subscription1, new DateTime(2020, 1, 1, 0, 0), SubscriptionBaseTransitionType.CREATE));
@@ -626,7 +617,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
     public void testPrecedingBillingEventForSubscription() {
         final DateTime now = new DateTime();
 
-        final SortedSet<BillingEvent> events = new TreeSet<BillingEvent>();
+        final SortedSet<BillingEvent> events = new TreeSet<>();
 
         events.add(createRealEvent(subscription1, now.minusDays(10)));
         events.add(createRealEvent(subscription1, now.minusDays(6)));
@@ -821,7 +812,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final BillingEvent trial = createRealEvent(subscription1, new LocalDate(2012, 5, 1).toDateTimeAtStartOfDay(DateTimeZone.UTC), SubscriptionBaseTransitionType.CREATE);
         final BillingEvent phase = createRealEvent(subscription1, new LocalDate(2012, 5, 31).toDateTimeAtStartOfDay(DateTimeZone.UTC), SubscriptionBaseTransitionType.PHASE);
         final BillingEvent upgrade = createRealEvent(subscription1, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC), SubscriptionBaseTransitionType.CHANGE);
-        final SortedSet<BillingEvent> billingEvents = new TreeSet<BillingEvent>();
+        final SortedSet<BillingEvent> billingEvents = new TreeSet<>();
         billingEvents.add(trial);
         billingEvents.add(phase);
         billingEvents.add(upgrade);
@@ -831,11 +822,11 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
         final BlockingState blockingState3 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, DISABLED_BUNDLE, "test", true, true, true, new LocalDate(2012, 7, 24).toDateTimeAtStartOfDay(DateTimeZone.UTC));
         final BlockingState blockingState4 = new DefaultBlockingState(bundleId1, BlockingStateType.SUBSCRIPTION_BUNDLE, CLEAR_BUNDLE, "test", false, false, false, new LocalDate(2012, 7, 25).toDateTimeAtStartOfDay(DateTimeZone.UTC));
 
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(ImmutableMap.<BlockingState, Optional<UUID>>of(blockingState1, Optional.<UUID>absent(),
-                                                                                                                        blockingState2, Optional.<UUID>absent(),
-                                                                                                                        blockingState3, Optional.<UUID>absent(),
-                                                                                                                        blockingState4, Optional.<UUID>absent()),
-                                                                         internalCallContext);
+        final Map<BlockingState, Optional<UUID>> mapParams = Map.of(blockingState1, Optional.empty(),
+                                                                    blockingState2, Optional.empty(),
+                                                                    blockingState3, Optional.empty(),
+                                                                    blockingState4, Optional.empty());
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(mapParams, internalCallContext);
 
         blockingCalculator.insertBlockingEvents(billingEvents, new HashSet<UUID>(), subscriptionsForAccount, catalog, null, internalCallContext);
 

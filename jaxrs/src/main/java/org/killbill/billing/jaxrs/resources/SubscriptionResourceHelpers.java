@@ -25,7 +25,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PhaseType;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
@@ -42,8 +42,7 @@ import org.killbill.billing.jaxrs.json.PhasePriceJson;
 import org.killbill.billing.jaxrs.json.SubscriptionJson;
 import org.killbill.billing.jaxrs.json.TierPriceJson;
 import org.killbill.billing.jaxrs.json.UsagePriceJson;
-
-import com.google.common.base.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 public class SubscriptionResourceHelpers {
 
@@ -85,12 +84,12 @@ public class SubscriptionResourceHelpers {
     public static List<PlanPhasePriceOverride> buildPlanPhasePriceOverrides(final Iterable<PhasePriceJson> priceOverrides,
                                                                             final Currency currency,
                                                                             final PlanPhaseSpecifier planPhaseSpecifier) {
-        final List<PlanPhasePriceOverride> overrides = new LinkedList<PlanPhasePriceOverride>();
+        final List<PlanPhasePriceOverride> overrides = new LinkedList<>();
         if (priceOverrides != null) {
             for (final PhasePriceJson input : priceOverrides) {
                 Preconditions.checkNotNull(input);
 
-                final List<UsagePriceOverride> usagePrices = new LinkedList<UsagePriceOverride>();
+                final List<UsagePriceOverride> usagePrices = new LinkedList<>();
                 if (input.getUsagePrices() != null) {
                     buildUsagePrices(currency, input, usagePrices);
                 }
@@ -117,7 +116,7 @@ public class SubscriptionResourceHelpers {
                         }
 
                         @Override
-                        public Double getSize() {
+                        public BigDecimal getSize() {
                             return block.getSize();
                         }
 
@@ -132,7 +131,7 @@ public class SubscriptionResourceHelpers {
                         }
 
                         @Override
-                        public Double getMax() {
+                        public BigDecimal getMax() {
                             return block.getMax();
                         }
                     });
@@ -245,8 +244,8 @@ public class SubscriptionResourceHelpers {
     }
 
     public static BaseEntitlementWithAddOnsSpecifier buildBaseEntitlementWithAddOnsSpecifier(final Iterable<EntitlementSpecifier> entitlementSpecifierList,
-                                                                                             final LocalDate resolvedEntitlementDate,
-                                                                                             final LocalDate resolvedBillingDate,
+                                                                                             final DateTime resolvedEntitlementDate,
+                                                                                             final DateTime resolvedBillingDate,
                                                                                              @Nullable final UUID bundleId,
                                                                                              @Nullable final String bundleExternalKey,
                                                                                              final Boolean isMigrated) {
@@ -267,12 +266,12 @@ public class SubscriptionResourceHelpers {
             }
 
             @Override
-            public LocalDate getEntitlementEffectiveDate() {
+            public DateTime getEntitlementEffectiveDate() {
                 return resolvedEntitlementDate;
             }
 
             @Override
-            public LocalDate getBillingEffectiveDate() {
+            public DateTime getBillingEffectiveDate() {
                 return resolvedBillingDate;
             }
 

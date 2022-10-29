@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -48,17 +49,12 @@ import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.invoice.model.DefaultInvoice;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
@@ -94,7 +90,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public Collection<Invoice> getUnpaidInvoicesByAccountId(final UUID accountId, final LocalDate upToDate, final InternalTenantContext context) {
         final List<InvoiceModelDao> unpaidInvoicesByAccountId = dao.getUnpaidInvoicesByAccountId(accountId, null, upToDate, context);
-        final Collection<Invoice> invoices = new LinkedList<Invoice>();
+        final Collection<Invoice> invoices = new LinkedList<>();
         for (final InvoiceModelDao invoiceModelDao : unpaidInvoicesByAccountId) {
             invoices.add(new DefaultInvoice(invoiceModelDao));
         }
@@ -144,7 +140,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
         final WithAccountLock withAccountLock = new WithAccountLock() {
             @Override
             public Iterable<DefaultInvoice> prepareInvoices() throws InvoiceApiException {
-                return ImmutableList.<DefaultInvoice>of(invoice);
+                return List.of(invoice);
             }
         };
 
@@ -167,24 +163,21 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     @Override
     public Map<UUID, BigDecimal> validateInvoiceItemAdjustments(final UUID paymentId, final Map<UUID, BigDecimal> idWithAmount, final InternalTenantContext context) throws InvoiceApiException {
         // We want to validate that only refund with invoice *item* adjustments are allowed (as opposed to refund with invoice adjustment)
-        if (idWithAmount.size() == 0) {
+        if (idWithAmount.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEMS_ADJUSTMENT_MISSING);
         }
         final InvoicePayment invoicePayment = getInvoicePayment(paymentId, InvoicePaymentType.ATTEMPT, context);
         return dao.computeItemAdjustments(invoicePayment.getInvoiceId().toString(), idWithAmount, context);
     }
 
-    private InvoicePayment getInvoicePayment(final UUID paymentId, final InvoicePaymentType type, final InternalTenantContext context) throws InvoiceApiException {
-
+    @VisibleForTesting
+    InvoicePayment getInvoicePayment(final UUID paymentId, final InvoicePaymentType type, final InternalTenantContext context) throws InvoiceApiException {
         final List<InvoicePaymentModelDao> invoicePayments = dao.getInvoicePaymentsByPaymentId(paymentId, context);
-        final InvoicePaymentModelDao resultOrNull = Iterables.tryFind(invoicePayments, new Predicate<InvoicePaymentModelDao>() {
-            @Override
-            public boolean apply(final InvoicePaymentModelDao input) {
-                return input.getType() == type &&
-                       input.getSuccess();
-            }
-        }).orNull();
-        return resultOrNull != null ? new DefaultInvoicePayment(resultOrNull) : null;
+        return invoicePayments.stream()
+                .filter(input -> input.getType() == type && input.getSuccess())
+                .findFirst()
+                .map(DefaultInvoicePayment::new)
+                .orElse(null);
     }
 
     @Override
@@ -200,38 +193,28 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public List<InvoicePayment> getInvoicePayments(final UUID paymentId, final TenantContext context) {
-        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByPaymentId(paymentId, internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context)),
-                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
-                                                                               @Override
-                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                                                                                   return new DefaultInvoicePayment(input);
-                                                                               }
-                                                                           }
-                                                                          ));
+        final InternalTenantContext ctx = internalCallContextFactory.createInternalTenantContext(paymentId, ObjectType.PAYMENT, context);
+        final List<InvoicePaymentModelDao> invoicePayments = dao.getInvoicePaymentsByPaymentId(paymentId, ctx);
+        return invoicePayments.stream()
+                .map(DefaultInvoicePayment::new)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public List<InvoicePayment> getInvoicePaymentsByAccount(final UUID accountId, final TenantContext context) {
-        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByAccount(internalCallContextFactory.createInternalTenantContext(accountId, ObjectType.ACCOUNT, context)),
-                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
-                                                                               @Override
-                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                                                                                   return new DefaultInvoicePayment(input);
-                                                                               }
-                                                                           }
-                                                                          ));
+        final InternalTenantContext ctx = internalCallContextFactory.createInternalTenantContext(accountId, ObjectType.ACCOUNT, context);
+        final List<InvoicePaymentModelDao> invoicePayments = dao.getInvoicePaymentsByAccount(ctx);
+        return invoicePayments.stream()
+                .map(DefaultInvoicePayment::new)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public List<InvoicePayment> getInvoicePaymentsByInvoice(final UUID invoiceId, final InternalTenantContext context) {
-        return ImmutableList.<InvoicePayment>copyOf(Collections2.transform(dao.getInvoicePaymentsByInvoice(invoiceId, context),
-                                                                           new Function<InvoicePaymentModelDao, InvoicePayment>() {
-                                                                               @Override
-                                                                               public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                                                                                   return new DefaultInvoicePayment(input);
-                                                                               }
-                                                                           }
-                                                                          ));
+        final List<InvoicePaymentModelDao> invoicePayments = dao.getInvoicePaymentsByInvoice(invoiceId, context);
+        return invoicePayments.stream()
+                .map(DefaultInvoicePayment::new)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override

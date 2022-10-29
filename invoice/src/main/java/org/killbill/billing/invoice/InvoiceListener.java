@@ -22,6 +22,8 @@ package org.killbill.billing.invoice;
 import java.util.Objects;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -47,6 +49,8 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.billing.util.optimizer.BusDispatcherOptimizer;
 import org.killbill.clock.Clock;
+import org.killbill.commons.eventbus.AllowConcurrentEvents;
+import org.killbill.commons.eventbus.Subscribe;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 import org.killbill.queue.retry.RetryableService;
@@ -55,10 +59,6 @@ import org.killbill.queue.retry.RetryableSubscriber.SubscriberAction;
 import org.killbill.queue.retry.RetryableSubscriber.SubscriberQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.AllowConcurrentEvents;
-import com.google.common.eventbus.Subscribe;
-import com.google.inject.Inject;
 
 @SuppressWarnings("TypeMayBeWeakened")
 public class InvoiceListener extends RetryableService implements InvoiceListenerService {
@@ -234,7 +234,8 @@ public class InvoiceListener extends RetryableService implements InvoiceListener
     @AllowConcurrentEvents
     @Subscribe
     public void handleSubscriptionTransition(final EffectiveSubscriptionInternalEvent event) {
-        handleEvent(event);
+    	if(!(event.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED)) 
+    			handleEvent(event);
     }
 
     @AllowConcurrentEvents

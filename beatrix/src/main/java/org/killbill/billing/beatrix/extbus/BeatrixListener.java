@@ -26,7 +26,6 @@ import javax.inject.Named;
 
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.entitlement.EntitlementService;
 import org.killbill.billing.entitlement.api.BlockingStateType;
 import org.killbill.billing.entitlement.api.DefaultEntitlementApi;
 import org.killbill.billing.events.AccountChangeInternalEvent;
@@ -63,6 +62,7 @@ import org.killbill.billing.notification.plugin.api.InvoicePaymentMetadata;
 import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata.ActionType;
+import org.killbill.billing.notification.plugin.api.TagMetadata;
 import org.killbill.billing.notification.plugin.api.TenantMetadata;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
@@ -73,6 +73,8 @@ import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.bus.api.BusEvent;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.commons.eventbus.AllowConcurrentEvents;
+import org.killbill.commons.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,8 +82,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.eventbus.AllowConcurrentEvents;
-import com.google.common.eventbus.Subscribe;
 
 public class BeatrixListener {
 
@@ -169,6 +169,8 @@ public class BeatrixListener {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_UNCANCEL;
                 } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE) {
                     eventBusType = ExtBusEventType.SUBSCRIPTION_BCD_CHANGE;
+                } else if (realEventST.getTransitionType() == SubscriptionBaseTransitionType.EXPIRED) {
+                	eventBusType = ExtBusEventType.SUBSCRIPTION_EXPIRED;
                 }
 
                 SubscriptionMetadata.ActionType actionType = (event instanceof EffectiveSubscriptionInternalEvent) ? ActionType.EFFECTIVE : ActionType.REQUESTED;
@@ -293,7 +295,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
-                metaData = realUserTagEventCr.getTagDefinition().getName();
+                final TagMetadata userTagCreationMetadata = new TagMetadata(realUserTagEventCr.getTagDefinition().getName());
+                metaData = objectMapper.writeValueAsString(userTagCreationMetadata);
                 break;
 
             case CONTROL_TAG_CREATION:
@@ -301,7 +304,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
-                metaData = realTagEventCr.getTagDefinition().getName();
+                final TagMetadata controlTagCreationMetadata = new TagMetadata(realTagEventCr.getTagDefinition().getName());
+                metaData = objectMapper.writeValueAsString(controlTagCreationMetadata);
                 break;
 
             case USER_TAG_DELETION:
@@ -309,7 +313,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                metaData = realUserTagEventDel.getTagDefinition().getName();
+                final TagMetadata userTagDeletionMetadata = new TagMetadata(realUserTagEventDel.getTagDefinition().getName());
+                metaData = objectMapper.writeValueAsString(userTagDeletionMetadata);
                 break;
 
             case CONTROL_TAG_DELETION:
@@ -317,7 +322,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                metaData = realTagEventDel.getTagDefinition().getName();
+                final TagMetadata controlTagDeletionMetadata = new TagMetadata(realTagEventDel.getTagDefinition().getName());
+                metaData = objectMapper.writeValueAsString(controlTagDeletionMetadata);
                 break;
 
             case CUSTOM_FIELD_CREATION:
@@ -339,7 +345,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TENANT_KVS;
                 objectId = realTenantConfigEventChg.getId();
                 eventBusType = ExtBusEventType.TENANT_CONFIG_CHANGE;
-                final TenantMetadata tenantConfigChangeMetadata = new TenantMetadata(realTenantConfigEventChg.getId(), realTenantConfigEventChg.getKey());
+                final TenantMetadata tenantConfigChangeMetadata = new TenantMetadata(realTenantConfigEventChg.getKey());
                 metaData = objectMapper.writeValueAsString(tenantConfigChangeMetadata);
                 break;
 

@@ -19,10 +19,9 @@ package org.killbill.billing.payment;
 
 import org.killbill.automaton.DefaultStateMachineConfig;
 import org.killbill.automaton.dot.DefaultStateMachineConfigDOTGenerator;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.annotations.Test;
-
-import com.google.common.io.Resources;
 
 public class TestDefaultStateMachineConfigDOTGenerator extends PaymentTestSuiteNoDB {
 

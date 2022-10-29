@@ -59,4 +59,8 @@ public interface SubscriptionEventSqlDao extends EntitySqlDao<SubscriptionEventM
     @SqlQuery
     public SortedSet<SubscriptionEventModelDao> getActiveEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
                                                                                @SmartBindBean final InternalTenantContext context);
+    
+    @SqlQuery
+    public SortedSet<SubscriptionEventModelDao> getAllEventsForSubscription(@Bind("subscriptionId") String subscriptionId,
+                                                                               @SmartBindBean final InternalTenantContext context);    
 }

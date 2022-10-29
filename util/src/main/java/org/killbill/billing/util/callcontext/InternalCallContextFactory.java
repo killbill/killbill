@@ -18,6 +18,7 @@
 
 package org.killbill.billing.util.callcontext;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -31,6 +32,7 @@ import org.killbill.billing.account.api.ImmutableAccountData;
 import org.killbill.billing.account.api.ImmutableAccountInternalApi;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.account.AccountDateTimeUtils;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
@@ -39,9 +41,6 @@ import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.dao.TimeZoneAwareEntity;
 import org.killbill.clock.Clock;
 import org.slf4j.MDC;
-
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 
 // Internal contexts almost always expect accountRecordId and tenantRecordId to be populated
 public class InternalCallContextFactory {
@@ -287,7 +286,7 @@ public class InternalCallContextFactory {
                                                           @Nullable final String comment,
                                                           @Nullable final DateTime createdDate,
                                                           @Nullable final DateTime updatedDate) {
-        final Long nonNulTenantRecordId = MoreObjects.firstNonNull(tenantRecordId, INTERNAL_TENANT_RECORD_ID);
+        final Long nonNulTenantRecordId = Objects.requireNonNullElse(tenantRecordId, INTERNAL_TENANT_RECORD_ID);
 
         final DateTimeZone fixedOffsetTimeZone;
         final DateTime referenceTime;

@@ -17,6 +17,7 @@
 
 package org.killbill.billing.server.log.obfuscators;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.killbill.billing.server.log.ServerTestSuiteNoDB;
@@ -25,7 +26,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.common.collect.ImmutableList;
 
 public class TestObfuscator extends ServerTestSuiteNoDB {
 
@@ -39,7 +39,7 @@ public class TestObfuscator extends ServerTestSuiteNoDB {
     @Test(groups = "fast")
     public void testObfuscateWithOnePattern() throws Exception {
         final Pattern pattern = Pattern.compile("number=([^;]+)");
-        final ImmutableList<Pattern> patterns = ImmutableList.<Pattern>of(pattern);
+        final List<Pattern> patterns = List.of(pattern);
         Assert.assertEquals(obfuscator.obfuscate("number=1234;number=12345;number=123456;number=1234567;number=12345678;number=123456789", patterns, Mockito.mock(ILoggingEvent.class)),
                             "number=****;number=*****;number=******;number=*******;number=********;number=*********");
 
@@ -49,7 +49,7 @@ public class TestObfuscator extends ServerTestSuiteNoDB {
     public void testObfuscateWithMultiplePatterns() throws Exception {
         final Pattern pattern1 = Pattern.compile("number=([^;]+)");
         final Pattern pattern2 = Pattern.compile("numberB=([^;]+)");
-        final ImmutableList<Pattern> patterns = ImmutableList.<Pattern>of(pattern1, pattern2);
+        final List<Pattern> patterns = List.of(pattern1, pattern2);
         Assert.assertEquals(obfuscator.obfuscate("number=1234;numberB=12345;number=123456;numberB=1234567;number=12345678;numberB=123456789", patterns, Mockito.mock(ILoggingEvent.class)),
                             "number=****;numberB=*****;number=******;numberB=*******;number=********;numberB=*********");
 

@@ -18,10 +18,11 @@
 package org.killbill.billing.payment.core.janitor;
 
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -45,6 +46,7 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallOrigin;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.UserType;
@@ -57,11 +59,6 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import static org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask.TRANSACTION_STATUSES_TO_CONSIDER;
 
@@ -218,12 +215,9 @@ public class IncompletePaymentAttemptTask implements Runnable {
                                                                                                              UUIDs.randomUUID());
 
         final List<PaymentTransactionModelDao> transactions = paymentDao.getPaymentTransactionsByExternalKey(attempt.getTransactionExternalKey(), tenantContext);
-        final List<PaymentTransactionModelDao> filteredTransactions = ImmutableList.copyOf(Iterables.filter(transactions, new Predicate<PaymentTransactionModelDao>() {
-            @Override
-            public boolean apply(final PaymentTransactionModelDao input) {
-                return input.getAttemptId().equals(attempt.getId());
-            }
-        }));
+        final List<PaymentTransactionModelDao> filteredTransactions = transactions.stream()
+                .filter(input -> input.getAttemptId().equals(attempt.getId()))
+                .collect(Collectors.toUnmodifiableList());
 
         // We only expect at most one transaction for a given attempt, but as a precaution we check for more; if this is the case we log a warn and continue processing the first one.
         if (filteredTransactions.size() > 1) {
@@ -403,7 +397,7 @@ public class IncompletePaymentAttemptTask implements Runnable {
         } else if (TransactionStatus.PENDING.equals(transactionStatus)) {
             retries = paymentConfig.getPendingTransactionsRetries(internalTenantContext);
         } else {
-            retries = ImmutableList.of();
+            retries = Collections.emptyList();
             log.warn("Unexpected transactionStatus='{}' from janitor, ignore...", transactionStatus);
         }
 

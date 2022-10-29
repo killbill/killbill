@@ -17,12 +17,12 @@
 
 package org.killbill.billing.util.glue;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.clock.Clock;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 
 public class NoCachingInternalCallContextFactoryProvider implements Provider<InternalCallContextFactory> {
 

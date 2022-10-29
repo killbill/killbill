@@ -45,10 +45,12 @@ import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOns;
 import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
+import org.killbill.billing.subscription.events.user.ApiEventBase;
+import org.killbill.billing.subscription.events.user.ApiEventCreate;
+import org.killbill.billing.subscription.events.user.ApiEventType;
+import org.killbill.billing.util.callcontext.CallContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
@@ -203,7 +205,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         testUtil.printEvents(events);
         assertTrue(events.size() == 1);
         assertTrue(events.get(0) instanceof PhaseEvent);
-        final DateTime nextPhaseChange = ((PhaseEvent) events.get(0)).getEffectiveDate();
+        final DateTime nextPhaseChange = events.get(0).getEffectiveDate();
         final DateTime nextExpectedPhaseChange = TestSubscriptionHelper.addDuration(subscription.getStartDate(), currentPhase.getDuration());
         assertEquals(nextPhaseChange, nextExpectedPhaseChange);
 
@@ -247,7 +249,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDeltaFromReality(it.toDurationMillis());
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         currentPhase = subscription.getCurrentPhase();
         assertNotNull(currentPhase);
         assertEquals(currentPhase.getPhaseType(), PhaseType.EVERGREEN);
@@ -286,11 +288,9 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(10);
         assertListenerStatus();
 
-        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), internalCallContext);
+        subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);
         assertEquals(subscription.getState(), EntitlementState.ACTIVE);
     }
-
-
 
     @Test(groups = "slow")
     public void testCreateSubscriptionWithBCD() throws SubscriptionBaseApiException {
@@ -304,16 +304,16 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                                                              this.internalCallContext.getUserToken(),
                                                                                                              this.internalCallContext.getTenantRecordId());
 
-        final Iterable<EntitlementSpecifier> specifiers = ImmutableList.<EntitlementSpecifier>of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), 18, null, null));
+        final Iterable<EntitlementSpecifier> specifiers = List.of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), 18, null, null));
         final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle.getId(),
                                                                                                                                 bundle.getExternalKey(),
                                                                                                                                 specifiers,
-                                                                                                                                init.toLocalDate(),
+                                                                                                                                init,
                                                                                                                                 false);
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BCD_CHANGE);
         final List<SubscriptionBaseWithAddOns> subscriptionBaseWithAddOns = subscriptionInternalApi.createBaseSubscriptionsWithAddOns(catalog.getCatalog(),
-                                                                                                                                      ImmutableList.<SubscriptionBaseWithAddOnsSpecifier>of(subscriptionBaseWithAddOnsSpecifier),
+                                                                                                                                      List.of(subscriptionBaseWithAddOnsSpecifier),
                                                                                                                                       false,
                                                                                                                                       internalCallContext);
         testListener.assertListenerStatus();
@@ -327,4 +327,77 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription.getBillCycleDayLocal().intValue(), 18);
 
     }
+    
+    @Test(groups = "slow")
+    public void testCreateSubscriptionAndCheckSubscriptionEvents() throws SubscriptionBaseApiException {
+        final DateTime init = clock.getUTCNow();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+        final String planSetName = PriceListSet.DEFAULT_PRICELIST_NAME;
+
+        final DefaultSubscriptionBase subscription = testUtil.createSubscription(bundle, productName, term, planSetName);
+        assertNotNull(subscription);
+
+        assertEquals(subscription.getBundleExternalKey(), bundle.getExternalKey());
+        testUtil.assertDateWithin(subscription.getStartDate(), init, clock.getUTCNow());
+        testUtil.assertDateWithin(subscription.getBundleStartDate(), init, clock.getUTCNow());
+
+        final Plan currentPlan = subscription.getCurrentPlan();
+        assertNotNull(currentPlan);
+        assertEquals(currentPlan.getProduct().getName(), productName);
+        assertEquals(currentPlan.getProduct().getCategory(), ProductCategory.BASE);
+        assertEquals(currentPlan.getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
+
+        final PlanPhase currentPhase = subscription.getCurrentPhase();
+        assertNotNull(currentPhase);
+        assertEquals(currentPhase.getPhaseType(), PhaseType.TRIAL);
+        assertListenerStatus();
+
+        //retrieve events with includeDeletedEvents=false (no deleted events exist currently)
+        final List<SubscriptionBaseEvent> activeEvents = dao.getEventsForSubscription(subscription.getId(), false, internalCallContext);
+        assertNotNull(activeEvents);
+        testUtil.printEvents(activeEvents);
+        assertTrue(activeEvents.size() == 2);
+        assertTrue(activeEvents.get(0) instanceof ApiEventBase);
+        assertTrue(activeEvents.get(1) instanceof PhaseEvent);
+    
+        clock.addDays(2);
+        
+        //change plan, this will result in deletion of the PhaseEvent
+        testListener.pushExpectedEvent(NextEvent.CHANGE);
+        final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("pistol-monthly-notrial");        
+        subscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier), callContext);
+        assertListenerStatus();
+        
+        //retrieve events with includeDeletedEvents=false 
+        List<SubscriptionBaseEvent> eventsAfterChange = dao.getEventsForSubscription(subscription.getId(), false, internalCallContext);
+        assertNotNull(eventsAfterChange);
+        testUtil.printEvents(eventsAfterChange);
+        assertTrue(eventsAfterChange.size() == 2); //PhaseEvent is deleted
+        SubscriptionBaseEvent event = eventsAfterChange.get(0);
+        assertTrue(event instanceof ApiEventBase);
+        assertEquals(((ApiEventBase) event).getApiEventType(), ApiEventType.CREATE);
+        
+        event = eventsAfterChange.get(1);
+        assertTrue(event instanceof ApiEventBase);
+        assertEquals(((ApiEventBase) event).getApiEventType(), ApiEventType.CHANGE);        
+        
+        ///retrieve events with includeDeletedEvents=true 
+        eventsAfterChange = dao.getEventsForSubscription(subscription.getId(), true, internalCallContext);
+        assertNotNull(eventsAfterChange);
+        testUtil.printEvents(eventsAfterChange);
+        assertTrue(eventsAfterChange.size() == 3); //Returns PhaseEvent as well
+        
+        event = eventsAfterChange.get(0);
+        assertTrue(event instanceof ApiEventBase);
+        assertEquals(((ApiEventBase) event).getApiEventType(), ApiEventType.CREATE);
+        
+        event = eventsAfterChange.get(1);
+        assertTrue(event instanceof ApiEventBase);
+        assertEquals(((ApiEventBase) event).getApiEventType(), ApiEventType.CHANGE);    
+        
+        event = eventsAfterChange.get(2);
+        assertTrue(event instanceof PhaseEvent);
+    }    
 }

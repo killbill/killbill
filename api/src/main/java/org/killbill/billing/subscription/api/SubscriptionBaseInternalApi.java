@@ -77,7 +77,7 @@ public interface SubscriptionBaseInternalApi {
 
     public SubscriptionBase getBaseSubscription(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
-    public SubscriptionBase getSubscriptionFromId(UUID id, InternalTenantContext context) throws SubscriptionBaseApiException;
+    public SubscriptionBase getSubscriptionFromId(UUID id, boolean includeDeletedEvents, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public SubscriptionBase getSubscriptionFromExternalKey(String externalKey, InternalTenantContext context) throws SubscriptionBaseApiException;
 

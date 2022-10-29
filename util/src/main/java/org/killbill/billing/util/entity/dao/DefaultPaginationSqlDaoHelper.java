@@ -23,13 +23,12 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
 
 public class DefaultPaginationSqlDaoHelper {
 

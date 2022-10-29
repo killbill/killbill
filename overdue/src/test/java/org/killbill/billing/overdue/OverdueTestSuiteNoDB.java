@@ -18,6 +18,7 @@
 
 package org.killbill.billing.overdue;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
@@ -42,6 +43,7 @@ import org.killbill.billing.tag.TagInternalApi;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.xmlloader.XMLLoader;
@@ -49,9 +51,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
-import com.google.common.io.Resources;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 public abstract class OverdueTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {

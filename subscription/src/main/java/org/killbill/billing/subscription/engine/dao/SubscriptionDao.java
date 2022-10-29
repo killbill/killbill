@@ -26,6 +26,9 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import javax.annotation.Nullable;
+
+import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -63,7 +66,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     SubscriptionBaseBundle createSubscriptionBundle(DefaultSubscriptionBaseBundle bundle, final SubscriptionCatalog catalog, final boolean renameCancelledBundleIfExist, InternalCallContext context) throws SubscriptionBaseApiException;
 
-    SubscriptionBase getSubscriptionFromId(UUID subscriptionId, final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
+    SubscriptionBase getSubscriptionFromId(UUID subscriptionId, final SubscriptionCatalog catalog, boolean includeDeletedEvents, InternalTenantContext context) throws CatalogApiException;
 
     SubscriptionBase getSubscriptionFromExternalKey(String externalKey, final SubscriptionCatalog catalog, InternalTenantContext context) throws CatalogApiException;
 
@@ -84,11 +87,11 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
     void updateChargedThroughDates(final Map<DateTime, List<UUID>> chargeThroughDates, final InternalCallContext context);
 
     // Event apis
-    void createNextPhaseEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
+    void createNextPhaseOrExpiredEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent readyPhaseEvent, SubscriptionBaseEvent nextPhase, InternalCallContext context);
 
     SubscriptionBaseEvent getEventById(UUID eventId, InternalTenantContext context);
 
-    List<SubscriptionBaseEvent> getEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
+    List<SubscriptionBaseEvent> getEventsForSubscription(UUID subscriptionId, boolean includeDeletedEvents, InternalTenantContext context);
 
     List<SubscriptionBaseEvent> getPendingEventsForSubscription(UUID subscriptionId, InternalTenantContext context);
 
@@ -96,7 +99,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     List<SubscriptionBaseEvent> createSubscriptionsWithAddOns(List<SubscriptionBaseWithAddOns> subscriptions, Map<UUID, List<SubscriptionBaseEvent>> initialEventsMap, final SubscriptionCatalog catalog, InternalCallContext context);
 
-    void cancelSubscriptionsOnBasePlanEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelEvents, final SubscriptionCatalog catalog, InternalCallContext context);
+    void cancelOrExpireSubscriptionOnNotification(DefaultSubscriptionBase subscription, SubscriptionBaseEvent event, List<DefaultSubscriptionBase> subscriptions, List<SubscriptionBaseEvent> cancelOrExpireEvents, final SubscriptionCatalog catalog, InternalCallContext context);
 
     void notifyOnBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, final SubscriptionCatalog catalog, final InternalCallContext context);
 

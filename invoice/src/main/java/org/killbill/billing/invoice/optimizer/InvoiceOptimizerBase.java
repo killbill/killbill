@@ -17,6 +17,7 @@
 
 package org.killbill.billing.invoice.optimizer;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -27,11 +28,9 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.junction.BillingEventSet;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 
 public abstract class InvoiceOptimizerBase implements InvoiceOptimizer {
 
@@ -63,7 +62,7 @@ public abstract class InvoiceOptimizerBase implements InvoiceOptimizer {
         }
 
         public AccountInvoices() {
-            this(null, null, ImmutableList.of());
+            this(null, null, Collections.emptyList());
         }
 
         public LocalDate getCutoffDate() {

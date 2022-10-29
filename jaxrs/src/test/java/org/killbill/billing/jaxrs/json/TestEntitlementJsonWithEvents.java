@@ -37,8 +37,6 @@ import org.killbill.clock.DefaultClock;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.killbill.billing.jaxrs.JaxrsTestUtils.createAuditLogsJson;
 
 public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
@@ -53,7 +51,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
 
         final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId,
                                                                          BillingPeriod.NO_BILLING_PERIOD,
-                                                                         effectiveDate.toLocalDate(),
+                                                                         effectiveDate,
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
@@ -71,7 +69,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 UUID.randomUUID(),
                                                                                 bundleExternalKey, UUID.randomUUID(),
                                                                                 externalKey,
-                                                                                new LocalDate(),
+                                                                                new DateTime(),
                                                                                 UUID.randomUUID().toString(),
                                                                                 ProductCategory.BASE,
                                                                                 BillingPeriod.MONTHLY,
@@ -80,13 +78,13 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 UUID.randomUUID().toString(),
                                                                                 EntitlementState.ACTIVE,
                                                                                 EntitlementSourceType.NATIVE,
+                                                                                new DateTime(),
                                                                                 new LocalDate(),
-                                                                                new LocalDate(),
-                                                                                new LocalDate(),
-                                                                                new LocalDate(),
+                                                                                new DateTime(),
+                                                                                new DateTime(),
                                                                                 null,
-                                                                                ImmutableList.<EventSubscriptionJson>of(newEvent),
-                                                                                ImmutableList.of(priceOverride),
+                                                                                List.of(newEvent),
+                                                                                List.of(priceOverride),
                                                                                 null,
                                                                                 auditLogs);
         final String asJson = mapper.writeValueAsString(entitlementJsonWithEvents);

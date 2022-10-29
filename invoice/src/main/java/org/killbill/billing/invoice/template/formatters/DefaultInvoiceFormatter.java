@@ -23,9 +23,10 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.joda.money.CurrencyUnit;
@@ -49,13 +50,10 @@ import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.billing.invoice.model.DefaultInvoice;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Format invoice fields
@@ -86,7 +84,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public Integer getInvoiceNumber() {
-        return MoreObjects.firstNonNull(invoice.getInvoiceNumber(), 0);
+        return Objects.requireNonNullElse(invoice.getInvoiceNumber(), 0);
     }
 
     @Override
@@ -124,7 +122,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public List<String> getTrackingIds() {
-        return MoreObjects.firstNonNull(invoice.getTrackingIds(), ImmutableList.<String>of());
+        return Objects.requireNonNullElse(invoice.getTrackingIds(), Collections.emptyList());
     }
 
     @Override
@@ -174,7 +172,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public <T extends InvoiceItem> List<InvoiceItem> getInvoiceItems(final Class<T> clazz) {
-        return MoreObjects.firstNonNull(invoice.getInvoiceItems(clazz), ImmutableList.<InvoiceItem>of());
+        return Objects.requireNonNullElse(invoice.getInvoiceItems(clazz), Collections.emptyList());
     }
 
     @Override
@@ -194,7 +192,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public List<InvoicePayment> getPayments() {
-        return MoreObjects.firstNonNull(invoice.getPayments(), ImmutableList.<InvoicePayment>of());
+        return Objects.requireNonNullElse(invoice.getPayments(), Collections.emptyList());
     }
 
     @Override
@@ -209,17 +207,17 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getChargedAmount() {
-        return MoreObjects.firstNonNull(invoice.getChargedAmount(), BigDecimal.ZERO);
+        return Objects.requireNonNullElse(invoice.getChargedAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getOriginalChargedAmount() {
-        return MoreObjects.firstNonNull(invoice.getOriginalChargedAmount(), BigDecimal.ZERO);
+        return Objects.requireNonNullElse(invoice.getOriginalChargedAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getBalance() {
-        return MoreObjects.firstNonNull(invoice.getBalance(), BigDecimal.ZERO);
+        return Objects.requireNonNullElse(invoice.getBalance(), BigDecimal.ZERO);
     }
 
     @Override
@@ -247,7 +245,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         dfs.setInternationalCurrencySymbol(currencyUnit.getCode());
 
         try {
-            Currency currency = Currency.fromCode(invoiceCurrencyCode);
+            final Currency currency = Currency.fromCode(invoiceCurrencyCode);
             dfs.setCurrencySymbol(currency.getSymbol());
         } catch (final IllegalArgumentException e) {
             dfs.setCurrencySymbol(currencyUnit.getSymbol(locale));
@@ -257,7 +255,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         numberFormatter.setMinimumFractionDigits(currencyUnit.getDecimalPlaces());
         numberFormatter.setMaximumFractionDigits(currencyUnit.getDecimalPlaces());
 
-        return numberFormatter.format(amount.doubleValue());
+        return numberFormatter.format(amount);
     }
 
     @Override
@@ -275,9 +273,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         }
         // If there were multiple payments (and refunds) we pick chose the last one
         DateTime latestPaymentDate = null;
-        final Iterator<InvoicePayment> paymentIterator = invoice.getPayments().iterator();
-        while (paymentIterator.hasNext()) {
-            final InvoicePayment cur = paymentIterator.next();
+        for (final InvoicePayment cur : invoice.getPayments()) {
             latestPaymentDate = latestPaymentDate != null && latestPaymentDate.isAfter(cur.getPaymentDate()) ?
                                 latestPaymentDate : cur.getPaymentDate();
 
@@ -319,7 +315,7 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getPaidAmount() {
-        return MoreObjects.firstNonNull(invoice.getPaidAmount(), BigDecimal.ZERO);
+        return Objects.requireNonNullElse(invoice.getPaidAmount(), BigDecimal.ZERO);
     }
 
     @Override
@@ -367,6 +363,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
         return invoice.getParentInvoiceId();
     }
 
+    @Override
+    public UUID getGroupId() {
+        return invoice.getGroupId();
+    }
+
     // Expose the fields for children classes. This is useful for further customization of the invoices
 
     @SuppressWarnings("UnusedDeclaration")
@@ -390,11 +391,11 @@ public class DefaultInvoiceFormatter implements InvoiceFormatter {
 
     @Override
     public BigDecimal getCreditedAmount() {
-        return MoreObjects.firstNonNull(invoice.getCreditedAmount(), BigDecimal.ZERO);
+        return Objects.requireNonNullElse(invoice.getCreditedAmount(), BigDecimal.ZERO);
     }
 
     @Override
     public BigDecimal getRefundedAmount() {
-        return MoreObjects.firstNonNull(invoice.getRefundedAmount(), BigDecimal.ZERO);
+        return Objects.requireNonNullElse(invoice.getRefundedAmount(), BigDecimal.ZERO);
     }
 }

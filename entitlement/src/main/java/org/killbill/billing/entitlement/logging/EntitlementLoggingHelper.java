@@ -17,6 +17,7 @@
 
 package org.killbill.billing.entitlement.logging;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 
@@ -67,8 +68,8 @@ public abstract class EntitlementLoggingHelper {
     private static void logCreateEntitlementWithAOs(final StringBuilder logLine,
                                                     final String externalKey,
                                                     final Iterable<EntitlementSpecifier> entitlementSpecifiers,
-                                                    final LocalDate entitlementDate,
-                                                    final LocalDate billingDate) {
+                                                    final Object entitlementDate,
+                                                    final Object billingDate) {
         if (externalKey != null) {
             logLine.append("bundleKey='")
                    .append(externalKey)
@@ -158,7 +159,7 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
-    public static void logCancelEntitlement(final Logger log, final Entitlement entitlement, final LocalDate entitlementEffectiveDate, final Boolean overrideBillingEffectiveDate, final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy) {
+    public static void logCancelEntitlement(final Logger log, final Entitlement entitlement, final Object entitlementEffectiveDate, final Object billingEffectiveDate, final Boolean overrideBillingEffectiveDate, final EntitlementActionPolicy entitlementPolicy, final BillingActionPolicy billingPolicy) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Cancel Entitlement: ")
                     .append(" id = '")
@@ -169,6 +170,11 @@ public abstract class EntitlementLoggingHelper {
                        .append(entitlementEffectiveDate)
                        .append("'");
             }
+            if (billingEffectiveDate != null) {
+                logLine.append(", billingDate='")
+                       .append(billingEffectiveDate)
+                       .append("'");
+            }            
             if (overrideBillingEffectiveDate != null) {
                 logLine.append(", overrideBillDate='")
                        .append(overrideBillingEffectiveDate)
@@ -209,7 +215,7 @@ public abstract class EntitlementLoggingHelper {
     }
 
     public static void logChangePlan(final Logger log, final Entitlement entitlement, final EntitlementSpecifier entitlementSpecifier,
-                                     final LocalDate entitlementEffectiveDate, final BillingActionPolicy actionPolicy) {
+                                     final Object entitlementEffectiveDate, final BillingActionPolicy actionPolicy) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Change Entitlement Plan: ")
                     .append(" id = '")
@@ -289,7 +295,7 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
-    public static void logAddBlockingState(final Logger log, final BlockingState inputBlockingState, final LocalDate inputEffectiveDate) {
+    public static void logAddBlockingState(final Logger log, final BlockingState inputBlockingState, final Object inputEffectiveDate) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Add BlockingState Entitlement: ");
             logBlockingState(logLine, inputBlockingState);

@@ -255,6 +255,8 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
                 return SubscriptionBaseTransitionType.PHASE;
             case BCD_UPDATE:
                 return SubscriptionBaseTransitionType.BCD_CHANGE;
+            case EXPIRED:
+            	return SubscriptionBaseTransitionType.EXPIRED;                
             default:
                 throw new SubscriptionBaseError("Unexpected event type " + eventType);
         }

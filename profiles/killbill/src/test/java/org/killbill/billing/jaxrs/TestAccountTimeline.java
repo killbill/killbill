@@ -65,11 +65,11 @@ public class TestAccountTimeline extends TestJaxrsBase {
         Assert.assertNotNull(timeline.getInvoices().get(0).getBundleKeys());
 
         final List<EventSubscription> events = timeline.getBundles().get(0).getSubscriptions().get(0).getEvents();
-        Assert.assertEquals(events.get(0).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()), new LocalDate(2012, 4, 25));
         Assert.assertEquals(events.get(0).getEventType(), SubscriptionEventType.START_ENTITLEMENT);
-        Assert.assertEquals(events.get(1).getEffectiveDate(), new LocalDate(2012, 4, 25));
+        Assert.assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()), new LocalDate(2012, 4, 25));
         Assert.assertEquals(events.get(1).getEventType(), SubscriptionEventType.START_BILLING);
-        Assert.assertEquals(events.get(2).getEffectiveDate(), new LocalDate(2012, 5, 25));
+        Assert.assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()), new LocalDate(2012, 5, 25));
         Assert.assertEquals(events.get(2).getEventType(), SubscriptionEventType.PHASE);
     }
 

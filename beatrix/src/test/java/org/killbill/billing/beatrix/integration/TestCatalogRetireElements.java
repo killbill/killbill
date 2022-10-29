@@ -18,6 +18,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,14 +45,9 @@ import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -62,7 +58,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        final Map<String, String> allExtraProperties = new HashMap<>(extraProperties);
         allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogRetireElements");
         return super.getConfigSource(null, allExtraProperties);
     }
@@ -84,9 +80,9 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext);
 
         // Move out a month. Date > catalog V2
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -97,22 +93,22 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Change to a plan that exists in V2 but not in V1
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("bazooka-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Change back to original plan: The code (subscription) chooses the latest version of the catalog when making the change and therefore the call succeeds
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec1), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec1), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         //
         // The code normally goes through the grandfathering logic to find the version but specifies the transitionTime of the latest CHANGE (and not the subscriptionStartDate)
         // and therefore correctly find the latest catalog version, invoicing at the new price 295.95
         //
-        Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.RECURRING, new BigDecimal("295.95")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-500.00")),
-                                    new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("204.05")));
+        final Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 4, callContext,
+                                                               new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.RECURRING, new BigDecimal("295.95")),
+                                                               new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2016, 1, 5), InvoiceItemType.REPAIR_ADJ, new BigDecimal("-500.00")),
+                                                               new ExpectedInvoiceItemCheck(new LocalDate(2015, 12, 5), new LocalDate(2015, 12, 5), InvoiceItemType.CBA_ADJ, new BigDecimal("204.05")));
         final VersionedCatalog catalog = catalogUserApi.getCatalog("foo", callContext);
         // RECURRING should be set against V2
         Assert.assertEquals(curInvoice.getInvoiceItems().get(0).getCatalogEffectiveDate().toDate().compareTo(catalog.getVersions().get(1).getEffectiveDate()), 0);
@@ -121,10 +117,10 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
 
 
-        final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, callContext);
+        final Subscription bpSubscription = subscriptionApi.getSubscriptionForEntitlementId(bpEntitlementId, false, callContext);
         final List<SubscriptionEvent> events = bpSubscription.getSubscriptionEvents();
         // We are seeing START_ENTITLEMENT, START_BILLING, and the **last CHANGE**
-        // Note that the PHASE and intermediate CHANGE are not being returned (is_active = '0') because all coincided on the same date. This is debatable
+        // Note that the PHASE and intermediate CHANGE are not being returned (is_active = FALSE) because all coincided on the same date. This is debatable
         // whether this is a good semantics. See #1030
         assertEquals(events.size(), 3);
         // Verify what we return is the price from the correct catalog version. See #1120
@@ -152,7 +148,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
                                                            ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
@@ -165,7 +161,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, Collections.emptyList(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_PLAN_NOT_FOUND.getCode());
@@ -181,7 +177,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 4);
 
         // One more invoice to generate an item whose effectiveDate is past our original V1 version
@@ -191,18 +187,15 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 5);
 
         final Invoice fifthInvoice = invoices.get(4);
         assertEquals(fifthInvoice.getInvoiceItems().size(), 2);
 
-        final InvoiceItem pistolInvoiceItem = Iterables.find(fifthInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return "pistol-monthly".equals(input.getPlanName());
-            }
-        });
+        final InvoiceItem pistolInvoiceItem = fifthInvoice.getInvoiceItems().stream()
+                .filter(input -> "pistol-monthly".equals(input.getPlanName()))
+                .findFirst().get();
         assertEquals(pistolInvoiceItem.getPrettyPlanName(), "Beretta");
     }
 
@@ -225,7 +218,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
                                                            ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
 
         // Move out a month.
@@ -234,7 +227,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         assertListenerStatus();
 
         // Cancel entitlement
-        bpEntitlement = bpEntitlement.cancelEntitlementWithDate(new LocalDate("2016-05-01"), true, ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement = bpEntitlement.cancelEntitlementWithDate(new LocalDate("2016-05-01"), true, Collections.emptyList(), callContext);
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
 
@@ -247,7 +240,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, Collections.emptyList(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_PLAN_NOT_FOUND.getCode());
@@ -255,7 +248,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         // Uncancel entitlement
         busHandler.pushExpectedEvents(NextEvent.UNCANCEL);
-        bpEntitlement.uncancelEntitlement(ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement.uncancelEntitlement(Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Move out a month and verify 'Pistol' plan continue working as expected.
@@ -263,7 +256,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 4);
         for (final Invoice invoice : invoices) {
             assertEquals(invoice.getInvoiceItems().get(0).getPlanName(), "pistol-monthly");
@@ -286,21 +279,21 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext);
 
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getLastActivePhase().getPhaseType(), PhaseType.TRIAL);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         // Move out after trial (2015-08-04)
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 2);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 2);
 
         // 2015-08-05
         clock.addDays(1);
@@ -310,11 +303,11 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Note that we need to trigger a CHANGE outside a TRIAL phase to generate a CHANGE event (otherwise, a CREATE is generated)
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier(productName, term, "SpecialDiscount", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 3);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 3);
 
         // Move out after discount phase (happens on 2015-11-04)
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -331,7 +324,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // This verifies the PlanAligner.getNextTimedPhase codepath with a CHANGE transition type
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
 
         // Move out a month (2015-12-05)
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -346,7 +339,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Catalog v3 should start now.
 
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2), "externalKey2", null, null, false, true, Collections.emptyList(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PRODUCT.getCode());
@@ -357,7 +350,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 9);
     }
 
@@ -377,21 +370,21 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext);
 
         assertNotNull(bpEntitlement);
         assertEquals(bpEntitlement.getLastActivePhase().getPhaseType(), PhaseType.TRIAL);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         // Move out after trial (2015-08-04)
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDays(30);
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 2);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 2);
 
         // 2015-08-05
         clock.addDays(1);
@@ -401,14 +394,14 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Note that we need to trigger a CHANGE outside a TRIAL phase to generate a CHANGE event (otherwise, a CREATE is generated)
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier(productName, term, "SpecialDiscount", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 3);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.DISCOUNT);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 3);
 
         // Cancel entitlement
-        bpEntitlement = bpEntitlement.cancelEntitlementWithDate(new LocalDate("2016-05-01"), true, ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement = bpEntitlement.cancelEntitlementWithDate(new LocalDate("2016-05-01"), true, Collections.emptyList(), callContext);
         assertEquals(bpEntitlement.getState(), EntitlementState.ACTIVE);
         assertListenerStatus();
 
@@ -427,7 +420,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // This verifies the PlanAligner.getNextTimedPhase codepath with a CHANGE transition type
         assertListenerStatus();
 
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getPhaseType(), PhaseType.EVERGREEN);
 
         // Move out a month (2015-12-05)
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -436,7 +429,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         // Uncancel entitlement
         busHandler.pushExpectedEvents(NextEvent.UNCANCEL);
-        bpEntitlement.uncancelEntitlement(ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement.uncancelEntitlement(Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Move out a month (2016-01-01)
@@ -447,7 +440,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // Catalog v3 should start now.
 
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2), "externalKey2", null, null, false, true, Collections.emptyList(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PRODUCT.getCode());
@@ -458,7 +451,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 9);
     }
 
@@ -482,7 +475,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
                                                            ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
@@ -500,7 +493,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, Collections.emptyList(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));
@@ -511,7 +504,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 4);
         for (final Invoice invoice : invoices) {
             assertEquals(invoice.getInvoiceItems().get(0).getPlanName(), "pistol-monthly");
@@ -536,12 +529,12 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, term, "SpecialDiscount", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext);
 
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         // Move out a month.
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
@@ -556,7 +549,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         // PriceList "SpecialDiscount" at this point.
 
         try {
-            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "externalKey2", null, null, false, true, Collections.emptyList(), callContext);
             fail(); // force to fail is there is not an exception
         } catch (final EntitlementApiException e) {
             assertTrue(e.getLocalizedMessage().startsWith("Could not find any product named 'Pistol'"));
@@ -572,7 +565,7 @@ public class TestCatalogRetireElements extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 5);
 
         assertTrue(invoices.get(0).getInvoiceItems().get(0).getPhaseName().equals("discount-pistol-monthly-trial"));

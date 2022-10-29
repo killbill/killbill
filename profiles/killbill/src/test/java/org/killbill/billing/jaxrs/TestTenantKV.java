@@ -18,6 +18,7 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +36,6 @@ import org.killbill.billing.client.model.gen.Payment;
 import org.killbill.billing.client.model.gen.PaymentMethod;
 import org.killbill.billing.client.model.gen.PaymentMethodPluginDetail;
 import org.killbill.billing.client.model.gen.PaymentTransaction;
-import org.killbill.billing.client.model.gen.PluginProperty;
 import org.killbill.billing.client.model.gen.TenantKeyValue;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.api.TransactionStatus;
@@ -43,8 +43,6 @@ import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.tenant.api.TenantKV;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 
@@ -191,7 +189,7 @@ public class TestTenantKV extends TestJaxrsBase {
         authTransactionJson.setTransactionType(TransactionType.AUTHORIZE);
 
         callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CREATION, ExtBusEventType.ACCOUNT_CHANGE, ExtBusEventType.PAYMENT_SUCCESS);
-        final ComboPaymentTransaction comboAuthorization = new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of(), null);
+        final ComboPaymentTransaction comboAuthorization = new ComboPaymentTransaction(accountJson, paymentMethodJson, authTransactionJson, Collections.emptyList(), Collections.emptyList(), null);
         final Payment payment = paymentApi.createComboPayment(comboAuthorization, NULL_PLUGIN_NAMES, requestOptions);
         callbackServlet.assertListenerStatus();
         assertEquals(payment.getTransactions().get(0).getStatus(), TransactionStatus.SUCCESS);

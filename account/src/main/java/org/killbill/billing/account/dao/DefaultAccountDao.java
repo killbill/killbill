@@ -19,10 +19,12 @@
 
 package org.killbill.billing.account.dao;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.BillingExceptionBase;
@@ -54,7 +56,6 @@ import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
 import org.killbill.billing.util.entity.dao.EntityDaoBase;
-import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoTransactionalJdbiWrapper;
 import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.features.KillbillFeatures;
@@ -64,9 +65,6 @@ import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.account.api.DefaultMutableAccountData.DEFAULT_BILLING_CYCLE_DAY_LOCAL;
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
@@ -135,8 +133,11 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         final Long recordId = savedAccount.getRecordId();
         // We need to re-hydrate the callcontext with the account record id
         final InternalCallContext rehydratedContext = internalCallContextFactory.createInternalCallContext(savedAccount, recordId, context);
-        final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(new DefaultAccountData(savedAccount), savedAccount.getId(),
-                                                                                           rehydratedContext.getAccountRecordId(), rehydratedContext.getTenantRecordId(), rehydratedContext.getUserToken());
+        final AccountCreationInternalEvent creationEvent = new DefaultAccountCreationEvent(new DefaultAccountData(savedAccount),
+                                                                                           savedAccount.getId(),
+                                                                                           rehydratedContext.getAccountRecordId(),
+                                                                                           rehydratedContext.getTenantRecordId(),
+                                                                                           rehydratedContext.getUserToken());
         try {
             eventBus.postFromTransaction(creationEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
         } catch (final EventBusException e) {
@@ -146,12 +147,8 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public AccountModelDao getAccountByKey(final String key, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
-            @Override
-            public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountByKey(key, context);
-            }
-        });
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
+                entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountByKey(key, context));
     }
 
     @Override
@@ -160,17 +157,14 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         if (userIsFeelingLucky) {
             // The use-case we can optimize is when the user is looking for an exact match (e.g. he knows the full email). In that case, we can speed up the queries
             // by doing exact searches only.
-            final AccountModelDao accountModelDao = transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<AccountModelDao>() {
-                @Override
-                public AccountModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                    return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).luckySearch(searchKey, context);
-                }
-            });
+            final AccountModelDao accountModelDao = transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
+                    entitySqlDaoWrapperFactory.become(AccountSqlDao.class).luckySearch(searchKey, context));
+
             return new DefaultPagination<AccountModelDao>(0L,
                                                           1L,
                                                           accountModelDao == null ? 0L : 1L,
                                                           null, // We don't compute stats for speed in that case
-                                                          accountModelDao == null ? ImmutableList.<AccountModelDao>of().iterator() : ImmutableList.<AccountModelDao>of(accountModelDao).iterator());
+                                                          accountModelDao == null ? Collections.emptyIterator() : List.of(accountModelDao).iterator());
         }
 
         // Otherwise, we pretty much need to do a full table scan (leading % in the like clause).
@@ -198,177 +192,143 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_MAP_NULL_KEY, "");
         }
 
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<UUID>() {
-            @Override
-            public UUID inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getIdFromKey(externalKey, context);
-            }
-        });
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
+                entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getIdFromKey(externalKey, context));
     }
 
     @Override
     public void update(final AccountModelDao specifiedAccount, final boolean treatNullValueAsReset, final InternalCallContext context) throws AccountApiException {
-        transactionalSqlDao.execute(false, AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws EventBusException, AccountApiException {
-                final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
+        transactionalSqlDao.execute(false, AccountApiException.class, entitySqlDaoWrapperFactory -> {
+            final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
 
-                final UUID accountId = specifiedAccount.getId();
-                final AccountModelDao currentAccount = transactional.getById(accountId.toString(), context);
-                if (currentAccount == null) {
-                    throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
-                }
-
-                specifiedAccount.validateAccountUpdateInput(currentAccount, treatNullValueAsReset, killbillFeatures.allowAccountBCDUpdate());
-
-                if (!treatNullValueAsReset) {
-                    if ((currentAccount.getBillingCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
-                        specifiedAccount.getBillingCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL) || // and the proposed date is not 0
-                        killbillFeatures.allowAccountBCDUpdate()) {
-                        // Use the specified BCD
-                    } else {
-                        // Keep the current BCD
-                        specifiedAccount.setBillingCycleDayLocal(currentAccount.getBillingCycleDayLocal());
-                    }
-
-                    // Set unspecified (null) fields to their current values
-                    specifiedAccount.mergeWithDelegate(currentAccount);
-                }
-
-                transactional.update(specifiedAccount, context);
-
-                final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId,
-                                                                                             currentAccount,
-                                                                                             specifiedAccount,
-                                                                                             context.getAccountRecordId(),
-                                                                                             context.getTenantRecordId(),
-                                                                                             context.getUserToken(),
-                                                                                             context.getCreatedDate());
-                try {
-                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
-                } catch (final EventBusException e) {
-                    log.warn("Failed to post account change event for accountId='{}'", accountId, e);
-                }
-
-                return null;
+            final UUID accountId = specifiedAccount.getId();
+            final AccountModelDao currentAccount = transactional.getById(accountId.toString(), context);
+            if (currentAccount == null) {
+                throw new AccountApiException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
             }
+
+            specifiedAccount.validateAccountUpdateInput(currentAccount, treatNullValueAsReset, killbillFeatures.allowAccountBCDUpdate());
+
+            if (!treatNullValueAsReset) {
+                if ((currentAccount.getBillingCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
+                     specifiedAccount.getBillingCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL) || // and the proposed date is not 0
+                    killbillFeatures.allowAccountBCDUpdate()) {
+                    // Use the specified BCD
+                } else {
+                    // Keep the current BCD
+                    specifiedAccount.setBillingCycleDayLocal(currentAccount.getBillingCycleDayLocal());
+                }
+
+                // Set unspecified (null) fields to their current values
+                specifiedAccount.mergeWithDelegate(currentAccount);
+            }
+
+            transactional.update(specifiedAccount, context);
+
+            final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId,
+                                                                                         currentAccount,
+                                                                                         specifiedAccount,
+                                                                                         context.getAccountRecordId(),
+                                                                                         context.getTenantRecordId(),
+                                                                                         context.getUserToken(),
+                                                                                         context.getCreatedDate());
+            try {
+                eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
+            } catch (final EventBusException e) {
+                log.warn("Failed to post account change event for accountId='{}'", accountId, e);
+            }
+
+            return null;
         });
     }
 
     @Override
     public void updatePaymentMethod(final UUID accountId, final UUID paymentMethodId, final InternalCallContext context) throws AccountApiException {
-        transactionalSqlDao.execute(false, AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws EntityPersistenceException, EventBusException {
-                final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
+        transactionalSqlDao.execute(false, AccountApiException.class, entitySqlDaoWrapperFactory -> {
+            final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
 
-                final AccountModelDao currentAccount = transactional.getById(accountId.toString(), context);
-                if (currentAccount == null) {
-                    throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
-                }
+            final AccountModelDao currentAccount = transactional.getById(accountId.toString(), context);
+            if (currentAccount == null) {
+                throw new EntityPersistenceException(ErrorCode.ACCOUNT_DOES_NOT_EXIST_FOR_ID, accountId);
+            }
 
-                // Check if an update is really needed. If not, bail early to avoid sending an extra event on the bus
-                if ((currentAccount.getPaymentMethodId() == null && paymentMethodId == null) ||
-                    (currentAccount.getPaymentMethodId() != null && currentAccount.getPaymentMethodId().equals(paymentMethodId))) {
-                    return null;
-                }
-
-                final String thePaymentMethodId = paymentMethodId != null ? paymentMethodId.toString() : null;
-                final AccountModelDao account = (AccountModelDao) transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
-
-                final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, currentAccount, account,
-                                                                                             context.getAccountRecordId(),
-                                                                                             context.getTenantRecordId(),
-                                                                                             context.getUserToken(),
-                                                                                             context.getCreatedDate());
-
-                try {
-                    eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
-                } catch (final EventBusException e) {
-                    log.warn("Failed to post account change event for accountId='{}'", accountId, e);
-                }
+            // Check if an update is really needed. If not, bail early to avoid sending an extra event on the bus
+            if ((currentAccount.getPaymentMethodId() == null && paymentMethodId == null) ||
+                (currentAccount.getPaymentMethodId() != null && currentAccount.getPaymentMethodId().equals(paymentMethodId))) {
                 return null;
             }
+
+            final String thePaymentMethodId = paymentMethodId != null ? paymentMethodId.toString() : null;
+            final AccountModelDao account = (AccountModelDao) transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
+
+            final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, currentAccount, account,
+                                                                                         context.getAccountRecordId(),
+                                                                                         context.getTenantRecordId(),
+                                                                                         context.getUserToken(),
+                                                                                         context.getCreatedDate());
+
+            try {
+                eventBus.postFromTransaction(changeEvent, entitySqlDaoWrapperFactory.getHandle().getConnection());
+            } catch (final EventBusException e) {
+                log.warn("Failed to post account change event for accountId='{}'", accountId, e);
+            }
+            return null;
         });
     }
 
     @Override
     public void addEmail(final AccountEmailModelDao email, final InternalCallContext context) throws AccountApiException {
-        transactionalSqlDao.execute(false, AccountApiException.class, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final AccountEmailSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class);
+        transactionalSqlDao.execute(false, AccountApiException.class, entitySqlDaoWrapperFactory -> {
+            final AccountEmailSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class);
 
-                if (transactional.getById(email.getId().toString(), context) != null) {
-                    throw new AccountApiException(ErrorCode.ACCOUNT_EMAIL_ALREADY_EXISTS, email.getId());
-                }
-
-                createAndRefresh(transactional, email, context);
-                return null;
+            if (transactional.getById(email.getId().toString(), context) != null) {
+                throw new AccountApiException(ErrorCode.ACCOUNT_EMAIL_ALREADY_EXISTS, email.getId());
             }
+
+            createAndRefresh(transactional, email, context);
+            return null;
         });
     }
 
     @Override
     public void removeEmail(final AccountEmailModelDao email, final InternalCallContext context) {
-        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).markEmailAsDeleted(email, context);
-                return null;
-            }
+        transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
+            entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).markEmailAsDeleted(email, context);
+            return null;
         });
     }
 
     @Override
     public List<AccountEmailModelDao> getEmailsByAccountId(final UUID accountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AccountEmailModelDao>>() {
-            @Override
-            public List<AccountEmailModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).getEmailByAccountId(accountId, context);
-            }
-        });
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
+                entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).getEmailByAccountId(accountId, context));
     }
 
     @Override
     public Integer getAccountBCD(final UUID accountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Integer>() {
-            @Override
-            public Integer inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getBCD(accountId.toString(), context);
-            }
-        });
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
+                entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getBCD(accountId.toString(), context));
     }
 
     @Override
     public List<AccountModelDao> getAccountsByParentId(final UUID parentAccountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AccountModelDao>>() {
-            @Override
-            public List<AccountModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountsByParentId(parentAccountId, context);
-            }
-        });
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
+                entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountsByParentId(parentAccountId, context));
     }
 
     @Override
     public List<AuditLogWithHistory> getAuditLogsWithHistoryForId(final UUID accountId, final AuditLevel auditLevel, final InternalTenantContext context) throws AccountApiException {
-        return transactionalSqlDao.execute(true, AccountApiException.class, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
-            @Override
-            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
-                final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
-                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.ACCOUNT, accountId, auditLevel, context);
-            }
+        return transactionalSqlDao.execute(true, AccountApiException.class, entitySqlDaoWrapperFactory -> {
+            final AccountSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountSqlDao.class);
+            return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.ACCOUNT, accountId, auditLevel, context);
         });
     }
 
     @Override
     public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<AuditLogWithHistory>>() {
-            @Override
-            public List<AuditLogWithHistory> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
-                final AccountEmailSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class);
-                return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.ACCOUNT_EMAIL, accountEmailId, auditLevel, context);
-            }
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
+            final AccountEmailSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class);
+            return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.ACCOUNT_EMAIL, accountEmailId, auditLevel, context);
         });
     }
 }

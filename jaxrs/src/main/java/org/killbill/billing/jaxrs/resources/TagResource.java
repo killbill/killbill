@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,10 +58,8 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMap;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -98,25 +97,13 @@ public class TagResource extends JaxRsResourceBase {
                             @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<Tag> tags = tagUserApi.getTags(offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(TagResource.class, "getTags", tags.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()), ImmutableMap.<String, String>of());
+        final URI nextPageUri = uriBuilder.nextPage(TagResource.class,
+                                                    "getTags",
+                                                    tags.getNextOffset(), limit,
+                                                    Map.of(QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Collections.emptyMap());
 
-        final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
-        for (final TagDefinition tagDefinition : tagUserApi.getTagDefinitions(tenantContext)) {
-            tagDefinitionsCache.put(tagDefinition.getId(), tagDefinition);
-        }
-
-        return buildStreamingPaginationResponse(tags,
-                                                new Function<Tag, TagJson>() {
-                                                    @Override
-                                                    public TagJson apply(final Tag tag) {
-                                                        final TagDefinition tagDefinition = tagDefinitionsCache.get(tag.getTagDefinitionId());
-
-                                                        // TODO Really slow - we should instead try to figure out the account id
-                                                        final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tag.getId(), ObjectType.TAG, auditMode.getLevel(), tenantContext);
-                                                        return new TagJson(tag, tagDefinition, auditLogs);
-                                                    }
-                                                },
-                                                nextPageUri);
+        return buildTagsStreamingPaginationResponse(tags, nextPageUri, auditMode, tenantContext);
     }
 
     @TimedResource
@@ -132,21 +119,27 @@ public class TagResource extends JaxRsResourceBase {
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<Tag> tags = tagUserApi.searchTags(searchKey, offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(TagResource.class, "searchTags", tags.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()), ImmutableMap.<String, String>of("searchKey", searchKey));
-        final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<UUID, TagDefinition>();
+        final URI nextPageUri = uriBuilder.nextPage(TagResource.class,
+                                                    "searchTags",
+                                                    tags.getNextOffset(),
+                                                    limit,
+                                                    Map.of(QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Map.of("searchKey", searchKey));
+        return buildTagsStreamingPaginationResponse(tags, nextPageUri, auditMode, tenantContext);
+    }
+
+    private Response buildTagsStreamingPaginationResponse(final Pagination<Tag> tags, final URI nextPageUri, @DefaultValue("NONE") @QueryParam(QUERY_AUDIT) final AuditMode auditMode, final TenantContext tenantContext) {
+        final Map<UUID, TagDefinition> tagDefinitionsCache = new HashMap<>();
         for (final TagDefinition tagDefinition : tagUserApi.getTagDefinitions(tenantContext)) {
             tagDefinitionsCache.put(tagDefinition.getId(), tagDefinition);
         }
         return buildStreamingPaginationResponse(tags,
-                                                new Function<Tag, TagJson>() {
-                                                    @Override
-                                                    public TagJson apply(final Tag tag) {
-                                                        final TagDefinition tagDefinition = tagDefinitionsCache.get(tag.getTagDefinitionId());
+                                                tag -> {
+                                                    final TagDefinition tagDefinition = tagDefinitionsCache.get(tag.getTagDefinitionId());
 
-                                                        // TODO Really slow - we should instead try to figure out the account id
-                                                        final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tag.getId(), ObjectType.TAG, auditMode.getLevel(), tenantContext);
-                                                        return new TagJson(tag, tagDefinition, auditLogs);
-                                                    }
+                                                    // TODO Really slow - we should instead try to figure out the account id
+                                                    final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tag.getId(), ObjectType.TAG, auditMode.getLevel(), tenantContext);
+                                                    return new TagJson(tag, tagDefinition, auditLogs);
                                                 },
                                                 nextPageUri);
     }

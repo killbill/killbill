@@ -18,6 +18,7 @@
 package org.killbill.billing.entitlement.api.svcs;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -27,9 +28,6 @@ import org.killbill.billing.entitlement.AccountEventsStreams;
 import org.killbill.billing.entitlement.EventsStream;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class DefaultAccountEventsStreams implements AccountEventsStreams {
 
@@ -51,7 +49,7 @@ public class DefaultAccountEventsStreams implements AccountEventsStreams {
     }
 
     public DefaultAccountEventsStreams(final ImmutableAccountData account) {
-        this(account, ImmutableList.<SubscriptionBaseBundle>of(), ImmutableMap.<UUID, Collection<SubscriptionBase>>of(), ImmutableMap.<UUID, Collection<EventsStream>>of());
+        this(account, Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap());
     }
 
     @Override

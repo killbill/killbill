@@ -91,10 +91,6 @@ import org.mockito.Mockito;
 import org.skife.jdbi.v2.IDBI;
 import org.testng.Assert;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-
 public class TestInvoiceHelper {
 
     public static final Currency accountCurrency = Currency.USD;
@@ -225,13 +221,13 @@ public class TestInvoiceHelper {
         Invoice invoice = generateInvoice(account.getId(), targetDate, new DryRunFutureDateArguments(), context);
         Assert.assertNotNull(invoice);
 
-        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, context);
+        List<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(false, true, context);
         Assert.assertEquals(invoices.size(), 0);
 
         invoice = generateInvoice(account.getId(), targetDate, null, context);
         Assert.assertNotNull(invoice);
 
-        invoices = invoiceDao.getInvoicesByAccount(false, context);
+        invoices = invoiceDao.getInvoicesByAccount(false, true, context);
         Assert.assertEquals(invoices.size(), 1);
 
         return invoice.getId();
@@ -242,7 +238,9 @@ public class TestInvoiceHelper {
                                                                    invoiceDao, internalCallContextFactory, invoicePluginDispatcher, locker, eventBus,
                                                                    notificationQueueService, invoiceConfig, clock, invoiceOptimizer, parkedAccountsManager);
 
-        return dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);
+        final List<Invoice> result = dispatcher.processAccountFromNotificationOrBusEvent(accountId, targetDate, dryRunArguments, false, internalCallContext);
+        Assert.assertEquals(result.size(), 1);
+        return result.get(0);
     }
 
     public SubscriptionBase createSubscription() throws SubscriptionBaseApiException {
@@ -251,7 +249,7 @@ public class TestInvoiceHelper {
         final SubscriptionBase subscription = Mockito.mock(SubscriptionBase.class);
         Mockito.when(subscription.getId()).thenReturn(uuid);
         Mockito.when(subscription.getBundleId()).thenReturn(bundleId);
-        Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
+        Mockito.when(subscriptionApi.getSubscriptionFromId(Mockito.<UUID>any(), Mockito.eq(false), Mockito.<InternalTenantContext>any())).thenReturn(subscription);
         return subscription;
     }
 
@@ -300,18 +298,11 @@ public class TestInvoiceHelper {
     }
 
     public List<InvoiceItemModelDao> getInvoiceItemByInvoiceId(final UUID invoiceId, final InternalCallContext internalCallContext) {
-        return invoiceItemSqlDao.getInvoiceItemsForInvoices(ImmutableList.of(invoiceId), internalCallContext);
+        return invoiceItemSqlDao.getInvoiceItemsForInvoices(List.of(invoiceId), internalCallContext);
     }
 
     public void createInvoice(final Invoice invoice, final InternalCallContext internalCallContext) throws EntityPersistenceException {
         final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
-        final List<InvoiceItemModelDao> invoiceItemModelDaos = ImmutableList.<InvoiceItemModelDao>copyOf(Collections2.transform(invoice.getInvoiceItems(),
-                                                                                                                                new Function<InvoiceItem, InvoiceItemModelDao>() {
-                                                                                                                                    @Override
-                                                                                                                                    public InvoiceItemModelDao apply(final InvoiceItem input) {
-                                                                                                                                        return new InvoiceItemModelDao(input);
-                                                                                                                                    }
-                                                                                                                                }));
         invoiceSqlDao.create(invoiceModelDao, internalCallContext);
 
         for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {

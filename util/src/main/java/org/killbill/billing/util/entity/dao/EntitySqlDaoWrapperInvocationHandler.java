@@ -28,17 +28,20 @@ import java.sql.SQLWarning;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
 import org.killbill.billing.callcontext.InternalCallContext;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.audit.ChangeType;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
@@ -64,12 +67,6 @@ import org.skife.jdbi.v2.unstable.BindIn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.Iterables;
-
 /**
  * Wraps an instance of EntitySqlDao, performing extra work around each method (Sql query)
  *
@@ -88,21 +85,18 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
     private final Handle handle;
 
     private final CacheControllerDispatcher cacheControllerDispatcher;
-    private final Clock clock;
     private final InternalCallContextFactory internalCallContextFactory;
     private final Profiling<Object, Throwable> prof;
 
     public EntitySqlDaoWrapperInvocationHandler(final Class<S> sqlDaoClass,
                                                 final S sqlDao,
                                                 final Handle handle,
-                                                final Clock clock,
                                                 // Special DAO that don't require caching can invoke EntitySqlDaoWrapperInvocationHandler with no caching (e.g NoCachingTenantDao)
                                                 @Nullable final CacheControllerDispatcher cacheControllerDispatcher,
                                                 final InternalCallContextFactory internalCallContextFactory) {
         this.sqlDaoClass = sqlDaoClass;
         this.sqlDao = sqlDao;
         this.handle = handle;
-        this.clock = clock;
         this.cacheControllerDispatcher = cacheControllerDispatcher;
         this.internalCallContextFactory = internalCallContextFactory;
         this.prof = new Profiling<Object, Throwable>();
@@ -297,7 +291,7 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
 
             if (!reHydratedEntities.isEmpty()) {
                 Preconditions.checkState(reHydratedEntities.size() == 1, "Invalid number of entities: %s", reHydratedEntities);
-                return Iterables.<M>getFirst(reHydratedEntities, null);
+                return reHydratedEntities.stream().findFirst().orElse(null);
             } else {
                 // Updated entity not retrieved yet, we have to go back to the database
                 final M entity = sqlDao.getByRecordId(entityRecordIds.get(0), context);
@@ -417,26 +411,26 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
             // Assume the first argument of type Entity is our type of Entity (type U here)
             // This is true for e.g. create calls
             if (arg instanceof Entity) {
-                return ImmutableList.<String>of(((Entity) arg).getId().toString());
+                return List.of(((Entity) arg).getId().toString());
             }
 
             // For Batch calls, the first argument will be of type List<Entity>
             if (arg instanceof Iterable) {
-                final Builder<String> entityIds = extractEntityIdsFromBatchArgument((Iterable) arg);
+                final List<String> entityIds = extractEntityIdsFromBatchArgument((Iterable<?>) arg);
                 if (entityIds != null) {
-                    return entityIds.build();
+                    return entityIds;
                 }
             }
 
             for (final Annotation annotation : parameterAnnotations[i]) {
                 if (arg instanceof String && Bind.class.equals(annotation.annotationType()) && ("id").equals(((Bind) annotation).value())) {
-                    return ImmutableList.<String>of((String) arg);
+                    return List.of((String) arg);
                 } else if (arg instanceof Collection && BindIn.class.equals(annotation.annotationType()) && ("ids").equals(((BindIn) annotation).value())) {
-                    return ImmutableList.<String>copyOf((Collection) arg);
+                    return List.copyOf((Collection) arg);
                 }
             }
         }
-        return ImmutableList.<String>of();
+        return Collections.emptyList();
     }
 
     private Annotation[][] getAnnotations(final Method method) {
@@ -452,9 +446,9 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
         return parameterAnnotations;
     }
 
-    private Builder<String> extractEntityIdsFromBatchArgument(final Iterable arg) {
-        final Iterator iterator = arg.iterator();
-        final Builder<String> entityIds = new Builder<String>();
+    private List<String> extractEntityIdsFromBatchArgument(final Iterable<?> arg) {
+        final Iterator<?> iterator = arg.iterator();
+        final List<String> entityIds = new ArrayList<>();
         while (iterator.hasNext()) {
             final Object object = iterator.next();
             if (!(object instanceof Entity)) {
@@ -524,9 +518,9 @@ public class EntitySqlDaoWrapperInvocationHandler<S extends EntitySqlDao<M, E>, 
                               final TableName tableName,
                               final ChangeType changeType,
                               final InternalCallContext context) {
-        final TableName destinationTableName = MoreObjects.firstNonNull(tableName.getHistoryTableName(), tableName);
+        final TableName destinationTableName = Objects.requireNonNullElse(tableName.getHistoryTableName(), tableName);
 
-        final Collection<EntityAudit> audits = new LinkedList<EntityAudit>();
+        final Collection<EntityAudit> audits = new LinkedList<>();
         for (final Long auditTargetRecordId : auditTargetRecordIds) {
             final EntityAudit audit = new EntityAudit(destinationTableName, auditTargetRecordId, changeType, context.getCreatedDate());
             audits.add(audit);

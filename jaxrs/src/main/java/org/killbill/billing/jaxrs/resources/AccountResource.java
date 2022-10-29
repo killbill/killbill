@@ -36,8 +36,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
@@ -115,6 +115,7 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
@@ -125,29 +126,21 @@ import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
 import org.killbill.billing.util.audit.AccountAuditLogs;
-import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.JaxrsConfig;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.MetricTag;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.MetricTag;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -237,17 +230,14 @@ public class AccountResource extends JaxRsResourceBase {
                                                     "getAccounts",
                                                     accounts.getNextOffset(),
                                                     limit,
-                                                    ImmutableMap.<String, String>of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
-                                                                                    QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
-                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
-                                                    ImmutableMap.<String, String>of());
+                                                    Map.of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
+                                                           QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
+                                                           QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Collections.emptyMap());
         return buildStreamingPaginationResponse(accounts,
-                                                new Function<Account, AccountJson>() {
-                                                    @Override
-                                                    public AccountJson apply(final Account account) {
-                                                        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
-                                                        return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
-                                                    }
+                                                account -> {
+                                                    final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
+                                                    return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
                                                 },
                                                 nextPageUri
                                                );
@@ -272,17 +262,14 @@ public class AccountResource extends JaxRsResourceBase {
                                                     "searchAccounts",
                                                     accounts.getNextOffset(),
                                                     limit,
-                                                    ImmutableMap.<String, String>of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
-                                                                                    QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
-                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
-                                                    ImmutableMap.<String, String>of("searchKey", searchKey));
+                                                    Map.of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
+                                                           QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
+                                                           QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Map.of("searchKey", searchKey));
         return buildStreamingPaginationResponse(accounts,
-                                                new Function<Account, AccountJson>() {
-                                                    @Override
-                                                    public AccountJson apply(final Account account) {
-                                                        final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
-                                                        return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
-                                                    }
+                                                account -> {
+                                                    final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
+                                                    return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
                                                 },
                                                 nextPageUri
                                                );
@@ -430,37 +417,31 @@ public class AccountResource extends JaxRsResourceBase {
 
         if (cancelAllSubscriptions) {
             final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(accountId, callContext);
-            final Iterable<Subscription> subscriptions = Iterables.concat(Iterables.transform(bundles, new Function<SubscriptionBundle, List<Subscription>>() {
-                @Override
-                public List<Subscription> apply(final SubscriptionBundle input) {
-                    return input.getSubscriptions();
-                }
-            }));
+            final Iterable<Subscription> toBeCancelled = bundles.stream()
+                    .map(SubscriptionBundle::getSubscriptions)
+                    .flatMap(Collection::stream)
+                    .filter(input -> input.getLastActiveProductCategory() != ProductCategory.ADD_ON &&
+                                     input.getBillingEndDate() == null)
+                    .collect(Collectors.toUnmodifiableList());
 
-            final Iterable<Subscription> toBeCancelled = Iterables.filter(subscriptions, new Predicate<Subscription>() {
-                @Override
-                public boolean apply(final Subscription input) {
-                    return input.getLastActiveProductCategory() != ProductCategory.ADD_ON && input.getBillingEndDate() == null;
-                }
-            });
             for (final Subscription cur : toBeCancelled) {
-                cur.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.END_OF_TERM, ImmutableList.<PluginProperty>of(), callContext);
+                cur.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.END_OF_TERM, Collections.emptyList(), callContext);
             }
         }
 
-        final Collection<Invoice> unpaidInvoices = writeOffUnpaidInvoices || itemAdjustUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, null, callContext) : ImmutableList.<Invoice>of();
+        final Collection<Invoice> unpaidInvoices = writeOffUnpaidInvoices || itemAdjustUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, null, callContext) : Collections.emptyList();
         if (writeOffUnpaidInvoices) {
             for (final Invoice cur : unpaidInvoices) {
                 invoiceApi.tagInvoiceAsWrittenOff(cur.getId(), callContext);
             }
         } else if (itemAdjustUnpaidInvoices) {
 
-            final List<InvoiceItemType> ADJUSTABLE_TYPES = ImmutableList.<InvoiceItemType>of(InvoiceItemType.EXTERNAL_CHARGE,
-                                                                                             InvoiceItemType.FIXED,
-                                                                                             InvoiceItemType.RECURRING,
-                                                                                             InvoiceItemType.TAX,
-                                                                                             InvoiceItemType.USAGE,
-                                                                                             InvoiceItemType.PARENT_SUMMARY);
+            final List<InvoiceItemType> ADJUSTABLE_TYPES = List.of(InvoiceItemType.EXTERNAL_CHARGE,
+                                                                   InvoiceItemType.FIXED,
+                                                                   InvoiceItemType.RECURRING,
+                                                                   InvoiceItemType.TAX,
+                                                                   InvoiceItemType.USAGE,
+                                                                   InvoiceItemType.PARENT_SUMMARY);
             final String description = comment != null ? comment : "Close Account";
             for (final Invoice invoice : unpaidInvoices) {
                 for (final InvoiceItem item : invoice.getInvoiceItems()) {
@@ -472,7 +453,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
 
         final BlockingStateJson blockingState = new BlockingStateJson(accountId, "CLOSE_ACCOUNT", "account-service", true, false, false, null, BlockingStateType.ACCOUNT, null);
-        addBlockingState(blockingState, accountId, accountId, BlockingStateType.ACCOUNT, null, ImmutableList.<String>of(), createdBy, reason, comment, request, null);
+        addBlockingState(blockingState, accountId, accountId, BlockingStateType.ACCOUNT, null, Collections.emptyList(), createdBy, reason, comment, request, null);
 
         if (removeFutureNotifications) {
             final Long tenantRecordId = recordIdApi.getRecordId(callContext.getTenantId(), ObjectType.TENANT, callContext);
@@ -510,7 +491,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Callable<List<Invoice>> invoicesCallable = new Callable<List<Invoice>>() {
             @Override
             public List<Invoice> call() throws Exception {
-                return invoiceApi.getInvoicesByAccount(accountId, false, false, tenantContext);
+                return invoiceApi.getInvoicesByAccount(accountId, false, false, true, tenantContext); 
             }
         };
         final Callable<List<InvoicePayment>> invoicePaymentsCallable = new Callable<List<InvoicePayment>>() {
@@ -522,7 +503,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Callable<List<Payment>> paymentsCallable = new Callable<List<Payment>>() {
             @Override
             public List<Payment> call() throws Exception {
-                return paymentApi.getAccountPayments(accountId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
+                return paymentApi.getAccountPayments(accountId, false, false, Collections.emptyList(), tenantContext);
             }
         };
         final Callable<AccountAuditLogs> auditsCallable = new Callable<AccountAuditLogs>() {
@@ -547,7 +528,7 @@ public class AccountResource extends JaxRsResourceBase {
             final Future<List<InvoicePayment>> futureInvoicePaymentsCallable = executor.submit(invoicePaymentsCallable);
             final Future<List<Payment>> futurePaymentsCallable = executor.submit(paymentsCallable);
             final Future<AccountAuditLogs> futureAuditsCallable = executor.submit(auditsCallable);
-            final ImmutableList<Future> toBeCancelled = ImmutableList.<Future>of(futureBundlesCallable, futureInvoicesCallable, futureInvoicePaymentsCallable, futurePaymentsCallable, futureAuditsCallable);
+            final List<Future> toBeCancelled = List.of(futureBundlesCallable, futureInvoicesCallable, futureInvoicePaymentsCallable, futurePaymentsCallable, futureAuditsCallable);
             final int timeoutMsec = 100;
 
             final long ini = System.currentTimeMillis();
@@ -673,12 +654,14 @@ public class AccountResource extends JaxRsResourceBase {
                                           @QueryParam(QUERY_WITH_MIGRATION_INVOICES) @DefaultValue("false") final boolean withMigrationInvoices,
                                           @QueryParam(QUERY_UNPAID_INVOICES_ONLY) @DefaultValue("false") final boolean unpaidInvoicesOnly,
                                           @QueryParam(QUERY_INCLUDE_VOIDED_INVOICES) @DefaultValue("false") final boolean includeVoidedInvoices,
+                                          @QueryParam(QUERY_INCLUDE_INVOICE_COMPONENTS) @DefaultValue("false") final boolean includeInvoiceComponents,
                                           @QueryParam(QUERY_INVOICES_FILTER) final String invoicesFilter,
                                           @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
 
         Preconditions.checkState(!unpaidInvoicesOnly || !withMigrationInvoices, "We don't support fetching unpaid invoices incl. migration");
         Preconditions.checkState(startDateStr == null || !withMigrationInvoices, "We don't support fetching migration invoices and specifying a start date");
+        Preconditions.checkState(!unpaidInvoicesOnly  || !includeInvoiceComponents, "We don't support fetching unpaid invoices without invoice components");
 
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
@@ -690,18 +673,18 @@ public class AccountResource extends JaxRsResourceBase {
 
         final List<Invoice> invoices;
         if (unpaidInvoicesOnly) {
-            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext));
+            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext));  
         } else {
             invoices = startDate != null || endDate != null ?
-                       invoiceApi.getInvoicesByAccount(accountId, startDate, endDate, includeVoidedInvoices, tenantContext) :
-                       invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, tenantContext);
+                       invoiceApi.getInvoicesByAccount(accountId, startDate, endDate, includeVoidedInvoices, includeInvoiceComponents, tenantContext) :
+                       invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, includeInvoiceComponents, tenantContext);
         }
 
 
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         // The filter, if any comes in addition to other param to limit the response
-        final Set<String> filterInvoiceIds = (null != invoicesFilter && !invoicesFilter.isEmpty()) ? Sets.newHashSet(invoicesFilter.split(",")) : Collections.emptySet();
-        final List<InvoiceJson> result = new LinkedList<InvoiceJson>();
+        final Set<String> filterInvoiceIds = (null != invoicesFilter && !invoicesFilter.isEmpty()) ? Set.of(invoicesFilter.split(",")) : Collections.emptySet();
+        final List<InvoiceJson> result = new LinkedList<>();
         for (final Invoice invoice : invoices) {
             if (filterInvoiceIds.isEmpty() || filterInvoiceIds.contains(invoice.getId().toString())) {
                 result.add(new InvoiceJson(invoice, null, accountAuditLogs));
@@ -816,7 +799,7 @@ public class AccountResource extends JaxRsResourceBase {
         //
         final BigDecimal creditAmount = remainingRequestPayment;
         if (externalPayment && remainingRequestPayment.compareTo(BigDecimal.ZERO) > 0) {
-            invoiceApi.insertCredits(account.getId(), clock.getUTCToday(), ImmutableList.of(createCreditItem(account.getId(), creditAmount, account.getCurrency())), true, pluginProperties, callContext);
+            invoiceApi.insertCredits(account.getId(), clock.getUTCToday(), List.of(createCreditItem(account.getId(), creditAmount, account.getCurrency())), true, pluginProperties, callContext);
         }
         final Map<String, String> queryParams = new HashMap<>();
         if (filterMinDate != null) {
@@ -900,12 +883,9 @@ public class AccountResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
         final List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), includedDeleted, withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
-        final List<PaymentMethodJson> json = new ArrayList<PaymentMethodJson>(Collections2.transform(methods, new Function<PaymentMethod, PaymentMethodJson>() {
-            @Override
-            public PaymentMethodJson apply(final PaymentMethod input) {
-                return PaymentMethodJson.toPaymentMethodJson(account, input, accountAuditLogs);
-            }
-        }));
+        final List<PaymentMethodJson> json = methods.stream()
+                .map(input -> PaymentMethodJson.toPaymentMethodJson(account, input, accountAuditLogs))
+                .collect(Collectors.toUnmodifiableList());
 
         return Response.status(Status.OK).entity(json).build();
     }
@@ -990,12 +970,10 @@ public class AccountResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final List<Payment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
-        final List<PaymentJson> result = ImmutableList.copyOf(Iterables.transform(payments, new Function<Payment, PaymentJson>() {
-            @Override
-            public PaymentJson apply(final Payment payment) {
-                return new PaymentJson(payment, accountAuditLogs);
-            }
-        }));
+        final List<PaymentJson> result = payments.stream()
+                .map(payment -> new PaymentJson(payment, accountAuditLogs))
+                .collect(Collectors.toUnmodifiableList());
+
         return Response.status(Response.Status.OK).entity(result).build();
     }
 
@@ -1164,12 +1142,9 @@ public class AccountResource extends JaxRsResourceBase {
         final Iterable<BlockingState> blockingStates = subscriptionApi.getBlockingStates(accountId, typeFilter, svcsFilter, OrderingType.ASCENDING, SubscriptionApi.ALL_EVENTS, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 
-        final List<BlockingStateJson> result = ImmutableList.copyOf(Iterables.transform(blockingStates, new Function<BlockingState, BlockingStateJson>() {
-            @Override
-            public BlockingStateJson apply(final BlockingState input) {
-                return new BlockingStateJson(input, accountAuditLogs);
-            }
-        }));
+        final List<BlockingStateJson> result = Iterables.toStream(blockingStates)
+                .map(input -> new BlockingStateJson(input, accountAuditLogs))
+                .collect(Collectors.toUnmodifiableList());
 
         return Response.status(Status.OK).entity(result).build();
     }
@@ -1434,15 +1409,10 @@ public class AccountResource extends JaxRsResourceBase {
         accountUserApi.getAccountById(accountId, callContext);
 
         // Make sure the email doesn't exist
-        final AccountEmail existingEmail = Iterables.<AccountEmail>tryFind(accountUserApi.getEmails(accountId, callContext),
-                                                                           new Predicate<AccountEmail>() {
-                                                                               @Override
-                                                                               public boolean apply(final AccountEmail input) {
-                                                                                   return input.getEmail().equals(json.getEmail());
-                                                                               }
-                                                                           }
-                                                                          )
-                .orNull();
+        final AccountEmail existingEmail = accountUserApi.getEmails(accountId, callContext).stream()
+                .filter(input -> input.getEmail().equals(json.getEmail()))
+                .findFirst().orElse(null);
+
         if (existingEmail == null) {
             accountUserApi.addEmail(accountId, json.toAccountEmail(UUIDs.randomUUID()), callContext);
         }
@@ -1573,17 +1543,12 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
     }
 
-    private List<AuditLogJson> getAuditLogs(AccountAuditLogs accountAuditLogs) {
+    private List<AuditLogJson> getAuditLogs(final AccountAuditLogs accountAuditLogs) {
         if (accountAuditLogs.getAuditLogs() == null) {
             return null;
         }
 
-        return ImmutableList.<AuditLogJson>copyOf(Collections2.transform(accountAuditLogs.getAuditLogs(), new Function<AuditLog, AuditLogJson>() {
-            @Override
-            public AuditLogJson apply(@Nullable final AuditLog input) {
-                return new AuditLogJson(input);
-            }
-        }));
+        return accountAuditLogs.getAuditLogs().stream().map(AuditLogJson::new).collect(Collectors.toUnmodifiableList());
     }
 
 
@@ -1674,7 +1639,7 @@ public class AccountResource extends JaxRsResourceBase {
                 return null;
             }
             @Override
-            public Integer getQuantity() {
+            public BigDecimal getQuantity() {
                 return null;
             }
             @Override

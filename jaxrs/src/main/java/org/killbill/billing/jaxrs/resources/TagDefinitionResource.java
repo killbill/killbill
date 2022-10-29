@@ -49,6 +49,7 @@ import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
@@ -59,9 +60,8 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import com.google.common.base.Preconditions;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -97,7 +97,7 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<TagDefinition> tagDefinitions = tagUserApi.getTagDefinitions(tenantContext);
 
-        final Collection<TagDefinitionJson> result = new LinkedList<TagDefinitionJson>();
+        final Collection<TagDefinitionJson> result = new LinkedList<>();
         for (final TagDefinition tagDefinition : tagDefinitions) {
             final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(tagDefinition.getId(), ObjectType.TAG_DEFINITION, auditMode.getLevel(), tenantContext);
             result.add(new TagDefinitionJson(tagDefinition, auditLogs));
@@ -139,8 +139,8 @@ public class TagDefinitionResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "TagDefinitionJson body should be specified");
         verifyNonNullOrEmpty(json.getName(), "TagDefinition name needs to be set",
                              json.getDescription(), "TagDefinition description needs to be set");
-        Preconditions.checkArgument(json.getApplicableObjectTypes() != null &&
-                                    !json.getApplicableObjectTypes().isEmpty(), "Applicable object types must be set");
+        Preconditions.checkArgument(json.getApplicableObjectTypes() != null && !json.getApplicableObjectTypes().isEmpty(),
+                                    "Applicable object types must be set");
 
 
         final TagDefinition createdTagDef = tagUserApi.createTagDefinition(json.getName(), json.getDescription(), json.getApplicableObjectTypes(), context.createCallContextNoAccountId(createdBy, reason, comment, request));

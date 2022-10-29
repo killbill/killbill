@@ -18,8 +18,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import org.joda.time.DateTime;
-
-import com.google.common.base.Preconditions;
+import org.killbill.commons.utils.Preconditions;
 
 class DisabledDuration implements Comparable<DisabledDuration> {
 
@@ -110,8 +109,8 @@ class DisabledDuration implements Comparable<DisabledDuration> {
         return end!= null && end.compareTo(o.getStart()) < 0;
     }
 
-    public static DisabledDuration mergeDuration(DisabledDuration d1, DisabledDuration d2) {
-        Preconditions.checkState(d1.getStart().compareTo(d2.getStart()) <=0 );
+    public static DisabledDuration mergeDuration(final DisabledDuration d1, final DisabledDuration d2) {
+        Preconditions.checkState(d1.getStart().compareTo(d2.getStart()) <= 0);
         Preconditions.checkState(!d1.isDisjoint(d2));
 
         final DateTime endDate = (d1.getEnd() != null && d2.getEnd() != null) ?

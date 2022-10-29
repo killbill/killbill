@@ -19,10 +19,14 @@
 package org.killbill.billing.entitlement.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -37,17 +41,13 @@ import org.killbill.billing.entitlement.api.EntitlementApiException;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
-
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
+import org.killbill.commons.utils.collect.MultiValueHashMap;
+import org.killbill.commons.utils.collect.MultiValueMap;
 
 public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDao, BlockingState, EntitlementApiException> implements BlockingStateDao {
 
-    private final Map<UUID, List<BlockingState>> blockingStates = new HashMap<UUID, List<BlockingState>>();
-    private final Map<Long, List<BlockingState>> blockingStatesPerAccountRecordId = new HashMap<Long, List<BlockingState>>();
+    private final MultiValueMap<UUID, BlockingState> blockingStates = new MultiValueHashMap<>();
+    private final MultiValueMap<Long, BlockingState> blockingStatesPerAccountRecordId = new MultiValueHashMap<>();
 
     // TODO This mock class should also check that events are past or present
 
@@ -57,13 +57,11 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
         if (states == null) {
             return null;
         }
-        final ImmutableList<BlockingState> filtered = ImmutableList.<BlockingState>copyOf(Collections2.filter(states, new Predicate<BlockingState>() {
-            @Override
-            public boolean apply(@Nullable final BlockingState input) {
-                return input.getService().equals(serviceName);
-            }
-        }));
-        return filtered.size() == 0 ? null : filtered.get(filtered.size() - 1);
+        final List<BlockingState> filtered = states
+                .stream()
+                .filter(input -> input.getService().equals(serviceName))
+                .collect(Collectors.toUnmodifiableList());
+        return filtered.isEmpty() ? null : filtered.get(filtered.size() - 1);
     }
 
     @Override
@@ -73,8 +71,8 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
             return new ArrayList<BlockingState>();
         }
 
-        final Map<String, BlockingState> tmp = new HashMap<String, BlockingState>();
-        for (BlockingState cur : blockingStatesForId) {
+        final Map<String, BlockingState> tmp = new HashMap<>();
+        for (final BlockingState cur : blockingStatesForId) {
             final BlockingState curStateForService = tmp.get(cur.getService());
             if (curStateForService == null || curStateForService.getEffectiveDate().compareTo(cur.getEffectiveDate()) < 0) {
                 tmp.put(cur.getService(), cur);
@@ -85,18 +83,18 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
 
     @Override
     public List<BlockingState> getBlockingAllForAccountRecordId(final VersionedCatalog catalog, final InternalTenantContext context) {
-        return MoreObjects.firstNonNull(blockingStatesPerAccountRecordId.get(context.getAccountRecordId()), ImmutableList.<BlockingState>of());
+        return Objects.requireNonNullElse(blockingStatesPerAccountRecordId.get(context.getAccountRecordId()), Collections.emptyList());
     }
 
     @Override
     public List<BlockingState> getBlockingActiveForAccount(final VersionedCatalog catalog, @Nullable final LocalDate cutoffDt, final InternalTenantContext context) {
-        return MoreObjects.firstNonNull(blockingStatesPerAccountRecordId.get(context.getAccountRecordId()), ImmutableList.<BlockingState>of());
+        return Objects.requireNonNullElse(blockingStatesPerAccountRecordId.get(context.getAccountRecordId()), Collections.emptyList());
     }
 
     @Override
-    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final InternalTenantContext context) {
+    public List<BlockingState> getByBlockingIds(final Iterable<UUID> blockableIds, final boolean includeDeletedEvents, final InternalTenantContext context) {
         final List<BlockingState> result = new ArrayList<>();
-        for (UUID cur : blockableIds) {
+        for (final UUID cur : blockableIds) {
             final List<BlockingState> objs = blockingStates.get(cur);
             if (objs != null && !objs.isEmpty()) {
                 result.addAll(objs);
@@ -110,7 +108,7 @@ public class MockBlockingStateDao extends MockEntityDaoBase<BlockingStateModelDa
     public synchronized void setBlockingStatesAndPostBlockingTransitionEvent(final Map<BlockingState, Optional<UUID>> states, final InternalCallContext context) {
         for (final BlockingState state : states.keySet()) {
             if (blockingStates.get(state.getBlockedId()) == null) {
-                blockingStates.put(state.getBlockedId(), new ArrayList<BlockingState>());
+                blockingStates.put(state.getBlockedId(), new ArrayList<>());
             }
             blockingStates.get(state.getBlockedId()).add(state);
 

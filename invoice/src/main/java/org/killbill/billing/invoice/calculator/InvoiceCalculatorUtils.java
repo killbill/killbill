@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.calculator;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -29,10 +30,8 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.currency.KillBillMoney;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 
 public abstract class InvoiceCalculatorUtils {
 
@@ -45,7 +44,7 @@ public abstract class InvoiceCalculatorUtils {
 
     private static boolean isCreditInvoice(final Iterable<InvoiceItem> invoiceItems) { 
 
-        if (Iterables.size(invoiceItems) != 2) { 
+        if (Iterables.size(invoiceItems) != 2) {
             return false;
         }
 
@@ -115,12 +114,9 @@ public abstract class InvoiceCalculatorUtils {
             return BigDecimal.ZERO;
         }
 
-        final Iterable<InvoiceItem> chargeItems = Iterables.filter(invoiceItems, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return isCharge(input);
-            }
-        });
+        final Iterable<InvoiceItem> chargeItems = Iterables.toStream(invoiceItems)
+                .filter(InvoiceCalculatorUtils::isCharge)
+                .collect(Collectors.toUnmodifiableList());
 
         if (Iterables.isEmpty(chargeItems)) {
             // return only credit amount to be subtracted to parent item amount
@@ -143,10 +139,10 @@ public abstract class InvoiceCalculatorUtils {
 
         if (isCreditInvoice(invoiceItems)) { //if the invoice corresponds to a CREDIT, include its amount
 
-            Iterator<InvoiceItem> itr = invoiceItems.iterator();
+            final Iterator<InvoiceItem> itr = invoiceItems.iterator();
 
-            InvoiceItem item1 = itr.next();
-            InvoiceItem item2 = itr.next();
+            final InvoiceItem item1 = itr.next();
+            final InvoiceItem item2 = itr.next();
 
             if (InvoiceItemType.CREDIT_ADJ.equals(item1.getInvoiceItemType())) {
                 amountAdjusted = amountAdjusted.add(item1.getAmount());

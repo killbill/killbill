@@ -17,6 +17,7 @@
 
 package org.killbill.billing.util.security.shiro.realm;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,10 +40,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
@@ -76,8 +73,8 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         final String username = "toto";
         final String password = "supperCompli43cated";
 
-        securityApi.addRoleDefinition("root", ImmutableList.of("*"), callContext);
-        securityApi.addUserRoles(username, password, ImmutableList.of("root"), callContext);
+        securityApi.addRoleDefinition("root", List.of("*"), callContext);
+        securityApi.addUserRoles(username, password, List.of("root"), callContext);
         final DelegatingSubject subject = new DelegatingSubject(securityManager);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
@@ -124,33 +121,33 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testEmptyPermissions() throws SecurityApiException {
         securityApi.addRoleDefinition("sanity1", null, callContext);
-        validateUserRoles(securityApi.getRoleDefinition("sanity1", callContext), ImmutableList.<String>of());
+        validateUserRoles(securityApi.getRoleDefinition("sanity1", callContext), Collections.emptyList());
 
-        securityApi.addRoleDefinition("sanity2", ImmutableList.<String>of(), callContext);
-        validateUserRoles(securityApi.getRoleDefinition("sanity2", callContext), ImmutableList.<String>of());
+        securityApi.addRoleDefinition("sanity2", Collections.emptyList(), callContext);
+        validateUserRoles(securityApi.getRoleDefinition("sanity2", callContext), Collections.emptyList());
     }
 
     @Test(groups = "slow")
     public void testInvalidPermissions() {
-        testInvalidPermissionScenario(ImmutableList.of("account:credit:vvvv"));
+        testInvalidPermissionScenario(List.of("account:credit:vvvv"));
     }
 
     @Test(groups = "slow")
     public void testSanityOfPermissions() throws SecurityApiException {
-        securityApi.addRoleDefinition("sanity1", ImmutableList.of("account:*", "*"), callContext);
-        validateUserRoles(securityApi.getRoleDefinition("sanity1", callContext), ImmutableList.of("*"));
+        securityApi.addRoleDefinition("sanity1", List.of("account:*", "*"), callContext);
+        validateUserRoles(securityApi.getRoleDefinition("sanity1", callContext), List.of("*"));
 
-        securityApi.addRoleDefinition("sanity2", ImmutableList.of("account:charge", "account:charge"), callContext);
-        validateUserRoles(securityApi.getRoleDefinition("sanity2", callContext), ImmutableList.of("account:charge"));
+        securityApi.addRoleDefinition("sanity2", List.of("account:charge", "account:charge"), callContext);
+        validateUserRoles(securityApi.getRoleDefinition("sanity2", callContext), List.of("account:charge"));
 
-        securityApi.addRoleDefinition("sanity3", ImmutableList.of("account:charge", "account:credit", "account:*", "invoice:*"), callContext);
-        validateUserRoles(securityApi.getRoleDefinition("sanity3", callContext), ImmutableList.of("account:*", "invoice:*"));
+        securityApi.addRoleDefinition("sanity3", List.of("account:charge", "account:credit", "account:*", "invoice:*"), callContext);
+        validateUserRoles(securityApi.getRoleDefinition("sanity3", callContext), List.of("account:*", "invoice:*"));
     }
 
     @Test(groups = "slow")
     public void testCustomPermissionsAcrossRealms() throws Exception {
         final String role = "writer_off";
-        final ImmutableList<String> rolePermissions = ImmutableList.<String>of(Permission.INVOICE_CAN_DELETE_CBA.toString(), /* Built-in permission */
+        final List<String> rolePermissions = List.of(Permission.INVOICE_CAN_DELETE_CBA.toString(), /* Built-in permission */
                                                                                "invoice:write_off" /* Built-in group but custom value */,
                                                                                "acme:kb_dev" /* Custom group and value */);
 
@@ -162,7 +159,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
         final String username = "tester";
         final String password = "tester";
-        securityApi.addUserRoles(username, password, ImmutableList.<String>of(role), callContext);
+        securityApi.addUserRoles(username, password, List.of(role), callContext);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
         final Subject subject = securityManager.login(null, goodToken);
@@ -198,8 +195,8 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         final String username = "i like";
         final String password = "c0ff33";
 
-        securityApi.addRoleDefinition("restricted", ImmutableList.of("account:*", "invoice", "tag:create_tag_definition"), callContext);
-        securityApi.addUserRoles(username, password, ImmutableList.of("restricted"), callContext);
+        securityApi.addRoleDefinition("restricted", List.of("account:*", "invoice", "tag:create_tag_definition"), callContext);
+        securityApi.addUserRoles(username, password, List.of("restricted"), callContext);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
         final Subject subject = securityManager.login(null, goodToken);
@@ -215,8 +212,8 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         }
         subject.logout();
 
-        securityApi.addRoleDefinition("newRestricted", ImmutableList.of("account:*", "invoice", "tag:delete_tag_definition"), callContext);
-        securityApi.updateUserRoles(username, ImmutableList.of("newRestricted"), callContext);
+        securityApi.addRoleDefinition("newRestricted", List.of("account:*", "invoice", "tag:delete_tag_definition"), callContext);
+        securityApi.updateUserRoles(username, List.of("newRestricted"), callContext);
 
         final Subject newSubject = securityManager.login(null, goodToken);
         newSubject.checkPermission(Permission.ACCOUNT_CAN_CHARGE.toString());
@@ -232,14 +229,14 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "Check * behavior with custom permissions")
     public void testAuthorizationV2() throws SecurityApiException {
-        securityApi.addRoleDefinition("for another user", ImmutableList.of("acme:kb_dev"), callContext);
+        securityApi.addRoleDefinition("for another user", List.of("acme:kb_dev"), callContext);
 
         final String username = "i like";
         final String password = "c0ff33";
         final String role = "for this user";
-        final ImmutableList<String> rolePermissions = ImmutableList.of("*");
+        final List<String> rolePermissions = List.of("*");
         securityApi.addRoleDefinition(role, rolePermissions, callContext);
-        securityApi.addUserRoles(username, password, ImmutableList.of(role), callContext);
+        securityApi.addUserRoles(username, password, List.of(role), callContext);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
         final Subject subject = securityManager.login(null, goodToken);
@@ -256,9 +253,9 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
             // "*" is not expanded
             final Set<String> permissions = securityApi.getCurrentUserPermissions(callContext);
-            Assert.assertEquals(permissions, ImmutableList.<String>of("*"));
+            Assert.assertEquals(permissions, List.of("*"));
 
-            securityApi.addRoleDefinition("for yet another user", ImmutableList.of("acme:kb_deployer"), callContext);
+            securityApi.addRoleDefinition("for yet another user", List.of("acme:kb_deployer"), callContext);
 
             // "*" is not expanded
             final List<String> roleDefinitions2 = securityApi.getRoleDefinition(role, callContext);
@@ -266,7 +263,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
             // "*" is not expanded
             final Set<String> permissions2 = securityApi.getCurrentUserPermissions(callContext);
-            Assert.assertEquals(permissions2, ImmutableList.<String>of("*"));
+            Assert.assertEquals(permissions2, List.of("*"));
         } finally {
             ThreadContext.unbindSubject();
             subject.logout();
@@ -275,13 +272,13 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "Check group:* behavior with custom permissions")
     public void testAuthorizationV3() throws SecurityApiException {
-        securityApi.addRoleDefinition("for another user", ImmutableList.of("acme:kb_dev"), callContext);
+        securityApi.addRoleDefinition("for another user", List.of("acme:kb_dev"), callContext);
 
         final String username = "i like";
         final String password = "c0ff33";
         final String role = "for this user";
-        securityApi.addRoleDefinition(role, ImmutableList.of("account", "invoice:*", "tag:create_tag_definition", "acme:*"), callContext);
-        securityApi.addUserRoles(username, password, ImmutableList.of(role), callContext);
+        securityApi.addRoleDefinition(role, List.of("account", "invoice:*", "tag:create_tag_definition", "acme:*"), callContext);
+        securityApi.addUserRoles(username, password, List.of(role), callContext);
 
         final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
         final Subject subject = securityManager.login(null, goodToken);
@@ -293,7 +290,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
             subject.checkPermission(Permission.TAG_CAN_CREATE_TAG_DEFINITION.toString());
             subject.checkPermission("acme:kb_dev");
 
-            final Object[] rolePermissions = ImmutableList.of("account:*", "invoice:*", "tag:create_tag_definition", "acme:*").toArray();
+            final Object[] rolePermissions = List.of("account:*", "invoice:*", "tag:create_tag_definition", "acme:*").toArray();
 
             // "*" is not expanded
             final List<String> roleDefinitions = securityApi.getRoleDefinition(role, callContext);
@@ -303,7 +300,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
             final Set<String> permissions = securityApi.getCurrentUserPermissions(callContext);
             Assert.assertEqualsNoOrder(permissions.toArray(), rolePermissions);
 
-            securityApi.addRoleDefinition("for yet another user", ImmutableList.of("acme:kb_deployer"), callContext);
+            securityApi.addRoleDefinition("for yet another user", List.of("acme:kb_deployer"), callContext);
 
             // "*" is not expanded
             final List<String> roleDefinitions2 = securityApi.getRoleDefinition(role, callContext);
@@ -323,10 +320,8 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         final String username = "siskiyou";
         final String password = "siskiyou33";
 
-        securityApi.addRoleDefinition("original", ImmutableList.of("account:*", "invoice", "tag:create_tag_definition"), callContext);
-        securityApi.addUserRoles(username, password, ImmutableList.of("restricted"), callContext);
-
-        final AuthenticationToken goodToken = new UsernamePasswordToken(username, password);
+        securityApi.addRoleDefinition("original", List.of("account:*", "invoice", "tag:create_tag_definition"), callContext);
+        securityApi.addUserRoles(username, password, List.of("restricted"), callContext);
 
         final List<String> roleDefinition = securityApi.getRoleDefinition("original", callContext);
         Assert.assertEquals(roleDefinition.size(), 3);
@@ -334,7 +329,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertTrue(roleDefinition.contains("invoice:*"));
         Assert.assertTrue(roleDefinition.contains("tag:create_tag_definition"));
 
-        securityApi.updateRoleDefinition("original", ImmutableList.of("account:*", "payment", "tag:create_tag_definition", "entitlement:create"), callContext);
+        securityApi.updateRoleDefinition("original", List.of("account:*", "payment", "tag:create_tag_definition", "entitlement:create"), callContext);
 
         final List<String> updatedRoleDefinition = securityApi.getRoleDefinition("original", callContext);
         Assert.assertEquals(updatedRoleDefinition.size(), 4);
@@ -343,7 +338,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         Assert.assertTrue(updatedRoleDefinition.contains("tag:create_tag_definition"));
         Assert.assertTrue(updatedRoleDefinition.contains("entitlement:create"));
 
-        securityApi.updateRoleDefinition("original", ImmutableList.<String>of(), callContext);
+        securityApi.updateRoleDefinition("original", List.of(), callContext);
         Assert.assertEquals(securityApi.getRoleDefinition("original", callContext).size(), 0);
     }
 
@@ -351,7 +346,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
         try {
             securityApi.addRoleDefinition("failed", permissions, callContext);
             Assert.fail("Should fail permissions " + permissions + " were invalid");
-        } catch (SecurityApiException expected) {
+        } catch (final SecurityApiException expected) {
             Assert.assertEquals(expected.getCode(), ErrorCode.SECURITY_INVALID_PERMISSIONS.getCode());
         }
     }
@@ -359,15 +354,7 @@ public class TestKillBillJdbcRealm extends UtilTestSuiteWithEmbeddedDB {
     private void validateUserRoles(final List<String> roles, final List<String> expectedRoles) {
         Assert.assertEquals(roles.size(), expectedRoles.size());
         for (final String cur : expectedRoles) {
-            boolean found = false;
-            if (Iterables.tryFind(roles, new Predicate<String>() {
-                @Override
-                public boolean apply(final String input) {
-                    return input.equals(cur);
-                }
-            }).orNull() != null) {
-                found = true;
-            }
+            final boolean found = roles.stream().filter(input -> input.equals(cur)).findFirst().orElse(null) != null;
             Assert.assertTrue(found, "Cannot find role " + cur);
         }
     }

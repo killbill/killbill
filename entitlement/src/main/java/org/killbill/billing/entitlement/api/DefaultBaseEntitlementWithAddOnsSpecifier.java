@@ -19,13 +19,13 @@ package org.killbill.billing.entitlement.api;
 
 import java.util.UUID;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 
 public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlementWithAddOnsSpecifier {
 
     private final Iterable<EntitlementSpecifier> entitlementSpecifier;
-    private final LocalDate entitlementEffectiveDate;
-    private final LocalDate billingEffectiveDate;
+    private final DateTime entitlementEffectiveDate;
+    private final DateTime billingEffectiveDate;
     private final boolean isMigrated;
 
     // Maybe populated after create or transfer
@@ -44,8 +44,8 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
     public DefaultBaseEntitlementWithAddOnsSpecifier(final UUID bundleId,
                                                      final String bundleExternalKey,
                                                      final Iterable<EntitlementSpecifier> entitlementSpecifier,
-                                                     final LocalDate entitlementEffectiveDate,
-                                                     final LocalDate billingEffectiveDate,
+                                                     final DateTime entitlementEffectiveDate,
+                                                     final DateTime billingEffectiveDate,
                                                      final boolean isMigrated) {
         this.bundleId = bundleId;
         this.bundleExternalKey = bundleExternalKey;
@@ -79,12 +79,12 @@ public class DefaultBaseEntitlementWithAddOnsSpecifier implements BaseEntitlemen
     }
 
     @Override
-    public LocalDate getEntitlementEffectiveDate() {
+    public DateTime getEntitlementEffectiveDate() {
         return entitlementEffectiveDate;
     }
 
     @Override
-    public LocalDate getBillingEffectiveDate() {
+    public DateTime getBillingEffectiveDate() {
         return billingEffectiveDate;
     }
 

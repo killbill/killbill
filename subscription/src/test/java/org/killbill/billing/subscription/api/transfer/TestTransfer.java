@@ -104,7 +104,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime afterTransferDate = clock.getUTCNow();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertNotNull(oldBaseSubscription.getEndDate());
         testUtil.assertDateWithin(oldBaseSubscription.getEndDate(), beforeTransferDate, afterTransferDate);
         assertTrue(oldBaseSubscription.getEndDate().compareTo(transferRequestedDate) == 0);
@@ -152,7 +152,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertNotNull(oldBaseSubscription.getFutureEndDate());
         assertTrue(oldBaseSubscription.getFutureEndDate().compareTo(ctd) == 0);
 
@@ -200,7 +200,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime afterTransferDate = clock.getUTCNow();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertNotNull(oldBaseSubscription.getEndDate());
         testUtil.assertDateWithin(oldBaseSubscription.getEndDate(), beforeTransferDate, afterTransferDate);
         assertTrue(oldBaseSubscription.getEndDate().compareTo(transferRequestedDate) == 0);
@@ -248,7 +248,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         assertListenerStatus();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
-        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+        final SubscriptionBase oldBaseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         assertNotNull(oldBaseSubscription.getFutureEndDate());
         assertTrue(oldBaseSubscription.getFutureEndDate().compareTo(ctd) == 0);
 
@@ -289,7 +289,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DateTime newCtd = newBaseSubscription.getStartDate().plusYears(1);
         setChargedThroughDate(newBaseSubscription.getId(), newCtd, internalCallContext);
-        final SubscriptionBase newBaseSubscriptionWithCtd = subscriptionInternalApi.getSubscriptionFromId(newBaseSubscription.getId(), internalCallContext);
+        final SubscriptionBase newBaseSubscriptionWithCtd = subscriptionInternalApi.getSubscriptionFromId(newBaseSubscription.getId(), false, internalCallContext);
 
         final String newBaseProduct2 = "Pistol";
         final BillingPeriod newBaseTerm2 = BillingPeriod.ANNUAL;
@@ -496,7 +496,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         setChargedThroughDate(baseSubscription.getId(), ctd, internalCallContext);
 
         // CANCEL BP
-        baseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), internalCallContext);
+        baseSubscription = subscriptionInternalApi.getSubscriptionFromId(baseSubscription.getId(), false, internalCallContext);
         baseSubscription.cancel(callContext);
 
         // MOVE CLOCK one day AHEAD AND UNCANCEL BP

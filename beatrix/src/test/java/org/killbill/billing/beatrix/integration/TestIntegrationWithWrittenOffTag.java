@@ -17,9 +17,11 @@
 
 package org.killbill.billing.beatrix.integration;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ObjectType;
@@ -31,7 +33,6 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.api.TagApiException;
 import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.killbill.billing.util.api.TagUserApi;
@@ -39,9 +40,6 @@ import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -84,14 +82,14 @@ public class TestIntegrationWithWrittenOffTag extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE);
         clock.addDays(31);
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
 
         // Tag non $0 invoice with WRITTEN_OFF and remove AUTO_PAY_OFF => System should still not pay anything
@@ -99,7 +97,7 @@ public class TestIntegrationWithWrittenOffTag extends TestIntegrationBase {
         remove_AUTO_PAY_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
         assertListenerStatus();
 
-        List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        List<Payment> accountPayments = paymentApi.getAccountPayments(account.getId(), false, false, Collections.emptyList(), callContext);
         assertEquals(accountPayments.size(), 0);
 
     }

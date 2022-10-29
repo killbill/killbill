@@ -18,13 +18,13 @@
 
 package org.killbill.billing.mock.glue;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.glue.OverdueModule;
 import org.killbill.billing.overdue.api.OverdueApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.mockito.Mockito;
-
-import com.google.inject.Inject;
 
 public class MockOverdueModule extends KillBillModule implements OverdueModule {
 

@@ -75,8 +75,8 @@ DROP TABLE IF EXISTS catalog_override_block_definition;
 CREATE TABLE catalog_override_block_definition (
     record_id serial unique,
     parent_unit_name varchar(255) NOT NULL,
-    bsize decimal(15,9) NOT NULL,
-    max decimal(15,9) NULL,
+    bsize decimal(18,9) NOT NULL,
+    max decimal(18,9) NULL,
     currency varchar(3) NOT NULL,
     price decimal(15,9) NOT NULL,
     effective_date datetime NOT NULL,

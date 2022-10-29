@@ -16,6 +16,7 @@
 
 package org.killbill.billing.subscription.engine.dao.model;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -27,8 +28,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
-
-import com.google.common.base.MoreObjects;
 
 public class SubscriptionModelDao extends EntityModelDaoBase implements EntityModelDao<SubscriptionBase> {
 
@@ -46,7 +45,7 @@ public class SubscriptionModelDao extends EntityModelDaoBase implements EntityMo
                                 final DateTime chargedThroughDate, final boolean migrated, final DateTime createdDate, final DateTime updateDate) {
         super(id, createdDate, updateDate);
         this.bundleId = bundleId;
-        this.externalKey = MoreObjects.firstNonNull(externalKey, id.toString());;
+        this.externalKey = Objects.requireNonNullElse(externalKey, id.toString());;
         this.category = category;
         this.startDate = startDate;
         this.bundleStartDate = bundleStartDate;

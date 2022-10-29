@@ -18,9 +18,12 @@
 
 package org.killbill.billing.tenant.dao;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -38,6 +41,7 @@ import org.killbill.billing.tenant.api.Tenant;
 import org.killbill.billing.tenant.api.TenantApiException;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.cache.CacheControllerDispatcher;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.config.definition.SecurityConfig;
@@ -49,14 +53,6 @@ import org.killbill.billing.util.entity.dao.EntitySqlDaoWrapperFactory;
 import org.killbill.billing.util.security.shiro.KillbillCredentialsMatcher;
 import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
@@ -82,7 +78,7 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
     public TenantModelDao getTenantByApiKey(final String apiKey) {
         return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TenantModelDao>() {
             @Override
-            public TenantModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
+            public TenantModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) {
                 return entitySqlDaoWrapperFactory.become(TenantSqlDao.class).getByApiKey(apiKey);
             }
         });
@@ -96,121 +92,89 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
         final String hashedPasswordBase64 = new SimpleHash(KillbillCredentialsMatcher.HASH_ALGORITHM_NAME,
                                                            entity.getApiSecret(), salt, securityConfig.getShiroNbHashIterations()).toBase64();
 
-        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final TenantModelDao tenantModelDaoWithSecret = new TenantModelDao(entity.getId(), context.getCreatedDate(), context.getUpdatedDate(),
-                                                                                   entity.getExternalKey(), entity.getApiKey(),
-                                                                                   hashedPasswordBase64, salt.toBase64());
-                final TenantSqlDao tenantSqlDao = entitySqlDaoWrapperFactory.become(TenantSqlDao.class);
-                createAndRefresh(tenantSqlDao, tenantModelDaoWithSecret, context);
-                return null;
-            }
+        transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
+            final TenantModelDao tenantModelDaoWithSecret = new TenantModelDao(entity.getId(), context.getCreatedDate(), context.getUpdatedDate(),
+                                                                               entity.getExternalKey(), entity.getApiKey(),
+                                                                               hashedPasswordBase64, salt.toBase64());
+            final TenantSqlDao tenantSqlDao = entitySqlDaoWrapperFactory.become(TenantSqlDao.class);
+            createAndRefresh(tenantSqlDao, tenantModelDaoWithSecret, context);
+            return null;
         });
     }
 
     @VisibleForTesting
     AuthenticationInfo getAuthenticationInfoForTenant(final UUID id) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<AuthenticationInfo>() {
-            @Override
-            public AuthenticationInfo inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final TenantModelDao tenantModelDao = entitySqlDaoWrapperFactory.become(TenantSqlDao.class).getSecrets(id.toString());
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
+            final TenantModelDao tenantModelDao = entitySqlDaoWrapperFactory.become(TenantSqlDao.class).getSecrets(id.toString());
 
-                final SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(tenantModelDao.getApiKey(), tenantModelDao.getApiSecret().toCharArray(), getClass().getSimpleName());
-                authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes(Base64.decode(tenantModelDao.getApiSalt())));
+            final SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(tenantModelDao.getApiKey(), tenantModelDao.getApiSecret().toCharArray(), getClass().getSimpleName());
+            authenticationInfo.setCredentialsSalt(ByteSource.Util.bytes(Base64.decode(tenantModelDao.getApiSalt())));
 
-                return authenticationInfo;
-            }
+            return authenticationInfo;
         });
     }
 
     @Override
     public List<String> getTenantValueForKey(final String key, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<String>>() {
-            @Override
-            public List<String> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final List<TenantKVModelDao> tenantKV = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
-                return ImmutableList.copyOf(Collections2.transform(tenantKV, new Function<TenantKVModelDao, String>() {
-                    @Override
-                    public String apply(final TenantKVModelDao in) {
-                        return in.getTenantValue();
-                    }
-                }));
-            }
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
+            final List<TenantKVModelDao> tenantKV = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getTenantValueForKey(key, context);
+            return tenantKV.stream().map(TenantKVModelDao::getTenantValue).collect(Collectors.toUnmodifiableList());
         });
     }
 
     @Override
     public void addTenantKeyValue(final String key, final String value, final boolean uniqueKey, final InternalCallContext context) {
-        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUIDs.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
-                final TenantKVSqlDao tenantKVSqlDao = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class);
-                if (uniqueKey) {
-                    deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
-                }
-                final TenantKVModelDao rehydrated = createAndRefresh(tenantKVSqlDao, tenantKVModelDao, context);
-                broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
-                return null;
+        transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
+            final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUIDs.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
+            final TenantKVSqlDao tenantKVSqlDao = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class);
+            if (uniqueKey) {
+                deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
             }
+            final TenantKVModelDao rehydrated = createAndRefresh(tenantKVSqlDao, tenantKVModelDao, context);
+            broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
+            return null;
         });
     }
 
     @Override
     public void updateTenantLastKeyValue(final String key, final String value, final InternalCallContext context) {
-        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUIDs.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
-                final TenantKVSqlDao tenantKVSqlDao = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class);
+        transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
+            final TenantKVModelDao tenantKVModelDao = new TenantKVModelDao(UUIDs.randomUUID(), context.getCreatedDate(), context.getUpdatedDate(), key, value);
+            final TenantKVSqlDao tenantKVSqlDao = entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class);
 
-                // Retrieve all values for key ordered with recordId (last at the end)
-                final List<TenantKVModelDao> tenantKV = tenantKVSqlDao.getTenantValueForKey(key, context);
-                final TenantKVModelDao rehydrated;
-                if (!tenantKV.isEmpty()) {
-                    final String id = tenantKV.get(tenantKV.size() - 1).getId().toString();
-                    rehydrated = (TenantKVModelDao) tenantKVSqlDao.updateTenantValueKey(id, value, context);
-                } else {
-                    rehydrated = createAndRefresh(tenantKVSqlDao, tenantKVModelDao, context);
-                }
-                broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
-                return null;
+            // Retrieve all values for key ordered with recordId (last at the end)
+            final List<TenantKVModelDao> tenantKV = tenantKVSqlDao.getTenantValueForKey(key, context);
+            final TenantKVModelDao rehydrated;
+            if (!tenantKV.isEmpty()) {
+                final String id = tenantKV.get(tenantKV.size() - 1).getId().toString();
+                rehydrated = (TenantKVModelDao) tenantKVSqlDao.updateTenantValueKey(id, value, context);
+            } else {
+                rehydrated = createAndRefresh(tenantKVSqlDao, tenantKVModelDao, context);
             }
+            broadcastConfigurationChangeFromTransaction(rehydrated.getRecordId(), key, entitySqlDaoWrapperFactory, context);
+            return null;
         });
-
     }
 
     @Override
     public void deleteTenantKey(final String key, final InternalCallContext context) {
-        transactionalSqlDao.execute(false, new EntitySqlDaoTransactionWrapper<Void>() {
-            @Override
-            public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
-                broadcastConfigurationChangeFromTransaction(null, key, entitySqlDaoWrapperFactory, context);
-                return null;
-            }
+        transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
+            deleteFromTransaction(key, entitySqlDaoWrapperFactory, context);
+            broadcastConfigurationChangeFromTransaction(null, key, entitySqlDaoWrapperFactory, context);
+            return null;
         });
     }
 
     @Override
     public TenantKVModelDao getKeyByRecordId(final Long recordId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<TenantKVModelDao>() {
-            @Override
-            public TenantKVModelDao inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getByRecordId(recordId, context);
-            }
-        });
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
+                entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).getByRecordId(recordId, context));
     }
 
     @Override
     public List<TenantKVModelDao> searchTenantKeyValues(final String searchKeyPrefix, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<List<TenantKVModelDao>>() {
-            @Override
-            public List<TenantKVModelDao> inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                return entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).searchTenantKeyValues(String.format("%s%%", searchKeyPrefix), context);
-            }
-        });
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
+                entitySqlDaoWrapperFactory.become(TenantKVSqlDao.class).searchTenantKeyValues(String.format("%s%%", searchKeyPrefix), context));
     }
 
     private Void deleteFromTransaction(final String key, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) {
@@ -236,12 +200,7 @@ public class DefaultTenantDao extends EntityDaoBase<TenantModelDao, Tenant, Tena
     // For now we restrict the caching to the (system) TenantKey keys
     //
     private boolean isSystemKey(final String key) {
-        return Iterables.tryFind(ImmutableList.copyOf(TenantKey.values()), new Predicate<TenantKey>() {
-            @Override
-            public boolean apply(final TenantKey input) {
-                return key.startsWith(input.toString());
-            }
-        }).orNull() != null;
+        return Arrays.stream(TenantKey.values()).anyMatch(input -> key.startsWith(input.toString()));
     }
 
 }

@@ -17,14 +17,11 @@
 
 package org.killbill.billing.catalog.plugin;
 
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
 import org.killbill.billing.catalog.StandaloneCatalog;
-import org.killbill.billing.catalog.api.Currency;
-import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PriceList;
-import org.killbill.billing.catalog.api.Product;
-import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.api.rules.CaseBillingAlignment;
 import org.killbill.billing.catalog.api.rules.CaseCancelPolicy;
 import org.killbill.billing.catalog.api.rules.CaseChangePlanAlignment;
@@ -34,8 +31,6 @@ import org.killbill.billing.catalog.api.rules.CasePriceList;
 import org.killbill.billing.catalog.plugin.api.StandalonePluginCatalog;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
 
@@ -52,11 +47,11 @@ public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
 
     }
 
-    private StandalonePluginCatalog buildStandalonePluginCatalog(final StandaloneCatalog inputCatalog) throws Exception {
+    private StandalonePluginCatalog buildStandalonePluginCatalog(final StandaloneCatalog inputCatalog) {
 
-        final TestModelPlanRules rules = new TestModelPlanRules(ImmutableList.<Product>copyOf(inputCatalog.getProducts()),
-                                                      ImmutableList.<Plan>copyOf(inputCatalog.getPlans()),
-                                                      inputCatalog.getPriceLists().getAllPriceLists());
+        final TestModelPlanRules rules = new TestModelPlanRules(List.copyOf(inputCatalog.getProducts()),
+                                                                List.copyOf(inputCatalog.getPlans()),
+                                                                inputCatalog.getPriceLists().getAllPriceLists());
 
         if (inputCatalog.getPlanRules().getCaseChangePlanPolicy() != null) {
             for (final CaseChangePlanPolicy cur : inputCatalog.getPlanRules().getCaseChangePlanPolicy()) {
@@ -89,13 +84,13 @@ public class TestCatalogPluginMapping extends CatalogTestSuiteNoDB {
             }
         }
         final TestModelStandalonePluginCatalog result = new TestModelStandalonePluginCatalog(new DateTime(inputCatalog.getEffectiveDate()),
-                                                                                   ImmutableList.<Currency>copyOf(inputCatalog.getSupportedCurrencies()),
-                                                                                   ImmutableList.<Product>copyOf(inputCatalog.getProducts()),
-                                                                                   ImmutableList.<Plan>copyOf(inputCatalog.getPlans()),
+                                                                                   List.of(inputCatalog.getSupportedCurrencies()),
+                                                                                   List.copyOf(inputCatalog.getProducts()),
+                                                                                   List.copyOf(inputCatalog.getPlans()),
                                                                                    inputCatalog.getPriceLists().getDefaultPricelist(),
-                                                                                   ImmutableList.<PriceList>copyOf(inputCatalog.getPriceLists().getChildPriceLists()),
+                                                                                   List.of(inputCatalog.getPriceLists().getChildPriceLists()),
                                                                                    rules,
-                                                                                   ImmutableList.<Unit>copyOf(inputCatalog.getUnits()));
+                                                                                   List.of(inputCatalog.getUnits()));
         return result;
     }
 

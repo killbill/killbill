@@ -52,8 +52,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 // Simple unit tests for DefaultSubscriptionBaseTransferApi, see TestTransfer for more advanced tests with dao
 public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoDB {
 
@@ -81,8 +79,8 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
     public void testEventsForCancelledSubscriptionBeforeTransfer() throws Exception {
         final DateTime subscriptionStartTime = clock.getUTCNow();
         final DateTime subscriptionCancelTime = subscriptionStartTime.plusDays(1);
-        final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),
-                                                                                            createEvent(subscriptionCancelTime, SubscriptionBaseTransitionType.CANCEL));
+        final List<ExistingEvent> existingEvents = List.of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),
+                                                           createEvent(subscriptionCancelTime, SubscriptionBaseTransitionType.CANCEL));
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 
@@ -97,8 +95,8 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
 
         final DateTime subscriptionStartTime = clock.getUTCNow();
         final DateTime subscriptionCancelTime = subscriptionStartTime.plusDays(1);
-        final ImmutableList<ExistingEvent> existingEvents = ImmutableList.<ExistingEvent>of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),
-                                                                                            createEvent(subscriptionCancelTime, SubscriptionBaseTransitionType.CANCEL));
+        final List<ExistingEvent> existingEvents = List.of(createEvent(subscriptionStartTime, SubscriptionBaseTransitionType.CREATE),
+                                                           createEvent(subscriptionCancelTime, SubscriptionBaseTransitionType.CANCEL));
         final SubscriptionBuilder subscriptionBuilder = new SubscriptionBuilder();
         final DefaultSubscriptionBase subscription = new DefaultSubscriptionBase(subscriptionBuilder);
 

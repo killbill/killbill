@@ -1,6 +1,6 @@
 /*
- * Copyright 2020-2021 Equinix, Inc
- * Copyright 2014-2021 The Billing Project, LLC
+ * Copyright 2020-2022 Equinix, Inc
+ * Copyright 2014-2022 The Billing Project, LLC
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -18,9 +18,14 @@
 package org.killbill.billing.util.security.shiro.realm;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.InputStream;
 import java.math.BigInteger;
+import java.net.URI;
 import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
@@ -29,16 +34,17 @@ import java.security.spec.ECFieldFp;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.EllipticCurve;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
+import javax.inject.Inject;
 
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -53,25 +59,17 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.MutablePrincipalCollection;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
-import org.asynchttpclient.AsyncCompletionHandler;
-import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.BoundRequestBuilder;
-import org.asynchttpclient.DefaultAsyncHttpClient;
-import org.asynchttpclient.DefaultAsyncHttpClientConfig.Builder;
-import org.asynchttpclient.ListenableFuture;
-import org.asynchttpclient.Response;
+import org.killbill.commons.utils.Strings;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.config.definition.SecurityConfig;
+import org.killbill.commons.utils.cache.Cache;
+import org.killbill.commons.utils.cache.DefaultCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.inject.Inject;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Clock;
 import io.jsonwebtoken.Jws;
@@ -89,7 +87,6 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
 
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final String USER_AGENT = "KillBill/1.0";
-    private static final int DEFAULT_TIMEOUT_SECS = 70;
 
     private static final int CACHE_MAXIMUM_SIZE = 15;
     private static final int CACHE_TIMEOUT_MINUTES = 15;
@@ -97,17 +94,16 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
     private final Cache<String, PublicKey> keys;
 
     private final SecurityConfig securityConfig;
-    private final AsyncHttpClient httpClient;
+    private final HttpClient httpClient;
     private final JwtParser jwtParser;
 
     @Inject
     public KillBillAuth0Realm(final SecurityConfig securityConfig, final org.killbill.clock.Clock clock) {
         this.securityConfig = securityConfig;
-        final Builder cfg = new Builder().setUserAgent(USER_AGENT)
-                                         .setConnectTimeout(Math.toIntExact(securityConfig.getShiroAuth0ConnectTimeout().getMillis()))
-                                         .setReadTimeout((int) securityConfig.getShiroAuth0ReadTimeout().getMillis())
-                                         .setRequestTimeout((int) securityConfig.getShiroAuth0RequestTimeout().getMillis());
-        this.httpClient = new DefaultAsyncHttpClient(cfg.build());
+
+        this.httpClient = HttpClient.newBuilder()
+                                    .connectTimeout(Duration.of(Math.toIntExact(securityConfig.getShiroAuth0ConnectTimeout().getMillis()), ChronoUnit.MILLIS)).build();
+
         final JwtParserBuilder jwtParserBuilder = Jwts.parserBuilder();
         if (securityConfig.getShiroAuth0Audience() != null) {
             jwtParserBuilder.requireAudience(securityConfig.getShiroAuth0Audience());
@@ -115,6 +111,7 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
         if (securityConfig.getShiroAuth0Issuer() != null) {
             jwtParserBuilder.requireIssuer(securityConfig.getShiroAuth0Issuer());
         }
+        this.keys = new DefaultCache<>(CACHE_MAXIMUM_SIZE, CACHE_TIMEOUT_MINUTES * 60, this::loadPublicKey);
         this.jwtParser = jwtParserBuilder
                              .setClock(new Clock() {
                                  @Override
@@ -140,30 +137,20 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
                                          throw new SignatureException("Key ID is required");
                                      }
 
-                                     final PublicKey publicKey;
-                                     try {
-                                         publicKey = keys.get(keyId, new Callable<PublicKey>() {
-                                             @Override
-                                             public PublicKey call() throws Exception {
-                                                 return loadPublicKey(keyId);
-                                             }
-                                         });
-                                     } catch (final ExecutionException e) {
-                                         throw new SignatureException("Unknown signing key ID");
+                                     PublicKey publicKey = keys.get(keyId);
+                                     if (publicKey == null) {
+                                         publicKey = loadPublicKey(keyId);
                                      }
 
                                      if (publicKey == null) {
                                          throw new SignatureException("Unknown signing key ID");
+                                     } else {
+                                         keys.put(keyId, publicKey);
+                                         return publicKey;
                                      }
-
-                                     return publicKey;
                                  }
                              })
                              .build();
-        this.keys = CacheBuilder.newBuilder()
-                                .maximumSize(CACHE_MAXIMUM_SIZE)
-                                .expireAfterWrite(CACHE_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-                                .build();
     }
 
     @Override
@@ -236,30 +223,35 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
     }
 
     private boolean doAuthenticate(final UsernamePasswordToken upToken) {
-        final BoundRequestBuilder builder = httpClient.preparePost(securityConfig.getShiroAuth0Url() + "/oauth/token");
-        builder.addFormParam("client_id", securityConfig.getShiroAuth0ClientId());
-        builder.addFormParam("client_secret", securityConfig.getShiroAuth0ClientSecret());
-        builder.addFormParam("audience", securityConfig.getShiroAuth0APIIdentifier());
-        builder.addFormParam("grant_type", "http://auth0.com/oauth/grant-type/password-realm");
-        builder.addFormParam("realm", securityConfig.getShiroAuth0DatabaseConnectionName());
-        builder.addFormParam("username", upToken.getUsername());
-        builder.addFormParam("password", String.valueOf(upToken.getPassword()));
+        final Map<Object, Object> data = new HashMap<>();
+        data.put("client_id", securityConfig.getShiroAuth0ClientId());
+        data.put("client_secret", securityConfig.getShiroAuth0ClientSecret());
+        data.put("audience", securityConfig.getShiroAuth0APIIdentifier());
+        data.put("grant_type", "http://auth0.com/oauth/grant-type/password-realm");
+        data.put("realm", securityConfig.getShiroAuth0DatabaseConnectionName());
+        data.put("username", upToken.getUsername());
+        data.put("password", String.valueOf(upToken.getPassword()));
+        final StringBuilder sb = new StringBuilder();
+        for (final Map.Entry<Object, Object> entry : data.entrySet()) {
+            if (sb.length() > 0) {
+                sb.append("&");
+            }
+            sb.append(URLEncoder.encode(entry.getKey().toString(), StandardCharsets.UTF_8));
+            sb.append("=");
+            sb.append(URLEncoder.encode(entry.getValue().toString(), StandardCharsets.UTF_8));
+        }
 
-        builder.addHeader("Content-Type", "application/x-www-form-urlencoded");
+        final HttpRequest request = HttpRequest.newBuilder()
+                                                       .uri(URI.create(securityConfig.getShiroAuth0Url() + "/oauth/token"))
+                                                       .header("User-Agent", USER_AGENT)
+                                                       .header("Content-Type", "application/x-www-form-urlencoded")
+                                                       .timeout(Duration.of((int) securityConfig.getShiroAuth0ReadTimeout().getMillis(), ChronoUnit.MILLIS))
+                                                       .POST(HttpRequest.BodyPublishers.ofString(sb.toString()))
+                                                       .build();
 
-        final Response response;
+        final HttpResponse<InputStream> response;
         try {
-            final ListenableFuture<Response> futureStatus =
-                    builder.execute(new AsyncCompletionHandler<Response>() {
-                        @Override
-                        public Response onCompleted(final Response response) throws Exception {
-                            return response;
-                        }
-                    });
-            response = futureStatus.get(DEFAULT_TIMEOUT_SECS, TimeUnit.SECONDS);
-        } catch (final TimeoutException toe) {
-            log.warn("Timeout while connecting to Auth0", toe);
-            throw new AuthenticationException(toe);
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (final Exception e) {
             log.warn("Error while connecting to Auth0", e);
             throw new AuthenticationException(e);
@@ -268,9 +260,9 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
         return isAuthenticated(response);
     }
 
-    private boolean isAuthenticated(final Response auth0RawResponse) {
+    private boolean isAuthenticated(final HttpResponse<InputStream> auth0RawResponse) {
         try {
-            final Map<String, Object> auth0Response = mapper.readValue(auth0RawResponse.getResponseBodyAsStream(), new TypeReference<Map<String, Object>>() {});
+            final Map<String, Object> auth0Response = mapper.readValue(auth0RawResponse.body(), new TypeReference<Map<String, Object>>() {});
             if (auth0Response.containsKey("access_token")) {
                 return true;
             } else {
@@ -284,27 +276,32 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
     }
 
     private String getBearerToken() {
-        final BoundRequestBuilder builder = httpClient.preparePost(securityConfig.getShiroAuth0Url() + "/oauth/token");
-        builder.addFormParam("client_id", securityConfig.getShiroAuth0ClientId());
-        builder.addFormParam("client_secret", securityConfig.getShiroAuth0ClientSecret());
-        builder.addFormParam("audience", securityConfig.getShiroAuth0Url() + "/api/v2/");
-        builder.addFormParam("grant_type", "client_credentials");
+        final Map<Object, Object> data = new HashMap<>();
+        data.put("client_id", securityConfig.getShiroAuth0ClientId());
+        data.put("client_secret", securityConfig.getShiroAuth0ClientSecret());
+        data.put("audience", securityConfig.getShiroAuth0Url() + "/api/v2/");
+        data.put("grant_type", "client_credentials");
+        final StringBuilder sb = new StringBuilder();
+        for (final Map.Entry<Object, Object> entry : data.entrySet()) {
+            if (sb.length() > 0) {
+                sb.append("&");
+            }
+            sb.append(URLEncoder.encode(entry.getKey().toString(), StandardCharsets.UTF_8));
+            sb.append("=");
+            sb.append(URLEncoder.encode(entry.getValue().toString(), StandardCharsets.UTF_8));
+        }
 
-        builder.addHeader("Content-Type", "application/x-www-form-urlencoded");
+        final HttpRequest request = HttpRequest.newBuilder()
+                                               .uri(URI.create(securityConfig.getShiroAuth0Url() + "/oauth/token"))
+                                               .header("User-Agent", USER_AGENT)
+                                               .header("Content-Type", "application/x-www-form-urlencoded")
+                                               .timeout(Duration.of((int) securityConfig.getShiroAuth0ReadTimeout().getMillis(), ChronoUnit.MILLIS))
+                                               .POST(HttpRequest.BodyPublishers.ofString(sb.toString()))
+                                               .build();
 
-        final Response response;
+        final HttpResponse<InputStream> response;
         try {
-            final ListenableFuture<Response> futureStatus =
-                    builder.execute(new AsyncCompletionHandler<Response>() {
-                        @Override
-                        public Response onCompleted(final Response response) throws Exception {
-                            return response;
-                        }
-                    });
-            response = futureStatus.get(DEFAULT_TIMEOUT_SECS, TimeUnit.SECONDS);
-        } catch (final TimeoutException toe) {
-            log.warn("Timeout while connecting to Auth0", toe);
-            throw new AuthenticationException(toe);
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (final Exception e) {
             log.warn("Error while connecting to Auth0", e);
             throw new AuthenticationException(e);
@@ -312,7 +309,7 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
 
         final Map<String, Object> auth0Response;
         try {
-            auth0Response = mapper.readValue(response.getResponseBodyAsStream(), new TypeReference<Map<String, Object>>() {});
+            auth0Response = mapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {});
         } catch (final Exception e) {
             log.warn("Unable to read response from Auth0", e);
             throw new AuthorizationException(e);
@@ -327,16 +324,11 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
 
     private String findAuth0UserId(final String username, final String token) {
         final String path;
-        try {
-            path = "/api/v2/users-by-email?email=" + URLEncoder.encode(username, "UTF-8");
-        } catch (final UnsupportedEncodingException e) {
-            // Should never happen
-            throw new IllegalStateException(e);
-        }
+        path = "/api/v2/users-by-email?email=" + URLEncoder.encode(username, StandardCharsets.UTF_8);
 
-        final Response auth0RawResponse = doGetRequest(path, token);
+        final HttpResponse<InputStream> auth0RawResponse = doGetRequest(path, token);
         try {
-            final List<Map<String, Object>> auth0Response = mapper.readValue(auth0RawResponse.getResponseBodyAsStream(), new TypeReference<List<Map<String, Object>>>() {});
+            final List<Map<String, Object>> auth0Response = mapper.readValue(auth0RawResponse.body(), new TypeReference<List<Map<String, Object>>>() {});
             if (auth0Response == null) {
                 log.warn("Unable to find user {} in Auth0", username);
                 return null;
@@ -353,16 +345,11 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
 
     private Set<String> findAuth0UserPermissions(final String userId, final String token) {
         final String path;
-        try {
-            path = "/api/v2/users/" + URLEncoder.encode(userId, "UTF-8") + "/permissions";
-        } catch (final UnsupportedEncodingException e) {
-            // Should never happen
-            throw new IllegalStateException(e);
-        }
+        path = "/api/v2/users/" + URLEncoder.encode(userId, StandardCharsets.UTF_8) + "/permissions";
 
-        final Response auth0RawResponse = doGetRequest(path, token);
+        final HttpResponse<InputStream> auth0RawResponse = doGetRequest(path, token);
         try {
-            final List<Map<String, Object>> auth0Response = mapper.readValue(auth0RawResponse.getResponseBodyAsStream(), new TypeReference<List<Map<String, Object>>>() {});
+            final List<Map<String, Object>> auth0Response = mapper.readValue(auth0RawResponse.body(), new TypeReference<List<Map<String, Object>>>() {});
             final Set<String> permissions = new HashSet<String>();
             for (final Map<String, Object> group : auth0Response) {
                 final Object permission = group.get("permission_name");
@@ -377,26 +364,22 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
         }
     }
 
-    private Response doGetRequest(final String path, final String token) {
-        final BoundRequestBuilder builder = httpClient.prepareGet(securityConfig.getShiroAuth0Url() + path);
-        builder.addHeader("Authorization", "Bearer " + token);
-        final Response response;
+    private HttpResponse<InputStream> doGetRequest(final String path, final String token) {
+        final HttpRequest request = HttpRequest.newBuilder()
+                                               .uri(URI.create(securityConfig.getShiroAuth0Url() + path))
+                                               .header("User-Agent", USER_AGENT)
+                                               .header("Authorization", "Bearer " + token)
+                                               .timeout(Duration.of((int) securityConfig.getShiroAuth0ReadTimeout().getMillis(), ChronoUnit.MILLIS))
+                                               .build();
+
+        final HttpResponse<InputStream> response;
         try {
-            final ListenableFuture<Response> futureStatus =
-                    builder.execute(new AsyncCompletionHandler<Response>() {
-                        @Override
-                        public Response onCompleted(final Response response) throws Exception {
-                            return response;
-                        }
-                    });
-            response = futureStatus.get(DEFAULT_TIMEOUT_SECS, TimeUnit.SECONDS);
-        } catch (final TimeoutException toe) {
-            log.warn("Timeout while connecting to Auth0", toe);
-            throw new AuthorizationException(toe);
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (final Exception e) {
             log.warn("Error while connecting to Auth0", e);
-            throw new AuthorizationException(e);
+            throw new AuthenticationException(e);
         }
+
         return response;
     }
 
@@ -422,26 +405,23 @@ public class KillBillAuth0Realm extends AuthorizingRealm {
     }
 
     private PublicKey loadPublicKey(final String keyId) {
-        final BoundRequestBuilder builder = httpClient.prepareGet(securityConfig.getShiroAuth0Url() + "/.well-known/jwks.json");
-        final Response response;
+        final HttpRequest request = HttpRequest.newBuilder()
+                                               .uri(URI.create(securityConfig.getShiroAuth0Url() + "/.well-known/jwks.json"))
+                                               .header("User-Agent", USER_AGENT)
+                                               .timeout(Duration.of((int) securityConfig.getShiroAuth0ReadTimeout().getMillis(), ChronoUnit.MILLIS))
+                                               .build();
+
+        final HttpResponse<InputStream> response;
         try {
-            final ListenableFuture<Response> futureStatus =
-                    builder.execute(new AsyncCompletionHandler<Response>() {
-                        @Override
-                        public Response onCompleted(final Response response) throws Exception {
-                            return response;
-                        }
-                    });
-            response = futureStatus.get(DEFAULT_TIMEOUT_SECS, TimeUnit.SECONDS);
-        } catch (final TimeoutException toe) {
-            throw new SignatureException("Timeout while connecting to Auth0 to fetch public keys", toe);
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (final Exception e) {
-            throw new SignatureException("Error while connecting to Auth0 to fetch public keys", e);
+            log.warn("Error while connecting to Auth0", e);
+            throw new AuthenticationException(e);
         }
 
         final Map<String, List<Map<String, Object>>> keysResponse;
         try {
-            keysResponse = mapper.readValue(response.getResponseBodyAsStream(), new TypeReference<Map<String, List<Map<String, Object>>>>() {});
+            keysResponse = mapper.readValue(response.body(), new TypeReference<Map<String, List<Map<String, Object>>>>() {});
         } catch (final IOException e) {
             throw new SignatureException("Unable to read public keys from Auth0", e);
         }

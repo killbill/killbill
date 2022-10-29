@@ -28,12 +28,24 @@ public class CatalogOverrideBlockDefinitionModelDao {
     private String currency;
     private BigDecimal price;
     private String blockType;
-    private double bsize;
-    private double max;
+    private BigDecimal bsize;
+    private BigDecimal max;
     private DateTime effectiveDate;
     private DateTime createdDate;
     private String createdBy;
     private Long tenantRecordId;
+
+    public CatalogOverrideBlockDefinitionModelDao() {
+    }
+
+    public CatalogOverrideBlockDefinitionModelDao(String parentUnitName, String currency, BigDecimal price, BigDecimal size, BigDecimal max, DateTime effectiveDate) {
+        this.parentUnitName = parentUnitName;
+        this.currency = currency;
+        this.price = price;
+        this.bsize = size;
+        this.max = max;
+        this.effectiveDate = effectiveDate;
+    }
 
     public Long getRecordId() {
         return recordId;
@@ -75,25 +87,25 @@ public class CatalogOverrideBlockDefinitionModelDao {
         this.blockType = blockType;
     }
 
-    public double getSize() {
+    public BigDecimal getSize() {
         return bsize;
     }
 
     // Jdbi binder
-    public double getBsize() {
+    public BigDecimal getBsize() {
         return bsize;
     }
 
-    public void setSize(double size) {
+    public void setSize(BigDecimal size) {
         this.bsize = size;
     }
 
 
-    public double getMax() {
+    public BigDecimal getMax() {
         return max;
     }
 
-    public void setMax(double max) {
+    public void setMax(BigDecimal max) {
         this.max = max;
     }
 
@@ -127,17 +139,5 @@ public class CatalogOverrideBlockDefinitionModelDao {
 
     public void setTenantRecordId(Long tenantRecordId) {
         this.tenantRecordId = tenantRecordId;
-    }
-
-    public CatalogOverrideBlockDefinitionModelDao() {
-    }
-
-    public CatalogOverrideBlockDefinitionModelDao(String parentUnitName, String currency, BigDecimal price, double size, double max, DateTime effectiveDate) {
-        this.parentUnitName = parentUnitName;
-        this.currency = currency;
-        this.price = price;
-        this.bsize = size;
-        this.max = max;
-        this.effectiveDate = effectiveDate;
     }
 }

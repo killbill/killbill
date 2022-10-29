@@ -19,10 +19,12 @@
 package org.killbill.billing.entitlement.engine.core;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -46,14 +48,7 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
-
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import org.killbill.commons.utils.Preconditions;
 
 public class DefaultEventsStream implements EventsStream {
 
@@ -61,6 +56,7 @@ public class DefaultEventsStream implements EventsStream {
     private final SubscriptionBaseBundle bundle;
     // All blocking states for the account, associated bundle or subscription
     private final Collection<BlockingState> blockingStates;
+    private final Collection<BlockingState> blockingStatesWithDeletedEvents;
     private final BlockingChecker blockingChecker;
     // Base subscription for the bundle if it exists, null otherwise
     private final SubscriptionBase baseSubscription;
@@ -85,9 +81,12 @@ public class DefaultEventsStream implements EventsStream {
     private BlockingState entitlementCancelEvent;
     private EntitlementState entitlementState;
 
+    private final boolean includeDeletedEvents;
+
     public DefaultEventsStream(final ImmutableAccountData account,
                                final SubscriptionBaseBundle bundle,
                                final Collection<BlockingState> blockingStates,
+                               final Collection<BlockingState> blockingStatesWithDeletedEvents,
                                final BlockingChecker blockingChecker,
                                @Nullable final SubscriptionBase baseSubscription,
                                final SubscriptionBase subscription,
@@ -97,7 +96,6 @@ public class DefaultEventsStream implements EventsStream {
         sanityChecks(account, bundle, baseSubscription, subscription);
         this.account = account;
         this.bundle = bundle;
-        this.blockingStates = blockingStates;
         this.blockingChecker = blockingChecker;
         this.baseSubscription = baseSubscription;
         this.subscription = subscription;
@@ -107,9 +105,26 @@ public class DefaultEventsStream implements EventsStream {
         this.utcNow = utcNow;
         this.utcToday = contextWithValidAccountRecordId.toLocalDate(utcNow);
 
+        this.blockingStates = blockingStates;
+        this.blockingStatesWithDeletedEvents = blockingStatesWithDeletedEvents;
+        this.includeDeletedEvents = !blockingStatesWithDeletedEvents.isEmpty();
+
         setup();
     }
 
+    public DefaultEventsStream(final ImmutableAccountData account,
+            				   final SubscriptionBaseBundle bundle,
+            				   final Collection<BlockingState> blockingStates,
+            				   final BlockingChecker blockingChecker,
+            				   @Nullable final SubscriptionBase baseSubscription,
+            				   final SubscriptionBase subscription,
+            				   final Collection<SubscriptionBase> allSubscriptionsForBundle,
+            				   @Nullable final Integer defaultBillCycleDayLocal,
+            				   final InternalTenantContext contextWithValidAccountRecordId, final DateTime utcNow) {
+    		this(account, bundle, blockingStates, Collections.emptyList(), blockingChecker, baseSubscription, subscription, allSubscriptionsForBundle, defaultBillCycleDayLocal, contextWithValidAccountRecordId, utcNow);
+    }
+
+    
     private void sanityChecks(@Nullable final ImmutableAccountData account,
                               @Nullable final SubscriptionBaseBundle bundle,
                               @Nullable final SubscriptionBase baseSubscription,
@@ -231,6 +246,11 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
+    public boolean getIncludeDeletedEvents() {
+    	return this.includeDeletedEvents;
+    }
+
+    @Override
     public boolean isBlockEntitlement(final DateTime effectiveDate) {
         Preconditions.checkState(effectiveDate != null);
         final BlockingAggregator aggregator = getBlockingAggregator(effectiveDate);
@@ -243,27 +263,23 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     @Override
-    public Collection<BlockingState> getBlockingStates() {
-        return blockingStates;
+    public Collection<BlockingState> getBlockingStates(final boolean includeDeletedEvents) {
+        return includeDeletedEvents ? blockingStatesWithDeletedEvents : blockingStates;
     }
 
     @Override
     public Collection<BlockingState> getPendingEntitlementCancellationEvents() {
-
-        return Collections2.<BlockingState>filter(subscriptionEntitlementStates,
-                                                  new Predicate<BlockingState>() {
-                                                      @Override
-                                                      public boolean apply(final BlockingState input) {
-                                                          return !input.getEffectiveDate().isBefore(utcNow) &&
-                                                                 DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName()) &&
-                                                                 (
-                                                                         // ... for that subscription
-                                                                         BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(subscription.getId()) ||
-                                                                         // ... for the associated base subscription
-                                                                         BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(baseSubscription.getId())
-                                                                 );
-                                                      }
-                                                  });
+        return subscriptionEntitlementStates
+                .stream()
+                .filter(input -> !input.getEffectiveDate().isBefore(utcNow) &&
+                                 DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName()) &&
+                                 (
+                                         // ... for that subscription
+                                         BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(subscription.getId()) ||
+                                         // ... for the associated base subscription
+                                         BlockingStateType.SUBSCRIPTION.equals(input.getType()) && input.getBlockedId().equals(baseSubscription.getId())
+                                 ))
+                .collect(Collectors.toUnmodifiableList());
 
     }
 
@@ -273,27 +289,19 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     public BlockingState getEntitlementCancellationEvent(final UUID subscriptionId) {
-        return Iterables.<BlockingState>tryFind(subscriptionEntitlementStates,
-                                                new Predicate<BlockingState>() {
-                                                    @Override
-                                                    public boolean apply(final BlockingState input) {
-                                                        return DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName()) &&
-                                                               input.getBlockedId().equals(subscriptionId);
-                                                    }
-                                                }).orNull();
+        return subscriptionEntitlementStates.stream()
+                .filter(input -> DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName()) &&
+                                 input.getBlockedId().equals(subscriptionId))
+                .findFirst().orElse(null);
     }
 
     public Iterable<SubscriptionBaseTransition> getPendingSubscriptionEvents(final DateTime effectiveDatetime, final SubscriptionBaseTransitionType... types) {
-        final List<SubscriptionBaseTransitionType> typeList = ImmutableList.<SubscriptionBaseTransitionType>copyOf(types);
-        return Iterables.<SubscriptionBaseTransition>filter(subscription.getAllTransitions(),
-                                                            new Predicate<SubscriptionBaseTransition>() {
-                                                                @Override
-                                                                public boolean apply(final SubscriptionBaseTransition input) {
-                                                                    // Make sure we return the event for equality
-                                                                    return !input.getEffectiveTransitionTime().isBefore(effectiveDatetime) &&
-                                                                           typeList.contains(input.getTransitionType());
-                                                                }
-                                                            });
+        final List<SubscriptionBaseTransitionType> typeList = List.of(types);
+        return subscription.getAllTransitions(false)
+                .stream()
+                .filter(input -> !input.getEffectiveTransitionTime().isBefore(effectiveDatetime) &&
+                                 typeList.contains(input.getTransitionType()))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -306,7 +314,7 @@ public class DefaultEventsStream implements EventsStream {
     public Collection<BlockingState> computeAddonsBlockingStatesForFutureSubscriptionBaseEvents() {
         if (!ProductCategory.BASE.equals(subscription.getCategory())) {
             // Only base subscriptions have add-ons
-            return ImmutableList.of();
+            return Collections.emptyList();
         }
 
         // We need to find the first "trigger" transition, from which we will create the add-ons cancellation events.
@@ -321,7 +329,7 @@ public class DefaultEventsStream implements EventsStream {
             // We need to go back to subscription base as entitlement doesn't know about these
             return computeAddonsBlockingStatesForNextSubscriptionBaseEvent(utcNow, true);
         } else {
-            return ImmutableList.of();
+            return Collections.emptyList();
         }
     }
 
@@ -332,7 +340,7 @@ public class DefaultEventsStream implements EventsStream {
             // Compute the transition trigger (either subscription cancel or change)
             final Iterable<SubscriptionBaseTransition> pendingSubscriptionBaseTransitions = getPendingSubscriptionEvents(effectiveDate, SubscriptionBaseTransitionType.CHANGE, SubscriptionBaseTransitionType.CANCEL);
             if (!pendingSubscriptionBaseTransitions.iterator().hasNext()) {
-                return ImmutableList.<BlockingState>of();
+                return Collections.emptyList();
             }
 
             subscriptionBaseTransitionTrigger = pendingSubscriptionBaseTransitions.iterator().next();
@@ -353,73 +361,65 @@ public class DefaultEventsStream implements EventsStream {
 
     private Collection<BlockingState> computeAddonsBlockingStatesForSubscriptionBaseEvent(@Nullable final Product baseTransitionTriggerNextProduct,
                                                                                           final DateTime blockingStateEffectiveDate) {
-        if (baseSubscription == null || baseSubscription.getLastActivePlan() == null || !ProductCategory.BASE.equals(baseSubscription.getLastActivePlan().getProduct().getCategory())) {
-            return ImmutableList.<BlockingState>of();
+        if (baseSubscription == null ||
+            baseSubscription.getLastActivePlan() == null ||
+            !ProductCategory.BASE.equals(baseSubscription.getLastActivePlan().getProduct().getCategory())) {
+            return Collections.emptySet();
         }
 
+        // Retrieve all add-ons to block for that base subscription
+        final Collection<SubscriptionBase> futureBlockedAddons = allSubscriptionsForBundle
+                .stream()
+                .filter(subscription -> isAddOnsNeedToBeBlocked(subscription, baseTransitionTriggerNextProduct))
+                .collect(Collectors.toUnmodifiableList());
+
+        // Create the blocking states
+        return futureBlockedAddons.stream()
+                .map(input -> new DefaultBlockingState(input.getId(),
+                                                       BlockingStateType.SUBSCRIPTION,
+                                                       DefaultEntitlementApi.ENT_STATE_CANCELLED,
+                                                       KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
+                                                       true,
+                                                       true,
+                                                       false,
+                                                       blockingStateEffectiveDate))
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    private boolean isAddOnsNeedToBeBlocked(final SubscriptionBase subscription, final Product baseTransitionTriggerNextProduct) {
         // Compute included and available addons for the new product
         final Collection<String> includedAddonsForProduct;
         final Collection<String> availableAddonsForProduct;
         if (baseTransitionTriggerNextProduct == null) {
-            includedAddonsForProduct = ImmutableList.<String>of();
-            availableAddonsForProduct = ImmutableList.<String>of();
+            includedAddonsForProduct = Collections.emptyList();
+            availableAddonsForProduct = Collections.emptyList();
         } else {
-            includedAddonsForProduct = Collections2.<Product, String>transform(ImmutableSet.<Product>copyOf(baseTransitionTriggerNextProduct.getIncluded()),
-                                                                               new Function<Product, String>() {
-                                                                                   @Override
-                                                                                   public String apply(final Product product) {
-                                                                                       return product.getName();
-                                                                                   }
-                                                                               });
+            includedAddonsForProduct = baseTransitionTriggerNextProduct.getIncluded().stream()
+                                                                       .map(Product::getName)
+                                                                       .collect(Collectors.toUnmodifiableSet());
 
-            availableAddonsForProduct = Collections2.<Product, String>transform(ImmutableSet.<Product>copyOf(baseTransitionTriggerNextProduct.getAvailable()),
-                                                                                new Function<Product, String>() {
-                                                                                    @Override
-                                                                                    public String apply(final Product product) {
-                                                                                        return product.getName();
-                                                                                    }
-                                                                                });
+            availableAddonsForProduct = baseTransitionTriggerNextProduct.getAvailable()
+                                                                        .stream()
+                                                                        .map(Product::getName)
+                                                                        .collect(Collectors.toUnmodifiableSet());
         }
 
-        // Retrieve all add-ons to block for that base subscription
-        final Collection<SubscriptionBase> futureBlockedAddons = Collections2.<SubscriptionBase>filter(allSubscriptionsForBundle,
-                                                                                                       new Predicate<SubscriptionBase>() {
-                                                                                                           @Override
-                                                                                                           public boolean apply(final SubscriptionBase subscription) {
-                                                                                                               final Plan lastActivePlan = subscription.getLastActivePlan();
-                                                                                                               final boolean result = ProductCategory.ADD_ON.equals(subscription.getCategory()) &&
-                                                                                                                                      // Check the subscription started, if not we don't want it, and that way we avoid doing NPE a few lines below.
-                                                                                                                                      lastActivePlan != null &&
-                                                                                                                                      // Check the entitlement for that add-on hasn't been cancelled yet
-                                                                                                                                      getEntitlementCancellationEvent(subscription.getId()) == null &&
-                                                                                                                                      (
-                                                                                                                                              // Base subscription cancelled
-                                                                                                                                              baseTransitionTriggerNextProduct == null ||
-                                                                                                                                              (
-                                                                                                                                                      // Change plan - check which add-ons to cancel
-                                                                                                                                                      includedAddonsForProduct.contains(lastActivePlan.getProduct().getName()) ||
-                                                                                                                                                      !availableAddonsForProduct.contains(subscription.getLastActivePlan().getProduct().getName())
-                                                                                                                                              )
-                                                                                                                                      );
-                                                                                                               return result;
-                                                                                                           }
-                                                                                                       });
+        final Plan lastActivePlan = subscription.getLastActivePlan();
 
-        // Create the blocking states
-        return Collections2.<SubscriptionBase, BlockingState>transform(futureBlockedAddons,
-                                                                       new Function<SubscriptionBase, BlockingState>() {
-                                                                           @Override
-                                                                           public BlockingState apply(final SubscriptionBase input) {
-                                                                               return new DefaultBlockingState(input.getId(),
-                                                                                                               BlockingStateType.SUBSCRIPTION,
-                                                                                                               DefaultEntitlementApi.ENT_STATE_CANCELLED,
-                                                                                                               KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName(),
-                                                                                                               true,
-                                                                                                               true,
-                                                                                                               false,
-                                                                                                               blockingStateEffectiveDate);
-                                                                           }
-                                                                       });
+        return ProductCategory.ADD_ON.equals(subscription.getCategory()) &&
+               // Check the subscription started, if not we don't want it, and that way we avoid doing NPE a few lines below.
+               lastActivePlan != null &&
+               // Check the entitlement for that add-on hasn't been cancelled yet
+               getEntitlementCancellationEvent(subscription.getId()) == null &&
+               (
+                       // Base subscription cancelled
+                       baseTransitionTriggerNextProduct == null ||
+                       (
+                               // Change plan - check which add-ons to cancel
+                               includedAddonsForProduct.contains(lastActivePlan.getProduct().getName()) ||
+                               !availableAddonsForProduct.contains(subscription.getLastActivePlan().getProduct().getName())
+                       )
+               );
     }
 
     private void setup() {
@@ -445,12 +445,11 @@ public class DefaultEventsStream implements EventsStream {
     }
 
 
-
     private List<BlockingState> filterCurrentBlockableStatePerService(final BlockingStateType type, final UUID blockableId, @Nullable final DateTime upTo) {
 
         final DateTime resolvedUpTo = upTo != null ? upTo : utcNow;
 
-        final Map<String, BlockingState> currentBlockingStatePerService = new HashMap<String, BlockingState>();
+        final Map<String, BlockingState> currentBlockingStatePerService = new HashMap<>();
         for (final BlockingState blockingState : blockingStates) {
             if (!blockingState.getBlockedId().equals(blockableId)) {
                 continue;
@@ -468,17 +467,13 @@ public class DefaultEventsStream implements EventsStream {
             }
         }
 
-        return ImmutableList.<BlockingState>copyOf(currentBlockingStatePerService.values());
+        return List.<BlockingState>copyOf(currentBlockingStatePerService.values());
     }
 
     private void computeEntitlementStartEvent() {
-        entitlementStartEvent = Iterables.<BlockingState>tryFind(subscriptionEntitlementStates,
-                                                                  new Predicate<BlockingState>() {
-                                                                      @Override
-                                                                      public boolean apply(final BlockingState input) {
-                                                                          return DefaultEntitlementApi.ENT_STATE_START.equals(input.getStateName());
-                                                                      }
-                                                                  }).orNull();
+        entitlementStartEvent = subscriptionEntitlementStates.stream()
+                .filter(input -> DefaultEntitlementApi.ENT_STATE_START.equals(input.getStateName()))
+                .findFirst().orElse(null);
 
         // Note that we still default to subscriptionBase.startDate (for compatibility issue where ENT_STATE_START does not exist)
         entitlementEffectiveStartDateTime = entitlementStartEvent != null ?
@@ -489,23 +484,19 @@ public class DefaultEventsStream implements EventsStream {
     }
 
     private void computeEntitlementCancelEvent() {
-        entitlementCancelEvent = Iterables.<BlockingState>tryFind(subscriptionEntitlementStates,
-                                                                  new Predicate<BlockingState>() {
-                                                                      @Override
-                                                                      public boolean apply(final BlockingState input) {
-                                                                          return DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName());
-                                                                      }
-                                                                  }).orNull();
+        entitlementCancelEvent = subscriptionEntitlementStates.stream()
+                .filter(input -> DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(input.getStateName()))
+                .findFirst().orElse(null);
         entitlementEffectiveEndDateTime =  entitlementCancelEvent != null ? entitlementCancelEvent.getEffectiveDate() : null;
         entitlementEffectiveEndDate = entitlementEffectiveEndDateTime != null ? internalTenantContext.toLocalDate(entitlementEffectiveEndDateTime) : null;
     }
 
     private void computeStateForEntitlement() {
         // Current state for the ENTITLEMENT_SERVICE_NAME is set to cancelled
-        if (entitlementEffectiveEndDate != null && entitlementEffectiveEndDate.compareTo(internalTenantContext.toLocalDate(utcNow)) <= 0) {
+        if (entitlementEffectiveEndDateTime != null && entitlementEffectiveEndDateTime.compareTo(utcNow) <= 0) {
             entitlementState = EntitlementState.CANCELLED;
         } else {
-            if (entitlementEffectiveStartDate.compareTo(utcToday) > 0) {
+            if (entitlementEffectiveStartDateTime.compareTo(utcNow) > 0) {
                 entitlementState = EntitlementState.PENDING;
             } else {
                 // Gather states across all services and check if one of them is set to 'blockEntitlement'
@@ -518,15 +509,12 @@ public class DefaultEventsStream implements EventsStream {
         subscriptionEntitlementStates = filterBlockingStatesForEntitlementService(BlockingStateType.SUBSCRIPTION, subscription.getId());
     }
 
-    private List<BlockingState> filterBlockingStatesForEntitlementService(final BlockingStateType blockingStateType, @Nullable final UUID blockableId) {
-        return ImmutableList.<BlockingState>copyOf(Iterables.<BlockingState>filter(blockingStates,
-                                                                                   new Predicate<BlockingState>() {
-                                                                                       @Override
-                                                                                       public boolean apply(final BlockingState input) {
-                                                                                           return blockingStateType.equals(input.getType()) &&
-                                                                                                  KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName().equals(input.getService()) &&
-                                                                                                  input.getBlockedId().equals(blockableId);
-                                                                                       }
-                                                                                   }));
+    private List<BlockingState> filterBlockingStatesForEntitlementService(final BlockingStateType blockingStateType,
+                                                                          @Nullable final UUID blockableId) {
+    	return blockingStates.stream()
+                .filter(input -> blockingStateType.equals(input.getType()) &&
+                                 KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName().equals(input.getService()) &&
+                                 input.getBlockedId().equals(blockableId))
+                .collect(Collectors.toUnmodifiableList());
     }
 }

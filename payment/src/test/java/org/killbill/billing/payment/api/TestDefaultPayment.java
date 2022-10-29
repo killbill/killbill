@@ -26,16 +26,14 @@ import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestDefaultPayment extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testAmountsCaptureVoided() throws Exception {
         final UUID paymentId = UUID.randomUUID();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.VOID, TransactionStatus.SUCCESS, null));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.VOID, TransactionStatus.SUCCESS, null));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -46,10 +44,10 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     @Test(groups = "fast")
     public void testAmountsCaptureVoidedAuthReversed() throws Exception {
         final UUID paymentId = UUID.randomUUID();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.VOID, TransactionStatus.SUCCESS, null),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.VOID, TransactionStatus.SUCCESS, null));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.VOID, TransactionStatus.SUCCESS, null),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.VOID, TransactionStatus.SUCCESS, null));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -61,9 +59,9 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     public void testAmountsCaptureChargeback() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String chargebackExternalKey = UUID.randomUUID().toString();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -75,10 +73,10 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     public void testAmountsCaptureChargebackReversed() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String chargebackExternalKey = UUID.randomUUID().toString();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.TEN));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.TEN));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.TEN), 0);
@@ -90,10 +88,10 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     public void testAmountsCaptureChargebackReversedMultipleCurrencies() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String chargebackExternalKey = UUID.randomUUID().toString();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.EUR),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.USD),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.EUR),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.ONE, Currency.EUR));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.EUR),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.USD),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.EUR),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.ONE, Currency.EUR));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getCurrency(), Currency.EUR);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.TEN), 0);
@@ -106,11 +104,11 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     public void testAmountsCaptureChargebackReversedAndRefund() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String chargebackExternalKey = UUID.randomUUID().toString();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.REFUND, TransactionStatus.SUCCESS, BigDecimal.ONE),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.TEN));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.AUTHORIZE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CAPTURE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.REFUND, TransactionStatus.SUCCESS, BigDecimal.ONE),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.TEN));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.TEN), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.TEN), 0);
@@ -122,8 +120,8 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     public void testAmountsPurchaseChargeback() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String chargebackExternalKey = UUID.randomUUID().toString();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -135,8 +133,8 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     public void testAmountsPurchaseChargebackDifferentCurrency() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String chargebackExternalKey = UUID.randomUUID().toString();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.USD),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.EUR));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN, Currency.USD),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.ONE, Currency.EUR));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -148,9 +146,9 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     public void testAmountsPurchaseChargebackReversed() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String chargebackExternalKey = UUID.randomUUID().toString();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.TEN));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.TEN));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -162,10 +160,10 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     public void testAmountsPurchaseChargebackReversedAndRefund() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String chargebackExternalKey = UUID.randomUUID().toString();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.REFUND, TransactionStatus.SUCCESS, BigDecimal.ONE),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.TEN));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.REFUND, TransactionStatus.SUCCESS, BigDecimal.ONE),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.TEN));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
@@ -177,11 +175,11 @@ public class TestDefaultPayment extends PaymentTestSuiteNoDB {
     public void testAmountsPurchaseMultipleChargebacks() throws Exception {
         final UUID paymentId = UUID.randomUUID();
         final String chargebackExternalKey = UUID.randomUUID().toString();
-        final List<PaymentTransaction> transactions = ImmutableList.<PaymentTransaction>of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.REFUND, TransactionStatus.SUCCESS, BigDecimal.ONE),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.ONE),
-                                                                                           buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.ONE),
-                                                                                           buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.ONE));
+        final List<PaymentTransaction> transactions = List.of(buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.PURCHASE, TransactionStatus.SUCCESS, BigDecimal.TEN),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.REFUND, TransactionStatus.SUCCESS, BigDecimal.ONE),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.ONE),
+                                                              buildPaymentTransaction(paymentId, UUID.randomUUID().toString(), TransactionType.CHARGEBACK, TransactionStatus.SUCCESS, BigDecimal.ONE),
+                                                              buildPaymentTransaction(paymentId, chargebackExternalKey, TransactionType.CHARGEBACK, TransactionStatus.PAYMENT_FAILURE, BigDecimal.ONE));
         final Payment payment = buildPayment(paymentId, transactions);
         Assert.assertEquals(payment.getAuthAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);

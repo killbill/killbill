@@ -19,13 +19,16 @@ package org.killbill.billing.payment.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -56,8 +59,12 @@ import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.PaymentRetryNotificationKey;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.collect.Iterables;
+import org.killbill.commons.utils.collect.MultiValueHashMap;
+import org.killbill.commons.utils.collect.MultiValueMap;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.EntityPaginationBuilder;
@@ -72,18 +79,6 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Ordering;
-
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPagination;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationFromPlugins;
 
@@ -93,7 +88,7 @@ public class PaymentRefresher extends ProcessorBase {
     private static final Logger log = LoggerFactory.getLogger(PaymentRefresher.class);
 
     private static final String SCHEDULED = "SCHEDULED";
-    private static final ImmutableList<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+    private static final List<PluginProperty> PLUGIN_PROPERTIES = Collections.emptyList();
 
     private final NotificationQueueService notificationQueueService;
     private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
@@ -134,7 +129,7 @@ public class PaymentRefresher extends ProcessorBase {
                                          final boolean isApiPayment,
                                          final InternalTenantContext internalTenantContext) {
         PaymentModelDao newPaymentModelDao = curPaymentModelDao;
-        final Collection<PaymentTransactionModelDao> transactionsModelDao = new LinkedList<PaymentTransactionModelDao>();
+        final Collection<PaymentTransactionModelDao> transactionsModelDao = new LinkedList<>();
         for (final PaymentTransactionModelDao curPaymentTransactionModelDao : curTransactionsModelDao) {
             PaymentTransactionModelDao newPaymentTransactionModelDao = curPaymentTransactionModelDao;
 
@@ -170,13 +165,10 @@ public class PaymentRefresher extends ProcessorBase {
             return null;
         }
 
-        return Iterables.tryFind(pluginTransactions,
-                                 new Predicate<PaymentTransactionInfoPlugin>() {
-                                     @Override
-                                     public boolean apply(final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin) {
-                                         return paymentTransactionModelDao.getId().equals(paymentTransactionInfoPlugin.getKbTransactionPaymentId());
-                                     }
-                                 }).orNull();
+        return Iterables.toStream(pluginTransactions)
+                        .filter(plugin -> paymentTransactionModelDao.getId().equals(plugin.getKbTransactionPaymentId()))
+                        .findFirst()
+                        .orElse(null);
     }
 
     public List<Payment> getAccountPayments(final UUID accountId,
@@ -188,35 +180,33 @@ public class PaymentRefresher extends ProcessorBase {
         final List<PaymentModelDao> paymentsModelDao = paymentDao.getPaymentsForAccount(accountId, tenantContext);
         final List<PaymentTransactionModelDao> transactionsModelDao = paymentDao.getTransactionsForAccount(accountId, tenantContext);
 
-        final Map<UUID, PaymentPluginApi> paymentPluginByPaymentMethodId = new HashMap<UUID, PaymentPluginApi>();
-        final Collection<UUID> absentPlugins = new HashSet<UUID>();
-        final List<Payment> transformedPayments = Lists.<PaymentModelDao, Payment>transform(paymentsModelDao,
-                                                                                            new Function<PaymentModelDao, Payment>() {
-                                                                                                @Override
-                                                                                                public Payment apply(final PaymentModelDao paymentModelDao) {
-                                                                                                    List<PaymentTransactionInfoPlugin> pluginInfo = null;
+        final Map<UUID, PaymentPluginApi> paymentPluginByPaymentMethodId = new HashMap<>();
+        final Collection<UUID> absentPlugins = new HashSet<>();
+        final List<Payment> transformedPayments = paymentsModelDao
+                .stream()
+                .map(paymentModelDao -> {
+                    List<PaymentTransactionInfoPlugin> pluginInfo = null;
 
-                                                                                                    if (withPluginInfo) {
-                                                                                                        PaymentPluginApi pluginApi = paymentPluginByPaymentMethodId.get(paymentModelDao.getPaymentMethodId());
-                                                                                                        if (pluginApi == null && !absentPlugins.contains(paymentModelDao.getPaymentMethodId())) {
-                                                                                                            try {
-                                                                                                                pluginApi = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, tenantContext);
-                                                                                                                paymentPluginByPaymentMethodId.put(paymentModelDao.getPaymentMethodId(), pluginApi);
-                                                                                                            } catch (final PaymentApiException e) {
-                                                                                                                log.warn("Unable to retrieve pluginApi for payment method " + paymentModelDao.getPaymentMethodId());
-                                                                                                                absentPlugins.add(paymentModelDao.getPaymentMethodId());
-                                                                                                            }
-                                                                                                        }
+                    if (withPluginInfo) {
+                        PaymentPluginApi pluginApi = paymentPluginByPaymentMethodId.get(paymentModelDao.getPaymentMethodId());
+                        if (pluginApi == null && !absentPlugins.contains(paymentModelDao.getPaymentMethodId())) {
+                            try {
+                                pluginApi = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, tenantContext);
+                                paymentPluginByPaymentMethodId.put(paymentModelDao.getPaymentMethodId(), pluginApi);
+                            } catch (final PaymentApiException e) {
+                                log.warn("Unable to retrieve pluginApi for payment method " + paymentModelDao.getPaymentMethodId());
+                                absentPlugins.add(paymentModelDao.getPaymentMethodId());
+                            }
+                        }
 
-                                                                                                        pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, context);
-                                                                                                    }
+                        pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, context);
+                    }
 
-                                                                                                    return toPayment(paymentModelDao, transactionsModelDao, pluginInfo, withAttempts, isApiPayment, tenantContext);
-                                                                                                }
-                                                                                            });
+                    return toPayment(paymentModelDao, transactionsModelDao, pluginInfo, withAttempts, isApiPayment, tenantContext);
+                }).collect(Collectors.toUnmodifiableList());
 
         // Copy the transformed list, so the transformation function is applied once (otherwise, the Janitor could be invoked multiple times)
-        return ImmutableList.<Payment>copyOf(transformedPayments);
+        return List.copyOf(transformedPayments);
     }
 
     public Payment getPayment(final UUID paymentId,
@@ -293,7 +283,7 @@ public class PaymentRefresher extends ProcessorBase {
                                            final Iterable<PluginProperty> properties,
                                            final TenantContext tenantContext,
                                            final InternalTenantContext internalTenantContext) {
-        final Map<UUID, Optional<PaymentPluginApi>> paymentMethodIdToPaymentPluginApi = new HashMap<UUID, Optional<PaymentPluginApi>>();
+        final Map<UUID, Optional<PaymentPluginApi>> paymentMethodIdToPaymentPluginApi = new HashMap<>();
 
         try {
             return getEntityPagination(limit,
@@ -304,33 +294,30 @@ public class PaymentRefresher extends ProcessorBase {
                                                return paymentDao.get(offset, limit, internalTenantContext);
                                            }
                                        },
-                                       new Function<PaymentModelDao, Payment>() {
-                                           @Override
-                                           public Payment apply(final PaymentModelDao paymentModelDao) {
-                                               final PaymentPluginApi pluginApi;
-                                               if (!withPluginInfo) {
-                                                   pluginApi = null;
-                                               } else {
-                                                   if (paymentMethodIdToPaymentPluginApi.get(paymentModelDao.getPaymentMethodId()) == null) {
-                                                       try {
-                                                           final PaymentPluginApi paymentProviderPlugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, internalTenantContext);
-                                                           paymentMethodIdToPaymentPluginApi.put(paymentModelDao.getPaymentMethodId(), Optional.<PaymentPluginApi>of(paymentProviderPlugin));
-                                                       } catch (final PaymentApiException e) {
-                                                           log.warn("Unable to retrieve PaymentPluginApi for paymentMethodId='{}'", paymentModelDao.getPaymentMethodId(), e);
-                                                           // We use Optional to avoid printing the log line for each result
-                                                           paymentMethodIdToPaymentPluginApi.put(paymentModelDao.getPaymentMethodId(), Optional.<PaymentPluginApi>absent());
-                                                       }
+                                       paymentModelDao -> {
+                                           final PaymentPluginApi pluginApi;
+                                           if (!withPluginInfo) {
+                                               pluginApi = null;
+                                           } else {
+                                               if (paymentMethodIdToPaymentPluginApi.get(paymentModelDao.getPaymentMethodId()) == null) {
+                                                   try {
+                                                       final PaymentPluginApi paymentProviderPlugin = getPaymentProviderPlugin(paymentModelDao.getPaymentMethodId(), true, internalTenantContext);
+                                                       paymentMethodIdToPaymentPluginApi.put(paymentModelDao.getPaymentMethodId(), Optional.of(paymentProviderPlugin));
+                                                   } catch (final PaymentApiException e) {
+                                                       log.warn("Unable to retrieve PaymentPluginApi for paymentMethodId='{}'", paymentModelDao.getPaymentMethodId(), e);
+                                                       // We use Optional to avoid printing the log line for each result
+                                                       paymentMethodIdToPaymentPluginApi.put(paymentModelDao.getPaymentMethodId(), Optional.empty());
                                                    }
-                                                   pluginApi = paymentMethodIdToPaymentPluginApi.get(paymentModelDao.getPaymentMethodId()).orNull();
                                                }
-                                               final List<PaymentTransactionInfoPlugin> pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, tenantContext);
-                                               return toPayment(paymentModelDao.getId(), pluginInfo, withAttempts, isApiPayment, internalTenantContext);
+                                               pluginApi = paymentMethodIdToPaymentPluginApi.get(paymentModelDao.getPaymentMethodId()).orElse(null);
                                            }
+                                           final List<PaymentTransactionInfoPlugin> pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, tenantContext);
+                                           return toPayment(paymentModelDao.getId(), pluginInfo, withAttempts, isApiPayment, internalTenantContext);
                                        }
                                       );
         } catch (final PaymentApiException e) {
             log.warn("Unable to get payments", e);
-            return new DefaultPagination<Payment>(offset, limit, null, null, ImmutableSet.<Payment>of().iterator());
+            return new DefaultPagination<Payment>(offset, limit, null, null, Collections.emptyIterator());
         }
     }
 
@@ -353,12 +340,9 @@ public class PaymentRefresher extends ProcessorBase {
                                            return paymentDao.getPayments(pluginName, offset, limit, internalTenantContext);
                                        }
                                    },
-                                   new Function<PaymentModelDao, Payment>() {
-                                       @Override
-                                       public Payment apply(final PaymentModelDao paymentModelDao) {
-                                           final List<PaymentTransactionInfoPlugin> pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, tenantContext);
-                                           return toPayment(paymentModelDao.getId(), pluginInfo, withAttempts, isApiPayment, internalTenantContext);
-                                       }
+                                   paymentModelDao -> {
+                                       final List<PaymentTransactionInfoPlugin> pluginInfo = getPaymentTransactionInfoPluginsIfNeeded(pluginApi, paymentModelDao, tenantContext);
+                                       return toPayment(paymentModelDao.getId(), pluginInfo, withAttempts, isApiPayment, internalTenantContext);
                                    }
                                   );
     }
@@ -393,16 +377,11 @@ public class PaymentRefresher extends ProcessorBase {
                                                    return paymentDao.searchPayments(searchKey, offset, limit, internalTenantContext);
                                                }
                                            },
-                                           new Function<PaymentModelDao, Payment>() {
-                                               @Override
-                                               public Payment apply(final PaymentModelDao paymentModelDao) {
-                                                   return toPayment(paymentModelDao.getId(), null, withAttempts, isApiPayment, internalTenantContext);
-                                               }
-                                           }
+                                           paymentModelDao -> toPayment(paymentModelDao.getId(), null, withAttempts, isApiPayment, internalTenantContext)
                                           );
             } catch (final PaymentApiException e) {
                 log.warn("Unable to search through payments", e);
-                return new DefaultPagination<Payment>(offset, limit, null, null, ImmutableSet.<Payment>of().iterator());
+                return new DefaultPagination<Payment>(offset, limit, null, null, Collections.emptyIterator());
             }
         }
     }
@@ -427,19 +406,19 @@ public class PaymentRefresher extends ProcessorBase {
         }
 
         // Cannot easily stream here unfortunately, since we need to merge PaymentTransactionInfoPlugin into Payment (no order assumed)
-        final Multimap<UUID, PaymentTransactionInfoPlugin> payments = HashMultimap.<UUID, PaymentTransactionInfoPlugin>create();
+        final MultiValueMap<UUID, PaymentTransactionInfoPlugin> payments = new MultiValueHashMap<>();
         for (final PaymentTransactionInfoPlugin paymentTransactionInfoPlugin : paymentTransactionInfoPlugins) {
             if (paymentTransactionInfoPlugin.getKbPaymentId() == null) {
                 // Garbage from the plugin?
                 log.debug("Plugin {} returned a payment without a kbPaymentId for searchKey {}", pluginName, searchKey);
             } else {
-                payments.put(paymentTransactionInfoPlugin.getKbPaymentId(), paymentTransactionInfoPlugin);
+                payments.putElement(paymentTransactionInfoPlugin.getKbPaymentId(), paymentTransactionInfoPlugin);
             }
         }
 
-        final Collection<Payment> results = new LinkedList<Payment>();
-        for (final UUID paymentId : payments.keys()) {
-            final Payment result = toPayment(paymentId, withPluginInfo ? payments.get(paymentId) : ImmutableList.<PaymentTransactionInfoPlugin>of(), withAttempts, isApiPayment, internalTenantContext);
+        final Collection<Payment> results = new LinkedList<>();
+        for (final UUID paymentId : payments.keySet()) {
+            final Payment result = toPayment(paymentId, withPluginInfo ? payments.get(paymentId) : Collections.emptyList(), withAttempts, isApiPayment, internalTenantContext);
             if (result != null) {
                 results.add(result);
             }
@@ -451,11 +430,12 @@ public class PaymentRefresher extends ProcessorBase {
     }
 
     // Used in bulk get APIs (getPayments / searchPayments)
-    private Payment toPayment(final UUID paymentId,
-                              @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions,
-                              final boolean withAttempts,
-                              final boolean isApiPayment,
-                              final InternalTenantContext tenantContext) {
+    @VisibleForTesting
+    Payment toPayment(final UUID paymentId,
+                      @Nullable final Iterable<PaymentTransactionInfoPlugin> pluginTransactions,
+                      final boolean withAttempts,
+                      final boolean isApiPayment,
+                      final InternalTenantContext tenantContext) {
         final PaymentModelDao paymentModelDao = paymentDao.getPayment(paymentId, tenantContext);
         if (paymentModelDao == null) {
             log.warn("Unable to find payment id " + paymentId);
@@ -498,12 +478,10 @@ public class PaymentRefresher extends ProcessorBase {
                               final boolean isApiPayment,
                               final InternalTenantContext internalTenantContext) {
         // Need to filter for optimized codepaths looking up by account_record_id
-        final Collection<PaymentTransactionModelDao> transactionsModelDao = new LinkedList<PaymentTransactionModelDao>(Collections2.filter(allTransactionsModelDao, new Predicate<PaymentTransactionModelDao>() {
-            @Override
-            public boolean apply(final PaymentTransactionModelDao curPaymentTransactionModelDao) {
-                return curPaymentTransactionModelDao.getPaymentId().equals(curPaymentModelDao.getId());
-            }
-        }));
+        final Collection<PaymentTransactionModelDao> transactionsModelDao = allTransactionsModelDao.stream()
+                .filter(paymentTransactionModelDao -> paymentTransactionModelDao.getPaymentId().equals(curPaymentModelDao.getId()))
+                // use toList() because transactionsModelDao will be processed later (invokeJanitor())
+                .collect(Collectors.toList());
 
         if (pluginTransactions != null) {
             invokeJanitor(curPaymentModelDao, transactionsModelDao, pluginTransactions, isApiPayment, internalTenantContext);
@@ -531,13 +509,10 @@ public class PaymentRefresher extends ProcessorBase {
             transactions.add(transaction);
         }
 
-        final Ordering<PaymentTransaction> perPaymentTransactionOrdering = Ordering.<PaymentTransaction>from(new Comparator<PaymentTransaction>() {
-            @Override
-            public int compare(final PaymentTransaction o1, final PaymentTransaction o2) {
-                return o1.getEffectiveDate().compareTo(o2.getEffectiveDate());
-            }
-        });
-        final List<PaymentTransaction> sortedTransactions = perPaymentTransactionOrdering.immutableSortedCopy(transactions);
+        final List<PaymentTransaction> sortedTransactions = transactions.stream()
+                .sorted(Comparator.comparing(PaymentTransaction::getEffectiveDate))
+                .collect(Collectors.toUnmodifiableList());
+
         return new DefaultPayment(curPaymentModelDao.getId(),
                                   curPaymentModelDao.getCreatedDate(),
                                   curPaymentModelDao.getUpdatedDate(),
@@ -627,7 +602,7 @@ public class PaymentRefresher extends ProcessorBase {
     private List<PluginProperty> buildPluginProperties(final PaymentAttemptModelDao pastPaymentAttempt) {
         if (pastPaymentAttempt.getPluginProperties() != null) {
             try {
-                return Lists.newArrayList(PluginPropertySerializer.deserialize(pastPaymentAttempt.getPluginProperties()));
+                return Iterables.toList(PluginPropertySerializer.deserialize(pastPaymentAttempt.getPluginProperties()));
             } catch (final PluginPropertySerializerException e) {
                 log.error("ERROR Deserializing Plugin Properties - " + e.getMessage());
             }

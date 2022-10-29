@@ -18,10 +18,9 @@
 
 package org.killbill.billing.payment.api;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestPaymentMethodPluginBase implements PaymentMethodPlugin {
 
@@ -42,6 +41,6 @@ public class TestPaymentMethodPluginBase implements PaymentMethodPlugin {
 
     @Override
     public List<PluginProperty> getProperties() {
-        return ImmutableList.<PluginProperty>of();
+        return Collections.emptyList();
     }
 }

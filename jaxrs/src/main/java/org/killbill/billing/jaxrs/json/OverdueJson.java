@@ -17,22 +17,21 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.catalog.api.TimeUnit;
 import org.killbill.billing.overdue.api.OverdueConfig;
-import org.killbill.billing.overdue.api.OverdueState;
 import org.killbill.billing.overdue.config.DefaultDuration;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.config.DefaultOverdueState;
 import org.killbill.billing.overdue.config.DefaultOverdueStatesAccount;
+import org.killbill.commons.utils.Preconditions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(value="Overdue")
@@ -51,12 +50,9 @@ public class OverdueJson {
     public OverdueJson(final OverdueConfig overdueConfig) {
         this.initialReevaluationIntervalDays = overdueConfig.getOverdueStatesAccount().getInitialReevaluationInterval() != null ?
                                                overdueConfig.getOverdueStatesAccount().getInitialReevaluationInterval().getDays() : null;
-        this.overdueStates = ImmutableList.copyOf(Iterables.transform(ImmutableList.copyOf(overdueConfig.getOverdueStatesAccount().getStates()), new Function<OverdueState, OverdueStateConfigJson>() {
-            @Override
-            public OverdueStateConfigJson apply(final OverdueState input) {
-                    return new OverdueStateConfigJson(input);
-            }
-        }));
+        this.overdueStates = Arrays.stream(overdueConfig.getOverdueStatesAccount().getStates())
+                .map(OverdueStateConfigJson::new)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     public Integer getInitialReevaluationInterval() {
@@ -115,11 +111,19 @@ public class OverdueJson {
             Preconditions.checkNotNull(cur.getName());
 
             // We only support timeSinceEarliestUnpaidInvoiceEqualsOrExceeds condition (see #611)
-            Preconditions.checkNotNull(cur.getCondition());
-            Preconditions.checkNotNull(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds());
-            Preconditions.checkNotNull(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getUnit());
-            Preconditions.checkState(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getUnit() == TimeUnit.DAYS);
-            Preconditions.checkState(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getNumber() > 0);
+            Preconditions.checkNotNull(cur.getCondition(), "overdueStateConfigJson.getCondition() is null");
+
+            Preconditions.checkNotNull(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds(),
+                                       "overdueStateConfigJson.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds() is null");
+
+            Preconditions.checkNotNull(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getUnit(),
+                                       "overdueStateConfigJson.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getUnit() is null");
+
+            Preconditions.checkState(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getUnit() == TimeUnit.DAYS,
+                                     "overdueStateConfigJson.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getUnit() != TimeUnit.DAYS");
+
+            Preconditions.checkState(cur.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getNumber() > 0,
+                                     "overdueStateConfigJson.getCondition().getTimeSinceEarliestUnpaidInvoiceEqualsOrExceeds().getNumber() <= 0");
 
             final DefaultOverdueState state = new DefaultOverdueState();
             state.setName(cur.getName());

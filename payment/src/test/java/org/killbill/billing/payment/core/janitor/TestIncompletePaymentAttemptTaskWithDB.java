@@ -33,14 +33,11 @@ import org.killbill.clock.Clock;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestIncompletePaymentAttemptTaskWithDB extends PaymentTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/757")
     public void testHandleRuntimeExceptions() throws PaymentApiException {
-        final List<PaymentAttemptModelDao> paymentAttemptModelDaos = ImmutableList.<PaymentAttemptModelDao>of(new PaymentAttemptModelDao(),
-                                                                                                              new PaymentAttemptModelDao());
+        final List<PaymentAttemptModelDao> paymentAttemptModelDaos = List.of(new PaymentAttemptModelDao(), new PaymentAttemptModelDao());
         final Iterator<PaymentAttemptModelDao> paymentAttemptModelDaoIterator = paymentAttemptModelDaos.iterator();
         final Iterable<PaymentAttemptModelDao> itemsForIteration = new Iterable<PaymentAttemptModelDao>() {
             @Override

@@ -19,6 +19,7 @@
 package org.killbill.billing.invoice.tree;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -29,10 +30,9 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.generator.InvoiceDateUtils;
 import org.killbill.billing.invoice.model.RecurringInvoiceItem;
 import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
+import org.killbill.commons.utils.Preconditions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 
 /**
  * An generic invoice item that contains all pertinent fields regarding of its InvoiceItemType.
@@ -255,9 +255,9 @@ public class Item {
                // following conditions: same type, subscription, start date. Depending on the catalog configuration, the end
                // date check could also match (e.g. repair from annual to monthly). For that scenario, we need to default
                // to catalog checks (the rate check is a lame check for versioned catalogs).
-               MoreObjects.firstNonNull(planName, "").equals(MoreObjects.firstNonNull(otherItem.getPlanName(), "")) &&
-               MoreObjects.firstNonNull(phaseName, "").equals(MoreObjects.firstNonNull(otherItem.getPhaseName(), "")) &&
-               MoreObjects.firstNonNull(rate, BigDecimal.ZERO).compareTo(MoreObjects.firstNonNull(otherItem.getRate(), BigDecimal.ZERO)) == 0;
+               Objects.requireNonNullElse(planName, "").equals(Objects.requireNonNullElse(otherItem.getPlanName(), "")) &&
+               Objects.requireNonNullElse(phaseName, "").equals(Objects.requireNonNullElse(otherItem.getPhaseName(), "")) &&
+               Objects.requireNonNullElse(rate, BigDecimal.ZERO).compareTo(Objects.requireNonNullElse(otherItem.getRate(), BigDecimal.ZERO)) == 0;
     }
 
     @Override

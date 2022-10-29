@@ -19,6 +19,7 @@ package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -64,14 +65,12 @@ import org.killbill.billing.payment.core.sm.control.RefundControlOperation;
 import org.killbill.billing.payment.core.sm.control.VoidControlOperation;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
 
 import static org.killbill.billing.payment.glue.PaymentModule.RETRYABLE_NAMED;
 
@@ -259,7 +258,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
 
             state.runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
-            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
         } catch (final OperationException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
@@ -267,7 +266,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
             } else if (e.getCause() instanceof PaymentControlApiException && e.getCause().getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause().getCause();
             } else if (e.getCause() != null || paymentStateContext.getResult() == null) {
-                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
             }
         }
         // If the result is set (and cause is null), that means we created a Payment but the associated transaction status is 'XXX_FAILURE',
@@ -283,7 +282,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
 
             paymentControlStateMachineHelper.getInitialState().runOperation(paymentControlStateMachineHelper.getOperation(), callback, enteringStateCallback, leavingStateCallback);
         } catch (final MissingEntryException e) {
-            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+            throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
         } catch (final OperationException e) {
             if (e.getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause();
@@ -291,7 +290,7 @@ public class PluginControlPaymentAutomatonRunner extends PaymentAutomatonRunner 
             } else if (e.getCause() instanceof PaymentControlApiException && e.getCause().getCause() instanceof PaymentApiException) {
                 throw (PaymentApiException) e.getCause().getCause();
             } else if (e.getCause() != null || paymentStateContext.getResult() == null) {
-                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, MoreObjects.firstNonNull(e.getMessage(), ""));
+                throw new PaymentApiException(e.getCause(), ErrorCode.PAYMENT_INTERNAL_ERROR, Objects.requireNonNullElse(e.getMessage(), ""));
             }
         }
         // If the result is set (and cause is null), that means we created a Payment but the associated transaction status is 'XXX_FAILURE',

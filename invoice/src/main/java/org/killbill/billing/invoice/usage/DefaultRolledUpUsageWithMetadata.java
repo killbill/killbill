@@ -27,12 +27,12 @@ import org.killbill.billing.usage.api.RolledUpUnit;
 public class DefaultRolledUpUsageWithMetadata implements RolledUpUsageWithMetadata {
 
     private final UUID subscriptionId;
-    private final LocalDate startDate;
-    private final LocalDate endDate;
+    private final DateTime startDate;
+    private final DateTime endDate;
     private final List<RolledUpUnit> rolledUpUnits;
     private final DateTime catalogEffectiveDate;
 
-    public DefaultRolledUpUsageWithMetadata(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final List<RolledUpUnit> rolledUpUnits, final DateTime catalogEffectiveDate) {
+    public DefaultRolledUpUsageWithMetadata(final UUID subscriptionId, final DateTime startDate, final DateTime endDate, final List<RolledUpUnit> rolledUpUnits, final DateTime catalogEffectiveDate) {
         this.subscriptionId = subscriptionId;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -46,12 +46,12 @@ public class DefaultRolledUpUsageWithMetadata implements RolledUpUsageWithMetada
     }
 
     @Override
-    public LocalDate getStart() {
+    public DateTime getStart() {
         return startDate;
     }
 
     @Override
-    public LocalDate getEnd() {
+    public DateTime getEnd() {
         return endDate;
     }
 

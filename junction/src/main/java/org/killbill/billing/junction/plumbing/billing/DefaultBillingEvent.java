@@ -20,6 +20,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,9 +36,6 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public class DefaultBillingEvent implements BillingEvent {
 
@@ -74,7 +72,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.subscriptionId = subscription.getId();
         this.bundleId = subscription.getBundleId();
 
-        this.isCancelledOrBlocked = inputEvent.getType() == SubscriptionBaseTransitionType.CANCEL;
+        this.isCancelledOrBlocked = inputEvent.getType() == SubscriptionBaseTransitionType.CANCEL || inputEvent.getType() == SubscriptionBaseTransitionType.EXPIRED; 
 
         this.type = inputEvent.getType();
         this.plan = inputEvent.getPlan();
@@ -237,15 +235,14 @@ public class DefaultBillingEvent implements BillingEvent {
 
     private static List<Usage> computeUsages(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase) {
         if (isCancelledOrBlocked) {
-            return ImmutableList.<Usage>of();
+            return Collections.emptyList();
         }
 
-        final List<Usage> result = (effectivePlanPhase.getUsages().length > 0) ?
-                             Lists.newArrayList() : ImmutableList.<Usage>of();
-        for (Usage usage : effectivePlanPhase.getUsages()) {
-            result.add(usage);
+        if (effectivePlanPhase.getUsages().length <= 0) {
+            return Collections.emptyList();
         }
-        return result;
+
+        return List.of(effectivePlanPhase.getUsages());
     }
 
 

@@ -19,8 +19,8 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.joda.time.DateTime;
@@ -35,11 +35,7 @@ import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.StandaloneCatalogWithPriceOverride;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogUserApi;
-import org.killbill.billing.catalog.api.Plan;
-import org.killbill.billing.catalog.api.PriceList;
-import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.override.PriceOverride;
 import org.killbill.billing.catalog.plugin.TestModelStandalonePluginCatalog;
@@ -54,17 +50,13 @@ import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.clock.Clock;
 import org.killbill.xmlloader.XMLLoader;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.io.Resources;
 
 public class TestWithCatalogPlugin extends TestIntegrationBase {
 
@@ -176,7 +168,6 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
         Assert.assertEquals(testCatalogPluginApi.getNbVersionedPluginCatalogApiCalls(), 3);
         Assert.assertEquals(catalog3.getVersions().get(2).getEffectiveDate().compareTo(testCatalogPluginApi.getLatestCatalogUpdate().toDate()), 0);
 
-
         // Retrieve 4 more times
         catalogUserApi.getCatalog("whatever", callContext);
         catalogUserApi.getCatalog("whatever", callContext);
@@ -253,26 +244,20 @@ public class TestWithCatalogPlugin extends TestIntegrationBase {
             return latestCatalogUpdate;
         }
 
-        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final VersionedCatalog input) {
-            return Iterables.transform(input.getVersions(), new Function<StaticCatalog, StandalonePluginCatalog>() {
-                @Override
-                public StandalonePluginCatalog apply(final StaticCatalog input) {
-
-                    final StandaloneCatalog standaloneCatalog = (StandaloneCatalog) input;
-                    return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
-                                                                ImmutableList.copyOf(standaloneCatalog.getSupportedCurrencies()),
-                                                                ImmutableList.<Product>copyOf(standaloneCatalog.getProducts()),
-                                                                ImmutableList.<Plan>copyOf(standaloneCatalog.getPlans()),
-                                                                standaloneCatalog.getPriceLists().getDefaultPricelist(),
-                                                                ImmutableList.<PriceList>copyOf(standaloneCatalog.getPriceLists().getChildPriceLists()),
-                                                                standaloneCatalog.getPlanRules(),
-                                                                null /* ImmutableList.<Unit>copyOf(input.getCurrentUnits()) */);
-                }
-
-                private <I, C extends I> List<I> listOf(@Nullable C[] input) {
-                    return (input != null) ? ImmutableList.<I>copyOf(input) : ImmutableList.<I>of();
-                }
-            });
+        private Iterable<StandalonePluginCatalog> toStandalonePluginCatalogs(final VersionedCatalog versionedCatalog) {
+            return versionedCatalog.getVersions()
+                    .stream()
+                    .map(input -> {
+                        final StandaloneCatalog standaloneCatalog = (StandaloneCatalog) input;
+                        return new TestModelStandalonePluginCatalog(new DateTime(input.getEffectiveDate()),
+                                                                    List.of(standaloneCatalog.getSupportedCurrencies()),
+                                                                    List.copyOf(standaloneCatalog.getProducts()),
+                                                                    List.copyOf(standaloneCatalog.getPlans()),
+                                                                    standaloneCatalog.getPriceLists().getDefaultPricelist(),
+                                                                    List.of(standaloneCatalog.getPriceLists().getChildPriceLists()),
+                                                                    standaloneCatalog.getPlanRules(),
+                                                                    null /* ImmutableList.<Unit>copyOf(input.getCurrentUnits()) */);
+                    }).collect(Collectors.toUnmodifiableList());
         }
     }
 }

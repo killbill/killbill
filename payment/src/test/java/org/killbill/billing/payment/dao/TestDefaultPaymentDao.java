@@ -28,10 +28,9 @@ import org.killbill.billing.payment.PaymentTestSuiteWithEmbeddedDB;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentStateMachineHelper;
+import org.killbill.commons.utils.collect.Iterators;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
 
@@ -94,14 +93,14 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
             verifyPayment(insertedPaymentModelDao, paymentModelDao);
 
             // Verify search APIs
-            Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(paymentModelDao.getPaymentMethodId().toString(), 0L, 100L, internalCallContext).iterator()).size(), 1);
-            Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(paymentModelDao.getExternalKey(), 0L, 100L, internalCallContext).iterator()).size(), 1);
+            Assert.assertEquals(Iterators.toUnmodifiableList(paymentDao.searchPayments(paymentModelDao.getPaymentMethodId().toString(), 0L, 100L, internalCallContext).iterator()).size(), 1);
+            Assert.assertEquals(Iterators.toUnmodifiableList(paymentDao.searchPayments(paymentModelDao.getExternalKey(), 0L, 100L, internalCallContext).iterator()).size(), 1);
         }
         Assert.assertEquals(paymentDao.getPaymentsForAccount(specifiedFirstPaymentModelDao.getAccountId(), internalCallContext).size(), 4);
 
         // Verify search APIs
-        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(accountId.toString(), 0L, 100L, internalCallContext).iterator()).size(), 4);
-        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments("_ERRORED", 0L, 100L, internalCallContext).iterator()).size(), runNb);
+        Assert.assertEquals(Iterators.toUnmodifiableList(paymentDao.searchPayments(accountId.toString(), 0L, 100L, internalCallContext).iterator()).size(), 4);
+        Assert.assertEquals(Iterators.toUnmodifiableList(paymentDao.searchPayments("_ERRORED", 0L, 100L, internalCallContext).iterator()).size(), runNb);
     }
 
     private void verifyPaymentAndTransactions(final InternalCallContext accountCallContext, final PaymentModelDao specifiedFirstPaymentModelDao, final PaymentTransactionModelDao... specifiedFirstPaymentTransactionModelDaos) {
@@ -169,8 +168,8 @@ public class TestDefaultPaymentDao extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(loadedPaymentModelDao.getExternalKey(), specifiedPaymentModelDao.getExternalKey());
 
         // Verify search APIs
-        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(specifiedPaymentModelDao.getPaymentMethodId().toString(), 0L, 100L, internalCallContext).iterator()).size(), 1);
-        Assert.assertEquals(ImmutableList.<PaymentModelDao>copyOf(paymentDao.searchPayments(specifiedPaymentModelDao.getExternalKey(), 0L, 100L, internalCallContext).iterator()).size(), 1);
+        Assert.assertEquals(Iterators.toUnmodifiableList(paymentDao.searchPayments(specifiedPaymentModelDao.getPaymentMethodId().toString(), 0L, 100L, internalCallContext).iterator()).size(), 1);
+        Assert.assertEquals(Iterators.toUnmodifiableList(paymentDao.searchPayments(specifiedPaymentModelDao.getExternalKey(), 0L, 100L, internalCallContext).iterator()).size(), 1);
     }
 
     private void verifyPaymentTransaction(final PaymentTransactionModelDao loadedPaymentTransactionModelDao, final PaymentTransactionModelDao specifiedPaymentTransactionModelDao) {

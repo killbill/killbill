@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.invoice.plugin.api.InvoicePluginApi;
 import org.killbill.billing.invoice.provider.DefaultNoOpInvoiceProviderPlugin;
@@ -29,12 +31,10 @@ import org.killbill.billing.osgi.api.OSGIServiceDescriptor;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.tenant.api.TenantInternalApi;
+import org.killbill.commons.utils.Joiner;
 import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Joiner;
-import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 

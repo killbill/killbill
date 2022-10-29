@@ -11,6 +11,7 @@ tableFields(prefix) ::= <<
 , <prefix>status
 , <prefix>migrated
 , <prefix>parent_invoice
+, <prefix>grp_id
 , <prefix>created_by
 , <prefix>created_date
 >>
@@ -23,6 +24,7 @@ tableValues() ::= <<
 , :status
 , :migrated
 , :parentInvoice
+, :grpId
 , :createdBy
 , :createdDate
 >>
@@ -35,7 +37,7 @@ getInvoicesBySubscription() ::= <<
   SELECT <allTableFields("i.")>
   FROM <tableName()> i
   JOIN invoice_items ii ON i.id = ii.invoice_id
-  WHERE ii.subscription_id = :subscriptionId AND i.migrated = '0'
+  WHERE ii.subscription_id = :subscriptionId AND i.migrated = FALSE
   <AND_CHECK_TENANT("i.")>
   <AND_CHECK_TENANT("ii.")>
   ;

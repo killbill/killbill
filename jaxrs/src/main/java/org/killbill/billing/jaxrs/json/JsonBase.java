@@ -17,20 +17,18 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.audit.AuditLog;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
 
 public abstract class JsonBase {
 
@@ -41,20 +39,14 @@ public abstract class JsonBase {
     }
 
     public JsonBase(@Nullable final List<AuditLogJson> auditLogs) {
-        this.auditLogs = auditLogs == null ? ImmutableList.<AuditLogJson>of() : auditLogs;
+        this.auditLogs = auditLogs == null ? Collections.emptyList() : auditLogs;
     }
 
-    protected static ImmutableList<AuditLogJson> toAuditLogJson(@Nullable final List<AuditLog> auditLogs) {
+    protected static List<AuditLogJson> toAuditLogJson(@Nullable final List<AuditLog> auditLogs) {
         if (auditLogs == null) {
-            return ImmutableList.of();
+            return Collections.emptyList();
         }
-
-        return ImmutableList.<AuditLogJson>copyOf(Collections2.transform(auditLogs, new Function<AuditLog, AuditLogJson>() {
-            @Override
-            public AuditLogJson apply(@Nullable final AuditLog input) {
-                return new AuditLogJson(input);
-            }
-        }));
+        return auditLogs.stream().map(AuditLogJson::new).collect(Collectors.toUnmodifiableList());
     }
 
     protected static String toString(@Nullable final UUID id) {
@@ -66,7 +58,7 @@ public abstract class JsonBase {
     }
 
     protected List<PluginProperty> propertiesToList(final Map<String, String> propertiesMap) {
-        final List<PluginProperty> properties = new LinkedList<PluginProperty>();
+        final List<PluginProperty> properties = new LinkedList<>();
         for (final String key : propertiesMap.keySet()) {
             final PluginProperty property = new PluginProperty(key, propertiesMap.get(key), false);
             properties.add(property);

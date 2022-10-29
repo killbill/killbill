@@ -19,7 +19,7 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,11 +82,8 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -140,12 +137,9 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(payment.getAccountId(), auditMode.getLevel(), tenantContext);
 
         final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePayments(paymentId, tenantContext);
-        final InvoicePayment invoicePayment = Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
-            @Override
-            public boolean apply(final InvoicePayment input) {
-                return input.getType() == InvoicePaymentType.ATTEMPT;
-            }
-        }).orNull();
+        final InvoicePayment invoicePayment = invoicePayments.stream()
+                .filter(input -> input.getType() == InvoicePaymentType.ATTEMPT)
+                .findFirst().orElse(null);
         final UUID invoiceId = invoicePayment != null ? invoicePayment.getInvoiceId() : null;
 
         final InvoicePaymentJson result = new InvoicePaymentJson(payment, invoiceId, accountAuditLogs);
@@ -189,7 +183,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "InvoicePaymentTransactionJson body should be specified");
 
         final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContextNoAccountId);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, Collections.emptyList(), callContextNoAccountId);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContextNoAccountId);
         final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
 
@@ -229,7 +223,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                                             createInvoicePaymentControlPluginApiPaymentOptions(true),
                                                             callContext);
             // /!\ Note! The invoicePayment#paymentId points to the original payment (PURCHASE) here, NOT the new one (CREDIT)
-            paymentIdToRedirectTo = paymentApi.getPaymentByTransactionExternalKey(transactionExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext).getId();
+            paymentIdToRedirectTo = paymentApi.getPaymentByTransactionExternalKey(transactionExternalKey, false, false, Collections.emptyList(), callContext).getId();
         } else {
             invoicePaymentApi.createRefundForInvoicePayment(isAdjusted,
                                                             adjustments,
@@ -270,7 +264,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getAmount(), "InvoicePaymentTransactionJson amount needs to be set");
 
         final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContextNoAccountId);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, Collections.emptyList(), callContextNoAccountId);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContextNoAccountId);
         final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
         final String transactionExternalKey = json.getTransactionExternalKey() != null ? json.getTransactionExternalKey() : UUIDs.randomUUID().toString();
@@ -308,7 +302,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json.getTransactionExternalKey(), "InvoicePaymentTransactionJson transactionExternalKey needs to be set");
 
         final CallContext callContextNoAccountId = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), callContextNoAccountId);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, Collections.emptyList(), callContextNoAccountId);
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), callContextNoAccountId);
         final CallContext callContext = context.createCallContextWithAccountId(account.getId(), createdBy, reason, comment, request);
 
@@ -346,15 +340,12 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
                                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
                                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws PaymentApiException, AccountApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Payment payment = paymentApi.getPayment(paymentId, false, false, ImmutableList.<PluginProperty>of(), tenantContext);
+        final Payment payment = paymentApi.getPayment(paymentId, false, false, Collections.emptyList(), tenantContext);
         final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePayments(paymentId, tenantContext);
 
-        final InvoicePayment originalInvoicePaymentAttempt = Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
-            @Override
-            public boolean apply(final InvoicePayment input) {
-                return input.getType() == InvoicePaymentType.ATTEMPT && !input.isSuccess();
-            }
-        }).orNull();
+        final InvoicePayment originalInvoicePaymentAttempt = invoicePayments.stream()
+                .filter(input -> input.getType() == InvoicePaymentType.ATTEMPT && !input.isSuccess())
+                .findFirst().orElse(null);
 
         final UUID invoiceId = originalInvoicePaymentAttempt != null ? originalInvoicePaymentAttempt.getInvoiceId() : null;
         if (invoiceId == null) {
@@ -362,9 +353,6 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         }
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
-
-        final List<String> controlPluginNames = new ArrayList<String>();
-        controlPluginNames.addAll(paymentControlPluginNames);
 
         final Account account = accountUserApi.getAccountById(payment.getAccountId(), tenantContext);
         final BigDecimal amount = json == null ? null : json.getAmount();

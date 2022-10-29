@@ -18,9 +18,10 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.jaxrs.JaxrsTestSuiteNoDB;
@@ -28,15 +29,13 @@ import org.killbill.billing.jaxrs.json.SubscriptionJson.EventSubscriptionJson;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testJson() throws Exception {
         final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID(),
                                                                       BillingPeriod.NO_BILLING_PERIOD,
-                                                                      new LocalDate(),
+                                                                      new DateTime(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
@@ -50,7 +49,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final BundleTimelineJson bundleTimelineJson = new BundleTimelineJson(UUID.randomUUID(),
                                                                              UUID.randomUUID(),
                                                                              UUID.randomUUID().toString(),
-                                                                             ImmutableList.<EventSubscriptionJson>of(event),
+                                                                             List.of(event),
                                                                              null);
 
         final String asJson = mapper.writeValueAsString(bundleTimelineJson);

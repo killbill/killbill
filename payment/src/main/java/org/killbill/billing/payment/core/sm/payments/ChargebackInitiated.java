@@ -17,8 +17,10 @@
 
 package org.killbill.billing.payment.core.sm.payments;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -30,10 +32,7 @@ import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.core.sm.PaymentAutomatonDAOHelper;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class ChargebackInitiated extends PaymentLeavingStateCallback {
 
@@ -47,7 +46,7 @@ public class ChargebackInitiated extends PaymentLeavingStateCallback {
         if (OperationResult.FAILURE.equals(paymentStateContext.getOverridePluginOperationResult())) {
             final List<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment = paymentStateContext.getPaymentId() != null ?
                                                                                           daoHelper.getPaymentDao().getTransactionsForPayment(paymentStateContext.getPaymentId(), paymentStateContext.getInternalCallContext()) :
-                                                                                          ImmutableList.<PaymentTransactionModelDao>of();
+                                                                                          Collections.emptyList();
             final Iterable<PaymentTransactionModelDao> existingPaymentTransactionsForTransactionIdOrKey = filterExistingPaymentTransactionsForTransactionIdOrKey(paymentTransactionsForCurrentPayment, paymentStateContext.getTransactionId(), paymentStateContext.getPaymentTransactionExternalKey());
 
             if (Iterables.isEmpty(existingPaymentTransactionsForTransactionIdOrKey)) {
@@ -60,17 +59,16 @@ public class ChargebackInitiated extends PaymentLeavingStateCallback {
     }
 
     private Iterable<PaymentTransactionModelDao> filterExistingPaymentTransactionsForTransactionIdOrKey(final Iterable<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment, @Nullable final UUID paymentTransactionId, @Nullable final String paymentTransactionExternalKey) {
-        return Iterables.filter(paymentTransactionsForCurrentPayment, new Predicate<PaymentTransactionModelDao>() {
-            @Override
-            public boolean apply(final PaymentTransactionModelDao input) {
-                if (paymentTransactionId != null && input.getId().equals(paymentTransactionId)) {
-                    return true;
-                }
-                if (paymentTransactionExternalKey != null && input.getTransactionExternalKey().equals(paymentTransactionExternalKey)) {
-                    return true;
-                }
-                return false;
-            }
-        });
+        return Iterables.toStream(paymentTransactionsForCurrentPayment)
+                .filter(input -> {
+                    if (paymentTransactionId != null && input.getId().equals(paymentTransactionId)) {
+                        return true;
+                    }
+                    if (paymentTransactionExternalKey != null && input.getTransactionExternalKey().equals(paymentTransactionExternalKey)) {
+                        return true;
+                    }
+                    return false;
+                })
+                .collect(Collectors.toList());
     }
 }

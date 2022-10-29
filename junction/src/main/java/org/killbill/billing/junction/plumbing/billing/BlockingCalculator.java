@@ -32,8 +32,10 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
@@ -51,14 +53,9 @@ import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.BlockingInternalApi;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
-import com.google.inject.Inject;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class BlockingCalculator {
 
@@ -92,15 +89,15 @@ public class BlockingCalculator {
             return false;
         }
 
-        final Collection<BillingEvent> billingEventsToAdd = new TreeSet<BillingEvent>();
-        final Collection<BillingEvent> billingEventsToRemove = new TreeSet<BillingEvent>();
+        final Collection<BillingEvent> billingEventsToAdd = new TreeSet<>();
+        final Collection<BillingEvent> billingEventsToRemove = new TreeSet<>();
 
         final List<BlockingState> blockingEvents = blockingApi.getBlockingActiveForAccount(catalog, cutoffDt, context);
 
         // Group blocking states per type
-        final Collection<BlockingState> accountBlockingEvents = new LinkedList<BlockingState>();
-        final Map<UUID, List<BlockingState>> perBundleBlockingEvents = new HashMap<UUID, List<BlockingState>>();
-        final Map<UUID, List<BlockingState>> perSubscriptionBlockingEvents = new HashMap<UUID, List<BlockingState>>();
+        final Collection<BlockingState> accountBlockingEvents = new LinkedList<>();
+        final Map<UUID, List<BlockingState>> perBundleBlockingEvents = new HashMap<>();
+        final Map<UUID, List<BlockingState>> perSubscriptionBlockingEvents = new HashMap<>();
         for (final BlockingState blockingEvent : blockingEvents) {
             if (blockingEvent.getType() == BlockingStateType.ACCOUNT) {
                 accountBlockingEvents.add(blockingEvent);
@@ -125,7 +122,7 @@ public class BlockingCalculator {
         for (final Entry<UUID, List<SubscriptionBase>> entry : subscriptionsForAccount.entrySet()) {
             final UUID bundleId = entry.getKey();
 
-            final List<BlockingState> bundleBlockingEvents = perBundleBlockingEvents.get(bundleId) != null ? perBundleBlockingEvents.get(bundleId) : ImmutableList.<BlockingState>of();
+            final List<BlockingState> bundleBlockingEvents = perBundleBlockingEvents.get(bundleId) != null ? perBundleBlockingEvents.get(bundleId) : Collections.emptyList();
 
             for (final SubscriptionBase subscription : entry.getValue()) {
                 // Avoid inserting additional events for subscriptions that don't even have a START event
@@ -133,11 +130,11 @@ public class BlockingCalculator {
                     continue;
                 }
 
-                final List<BlockingState> subscriptionBlockingEvents = perSubscriptionBlockingEvents.get(subscription.getId()) != null ? perSubscriptionBlockingEvents.get(subscription.getId()) : ImmutableList.<BlockingState>of();
+                final List<BlockingState> subscriptionBlockingEvents = perSubscriptionBlockingEvents.get(subscription.getId()) != null ? perSubscriptionBlockingEvents.get(subscription.getId()) : Collections.emptyList();
                 final List<BlockingState> aggregateSubscriptionBlockingEvents = getAggregateBlockingEventsPerSubscription(subscription.getEndDate(), subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents);
                 final List<DisabledDuration> accountBlockingDurations = createBlockingDurations(aggregateSubscriptionBlockingEvents);
 
-                final SortedSet<BillingEvent> subscriptionBillingEvents = perSubscriptionBillingEvents.getOrDefault(subscription.getId(), ImmutableSortedSet.<BillingEvent>of());
+                final SortedSet<BillingEvent> subscriptionBillingEvents = perSubscriptionBillingEvents.getOrDefault(subscription.getId(), Collections.emptySortedSet());
 
                 final SortedSet<BillingEvent> newEvents = createNewEvents(accountBlockingDurations, subscriptionBillingEvents, context);
                 billingEventsToAdd.addAll(newEvents);
@@ -160,7 +157,7 @@ public class BlockingCalculator {
                                                                         final Iterable<BlockingState> subscriptionBlockingEvents,
                                                                         final Iterable<BlockingState> bundleBlockingEvents,
                                                                         final Iterable<BlockingState> accountBlockingEvents) {
-        final List<BlockingState> result = new LinkedList<BlockingState>();
+        final List<BlockingState> result = new LinkedList<>();
         for (final BlockingState bs : Iterables.concat(subscriptionBlockingEvents, bundleBlockingEvents, accountBlockingEvents)) {
             if (subscriptionEndDate == null || bs.getEffectiveDate().compareTo(subscriptionEndDate) <= 0) {
                 // Event is prior to cancel date
@@ -265,7 +262,7 @@ public class BlockingCalculator {
                                        planPhase,
                                        fixedPrice,
                                        recurringPrice,
-                                       ImmutableList.of(),
+                                       Collections.emptyList(),
                                        currency,
                                        billingPeriod,
                                        billCycleDay,
@@ -323,7 +320,9 @@ public class BlockingCalculator {
         for (final Entry<String, BlockingStateService> entry : svcBlockedMap.entrySet()) {
             unorderedDisabledDuration.addAll(entry.getValue().build());
         }
-        final List<DisabledDuration> sortedDisabledDuration = Ordering.natural().sortedCopy(unorderedDisabledDuration);
+        final List<DisabledDuration> sortedDisabledDuration = unorderedDisabledDuration.stream()
+                .sorted()
+                .collect(Collectors.toUnmodifiableList());
 
         DisabledDuration prevDuration = null;
         for (final DisabledDuration d : sortedDisabledDuration) {

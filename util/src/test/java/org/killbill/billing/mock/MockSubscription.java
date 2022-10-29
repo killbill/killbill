@@ -208,6 +208,11 @@ public class MockSubscription implements SubscriptionBase {
     public DateTime getFutureEndDate() {
         return sub.getFutureEndDate();
     }
+    
+    @Override
+    public DateTime getFutureExpiryDate() {
+        return sub.getFutureExpiryDate();
+    }    
 
     @Override
     public EntitlementSourceType getSourceType() {
@@ -264,7 +269,12 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public List<SubscriptionBaseTransition> getAllTransitions() {
+    public List<SubscriptionBaseTransition> getAllTransitions(boolean includeDeleted) {
         return null;
     }
+
+	@Override
+	public boolean getIncludeDeletedEvents() {
+		return false;
+	}
 }

@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,8 +43,6 @@ import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.bus.api.PersistentBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 public class PaymentAutomatonDAOHelper {
 
@@ -94,7 +93,7 @@ public class PaymentAutomatonDAOHelper {
             final PaymentModelDao newPaymentModelDao = buildNewPaymentModelDao();
             final PaymentTransactionModelDao newPaymentTransactionModelDao = buildNewPaymentTransactionModelDao(newPaymentModelDao.getId());
 
-            existingTransactions = ImmutableList.of();
+            existingTransactions = Collections.emptyList();
             final PaymentAndTransactionModelDao paymentAndTransactionModelDao = paymentDao.insertPaymentWithFirstTransaction(newPaymentModelDao, newPaymentTransactionModelDao, internalCallContext);
             paymentTransactionModelDao = paymentAndTransactionModelDao.getPaymentTransactionModelDao();
 

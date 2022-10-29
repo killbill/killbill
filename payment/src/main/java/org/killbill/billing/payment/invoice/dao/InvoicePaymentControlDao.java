@@ -63,7 +63,7 @@ public class InvoicePaymentControlDao {
         return dbi.withHandle(new HandleCallback<List<PluginAutoPayOffModelDao>>() {
             @Override
             public List<PluginAutoPayOffModelDao> withHandle(final Handle handle) throws Exception {
-                final List<Map<String, Object>> queryResult = handle.select("select * from invoice_payment_control_plugin_auto_pay_off where account_id = ? and is_active = '1'", accountId.toString());
+                final List<Map<String, Object>> queryResult = handle.select("select * from invoice_payment_control_plugin_auto_pay_off where account_id = ? and is_active = TRUE", accountId.toString());
                 final List<PluginAutoPayOffModelDao> result = new ArrayList<PluginAutoPayOffModelDao>(queryResult.size());
                 for (final Map<String, Object> row : queryResult) {
 
@@ -90,7 +90,7 @@ public class InvoicePaymentControlDao {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("update invoice_payment_control_plugin_auto_pay_off set is_active = '0' where account_id = ?", accountId.toString());
+                handle.execute("update invoice_payment_control_plugin_auto_pay_off set is_active = FALSE where account_id = ?", accountId.toString());
                 return null;
             }
         });

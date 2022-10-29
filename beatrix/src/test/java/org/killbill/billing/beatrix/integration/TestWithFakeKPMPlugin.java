@@ -21,13 +21,13 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -47,14 +47,15 @@ import org.killbill.billing.osgi.config.OSGIConfig;
 import org.killbill.billing.osgi.pluginconf.PluginConfigException;
 import org.killbill.billing.osgi.pluginconf.PluginFinder;
 import org.killbill.billing.platform.api.KillbillConfigSource;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.jackson.ObjectMapper;
 import org.killbill.billing.util.nodes.NodeCommand;
 import org.killbill.billing.util.nodes.NodeCommandMetadata;
-import org.killbill.billing.util.nodes.NodeCommandProperty;
 import org.killbill.billing.util.nodes.NodeInfo;
 import org.killbill.billing.util.nodes.NodeInfoMapper;
 import org.killbill.billing.util.nodes.PluginNodeCommandMetadata;
 import org.killbill.billing.util.nodes.SystemNodeCommandType;
+import org.killbill.commons.eventbus.Subscribe;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.launch.Framework;
@@ -65,10 +66,7 @@ import org.testng.annotations.Test;
 
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.eventbus.Subscribe;
+
 import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -291,12 +289,9 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
         }
 
         public BundleWithMetadata getBundle(final String pluginName) {
-            return Iterables.tryFind(bundles, new Predicate<BundleWithMetadata>() {
-                @Override
-                public boolean apply(@Nullable final BundleWithMetadata input) {
-                    return input.getPluginName().equals(pluginName);
-                }
-            }).orNull();
+            return bundles.stream()
+                    .filter(input -> pluginName.equals(input.getPluginName()))
+                    .findFirst().orElse(null);
         }
     }
 
@@ -355,7 +350,7 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
 
             @Override
             public NodeCommandMetadata getNodeCommandMetadata() {
-                return new PluginNodeCommandMetadata(NEW_PLUGIN_NAME, NEW_PLUGIN_NAME, NEW_PLUGIN_VERSION, ImmutableList.<NodeCommandProperty>of());
+                return new PluginNodeCommandMetadata(NEW_PLUGIN_NAME, NEW_PLUGIN_NAME, NEW_PLUGIN_VERSION, Collections.emptyList());
             }
         };
         busHandler.pushExpectedEvent(NextEvent.BROADCAST_SERVICE);
@@ -367,13 +362,12 @@ public class TestWithFakeKPMPlugin extends TestIntegrationBase {
             @Override
             public Boolean call() throws Exception {
                 final Iterable<NodeInfo> rawNodeInfos = nodesApi.getNodesInfo();
-
-                final List<NodeInfo> nodeInfos = ImmutableList.<NodeInfo>copyOf(rawNodeInfos);
+                final List<NodeInfo> nodeInfos = Iterables.toUnmodifiableList(rawNodeInfos);
                 Assert.assertEquals(nodeInfos.size(), 1);
 
                 final NodeInfo nodeInfo = nodeInfos.get(0);
                 final Iterable<PluginInfo> rawPluginInfos = nodeInfo.getPluginInfo();
-                final List<PluginInfo> pluginsInfo = ImmutableList.copyOf(rawPluginInfos);
+                final List<PluginInfo> pluginsInfo = Iterables.toUnmodifiableList(rawPluginInfos);
 
                 if (pluginsInfo.size() == 1) {
                     final PluginInfo pluginInfo = pluginsInfo.get(0);

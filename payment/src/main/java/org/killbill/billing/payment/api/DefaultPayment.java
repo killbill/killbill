@@ -18,25 +18,22 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.entity.EntityBase;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.currency.KillBillMoney;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public class DefaultPayment extends EntityBase implements Payment {
 
@@ -69,10 +66,12 @@ public class DefaultPayment extends EntityBase implements Payment {
         this.transactions = transactions;
         this.paymentAttempts = paymentAttempts;
 
-        final Collection<PaymentTransaction> voidedTransactions = new LinkedList<PaymentTransaction>();
-        final Collection<PaymentTransaction> nonVoidedTransactions = new LinkedList<PaymentTransaction>();
+        final Collection<PaymentTransaction> voidedTransactions = new LinkedList<>();
+        final Collection<PaymentTransaction> nonVoidedTransactions = new LinkedList<>();
         int nvTxToVoid = 0;
-        for (final PaymentTransaction paymentTransaction : Lists.<PaymentTransaction>reverse(transactions)) {
+        final List<PaymentTransaction> reversedPaymentTransactions = new ArrayList<>(transactions);
+        Collections.reverse(reversedPaymentTransactions);
+        for (final PaymentTransaction paymentTransaction : reversedPaymentTransactions) {
             if (TransactionStatus.SUCCESS.equals(paymentTransaction.getTransactionStatus())) {
                 if (paymentTransaction.getTransactionType() == TransactionType.VOID) {
                     nvTxToVoid++;
@@ -93,29 +92,24 @@ public class DefaultPayment extends EntityBase implements Payment {
         final Currency chargebackCurrency = getCurrencyForTransactions(chargebackTransactions, false);
         final BigDecimal chargebackAmount = chargebackCurrency == null ? BigDecimal.ZERO : getAmountForTransactions(chargebackTransactions, false);
 
-        PaymentTransaction transactionToUseForCurrency = Iterables.<PaymentTransaction>getFirst(Iterables.<PaymentTransaction>filter(transactions,
-                                                                                                                                     new Predicate<PaymentTransaction>() {
-                                                                                                                                         @Override
-                                                                                                                                         public boolean apply(final PaymentTransaction transaction) {
-                                                                                                                                             return (transaction.getTransactionType() == TransactionType.AUTHORIZE ||
-                                                                                                                                                     transaction.getTransactionType() == TransactionType.PURCHASE ||
-                                                                                                                                                     transaction.getTransactionType() == TransactionType.CREDIT) &&
-                                                                                                                                                    (TransactionStatus.SUCCESS.equals(transaction.getTransactionStatus()) ||
-                                                                                                                                                     TransactionStatus.PENDING.equals(transaction.getTransactionStatus()));
-                                                                                                                                         }
-                                                                                                                                     }), null);
+        PaymentTransaction transactionToUseForCurrency = transactions.stream()
+                .filter(transaction -> (transaction.getTransactionType() == TransactionType.AUTHORIZE ||
+                                        transaction.getTransactionType() == TransactionType.PURCHASE ||
+                                        transaction.getTransactionType() == TransactionType.CREDIT) &&
+                                      (TransactionStatus.SUCCESS.equals(transaction.getTransactionStatus()) ||
+                                       TransactionStatus.PENDING.equals(transaction.getTransactionStatus())))
+                .findFirst().orElse(null);
+
         if (transactionToUseForCurrency == null) {
             // No successful one, take the last non-successful one then
-            transactionToUseForCurrency = Iterables.<PaymentTransaction>getLast(Iterables.<PaymentTransaction>filter(transactions,
-                                                                                                                     new Predicate<PaymentTransaction>() {
-                                                                                                                         @Override
-                                                                                                                         public boolean apply(final PaymentTransaction transaction) {
-                                                                                                                             return transaction.getTransactionType() == TransactionType.AUTHORIZE ||
-                                                                                                                                    transaction.getTransactionType() == TransactionType.PURCHASE ||
-                                                                                                                                    transaction.getTransactionType() == TransactionType.CREDIT;
-                                                                                                                         }
-                                                                                                                     }), null);
+            final List<PaymentTransaction> nonSuccessfulTransactions = transactions.stream()
+                    .filter(transaction -> transaction.getTransactionType() == TransactionType.AUTHORIZE ||
+                                           transaction.getTransactionType() == TransactionType.PURCHASE ||
+                                           transaction.getTransactionType() == TransactionType.CREDIT)
+                    .collect(Collectors.toUnmodifiableList());
+            transactionToUseForCurrency = Iterables.getLast(nonSuccessfulTransactions);
         }
+
         this.currency = transactionToUseForCurrency == null ? null : transactionToUseForCurrency.getCurrency();
 
         this.authAmount = getAmountForTransactions(this.currency,
@@ -159,17 +153,14 @@ public class DefaultPayment extends EntityBase implements Payment {
                                                      chargebackAmount,
                                                      chargebackCurrency);
 
-        this.isAuthVoided = Iterables.<PaymentTransaction>tryFind(voidedTransactions,
-                                                                  new Predicate<PaymentTransaction>() {
-                                                                      @Override
-                                                                      public boolean apply(final PaymentTransaction input) {
-                                                                          return input.getTransactionType() == TransactionType.AUTHORIZE && TransactionStatus.SUCCESS.equals(input.getTransactionStatus());
-                                                                      }
-                                                                  }).isPresent();
+        this.isAuthVoided = voidedTransactions
+                .stream()
+                .anyMatch(input -> input.getTransactionType() == TransactionType.AUTHORIZE &&
+                                   TransactionStatus.SUCCESS.equals(input.getTransactionStatus()));
     }
 
     private static Collection<PaymentTransaction> getChargebackTransactions(final Collection<PaymentTransaction> transactions) {
-        final Collection<String> successfulChargebackExternalKeys = new HashSet<String>();
+        final Collection<String> successfulChargebackExternalKeys = new HashSet<>();
 
         for (final PaymentTransaction transaction : transactions) {
             // We are looking for the last chargeback in state SUCCESS for a given external key
@@ -180,12 +171,9 @@ public class DefaultPayment extends EntityBase implements Payment {
             }
         }
 
-        return Collections2.<PaymentTransaction>filter(transactions, new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return successfulChargebackExternalKeys.contains(input.getExternalKey());
-            }
-        });
+        return transactions.stream()
+                .filter(input -> successfulChargebackExternalKeys.contains(input.getExternalKey()))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private static BigDecimal getAmountForTransactions(final Currency paymentCurrency,
@@ -196,17 +184,14 @@ public class DefaultPayment extends EntityBase implements Payment {
                                                        final Currency chargebackProcessedCurrency,
                                                        final BigDecimal chargebackAmount,
                                                        final Currency chargebackCurrency) {
-        BigDecimal unformattedAmountForTransactions = null;
+        final BigDecimal unformattedAmountForTransactions;
 
-        final Collection<PaymentTransaction> candidateTransactions = Collections2.<PaymentTransaction>filter(transactions,
-                                                                                                             new Predicate<PaymentTransaction>() {
-                                                                                                                 @Override
-                                                                                                                 public boolean apply(final PaymentTransaction transaction) {
-                                                                                                                     return transaction.getTransactionType() == transactiontype && TransactionStatus.SUCCESS.equals(transaction.getTransactionStatus());
-                                                                                                                 }
-                                                                                                             });
+        final Collection<PaymentTransaction> candidateTransactions = transactions.stream()
+                .filter(transaction -> transaction.getTransactionType() == transactiontype &&
+                                       TransactionStatus.SUCCESS.equals(transaction.getTransactionStatus()))
+                .collect(Collectors.toUnmodifiableList());
 
-        final boolean takeChargebacksIntoAccount = ImmutableList.<TransactionType>of(TransactionType.CAPTURE, TransactionType.PURCHASE).contains(transactiontype);
+        final boolean takeChargebacksIntoAccount = List.of(TransactionType.CAPTURE, TransactionType.PURCHASE).contains(transactiontype);
         Currency currencyForTransactions = getCurrencyForTransactions(candidateTransactions, true);
         if (currencyForTransactions == null || currencyForTransactions != paymentCurrency) {
             currencyForTransactions = getCurrencyForTransactions(candidateTransactions, false);
@@ -281,15 +266,16 @@ public class DefaultPayment extends EntityBase implements Payment {
     }
 
     private static Currency getCurrencyForTransactions(final Collection<PaymentTransaction> candidateTransactions, final boolean useProcessedValues) {
-        final Collection<Currency> currencies = new HashSet<Currency>(Collections2.<PaymentTransaction, Currency>transform(candidateTransactions,
-                                                                                                                           new Function<PaymentTransaction, Currency>() {
-                                                                                                                               @Override
-                                                                                                                               public Currency apply(final PaymentTransaction transaction) {
-                                                                                                                                   return useProcessedValues ? transaction.getProcessedCurrency() : transaction.getCurrency();
-                                                                                                                               }
-                                                                                                                           }));
+        final Collection<Currency> currencies = candidateTransactions
+                .stream()
+                .map(paymentTrx -> useProcessedValues ? paymentTrx.getProcessedCurrency() : paymentTrx.getCurrency())
+                // use toSet() instead of toUnmodifiableSet() because returned collection may return null.
+                // See also TestRetryablePayment to confirm
+                .collect(Collectors.toSet());
 
-        return currencies.size() > 1 ? null : Iterables.<Currency>getFirst(currencies, null);
+        // See Iterables.getFirst() javadoc on why not just use stream.findFirst().
+        // See TestRetryablePayment#testInitToSuccessWithResFailure() to see null currencies with stream.findFirst().
+        return currencies.size() > 1 ? null : Iterables.getFirst(currencies, null);
     }
 
     @Override

@@ -20,12 +20,14 @@
 package org.killbill.billing.entitlement.api;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -42,7 +44,6 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogInternalApi;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.AccountEntitlements;
 import org.killbill.billing.entitlement.EntitlementInternalApi;
@@ -69,15 +70,6 @@ import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logAddBlockingState;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUpdateExternalKey;
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
@@ -86,20 +78,17 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultSubscriptionApi.class);
 
-    private static final Comparator<SubscriptionBundle> SUBSCRIPTION_BUNDLE_COMPARATOR = new Comparator<SubscriptionBundle>() {
-        @Override
-        public int compare(final SubscriptionBundle o1, final SubscriptionBundle o2) {
-            final int compared = o1.getOriginalCreatedDate().compareTo(o2.getOriginalCreatedDate());
-            if (compared != 0) {
-                return compared;
+    private static final Comparator<SubscriptionBundle> SUBSCRIPTION_BUNDLE_COMPARATOR = (o1, o2) -> {
+        final int compared = o1.getOriginalCreatedDate().compareTo(o2.getOriginalCreatedDate());
+        if (compared != 0) {
+            return compared;
+        } else {
+            final int compared2 = o1.getUpdatedDate().compareTo(o2.getUpdatedDate());
+            if (compared2 != 0) {
+                return compared2;
             } else {
-                final int compared2 = o1.getUpdatedDate().compareTo(o2.getUpdatedDate());
-                if (compared2 != 0) {
-                    return compared2;
-                } else {
-                    // Default stable ordering (in the sense that doing twice the same call will lead to same result)
-                    return o1.getId().compareTo(o2.getId());
-                }
+                // Default stable ordering (in the sense that doing twice the same call will lead to same result)
+                return o1.getId().compareTo(o2.getId());
             }
         }
     };
@@ -136,12 +125,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
-    public Subscription getSubscriptionForEntitlementId(final UUID entitlementId, final TenantContext tenantContext) throws SubscriptionApiException {
+    public Subscription getSubscriptionForEntitlementId(final UUID entitlementId, final boolean includeDeletedEvents, final TenantContext tenantContext) throws SubscriptionApiException {
 
         try {
             final UUID accountId = internalCallContextFactory.getAccountId(entitlementId, ObjectType.SUBSCRIPTION, tenantContext);
             final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
-            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementInternalApi.getEntitlementForId(entitlementId, internalTenantContextWithValidAccountRecordId);
+            final DefaultEntitlement entitlement = (DefaultEntitlement) entitlementInternalApi.getEntitlementForId(entitlementId, includeDeletedEvents, internalTenantContextWithValidAccountRecordId);
             return new DefaultSubscription(entitlement);
         } catch (final EntitlementApiException e) {
             throw new SubscriptionApiException(e);
@@ -149,13 +138,13 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
-    public Subscription getSubscriptionForExternalKey(final String externalKey, final TenantContext tenantContext) throws SubscriptionApiException {
+    public Subscription getSubscriptionForExternalKey(final String externalKey, final boolean includeDeletedEvents, final TenantContext tenantContext) throws SubscriptionApiException {
 
         try {
             final InternalTenantContext contextWithoutAccountRecordId = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
             final UUID subscriptionId = subscriptionBaseInternalApi.getSubscriptionIdFromSubscriptionExternalKey(externalKey, contextWithoutAccountRecordId);
-            return getSubscriptionForEntitlementId(subscriptionId, tenantContext);
-        } catch (SubscriptionBaseApiException e) {
+            return getSubscriptionForEntitlementId(subscriptionId, includeDeletedEvents, tenantContext);
+        } catch (final SubscriptionBaseApiException e) {
             throw new SubscriptionApiException(e);
         }
     }
@@ -208,13 +197,10 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
     @Override
     public List<SubscriptionBundle> getSubscriptionBundlesForAccountIdAndExternalKey(final UUID accountId, final String externalKey, final TenantContext context) throws SubscriptionApiException {
-        return ImmutableList.<SubscriptionBundle>copyOf(Iterables.<SubscriptionBundle>filter(getSubscriptionBundlesForAccount(accountId, context),
-                                                                                             new Predicate<SubscriptionBundle>() {
-                                                                                                 @Override
-                                                                                                 public boolean apply(final SubscriptionBundle bundle) {
-                                                                                                     return bundle.getExternalKey().equals(externalKey);
-                                                                                                 }
-                                                                                             }));
+        final List<SubscriptionBundle> bundles = getSubscriptionBundlesForAccount(accountId, context);
+        return bundles.stream()
+                      .filter(bundle -> bundle.getExternalKey().equals(externalKey))
+                      .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -239,13 +225,13 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         final List<SubscriptionBaseBundle> baseBundles = subscriptionBaseInternalApi.getBundlesForKey(externalKey, internalContext);
 
-        final List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>(baseBundles.size());
+        final List<SubscriptionBundle> result = new ArrayList<>(baseBundles.size());
         for (final SubscriptionBaseBundle cur : baseBundles) {
             final SubscriptionBundle bundle = getSubscriptionBundle(cur.getId(), context);
             result.add(bundle);
         }
         // Sorting by createdDate will likely place the active bundle last, but this is the same ordering we already use for getSubscriptionBundlesForAccount
-        return Ordering.from(SUBSCRIPTION_BUNDLE_COMPARATOR).sortedCopy(result);
+        return result.stream().sorted(SUBSCRIPTION_BUNDLE_COMPARATOR).collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -263,15 +249,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                       return subscriptionBaseInternalApi.getBundles(offset, limit, internalContext);
                                                   }
                                               },
-                                              new Function<SubscriptionBaseBundle, SubscriptionBundle>() {
-                                                  @Override
-                                                  public SubscriptionBundle apply(final SubscriptionBaseBundle subscriptionBaseBundle) {
-                                                      try {
-                                                          return getSubscriptionBundle(subscriptionBaseBundle.getId(), context);
-                                                      } catch (final SubscriptionApiException e) {
-                                                          log.warn("Error retrieving bundleId='{}'", subscriptionBaseBundle.getId(), e);
-                                                          return null;
-                                                      }
+                                              subscriptionBaseBundle -> {
+                                                  try {
+                                                      return getSubscriptionBundle(subscriptionBaseBundle.getId(), context);
+                                                  } catch (final SubscriptionApiException e) {
+                                                      log.warn("Error retrieving bundleId='{}'", subscriptionBaseBundle.getId(), e);
+                                                      return null;
                                                   }
                                               }
                                              );
@@ -287,15 +270,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                       return subscriptionBaseInternalApi.searchBundles(searchKey, offset, limit, internalContext);
                                                   }
                                               },
-                                              new Function<SubscriptionBaseBundle, SubscriptionBundle>() {
-                                                  @Override
-                                                  public SubscriptionBundle apply(final SubscriptionBaseBundle subscriptionBaseBundle) {
-                                                      try {
-                                                          return getSubscriptionBundle(subscriptionBaseBundle.getId(), context);
-                                                      } catch (final SubscriptionApiException e) {
-                                                          log.warn("Error retrieving bundleId='{}'", subscriptionBaseBundle.getId(), e);
-                                                          return null;
-                                                      }
+                                              subscriptionBaseBundle -> {
+                                                  try {
+                                                      return getSubscriptionBundle(subscriptionBaseBundle.getId(), context);
+                                                  } catch (final SubscriptionApiException e) {
+                                                      log.warn("Error retrieving bundleId='{}'", subscriptionBaseBundle.getId(), e);
+                                                      return null;
                                                   }
                                               }
                                              );
@@ -314,12 +294,11 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             account = accountApi.getImmutableAccountDataById(accountId, internalCallContext);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
-        } catch (AccountApiException e) {
+        } catch (final AccountApiException e) {
             throw new EntitlementApiException(e);
         }
 
-
-        final LocalDate effectiveDate = internalCallContext.toLocalDate(callContext.getCreatedDate());
+        final DateTime effectiveDate = callContext.getCreatedDate();
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
                 newExternalKey,
@@ -334,7 +313,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                                                                                null,
                                                                                baseEntitlementWithAddOnsSpecifierList,
                                                                                null,
-                                                                               ImmutableList.<PluginProperty>of(),
+                                                                               Collections.emptyList(),
                                                                                callContext);
 
         final WithEntitlementPlugin<Void> updateExternalKeyWithPlugin = new WithEntitlementPlugin<Void>() {
@@ -355,6 +334,16 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
 
         logAddBlockingState(log, inputBlockingState, inputEffectiveDate);
 
+        final InternalCallContext internalCallContextWithValidAccountId = getInternalCallContextUsingBlockingState(inputBlockingState, callContext);
+        final DateTime effectiveDate = inputEffectiveDate == null ? callContext.getCreatedDate() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
+        addBlockingState(inputBlockingState, effectiveDate, properties, callContext);
+
+    }
+
+    @Override
+    public void addBlockingState(final BlockingState inputBlockingState, @Nullable final DateTime inputEffectiveDate, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
+        logAddBlockingState(log, inputBlockingState, inputEffectiveDate);
+
         // This is in no way an exhaustive arg validation, but to to ensure plugin would not hijack private entitlement state or service name
         if (inputBlockingState.getService() == null || inputBlockingState.getService().equals(KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName())) {
             throw new EntitlementApiException(ErrorCode.SUB_BLOCKING_STATE_INVALID_ARG, "Need to specify a valid serviceName");
@@ -367,7 +356,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(ErrorCode.SUB_BLOCKING_STATE_INVALID_ARG, "Need to specify a valid stateName");
         }
 
-        final InternalCallContext internalCallContextWithValidAccountId;
+        final InternalCallContext internalCallContextWithValidAccountId = getInternalCallContextUsingBlockingState(inputBlockingState, callContext);
         final ImmutableAccountData account;
         final UUID accountId;
         final UUID bundleId;
@@ -375,7 +364,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         try {
             switch (inputBlockingState.getType()) {
                 case ACCOUNT:
-                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.ACCOUNT, callContext);
                     account = accountApi.getImmutableAccountDataById(inputBlockingState.getBlockedId(), internalCallContextWithValidAccountId);
                     externalKey = account.getExternalKey();
                     accountId = account.getId();
@@ -383,7 +371,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                     break;
 
                 case SUBSCRIPTION_BUNDLE:
-                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.BUNDLE, callContext);
                     final SubscriptionBaseBundle bundle = subscriptionBaseInternalApi.getBundleFromId(inputBlockingState.getBlockedId(), internalCallContextWithValidAccountId);
                     externalKey = bundle.getExternalKey();
                     bundleId = bundle.getId();
@@ -391,8 +378,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                     break;
 
                 case SUBSCRIPTION:
-                    internalCallContextWithValidAccountId = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.SUBSCRIPTION, callContext);
-                    final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(inputBlockingState.getBlockedId(), internalCallContextWithValidAccountId);
+                    final Entitlement entitlement = entitlementInternalApi.getEntitlementForId(inputBlockingState.getBlockedId(), false, internalCallContextWithValidAccountId);
                     bundleId = entitlement.getBundleId();
                     accountId = entitlement.getAccountId();
                     externalKey = null;
@@ -407,15 +393,15 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             throw new EntitlementApiException(e);
         }
 
-        final DateTime effectiveDate = inputEffectiveDate == null ? callContext.getCreatedDate() : internalCallContextWithValidAccountId.toUTCDateTime(inputEffectiveDate);
+        final DateTime effectiveDate = inputEffectiveDate == null ? callContext.getCreatedDate() : inputEffectiveDate;
         final DefaultBlockingState blockingState = new DefaultBlockingState(inputBlockingState, effectiveDate);
 
         final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                 bundleId,
                 externalKey,
                 new ArrayList<EntitlementSpecifier>(),
-                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
-                internalCallContextWithValidAccountId.toLocalDate(effectiveDate),
+                effectiveDate,
+                effectiveDate,
                 false);
         final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
         baseEntitlementWithAddOnsSpecifierList.add(baseEntitlementWithAddOnsSpecifier);
@@ -436,6 +422,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             }
         };
         pluginExecution.executeWithPlugin(addBlockingStateWithPlugin, pluginContext);
+
     }
 
     @Override
@@ -444,28 +431,11 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
             final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
             final VersionedCatalog catalog = catalogInternalApi.getFullCatalog(true, true, internalTenantContextWithValidAccountRecordId);
             final List<BlockingState> allBlockingStates = blockingStateDao.getBlockingAllForAccountRecordId(catalog, internalTenantContextWithValidAccountRecordId);
-
-            final ImmutableAccountData account = accountApi.getImmutableAccountDataById(accountId, internalTenantContextWithValidAccountRecordId);
-
-            final Iterable<BlockingState> filteredByTypes = typeFilter != null && !typeFilter.isEmpty() ?
-                                                            Iterables.filter(allBlockingStates, new Predicate<BlockingState>() {
-                                                                @Override
-                                                                public boolean apply(final BlockingState input) {
-                                                                    return typeFilter.contains(input.getType());
-                                                                }
-                                                            }) : allBlockingStates;
-
-            final Iterable<BlockingState> filteredByTypesAndSvcs = svcsFilter != null && !svcsFilter.isEmpty() ?
-                                                                   Iterables.filter(filteredByTypes, new Predicate<BlockingState>() {
-                                                                       @Override
-                                                                       public boolean apply(final BlockingState input) {
-                                                                           return svcsFilter.contains(input.getService());
-                                                                       }
-                                                                   }) : filteredByTypes;
+            final Iterable<BlockingState> filteredBlockingStates = filterBlockingState(allBlockingStates, typeFilter, svcsFilter);
 
             final LocalDate localDateNowInAccountTimezone = internalTenantContextWithValidAccountRecordId.toLocalDate(clock.getUTCNow());
-            final List<BlockingState> result = new ArrayList<BlockingState>();
-            for (final BlockingState cur : filteredByTypesAndSvcs) {
+            final List<BlockingState> result = new ArrayList<>();
+            for (final BlockingState cur : filteredBlockingStates) {
 
                 final LocalDate eventDate = internalTenantContextWithValidAccountRecordId.toLocalDate(cur.getEffectiveDate());
                 final int comp = eventDate.compareTo(localDateNowInAccountTimezone);
@@ -476,13 +446,32 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
                 }
             }
 
-            return orderingType == OrderingType.ASCENDING ? result : Lists.reverse(result);
+            if (orderingType == OrderingType.DESCENDING) {
+                Collections.reverse(result);
+            }
 
-        } catch (final AccountApiException e) {
-            throw new EntitlementApiException(e);
+            return result;
+
         } catch (final CatalogApiException e) {
             throw new EntitlementApiException(e);
         }
+    }
+
+    private Iterable<BlockingState> filterBlockingState(final List<BlockingState> blockingStatesToFilter,
+                                                        final List<BlockingStateType> typeFilter,
+                                                        final List<String> svcsFilter) {
+        List<BlockingState> result = List.copyOf(blockingStatesToFilter);
+        if (typeFilter != null && !typeFilter.isEmpty()) {
+            result = result.stream()
+                           .filter(input -> typeFilter.contains(input.getType()))
+                           .collect(Collectors.toUnmodifiableList());
+        }
+        if (svcsFilter != null && !svcsFilter.isEmpty()) {
+            result = result.stream()
+                           .filter(input -> svcsFilter.contains(input.getService()))
+                           .collect(Collectors.toUnmodifiableList());
+        }
+        return result;
     }
 
     @Override
@@ -504,7 +493,6 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     public List<AuditLogWithHistory> getBlockingStateAuditLogsWithHistoryForId(final UUID blockingId, final AuditLevel auditLevel, final TenantContext context) {
         return blockingStateDao.getBlockingStateAuditLogsWithHistoryForId(blockingId, auditLevel, internalCallContextFactory.createInternalTenantContext(blockingId, ObjectType.BLOCKING_STATES, context));
     }
-
 
     private List<SubscriptionBundle> getSubscriptionBundlesForAccount(final UUID accountId, final TenantContext tenantContext) throws SubscriptionApiException {
         final InternalTenantContext internalTenantContextWithValidAccountRecordId = internalCallContextFactory.createInternalTenantContext(accountId, tenantContext);
@@ -545,7 +533,7 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }
 
         // Sort the results for predictability
-        return Ordering.<SubscriptionBundle>from(SUBSCRIPTION_BUNDLE_COMPARATOR).sortedCopy(bundles);
+        return bundles.stream().sorted(SUBSCRIPTION_BUNDLE_COMPARATOR).collect(Collectors.toUnmodifiableList());
     }
 
     private Map<UUID, List<Subscription>> buildSubscriptionsFromEntitlements(final AccountEntitlements accountEntitlements) {
@@ -565,4 +553,27 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
         }
         return subscriptionsPerBundle;
     }
+
+    private InternalCallContext getInternalCallContextUsingBlockingState(final BlockingState inputBlockingState, final CallContext callContext) {
+        final InternalCallContext internalCallContext;
+        switch (inputBlockingState.getType()) {
+            case ACCOUNT:
+                internalCallContext = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.ACCOUNT, callContext);
+                break;
+
+            case SUBSCRIPTION_BUNDLE:
+                internalCallContext = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.BUNDLE, callContext);
+                break;
+
+            case SUBSCRIPTION:
+                internalCallContext = internalCallContextFactory.createInternalCallContext(inputBlockingState.getBlockedId(), ObjectType.SUBSCRIPTION, callContext);
+                break;
+
+            default:
+                throw new IllegalStateException("Invalid blockingStateType " + inputBlockingState.getType());
+
+        }
+        return internalCallContext;
+    }
+
 }

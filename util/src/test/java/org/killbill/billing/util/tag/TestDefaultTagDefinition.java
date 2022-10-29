@@ -17,6 +17,7 @@
 
 package org.killbill.billing.util.tag;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
@@ -26,8 +27,6 @@ import org.killbill.billing.util.api.TagDefinitionApiException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestDefaultTagDefinition extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
@@ -35,7 +34,7 @@ public class TestDefaultTagDefinition extends UtilTestSuiteNoDB {
 
         final DefaultTagDefinition def1 = new DefaultTagDefinition(UUID.randomUUID(), "foo", "nothing", false);
         Assert.assertFalse(def1.getApplicableObjectTypes().isEmpty());
-        Assert.assertEquals(ImmutableList.<ObjectType>copyOf(ObjectType.values()), def1.getApplicableObjectTypes());
+        Assert.assertEquals(List.of(ObjectType.values()), def1.getApplicableObjectTypes());
 
         for (final ControlTagType cur : ControlTagType.values()) {
 

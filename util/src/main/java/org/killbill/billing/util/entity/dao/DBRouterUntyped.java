@@ -17,14 +17,13 @@
 
 package org.killbill.billing.util.entity.dao;
 
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.profiling.Profiling.WithProfilingCallback;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.TransactionCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import static org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE.RO_ALLOWED;
 import static org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE.RW_ONLY;

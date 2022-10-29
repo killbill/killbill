@@ -116,8 +116,8 @@ public class DefaultSubscriptionEvent implements SubscriptionEvent {
     }
 
     @Override
-    public LocalDate getEffectiveDate() {
-        return effectiveDate != null ? internalTenantContext.toLocalDate(effectiveDate) : null;
+    public DateTime getEffectiveDate() {
+        return effectiveDate != null ? effectiveDate : null;
     }
 
     @Override

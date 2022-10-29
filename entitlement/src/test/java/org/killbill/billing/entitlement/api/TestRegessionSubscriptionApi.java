@@ -17,6 +17,7 @@
 
 package org.killbill.billing.entitlement.api;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,11 +28,8 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.EntitlementTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 
@@ -50,10 +48,10 @@ public class TestRegessionSubscriptionApi extends EntitlementTestSuiteWithEmbedd
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Shotgun",  BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(planPhaseSpecifier);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), entitlementEffectiveDate, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), spec, UUID.randomUUID().toString(), entitlementEffectiveDate, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         // Because of the BlockingState event ENT_STARTED, the entitlement date should be correctly set
-        Assert.assertEquals(entitlement.getEffectiveStartDate(), entitlementEffectiveDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()), entitlementEffectiveDate);
 
         final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), callContext);
         Assert.assertEquals(bundles.size(), 1);
@@ -65,9 +63,9 @@ public class TestRegessionSubscriptionApi extends EntitlementTestSuiteWithEmbedd
         assertEquals(blockingStates.get(0).getStateName(), DefaultEntitlementApi.ENT_STATE_START);
         blockingStateDao.unactiveBlockingState(blockingStates.get(0).getId(), internalCallContext);
 
-        final Entitlement oldSchoolEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), callContext);
+        final Entitlement oldSchoolEntitlement = entitlementApi.getEntitlementForId(entitlement.getId(), false, callContext);
         // Because the ENT_STARTED BlockingState has been invalidated, the startDate should now default to the billingDate
-        Assert.assertEquals(oldSchoolEntitlement.getEffectiveStartDate(), initialDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(oldSchoolEntitlement.getEffectiveStartDate()), initialDate);
 
         final List<SubscriptionBundle> oldSchoolBundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), callContext);
         Assert.assertEquals(oldSchoolBundles.size(), 1);
@@ -79,11 +77,11 @@ public class TestRegessionSubscriptionApi extends EntitlementTestSuiteWithEmbedd
         Assert.assertEquals(bundles.get(idx).getSubscriptions().size(), 1);
         Assert.assertEquals(bundles.get(idx).getSubscriptions().get(0).getId(), entitlement.getId());
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().size(), 3);
-        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(0).getEffectiveDate(), entitlement.getEffectiveStartDate());
+        Assert.assertEquals(internalCallContext.toLocalDate(bundles.get(idx).getTimeline().getSubscriptionEvents().get(0).getEffectiveDate()), internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()));
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
-        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(1).getEffectiveDate(), billingStartDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(bundles.get(idx).getTimeline().getSubscriptionEvents().get(1).getEffectiveDate()), billingStartDate);
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
-        Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getEffectiveDate(), new LocalDate(2013, 9, 6));
+        Assert.assertEquals(internalCallContext.toLocalDate(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getEffectiveDate()), new LocalDate(2013, 9, 6));
         Assert.assertEquals(bundles.get(idx).getTimeline().getSubscriptionEvents().get(2).getSubscriptionEventType(), SubscriptionEventType.PHASE);
     }
 

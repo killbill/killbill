@@ -18,18 +18,20 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertEquals;
 
@@ -60,7 +62,7 @@ public class TestCatalogValidation extends TestIntegrationBase {
         try {
             uploadCatalog("CatalogValidation-v1-invalid.xml");
             Assert.fail("Catalog upload expected to fail");
-        } catch (CatalogApiException cApiException) {
+        } catch (final CatalogApiException cApiException) {
             assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
         }
     }
@@ -72,7 +74,7 @@ public class TestCatalogValidation extends TestIntegrationBase {
             // standard2-monthly: FIXEDTERM phase types must have a non-UNLIMITED Duration specified
             uploadCatalog("CatalogValidation-v2-invalid.xml");
             Assert.fail("Catalog upload expected to fail");
-        } catch (CatalogApiException cApiException) {
+        } catch (final CatalogApiException cApiException) {
             assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
         }
 
@@ -80,13 +82,14 @@ public class TestCatalogValidation extends TestIntegrationBase {
             // standard3-monthly: EVERGREEN phase types must have an UNLIMITED Duration specified
             uploadCatalog("CatalogValidation-v3-invalid.xml");
             Assert.fail("Catalog upload expected to fail");
-        } catch (CatalogApiException cApiException) {
+        } catch (final CatalogApiException cApiException) {
             assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
         }
     }
 
-    private void uploadCatalog(final String name) throws CatalogApiException, IOException {
-        catalogUserApi.uploadCatalog(Resources.asCharSource(Resources.getResource("catalogs/testCatalogValidation/" + name), Charsets.UTF_8).read(), testCallContext);
+    private void uploadCatalog(final String name) throws CatalogApiException, IOException, URISyntaxException {
+        final Path path = Paths.get(Resources.getResource("catalogs/testCatalogValidation/" + name).toURI());
+        catalogUserApi.uploadCatalog(Files.readString(path), testCallContext);
     }
 
 }

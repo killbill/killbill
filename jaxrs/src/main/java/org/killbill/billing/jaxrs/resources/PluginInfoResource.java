@@ -17,6 +17,9 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
@@ -31,19 +34,16 @@ import org.killbill.billing.entitlement.api.SubscriptionApiException;
 import org.killbill.billing.jaxrs.json.PluginInfoJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
-import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginsInfoApi;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldUserApi;
 import org.killbill.billing.util.api.TagUserApi;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -76,12 +76,10 @@ public class PluginInfoResource extends JaxRsResourceBase {
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Retrieve the list of registered plugins", response = PluginInfoJson.class, responseContainer = "List")
     public Response getPluginsInfo(@javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
-        return Response.status(Status.OK).entity(ImmutableList.copyOf(Iterables.transform(pluginsInfoApi.getPluginsInfo(), new Function<PluginInfo, PluginInfoJson>() {
-            @Override
-            public PluginInfoJson apply(final PluginInfo input) {
-                return new PluginInfoJson(input);
-            }
-        }))).build();
+        final List<PluginInfoJson> result = Iterables.toStream(pluginsInfoApi.getPluginsInfo())
+                .map(PluginInfoJson::new)
+                .collect(Collectors.toUnmodifiableList());
+        return Response.status(Status.OK).entity(result).build();
     }
 
 }

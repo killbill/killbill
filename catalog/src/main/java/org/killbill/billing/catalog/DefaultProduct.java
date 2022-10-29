@@ -22,6 +22,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -162,7 +163,7 @@ public class DefaultProduct extends ValidatingConfig<StandaloneCatalog> implemen
     }
 
     @Override
-    public boolean compliesWithLimits(String unit, double value) {
+    public boolean compliesWithLimits(String unit, BigDecimal value) {
         Limit l = findLimit(unit);
         if (l == null) {
             return true;

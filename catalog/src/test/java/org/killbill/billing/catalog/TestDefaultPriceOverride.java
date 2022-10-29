@@ -20,7 +20,6 @@ package org.killbill.billing.catalog;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -32,19 +31,36 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.Price;
 import org.killbill.billing.catalog.api.TierPriceOverride;
 import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
+import org.killbill.billing.catalog.api.Unit;
 import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.catalog.api.UsageType;
-import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertTrue;
 
 public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
+
+    private PlanPhasePriceOverride findPlanPhasePriceOverrideByName(final List<PlanPhasePriceOverride> overrides,
+                                                                    final String name) {
+        return overrides.stream().filter(input -> input.getPhaseName().equals(name)).findFirst().orElse(null);
+    }
+
+    /**
+     * name comparison will be param's {@link DefaultTieredBlock#getUnit} {@link Unit#getName()}
+     * size comparison will be param's {@link DefaultTieredBlock#getSize()}
+     * max comparison will be param's {@link DefaultTieredBlock#getMax()}
+     *
+     * In this class, {@link DefaultTieredBlock} instance variable name usually named "initialTieredBlock".
+     */
+    private TieredBlockPriceOverride findTieredBlockPriceOverrideByNameSizeAndMax(final List<TieredBlockPriceOverride> overrides,
+                                                                                  final DefaultTieredBlock initialTieredBlock) {
+        return overrides.stream()
+                        .filter(input -> input.getUnitName().equals(initialTieredBlock.getUnit().getName()) &&
+                                         input.getSize().compareTo(initialTieredBlock.getSize()) == 0 &&
+                                         input.getMax().compareTo(initialTieredBlock.getMax()) == 0)
+                        .findFirst().orElse(null);
+    }
 
     @Test(groups = "slow")
     public void testBasicWithLegacyNamePattern() throws Exception {
@@ -78,12 +94,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
             final DefaultPlanPhase initialPhase = (DefaultPlanPhase) plan.getAllPhases()[i];
             final DefaultPlanPhase newPhase = (DefaultPlanPhase) overriddenPlan.getAllPhases()[i];
 
-            final PlanPhasePriceOverride override = Iterables.tryFind(overrides, new Predicate<PlanPhasePriceOverride>() {
-                @Override
-                public boolean apply(final PlanPhasePriceOverride input) {
-                    return input.getPhaseName().equals(initialPhase.getName());
-                }
-            }).orNull();
+            final PlanPhasePriceOverride override = findPlanPhasePriceOverrideByName(overrides, initialPhase.getName());
 
             assertNotEquals(newPhase.getName(), initialPhase.getName());
             assertEquals(newPhase.getDuration(), initialPhase.getDuration());
@@ -149,12 +160,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
             final DefaultPlanPhase initialPhase = (DefaultPlanPhase) plan.getAllPhases()[i];
             final DefaultPlanPhase newPhase = (DefaultPlanPhase) overriddenPlan.getAllPhases()[i];
 
-            final PlanPhasePriceOverride override = Iterables.tryFind(overrides, new Predicate<PlanPhasePriceOverride>() {
-                @Override
-                public boolean apply(final PlanPhasePriceOverride input) {
-                    return input.getPhaseName().equals(initialPhase.getName());
-                }
-            }).orNull();
+            final PlanPhasePriceOverride override = findPlanPhasePriceOverrideByName(overrides, initialPhase.getName());
 
             assertNotEquals(newPhase.getName(), initialPhase.getName());
             assertEquals(newPhase.getName(), overriddenPlan.getName() + "-" + initialPhase.getName().split("-")[initialPhase.getName().split("-").length - 1]);
@@ -204,7 +210,7 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
 
         final List<TieredBlockPriceOverride> tieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
-        tieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new Double("1"), new BigDecimal("0.75"), Currency.USD, new Double("10000")));
+        tieredBlockPriceOverrides.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new BigDecimal("1"), new BigDecimal("0.75"), Currency.USD, new BigDecimal("10000")));
 
         final List<TierPriceOverride> tierPriceOverrides = new ArrayList<TierPriceOverride>();
         tierPriceOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides));
@@ -243,17 +249,9 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                 assertEquals(newTier.getTieredBlocks().length, initialTier.getTieredBlocks().length);
 
                 for (int k = 0; k < newTier.getTieredBlocks().length; k++) {
-                    final DefaultTieredBlock initialTieredBlock = (DefaultTieredBlock) initialTier.getTieredBlocks()[k];
-                    final DefaultTieredBlock newTieredBlock = (DefaultTieredBlock) newTier.getTieredBlocks()[k];
-                    final TieredBlockPriceOverride override = Iterables.tryFind(tieredBlockPriceOverrides, new Predicate<TieredBlockPriceOverride>() {
-                        @Override
-                        public boolean apply(final TieredBlockPriceOverride input) {
-
-                            return input.getUnitName().equals(initialTieredBlock.getUnit().getName()) &&
-                                   Double.compare(input.getSize(), initialTieredBlock.getSize()) == 0 &&
-                                   Double.compare(input.getMax(), initialTieredBlock.getMax()) == 0;
-                        }
-                    }).orNull();
+                    final DefaultTieredBlock initialTieredBlock = initialTier.getTieredBlocks()[k];
+                    final DefaultTieredBlock newTieredBlock = newTier.getTieredBlocks()[k];
+                    final TieredBlockPriceOverride override = findTieredBlockPriceOverrideByNameSizeAndMax(tieredBlockPriceOverrides, initialTieredBlock);
 
                     assertEquals(newTieredBlock.getUnit().getName(), initialTieredBlock.getUnit().getName());
                     assertEquals(newTieredBlock.getMax(), initialTieredBlock.getMax());
@@ -273,10 +271,10 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
 
         final List<TieredBlockPriceOverride> tieredBlockPriceOverrides1 = new ArrayList<TieredBlockPriceOverride>();
-        tieredBlockPriceOverrides1.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new Double("1"), new BigDecimal("1.5"), Currency.USD, new Double("5")));
+        tieredBlockPriceOverrides1.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new BigDecimal("1"), new BigDecimal("1.5"), Currency.USD, new BigDecimal("5")));
 
         final List<TieredBlockPriceOverride> tieredBlockPriceOverrides2 = new ArrayList<TieredBlockPriceOverride>();
-        tieredBlockPriceOverrides2.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new Double("1"), new BigDecimal("0.75"), Currency.USD, new Double("10000")));
+        tieredBlockPriceOverrides2.add(new DefaultTieredBlockPriceOverride("chocolate-videos", new BigDecimal("1"), new BigDecimal("0.75"), Currency.USD, new BigDecimal("10000")));
 
         final List<TierPriceOverride> tierPriceOverrides = new ArrayList<TierPriceOverride>();
         tierPriceOverrides.add(new DefaultTierPriceOverride(tieredBlockPriceOverrides1));
@@ -302,14 +300,9 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
         assertNotEquals(overriddenPlan.getFinalPhase().getName(), plan.getFinalPhase().getName());
 
         final DefaultPlanPhase initialPhase = (DefaultPlanPhase) plan.getFinalPhase();
-        final DefaultPlanPhase newPhase = (DefaultPlanPhase) overriddenPlan.getFinalPhase();
+        final DefaultPlanPhase newPhase = overriddenPlan.getFinalPhase();
 
-        final PlanPhasePriceOverride override = Iterables.tryFind(overrides, new Predicate<PlanPhasePriceOverride>() {
-            @Override
-            public boolean apply(final PlanPhasePriceOverride input) {
-                return input.getPhaseName().equals(initialPhase.getName());
-            }
-        }).orNull();
+        final PlanPhasePriceOverride override = findPlanPhasePriceOverrideByName(overrides, initialPhase.getName());
 
         assertNotEquals(newPhase.getName(), initialPhase.getName());
         assertEquals(newPhase.getName(), overriddenPlan.getName() + "-" + initialPhase.getName().split("-")[initialPhase.getName().split("-").length - 1]);
@@ -340,20 +333,12 @@ public class TestDefaultPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
                 assertEquals(newTier.getTieredBlocks().length, initialTier.getTieredBlocks().length);
 
                 for (int k = 0; k < newTier.getTieredBlocks().length; k++) {
-                    final DefaultTieredBlock initialTieredBlock = (DefaultTieredBlock) initialTier.getTieredBlocks()[k];
-                    final DefaultTieredBlock newTieredBlock = (DefaultTieredBlock) newTier.getTieredBlocks()[k];
+                    final DefaultTieredBlock initialTieredBlock = initialTier.getTieredBlocks()[k];
+                    final DefaultTieredBlock newTieredBlock = newTier.getTieredBlocks()[k];
                     List<TieredBlockPriceOverride> tieredBlockPriceOverrides = new ArrayList<TieredBlockPriceOverride>();
                     tieredBlockPriceOverrides.addAll(tieredBlockPriceOverrides1);
                     tieredBlockPriceOverrides.addAll(tieredBlockPriceOverrides2);
-                    final TieredBlockPriceOverride tieredBlockPriceOverride = Iterables.tryFind(tieredBlockPriceOverrides, new Predicate<TieredBlockPriceOverride>() {
-                        @Override
-                        public boolean apply(final TieredBlockPriceOverride input) {
-
-                            return input.getUnitName().equals(initialTieredBlock.getUnit().getName()) &&
-                                   Double.compare(input.getSize(), initialTieredBlock.getSize()) == 0 &&
-                                   Double.compare(input.getMax(), initialTieredBlock.getMax()) == 0;
-                        }
-                    }).orNull();
+                    final TieredBlockPriceOverride tieredBlockPriceOverride = findTieredBlockPriceOverrideByNameSizeAndMax(tieredBlockPriceOverrides, initialTieredBlock);
 
                     assertEquals(newTieredBlock.getUnit().getName(), initialTieredBlock.getUnit().getName());
                     assertEquals(newTieredBlock.getMax(), initialTieredBlock.getMax());

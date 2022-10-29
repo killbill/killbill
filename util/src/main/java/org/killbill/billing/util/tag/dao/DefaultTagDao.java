@@ -22,7 +22,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.killbill.billing.BillingExceptionBase;
@@ -57,12 +60,6 @@ import org.killbill.clock.Clock;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
@@ -101,12 +98,9 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
     @Override
     public List<TagModelDao> getTagsForAccountType(final ObjectType objectType, final boolean includedDeleted, final InternalTenantContext internalTenantContext) {
         final List<TagModelDao> allTags = getTagsForAccount(includedDeleted, internalTenantContext);
-        return ImmutableList.<TagModelDao>copyOf(Collections2.filter(allTags, new Predicate<TagModelDao>() {
-            @Override
-            public boolean apply(final TagModelDao input) {
-                return input.getObjectType() == objectType;
-            }
-        }));
+        return allTags.stream()
+                .filter(input -> input.getObjectType() == objectType)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
@@ -171,14 +165,8 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
 
     @Override
     protected boolean checkEntityAlreadyExists(final EntitySqlDao<TagModelDao, Tag> transactional, final TagModelDao entity, final InternalCallContext context) {
-        return Iterables.find(transactional.getByAccountRecordId(context),
-                              new Predicate<TagModelDao>() {
-                                  @Override
-                                  public boolean apply(final TagModelDao existingTag) {
-                                      return entity.equals(existingTag) || entity.isSame(existingTag);
-                                  }
-                              },
-                              null) != null;
+        return transactional.getByAccountRecordId(context).stream()
+                .anyMatch(existingTag -> entity.equals(existingTag) || entity.isSame(existingTag));
     }
 
     @Override
@@ -208,14 +196,10 @@ public class DefaultTagDao extends EntityDaoBase<TagModelDao, Tag, TagApiExcepti
         transactionalSqlDao.execute(false, TagApiException.class, getCreateEntitySqlDaoTransactionWrapper(entity, context));
     }
 
-    private void validateApplicableObjectTypes(final UUID tagDefinitionId, final ObjectType objectType) throws TagApiException {
-
-        final ControlTagType controlTagType = Iterables.tryFind(ImmutableList.<ControlTagType>copyOf(ControlTagType.values()), new Predicate<ControlTagType>() {
-            @Override
-            public boolean apply(final ControlTagType input) {
-                return input.getId().equals(tagDefinitionId);
-            }
-        }).orNull();
+    private void validateApplicableObjectTypes(final UUID tagDefinitionId, final ObjectType objectType) {
+        final ControlTagType controlTagType = Stream.of(ControlTagType.values())
+                .filter(input -> input.getId().equals(tagDefinitionId))
+                .findFirst().orElse(null);
 
         if (controlTagType != null && !controlTagType.getApplicableObjectTypes().contains(objectType)) {
             // TODO Add missing ErrorCode.TAG_NOT_APPLICABLE

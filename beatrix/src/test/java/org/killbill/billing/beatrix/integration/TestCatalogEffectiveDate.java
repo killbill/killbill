@@ -19,6 +19,11 @@ package org.killbill.billing.beatrix.integration;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -30,14 +35,11 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.commons.utils.io.IOUtils;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 
 public class TestCatalogEffectiveDate extends TestIntegrationBase {
 
@@ -67,7 +69,7 @@ public class TestCatalogEffectiveDate extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext,
@@ -80,7 +82,8 @@ public class TestCatalogEffectiveDate extends TestIntegrationBase {
         checkNoMoreInvoiceToGenerate(account.getId(), testCallContext);
     }
 
-    private void uploadCatalog(final String name) throws CatalogApiException, IOException {
-        catalogUserApi.uploadCatalog(Resources.asCharSource(Resources.getResource("catalogs/testCatalogEffectiveDate/" + name), Charsets.UTF_8).read(), testCallContext);
+    private void uploadCatalog(final String name) throws CatalogApiException, IOException, URISyntaxException {
+        final Path path = Paths.get(Resources.getResource("catalogs/testCatalogEffectiveDate/" + name).toURI());
+        catalogUserApi.uploadCatalog(Files.readString(path), testCallContext);
     }
 }

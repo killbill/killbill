@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -73,9 +75,6 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificationQueue;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-
 public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase implements EntitlementInternalApi {
 
     private final BlockingStateDao blockingStateDao;
@@ -101,11 +100,11 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         final CallContext callContext = internalCallContextFactory.createCallContext(internalCallContext);
 
-        final ImmutableMap.Builder<BlockingState, Optional<UUID>> blockingStates = new ImmutableMap.Builder<BlockingState, Optional<UUID>>();
-        final Map<DateTime, Collection<NotificationEvent>> notificationEvents = new HashMap<DateTime, Collection<NotificationEvent>>();
-        final Collection<EntitlementContext> pluginContexts = new LinkedList<EntitlementContext>();
-        final List<WithEntitlementPlugin> callbacks = new LinkedList<WithEntitlementPlugin>();
-        final List<SubscriptionBase> subscriptions = new LinkedList<SubscriptionBase>();
+        final Map<BlockingState, Optional<UUID>> blockingStates = new HashMap<>();
+        final Map<DateTime, Collection<NotificationEvent>> notificationEvents = new HashMap<>();
+        final Collection<EntitlementContext> pluginContexts = new LinkedList<>();
+        final List<WithEntitlementPlugin> callbacks = new LinkedList<>();
+        final List<SubscriptionBase> subscriptions = new LinkedList<>();
 
         for (final Entitlement entitlement : entitlements) {
             if (entitlement.getState() == EntitlementState.CANCELLED) {
@@ -113,11 +112,13 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
                 continue;
             }
 
+            final DateTime effectiveDateTime = dateHelper.fromLocalDateAndReferenceTime(effectiveDate, callContext.getCreatedDate(), internalCallContext);
+
             final BaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = new DefaultBaseEntitlementWithAddOnsSpecifier(
                     entitlement.getBundleId(),
                     entitlement.getBundleExternalKey(),
                     null,
-                    effectiveDate,
+                    effectiveDateTime,
                     null,
                     false);
             final List<BaseEntitlementWithAddOnsSpecifier> baseEntitlementWithAddOnsSpecifierList = new ArrayList<BaseEntitlementWithAddOnsSpecifier>();
@@ -148,8 +149,12 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         pluginExecution.executeWithPlugin(preCallbacksCallback, callbacks, pluginContexts);
 
+        final Map<BlockingState, Optional<UUID>> states = new HashMap<>();
+        for (final Entry<BlockingState, Optional<UUID>> entry : blockingStates.entrySet()) {
+            states.put(entry.getKey(), Optional.of(entry.getValue().get()));
+        }
         // Record the new states first, then insert the notifications to avoid race conditions
-        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(blockingStates.build(), internalCallContext);
+        blockingStateDao.setBlockingStatesAndPostBlockingTransitionEvent(states, internalCallContext);
         for (final DateTime effectiveDateForNotification : notificationEvents.keySet()) {
             for (final NotificationEvent notificationEvent : notificationEvents.get(effectiveDateForNotification)) {
                 recordFutureNotification(effectiveDateForNotification, notificationEvent, internalCallContext);
@@ -201,13 +206,13 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
     private class WithDateOverrideBillingPolicyEntitlementCanceler implements WithEntitlementPlugin<Entitlement> {
 
         private final DefaultEntitlement entitlement;
-        private final ImmutableMap.Builder<BlockingState, Optional<UUID>> blockingStates;
+        private final Map<BlockingState, Optional<UUID>> blockingStates;
         private final Map<DateTime, Collection<NotificationEvent>> notificationEventsWithEffectiveDate;
         private final CallContext callContext;
         private final InternalCallContext internalCallContext;
 
         public WithDateOverrideBillingPolicyEntitlementCanceler(final DefaultEntitlement entitlement,
-                                                                final ImmutableMap.Builder<BlockingState, Optional<UUID>> blockingStates,
+                                                                final Map<BlockingState, Optional<UUID>> blockingStates,
                                                                 final Map<DateTime, Collection<NotificationEvent>> notificationEventsWithEffectiveDate,
                                                                 final CallContext callContext,
                                                                 final InternalCallContext internalCallContext) {
@@ -220,7 +225,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
 
         @Override
         public Entitlement doCall(final EntitlementApi entitlementApi, final DefaultEntitlementContext updatedPluginContext) throws EntitlementApiException {
-            DateTime effectiveDate = dateHelper.fromLocalDateAndReferenceTime(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate(), updatedPluginContext.getCreatedDate(), internalCallContext);
+            DateTime effectiveDate = updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementEffectiveDate();
 
             //
             // If the entitlementDate provided is ahead we default to the effective subscriptionBase cancellationDate to avoid weird timing issues.
@@ -240,7 +245,7 @@ public class DefaultEntitlementInternalApi extends DefaultEntitlementApiBase imp
             final Collection<NotificationEvent> notificationEvents = new ArrayList<NotificationEvent>();
             final Collection<BlockingState> addOnsBlockingStates = entitlement.computeAddOnBlockingStates(effectiveDate, notificationEvents, callContext, internalCallContext);
 
-            final Optional<UUID> bundleIdOptional = Optional.<UUID>fromNullable(entitlement.getBundleId());
+            final Optional<UUID> bundleIdOptional = Optional.ofNullable(entitlement.getBundleId());
             blockingStates.put(newBlockingState, bundleIdOptional);
             for (final BlockingState blockingState : addOnsBlockingStates) {
                 blockingStates.put(blockingState, bundleIdOptional);

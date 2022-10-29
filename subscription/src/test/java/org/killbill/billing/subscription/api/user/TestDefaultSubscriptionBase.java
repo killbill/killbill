@@ -77,13 +77,13 @@ public class TestDefaultSubscriptionBase extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
-        Assert.assertEquals(subscriptionBase.getAllTransitions().size(), 2);
-        Assert.assertNull(subscriptionBase.getAllTransitions().get(0).getPreviousState());
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(0).getNextState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(0).getEffectiveTransitionTime(), startDate);
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(1).getPreviousState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(1).getNextState(), EntitlementState.CANCELLED);
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(1).getEffectiveTransitionTime(), startDate);
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).size(), 2);
+        Assert.assertNull(subscriptionBase.getAllTransitions(false).get(0).getPreviousState());
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(0).getNextState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(0).getEffectiveTransitionTime(), startDate);
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(1).getPreviousState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(1).getNextState(), EntitlementState.CANCELLED);
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(1).getEffectiveTransitionTime(), startDate);
     }
 
     @Test(groups = "fast", description = "https://github.com/killbill/killbill/issues/897")
@@ -127,13 +127,13 @@ public class TestDefaultSubscriptionBase extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
-        Assert.assertEquals(subscriptionBase.getAllTransitions().size(), 2);
-        Assert.assertNull(subscriptionBase.getAllTransitions().get(0).getPreviousState());
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(0).getNextState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(0).getEffectiveTransitionTime(), startDate);
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(1).getPreviousState(), EntitlementState.ACTIVE);
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(1).getNextState(), EntitlementState.CANCELLED);
-        Assert.assertEquals(subscriptionBase.getAllTransitions().get(1).getEffectiveTransitionTime(), new DateTime(2012, 6, 1, 0, 0, DateTimeZone.UTC));
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).size(), 2);
+        Assert.assertNull(subscriptionBase.getAllTransitions(false).get(0).getPreviousState());
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(0).getNextState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(0).getEffectiveTransitionTime(), startDate);
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(1).getPreviousState(), EntitlementState.ACTIVE);
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(1).getNextState(), EntitlementState.CANCELLED);
+        Assert.assertEquals(subscriptionBase.getAllTransitions(false).get(1).getEffectiveTransitionTime(), new DateTime(2012, 6, 1, 0, 0, DateTimeZone.UTC));
     }
 
     @Test(groups = "fast")
