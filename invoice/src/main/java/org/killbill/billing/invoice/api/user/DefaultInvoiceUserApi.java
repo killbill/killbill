@@ -164,6 +164,22 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
+    public Pagination<Invoice> getInvoicesByAccountWithPagination(final UUID accountId, final Long offset, final Long limit, final TenantContext context) {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<InvoiceModelDao, AccountApiException>() {
+                                                  @Override
+                                                  public Pagination<InvoiceModelDao> build() {
+                                                      // Invoices will be shallow, i.e. won't contain items nor payments
+                                                      return dao.getInvoicesByAccountWithPagination(offset, limit, internalTenantContext);
+                                                  }
+                                              },
+                                              DefaultInvoice::new
+                                             );
+    }
+
+
+    @Override
     public List<Invoice> getInvoicesByGroup(final UUID accountId, final UUID groupId, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByGroup(groupId, internalTenantContext);
@@ -812,4 +828,5 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         }
     }
+
 }

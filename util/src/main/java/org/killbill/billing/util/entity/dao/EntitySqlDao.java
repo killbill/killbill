@@ -82,6 +82,10 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
 
     @SqlQuery
     public List<M> getByAccountRecordId(@SmartBindBean final InternalTenantContext context);
+    
+    @SqlQuery
+    Iterator<M> getByAccountRecordIdWithPaginationEnabled(@Bind("offset") final Long offset,
+                                                          @Bind("rowCount") final Long rowCount, @SmartBindBean final InternalTenantContext context);
 
     @SqlQuery
     public List<M> getByAccountRecordIdIncludedDeleted(@SmartBindBean final InternalTenantContext context);

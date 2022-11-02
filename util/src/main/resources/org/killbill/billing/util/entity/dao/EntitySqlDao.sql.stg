@@ -241,6 +241,18 @@ where <accountRecordIdField("t.")> = :accountRecordId
 ;
 >>
 
+getByAccountRecordIdWithPaginationEnabled(accountRecordId) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <accountRecordIdField("t.")> = :accountRecordId
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+limit :rowCount offset :offset
+;
+>>
+
 getByAccountRecordIdIncludedDeleted(accountRecordId) ::= <<
 select
 <allTableFields("t.")>
