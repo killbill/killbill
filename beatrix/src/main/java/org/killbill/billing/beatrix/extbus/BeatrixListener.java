@@ -63,7 +63,7 @@ import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata.ActionType;
 import org.killbill.billing.notification.plugin.api.TagMetadata;
-import org.killbill.billing.notification.plugin.api.TenantMetadata;
+import org.killbill.billing.notification.plugin.api.TenantConfigMetadata;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -345,7 +345,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TENANT_KVS;
                 objectId = realTenantConfigEventChg.getId();
                 eventBusType = ExtBusEventType.TENANT_CONFIG_CHANGE;
-                final TenantMetadata tenantConfigChangeMetadata = new TenantMetadata(realTenantConfigEventChg.getKey());
+                final TenantConfigMetadata tenantConfigChangeMetadata = new TenantConfigMetadata(realTenantConfigEventChg.getKey());
                 metaData = objectMapper.writeValueAsString(tenantConfigChangeMetadata);
                 break;
 
@@ -354,7 +354,7 @@ public class BeatrixListener {
                 objectType = ObjectType.TENANT_KVS;
                 objectId = null;
                 eventBusType = ExtBusEventType.TENANT_CONFIG_DELETION;
-                final TenantMetadata tenantConfigDeletionMetadata = new TenantMetadata(realTenantConfigEventDel.getKey());
+                final TenantConfigMetadata tenantConfigDeletionMetadata = new TenantConfigMetadata(realTenantConfigEventDel.getKey());
                 metaData = objectMapper.writeValueAsString(tenantConfigDeletionMetadata);
                 break;
 
