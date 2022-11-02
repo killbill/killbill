@@ -700,7 +700,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve account invoices", response = InvoiceJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getInvoicesForAccount(@PathParam("accountId") final UUID accountId,
+    public Response getInvoicesForAccountWithPagination(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_INVOICES_FILTER) final String invoicesFilter,
                                           @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                           @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
@@ -727,7 +727,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
 
         final URI nextPageUri = uriBuilder.nextPage(AccountResource.class,
-                                                    "getInvoicesForAccount",
+                                                    "getInvoicesForAccountWithPagination",
                                                     invoices.getNextOffset(),
                                                     limit,
                                                     queryParams,
