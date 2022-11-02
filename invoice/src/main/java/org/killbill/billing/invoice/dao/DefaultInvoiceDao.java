@@ -187,7 +187,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     @Override
     public Pagination<InvoiceModelDao> getInvoicesByAccountWithPagination(final Long offset, final Long limit, final InternalTenantContext context) {
 
-        final Pagination<InvoiceModelDao> invoices = paginationHelper.getPagination(InvoiceSqlDao.class,
+        final Pagination<InvoiceModelDao> invoices = paginationHelper.getPaginationWithAccountRecordId(InvoiceSqlDao.class,
                                                                                     new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
                                                                                         @Override
                                                                                         public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {

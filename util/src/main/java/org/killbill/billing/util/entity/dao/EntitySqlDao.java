@@ -122,9 +122,15 @@ public interface EntitySqlDao<M extends EntityModelDao<E>, E extends Entity> ext
 
     @SqlQuery
     public Long getRecordIdAtOffset(@Bind("offset") final Long offset);
+    
+    @SqlQuery
+    public Long getRecordIdAtOffsetWithAccountRecordId(@Bind("offset") final Long offset, @SmartBindBean final InternalTenantContext context);    
 
     @SqlQuery
     public Long getCount(@SmartBindBean final InternalTenantContext context);
+    
+    @SqlQuery
+    public Long getCountWithAccountRecordId(@SmartBindBean final InternalTenantContext context);    
 
     @SqlUpdate
     public void test(@SmartBindBean final InternalTenantContext context);
