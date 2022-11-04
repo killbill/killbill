@@ -248,7 +248,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     public void testRetrieveInvoicesByAccountWithPagination() throws EntityPersistenceException {
         final Invoice createdInvoice = createAndGetInvoiceWithInvoiceItem(clock.getUTCToday(), clock.getUTCToday(), BigDecimal.TEN);
 
-        final Pagination<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccountWithPagination(0L, 5L, context);
+        final Pagination<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(0L, 5L, context);
         assertNotNull(invoices);
         assertEquals(invoices.getTotalNbRecords().longValue(), 1L);
 
@@ -272,7 +272,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
             createAndGetInvoice(clock.getUTCToday(), clock.getUTCToday());
         }
 
-        final Pagination<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccountWithPagination(0L, 5L, context);
+        final Pagination<InvoiceModelDao> invoices = invoiceDao.getInvoicesByAccount(0L, 5L, context);
         assertNotNull(invoices);
         assertEquals(invoices.getTotalNbRecords().longValue(), 7L);
 

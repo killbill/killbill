@@ -171,7 +171,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                                   @Override
                                                   public Pagination<InvoiceModelDao> build() {
                                                       // Invoices will be shallow, i.e. won't contain items nor payments
-                                                      return dao.getInvoicesByAccountWithPagination(offset, limit, internalTenantContext);
+                                                      return dao.getInvoicesByAccount(offset, limit, internalTenantContext);
                                                   }
                                               },
                                               DefaultInvoice::new

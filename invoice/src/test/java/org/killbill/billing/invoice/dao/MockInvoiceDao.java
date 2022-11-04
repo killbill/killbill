@@ -496,7 +496,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public Pagination<InvoiceModelDao> getInvoicesByAccountWithPagination(final Long offset, final Long limit, final InternalTenantContext context) {
+    public Pagination<InvoiceModelDao> getInvoicesByAccount(final Long offset, final Long limit, final InternalTenantContext context) {
         return null;
     }
 }
