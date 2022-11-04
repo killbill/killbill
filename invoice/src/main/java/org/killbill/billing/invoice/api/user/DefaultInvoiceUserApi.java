@@ -164,7 +164,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public Pagination<Invoice> getInvoicesByAccountWithPagination(final UUID accountId, final Long offset, final Long limit, final TenantContext context) {
+    public Pagination<Invoice> getInvoicesByAccount(final UUID accountId, final Long offset, final Long limit, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         return getEntityPaginationNoException(limit,
                                               new SourcePaginationBuilder<InvoiceModelDao, AccountApiException>() {

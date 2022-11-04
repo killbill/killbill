@@ -712,7 +712,7 @@ public class AccountResource extends JaxRsResourceBase {
         // Verify the account exists
         accountUserApi.getAccountById(accountId, tenantContext);
 
-        final Pagination<Invoice> invoices = invoiceApi.getInvoicesByAccountWithPagination(accountId, offset, limit, tenantContext);
+        final Pagination<Invoice> invoices = invoiceApi.getInvoicesByAccount(accountId, offset, limit, tenantContext);
 
         //TODO_1272: Delete this filter?
         // The filter, if any comes in addition to other param to limit the response

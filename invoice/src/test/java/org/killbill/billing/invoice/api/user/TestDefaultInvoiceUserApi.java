@@ -730,7 +730,7 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
 
         //with pagination
-        final Pagination<Invoice> invoices2 = invoiceUserApi.getInvoicesByAccountWithPagination(accountId, 0L, 5L, callContext);
+        final Pagination<Invoice> invoices2 = invoiceUserApi.getInvoicesByAccount(accountId, 0L, 5L, callContext);
         Assert.assertNotNull(invoices2);
         assertEquals(invoices2.getTotalNbRecords().longValue(), 2L);
 
