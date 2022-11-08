@@ -668,9 +668,6 @@ public class AccountResource extends JaxRsResourceBase {
         final LocalDate startDate = startDateStr != null ? LOCAL_DATE_FORMATTER.parseLocalDate(startDateStr) : null;
         final LocalDate endDate = endDateStr != null ? LOCAL_DATE_FORMATTER.parseLocalDate(endDateStr) : null;
 
-        // Verify the account exists
-        accountUserApi.getAccountById(accountId, tenantContext);
-
         final List<Invoice> invoices;
         if (unpaidInvoicesOnly) {
             invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext));
@@ -707,9 +704,6 @@ public class AccountResource extends JaxRsResourceBase {
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
 
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-
-        // Verify the account exists
-        accountUserApi.getAccountById(accountId, tenantContext);
 
         final Pagination<Invoice> invoices = invoiceApi.getInvoicesByAccount(accountId, offset, limit, tenantContext);
 
