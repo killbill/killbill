@@ -711,11 +711,11 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
 
         // Create invoice1
         final InvoiceItem externalCharge1 = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, new BigDecimal(300), accountCurrency, null);
-        invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge1), true, null, callContext).get(0);
+        invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge1), true, null, callContext);
 
         // Create invoice2
         final InvoiceItem externalCharge2 = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, new BigDecimal(500), accountCurrency, null);
-        invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge2), true, null, callContext).get(0);
+        invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge2), true, null, callContext);
 
         //without pagination and without invoice components
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, false, callContext);
@@ -733,11 +733,8 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         final Pagination<Invoice> invoices2 = invoiceUserApi.getInvoicesByAccount(accountId, 0L, 5L, callContext);
         Assert.assertNotNull(invoices2);
         assertEquals(invoices2.getTotalNbRecords().longValue(), 2L);
-
+        Assert.assertEquals(invoices2.getMaxNbRecords(), (Long) 2L);
         Assert.assertEquals(invoices2.getCurrentOffset(), (Long) 0L);
         Assert.assertNull(invoices2.getNextOffset());
-        Assert.assertEquals(invoices2.getMaxNbRecords(), (Long) 2L);
-        Assert.assertEquals(invoices2.getTotalNbRecords(), (Long) 2L);
-
     }
 }

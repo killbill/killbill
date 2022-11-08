@@ -701,7 +701,6 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getInvoicesForAccountWithPagination(@PathParam("accountId") final UUID accountId,
-                                          @QueryParam(QUERY_INVOICES_FILTER) final String invoicesFilter,
                                           @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                           @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                           @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -714,14 +713,7 @@ public class AccountResource extends JaxRsResourceBase {
 
         final Pagination<Invoice> invoices = invoiceApi.getInvoicesByAccount(accountId, offset, limit, tenantContext);
 
-        //TODO_1272: Delete this filter?
-        // The filter, if any comes in addition to other param to limit the response
-        final Set<String> filterInvoiceIds = (null != invoicesFilter && !invoicesFilter.isEmpty()) ? Set.of(invoicesFilter.split(",")) : Collections.emptySet();
-
         final Map<String, String> queryParams = new HashMap<>();
-        if (invoicesFilter != null) {
-            queryParams.put(QUERY_INVOICES_FILTER, invoicesFilter);
-        }
         if (auditMode != null && auditMode.getLevel() != null) {
             queryParams.put(QUERY_AUDIT, auditMode.getLevel().toString());
         }
@@ -735,11 +727,7 @@ public class AccountResource extends JaxRsResourceBase {
         return buildStreamingPaginationResponse(invoices,
                                                 invoice -> {
                                                     final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
-                                                    if (filterInvoiceIds.isEmpty() || filterInvoiceIds.contains(invoice.getId().toString())) {
-                                                        return new InvoiceJson(invoice, null, accountAuditLogs);
-                                                    } else {
-                                                        return null;
-                                                    }
+                                                    return new InvoiceJson(invoice, null, accountAuditLogs);
                                                 },
                                                 nextPageUri
                                                );

@@ -83,6 +83,65 @@ public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbedded
         searchAndValidateKombuchas("jasmin", 0L, 100L, 4, 1L, 1L, null, 0L, null);
     }
 
+    @Test(groups = "slow")
+    public void testListKombuchasAll() {
+        insertKombuchas(4);
+
+        for (int i = 0; i < 4; i++) {
+            if (i < 3) {
+                listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 4L, 4L, Long.valueOf(i), Long.valueOf(i + 1), true);
+                listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 4L, 4L, Long.valueOf(i), Long.valueOf(i + 1), false);
+            } else {
+                listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 4L, 4L, Long.valueOf(i), null, true);
+                listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 4L, 4L, Long.valueOf(i), null, false);
+            }
+        }
+    }
+
+    @Test(groups = "slow")
+    public void testListKombuchasWithDifferentLimitsAndOffsets() {
+        insertKombuchas(4);
+
+        //limit=10, offset=0
+        listAndValidateKombuchas(0L, 10L, 100L, 4L, 4L, 0L, null, true);
+        listAndValidateKombuchas(0L, 10L, 100L, 4L, 4L, 0L, null, false);
+
+        //limit=2, offset=0
+        listAndValidateKombuchas(0L, 2L, 100L, 4L, 4L, 0L, 2L, true);
+        listAndValidateKombuchas(0L, 2L, 100L, 4L, 4L, 0L, 2L, false);
+
+        //limit=2, offset=1
+        listAndValidateKombuchas(1L, 2L, 100L, 4L, 4L, 1L, 3L, false);
+        listAndValidateKombuchas(1L, 2L, 100L, 4L, 4L, 1L, 3L, true);
+
+        //limit=10, offset=3
+        listAndValidateKombuchas(3L, 10L, 100L, 4L, 4L, 3L, null, false);
+        listAndValidateKombuchas(3L, 10L, 100L, 4L, 4L, 3L, null, true);
+    }
+
+    @Test(groups = "slow")
+    public void testListKombuchasSmallPaginationThreshold() {
+        insertKombuchas(4);
+
+        listAndValidateKombuchas(0L, 2L, 1L, 4L, null, 0L, 2L, true);
+        listAndValidateKombuchas(0L, 2L, 1L, 4L, null, 0L, 2L, false);
+    }
+
+    private void listAndValidateKombuchas(final Long offset,
+    									  final Long limit,
+    									  final Long simplePaginationThreshold, 
+    									  final Long expectedTotalNbRecords,
+    									  final Long expectedMaxNbRecords,
+    									  final Long expectedCurrentOffset, 
+    									  final Long expectedNextOffset,
+    									  final boolean withAccountRecordId) {
+    	final Pagination<KombuchaModelDao> pagination = withAccountRecordId ? listKombuchasWithAccountRecordId(offset, limit, simplePaginationThreshold) : listKombuchas(offset, limit, simplePaginationThreshold);
+    	Assert.assertEquals(pagination.getTotalNbRecords(), expectedTotalNbRecords);
+    	Assert.assertEquals(pagination.getMaxNbRecords(), expectedMaxNbRecords);
+    	Assert.assertEquals(pagination.getCurrentOffset(), expectedCurrentOffset);
+    	Assert.assertEquals(pagination.getNextOffset(), expectedNextOffset);
+    }
+
     private void searchAndValidateKombuchas(final String tea,
                                             final Long offset,
                                             final Long limit,
@@ -119,6 +178,51 @@ public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbedded
         final DefaultPaginationSqlDaoHelper defaultPaginationSqlDaoHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao, simplePaginationThreshold);
         return defaultPaginationSqlDaoHelper.getPagination(KombuchaSqlDao.class,
                                                            searchBestKombuchas,
+                                                           offset,
+                                                           limit,
+                                                           internalCallContext);
+    }
+
+    private Pagination<KombuchaModelDao> listKombuchasWithAccountRecordId(final Long offset, final Long limit, final Long simplePaginationThreshold) {
+        final PaginationIteratorBuilder<KombuchaModelDao, Kombucha, EntitySqlDao<KombuchaModelDao, Kombucha>> paginationIteratorBuilder = new PaginationIteratorBuilder<KombuchaModelDao, Kombucha, EntitySqlDao<KombuchaModelDao, Kombucha>>() {
+            @Override
+            public Long getCount(final EntitySqlDao<KombuchaModelDao, Kombucha> sqlDao, final InternalTenantContext context) {
+                return sqlDao.getCountWithAccountRecordId(context);
+            }
+
+            @Override
+            public Iterator<KombuchaModelDao> build(final EntitySqlDao<KombuchaModelDao, Kombucha> sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                return sqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit, context);
+            }
+
+        };
+
+        final DefaultPaginationSqlDaoHelper defaultPaginationSqlDaoHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao, simplePaginationThreshold);
+        return defaultPaginationSqlDaoHelper.getPaginationWithAccountRecordId(KombuchaSqlDao.class,
+                                                                              paginationIteratorBuilder,
+                                                                              offset,
+                                                                              limit,
+                                                                              internalCallContext);
+    }
+
+    //method that queries the tables without the accountRecordId
+    private Pagination<KombuchaModelDao> listKombuchas(final Long offset, final Long limit, final Long simplePaginationThreshold) {
+        final PaginationIteratorBuilder<KombuchaModelDao, Kombucha, EntitySqlDao<KombuchaModelDao, Kombucha>> paginationIteratorBuilder = new PaginationIteratorBuilder<KombuchaModelDao, Kombucha, EntitySqlDao<KombuchaModelDao, Kombucha>>() {
+            @Override
+            public Long getCount(final EntitySqlDao<KombuchaModelDao, Kombucha> sqlDao, final InternalTenantContext context) {
+                return sqlDao.getCount(context);
+            }
+
+            @Override
+            public Iterator<KombuchaModelDao> build(final EntitySqlDao<KombuchaModelDao, Kombucha> sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                return sqlDao.get(offset, limit, "record_id", ordering.toString(), context);
+            }
+
+        };
+
+        final DefaultPaginationSqlDaoHelper defaultPaginationSqlDaoHelper = new DefaultPaginationSqlDaoHelper(transactionalSqlDao, simplePaginationThreshold);
+        return defaultPaginationSqlDaoHelper.getPagination(KombuchaSqlDao.class,
+                                                           paginationIteratorBuilder,
                                                            offset,
                                                            limit,
                                                            internalCallContext);

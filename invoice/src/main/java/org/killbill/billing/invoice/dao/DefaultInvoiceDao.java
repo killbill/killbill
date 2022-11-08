@@ -191,7 +191,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                                                     new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
                                                                                         @Override
                                                                                         public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
-                                                                                            return null;
+                                                                                            return invoiceSqlDao.getCountWithAccountRecordId(context);
                                                                                         }
 
                                                                                         @Override
