@@ -85,46 +85,62 @@ public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbedded
 
     @Test(groups = "slow")
     public void testListKombuchasAll() {
-        insertKombuchas(4);
+        insertKombuchas(null);
+        insertKombuchas(2347L); //dummy accountRecordId
 
+        //Test with acccountRecordId
         for (int i = 0; i < 4; i++) {
             if (i < 3) {
                 listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 4L, 4L, Long.valueOf(i), Long.valueOf(i + 1), true);
-                listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 4L, 4L, Long.valueOf(i), Long.valueOf(i + 1), false);
             } else {
                 listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 4L, 4L, Long.valueOf(i), null, true);
-                listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 4L, 4L, Long.valueOf(i), null, false);
+            }
+        }
+
+        //Test without acccountRecordId
+        for (int i = 0; i < 8; i++) {
+            if (i < 7) {
+                listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 8L, 8L, Long.valueOf(i), Long.valueOf(i + 1), false);
+            } else {
+                listAndValidateKombuchas(Long.valueOf(i), 1L, 100L, 8L, 8L, Long.valueOf(i), null, false);
             }
         }
     }
 
     @Test(groups = "slow")
     public void testListKombuchasWithDifferentLimitsAndOffsets() {
-        insertKombuchas(4);
+        insertKombuchas(null);
+        insertKombuchas(2347L); //dummy accountRecordId
 
-        //limit=10, offset=0
+        //offset=0, limit=10
         listAndValidateKombuchas(0L, 10L, 100L, 4L, 4L, 0L, null, true);
-        listAndValidateKombuchas(0L, 10L, 100L, 4L, 4L, 0L, null, false);
+        listAndValidateKombuchas(0L, 10L, 100L, 8L, 8L, 0L, null, false);
 
-        //limit=2, offset=0
+        //offset=0, limit=2
         listAndValidateKombuchas(0L, 2L, 100L, 4L, 4L, 0L, 2L, true);
-        listAndValidateKombuchas(0L, 2L, 100L, 4L, 4L, 0L, 2L, false);
+        listAndValidateKombuchas(0L, 2L, 100L, 8L, 8L, 0L, 2L, false);
 
-        //limit=2, offset=1
-        listAndValidateKombuchas(1L, 2L, 100L, 4L, 4L, 1L, 3L, false);
+        //offset=1, limit=2
         listAndValidateKombuchas(1L, 2L, 100L, 4L, 4L, 1L, 3L, true);
+        listAndValidateKombuchas(1L, 2L, 100L, 8L, 8L, 1L, 3L, false);
 
-        //limit=10, offset=3
-        listAndValidateKombuchas(3L, 10L, 100L, 4L, 4L, 3L, null, false);
+        //offset=3, limit=10
         listAndValidateKombuchas(3L, 10L, 100L, 4L, 4L, 3L, null, true);
+        listAndValidateKombuchas(3L, 10L, 100L, 8L, 8L, 3L, null, false);
+
+        //offset=0, limit=5
+        listAndValidateKombuchas(0L, 5L, 100L, 4L, 4L, 0L, null, true);
+        listAndValidateKombuchas(0L, 5L, 100L, 8L, 8L, 0L, 5L, false);
     }
 
     @Test(groups = "slow")
     public void testListKombuchasSmallPaginationThreshold() {
-        insertKombuchas(4);
+        insertKombuchas(null);
+        insertKombuchas(2347L); //dummy accountRecordId
 
+        //offset=0, limit=2
         listAndValidateKombuchas(0L, 2L, 1L, 4L, null, 0L, 2L, true);
-        listAndValidateKombuchas(0L, 2L, 1L, 4L, null, 0L, 2L, false);
+        listAndValidateKombuchas(0L, 2L, 1L, 8L, null, 0L, 2L, false);
     }
 
     private void listAndValidateKombuchas(final Long offset,
@@ -233,6 +249,16 @@ public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbedded
 
         final KombuchaSqlDao dao = dbi.onDemand(KombuchaSqlDao.class);
         for (int i = 0; i < nb; i++) {
+            dao.create(kombuchas.get(i), internalCallContext);
+        }
+    }
+
+    private void insertKombuchas(final Long accountRecordId) { //inserts all kombuchas with the specified accountRecordId
+        final KombuchaSqlDao dao = dbi.onDemand(KombuchaSqlDao.class);
+        if (accountRecordId != null) {
+            internalCallContext.setAccountRecordId(accountRecordId);
+        }
+        for (int i = 0; i < kombuchas.size(); i++) {
             dao.create(kombuchas.get(i), internalCallContext);
         }
     }
