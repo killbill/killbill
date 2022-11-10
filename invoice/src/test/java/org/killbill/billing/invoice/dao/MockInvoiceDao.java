@@ -494,4 +494,9 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     public List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final InternalTenantContext context) {
         return null;
     }
+
+    @Override
+    public Pagination<InvoiceModelDao> getInvoicesByAccount(final Long offset, final Long limit, final InternalTenantContext context) {
+        return null;
+    }
 }
