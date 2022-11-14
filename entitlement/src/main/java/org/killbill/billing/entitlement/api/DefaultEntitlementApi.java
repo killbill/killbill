@@ -87,8 +87,6 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     public static final String ENT_STATE_CLEAR = "ENT_CLEAR";
     public static final String ENT_STATE_CANCELLED = "ENT_CANCELLED";
 
-    private static final Pattern TRANSFER_PLUGIN_PROPS_PATTERN = Pattern.compile("^KB_SUB_ID_([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$");
-
     private final SubscriptionBaseInternalApi subscriptionBaseInternalApi;
     private final SubscriptionBaseTransferApi subscriptionBaseTransferApi;
     private final Clock clock;
@@ -268,24 +266,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     }
 
     @Override
-    public UUID transferEntitlements(final UUID sourceAccountId, final UUID destAccountId, final String bundleExternalKey, final LocalDate effectiveDate, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
-        return transferEntitlementsOverrideBillingPolicy(sourceAccountId, destAccountId, bundleExternalKey, effectiveDate, BillingActionPolicy.IMMEDIATE, properties, context);
-    }
-
-    static Map<UUID, String> toSubExtKeysMap(final Iterable<PluginProperty> properties) {
-        final Map<UUID, String> res = new HashMap<>();
-        for (final PluginProperty pp : properties) {
-            final Matcher m = TRANSFER_PLUGIN_PROPS_PATTERN.matcher(pp.getKey());
-            if (m.matches()) {
-                final UUID subId = UUID.fromString(m.group(1));
-                res.put(subId, (String) pp.getValue());
-            }
-        }
-        return res;
+    public UUID transferEntitlements(final UUID sourceAccountId, final UUID destAccountId, final String bundleExternalKey, final LocalDate effectiveDate, final Map<UUID, String> subExtKeys, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
+        return transferEntitlementsOverrideBillingPolicy(sourceAccountId, destAccountId, bundleExternalKey, effectiveDate, subExtKeys, BillingActionPolicy.IMMEDIATE, properties, context);
     }
 
     @Override
-    public UUID transferEntitlementsOverrideBillingPolicy(final UUID sourceAccountId, final UUID destAccountId, final String bundleExternalKey, @Nullable final LocalDate effectiveDate, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
+    public UUID transferEntitlementsOverrideBillingPolicy(final UUID sourceAccountId, final UUID destAccountId, final String bundleExternalKey, @Nullable final LocalDate effectiveDate, final Map<UUID, String> subExtKeys, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
 
         logTransferEntitlement(log, sourceAccountId, destAccountId, bundleExternalKey, effectiveDate, billingPolicy);
 
@@ -339,8 +325,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     final DefaultBaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
 
                     final DateTime requestedDate = baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate();
-                    final Map<UUID, String> subExtKeysMap = toSubExtKeysMap(properties);
-                    final SubscriptionBaseBundle newBundle = subscriptionBaseTransferApi.transferBundle(sourceAccountId, destAccountId, bundleExternalKey, subExtKeysMap, requestedDate, true, cancelImm, context);
+                    final SubscriptionBaseBundle newBundle = subscriptionBaseTransferApi.transferBundle(sourceAccountId, destAccountId, bundleExternalKey, subExtKeys, requestedDate, true, cancelImm, context);
 
                     // Update the context for plugins
                     baseEntitlementWithAddOnsSpecifier.setBundleId(newBundle.getId());
