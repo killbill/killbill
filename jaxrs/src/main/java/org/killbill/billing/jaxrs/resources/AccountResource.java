@@ -735,10 +735,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICES + "/" + PAGINATION)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account invoices", response = InvoiceJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve paginated invoices for account", response = InvoiceJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getInvoicesForAccountWithPagination(@PathParam("accountId") final UUID accountId,
+    public Response getInvoicesForAccountPaginated(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                           @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                           @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -754,7 +754,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
 
         final URI nextPageUri = uriBuilder.nextPage(AccountResource.class,
-                                                    "getInvoicesForAccountWithPagination",
+                                                    "getInvoicesForAccountPaginated",
                                                     invoices.getNextOffset(),
                                                     limit,
                                                     queryParams,
