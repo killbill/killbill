@@ -207,6 +207,19 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
     }
 
     @Override
+    public Pagination<SubscriptionBaseBundle> getBundlesForAccount(final Long offset, final Long limit, final InternalTenantContext context) {
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<SubscriptionBundleModelDao, SubscriptionBaseApiException>() {
+                                                  @Override
+                                                  public Pagination<SubscriptionBundleModelDao> build() {
+                                                      return dao.getByAccountRecordId(offset, limit, context);
+                                                  }
+                                              },
+                                              SubscriptionBundleModelDao::toSubscriptionBundle
+                                             );
+    }
+
+    @Override
     public List<SubscriptionBaseBundle> getBundlesForKey(final String bundleKey, final InternalTenantContext context) {
         return dao.getSubscriptionBundlesForKey(bundleKey, context);
     }
@@ -237,7 +250,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
                                              );
 
     }
-
+    
     @Override
     public Iterable<UUID> getNonAOSubscriptionIdsForKey(final String bundleKey, final InternalTenantContext context) {
         return dao.getNonAOSubscriptionIdsForKey(bundleKey, context);
