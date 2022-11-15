@@ -46,7 +46,7 @@ public class DefaultNoOpInvoiceProviderPlugin implements NoOpInvoicePluginApi {
     }
 
     @Override
-    public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> properties, final CallContext context) {
+    public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> properties, final InvoiceContext context) {
         return null;
     }
 

@@ -109,7 +109,7 @@ public class InvoiceApiHelper {
             final List<InvoiceModelDao> invoiceModelDaos = new LinkedList<InvoiceModelDao>();
             for (final DefaultInvoice invoiceForPlugin : invoicesForPlugins) {
                 // Call plugin(s)
-                final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, pluginProperties, internalCallContext);
+                final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoiceForPlugin, isDryRun, context, pluginProperties, targetDate, existingInvoices, isRescheduled, internalCallContext);
                 // Could be a bit weird for a plugin to keep updating properties for each invoice
                 pluginProperties = itemsResult.getPluginProperties();
 

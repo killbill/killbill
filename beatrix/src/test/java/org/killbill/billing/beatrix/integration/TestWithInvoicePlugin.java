@@ -51,6 +51,7 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
+import org.killbill.billing.invoice.api.DefaultInvoiceContext;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
@@ -242,6 +243,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         // verify the ID is the one passed by the plugin #887
         assertEquals(externalCharge.getLinkedItemId(), pluginLinkedItemId);
 
+        InvoiceContext invoiceContext = new DefaultInvoiceContext(null, invoices.get(0), invoices, false, false, callContext);
+        AdditionalItemsResult res = testInvoicePluginApi.getAdditionalInvoiceItems(invoices.get(0), false, null, invoiceContext);
+        assertEquals(res.getAdditionalItems().size(), 1);
+
         // On next invoice we will update the amount and the description of the previously inserted EXTERNAL_CHARGE item
         testInvoicePluginApi.additionalInvoiceItem = new ExternalChargeInvoiceItem(pluginInvoiceItemId,
                                                                                    clock.getUTCNow(),
@@ -278,6 +283,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         assertNotNull(externalCharge2);
 
         assertEquals(externalCharge2.getAmount().compareTo(BigDecimal.ONE), 0);
+        
+        invoiceContext = new DefaultInvoiceContext(null, invoices2.get(0), invoices, false, false, callContext);
+        res = testInvoicePluginApi.getAdditionalInvoiceItems(invoices2.get(0), false, null, invoiceContext);
+        assertEquals(res.getAdditionalItems().size(), 1);          
     }
 
     @Test(groups = "slow")
@@ -1094,7 +1103,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final InvoiceContext invoiceContext) {
 
             assertTrue(checkPluginProperties.apply(pluginProperties));
 
@@ -1129,6 +1138,10 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
             } else {
                 res = Collections.emptyList();
             }
+
+            assertNotNull(invoiceContext.getInvoice());
+            assertNotNull(invoiceContext.getExistingInvoices());
+
             return new AdditionalItemsResult() {
                 @Override
                 public List<InvoiceItem> getAdditionalItems() {

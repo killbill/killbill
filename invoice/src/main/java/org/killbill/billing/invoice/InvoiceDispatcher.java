@@ -691,7 +691,7 @@ public class InvoiceDispatcher {
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
             startNano = System.nanoTime();
-            final AdditionalInvoiceItemsResult addItemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, false, callContext, pluginProperties, internalCallContext);
+            final AdditionalInvoiceItemsResult addItemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, false, callContext, pluginProperties, originalTargetDate, accountInvoices.getInvoices(), isRescheduled, internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_ADDITIONAL_ITEMS, System.nanoTime() - startNano);
 
             if (addItemsResult.isInvoiceUpdated()) {
@@ -853,7 +853,7 @@ public class InvoiceDispatcher {
             // Ask external invoice plugins if additional items (tax, etc) shall be added to the invoice
             //
             startNano = System.nanoTime();
-            final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, true, callContext, pluginProperties, internalCallContext);
+            final AdditionalInvoiceItemsResult itemsResult = invoicePluginDispatcher.updateOriginalInvoiceWithPluginInvoiceItems(invoice, true, callContext, pluginProperties, originalTargetDate, accountInvoices.getInvoices(), isRescheduled, internalCallContext);
             invoiceTimings.put(InvoiceTiming.PLUGINS_ADDITIONAL_ITEMS, System.nanoTime() - startNano);
 
             if (itemsResult.isInvoiceUpdated()) {
