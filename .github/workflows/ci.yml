@@ -7,7 +7,7 @@ on:
 
 jobs:
   ci:
-    uses: killbill/gh-actions-shared/.github/workflows/ci.yml@main   
+    uses: xsalefter/gh-actions-shared/.github/workflows/ci.yml@deleteme-redirectTestOutputToFile-false
   e2e:
     runs-on: ubuntu-latest
     services:
