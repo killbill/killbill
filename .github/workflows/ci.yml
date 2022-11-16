@@ -7,7 +7,7 @@ on:
 
 jobs:
   ci:
-    uses: xsalefter/gh-actions-shared/.github/workflows/ci.yml@deleteme-redirectTestOutputToFile-false
+    uses: xsalefter/gh-actions-shared/.github/workflows/ci.yml@deleteme-redirectTestOutputToFile-false-mysql
   e2e:
     runs-on: ubuntu-latest
     services:
