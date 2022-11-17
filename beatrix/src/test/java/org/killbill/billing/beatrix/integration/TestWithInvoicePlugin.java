@@ -1139,6 +1139,7 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
                 res = Collections.emptyList();
             }
 
+            //TODO_1489 - Is this correct/required?
             assertNotNull(invoiceContext.getInvoice());
             assertNotNull(invoiceContext.getExistingInvoices());
 
@@ -1156,8 +1157,12 @@ public class TestWithInvoicePlugin extends TestIntegrationBase {
         }
 
         @Override
-        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> pluginProperties, final CallContext context) {
+        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> pluginProperties, final InvoiceContext context) {
             assertTrue(checkPluginProperties.apply(pluginProperties));
+
+            //TODO_1489 - Is this correct/required?
+            assertNotNull(context.getInvoice());
+            assertNotNull(context.getExistingInvoices());
 
             return grpResult.apply(invoice);
         }

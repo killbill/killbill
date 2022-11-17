@@ -716,7 +716,7 @@ public class InvoiceDispatcher {
             logInvoiceWithItems(account, invoice, actualTargetDate, adjustedUniqueOtherInvoiceId, isRealInvoiceWithItems);
 
             if (allowSplitting && !billingEvents.isAccountAutoInvoiceReuseDraft()) {
-                final SplitInvoiceResult splitInvoiceResult = invoicePluginDispatcher.splitInvoices(invoice, false, callContext, pluginProperties, internalCallContext);
+                final SplitInvoiceResult splitInvoiceResult = invoicePluginDispatcher.splitInvoices(invoice, false, callContext, pluginProperties, originalTargetDate, accountInvoices.getInvoices(), isRescheduled, internalCallContext);
                 splitInvoices = splitInvoiceResult.getInvoices();
                 pluginProperties = splitInvoiceResult.getPluginProperties();
             } else {

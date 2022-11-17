@@ -508,7 +508,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         }
 
         @Override
-        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> properties, final CallContext context) {
+        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> properties, final InvoiceContext context) {
             return null;
         }
 
