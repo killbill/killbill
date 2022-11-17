@@ -228,4 +228,45 @@ public class TestBundle extends TestJaxrsBase {
         }
         Assert.assertNull(page);
     }
+
+    @Test(groups = "slow", description = "Can paginate account bundles")
+    public void testAccountBundlesPagination() throws Exception {
+        final Account accountJson = createAccount();
+
+        for (int i = 0; i < 5; i++) {
+            createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY);
+        }
+
+        //Default limit and offset
+        Bundles page = accountApi.getAccountBundlesPaginated(accountJson.getAccountId(), requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 5);
+        Assert.assertNull(page.getNext());
+
+        //various limits and offsets
+        page = accountApi.getAccountBundlesPaginated(accountJson.getAccountId(), 0L, 2L, AuditLevel.NONE, requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 2);
+        Assert.assertNotNull(page.getNext());
+
+        page = accountApi.getAccountBundlesPaginated(accountJson.getAccountId(), 1L, 3L, AuditLevel.NONE, requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 3);
+        Assert.assertNotNull(page.getNext());
+
+        page = accountApi.getAccountBundlesPaginated(accountJson.getAccountId(), 1L, 8L, AuditLevel.NONE, requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 4);
+        Assert.assertNull(page.getNext());
+
+        //Fetch each Bundle in a single page
+        page = bundleApi.getBundles(0L, 1L, AuditLevel.NONE, requestOptions);
+        for (int i = 0; i < 5; i++) {
+            Assert.assertNotNull(page);
+            Assert.assertEquals(page.size(), 1);
+            page = page.getNext();
+        }
+        Assert.assertNull(page);
+
+    }
 }
