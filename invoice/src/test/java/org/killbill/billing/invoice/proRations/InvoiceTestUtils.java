@@ -37,6 +37,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -129,10 +130,10 @@ public class InvoiceTestUtils {
         Mockito.when(payment.getAmount()).thenReturn(amount);
         Mockito.when(payment.getCurrency()).thenReturn(currency);
         Mockito.when(payment.getProcessedCurrency()).thenReturn(currency);
-        Mockito.when(payment.isSuccess()).thenReturn(true);
+        Mockito.when(payment.getStatus()).thenReturn(InvoicePaymentStatus.SUCCESS);
 
         invoicePaymentApi.recordPaymentAttemptCompletion(payment.getInvoiceId(), payment.getAmount(), payment.getCurrency(), payment.getProcessedCurrency(), payment.getPaymentId(), UUID.randomUUID(), payment.getPaymentCookieId(),
-                                                         payment.getPaymentDate(), payment.isSuccess(), callContext);
+                                                         payment.getPaymentDate(), payment.getStatus() == InvoicePaymentStatus.SUCCESS, callContext);
 
         return payment;
     }

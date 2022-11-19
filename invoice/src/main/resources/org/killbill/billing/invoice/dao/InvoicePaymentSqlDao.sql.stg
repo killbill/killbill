@@ -13,7 +13,7 @@ tableFields(prefix) ::= <<
 , <prefix>processed_currency
 , <prefix>payment_cookie_id
 , <prefix>linked_invoice_payment_id
-, <prefix>success
+, <prefix>status
 , <prefix>created_by
 , <prefix>created_date
 >>
@@ -28,7 +28,7 @@ tableValues() ::= <<
 , :processedCurrency
 , :paymentCookieId
 , :linkedInvoicePaymentId
-, :success
+, :status
 , :createdBy
 , :createdDate
 >>
@@ -97,7 +97,7 @@ getRemainingAmountPaid() ::= <<
     SELECT SUM(amount)
     FROM <tableName()>
     WHERE (id = :invoicePaymentId OR linked_invoice_payment_id = :invoicePaymentId)
-    AND success
+    AND status = 'SUCCESS'
     <AND_CHECK_TENANT("")>
     ;
 >>
@@ -117,7 +117,7 @@ getChargeBacksByAccountId() ::= <<
     FROM <tableName()> ip
     INNER JOIN invoices i ON i.id = ip.invoice_id
     WHERE ip.type = 'CHARGED_BACK' AND i.account_id = :accountId
-    AND success
+    AND status = 'SUCCESS'
     <AND_CHECK_TENANT("i.")>
     <AND_CHECK_TENANT("ip.")>
     ;
@@ -128,7 +128,7 @@ getChargebacksByPaymentId() ::= <<
     FROM <tableName()>
     WHERE type = 'CHARGED_BACK'
     AND linked_invoice_payment_id IN (SELECT id FROM invoice_payments WHERE payment_id = :paymentId)
-    AND success
+    AND status = 'SUCCESS'
     <AND_CHECK_TENANT("")>
     ;
 >>
@@ -142,7 +142,7 @@ updateAttempt() ::= <<
     processed_currency = :processedCurrency,
     payment_cookie_id = :paymentCookieId,
     linked_invoice_payment_id := :linkedInvoicePaymentId,
-    success := :success
+    status := :status
     WHERE id = :id
     <AND_CHECK_TENANT("")>
     ;

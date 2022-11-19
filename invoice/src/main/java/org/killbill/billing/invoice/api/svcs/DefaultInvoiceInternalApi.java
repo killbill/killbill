@@ -40,6 +40,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.WithAccountLock;
@@ -99,13 +100,13 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
 
     @Override
     public void recordPaymentAttemptInit(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final UUID paymentAttemptId, final String transactionExternalKey, final DateTime paymentDate, final InternalCallContext context) throws InvoiceApiException {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, transactionExternalKey, false);
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, transactionExternalKey, InvoicePaymentStatus.INIT);
         dao.notifyOfPaymentInit(new InvoicePaymentModelDao(invoicePayment), paymentAttemptId, context);
     }
 
     @Override
     public void recordPaymentAttemptCompletion(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final UUID paymentAttemptId, final String transactionExternalKey, final DateTime paymentDate, final boolean success, final InternalCallContext context) throws InvoiceApiException {
-        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, transactionExternalKey, success);
+        final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, transactionExternalKey, InvoicePaymentStatus.SUCCESS);
         dao.notifyOfPaymentCompletion(new InvoicePaymentModelDao(invoicePayment), paymentAttemptId, context);
     }
 
@@ -174,7 +175,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     InvoicePayment getInvoicePayment(final UUID paymentId, final InvoicePaymentType type, final InternalTenantContext context) throws InvoiceApiException {
         final List<InvoicePaymentModelDao> invoicePayments = dao.getInvoicePaymentsByPaymentId(paymentId, context);
         return invoicePayments.stream()
-                .filter(input -> input.getType() == type && input.getSuccess())
+                .filter(input -> input.getType() == type && input.getStatus() == InvoicePaymentStatus.SUCCESS)
                 .findFirst()
                 .map(DefaultInvoicePayment::new)
                 .orElse(null);

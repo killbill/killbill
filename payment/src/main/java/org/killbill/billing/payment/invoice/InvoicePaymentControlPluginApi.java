@@ -52,6 +52,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.payment.api.PaymentApiException;
@@ -167,7 +168,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                 case PURCHASE:
                     final UUID invoiceId = getInvoiceId(pluginProperties);
                     existingInvoicePayment = invoiceApi.getInvoicePaymentForAttempt(paymentControlContext.getPaymentId(), internalContext);
-                    if (existingInvoicePayment != null && existingInvoicePayment.isSuccess()) {
+                    if (existingInvoicePayment != null && existingInvoicePayment.getStatus() == InvoicePaymentStatus.SUCCESS) {
                         // Only one successful purchase per payment (the invoice could be linked to multiple successful payments though)
                         log.info("onSuccessCall was already completed for purchase paymentId='{}'", paymentControlContext.getPaymentId());
                     } else {
@@ -643,7 +644,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         // Look for ATTEMPT matching that invoiceId that are not successful and extract matching paymentTransaction
         final InvoicePayment incompleteInvoicePayment = invoicePayments
                 .stream()
-                .filter(input -> input.getType() == InvoicePaymentType.ATTEMPT && !input.isSuccess())
+                .filter(input -> input.getType() == InvoicePaymentType.ATTEMPT && input.getStatus() != InvoicePaymentStatus.SUCCESS)
                 .findFirst().orElse(null);
 
         // If such (incomplete) paymentTransaction exists, verify the state of the payment transaction

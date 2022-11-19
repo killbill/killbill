@@ -32,6 +32,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.formatters.InvoiceFormatter;
@@ -133,9 +134,9 @@ public class TestDefaultInvoiceFormatter extends InvoiceTestSuiteNoDB {
         invoice.addInvoiceItem(creditAdjInvoiceItem);
         invoice.addInvoiceItem(creditBalanceAdjInvoiceItem2);
         invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.TEN,
-                                                     Currency.USD, Currency.USD, null, true));
+                                                     Currency.USD, Currency.USD, null, InvoicePaymentStatus.SUCCESS));
         invoice.addPayment(new DefaultInvoicePayment(InvoicePaymentType.REFUND, UUID.randomUUID(), invoice.getId(), clock.getUTCNow(), BigDecimal.ONE.negate(),
-                                                     Currency.USD, Currency.USD, null, true));
+                                                     Currency.USD, Currency.USD, null, InvoicePaymentStatus.SUCCESS));
         // Check the scenario
         Assert.assertEquals(invoice.getBalance().doubleValue(), 1.00);
         Assert.assertEquals(invoice.getCreditedAmount().doubleValue(), 11.00);

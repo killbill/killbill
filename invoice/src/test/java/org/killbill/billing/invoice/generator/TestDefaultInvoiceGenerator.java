@@ -51,6 +51,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.DefaultInvoice;
@@ -871,7 +872,7 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
 
         // pay the invoice
         invoice1.addPayment(new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), invoice1.getId(), april25.toDateTimeAtCurrentTime(), TEN,
-                                                      Currency.USD, Currency.USD, null, true));
+                                                      Currency.USD, Currency.USD, null, InvoicePaymentStatus.SUCCESS));
         assertEquals(invoice1.getBalance().compareTo(ZERO), 0);
 
         // change the plan (i.e. repair) on start date
