@@ -240,6 +240,12 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
+    public Pagination<SubscriptionBundle> getSubscriptionBundlesForAccountId(final UUID accountId, final Long offset, final Long limit, final TenantContext context) throws SubscriptionApiException {
+        // TODO api snapshot contains this change
+        return null;
+    }
+
+    @Override
     public Pagination<SubscriptionBundle> getSubscriptionBundles(final Long offset, final Long limit, final TenantContext context) {
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         return getEntityPaginationNoException(limit,
