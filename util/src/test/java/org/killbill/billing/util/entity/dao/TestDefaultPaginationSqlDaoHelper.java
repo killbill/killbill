@@ -17,6 +17,8 @@
 
 package org.killbill.billing.util.entity.dao;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -156,6 +158,8 @@ public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbedded
     	Assert.assertEquals(pagination.getMaxNbRecords(), expectedMaxNbRecords);
     	Assert.assertEquals(pagination.getCurrentOffset(), expectedCurrentOffset);
     	Assert.assertEquals(pagination.getNextOffset(), expectedNextOffset);
+
+        closePagination(pagination);
     }
 
     private void searchAndValidateKombuchas(final String tea,
@@ -173,6 +177,8 @@ public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbedded
         Assert.assertEquals(pagination.getMaxNbRecords(), expectedMaxNbRecords);
         Assert.assertEquals(pagination.getCurrentOffset(), expectedCurrentOffset);
         Assert.assertEquals(pagination.getNextOffset(), expectedNextOffset);
+
+        closePagination(pagination);
     }
 
     private Pagination<KombuchaModelDao> searchKombuchas(final String searchKey,
@@ -260,6 +266,14 @@ public class TestDefaultPaginationSqlDaoHelper extends UtilTestSuiteWithEmbedded
         }
         for (int i = 0; i < kombuchas.size(); i++) {
             dao.create(kombuchas.get(i), internalCallContext);
+        }
+    }
+
+    private void closePagination(final Closeable pagination) {
+        try {
+            pagination.close();
+        } catch (final IOException e) {
+            throw new RuntimeException("Cannot close pagination: " + e.getMessage());
         }
     }
 }
