@@ -370,6 +370,6 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
     @Override
     public Pagination<BlockingStateModelDao> getByAccountRecordId(final Long offset, final Long limit,
                                                                   final InternalTenantContext context) {
-        throw new RuntimeException("Not Implemented"); //TODO_1792 - Does this need to be handled in any other way?
+    	return delegate.getByAccountRecordId(offset, limit, context);
     }
 }
