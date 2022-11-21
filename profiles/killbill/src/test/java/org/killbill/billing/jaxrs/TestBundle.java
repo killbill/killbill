@@ -125,13 +125,15 @@ public class TestBundle extends TestJaxrsBase {
 
         final Account newAccount = createAccountWithDefaultPaymentMethod();
 
-        final Map<String, String> props = new HashMap<>();
-        final String subKey = String.format("KB_SUB_ID_%s", entitlementJsonNoEvents.getSubscriptionId());
-        props.put(subKey, "new-sub-key");
         final Bundle bundle = new Bundle();
         bundle.setAccountId(newAccount.getAccountId());
         bundle.setBundleId(entitlementJsonNoEvents.getBundleId());
-        bundleApi.transferBundle(entitlementJsonNoEvents.getBundleId(), bundle, null, props, requestOptions);
+        final Subscription sub = new Subscription();
+        sub.setSubscriptionId(entitlementJsonNoEvents.getSubscriptionId());
+        sub.setExternalKey("new-sub-key");
+        bundle.setSubscriptions(Collections.singletonList(sub));
+
+        bundleApi.transferBundle(entitlementJsonNoEvents.getBundleId(), bundle, null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
         assertEquals(existingBundles.size(), 1);
