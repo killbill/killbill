@@ -34,7 +34,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
     private final UUID accountId;
     private final AuditLevel auditLevel;
-    private final Iterator<AuditLog> accountAuditLogs;
+    private final List<AuditLog> accountAuditLogs;
 
     private final Map<ObjectType, DefaultAccountAuditLogsForObjectType> auditLogsCache = new HashMap<>();
 
@@ -46,7 +46,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
         this.accountId = accountId;
         this.auditLevel = auditLevel;
         // TODO pierre - lame, we should be smarter to avoid loading all entries in memory. It's a bit tricky though...
-        this.accountAuditLogs = accountAuditLogsOrderedByTableName;
+        this.accountAuditLogs = Iterators.toUnmodifiableList(accountAuditLogsOrderedByTableName);
     }
 
     public void close() {
@@ -127,7 +127,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
     @Override
     public AccountAuditLogsForObjectType getAuditLogs(final ObjectType objectType) {
         if (auditLogsCache.get(objectType) == null) {
-            auditLogsCache.put(objectType, new DefaultAccountAuditLogsForObjectType(auditLevel, new ObjectTypeFilter(objectType, accountAuditLogs)));
+            auditLogsCache.put(objectType, new DefaultAccountAuditLogsForObjectType(auditLevel, new ObjectTypeFilter(objectType, accountAuditLogs.iterator())));
         }
 
         // Should never be null
@@ -136,7 +136,7 @@ public class DefaultAccountAuditLogs implements AccountAuditLogs {
 
     @Override
     public List<AuditLog> getAuditLogs() {
-        return Iterators.toUnmodifiableList(accountAuditLogs);
+        return accountAuditLogs;
     }
 
     private enum IteratorState {
