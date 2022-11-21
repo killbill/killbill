@@ -71,12 +71,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>io.airlift</groupId>
-            <artifactId>testing-mysql-server</artifactId>
-            <!-- Technically, test-runtime -->
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>io.zonky.test</groupId>
             <artifactId>embedded-postgres</artifactId>
             <!-- Technically, test-runtime -->
@@ -321,6 +315,12 @@
         <dependency>
             <groupId>org.kill-bill.commons</groupId>
             <artifactId>killbill-xmlloader</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.kill-bill.testing</groupId>
+            <artifactId>testing-mysql-server</artifactId>
+            <!-- Technically, test-runtime -->
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
