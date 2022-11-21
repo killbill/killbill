@@ -726,10 +726,11 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                             context);
                 result = existingRefund;
             } else {
+                final InvoicePaymentStatus status = success ? InvoicePaymentStatus.SUCCESS : InvoicePaymentStatus.INIT;
                 final InvoicePaymentModelDao refund = new InvoicePaymentModelDao(UUIDs.randomUUID(), context.getCreatedDate(), InvoicePaymentType.REFUND,
                                                                                  payment.getInvoiceId(), paymentId,
                                                                                  context.getCreatedDate(), requestedPositiveAmount.negate(),
-                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId(), InvoicePaymentStatus.SUCCESS);
+                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId(), status);
                 result = createAndRefresh(transactional, refund, context);
             }
 
