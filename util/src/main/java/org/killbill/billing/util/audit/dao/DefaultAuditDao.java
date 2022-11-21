@@ -76,7 +76,8 @@ public class DefaultAuditDao implements AuditDao {
         // Since we want to stream the results out, we don't want to auto-commit when this method returns.
         final EntitySqlDao auditSqlDao = transactionalSqlDao.onDemandForStreamingResults(EntitySqlDao.class);
         final Iterator<AuditLogModelDao> auditLogsForAccountRecordId = auditSqlDao.getAuditLogsForAccountRecordId(context);
-        final Iterator<AuditLog> allAuditLogs = buildAuditLogsFromModelDao(auditLogsForAccountRecordId, context);
+        final List<AuditLogModelDao> listAuditLogsForAccountRecordId = Iterators.toUnmodifiableList(auditLogsForAccountRecordId);
+        final Iterator<AuditLog> allAuditLogs = buildAuditLogsFromModelDao(listAuditLogsForAccountRecordId.iterator(), context);
 
         return new DefaultAccountAuditLogs(accountId, auditLevel, allAuditLogs);
     }
