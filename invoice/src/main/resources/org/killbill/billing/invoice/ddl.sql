@@ -106,7 +106,7 @@ CREATE TABLE invoice_item_history (
     rate numeric(15,9) NULL,
     currency varchar(3) NOT NULL,
     linked_item_id varchar(36),
-    quantity int,
+    quantity decimal(18, 9),
     item_details text,
     change_type varchar(6) NOT NULL,
     created_by varchar(50) NOT NULL,
