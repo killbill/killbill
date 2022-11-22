@@ -284,7 +284,7 @@ public class TestInvoice extends TestJaxrsBase {
         final Account accountJson = createAccountWithDefaultPaymentMethod();
         final LocalDate effDt = new LocalDate(initialDate, DateTimeZone.forID(accountJson.getTimeZone()));
         final InvoiceDryRun dryRunArg = new InvoiceDryRun(DryRunType.SUBSCRIPTION_ACTION, SubscriptionEventType.START_BILLING,
-                                                          null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, effDt, null, null);
+                                                          null, "Assault-Rifle", ProductCategory.BASE, BillingPeriod.ANNUAL, null, null, null, effDt, null, null, null);
 
         final LocalDate targetDt1 = effDt;
         final Invoice dryRunInvoice1 = invoiceApi.generateDryRunInvoice(dryRunArg, accountJson.getAccountId(), targetDt1, NULL_PLUGIN_PROPERTIES, requestOptions);
@@ -942,6 +942,61 @@ public class TestInvoice extends TestJaxrsBase {
 
         final Invoices accountInvoices2 = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.FULL, requestOptions);
         assertEquals(accountInvoices2.size(), 4);
+    }
+
+    @Test(groups = "slow", description = "retrieve account invoices")
+    public void testGetAccountInvoices() throws Exception {
+        final Account account = createAccountWithPMBundleAndSubscriptionAndWaitForFirstInvoice();
+
+        for (int i = 0; i < 3; i++) {
+            callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION, ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
+            clock.addMonths(1);
+            callbackServlet.assertListenerStatus();
+        }
+
+        //without pagination and with invoice components
+        Invoices invoices = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, true, false, true, true, null, AuditLevel.NONE, requestOptions);
+        assertEquals(invoices.size(), 5);
+
+        //retrieve last invoice and verify that it contains invoice items
+        Invoice invoice = invoices.get(4);
+        Assert.assertNotNull(invoice.getItems());
+        Assert.assertEquals(invoice.getItems().size(), 1);
+
+        //without pagination and without invoice components
+        invoices = accountApi.getInvoicesForAccount(account.getAccountId(), null, null, true, false, true, false, null, AuditLevel.NONE, requestOptions);
+        assertEquals(invoices.size(), 5);
+
+        //retrieve last invoice and verify that it does not contain invoice items
+        invoice = invoices.get(4);
+        Assert.assertNotNull(invoice.getItems());
+        Assert.assertEquals(invoice.getItems().size(), 0);
+
+        //with pagination and default limit and offset
+        Invoices page = accountApi.getInvoicesForAccountPaginated(account.getAccountId(), requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 5);
+        Assert.assertNull(page.getNext());
+
+        //with pagination, various limits and offsets
+        page = accountApi.getInvoicesForAccountPaginated(account.getAccountId(), 0L, 10L, AuditLevel.NONE, requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 5);
+        Assert.assertNull(page.getNext());
+
+        page = accountApi.getInvoicesForAccountPaginated(account.getAccountId(), 0L, 2L, AuditLevel.NONE, requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 2);
+        Assert.assertNotNull(page.getNext());
+
+        //with pagination - fetch each invoice in a single page
+        page = accountApi.getInvoicesForAccountPaginated(account.getAccountId(), 0L, 1L, AuditLevel.NONE, requestOptions);
+        for (int i = 0; i < 5; i++) {
+            Assert.assertNotNull(page);
+            Assert.assertEquals(page.size(), 1);
+            page = page.getNext();
+        }
+        Assert.assertNull(page);
     }
 
 }

@@ -240,6 +240,27 @@ public class DefaultSubscriptionApi implements SubscriptionApi {
     }
 
     @Override
+    public Pagination<SubscriptionBundle> getSubscriptionBundlesForAccountId(final UUID accountId, final Long offset, final Long limit, final TenantContext context) throws SubscriptionApiException {
+        final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<SubscriptionBaseBundle, SubscriptionApiException>() {
+                                                  @Override
+                                                  public Pagination<SubscriptionBaseBundle> build() {
+                                                      return subscriptionBaseInternalApi.getBundlesForAccount(offset, limit, internalContext);
+                                                  }
+                                              },
+                                              subscriptionBaseBundle -> {
+                                                  try {
+                                                      return getSubscriptionBundle(subscriptionBaseBundle.getId(), context);
+                                                  } catch (final SubscriptionApiException e) {
+                                                      log.warn("Error retrieving bundleId='{}'", subscriptionBaseBundle.getId(), e);
+                                                      return null;
+                                                  }
+                                              }
+                                             );
+    }
+
+    @Override
     public Pagination<SubscriptionBundle> getSubscriptionBundles(final Long offset, final Long limit, final TenantContext context) {
         final InternalTenantContext internalContext = internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context);
         return getEntityPaginationNoException(limit,
