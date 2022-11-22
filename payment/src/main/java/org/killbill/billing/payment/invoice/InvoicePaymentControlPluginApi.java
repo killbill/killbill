@@ -180,7 +180,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                             invoicePaymentAmount = paymentControlContext.getAmount();
                         }
 
-                        log.debug("Notifying invoice of {} paymentId='{}', amount='{}', currency='{}', invoiceId='{}' invoicePaymentStatus='{}'", status, paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
+                        log.debug("Notifying invoice of paymentId='{}', amount='{}', currency='{}', invoiceId='{}', invoicePaymentStatus='{}'", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId, status);
 
                         invoiceApi.recordPaymentAttemptCompletion(invoiceId,
                                                                   invoicePaymentAmount,
