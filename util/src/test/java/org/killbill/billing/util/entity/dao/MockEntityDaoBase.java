@@ -94,4 +94,13 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
     @Override
     public void test(final InternalTenantContext context) {
     }
+
+    @Override
+    public Pagination<M> getByAccountRecordId(final Long offset, final Long limit, final InternalTenantContext context) {
+        final List<M> result = new ArrayList<>();
+        for (final Map<Long, M> cur : entities.values()) {
+            result.add(cur.get(context.getAccountRecordId()));
+        }
+        return new DefaultPagination<M>(Long.valueOf(result.size()), result.iterator());
+    }
 }

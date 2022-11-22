@@ -188,27 +188,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public Pagination<InvoiceModelDao> getInvoicesByAccount(final Long offset, final Long limit, final InternalTenantContext context) {
-
-        final Pagination<InvoiceModelDao> invoices = paginationHelper.getPaginationWithAccountRecordId(InvoiceSqlDao.class,
-                                                                                    new PaginationIteratorBuilder<InvoiceModelDao, Invoice, InvoiceSqlDao>() {
-                                                                                        @Override
-                                                                                        public Long getCount(final InvoiceSqlDao invoiceSqlDao, final InternalTenantContext context) {
-                                                                                            return invoiceSqlDao.getCountWithAccountRecordId(context);
-                                                                                        }
-
-                                                                                        @Override
-                                                                                        public Iterator<InvoiceModelDao> build(final InvoiceSqlDao invoiceSqlDao, final Long offset,
-                                                                                                                               final Long limit, final DefaultPaginationSqlDaoHelper.Ordering ordering,
-                                                                                                                               final InternalTenantContext context) {
-                                                                                            return invoiceSqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit, context);
-                                                                                        }
-                                                                                    }, offset, limit, context);
-
-        return invoices;
-    }
-
-    @Override
     public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, includeInvoiceComponents, invoicesTags, entitySqlDaoWrapperFactory, context));
