@@ -25,7 +25,9 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.entity.EntityBase;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
@@ -42,13 +44,14 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
     private Currency processedCurrency;
     private String paymentCookieId;
     private UUID linkedInvoicePaymentId;
-    private Boolean success;
+
+    private InvoicePaymentStatus status;
 
     public InvoicePaymentModelDao() { /* For the DAO mapper */ }
 
     public InvoicePaymentModelDao(final UUID id, final DateTime createdDate, final InvoicePaymentType type, final UUID invoiceId,
                                   final UUID paymentId, final DateTime paymentDate, final BigDecimal amount, final Currency currency,
-                                  final Currency processedCurrency, final String paymentCookieId, final UUID linkedInvoicePaymentId, final Boolean success) {
+                                  final Currency processedCurrency, final String paymentCookieId, final UUID linkedInvoicePaymentId, final InvoicePaymentStatus status) {
         super(id, createdDate, createdDate);
         this.type = type;
         this.invoiceId = invoiceId;
@@ -59,13 +62,13 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
         this.processedCurrency = processedCurrency;
         this.paymentCookieId = paymentCookieId;
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
-        this.success = success;
+        this.status = status;
     }
 
     public InvoicePaymentModelDao(final InvoicePayment invoicePayment) {
         this(invoicePayment.getId(), invoicePayment.getCreatedDate(), invoicePayment.getType(), invoicePayment.getInvoiceId(), invoicePayment.getPaymentId(),
              invoicePayment.getPaymentDate(), invoicePayment.getAmount(), invoicePayment.getCurrency(), invoicePayment.getProcessedCurrency(), invoicePayment.getPaymentCookieId(),
-             invoicePayment.getLinkedInvoicePaymentId(), invoicePayment.isSuccess());
+             invoicePayment.getLinkedInvoicePaymentId(), invoicePayment.getStatus());
     }
 
     public InvoicePaymentType getType() {
@@ -140,12 +143,12 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
     }
 
-    public Boolean getSuccess() {
-        return success;
+    public InvoicePaymentStatus getStatus() {
+        return status;
     }
 
-    public void setSuccess(final Boolean success) {
-        this.success = success;
+    public void setStatus(final InvoicePaymentStatus status) {
+        this.status = status;
     }
 
     @Override
@@ -160,7 +163,7 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
         sb.append(", processedCurrency=").append(processedCurrency);
         sb.append(", paymentCookieId='").append(paymentCookieId).append('\'');
         sb.append(", linkedInvoicePaymentId=").append(linkedInvoicePaymentId);
-        sb.append(", success=").append(success);
+        sb.append(", status=").append(status);
         sb.append('}');
         return sb.toString();
     }
@@ -200,10 +203,12 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
         if (paymentId != null ? !paymentId.equals(that.paymentId) : that.paymentId != null) {
             return false;
         }
+        if (status != null ? !status.equals(that.status) : that.status != null) {
+            return false;
+        }
         if (type != that.type) {
             return false;
         }
-
         return true;
     }
 
@@ -217,6 +222,7 @@ public class InvoicePaymentModelDao extends EntityModelDaoBase implements Entity
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (currency != null ? currency.hashCode() : 0);
         result = 31 * result + (paymentCookieId != null ? paymentCookieId.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         result = 31 * result + (linkedInvoicePaymentId != null ? linkedInvoicePaymentId.hashCode() : 0);
         return result;
     }

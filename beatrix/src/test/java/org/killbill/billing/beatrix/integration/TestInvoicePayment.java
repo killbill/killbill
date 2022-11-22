@@ -45,7 +45,9 @@ import org.killbill.billing.entitlement.api.Entitlement.EntitlementActionPolicy;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
@@ -699,7 +701,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertEquals(invoice1.getPayments().get(0).getPaymentCookieId(), payment1.getTransactions().get(0).getExternalKey());
         Assert.assertEquals(invoice1.getPayments().get(0).getPaymentId(), payment1.getId());
         Assert.assertEquals(invoice1.getPayments().get(0).getType(), InvoicePaymentType.ATTEMPT);
-        Assert.assertTrue(invoice1.getPayments().get(0).isSuccess());
+        Assert.assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
 
         // Verify links for payment 2
         Assert.assertEquals(invoice1.getPayments().get(1).getAmount().compareTo(new BigDecimal("6.00")), 0);
@@ -707,7 +709,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertEquals(invoice1.getPayments().get(1).getPaymentCookieId(), payment2.getTransactions().get(0).getExternalKey());
         Assert.assertEquals(invoice1.getPayments().get(1).getPaymentId(), payment2.getId());
         Assert.assertEquals(invoice1.getPayments().get(1).getType(), InvoicePaymentType.ATTEMPT);
-        Assert.assertTrue(invoice1.getPayments().get(1).isSuccess());
+        Assert.assertTrue(invoice1.getPayments().get(1).getStatus() == InvoicePaymentStatus.SUCCESS);
 
         // Verify links for refund 1
         Assert.assertEquals(invoice1.getPayments().get(2).getAmount().compareTo(new BigDecimal("-4.00")), 0);
@@ -715,7 +717,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertEquals(invoice1.getPayments().get(2).getPaymentCookieId(), payment1.getTransactions().get(1).getExternalKey());
         Assert.assertEquals(invoice1.getPayments().get(2).getPaymentId(), payment1.getId());
         Assert.assertEquals(invoice1.getPayments().get(2).getType(), InvoicePaymentType.REFUND);
-        Assert.assertTrue(invoice1.getPayments().get(2).isSuccess());
+        Assert.assertTrue(invoice1.getPayments().get(2).getStatus() == InvoicePaymentStatus.SUCCESS);
 
         // Verify links for refund 2
         Assert.assertEquals(invoice1.getPayments().get(3).getAmount().compareTo(new BigDecimal("-6.00")), 0);
@@ -723,7 +725,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertEquals(invoice1.getPayments().get(3).getPaymentCookieId(), payment2.getTransactions().get(1).getExternalKey());
         Assert.assertEquals(invoice1.getPayments().get(3).getPaymentId(), payment2.getId());
         Assert.assertEquals(invoice1.getPayments().get(3).getType(), InvoicePaymentType.REFUND);
-        Assert.assertTrue(invoice1.getPayments().get(3).isSuccess());
+        Assert.assertTrue(invoice1.getPayments().get(3).getStatus() == InvoicePaymentStatus.SUCCESS);
     }
 
     @Test(groups = "slow")
@@ -753,7 +755,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertFalse(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -781,7 +783,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertTrue(invoice2.getPaidAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertTrue(invoice2.getChargedAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertEquals(invoice2.getPayments().size(), 1);
-        assertTrue(invoice2.getPayments().get(0).isSuccess());
+        assertTrue(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance2.compareTo(BigDecimal.ZERO) == 0);
@@ -822,7 +824,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertFalse(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -860,7 +862,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice11.getPayments().size(), 1);
         assertEquals(invoice11.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice11.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice11.getPayments().get(0).isSuccess());
+        assertFalse(invoice11.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertNotNull(invoice11.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance11 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -888,7 +890,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertTrue(invoice2.getPaidAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertTrue(invoice2.getChargedAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertEquals(invoice2.getPayments().size(), 1);
-        assertTrue(invoice2.getPayments().get(0).isSuccess());
+        assertTrue(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance2.compareTo(BigDecimal.ZERO) == 0);
@@ -977,7 +979,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice2.getPayments().size(), 1);
         assertEquals(invoice2.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice2.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice2.getPayments().get(0).isSuccess());
+        assertFalse(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertEquals(invoice2.getPayments().get(0).getPaymentId(), payment1.getId());
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1056,7 +1058,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.PENDING);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1084,6 +1086,17 @@ public class TestInvoicePayment extends TestIntegrationBase {
         final PaymentOptions paymentOptions = Mockito.mock(PaymentOptions.class);
         Mockito.when(paymentOptions.getPaymentControlPluginNames()).thenReturn(paymentControlPluginNames);
 
+        // Add a credit on the account
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), "", BigDecimal.TEN, account.getCurrency(), null);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), List.of(inputCredit), true, null, callContext);
+        assertListenerStatus();
+
+        // Shows the credit is reflected on the account
+        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance2.compareTo(new BigDecimal("239.95")) == 0);
+
+        // As we transition the payment from PENDING to SUCCESS, we check the credit is not applied in the invoice, i.e the original payment remains the same
         busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         paymentApi.notifyPendingTransactionOfStateChangedWithPaymentControl(account, payments.get(0).getTransactions().get(0).getId(), true, paymentOptions, callContext);
         assertListenerStatus();
@@ -1095,13 +1108,18 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertTrue(invoice2.getPaidAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertTrue(invoice2.getChargedAmount().compareTo(new BigDecimal("249.95")) == 0);
         assertEquals(invoice2.getPayments().size(), 1);
-        assertTrue(invoice2.getPayments().get(0).isSuccess());
+        assertTrue(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
 
         // Perform a similar PENDING payment transaction with a refund + item adjustments
         paymentPlugin.makeNextPaymentPending();
         final Map<UUID, BigDecimal> adjustments = new HashMap<UUID, BigDecimal>();
         final BigDecimal refundValue = new BigDecimal("13.45");
         adjustments.put(invoice2.getInvoiceItems().get(0).getId(), refundValue);
+
+        // Shows the credit is still available on the account
+        final BigDecimal accountBalance3 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance3.compareTo(new BigDecimal("-10.00")) == 0);
+
 
         busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT_ERROR);
         invoicePaymentApi.createRefundForInvoicePayment(true, adjustments, account, payments.get(0).getId(), refundValue, payments.get(0).getCurrency(), null, UUID.randomUUID().toString(),
@@ -1115,9 +1133,6 @@ public class TestInvoicePayment extends TestIntegrationBase {
         paymentApi.notifyPendingTransactionOfStateChangedWithPaymentControl(account, payments2.get(0).getTransactions().get(1).getId(), true, paymentOptions, callContext);
         assertListenerStatus();
 
-
-        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
-        assertTrue(accountBalance2.compareTo(BigDecimal.ZERO) == 0);
 
         final List<Payment> payments3 = paymentApi.getAccountPayments(account.getId(), false, true, Collections.emptyList(), callContext);
         assertEquals(payments3.size(), 1);
@@ -1172,7 +1187,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.PENDING);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1270,7 +1285,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertTrue(invoice1.getPayments().get(0).isSuccess());
+        assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1301,7 +1316,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice2.getPayments().size(), 1);
         assertEquals(invoice2.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice2.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice2.getPayments().get(0).isSuccess());
+        assertTrue(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.INIT);
         assertNotNull(invoice2.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1377,7 +1392,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.INIT);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1425,7 +1440,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice2.getPayments().size(), 1);
         assertEquals(invoice2.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoice2.getPayments().get(0).getCurrency(), Currency.USD);
-        assertTrue(invoice2.getPayments().get(0).isSuccess());
+        assertTrue(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertNotNull(invoice2.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1478,7 +1493,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         dbi.withHandle(new HandleCallback<Void>() {
             @Override
             public Void withHandle(final Handle handle) throws Exception {
-                handle.execute("update invoice_payments set success = false where payment_cookie_id = ?", originalTransaction.getExternalKey());
+                handle.execute("update invoice_payments set status='INIT' where payment_cookie_id = ?", originalTransaction.getExternalKey());
                 return null;
             }
         });
@@ -1517,7 +1532,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         Assert.assertEquals(updateInvoice3.getBalance().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(updateInvoice3.getPayments().size(), 1);
         Assert.assertEquals(updateInvoice3.getPayments().get(0).getPaymentCookieId(), originalTransaction.getExternalKey());
-        Assert.assertTrue(updateInvoice3.getPayments().get(0).isSuccess());
+        Assert.assertTrue(updateInvoice3.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         Assert.assertEquals(invoiceUserApi.getAccountBalance(account.getId(), callContext).compareTo(invoice2.getBalance()), 0);
 
         final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, Collections.emptyList(), callContext);
@@ -1577,7 +1592,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.INIT);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1643,7 +1658,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice2.getPayments().size(), 1);
         assertEquals(invoice2.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoice2.getPayments().get(0).getCurrency(), Currency.USD);
-        assertTrue(invoice2.getPayments().get(0).isSuccess());
+        assertTrue(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertNotNull(invoice2.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1714,7 +1729,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.INIT);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1762,7 +1777,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice2.getPayments().size(), 1);
         assertEquals(invoice2.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoice2.getPayments().get(0).getCurrency(), Currency.USD);
-        assertTrue(invoice2.getPayments().get(0).isSuccess());
+        assertTrue(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertNotNull(invoice2.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1833,7 +1848,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.INIT);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1871,7 +1886,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice2.getPayments().size(), 1);
         assertEquals(invoice2.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoice2.getPayments().get(0).getCurrency(), Currency.USD);
-        assertTrue(invoice2.getPayments().get(0).isSuccess());
+        assertTrue(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertNotNull(invoice2.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1942,7 +1957,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(BigDecimal.ZERO), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).isSuccess());
+        assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.INIT);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1984,7 +1999,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice2.getPayments().size(), 1);
         assertEquals(invoice2.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoice2.getPayments().get(0).getCurrency(), Currency.USD);
-        assertTrue(invoice2.getPayments().get(0).isSuccess());
+        assertTrue(invoice2.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
         assertNotNull(invoice2.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
