@@ -637,7 +637,7 @@ public class AccountResource extends JaxRsResourceBase {
     }
 
 
-        /*
+    /*
      * ************************** INVOICES ********************************
      */
 
@@ -661,25 +661,21 @@ public class AccountResource extends JaxRsResourceBase {
 
         Preconditions.checkState(!unpaidInvoicesOnly || !withMigrationInvoices, "We don't support fetching unpaid invoices incl. migration");
         Preconditions.checkState(startDateStr == null || !withMigrationInvoices, "We don't support fetching migration invoices and specifying a start date");
-        Preconditions.checkState(!unpaidInvoicesOnly  || !includeInvoiceComponents, "We don't support fetching unpaid invoices without invoice components");
+        Preconditions.checkState(!unpaidInvoicesOnly || !includeInvoiceComponents, "We don't support fetching unpaid invoices without invoice components");
 
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
         final LocalDate startDate = startDateStr != null ? LOCAL_DATE_FORMATTER.parseLocalDate(startDateStr) : null;
         final LocalDate endDate = endDateStr != null ? LOCAL_DATE_FORMATTER.parseLocalDate(endDateStr) : null;
 
-        // Verify the account exists
-        accountUserApi.getAccountById(accountId, tenantContext);
-
         final List<Invoice> invoices;
         if (unpaidInvoicesOnly) {
-            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext));  
+            invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext));
         } else {
             invoices = startDate != null || endDate != null ?
                        invoiceApi.getInvoicesByAccount(accountId, startDate, endDate, includeVoidedInvoices, includeInvoiceComponents, tenantContext) :
                        invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, includeInvoiceComponents, tenantContext);
         }
-
 
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         // The filter, if any comes in addition to other param to limit the response
@@ -692,6 +688,43 @@ public class AccountResource extends JaxRsResourceBase {
         }
 
         return Response.status(Status.OK).entity(result).build();
+    }
+
+    @TimedResource
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICES + "/" + PAGINATION)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve account invoices", response = InvoiceJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response getInvoicesForAccountWithPagination(@PathParam("accountId") final UUID accountId,
+                                          @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                          @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
+
+        final Pagination<Invoice> invoices = invoiceApi.getInvoicesByAccount(accountId, offset, limit, tenantContext);
+
+        final Map<String, String> queryParams = new HashMap<>();
+        if (auditMode != null && auditMode.getLevel() != null) {
+            queryParams.put(QUERY_AUDIT, auditMode.getLevel().toString());
+        }
+
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class,
+                                                    "getInvoicesForAccountWithPagination",
+                                                    invoices.getNextOffset(),
+                                                    limit,
+                                                    queryParams,
+                                                    Map.of("accountId", String.valueOf(accountId)));
+        return buildStreamingPaginationResponse(invoices,
+                                                invoice -> {
+                                                    final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
+                                                    return new InvoiceJson(invoice, null, accountAuditLogs);
+                                                },
+                                                nextPageUri
+                                               );
     }
 
     /*

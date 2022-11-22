@@ -44,6 +44,7 @@ import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.invoice.model.TaxInvoiceItem;
 import org.killbill.billing.util.currency.KillBillMoney;
+import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.testng.Assert;
@@ -700,5 +701,40 @@ public class TestDefaultInvoiceUserApi extends InvoiceTestSuiteWithEmbeddedDB {
         // Verify that amountCharged DOES NOT reflect the credit since invoice is NOT in DRAFT status
         Assert.assertEquals(updatedExternalChargeInvoice.getChargedAmount().compareTo(new BigDecimal(300)), 0);
 
+    }
+    
+    @Test(groups = "slow")
+    public void testRetrieveInvoicesByAccount() throws Exception {
+
+        final Account account = invoiceUtil.createAccount(callContext);
+        final UUID accountId = account.getId();
+
+        // Create invoice1
+        final InvoiceItem externalCharge1 = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, new BigDecimal(300), accountCurrency, null);
+        invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge1), true, null, callContext);
+
+        // Create invoice2
+        final InvoiceItem externalCharge2 = new ExternalChargeInvoiceItem(null, accountId, null, UUID.randomUUID().toString(), clock.getUTCToday(), null, new BigDecimal(500), accountCurrency, null);
+        invoiceUserApi.insertExternalCharges(accountId, clock.getUTCToday(), List.of(externalCharge2), true, null, callContext);
+
+        //without pagination and without invoice components
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, false, callContext);
+        Assert.assertNotNull(invoices);
+        Assert.assertEquals(invoices.size(), 2);
+        Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 0);
+
+        //without pagination and with invoice components
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
+        Assert.assertNotNull(invoices);
+        Assert.assertEquals(invoices.size(), 2);
+        Assert.assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
+
+        //with pagination
+        final Pagination<Invoice> invoices2 = invoiceUserApi.getInvoicesByAccount(accountId, 0L, 5L, callContext);
+        Assert.assertNotNull(invoices2);
+        assertEquals(invoices2.getTotalNbRecords().longValue(), 2L);
+        Assert.assertEquals(invoices2.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(invoices2.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(invoices2.getNextOffset());
     }
 }

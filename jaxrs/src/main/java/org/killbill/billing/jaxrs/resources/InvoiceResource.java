@@ -457,11 +457,17 @@ public class InvoiceResource extends JaxRsResourceBase {
         // On the other hand if body is not null, we are attempting a dryRun subscription operation
         if (dryRunSubscriptionSpec != null && dryRunSubscriptionSpec.getDryRunAction() != null) {
             if (SubscriptionEventType.START_BILLING.equals(dryRunSubscriptionSpec.getDryRunAction())) {
-                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified");
-                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified");
-                verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductCategory(), "DryRun subscription product category should be specified");
-                if (dryRunSubscriptionSpec.getProductCategory().equals(ProductCategory.ADD_ON)) {
-                    verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundleID should be specified");
+                if (dryRunSubscriptionSpec.getPlanName() == null) {
+                    verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified when no planName is specified");
+                    verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBillingPeriod(), "DryRun subscription billingPeriod should be specified when no planName is specified");
+                    verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductCategory(), "DryRun subscription product category should be specified when no planName is specified");
+                    if (dryRunSubscriptionSpec.getProductCategory().equals(ProductCategory.ADD_ON)) {
+                        verifyNonNullOrEmpty(dryRunSubscriptionSpec.getBundleId(), "DryRun bundleID should be specified when product category is ADD_ON");
+                    }
+                } else {
+                    Preconditions.checkArgument(dryRunSubscriptionSpec.getProductName() == null, "DryRun subscription productName should not be set when planName is specified");
+                    Preconditions.checkArgument(dryRunSubscriptionSpec.getBillingPeriod() == null, "DryRun subscription billing period should not be set when planName is specified");
+                    Preconditions.checkArgument(dryRunSubscriptionSpec.getProductCategory() == null, "DryRun subscription product category should not be set when planName is specified");
                 }
             } else if (SubscriptionEventType.CHANGE.equals(dryRunSubscriptionSpec.getDryRunAction())) {
                 verifyNonNullOrEmpty(dryRunSubscriptionSpec.getProductName(), "DryRun subscription product category should be specified");
@@ -1119,14 +1125,19 @@ public class InvoiceResource extends JaxRsResourceBase {
                 this.bundleId = input.getBundleId();
                 this.effectiveDate = input.getEffectiveDate();
                 this.billingPolicy = input.getBillingPolicy() != null ? input.getBillingPolicy() : null;
-                final PlanPhaseSpecifier planPhaseSpecifier = (input.getProductName() != null &&
-                                                               input.getProductCategory() != null &&
-                                                               input.getBillingPeriod() != null) ?
-                                                              new PlanPhaseSpecifier(input.getProductName(),
-                                                                                     input.getBillingPeriod(),
-                                                                                     input.getPriceListName(),
-                                                                                     input.getPhaseType() != null ? input.getPhaseType() : null) :
-                                                              null;
+
+                final PlanPhaseSpecifier planPhaseSpecifier;
+                if (input.getPlanName() != null) {
+                    planPhaseSpecifier = new PlanPhaseSpecifier(input.getPlanName());
+
+                } else if (input.getProductName() != null && input.getProductCategory() != null && input.getBillingPeriod() != null) {
+                    planPhaseSpecifier = new PlanPhaseSpecifier(input.getProductName(),
+                                                                input.getBillingPeriod(),
+                                                                input.getPriceListName(),
+                                                                input.getPhaseType() != null ? input.getPhaseType() : null);
+                } else {
+                    planPhaseSpecifier = null;
+                }
                 final List<PlanPhasePriceOverride> overrides = buildPlanPhasePriceOverrides(input.getPriceOverrides(),
                                                                                             account.getCurrency(),
                                                                                             planPhaseSpecifier);

@@ -23,10 +23,10 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import org.killbill.billing.callcontext.InternalTenantContext;
-import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +57,27 @@ public class DefaultPaginationSqlDaoHelper {
                                                                                                                      final Long offset,
                                                                                                                      final Long limitMaybeNegative,
                                                                                                                      @Nullable final InternalTenantContext context) {
+
+        return getPaginationInternal(sqlDaoClazz, paginationIteratorBuilder, offset, limitMaybeNegative, false, context);
+
+    }
+
+    public <E extends Entity, M extends EntityModelDao<E>, S extends EntitySqlDao<M, E>> Pagination<M> getPaginationWithAccountRecordId(final Class<? extends EntitySqlDao<M, E>> sqlDaoClazz,
+                                                                                                                                        final PaginationIteratorBuilder<M, E, S> paginationIteratorBuilder,
+                                                                                                                                        final Long offset,
+                                                                                                                                        final Long limitMaybeNegative,
+                                                                                                                                        @Nullable final InternalTenantContext context) {
+
+        return getPaginationInternal(sqlDaoClazz, paginationIteratorBuilder, offset, limitMaybeNegative, true, context);
+
+    }
+
+    private <E extends Entity, M extends EntityModelDao<E>, S extends EntitySqlDao<M, E>> Pagination<M> getPaginationInternal(final Class<? extends EntitySqlDao<M, E>> sqlDaoClazz,
+                                                                                                                              final PaginationIteratorBuilder<M, E, S> paginationIteratorBuilder,
+                                                                                                                              final Long offset,
+                                                                                                                              final Long limitMaybeNegative,
+                                                                                                                              final boolean withAccountRecordId,
+                                                                                                                              @Nullable final InternalTenantContext context) {
         // Use a negative limit as a hint to go backwards. It's a bit awkward -- using a negative offset instead would be more intuitive,
         // but it is non-deterministic for the first page unfortunately (limit 0 offset 50: ASC or DESC?)
         final Ordering ordering = limitMaybeNegative >= 0 ? Ordering.ASC : Ordering.DESC;
@@ -85,15 +106,16 @@ public class DefaultPaginationSqlDaoHelper {
             // The count to get maxNbRecords can be expensive on very large datasets. As a heuristic to check how large that number is,
             // we retrieve 1 record at offset simplePaginationThreshold (pretty fast). If we've found a record, that means the count is larger
             // than this threshold and we don't issue the full count query
-            final Long recordIdAtSimplePaginationOffset = sqlDao.getRecordIdAtOffset(simplePaginationThreshold);
+            final Long recordIdAtSimplePaginationOffset = withAccountRecordId ? sqlDao.getRecordIdAtOffsetWithAccountRecordId(simplePaginationThreshold, context) : sqlDao.getRecordIdAtOffset(simplePaginationThreshold);
             final boolean veryLargeDataSet = recordIdAtSimplePaginationOffset != null;
 
             if (veryLargeDataSet) {
                 maxNbRecords = null;
             } else {
-                maxNbRecords = sqlDao.getCount(context);
+                maxNbRecords = withAccountRecordId ? sqlDao.getCountWithAccountRecordId(context) : sqlDao.getCount(context);
             }
         }
+
         final Iterator<M> results = paginationIteratorBuilder.build((S) sqlDao, offset, limit, ordering, context);
 
         final Long totalNbRecords = totalNbRecordsOrNull == null ? maxNbRecords : totalNbRecordsOrNull;

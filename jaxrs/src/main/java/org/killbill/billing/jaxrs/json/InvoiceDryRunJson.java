@@ -49,6 +49,7 @@ public class InvoiceDryRunJson {
     private final UUID bundleId;
     private final BillingActionPolicy billingPolicy;
     private final List<PhasePriceJson> priceOverrides;
+    private final String planName;
 
     @JsonCreator
     public InvoiceDryRunJson(@JsonProperty("dryRunType") @Nullable final DryRunType dryRunType,
@@ -62,7 +63,8 @@ public class InvoiceDryRunJson {
                              @JsonProperty("bundleId") @Nullable final UUID bundleId,
                              @JsonProperty("effectiveDate") @Nullable final LocalDate effectiveDate,
                              @JsonProperty("billingPolicy") @Nullable final BillingActionPolicy billingPolicy,
-                             @JsonProperty("priceOverrides") @Nullable final List<PhasePriceJson> priceOverrides) {
+                             @JsonProperty("priceOverrides") @Nullable final List<PhasePriceJson> priceOverrides,
+                             @JsonProperty("planName") @Nullable final String planName) {
         this.dryRunType = dryRunType;
         this.dryRunAction = dryRunAction;
         this.phaseType = phaseType;
@@ -75,6 +77,7 @@ public class InvoiceDryRunJson {
         this.effectiveDate = effectiveDate;
         this.billingPolicy = billingPolicy;
         this.priceOverrides = priceOverrides;
+        this.planName = planName;
     }
 
     public DryRunType getDryRunType() {
@@ -125,6 +128,10 @@ public class InvoiceDryRunJson {
         return priceOverrides;
     }
 
+    public String getPlanName() {
+        return planName;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -172,6 +179,9 @@ public class InvoiceDryRunJson {
         if (priceOverrides != null ? !priceOverrides.equals(that.priceOverrides) : that.priceOverrides != null) {
             return false;
         }
+        if (planName != null ? !planName.equals(that.planName) : that.planName != null) {
+            return false;
+        }        
 
         return true;
     }
@@ -190,6 +200,7 @@ public class InvoiceDryRunJson {
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (billingPolicy != null ? billingPolicy.hashCode() : 0);
         result = 31 * result + (priceOverrides != null ? priceOverrides.hashCode() : 0);
+        result = 31 * result + (planName != null ? planName.hashCode() : 0);
         return result;
     }
 }

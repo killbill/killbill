@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.net.URI;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -62,6 +65,7 @@ import org.killbill.billing.jaxrs.json.AuditLogJson;
 import org.killbill.billing.jaxrs.json.BlockingStateJson;
 import org.killbill.billing.jaxrs.json.BundleJson;
 import org.killbill.billing.jaxrs.json.CustomFieldJson;
+import org.killbill.billing.jaxrs.json.SubscriptionJson;
 import org.killbill.billing.jaxrs.json.TagJson;
 import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
@@ -423,13 +427,26 @@ public class BundleResource extends JaxRsResourceBase {
         verifyNonNullOrEmpty(json, "BundleJson body should be specified");
         verifyNonNullOrEmpty(json.getAccountId(), "BundleJson accountId needs to be set");
 
+        // Extract possible key mapping for new subscriptions (the subscription#id points to the existing subscription and the subscription#externalKey is the new key to use for the transferred subscription)
+        final Map<UUID, String> subExtKeys = json.getSubscriptions() == null ?
+                                             Collections.emptyMap() :
+                                             json.getSubscriptions()
+                                                 .stream()
+                                                 .filter(s -> s.getSubscriptionId() != null && s.getExternalKey() != null)
+                                                 .map(new Function<SubscriptionJson, SimpleEntry<UUID, String>>() {
+                                                     @Override
+                                                     public SimpleEntry<UUID, String> apply(final SubscriptionJson sub) {
+                                                         return new SimpleEntry<>(sub.getSubscriptionId(), sub.getExternalKey());
+                                                     }
+                                                 }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
 
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final SubscriptionBundle bundle = subscriptionApi.getSubscriptionBundle(bundleId, callContext);
         final LocalDate inputLocalDate = toLocalDate(requestedDate);
 
-        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), json.getAccountId(), bundle.getExternalKey(), inputLocalDate, billingPolicy, pluginProperties, callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlementsOverrideBillingPolicy(bundle.getAccountId(), json.getAccountId(), bundle.getExternalKey(), inputLocalDate, subExtKeys, billingPolicy, pluginProperties, callContext);
         return uriBuilder.buildResponse(uriInfo, BundleResource.class, "getBundle", newBundleId, request);
     }
 
