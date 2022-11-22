@@ -35,6 +35,8 @@ import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.entity.EntityPersistenceException;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
+import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.CreditBalanceAdjInvoiceItem;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
@@ -63,10 +65,18 @@ public class CBADao {
                                                     final InternalCallContext context) throws EntityPersistenceException, InvoiceApiException {
         final BigDecimal balance = getInvoiceBalance(invoice);
 
+        final boolean hasPendingPayments = invoice.getInvoicePayments().stream()
+                                                  .filter(p -> p.getType() == InvoicePaymentType.ATTEMPT && p.getStatus() == InvoicePaymentStatus.PENDING)
+                                                  .findFirst()
+                                                  .isPresent();
+
         if (balance.compareTo(BigDecimal.ZERO) < 0) {
             // Current balance is negative, we need to generate a credit (positive CBA amount)
             return buildCBAItem(invoice, balance, context);
-        } else if (balance.compareTo(BigDecimal.ZERO) > 0 && invoice.getStatus() == InvoiceStatus.COMMITTED && !invoice.isWrittenOff()) {
+        } else if (balance.compareTo(BigDecimal.ZERO) > 0
+                   && invoice.getStatus() == InvoiceStatus.COMMITTED
+                   && !hasPendingPayments
+                   && !invoice.isWrittenOff()) {
             // Current balance is positive and the invoice is COMMITTED, we need to use some of the existing if available (negative CBA amount)
             // PERF: in some codepaths, the CBA maybe have already been computed
             BigDecimal accountCBA = accountCBAOrNull;

@@ -47,6 +47,7 @@ import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
+import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.overdue.config.DefaultOverdueConfig;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
@@ -1057,7 +1058,7 @@ public class TestInvoicePayment extends TestIntegrationBase {
         assertEquals(invoice1.getPayments().size(), 1);
         assertEquals(invoice1.getPayments().get(0).getAmount().compareTo(new BigDecimal("249.95")), 0);
         assertEquals(invoice1.getPayments().get(0).getCurrency(), Currency.USD);
-        assertFalse(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.SUCCESS);
+        assertTrue(invoice1.getPayments().get(0).getStatus() == InvoicePaymentStatus.PENDING);
         assertNotNull(invoice1.getPayments().get(0).getPaymentId());
 
         final BigDecimal accountBalance1 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -1085,6 +1086,17 @@ public class TestInvoicePayment extends TestIntegrationBase {
         final PaymentOptions paymentOptions = Mockito.mock(PaymentOptions.class);
         Mockito.when(paymentOptions.getPaymentControlPluginNames()).thenReturn(paymentControlPluginNames);
 
+        // Add a credit on the account
+        busHandler.pushExpectedEvents(NextEvent.INVOICE);
+        final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), "", BigDecimal.TEN, account.getCurrency(), null);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), List.of(inputCredit), true, null, callContext);
+        assertListenerStatus();
+
+        // Shows the credit is reflected on the account
+        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance2.compareTo(new BigDecimal("239.95")) == 0);
+
+        // As we transition the payment from PENDING to SUCCESS, we check the credit is not applied in the invoice, i.e the original payment remains the same
         busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT, NextEvent.BLOCK);
         paymentApi.notifyPendingTransactionOfStateChangedWithPaymentControl(account, payments.get(0).getTransactions().get(0).getId(), true, paymentOptions, callContext);
         assertListenerStatus();
@@ -1104,6 +1116,11 @@ public class TestInvoicePayment extends TestIntegrationBase {
         final BigDecimal refundValue = new BigDecimal("13.45");
         adjustments.put(invoice2.getInvoiceItems().get(0).getId(), refundValue);
 
+        // Shows the credit is still available on the account
+        final BigDecimal accountBalance3 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
+        assertTrue(accountBalance3.compareTo(new BigDecimal("-10.00")) == 0);
+
+
         busHandler.pushExpectedEvents(NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT_ERROR);
         invoicePaymentApi.createRefundForInvoicePayment(true, adjustments, account, payments.get(0).getId(), refundValue, payments.get(0).getCurrency(), null, UUID.randomUUID().toString(),
                                                         Collections.emptyList(), paymentOptions, callContext);
@@ -1116,9 +1133,6 @@ public class TestInvoicePayment extends TestIntegrationBase {
         paymentApi.notifyPendingTransactionOfStateChangedWithPaymentControl(account, payments2.get(0).getTransactions().get(1).getId(), true, paymentOptions, callContext);
         assertListenerStatus();
 
-
-        final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
-        assertTrue(accountBalance2.compareTo(BigDecimal.ZERO) == 0);
 
         final List<Payment> payments3 = paymentApi.getAccountPayments(account.getId(), false, true, Collections.emptyList(), callContext);
         assertEquals(payments3.size(), 1);
