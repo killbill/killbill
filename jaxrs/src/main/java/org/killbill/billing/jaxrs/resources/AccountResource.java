@@ -308,6 +308,47 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(result).build();
     }
 
+    @TimedResource
+    @GET
+    @Path("/{accountId:" + UUID_PATTERN + "}/" + BUNDLES + "/" + PAGINATION)
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Retrieve paginated bundles for account", response = BundleJson.class, responseContainer = "List")
+    @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
+                           @ApiResponse(code = 404, message = "Account not found")})
+    public Response getAccountBundlesPaginated(@PathParam("accountId") final UUID accountId,
+                                               @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                               @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                               @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, SubscriptionApiException, CatalogApiException {
+        final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
+
+        final Pagination<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(accountId, offset, limit, tenantContext);
+
+        final Map<String, String> queryParams = new HashMap<>();
+        if (auditMode != null && auditMode.getLevel() != null) {
+            queryParams.put(QUERY_AUDIT, auditMode.getLevel().toString());
+        }
+
+        final URI nextPageUri = uriBuilder.nextPage(AccountResource.class,
+                                                    "getAccountBundlesPaginated",
+                                                    bundles.getNextOffset(),
+                                                    limit,
+                                                    queryParams,
+                                                    Map.of("accountId", String.valueOf(accountId)));
+        return buildStreamingPaginationResponse(bundles,
+                                                bundle -> {
+                                                    final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
+                                                    try {
+                                                        return new BundleJson(bundle, null, accountAuditLogs);
+                                                    } catch (final CatalogApiException e) {
+                                                        throw new RuntimeException(e);
+                                                    }
+                                                },
+                                                nextPageUri
+                                               );
+
+    }
+
     private List<SubscriptionBundle> filterBundles(final List<SubscriptionBundle> subscriptionBundlesForAccountId, final List<String> bundlesFilter) {
         List<SubscriptionBundle> result = new ArrayList<SubscriptionBundle>();
         for (SubscriptionBundle subscriptionBundle : subscriptionBundlesForAccountId) {
@@ -694,10 +735,10 @@ public class AccountResource extends JaxRsResourceBase {
     @GET
     @Path("/{accountId:" + UUID_PATTERN + "}/" + INVOICES + "/" + PAGINATION)
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve account invoices", response = InvoiceJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve paginated invoices for account", response = InvoiceJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
-    public Response getInvoicesForAccountWithPagination(@PathParam("accountId") final UUID accountId,
+    public Response getInvoicesForAccountPaginated(@PathParam("accountId") final UUID accountId,
                                           @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
                                           @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
                                           @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
@@ -713,7 +754,7 @@ public class AccountResource extends JaxRsResourceBase {
         }
 
         final URI nextPageUri = uriBuilder.nextPage(AccountResource.class,
-                                                    "getInvoicesForAccountWithPagination",
+                                                    "getInvoicesForAccountPaginated",
                                                     invoices.getNextOffset(),
                                                     limit,
                                                     queryParams,
