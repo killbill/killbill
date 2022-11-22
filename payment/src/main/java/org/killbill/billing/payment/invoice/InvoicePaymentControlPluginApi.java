@@ -149,6 +149,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         }
     }
 
+
     @Override
     public OnSuccessPaymentControlResult onSuccessCall(final PaymentControlContext paymentControlContext, final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {
         final TransactionType transactionType = paymentControlContext.getTransactionType();
@@ -162,8 +163,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
         try {
             final InvoicePayment existingInvoicePayment;
             final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(paymentControlContext.getTransactionId(), internalContext);
-            // If it's not SUCCESS, it is PENDING
-            final boolean success = paymentTransactionModelDao.getTransactionStatus() == TransactionStatus.SUCCESS;
+            final InvoicePaymentStatus status = toInvoicePaymentStatus(paymentTransactionModelDao.getTransactionStatus());
             switch (transactionType) {
                 case PURCHASE:
                     final UUID invoiceId = getInvoiceId(pluginProperties);
@@ -180,9 +180,8 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                             invoicePaymentAmount = paymentControlContext.getAmount();
                         }
 
-                        log.debug("Notifying invoice of {} paymentId='{}', amount='{}', currency='{}', invoiceId='{}'", success ? "successful" : "pending", paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
+                        log.debug("Notifying invoice of {} paymentId='{}', amount='{}', currency='{}', invoiceId='{}' invoicePaymentStatus='{}'", status, paymentControlContext.getPaymentId(), invoicePaymentAmount, paymentControlContext.getCurrency(), invoiceId);
 
-                        // For PENDING payments, the attempt will be kept as unsuccessful and an InvoicePaymentErrorInternalEvent sent on the bus (e.g. for Overdue)
                         invoiceApi.recordPaymentAttemptCompletion(invoiceId,
                                                                   invoicePaymentAmount,
                                                                   paymentControlContext.getCurrency(),
@@ -191,7 +190,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                                   paymentControlContext.getAttemptPaymentId(),
                                                                   paymentControlContext.getTransactionExternalKey(),
                                                                   paymentControlContext.getCreatedDate(),
-                                                                  success,
+                                                                  status,
                                                                   internalContext);
                     }
                     break;
@@ -200,7 +199,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                     final Map<UUID, BigDecimal> idWithAmount = extractIdsWithAmountFromProperties(pluginProperties);
                     final PluginProperty prop = getPluginProperty(pluginProperties, PROP_IPCD_REFUND_WITH_ADJUSTMENTS);
                     final boolean isAdjusted = prop != null && prop.getValue() != null ? Boolean.valueOf(prop.getValue().toString()) : false;
-                    invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAttemptPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), success, internalContext);
+                    invoiceApi.recordRefund(paymentControlContext.getPaymentId(), paymentControlContext.getAttemptPaymentId(), paymentControlContext.getAmount(), isAdjusted, idWithAmount, paymentControlContext.getTransactionExternalKey(), status, internalContext);
                     break;
 
                 case CHARGEBACK:
@@ -242,7 +241,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                             isInvoiceAdjusted,
                                             idWithAmountMap,
                                             paymentControlContext.getTransactionExternalKey(),
-                                            success,
+                                            status,
                                             internalContext);
                     break;
 
@@ -276,7 +275,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                               paymentControlContext.getAttemptPaymentId(),
                                                               paymentControlContext.getTransactionExternalKey(),
                                                               paymentControlContext.getCreatedDate(),
-                                                              false,
+                                                              InvoicePaymentStatus.INIT,
                                                               internalContext);
                 } catch (final InvoiceApiException e) {
                     log.error("InvoicePaymentControlPluginApi onFailureCall failed ton update invoice for attemptId = " + paymentControlContext.getAttemptPaymentId() + ", transactionType  = " + transactionType, e);
@@ -309,6 +308,17 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
             retryServiceScheduler.scheduleRetry(ObjectType.ACCOUNT, accountId, cur.getAttemptId(), internalCallContext.getTenantRecordId(), List.of(PLUGIN_NAME), internalCallContext.getCreatedDate());
         }
         controlDao.removeAutoPayOffEntry(accountId);
+    }
+
+    private static InvoicePaymentStatus toInvoicePaymentStatus(final TransactionStatus status) {
+        switch (status) {
+            case SUCCESS:
+                return InvoicePaymentStatus.SUCCESS;
+            case PENDING:
+                return InvoicePaymentStatus.PENDING;
+            default:
+                return InvoicePaymentStatus.INIT;
+        }
     }
 
     private UUID getInvoiceId(final Iterable<PluginProperty> pluginProperties) throws PaymentControlApiException {
@@ -366,7 +376,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                           paymentControlPluginContext.getAttemptPaymentId(),
                                                           paymentControlPluginContext.getTransactionExternalKey(),
                                                           paymentControlPluginContext.getCreatedDate(),
-                                                          false,
+                                                          InvoicePaymentStatus.INIT,
                                                           internalContext);
                 return new DefaultPriorPaymentControlResult(true);
             }
@@ -673,7 +683,7 @@ public final class InvoicePaymentControlPluginApi implements PaymentControlPlugi
                                                           paymentAttemptId,
                                                           successfulTransaction.getTransactionExternalKey(),
                                                           successfulTransaction.getCreatedDate(),
-                                                          true,
+                                                          InvoicePaymentStatus.SUCCESS,
                                                           internalContext);
                 return true;
 

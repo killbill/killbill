@@ -133,7 +133,7 @@ public class InvoiceTestUtils {
         Mockito.when(payment.getStatus()).thenReturn(InvoicePaymentStatus.SUCCESS);
 
         invoicePaymentApi.recordPaymentAttemptCompletion(payment.getInvoiceId(), payment.getAmount(), payment.getCurrency(), payment.getProcessedCurrency(), payment.getPaymentId(), UUID.randomUUID(), payment.getPaymentCookieId(),
-                                                         payment.getPaymentDate(), payment.getStatus() == InvoicePaymentStatus.SUCCESS, callContext);
+                                                         payment.getPaymentDate(), payment.getStatus(), callContext);
 
         return payment;
     }

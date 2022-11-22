@@ -105,8 +105,7 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public void recordPaymentAttemptCompletion(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final UUID paymentAttemptId, final String transactionExternalKey, final DateTime paymentDate, final boolean success, final InternalCallContext context) throws InvoiceApiException {
-        final InvoicePaymentStatus status = success ? InvoicePaymentStatus.SUCCESS : InvoicePaymentStatus.INIT;
+    public void recordPaymentAttemptCompletion(final UUID invoiceId, final BigDecimal amount, final Currency currency, final Currency processedCurrency, final UUID paymentId, final UUID paymentAttemptId, final String transactionExternalKey, final DateTime paymentDate, final InvoicePaymentStatus status, final InternalCallContext context) throws InvoiceApiException {
         final InvoicePayment invoicePayment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, transactionExternalKey, status);
         dao.notifyOfPaymentCompletion(new InvoicePaymentModelDao(invoicePayment), paymentAttemptId, context);
     }
@@ -128,12 +127,12 @@ public class DefaultInvoiceInternalApi implements InvoiceInternalApi {
     }
 
     @Override
-    public InvoicePayment recordRefund(final UUID paymentId, final UUID paymentAttemptId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final String transactionExternalKey, final boolean success, final InternalCallContext context) throws InvoiceApiException {
+    public InvoicePayment recordRefund(final UUID paymentId, final UUID paymentAttemptId, final BigDecimal amount, final boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final String transactionExternalKey, final InvoicePaymentStatus status, final InternalCallContext context) throws InvoiceApiException {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvoiceApiException(ErrorCode.PAYMENT_REFUND_AMOUNT_NEGATIVE_OR_NULL, paymentId, amount);
         }
 
-        final InvoicePaymentModelDao refund = dao.createRefund(paymentId, paymentAttemptId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, transactionExternalKey, success, context);
+        final InvoicePaymentModelDao refund = dao.createRefund(paymentId, paymentAttemptId, amount, isInvoiceAdjusted, invoiceItemIdsWithAmounts, transactionExternalKey, status, context);
 
         // See https://github.com/killbill/killbill/issues/265
         final CallContext callContext = internalCallContextFactory.createCallContext(context);

@@ -393,7 +393,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCreateRefundOnNonExistingPayment() throws Exception {
         try {
-            invoiceDao.createRefund(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, false, Collections.emptyMap(), null, true, context);
+            invoiceDao.createRefund(UUID.randomUUID(), UUID.randomUUID(), BigDecimal.TEN, false, Collections.emptyMap(), null, InvoicePaymentStatus.SUCCESS, context);
             Assert.fail();
         } catch (InvoiceApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND.getCode());
@@ -835,7 +835,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(new BigDecimal("0.00")), 0);
 
-        invoiceDao.createRefund(paymentId, UUID.randomUUID(), refund1, withAdjustment, Collections.emptyMap(), UUID.randomUUID().toString(), true, context);
+        invoiceDao.createRefund(paymentId, UUID.randomUUID(), refund1, withAdjustment, Collections.emptyMap(), UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, context);
         balance = invoiceDao.getAccountBalance(accountId, context);
         if (withAdjustment) {
             assertEquals(balance.compareTo(BigDecimal.ZERO), 0);
@@ -895,7 +895,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // PAss a null value to let invoice calculate the amount to adjust
         itemAdjustment.put(item2.getId(), null);
 
-        invoiceDao.createRefund(paymentId, UUID.randomUUID(), refundAmount, true, itemAdjustment, UUID.randomUUID().toString(), true, context);
+        invoiceDao.createRefund(paymentId, UUID.randomUUID(), refundAmount, true, itemAdjustment, UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, context);
         accountBalance = invoiceDao.getAccountBalance(accountId, context);
 
         final boolean partialRefund = refundAmount.compareTo(amount) < 0;
@@ -1004,7 +1004,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         if (withAdjustment) {
             invoiceItemIdsWithAmounts.put(item2Replace.getId(), refundAmount);
         }
-        invoiceDao.createRefund(paymentId, UUID.randomUUID(), refundAmount, withAdjustment, invoiceItemIdsWithAmounts, UUID.randomUUID().toString(), true, context);
+        invoiceDao.createRefund(paymentId, UUID.randomUUID(), refundAmount, withAdjustment, invoiceItemIdsWithAmounts, UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, context);
 
         balance = invoiceDao.getAccountBalance(accountId, context);
         assertEquals(balance.compareTo(expectedFinalBalance), 0);
@@ -1630,7 +1630,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         // AND THEN THIRD THE REFUND
         final Map<UUID, BigDecimal> invoiceItemMap = new HashMap<UUID, BigDecimal>();
         invoiceItemMap.put(invoiceItem.getId(), new BigDecimal("239.00"));
-        invoiceDao.createRefund(paymentId, UUID.randomUUID(), paymentAmount, true, invoiceItemMap, UUID.randomUUID().toString(), true, context);
+        invoiceDao.createRefund(paymentId, UUID.randomUUID(), paymentAmount, true, invoiceItemMap, UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, context);
 
         final InvoiceModelDao savedInvoice = invoiceDao.getById(invoiceId, context);
         assertNotNull(savedInvoice);
@@ -1772,7 +1772,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00, context);
 
         // Refund Payment before we can deleted CBA
-        invoiceDao.createRefund(paymentId, UUID.randomUUID(), new BigDecimal("10.0"), false, Collections.emptyMap(), UUID.randomUUID().toString(), true, context);
+        invoiceDao.createRefund(paymentId, UUID.randomUUID(), new BigDecimal("10.0"), false, Collections.emptyMap(), UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, context);
 
         // Verify all three invoices were affected
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 0.00);
@@ -1846,7 +1846,7 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.verifyInvoice(invoice2.getId(), 0.00, -5.00, context);
         invoiceUtil.verifyInvoice(invoice3.getId(), 0.00, -5.00, context);
 
-        invoiceDao.createRefund(paymentId, UUID.randomUUID(), paymentAmount, false, Collections.emptyMap(), UUID.randomUUID().toString(), true, context);
+        invoiceDao.createRefund(paymentId, UUID.randomUUID(), paymentAmount, false, Collections.emptyMap(), UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, context);
 
         // Verify all three invoices were affected
         Assert.assertEquals(invoiceDao.getAccountCBA(accountId, context).doubleValue(), 0.00);

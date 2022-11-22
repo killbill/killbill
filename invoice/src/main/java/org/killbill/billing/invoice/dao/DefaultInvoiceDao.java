@@ -660,7 +660,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final UUID paymentAttemptId,
                                                final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
                                                final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final String transactionExternalKey,
-                                               final boolean success, final InternalCallContext context) throws InvoiceApiException {
+                                               final InvoicePaymentStatus status, final InternalCallContext context) throws InvoiceApiException {
 
         if (isInvoiceAdjusted && invoiceItemIdsWithNullAmounts.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEMS_ADJUSTMENT_MISSING);
@@ -704,15 +704,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                          "Found refund for transactionExternalKey=" + transactionExternalKey + ", paymentId=" + existingRefund.getPaymentId() +
                                          "and does not match input paymentId=" + paymentId);
 
-                // The pending entry already exists, bail out (no need to send events, or compute cba logic)
-                if (existingRefund.getStatus() != InvoicePaymentStatus.SUCCESS && !success) {
+                // The entry already exists, bail out (no need to send events, or compute cba logic)
+                if (existingRefund.getStatus() == status) {
                     return existingRefund;
                 }
 
-                // At this point, we expect the request to be a transition PENDING -> SUCCESS (SUCCESS -> SUCCESS is also tolerated)
-                Preconditions.checkState(success, "Found successful refund for transactionExternalKey=" + transactionExternalKey + "and does not match pending input");
                 // We only update date and the status
-                existingRefund.setStatus(InvoicePaymentStatus.SUCCESS);
+                existingRefund.setStatus(status);
                 existingRefund.setPaymentDate(context.getCreatedDate());
                 transactional.updateAttempt(existingRefund.getId().toString(),
                                             existingRefund.getPaymentId().toString(),
@@ -726,7 +724,6 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                             context);
                 result = existingRefund;
             } else {
-                final InvoicePaymentStatus status = success ? InvoicePaymentStatus.SUCCESS : InvoicePaymentStatus.INIT;
                 final InvoicePaymentModelDao refund = new InvoicePaymentModelDao(UUIDs.randomUUID(), context.getCreatedDate(), InvoicePaymentType.REFUND,
                                                                                  payment.getInvoiceId(), paymentId,
                                                                                  context.getCreatedDate(), requestedPositiveAmount.negate(),
@@ -734,7 +731,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                 result = createAndRefresh(transactional, refund, context);
             }
 
-            if (success) {
+            if (status == InvoicePaymentStatus.SUCCESS) {
                 // Retrieve invoice after the Refund
                 final InvoiceModelDao invoice = transInvoiceDao.getById(payment.getInvoiceId().toString(), context);
                 Preconditions.checkState(invoice != null, "Invoice shouldn't be null for payment " + payment.getId());
