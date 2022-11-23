@@ -48,6 +48,8 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
     private int billingCycleDayLocal;
     private boolean isActive;
 
+    private int quantity;
+
     public SubscriptionEventModelDao() {
     /* For the DAO mapper */
     }
@@ -125,6 +127,10 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         return billingCycleDayLocal;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
     // TODO required for jdbi binder
     public boolean getIsActive() {
         return isActive;
@@ -169,6 +175,10 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
 
     public void setBillingCycleDayLocal(final int billingCycleDayLocal) {
         this.billingCycleDayLocal = billingCycleDayLocal;
+    }
+
+    public void setQuantity(final int quantity) {
+        this.quantity = quantity;
     }
 
     public void setIsActive(final boolean isActive) {
@@ -259,6 +269,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         sb.append(", phaseName='").append(phaseName).append('\'');
         sb.append(", priceListName='").append(priceListName).append('\'');
         sb.append(", billingCycleDayLocal=").append(billingCycleDayLocal);
+        sb.append(", quantity=").append(quantity);
         sb.append(", isActive=").append(isActive);
         sb.append('}');
         return sb.toString();
@@ -308,6 +319,9 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         if (billingCycleDayLocal != that.billingCycleDayLocal) {
             return false;
         }
+        if (quantity != that.quantity) {
+            return false;
+        }
         return true;
     }
 
@@ -322,6 +336,8 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         result = 31 * result + (planName != null ? planName.hashCode() : 0);
         result = 31 * result + (phaseName != null ? phaseName.hashCode() : 0);
         result = 31 * result + (priceListName != null ? priceListName.hashCode() : 0);
+        result = 31 * result + billingCycleDayLocal;
+        result = 31 * result + quantity;
         result = 31 * result + (isActive ? 1 : 0);
         return result;
     }
