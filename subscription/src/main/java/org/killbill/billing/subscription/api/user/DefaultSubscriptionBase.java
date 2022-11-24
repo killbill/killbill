@@ -674,7 +674,8 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                     // Computed from lastActiveCatalog
                     final DateTime catalogEffectiveDate = CatalogDateHelper.toUTCDateTime(lastActiveCatalog.getEffectiveDate());
                     final SubscriptionBillingEvent billingTransition = new DefaultSubscriptionBillingEvent(cur.getTransitionType(), plan, planPhase, cur.getEffectiveTransitionTime(),
-                                                                                                           cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal(), catalogEffectiveDate);
+                                                                                                           cur.getTotalOrdering(), cur.getNextBillingCycleDayLocal(), cur.getNextQuantity(),
+                                                                                                           catalogEffectiveDate);
                     result.add(billingTransition);
 
                     if (isCreateOrTransfer || isChangeEvent) {
@@ -697,7 +698,7 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
                                 // Computed from the nextPlan
                                 final DateTime catalogEffectiveDateForNextPlan = CatalogDateHelper.toUTCDateTime(nextPlan.getCatalog().getEffectiveDate());
                                 final SubscriptionBillingEvent newBillingTransition = new DefaultSubscriptionBillingEvent(SubscriptionBaseTransitionType.CHANGE, nextPlan, nextPlanPhase, nextEffectiveDate,
-                                                                                                                          cur.getTotalOrdering(), bcdLocal, catalogEffectiveDateForNextPlan);
+                                                                                                                          cur.getTotalOrdering(), bcdLocal, cur.getNextQuantity(), catalogEffectiveDateForNextPlan);
                                 candidatesCatalogChangeEvents.add(newBillingTransition);
                             }
                             // TODO not so optimized as we keep parsing catalogs from the start...
