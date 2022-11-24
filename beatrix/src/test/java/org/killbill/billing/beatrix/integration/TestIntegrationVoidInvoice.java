@@ -160,7 +160,7 @@ public class TestIntegrationVoidInvoice extends TestIntegrationBase {
         final BigDecimal accountCBA1 = invoiceUserApi.getAccountCBA(account.getId(), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
         final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         assertListenerStatus();
 

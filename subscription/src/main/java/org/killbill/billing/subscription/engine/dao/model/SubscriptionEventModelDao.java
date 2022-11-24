@@ -28,6 +28,9 @@ import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
 import org.killbill.billing.subscription.events.expired.ExpiredEventBuilder;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventBuilder;
+import org.killbill.billing.subscription.events.quantity.QuantityEvent;
+import org.killbill.billing.subscription.events.quantity.QuantityEventBuilder;
+import org.killbill.billing.subscription.events.quantity.QuantityEventData;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventType;
@@ -54,23 +57,6 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
     /* For the DAO mapper */
     }
 
-    public SubscriptionEventModelDao(final UUID id, final long totalOrdering, final EventType eventType, final ApiEventType userType,
-                                     final DateTime effectiveDate, final UUID subscriptionId,
-                                     final String planName, final String phaseName, final String priceListName, final int billingCycleDayLocal,
-                                     final boolean active, final DateTime createDate, final DateTime updateDate) {
-        super(id, createDate, updateDate);
-        this.totalOrdering = totalOrdering;
-        this.eventType = eventType;
-        this.userType = userType;
-        this.effectiveDate = effectiveDate;
-        this.subscriptionId = subscriptionId;
-        this.planName = planName;
-        this.phaseName = phaseName;
-        this.priceListName = priceListName;
-        this.billingCycleDayLocal = billingCycleDayLocal;
-        this.isActive = active;
-    }
-
     public SubscriptionEventModelDao(final SubscriptionBaseEvent src) {
         super(src.getId(), src.getCreatedDate(), src.getUpdatedDate());
         this.totalOrdering = src.getTotalOrdering();
@@ -88,6 +74,7 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
         }
         this.priceListName = eventType == EventType.API_USER ? ((ApiEvent) src).getPriceList() : null;
         this.billingCycleDayLocal = eventType == EventType.BCD_UPDATE ? ((BCDEvent) src).getBillCycleDayLocal() : 0;
+        this.quantity = eventType == EventType.QUANTITY_UPDATE ? ((QuantityEvent) src).getQuantity() : 0;
         this.isActive = src.isActive();
     }
 
@@ -223,6 +210,8 @@ public class SubscriptionEventModelDao extends EntityModelDaoBase implements Ent
             result = builder.build();
         } else if (src.getEventType() == EventType.BCD_UPDATE) {
             result = (new BCDEventBuilder(base).setBillCycleDayLocal(src.getBillingCycleDayLocal())).build();
+        } else if (src.getEventType() == EventType.QUANTITY_UPDATE) {
+            result = (new QuantityEventBuilder(base).setQuantity(src.getQuantity())).build();
         } else if (src.getEventType() == EventType.EXPIRED) {
         	result = (new ExpiredEventBuilder(base)).build(); 
         } else {

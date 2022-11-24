@@ -283,6 +283,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
+    public Integer getQuantity() {
+        return getSubscriptionBase().getQuantity() != null ? getSubscriptionBase().getQuantity() : Integer.valueOf(1); // Provide a sane non null default.
+    }
+
+    @Override
     public Entitlement cancelEntitlementWithPolicy(final EntitlementActionPolicy entitlementPolicy, final Iterable<PluginProperty> properties, final CallContext callContext) throws EntitlementApiException {
 
         logCancelEntitlement(log, this, null, null, null, entitlementPolicy, null);
@@ -825,6 +830,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }
+    }
+
+    @Override
+    public void updateQuantity(final int quantity, final LocalDate effectiveFromDate, final CallContext context) throws EntitlementApiException {
+        // TODO
     }
 
     private void refresh(final TenantContext context) throws EntitlementApiException {

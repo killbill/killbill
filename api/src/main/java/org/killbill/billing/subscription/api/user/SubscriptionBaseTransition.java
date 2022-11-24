@@ -66,5 +66,9 @@ public interface SubscriptionBaseTransition {
 
     public Integer getNextBillingCycleDayLocal();
 
+    public Integer getPreviousQuantity();
+
+    public Integer getNextQuantity();
+
     public DateTime getCreatedDate();
 }

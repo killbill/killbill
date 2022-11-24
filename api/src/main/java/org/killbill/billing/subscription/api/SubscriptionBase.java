@@ -116,6 +116,8 @@ public interface SubscriptionBase extends Entity, Blockable {
 
     public Integer getBillCycleDayLocal();
 
+    public Integer getQuantity();
+
     public SubscriptionBaseTransition getPendingTransition();
 
     public SubscriptionBaseTransition getPreviousTransition();

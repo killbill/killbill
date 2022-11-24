@@ -140,6 +140,7 @@ public class TestApiListener {
         TAG_DEFINITION,
         CUSTOM_FIELD,
         BCD_CHANGE,
+        QUANTITY_CHANGE,
         EXPIRED
     }
 
@@ -194,6 +195,10 @@ public class TestApiListener {
                 break;
             case BCD_CHANGE:
                 assertEqualsNicely(NextEvent.BCD_CHANGE);
+                notifyIfStackEmpty();
+                break;
+            case QUANTITY_CHANGE:
+                assertEqualsNicely(NextEvent.QUANTITY_CHANGE);
                 notifyIfStackEmpty();
                 break;
             case EXPIRED:

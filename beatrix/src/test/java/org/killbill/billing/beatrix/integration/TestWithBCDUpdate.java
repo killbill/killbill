@@ -577,7 +577,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, Collections.emptyList()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext);
 
@@ -640,7 +640,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, Collections.emptyList()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Account accountBCD = accountUserApi.getAccountById(account.getId(), callContext);
         assertEquals(accountBCD.getBillCycleDayLocal(), (Integer) 1);
@@ -700,7 +700,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, Collections.emptyList()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         // BP creation : Will set Account BCD to the first (DateOfFirstRecurringNonZeroCharge is the subscription start date in this case)
-        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
+        final UUID baseEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement baseEntitlement = entitlementApi.getEntitlementForId(baseEntitlementId, false, callContext);
 
@@ -762,7 +762,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         busHandler.pushExpectedEvents( NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
         // We will realign the BCD on the 15 as we create the subscription - ignoring the account setting on 21.
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -784,7 +784,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
 
         // Change plan EOT
         // We will now realign the BCD on the 21 as we change the plan for the subscription.
-        entitlement.changePlan(new DefaultEntitlementSpecifier(spec2, 21, null, null), Collections.emptyList(), callContext);
+        entitlement.changePlan(new DefaultEntitlementSpecifier(spec2, 21, null, null, null), Collections.emptyList(), callContext);
 
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.BCD_CHANGE, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         clock.addMonths(1);
@@ -886,7 +886,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.QUARTERLY, "notrial", null);
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-quarterly-notrial-evergreen", account.getCurrency(), BigDecimal.TEN, BigDecimal.ZERO, Collections.emptyList()));
-        final DefaultEntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(spec, billCycleDay, UUID.randomUUID().toString(), overrides);
+        final DefaultEntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(spec, billCycleDay, null, UUID.randomUUID().toString(), overrides);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         entitlementApi.createBaseEntitlement(account.getId(), entitlementSpecifier, "134582864", null, null, false, true, Collections.emptyList(), callContext);
@@ -918,7 +918,7 @@ public class TestWithBCDUpdate extends TestIntegrationBase {
         busHandler.pushExpectedEvents( NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
 
         // We will realign the BCD on the 15 as we create the subscription - ignoring the account setting on 21.
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final Invoice firstInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,

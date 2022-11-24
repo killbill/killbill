@@ -112,7 +112,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         //
         // We verify that invoice only tried to REPAIR from cutoff date -- and in particular the period 2020-01-15 - 2020-02-01 is left untouched.
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), new LocalDate(2020, 1, 15), Collections.emptyList(), callContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null, null), new LocalDate(2020, 1, 15), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
@@ -171,14 +171,14 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose targetDt >= cutoffDt
         // - Proposed items correctly generate the 2 expected items but both are filtered because their startDt < cutoffDt
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday().minusDays(1), Collections.emptyList(), callContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null, null), clock.getUTCToday().minusDays(1), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Do a change today => Only new item 2020-01-16 - 2020-02-01 gets generated
         // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose targetDt >= cutoffDt
         // - Proposed items correctly generate the 2 expected items but the first one is filtered because its start date  2020-01-15 < cutoffDt
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday(), Collections.emptyList(), callContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null, null), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Double invoicing due to bad config! (no REPAIR)
@@ -898,7 +898,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final LocalDate effDt1 = new LocalDate(2020, 8, 15);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
         subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, false, callContext);
         assertListenerStatus();
 
@@ -906,7 +906,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final LocalDate effDt2 = new LocalDate(2020, 9, 1);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("training-usage-in-arrear");
-        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null), null, effDt2, effDt2, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null, null), null, effDt2, effDt2, false, true, Collections.emptyList(), callContext);
         final Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, false, callContext);
         assertListenerStatus();
 

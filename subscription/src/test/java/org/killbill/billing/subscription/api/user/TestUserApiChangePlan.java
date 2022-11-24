@@ -20,7 +20,6 @@ package org.killbill.billing.subscription.api.user;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -30,9 +29,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.api.TestApiListener.NextEvent;
-import org.killbill.billing.callcontext.CallContextBase;
 import org.killbill.billing.callcontext.InternalCallContext;
-import org.killbill.billing.callcontext.MutableCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Duration;
 import org.killbill.billing.catalog.api.PhaseType;
@@ -43,7 +40,6 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
-import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunArguments;
@@ -51,15 +47,9 @@ import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.SubscriptionBillingApiException;
-import org.killbill.billing.subscription.engine.dao.SubscriptionEventSqlDao;
-import org.killbill.billing.subscription.engine.dao.model.SubscriptionEventModelDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEvent;
-import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.killbill.billing.util.callcontext.CallContext;
-import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
-import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -509,7 +499,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription.getStartDate().compareTo(startDate.toDateTime(accountData.getReferenceTime())), 0);
 
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", baseTerm, basePriceList);
-        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(planPhaseSpecifier, null, null, null);
+        final EntitlementSpecifier spec = new DefaultEntitlementSpecifier(planPhaseSpecifier, null, 1, null, null);
 
         // First try with default api (no date -> IMM) => Call should fail because subscription is PENDING
         final DryRunArguments dryRunArguments1 = testUtil.createDryRunArguments(subscription.getId(), subscription.getBundleId(), spec, null, SubscriptionEventType.CHANGE, null);
@@ -726,7 +716,7 @@ public class TestUserApiChangePlan extends SubscriptionTestSuiteWithEmbeddedDB {
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, "gunclubDiscount");
 
         testListener.pushExpectedEvents(NextEvent.CHANGE, NextEvent.BCD_CHANGE);
-        subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier, 18, null, null), clock.getUTCNow(), callContext);
+        subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier, 18, 1, null, null), clock.getUTCNow(), callContext);
         assertListenerStatus();
 
         subscription = (DefaultSubscriptionBase) subscriptionInternalApi.getSubscriptionFromId(subscription.getId(), false, internalCallContext);

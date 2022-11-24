@@ -82,6 +82,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
                                                                    new DateTime(),
                                                                    new DateTime(),
                                                                    null,
+                                                                   1,
                                                                    List.of(event),
                                                                    List.of(priceOverride),
                                                                    null,

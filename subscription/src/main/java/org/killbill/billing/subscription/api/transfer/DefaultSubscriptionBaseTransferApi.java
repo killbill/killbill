@@ -120,6 +120,10 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 newEvent = BCDEventData.createBCDEvent(subscription, effectiveDate, existingEvent.getBillCycleDayLocal());
                 break;
 
+            case QUANTITY_CHANGE:
+                // TODO
+                break;
+
             case CANCEL:
             default:
                 break;

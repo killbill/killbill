@@ -77,6 +77,7 @@ public class SubscriptionJson extends JsonBase {
     private final DateTime billingStartDate;
     private final DateTime billingEndDate;
     private final Integer billCycleDayLocal;
+    private final Integer quantity;
     private final List<EventSubscriptionJson> events;
     private final List<PhasePriceJson> prices;
     private final List<PhasePriceJson> priceOverrides;
@@ -318,6 +319,7 @@ public class SubscriptionJson extends JsonBase {
                             @JsonProperty("billingStartDate") @Nullable final DateTime billingStartDate,
                             @JsonProperty("billingEndDate") @Nullable final DateTime billingEndDate,
                             @JsonProperty("billCycleDayLocal") @Nullable final Integer billCycleDayLocal,
+                            @JsonProperty("quantity") @Nullable final Integer quantity,
                             @JsonProperty("events") @Nullable final List<EventSubscriptionJson> events,
                             @JsonProperty("priceOverrides") final List<PhasePriceJson> priceOverrides,
                             @JsonProperty("prices") final List<PhasePriceJson> prices,
@@ -337,6 +339,7 @@ public class SubscriptionJson extends JsonBase {
         this.billingStartDate = billingStartDate;
         this.billingEndDate = billingEndDate;
         this.billCycleDayLocal = billCycleDayLocal;
+        this.quantity = quantity;
         this.accountId = accountId;
         this.bundleId = bundleId;
         this.subscriptionId = subscriptionId;
@@ -393,6 +396,7 @@ public class SubscriptionJson extends JsonBase {
         this.billingStartDate = subscription.getBillingStartDate();
         this.billingEndDate = subscription.getBillingEndDate();
         this.billCycleDayLocal = subscription.getBillCycleDayLocal();
+        this.quantity = subscription.getQuantity();
         this.accountId = subscription.getAccountId();
         this.bundleId = subscription.getBundleId();
         this.subscriptionId = subscription.getId();
@@ -507,6 +511,10 @@ public class SubscriptionJson extends JsonBase {
         return billCycleDayLocal;
     }
 
+    public Integer getQuantity() {
+        return quantity;
+    }
+
     public List<EventSubscriptionJson> getEvents() {
         return events;
     }
@@ -541,6 +549,7 @@ public class SubscriptionJson extends JsonBase {
         sb.append(", billingStartDate=").append(billingStartDate);
         sb.append(", billingEndDate=").append(billingEndDate);
         sb.append(", billCycleDayLocal=").append(billCycleDayLocal);
+        sb.append(", quantity=").append(quantity);
         sb.append(", events=").append(events);
         sb.append(", prices=").append(prices);
         sb.append(", priceOverrides=").append(priceOverrides);
@@ -622,6 +631,9 @@ public class SubscriptionJson extends JsonBase {
         if (billCycleDayLocal != null ? !billCycleDayLocal.equals(that.billCycleDayLocal) : that.billCycleDayLocal != null) {
             return false;
         }
+        if (quantity != null ? !quantity.equals(that.quantity) : that.quantity != null) {
+            return false;
+        }
         return true;
     }
 
@@ -646,6 +658,7 @@ public class SubscriptionJson extends JsonBase {
         result = 31 * result + (billingStartDate != null ? billingStartDate.hashCode() : 0);
         result = 31 * result + (billingEndDate != null ? billingEndDate.hashCode() : 0);
         result = 31 * result + (billCycleDayLocal != null ? billCycleDayLocal.hashCode() : 0);
+        result = 31 * result + (quantity != null ? quantity.hashCode() : 0);
         result = 31 * result + (events != null ? events.hashCode() : 0);
         result = 31 * result + (priceOverrides != null ? priceOverrides.hashCode() : 0);
         return result;

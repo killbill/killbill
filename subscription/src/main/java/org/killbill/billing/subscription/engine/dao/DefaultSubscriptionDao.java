@@ -80,6 +80,8 @@ import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventBuilder;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventBuilder;
+import org.killbill.billing.subscription.events.quantity.QuantityEvent;
+import org.killbill.billing.subscription.events.quantity.QuantityEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
@@ -520,7 +522,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                     for (final SubscriptionBaseEvent cur : initialEvents) {
                         createdEvents.add(createAndRefresh(eventsDaoFromSameTransaction, new SubscriptionEventModelDao(cur), context));
 
-                        final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER || cur.getType() == EventType.BCD_UPDATE);
+                        final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER || cur.getType() == EventType.BCD_UPDATE || cur.getType() == EventType.QUANTITY_UPDATE);
                         final int seqId = isBusEvent ? busEffSeqId++ : 0;
                         if (!isBusEvent || !groupBusEvents || seqId == 0) {
                             recordBusOrFutureNotificationFromTransaction(defaultSubscriptionBase, cur, entitySqlDaoWrapperFactory, isBusEvent, seqId, catalog, context);
@@ -669,7 +671,7 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
             for (final SubscriptionBaseEvent cur : inputChangeEvents) {
                 createAndRefresh(eventSqlDao, new SubscriptionEventModelDao(cur), context);
 
-                final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER || cur.getType() == EventType.BCD_UPDATE);
+                final boolean isBusEvent = cur.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0 && (cur.getType() == EventType.API_USER || cur.getType() == EventType.BCD_UPDATE ||  cur.getType() == EventType.QUANTITY_UPDATE);
                 recordBusOrFutureNotificationFromTransaction(subscription, cur, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
             }
 
@@ -728,20 +730,20 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
         cancelFutureEventFromTransaction(subscriptionId, entitySqlDaoWrapperFactory, EventType.PHASE, null, context);
     }
 
-    private void unactivateFutureEventsFromTransaction(final UUID subscriptionId, final DateTime effectiveDate, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingBCDChange, final InternalCallContext context) {
+    private void unactivateFutureEventsFromTransaction(final UUID subscriptionId, final DateTime effectiveDate, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingQuantityOrBCDChange, final InternalCallContext context) {
         final SubscriptionEventSqlDao eventSqlDao = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
         final SortedSet<SubscriptionEventModelDao> eventModels = eventSqlDao.getFutureOrPresentActiveEventForSubscription(subscriptionId.toString(), effectiveDate.toDate(), context);
-        unactivateFutureEventsFromTransaction(eventModels, entitySqlDaoWrapperFactory, includingBCDChange, context);
+        unactivateFutureEventsFromTransaction(eventModels, entitySqlDaoWrapperFactory, includingQuantityOrBCDChange, context);
     }
 
-    private void unactivateFutureEventsFromTransaction(final Iterable<SubscriptionEventModelDao> eventModels, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingBCDChange, final InternalCallContext context) {
+    private void unactivateFutureEventsFromTransaction(final Iterable<SubscriptionEventModelDao> eventModels, final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final boolean includingQuantityOrBCDChange, final InternalCallContext context) {
         for (final SubscriptionEventModelDao cur : eventModels) {
             // Skip CREATE event (because of date equality in the query and we don't want to invalidate CREATE event that match a CANCEL event)
             if (cur.getEventType() == EventType.API_USER && (cur.getUserType() == ApiEventType.CREATE || cur.getUserType() == ApiEventType.TRANSFER)) {
                 continue;
             }
 
-            if (includingBCDChange || cur.getEventType() != EventType.BCD_UPDATE) {
+            if (includingQuantityOrBCDChange || (cur.getEventType() != EventType.BCD_UPDATE && cur.getEventType() != EventType.QUANTITY_UPDATE)) {
                 unactivateEventFromTransaction(cur, entitySqlDaoWrapperFactory, context);
             }
         }
@@ -929,6 +931,9 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
                         break;
                     case BCD_UPDATE:
                         eventBuilder = new BCDEventBuilder((BCDEvent) curDryRun);
+                        break;
+                    case QUANTITY_UPDATE:
+                        eventBuilder = new QuantityEventBuilder((QuantityEvent) curDryRun);
                         break;
                     case API_USER:
                     default:

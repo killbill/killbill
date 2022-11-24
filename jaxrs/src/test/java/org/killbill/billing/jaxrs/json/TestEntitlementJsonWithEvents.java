@@ -83,6 +83,7 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
                                                                                 new DateTime(),
                                                                                 new DateTime(),
                                                                                 null,
+                                                                                1,
                                                                                 List.of(newEvent),
                                                                                 List.of(priceOverride),
                                                                                 null,

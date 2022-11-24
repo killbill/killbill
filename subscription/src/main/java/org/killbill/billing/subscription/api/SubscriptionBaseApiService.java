@@ -90,6 +90,7 @@ public interface SubscriptionBaseApiService {
                                                            Plan plan, PhaseType initialPhase,
                                                            String realPriceList, DateTime effectiveDate,
                                                            Integer bcd,
+                                                           Integer quantity,
                                                            SubscriptionCatalog catalog,
                                                            InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
