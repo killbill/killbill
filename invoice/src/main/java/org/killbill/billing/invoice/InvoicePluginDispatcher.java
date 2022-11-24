@@ -246,7 +246,7 @@ public class InvoicePluginDispatcher {
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
-        	final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, clonedInvoice, existingInvoices, isDryRun, isRescheduled, callContext);
+            final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, clonedInvoice, existingInvoices, isDryRun, isRescheduled, callContext);
             final InvoiceGroupingResult grpResult = invoicePlugin.getInvoiceGrouping(clonedInvoice, isDryRun, inputPluginProperties, invoiceContext);
             if (grpResult != null) {
 
