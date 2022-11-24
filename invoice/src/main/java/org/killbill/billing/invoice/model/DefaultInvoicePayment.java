@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
 import org.killbill.billing.entity.EntityBase;
@@ -41,22 +42,22 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     private final Currency processedCurrency;
     private final String paymentCookieId;
     private final UUID linkedInvoicePaymentId;
-    private final Boolean isSuccess;
+    private final InvoicePaymentStatus status;
 
     public DefaultInvoicePayment(final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
-                                 final BigDecimal amount, final Currency currency, final Currency processedCurrency, final String paymentCookieId, final Boolean isSuccess) {
-        this(UUIDs.randomUUID(), null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, paymentCookieId, null, isSuccess);
+                                 final BigDecimal amount, final Currency currency, final Currency processedCurrency, final String paymentCookieId, final InvoicePaymentStatus status) {
+        this(UUIDs.randomUUID(), null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, paymentCookieId, null, status);
     }
 
     public DefaultInvoicePayment(final UUID id, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
                                  @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final Currency processedCurrency, @Nullable final String paymentCookieId,
                                  @Nullable final UUID linkedInvoicePaymentId) {
-        this(id, null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, paymentCookieId, linkedInvoicePaymentId, true);
+        this(id, null, type, paymentId, invoiceId, paymentDate, amount, currency, processedCurrency, paymentCookieId, linkedInvoicePaymentId, InvoicePaymentStatus.SUCCESS);
     }
 
     public DefaultInvoicePayment(final UUID id, @Nullable final DateTime createdDate, final InvoicePaymentType type, final UUID paymentId, final UUID invoiceId, final DateTime paymentDate,
                                  @Nullable final BigDecimal amount, @Nullable final Currency currency, @Nullable final Currency processedCurrency, @Nullable final String paymentCookieId,
-                                 @Nullable final UUID linkedInvoicePaymentId, final Boolean isSuccess) {
+                                 @Nullable final UUID linkedInvoicePaymentId, final InvoicePaymentStatus status) {
         super(id, createdDate, createdDate);
         this.type = type;
         this.paymentId = paymentId;
@@ -67,7 +68,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
         this.processedCurrency =processedCurrency;
         this.paymentCookieId = paymentCookieId;
         this.linkedInvoicePaymentId = linkedInvoicePaymentId;
-        this.isSuccess = isSuccess;
+        this.status = status;
     }
 
     public DefaultInvoicePayment(final InvoicePaymentModelDao invoicePaymentModelDao) {
@@ -76,7 +77,7 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
              invoicePaymentModelDao.getAmount(), invoicePaymentModelDao.getCurrency(), invoicePaymentModelDao.getProcessedCurrency(),
              invoicePaymentModelDao.getPaymentCookieId(),
              invoicePaymentModelDao.getLinkedInvoicePaymentId(),
-             invoicePaymentModelDao.getSuccess());
+             invoicePaymentModelDao.getStatus());
     }
 
     @Override
@@ -125,8 +126,8 @@ public class DefaultInvoicePayment extends EntityBase implements InvoicePayment 
     }
 
     @Override
-    public Boolean isSuccess() {
-        return isSuccess;
+    public InvoicePaymentStatus getStatus() {
+        return status;
     }
 
 }

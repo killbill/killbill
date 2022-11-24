@@ -35,6 +35,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.DefaultInvoice;
@@ -111,7 +112,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         inputInvoice.addInvoiceItem(invoiceItem);
         invoiceUtil.createInvoice(inputInvoice, internalAccountContext);
 
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), inputInvoice.getId(), new DateTime(), BigDecimal.TEN, Currency.USD, Currency.USD, null, true);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), inputInvoice.getId(), new DateTime(), BigDecimal.TEN, Currency.USD, Currency.USD, null, InvoicePaymentStatus.SUCCESS);
         invoiceUtil.createPayment(payment, internalAccountContext);
 
         final List<Tag> tags = Collections.emptyList();

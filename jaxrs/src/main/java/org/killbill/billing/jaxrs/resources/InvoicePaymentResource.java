@@ -49,6 +49,7 @@ import org.killbill.billing.account.api.AccountApiException;
 import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceUserApi;
 import org.killbill.billing.jaxrs.json.AuditLogJson;
@@ -344,7 +345,7 @@ public class InvoicePaymentResource extends JaxRsResourceBase {
         final List<InvoicePayment> invoicePayments = invoicePaymentApi.getInvoicePayments(paymentId, tenantContext);
 
         final InvoicePayment originalInvoicePaymentAttempt = invoicePayments.stream()
-                .filter(input -> input.getType() == InvoicePaymentType.ATTEMPT && !input.isSuccess())
+                .filter(input -> input.getType() == InvoicePaymentType.ATTEMPT && input.getStatus() != InvoicePaymentStatus.SUCCESS)
                 .findFirst().orElse(null);
 
         final UUID invoiceId = originalInvoicePaymentAttempt != null ? originalInvoicePaymentAttempt.getInvoiceId() : null;

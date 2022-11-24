@@ -86,6 +86,6 @@ public interface InvoicePaymentSqlDao extends EntitySqlDao<InvoicePaymentModelDa
                        @Bind("processedCurrency") final Currency processedCurrency,
                        @Bind("paymentCookieId") final String paymentCookieId,
                        @Bind("linkedInvoicePaymentId") final String linkedInvoicePaymentId,
-                       @Bind("success") final boolean success,
+                       @Bind("status") final String status,
                        @SmartBindBean final InternalTenantContext context);
 }

@@ -41,7 +41,7 @@ public interface InvoiceInternalApi {
 
     void recordPaymentAttemptInit(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, UUID paymentAttemptId, String transactionExternalKey, DateTime paymentDate, InternalCallContext context) throws InvoiceApiException;
 
-    void recordPaymentAttemptCompletion(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, UUID paymentAttemptId, String transactionExternalKey, DateTime paymentDate, boolean success, InternalCallContext context) throws InvoiceApiException;
+    void recordPaymentAttemptCompletion(UUID invoiceId, BigDecimal amountOutstanding, Currency currency, Currency processedCurrency, UUID paymentId, UUID paymentAttemptId, String transactionExternalKey, DateTime paymentDate, InvoicePaymentStatus status, InternalCallContext context) throws InvoiceApiException;
 
     InvoicePayment getInvoicePaymentForAttempt(UUID paymentId, InternalTenantContext context) throws InvoiceApiException;
 
@@ -57,12 +57,13 @@ public interface InvoiceInternalApi {
      * @param isInvoiceAdjusted         whether the refund should trigger an invoice or invoice item adjustment
      * @param invoiceItemIdsWithAmounts invoice item ids and associated amounts to adjust
      * @param transactionExternalKey    refund transaction externalKey
+     * @param status                    the (invoice) payment status
      * @param context                   the call callcontext
      * @return the created invoice payment object associated with this refund
      * @throws InvoiceApiException
      */
     InvoicePayment recordRefund(UUID paymentId, UUID paymentAttemptId, BigDecimal amount, boolean isInvoiceAdjusted, final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts,
-                                String transactionExternalKey, boolean success, InternalCallContext context) throws InvoiceApiException;
+                                String transactionExternalKey, InvoicePaymentStatus status, InternalCallContext context) throws InvoiceApiException;
 
     InvoicePayment recordChargeback(UUID paymentId, UUID paymentAttemptId, String chargebackTransactionExternalKey, BigDecimal amount, Currency currency, InternalCallContext context) throws InvoiceApiException;
 

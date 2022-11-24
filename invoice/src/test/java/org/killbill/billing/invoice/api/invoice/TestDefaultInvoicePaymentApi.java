@@ -28,6 +28,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -102,7 +103,7 @@ public class TestDefaultInvoicePaymentApi extends InvoiceTestSuiteWithEmbeddedDB
 
         // Create a full refund with no adjustment
         final InvoicePayment refund = invoiceInternalApi.recordRefund(payment.getPaymentId(), UUID.randomUUID(), refundAmount, adjusted, invoiceItemIdsWithAmounts,
-                                                                      UUID.randomUUID().toString(), true, internalCallContext);
+                                                                      UUID.randomUUID().toString(), InvoicePaymentStatus.SUCCESS, internalCallContext);
         Assert.assertEquals(refund.getAmount().compareTo(refundAmount.negate()), 0);
         Assert.assertEquals(refund.getCurrency(), CURRENCY);
         Assert.assertEquals(refund.getInvoiceId(), invoice.getId());
