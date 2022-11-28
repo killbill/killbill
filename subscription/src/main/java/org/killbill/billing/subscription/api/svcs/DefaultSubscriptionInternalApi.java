@@ -456,7 +456,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         try {
             final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
             final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, false, internalCallContext);
-            final DateTime effectiveDate = internalCallContext.toUTCDateTime(effectiveFromDate);
+            final DateTime effectiveDate = effectiveFromDate != null ? internalCallContext.toUTCDateTime(effectiveFromDate) : internalCallContext.getCreatedDate();
             final QuantityEvent quantityEvent = QuantityEventData.createQuantityEvent(subscription, effectiveDate, quantity);
             dao.createChangeEvent(subscription, quantityEvent, catalog, internalCallContext);
         } catch (final CatalogApiException e) {
