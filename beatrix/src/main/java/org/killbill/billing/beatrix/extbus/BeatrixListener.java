@@ -62,6 +62,8 @@ import org.killbill.billing.notification.plugin.api.InvoicePaymentMetadata;
 import org.killbill.billing.notification.plugin.api.PaymentMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata;
 import org.killbill.billing.notification.plugin.api.SubscriptionMetadata.ActionType;
+import org.killbill.billing.notification.plugin.api.TagMetadata;
+import org.killbill.billing.notification.plugin.api.TenantConfigMetadata;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -295,7 +297,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
-                metaData = realUserTagEventCr.getTagDefinition().getName();
+                final TagMetadata userTagCreationMetadata = new TagMetadata(realUserTagEventCr.getTagDefinition().getName());
+                metaData = objectMapper.writeValueAsString(userTagCreationMetadata);
                 break;
 
             case CONTROL_TAG_CREATION:
@@ -303,7 +306,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventCr.getTagId();
                 eventBusType = ExtBusEventType.TAG_CREATION;
-                metaData = realTagEventCr.getTagDefinition().getName();
+                final TagMetadata controlTagCreationMetadata = new TagMetadata(realTagEventCr.getTagDefinition().getName());
+                metaData = objectMapper.writeValueAsString(controlTagCreationMetadata);
                 break;
 
             case USER_TAG_DELETION:
@@ -311,7 +315,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realUserTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                metaData = realUserTagEventDel.getTagDefinition().getName();
+                final TagMetadata userTagDeletionMetadata = new TagMetadata(realUserTagEventDel.getTagDefinition().getName());
+                metaData = objectMapper.writeValueAsString(userTagDeletionMetadata);
                 break;
 
             case CONTROL_TAG_DELETION:
@@ -319,7 +324,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TAG;
                 objectId = realTagEventDel.getTagId();
                 eventBusType = ExtBusEventType.TAG_DELETION;
-                metaData = realTagEventDel.getTagDefinition().getName();
+                final TagMetadata controlTagDeletionMetadata = new TagMetadata(realTagEventDel.getTagDefinition().getName());
+                metaData = objectMapper.writeValueAsString(controlTagDeletionMetadata);
                 break;
 
             case CUSTOM_FIELD_CREATION:
@@ -341,7 +347,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TENANT_KVS;
                 objectId = realTenantConfigEventChg.getId();
                 eventBusType = ExtBusEventType.TENANT_CONFIG_CHANGE;
-                metaData = realTenantConfigEventChg.getKey();
+                final TenantConfigMetadata tenantConfigChangeMetadata = new TenantConfigMetadata(realTenantConfigEventChg.getKey());
+                metaData = objectMapper.writeValueAsString(tenantConfigChangeMetadata);
                 break;
 
             case TENANT_CONFIG_DELETION:
@@ -349,7 +356,8 @@ public class BeatrixListener {
                 objectType = ObjectType.TENANT_KVS;
                 objectId = null;
                 eventBusType = ExtBusEventType.TENANT_CONFIG_DELETION;
-                metaData = realTenantConfigEventDel.getKey();
+                final TenantConfigMetadata tenantConfigDeletionMetadata = new TenantConfigMetadata(realTenantConfigEventDel.getKey());
+                metaData = objectMapper.writeValueAsString(tenantConfigDeletionMetadata);
                 break;
 
             case BROADCAST_SERVICE:
