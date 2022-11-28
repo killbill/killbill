@@ -366,4 +366,10 @@ public class ProxyBlockingStateDao implements BlockingStateDao {
                KILLBILL_SERVICES.ENTITLEMENT_SERVICE.getServiceName().equals(blockingState.getService()) &&
                DefaultEntitlementApi.ENT_STATE_CANCELLED.equals(blockingState.getStateName());
     }
+
+    @Override
+    public Pagination<BlockingStateModelDao> getByAccountRecordId(final Long offset, final Long limit,
+                                                                  final InternalTenantContext context) {
+    	return delegate.getByAccountRecordId(offset, limit, context);
+    }
 }

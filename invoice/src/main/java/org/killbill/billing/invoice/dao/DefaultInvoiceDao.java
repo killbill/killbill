@@ -57,6 +57,7 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.api.user.DefaultInvoiceAdjustmentEvent;
@@ -129,6 +130,8 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     private final TagInternalApi tagInternalApi;
     private final AuditDao auditDao;
 
+
+
     @Inject
     public DefaultInvoiceDao(final TagInternalApi tagInternalApi,
                              final IDBI dbi,
@@ -164,38 +167,42 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceSqlDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
             final List<InvoiceModelDao> invoicesByAccountRecordId = invoiceSqlDao.getByAccountRecordId(context);
             final List<InvoiceModelDao> invoices = invoicesByAccountRecordId.stream()
-                    .filter(invoice -> !invoice.isMigrated() &&
-                                       (includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus())))
-                    .sorted(INVOICE_MODEL_DAO_COMPARATOR)
-                    .collect(Collectors.toUnmodifiableList());
+                                                                            .filter(invoice -> !invoice.isMigrated() &&
+                                                                                               (includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus())))
+                                                                            .sorted(INVOICE_MODEL_DAO_COMPARATOR)
+                                                                            .collect(Collectors.toUnmodifiableList());
 
-            invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
+            if (includeInvoiceComponents) {
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
+            }
 
             return invoices;
         });
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, invoicesTags, entitySqlDaoWrapperFactory, context));
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(includeVoidedInvoices, includeInvoiceComponents, invoicesTags, entitySqlDaoWrapperFactory, context));
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<Tag> invoicesTags = getInvoicesTags(context);
 
         return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> {
             final InvoiceSqlDao invoiceDao = entitySqlDaoWrapperFactory.become(InvoiceSqlDao.class);
             final List<InvoiceModelDao> invoices = getAllNonMigratedInvoicesByAccountAfterDate(includeVoidedInvoices, invoiceDao, fromDate, upToDate, context);
-            invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
+            if (includeInvoiceComponents) {
+                invoiceDaoHelper.populateChildren(invoices, invoicesTags, entitySqlDaoWrapperFactory, context);
+            }
 
             return invoices;
         });
@@ -562,7 +569,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             BigDecimal cba = BigDecimal.ZERO;
 
             BigDecimal accountBalance = BigDecimal.ZERO;
-            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, invoicesTags, entitySqlDaoWrapperFactory, context);
+            final List<InvoiceModelDao> invoices = invoiceDaoHelper.getAllInvoicesByAccountFromTransaction(false, true, invoicesTags, entitySqlDaoWrapperFactory, context);
             for (final InvoiceModelDao cur : invoices) {
 
                 // Skip DRAFT OR VOID invoices
@@ -632,7 +639,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final UUID paymentAttemptId,
                                                final BigDecimal requestedRefundAmount, final boolean isInvoiceAdjusted,
                                                final Map<UUID, BigDecimal> invoiceItemIdsWithNullAmounts, final String transactionExternalKey,
-                                               final boolean success, final InternalCallContext context) throws InvoiceApiException {
+                                               final InvoicePaymentStatus status, final InternalCallContext context) throws InvoiceApiException {
 
         if (isInvoiceAdjusted && invoiceItemIdsWithNullAmounts.isEmpty()) {
             throw new InvoiceApiException(ErrorCode.INVOICE_ITEMS_ADJUSTMENT_MISSING);
@@ -647,7 +654,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
 
             final List<InvoicePaymentModelDao> paymentsForId = transactional.getByPaymentId(paymentId.toString(), context);
             final InvoicePaymentModelDao payment = paymentsForId.stream()
-                                                                .filter(input -> input.getType() == InvoicePaymentType.ATTEMPT && input.getSuccess())
+                                                                .filter(input -> input.getType() == InvoicePaymentType.ATTEMPT && input.getStatus() == InvoicePaymentStatus.SUCCESS)
                                                                 .findFirst()
                                                                 .orElseThrow(() -> new InvoiceApiException(ErrorCode.INVOICE_PAYMENT_BY_ATTEMPT_NOT_FOUND, paymentId));
 
@@ -676,15 +683,13 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                          "Found refund for transactionExternalKey=" + transactionExternalKey + ", paymentId=" + existingRefund.getPaymentId() +
                                          "and does not match input paymentId=" + paymentId);
 
-                // The pending entry already exists, bail out (no need to send events, or compute cba logic)
-                if (!existingRefund.getSuccess() && !success) {
+                // The entry already exists, bail out (no need to send events, or compute cba logic)
+                if (existingRefund.getStatus() == status) {
                     return existingRefund;
                 }
 
-                // At this point, we expect the request to be a transition PENDING -> SUCCESS (SUCCESS -> SUCCESS is also tolerated)
-                Preconditions.checkState(success, "Found successful refund for transactionExternalKey=" + transactionExternalKey + "and does not match pending input");
                 // We only update date and the status
-                existingRefund.setSuccess(true);
+                existingRefund.setStatus(status);
                 existingRefund.setPaymentDate(context.getCreatedDate());
                 transactional.updateAttempt(existingRefund.getId().toString(),
                                             existingRefund.getPaymentId().toString(),
@@ -694,18 +699,18 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                             existingRefund.getProcessedCurrency(),
                                             existingRefund.getPaymentCookieId(),
                                             existingRefund.getLinkedInvoicePaymentId().toString(),
-                                            existingRefund.getSuccess(),
+                                            existingRefund.getStatus().toString(),
                                             context);
                 result = existingRefund;
             } else {
                 final InvoicePaymentModelDao refund = new InvoicePaymentModelDao(UUIDs.randomUUID(), context.getCreatedDate(), InvoicePaymentType.REFUND,
                                                                                  payment.getInvoiceId(), paymentId,
                                                                                  context.getCreatedDate(), requestedPositiveAmount.negate(),
-                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId(), success);
+                                                                                 payment.getCurrency(), payment.getProcessedCurrency(), transactionExternalKey, payment.getId(), status);
                 result = createAndRefresh(transactional, refund, context);
             }
 
-            if (success) {
+            if (status == InvoicePaymentStatus.SUCCESS) {
                 // Retrieve invoice after the Refund
                 final InvoiceModelDao invoice = transInvoiceDao.getById(payment.getInvoiceId().toString(), context);
                 Preconditions.checkState(invoice != null, "Invoice shouldn't be null for payment " + payment.getId());
@@ -776,7 +781,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
             final InvoicePaymentModelDao chargeBack = new InvoicePaymentModelDao(UUIDs.randomUUID(), context.getCreatedDate(), InvoicePaymentType.CHARGED_BACK,
                                                                                  payment.getInvoiceId(), payment.getPaymentId(), context.getCreatedDate(),
                                                                                  requestedChargedBackAmount.negate(), payment.getCurrency(), payment.getProcessedCurrency(),
-                                                                                 chargebackTransactionExternalKey, payment.getId(), true);
+                                                                                 chargebackTransactionExternalKey, payment.getId(), InvoicePaymentStatus.SUCCESS);
             createAndRefresh(transactional, chargeBack, context);
 
             // Notify the bus since the balance of the invoice changed
@@ -811,7 +816,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                         invoicePayment.getProcessedCurrency(),
                                         invoicePayment.getPaymentCookieId(),
                                         invoicePayment.getLinkedInvoicePaymentId() == null ? null : invoicePayment.getLinkedInvoicePaymentId().toString(),
-                                        false,
+                                        InvoicePaymentStatus.INIT.toString(),
                                         context);
             final InvoicePaymentModelDao chargebackReversed = transactional.getByRecordId(invoicePayment.getRecordId(), context);
 
@@ -911,7 +916,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
         transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
             final InvoicePaymentSqlDao transactional = entitySqlDaoWrapperFactory.become(InvoicePaymentSqlDao.class);
             //
-            // In case of notifyOfPaymentInit we always want to record the row with success = false
+            // In case of notifyOfPaymentInit we always want to record the row with status = INIT
             // Otherwise, if the payment id is null, the payment wasn't attempted (e.g. no payment method so we don't record an attempt but send
             // an event nonetheless (e.g. for Overdue))
             //
@@ -949,7 +954,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                                 invoicePayment.getProcessedCurrency(),
                                                 invoicePayment.getPaymentCookieId(),
                                                 null,
-                                                invoicePayment.getSuccess(),
+                                                invoicePayment.getStatus().toString(),
                                                 context);
                 }
             }
@@ -1117,7 +1122,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                                            final UUID accountId, final UUID paymentAttemptId, final UUID userToken,
                                            final InternalCallContext context) {
         final BusEvent busEvent;
-        if (Boolean.TRUE.equals(invoicePaymentModelDao.getSuccess())) {
+        if (InvoicePaymentStatus.SUCCESS == invoicePaymentModelDao.getStatus()) {
             busEvent = new DefaultInvoicePaymentInfoEvent(accountId,
                                                           invoicePaymentModelDao.getPaymentId(),
                                                           paymentAttemptId,

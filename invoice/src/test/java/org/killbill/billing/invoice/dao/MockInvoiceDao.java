@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -42,6 +43,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.InvoiceDispatcher.FutureAccountNotifications;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.junction.BillingEventSet;
 import org.killbill.billing.util.api.AuditLevel;
@@ -164,13 +166,16 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<InvoiceModelDao>();
 
         synchronized (monitor) {
             final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : invoices.values()) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.isMigrated()) {
+                    if (includeInvoiceComponents) {
+                        invoice.addInvoiceItems(items.values().stream().filter(item -> item.getInvoiceId().equals(invoice.getId())).collect(Collectors.toList()));
+                    }
                     result.add(invoice);
                 }
             }
@@ -179,13 +184,16 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getInvoicesByAccount(final Boolean includeVoidedInvoices, final LocalDate fromDate, final LocalDate upToDate, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<InvoiceModelDao> invoicesForAccount = new ArrayList<>();
         synchronized (monitor) {
             final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : getAll(context)) {
                 if (accountId.equals(invoice.getAccountId()) && !invoice.getTargetDate().isBefore(fromDate) && !invoice.isMigrated() &&
-                    (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
+                    (includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
+                    if (includeInvoiceComponents) {
+                        invoice.addInvoiceItems(items.values().stream().filter(item -> item.getInvoiceId().equals(invoice.getId())).collect(Collectors.toList()));
+                    }
                     invoicesForAccount.add(invoice);
                 }
             }
@@ -335,13 +343,16 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     }
 
     @Override
-    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final InternalTenantContext context) {
+    public List<InvoiceModelDao> getAllInvoicesByAccount(final Boolean includeVoidedInvoices, final Boolean includeInvoiceComponents, final InternalTenantContext context) {
         final List<InvoiceModelDao> result = new ArrayList<>();
 
         synchronized (monitor) {
             final UUID accountId = getAccountIdByRecordId(context.getAccountRecordId());
             for (final InvoiceModelDao invoice : invoices.values()) {
-                if (accountId.equals(invoice.getAccountId()) && (includeVoidedInvoices ? true : !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
+                if (accountId.equals(invoice.getAccountId()) && (includeVoidedInvoices || !InvoiceStatus.VOID.equals(invoice.getStatus()))) {
+                    if (includeInvoiceComponents) {
+                        invoice.addInvoiceItems(items.values().stream().filter(item -> item.getInvoiceId().equals(invoice.getId())).collect(Collectors.toList()));
+                    }
                     result.add(invoice);
                 }
             }
@@ -413,7 +424,7 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     @Override
     public InvoicePaymentModelDao createRefund(final UUID paymentId, final UUID paymentAttemptId, final BigDecimal amount, final boolean isInvoiceAdjusted,
                                                final Map<UUID, BigDecimal> invoiceItemIdsWithAmounts, final String transactionExternalKey,
-                                               final boolean success, final InternalCallContext context)
+                                               final InvoicePaymentStatus status, final InternalCallContext context)
             throws InvoiceApiException {
         return null;
     }
@@ -484,4 +495,5 @@ public class MockInvoiceDao extends MockEntityDaoBase<InvoiceModelDao, Invoice, 
     public List<AuditLogWithHistory> getInvoicePaymentAuditLogsWithHistoryForId(final UUID invoicePaymentId, final AuditLevel auditLevel, final InternalTenantContext context) {
         return null;
     }
+
 }

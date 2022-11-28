@@ -68,12 +68,12 @@ public interface SubscriptionBaseApiService {
 
     // Return the effective date of the change
     public DateTime changePlanWithRequestedDate(DefaultSubscriptionBase subscription, EntitlementSpecifier spec,
-                                                 DateTime requestedDate, CallContext context)
+                                                DateTime requestedDate, CallContext context)
             throws SubscriptionBaseApiException;
 
     // Return the effective date of the change
     public DateTime changePlanWithPolicy(DefaultSubscriptionBase subscription, EntitlementSpecifier spec,
-                                          BillingActionPolicy policy, CallContext context)
+                                         BillingActionPolicy policy, CallContext context)
             throws SubscriptionBaseApiException;
 
     public int handleBasePlanEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent event, SubscriptionCatalog catalog, final CallContext context) throws CatalogApiException;
@@ -98,6 +98,7 @@ public interface SubscriptionBaseApiService {
                                                              String newPriceList, DateTime effectiveDate,
                                                              boolean addCancellationAddOnForEventsIfRequired,
                                                              Integer bcd,
+                                                             PhaseType requestedPhaseType,
                                                              SubscriptionCatalog catalog,
                                                              InternalTenantContext context)
             throws CatalogApiException, SubscriptionBaseApiException;
@@ -109,4 +110,9 @@ public interface SubscriptionBaseApiService {
                                                              final InternalTenantContext internalTenantContext) throws CatalogApiException;
 
     boolean undoChangePlan(DefaultSubscriptionBase defaultSubscriptionBase, CallContext context) throws SubscriptionBaseApiException;
+
+    int getAccountBCD(InternalTenantContext context) throws SubscriptionBaseApiException;
+
+    // If we expose more than one config, we should instead return the SubscriptionConfig object
+    boolean isEffectiveDateForExistingSubscriptionsAlignedToBCD(final InternalTenantContext tenantContext);
 }

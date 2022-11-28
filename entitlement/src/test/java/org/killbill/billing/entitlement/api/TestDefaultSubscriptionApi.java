@@ -42,11 +42,13 @@ import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.ChangeType;
+import org.killbill.billing.util.entity.Pagination;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -179,7 +181,7 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         final Account account2 = createAccount(getAccountData(7));
 
         testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.BLOCK);
-        entitlementApi.transferEntitlements(account.getId(), account2.getId(), externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), Collections.emptyList(), callContext);
+        entitlementApi.transferEntitlements(account.getId(), account2.getId(), externalKey, new LocalDate(clock.getUTCNow(), account.getTimeZone()), Collections.emptyMap(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final List<SubscriptionBundle> bundles3 = subscriptionApi.getSubscriptionBundlesForExternalKey(externalKey, callContext);
@@ -738,6 +740,55 @@ public class TestDefaultSubscriptionApi extends EntitlementTestSuiteWithEmbedded
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.EXTERNAL_KEY_LIMIT_EXCEEDED.getCode());
         }
+    }
+
+    @Test(groups = "slow", description = "https://github.com/killbill/killbill/issues/1792")
+    public void testGetSubscriptionsForAccount() throws AccountApiException, SubscriptionApiException, EntitlementApiException {
+
+        final Account account = createAccount(getAccountData(7));
+
+        //create a subscription
+        PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //retrieve subscription with pagination
+        Pagination<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), 0L, 10L, callContext);
+        assertNotNull(bundles);
+        assertEquals(bundles.getTotalNbRecords().longValue(), 1L);
+        Assert.assertEquals(bundles.getMaxNbRecords(), (Long) 1L);
+        Assert.assertEquals(bundles.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(bundles.getNextOffset());
+
+        //create another subscription
+        spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), null, null, null, false, true, Collections.emptyList(), callContext);
+        assertListenerStatus();
+
+        //retrieve subscription with pagination
+        bundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), 0L, 10L, callContext);
+        assertNotNull(bundles);
+        assertEquals(bundles.getTotalNbRecords().longValue(), 2L);
+        Assert.assertEquals(bundles.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(bundles.getCurrentOffset(), (Long) 0L);
+        Assert.assertNull(bundles.getNextOffset());
+
+        //retrieve subscription with pagination with different limits and offsets
+        bundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), 0L, 1L, callContext);
+        assertNotNull(bundles);
+        assertEquals(bundles.getTotalNbRecords().longValue(), 2L);
+        Assert.assertEquals(bundles.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(bundles.getCurrentOffset(), (Long) 0L);
+        Assert.assertNotNull(bundles.getNextOffset());
+
+        bundles = subscriptionApi.getSubscriptionBundlesForAccountId(account.getId(), 1L, 1L, callContext);
+        assertNotNull(bundles);
+        assertEquals(bundles.getTotalNbRecords().longValue(), 2L);
+        Assert.assertEquals(bundles.getMaxNbRecords(), (Long) 2L);
+        Assert.assertEquals(bundles.getCurrentOffset(), (Long) 1L);
+        Assert.assertNull(bundles.getNextOffset());
     }
 
     private void verifyBlockingStates(final Iterable<BlockingState> result, final List<BlockingState> expected, final boolean dateOnly) {

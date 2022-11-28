@@ -69,7 +69,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.ANNUAL);
 
         // Move out of trials for interesting invoices adjustments
@@ -84,7 +84,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, false, callContext);
         assertListenerStatus();
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
 
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
@@ -114,7 +114,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
         assertListenerStatus();
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
@@ -137,7 +137,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         // Day of the transfer
         assertEquals(newBCD, (Integer) 3);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
 
         final List<InvoiceItem> invoiceItems = invoices.get(0).getInvoiceItems();
@@ -170,7 +170,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
         assertListenerStatus();
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
@@ -186,7 +186,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, true, callContext);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 3);
 
         // CHECK OLD AND NEW ACCOUNTS ITEMS
@@ -201,7 +201,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, toBeChecked);
 
         // CHECK NEW ACCOUNT ITEMS
-        invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
 
         toBeChecked = List.of(
@@ -261,7 +261,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final LocalDate transferDay = now.toLocalDate();
 
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.TRANSFER, NextEvent.TRANSFER, NextEvent.BLOCK, NextEvent.BLOCK,  NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        final UUID newBundleId = entitlementApi.transferEntitlements(account.getId(), newAccount.getId(), bundleExternalKey, transferDay, Collections.emptyList(), callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlements(account.getId(), newAccount.getId(), bundleExternalKey, transferDay, Collections.emptyMap(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Check the last 2 invoices on the old account

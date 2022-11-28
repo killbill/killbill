@@ -27,6 +27,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceApiHelper;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoicePaymentModelDao;
@@ -50,10 +51,10 @@ public class TestDefaultInvoiceInternalApiUnit extends InvoiceTestSuiteNoDB {
         return Mockito.spy(toSpy);
     }
 
-    private InvoicePaymentModelDao createMockedInvoicePaymentModelDaoWithTypeAndSuccess(final InvoicePaymentType type, final Boolean success) {
+    private InvoicePaymentModelDao createMockedInvoicePaymentModelDaoWithTypeAndSuccess(final InvoicePaymentType type, final InvoicePaymentStatus status) {
         final InvoicePaymentModelDao modelDao = mock(InvoicePaymentModelDao.class);
         when(modelDao.getType()).thenReturn(type);
-        when(modelDao.getSuccess()).thenReturn(success);
+        when(modelDao.getStatus()).thenReturn(status);
         return modelDao;
     }
 
@@ -64,13 +65,13 @@ public class TestDefaultInvoiceInternalApiUnit extends InvoiceTestSuiteNoDB {
         final AtomicInteger paymentCookie = new AtomicInteger(1);
         List.of(InvoicePaymentType.ATTEMPT, InvoicePaymentType.ATTEMPT, InvoicePaymentType.ATTEMPT, InvoicePaymentType.REFUND)
             .forEach(type -> {
-                final InvoicePaymentModelDao modelDao = createMockedInvoicePaymentModelDaoWithTypeAndSuccess(type, Boolean.TRUE);
+                final InvoicePaymentModelDao modelDao = createMockedInvoicePaymentModelDaoWithTypeAndSuccess(type, InvoicePaymentStatus.SUCCESS);
                 // Only used to make sure in test, that we get the first data from the list
                 when(modelDao.getPaymentCookieId()).thenReturn(String.valueOf(paymentCookie.getAndIncrement()));
                 result.add(modelDao);
             });
         // Scenario: find with CHARGED_BACK will return null because getSuccess() is FALSE
-        final InvoicePaymentModelDao modelDao = createMockedInvoicePaymentModelDaoWithTypeAndSuccess(InvoicePaymentType.CHARGED_BACK, Boolean.FALSE);
+        final InvoicePaymentModelDao modelDao = createMockedInvoicePaymentModelDaoWithTypeAndSuccess(InvoicePaymentType.CHARGED_BACK, InvoicePaymentStatus.INIT);
         result.add(modelDao);
 
         return result;
@@ -89,14 +90,14 @@ public class TestDefaultInvoiceInternalApiUnit extends InvoiceTestSuiteNoDB {
         InvoicePayment result = invoiceInternalApi.getInvoicePayment(anyPaymentId, InvoicePaymentType.ATTEMPT, anyCtx);
 
         Assert.assertNotNull(result);
-        Assert.assertEquals(result.isSuccess(), Boolean.TRUE);
+        Assert.assertEquals(result.getStatus(), InvoicePaymentStatus.SUCCESS);
         Assert.assertEquals(result.getType(), InvoicePaymentType.ATTEMPT);
         Assert.assertEquals(result.getPaymentCookieId(), "1"); // See comment in testGetInvoicePaymentModels()
 
         result = invoiceInternalApi.getInvoicePayment(anyPaymentId, InvoicePaymentType.REFUND, anyCtx);
 
         Assert.assertNotNull(result);
-        Assert.assertEquals(result.isSuccess(), Boolean.TRUE);
+        Assert.assertEquals(result.getStatus(), InvoicePaymentStatus.SUCCESS);
         Assert.assertEquals(result.getType(), InvoicePaymentType.REFUND);
 
         // See comment about CHARGED_BACK type in testGetInvoicePaymentModels()

@@ -146,22 +146,38 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final boolean includesMigrated, final boolean includeVoidedInvoices, final TenantContext context) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final boolean includesMigrated, final boolean includeVoidedInvoices, final boolean includeInvoiceComponents, final TenantContext context) {
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
         final List<InvoiceModelDao> invoicesByAccount = includesMigrated ?
-                                                        dao.getAllInvoicesByAccount(includeVoidedInvoices, internalTenantContext) :
-                                                        dao.getInvoicesByAccount(includeVoidedInvoices, internalTenantContext);
+                                                        dao.getAllInvoicesByAccount(includeVoidedInvoices, includeInvoiceComponents, internalTenantContext) :
+                                                        dao.getInvoicesByAccount(includeVoidedInvoices, includeInvoiceComponents, internalTenantContext);
 
         return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
 
     @Override
-    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final LocalDate upToDate, final boolean includeVoidedInvoices, final TenantContext context) {
+    public List<Invoice> getInvoicesByAccount(final UUID accountId, final LocalDate fromDate, final LocalDate upToDate, final boolean includeVoidedInvoices, final boolean includeInvoiceComponents, final TenantContext context) {
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
-        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(includeVoidedInvoices, fromDate, upToDate, internalTenantContext);
+        final List<InvoiceModelDao> invoicesByAccount = dao.getInvoicesByAccount(includeVoidedInvoices, fromDate, upToDate, includeInvoiceComponents, internalTenantContext);
         return fromInvoiceModelDao(invoicesByAccount, getCatalogSafelyForPrettyNames(internalTenantContext));
     }
+
+    @Override
+    public Pagination<Invoice> getInvoicesByAccount(final UUID accountId, final Long offset, final Long limit, final TenantContext context) {
+        final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(accountId, context);
+        return getEntityPaginationNoException(limit,
+                                              new SourcePaginationBuilder<InvoiceModelDao, AccountApiException>() {
+                                                  @Override
+                                                  public Pagination<InvoiceModelDao> build() {
+                                                      // Invoices will be shallow, i.e. won't contain items nor payments
+                                                      return dao.getByAccountRecordId(offset, limit, internalTenantContext);
+                                                  }
+                                              },
+                                              DefaultInvoice::new
+                                             );
+    }
+
 
     @Override
     public List<Invoice> getInvoicesByGroup(final UUID accountId, final UUID groupId, final TenantContext context) {
@@ -812,4 +828,5 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
             }
         }
     }
+
 }

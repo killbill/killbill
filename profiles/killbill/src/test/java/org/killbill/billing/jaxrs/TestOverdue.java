@@ -30,6 +30,7 @@ import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.Invoice;
 import org.killbill.billing.client.model.gen.InvoicePayment;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -77,7 +78,7 @@ public class TestOverdue extends TestJaxrsBase {
         // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
         // a refresh overdue notification kicks in after the first payment, which makes the account goes CLEAR and
         // triggers an AUTO_INVOICE_OFF tag removal (hence adjustment of the other invoices balance).
-        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
+        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.NONE, requestOptions);
         final List<Invoice> mostRecentInvoiceFirst = invoicesForAccount.stream()
                 .sorted(Comparator.comparing(Invoice::getInvoiceDate).reversed())
                 .collect(Collectors.toUnmodifiableList());

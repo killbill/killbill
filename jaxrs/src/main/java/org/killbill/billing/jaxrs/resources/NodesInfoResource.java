@@ -117,7 +117,7 @@ public class NodesInfoResource extends JaxRsResourceBase {
     @TimedResource
     @GET
     @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve all the nodes infos", response = PluginInfoJson.class, responseContainer = "List")
+    @ApiOperation(value = "Retrieve all the nodes infos", response = NodeInfoJson.class, responseContainer = "List")
     public Response getNodesInfo(@javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException {
 
         final Iterable<NodeInfo> nodeInfos = killbillInfoApi.getNodesInfo();

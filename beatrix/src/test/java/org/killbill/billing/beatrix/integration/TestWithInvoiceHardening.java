@@ -210,7 +210,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
     }
 
     private void deleteUsedCredit(final UUID accountId, final BigDecimal targetAmount) throws InvoiceApiException {
-        final List<Invoice> allInvoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+        final List<Invoice> allInvoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
         final Iterable<InvoiceItem> allItems = allInvoices.stream()
                 .map(Invoice::getInvoiceItems)
                 .flatMap(Collection::stream)

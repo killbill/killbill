@@ -63,6 +63,8 @@ public interface SubscriptionBaseInternalApi {
     public List<SubscriptionBaseBundle> getBundlesForKey(String bundleKey, InternalTenantContext context);
 
     public Pagination<SubscriptionBaseBundle> getBundles(Long offset, Long limit, InternalTenantContext context);
+    
+    public Pagination<SubscriptionBaseBundle> getBundlesForAccount(Long offset, Long limit, InternalTenantContext context);
 
     public Pagination<SubscriptionBaseBundle> searchBundles(String searchKey, Long offset, Long limit, InternalTenantContext context);
 

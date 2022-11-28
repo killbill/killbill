@@ -125,13 +125,15 @@ public class TestBundle extends TestJaxrsBase {
 
         final Account newAccount = createAccountWithDefaultPaymentMethod();
 
-        final Map<String, String> props = new HashMap<>();
-        final String subKey = String.format("KB_SUB_ID_%s", entitlementJsonNoEvents.getSubscriptionId());
-        props.put(subKey, "new-sub-key");
         final Bundle bundle = new Bundle();
         bundle.setAccountId(newAccount.getAccountId());
         bundle.setBundleId(entitlementJsonNoEvents.getBundleId());
-        bundleApi.transferBundle(entitlementJsonNoEvents.getBundleId(), bundle, null, props, requestOptions);
+        final Subscription sub = new Subscription();
+        sub.setSubscriptionId(entitlementJsonNoEvents.getSubscriptionId());
+        sub.setExternalKey("new-sub-key");
+        bundle.setSubscriptions(Collections.singletonList(sub));
+
+        bundleApi.transferBundle(entitlementJsonNoEvents.getBundleId(), bundle, null, NULL_PLUGIN_PROPERTIES, requestOptions);
 
         existingBundles = bundleApi.getBundleByKey(bundleExternalKey, requestOptions);
         assertEquals(existingBundles.size(), 1);
@@ -227,5 +229,46 @@ public class TestBundle extends TestJaxrsBase {
             page = page.getNext();
         }
         Assert.assertNull(page);
+    }
+
+    @Test(groups = "slow", description = "Can paginate account bundles")
+    public void testAccountBundlesPagination() throws Exception {
+        final Account accountJson = createAccount();
+
+        for (int i = 0; i < 5; i++) {
+            createSubscription(accountJson.getAccountId(), UUID.randomUUID().toString(), "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY);
+        }
+
+        //Default limit and offset
+        Bundles page = accountApi.getAccountBundlesPaginated(accountJson.getAccountId(), requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 5);
+        Assert.assertNull(page.getNext());
+
+        //various limits and offsets
+        page = accountApi.getAccountBundlesPaginated(accountJson.getAccountId(), 0L, 2L, AuditLevel.NONE, requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 2);
+        Assert.assertNotNull(page.getNext());
+
+        page = accountApi.getAccountBundlesPaginated(accountJson.getAccountId(), 1L, 3L, AuditLevel.NONE, requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 3);
+        Assert.assertNotNull(page.getNext());
+
+        page = accountApi.getAccountBundlesPaginated(accountJson.getAccountId(), 1L, 8L, AuditLevel.NONE, requestOptions);
+        Assert.assertNotNull(page);
+        Assert.assertEquals(page.size(), 4);
+        Assert.assertNull(page.getNext());
+
+        //Fetch each Bundle in a single page
+        page = bundleApi.getBundles(0L, 1L, AuditLevel.NONE, requestOptions);
+        for (int i = 0; i < 5; i++) {
+            Assert.assertNotNull(page);
+            Assert.assertEquals(page.size(), 1);
+            page = page.getNext();
+        }
+        Assert.assertNull(page);
+
     }
 }

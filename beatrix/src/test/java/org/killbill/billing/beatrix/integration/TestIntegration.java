@@ -798,7 +798,7 @@ public class TestIntegration extends TestIntegrationBase {
         entitlement = (DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext);
         Assert.assertEquals(entitlement.getState(), EntitlementState.BLOCKED);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
         assertEquals(invoices.size(), 3);
 
         // Cancel entitlement start of term but with billing policy immediate (ENT_BLOCKED must be after ENT_CANCELLED to trigger the bug)
@@ -817,7 +817,7 @@ public class TestIntegration extends TestIntegrationBase {
         assertListenerStatus();
 
         // No new invoices
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
         assertEquals(invoices.size(), 3);
 
         checkNoMoreInvoiceToGenerate(account);
@@ -836,14 +836,14 @@ public class TestIntegration extends TestIntegrationBase {
 
         final DefaultEntitlement baseEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "bundleKey", productName, ProductCategory.BASE, BillingPeriod.MONTHLY, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
         assertNotNull(invoices);
         assertTrue(invoices.size() == 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 2);
 
@@ -858,7 +858,7 @@ public class TestIntegration extends TestIntegrationBase {
         clock.addDeltaFromReality(AT_LEAST_ONE_MONTH_MS);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 8);
 
@@ -869,7 +869,7 @@ public class TestIntegration extends TestIntegrationBase {
             assertListenerStatus();
         }
 
-        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
         assertNotNull(invoices);
         assertEquals(invoices.size(), 14);
 

@@ -143,7 +143,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), new LocalDate(2012, 6, 1), InvoiceItemType.RECURRING, new BigDecimal("2.95")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2012, 5, 1), null, InvoiceItemType.TAX, new BigDecimal("1.0")));
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
         final List<InvoiceItem> invoiceItems = invoices.get(1).getInvoiceItems();
         final InvoiceItem taxItem = invoiceItems.stream()
@@ -429,7 +429,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        final List<Invoice> accountInvoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> accountInvoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(accountInvoices.size(), 2);
 
         // Commit invoice
@@ -458,7 +458,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         }
 
         @Override
-        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final InvoiceContext invoiceContext) {
             final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
             for (final TaxInvoiceItem item : taxItems) {
                 final String description;
@@ -508,7 +508,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         }
 
         @Override
-        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> properties, final CallContext context) {
+        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> properties, final InvoiceContext context) {
             return null;
         }
 

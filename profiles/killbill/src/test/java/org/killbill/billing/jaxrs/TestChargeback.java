@@ -35,6 +35,7 @@ import org.killbill.billing.client.model.gen.Subscription;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.billing.util.api.AuditLevel;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -163,7 +164,7 @@ public class TestChargeback extends TestJaxrsBase {
         assertEquals(transactions.get(0).getPaymentId(), chargeback.getPaymentId());
 
         // Verify invoice balance
-        invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, null, null, requestOptions);
+        invoices = accountApi.getInvoicesForAccount(payment.getAccountId(), null, null, false, false, false, true, null, AuditLevel.NONE, requestOptions);
         Assert.assertEquals(invoices.size(), 2);
         Assert.assertEquals(invoices.get(1).getBalance().compareTo(BigDecimal.ZERO), 1);
     }
@@ -191,7 +192,7 @@ public class TestChargeback extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         // Retrieve the invoice
-        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
+        final List<Invoice> invoices = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.NONE, requestOptions);
         // We should have two invoices, one for the trial (zero dollar amount) and one for the first month
         assertEquals(invoices.size(), 2);
         assertTrue(invoices.get(1).getAmount().doubleValue() > 0);
