@@ -53,6 +53,8 @@ import org.killbill.billing.notification.plugin.api.BroadcastMetadata;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
 import org.killbill.billing.notification.plugin.api.InvoicePaymentMetadata;
 import org.killbill.billing.notification.plugin.api.PaymentMetadata;
+import org.killbill.billing.notification.plugin.api.TagMetadata;
+import org.killbill.billing.notification.plugin.api.TenantConfigMetadata;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.util.callcontext.CallOrigin;
@@ -464,6 +466,8 @@ public class TestBeatrixListener {
         when(event.getBusEventType()).thenReturn(BusInternalEventType.USER_TAG_CREATION);
         when(event.getTagId()).thenReturn(OBJECT_ID);
         when(event.getTagDefinition()).thenReturn(new DefaultTagDefinition("MY_TAG", "", false));
+        ArgumentCaptor<TagMetadata> metadataCaptor = ArgumentCaptor.forClass(TagMetadata.class);
+        when(objectMapper.writeValueAsString(metadataCaptor.capture())).thenReturn(METADATA);
 
         when(internalCallContextFactory.getAccountId(
                 OBJECT_ID,
@@ -481,8 +485,11 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getObjectId(), OBJECT_ID);
         assertEquals(postedEvent.getObjectType(), ObjectType.TAG);
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TAG_CREATION);
-        assertEquals(postedEvent.getMetaData(), "MY_TAG");
+        assertEquals(postedEvent.getMetaData(), METADATA);
         assertCommonFieldsWithAccountId(postedEvent);
+        
+        TagMetadata tagMetadata = metadataCaptor.getValue();
+        assertTagMetadataFields(tagMetadata);
     }
 
     @Test(groups = "fast")
@@ -492,6 +499,8 @@ public class TestBeatrixListener {
         when(event.getBusEventType()).thenReturn(BusInternalEventType.CONTROL_TAG_CREATION);
         when(event.getTagId()).thenReturn(OBJECT_ID);
         when(event.getTagDefinition()).thenReturn(new DefaultTagDefinition("MY_TAG", "", false));
+        ArgumentCaptor<TagMetadata> metadataCaptor = ArgumentCaptor.forClass(TagMetadata.class);
+        when(objectMapper.writeValueAsString(metadataCaptor.capture())).thenReturn(METADATA);
 
         when(internalCallContextFactory.getAccountId(
                 OBJECT_ID,
@@ -509,8 +518,11 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getObjectId(), OBJECT_ID);
         assertEquals(postedEvent.getObjectType(), ObjectType.TAG);
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TAG_CREATION);
-        assertEquals(postedEvent.getMetaData(), "MY_TAG");
+        assertEquals(postedEvent.getMetaData(), METADATA);
         assertCommonFieldsWithAccountId(postedEvent);
+        
+        TagMetadata tagMetadata = metadataCaptor.getValue();
+        assertTagMetadataFields(tagMetadata);
     }
 
     @Test(groups = "fast")
@@ -520,6 +532,8 @@ public class TestBeatrixListener {
         when(event.getBusEventType()).thenReturn(BusInternalEventType.USER_TAG_DELETION);
         when(event.getTagId()).thenReturn(OBJECT_ID);
         when(event.getTagDefinition()).thenReturn(new DefaultTagDefinition("MY_TAG", "", false));
+        ArgumentCaptor<TagMetadata> metadataCaptor = ArgumentCaptor.forClass(TagMetadata.class);
+        when(objectMapper.writeValueAsString(metadataCaptor.capture())).thenReturn(METADATA);
 
         when(internalCallContextFactory.getAccountId(
                 OBJECT_ID,
@@ -537,8 +551,11 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getObjectId(), OBJECT_ID);
         assertEquals(postedEvent.getObjectType(), ObjectType.TAG);
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TAG_DELETION);
-        assertEquals(postedEvent.getMetaData(), "MY_TAG");
+        assertEquals(postedEvent.getMetaData(), METADATA);
         assertCommonFieldsWithAccountId(postedEvent);
+        
+        TagMetadata tagMetadata = metadataCaptor.getValue();
+        assertTagMetadataFields(tagMetadata);
     }
 
     @Test(groups = "fast")
@@ -548,6 +565,8 @@ public class TestBeatrixListener {
         when(event.getBusEventType()).thenReturn(BusInternalEventType.CONTROL_TAG_DELETION);
         when(event.getTagId()).thenReturn(OBJECT_ID);
         when(event.getTagDefinition()).thenReturn(new DefaultTagDefinition("MY_TAG", "", false));
+        ArgumentCaptor<TagMetadata> metadataCaptor = ArgumentCaptor.forClass(TagMetadata.class);
+        when(objectMapper.writeValueAsString(metadataCaptor.capture())).thenReturn(METADATA);
 
         when(internalCallContextFactory.getAccountId(
                 OBJECT_ID,
@@ -565,8 +584,11 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getObjectId(), OBJECT_ID);
         assertEquals(postedEvent.getObjectType(), ObjectType.TAG);
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TAG_DELETION);
-        assertEquals(postedEvent.getMetaData(), "MY_TAG");
+        assertEquals(postedEvent.getMetaData(), METADATA);
         assertCommonFieldsWithAccountId(postedEvent);
+        
+        TagMetadata tagMetadata = metadataCaptor.getValue();
+        assertTagMetadataFields(tagMetadata);
     }
 
     @Test(groups = "fast")
@@ -629,7 +651,9 @@ public class TestBeatrixListener {
         provideCommonBusEventInfo(event);
         when(event.getBusEventType()).thenReturn(BusInternalEventType.TENANT_CONFIG_CHANGE);
         when(event.getId()).thenReturn(OBJECT_ID);
-        when(event.getKey()).thenReturn(METADATA);
+        when(event.getKey()).thenReturn("PER_TENANT_CONFIG");
+        ArgumentCaptor<TenantConfigMetadata> metadataCaptor = ArgumentCaptor.forClass(TenantConfigMetadata.class);
+        when(objectMapper.writeValueAsString(metadataCaptor.capture())).thenReturn(METADATA);
 
         ArgumentCaptor<BusEvent> eventCaptor = ArgumentCaptor.forClass(BusEvent.class);
 
@@ -643,6 +667,9 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TENANT_CONFIG_CHANGE);
         assertEquals(postedEvent.getMetaData(), METADATA);
         assertCommonFieldsWithNoAccountId(postedEvent);
+        
+        TenantConfigMetadata tenantConfigMetadata = metadataCaptor.getValue();
+        assertTenantConfigMetadataFields(tenantConfigMetadata);
     }
 
     @Test(groups = "fast")
@@ -650,7 +677,9 @@ public class TestBeatrixListener {
         TenantConfigDeletionInternalEvent event = mock(TenantConfigDeletionInternalEvent.class);
         provideCommonBusEventInfo(event);
         when(event.getBusEventType()).thenReturn(BusInternalEventType.TENANT_CONFIG_DELETION);
-        when(event.getKey()).thenReturn(METADATA);
+        when(event.getKey()).thenReturn("PER_TENANT_CONFIG");
+        ArgumentCaptor<TenantConfigMetadata> metadataCaptor = ArgumentCaptor.forClass(TenantConfigMetadata.class);
+        when(objectMapper.writeValueAsString(metadataCaptor.capture())).thenReturn(METADATA);
 
         ArgumentCaptor<BusEvent> eventCaptor = ArgumentCaptor.forClass(BusEvent.class);
 
@@ -664,6 +693,9 @@ public class TestBeatrixListener {
         assertEquals(postedEvent.getEventType(), ExtBusEventType.TENANT_CONFIG_DELETION);
         assertEquals(postedEvent.getMetaData(), METADATA);
         assertCommonFieldsWithNoAccountId(postedEvent);
+        
+        TenantConfigMetadata tenantConfigMetadata = metadataCaptor.getValue();
+        assertTenantConfigMetadataFields(tenantConfigMetadata);
     }
 
     @Test(groups = "fast")
@@ -794,4 +826,12 @@ public class TestBeatrixListener {
         assertEquals(paymentMetadata.getTransactionType(), TransactionType.PURCHASE);
         assertEquals(paymentMetadata.getEffectiveDate(), PAYMENT_EFFECTIVE_DATE);
     }
+    
+    private void assertTagMetadataFields(TagMetadata tagMetadata) {
+    	assertEquals(tagMetadata.getTagDefinitionName(), "MY_TAG");
+	}
+    
+    private void assertTenantConfigMetadataFields(TenantConfigMetadata tenantConfigMetadata) {
+    	assertEquals(tenantConfigMetadata.getKey(), "PER_TENANT_CONFIG");
+	}
 }
