@@ -981,19 +981,23 @@ public class DefaultSubscriptionDao extends EntityDaoBase<SubscriptionBundleMode
     }
 
     @Override
-    public void createBCDChangeEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent bcdEvent, final SubscriptionCatalog catalog, final InternalCallContext context) {
+    public void createChangeEvent(final DefaultSubscriptionBase subscription, final SubscriptionBaseEvent changeEvent, final SubscriptionCatalog catalog, final InternalCallContext context) {
+
+        // BCD_CHANGE, QUANTITY_CHANGE
+        Preconditions.checkState(changeEvent.getType() == EventType.BCD_UPDATE || changeEvent.getType() == EventType.QUANTITY_UPDATE, "Unexpected event type " + changeEvent.getType());
+        final SubscriptionBaseTransitionType transitionType = SubscriptionBaseTransitionData.toSubscriptionTransitionType(changeEvent.getType(), null);
+
         transactionalSqlDao.execute(false, entitySqlDaoWrapperFactory -> {
             final SubscriptionEventSqlDao transactional = entitySqlDaoWrapperFactory.become(SubscriptionEventSqlDao.class);
-            createAndRefresh(transactional, new SubscriptionEventModelDao(bcdEvent), context);
+            createAndRefresh(transactional, new SubscriptionEventModelDao(changeEvent), context);
 
             // Notify the Bus
-            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, bcdEvent, SubscriptionBaseTransitionType.BCD_CHANGE, 0, context);
-            final boolean isBusEvent = bcdEvent.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
-            recordBusOrFutureNotificationFromTransaction(subscription, bcdEvent, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
+            notifyBusOfRequestedChange(entitySqlDaoWrapperFactory, subscription, changeEvent, transitionType, 0, context);
+            final boolean isBusEvent = changeEvent.getEffectiveDate().compareTo(context.getCreatedDate()) <= 0;
+            recordBusOrFutureNotificationFromTransaction(subscription, changeEvent, entitySqlDaoWrapperFactory, isBusEvent, 0, catalog, context);
 
             return null;
         });
-
     }
 
     @Override

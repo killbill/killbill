@@ -278,6 +278,25 @@ public abstract class EntitlementLoggingHelper {
         }
     }
 
+    public static void logUpdateQuantity(final Logger log, final Entitlement entitlement, final int quantity, final LocalDate effectiveFromDate) {
+        if (log.isInfoEnabled()) {
+            final StringBuilder logLine = new StringBuilder("Update Entitlement Quantity: ")
+                    .append(" id = '")
+                    .append(entitlement.getId())
+                    .append("'");
+
+            logLine.append(", quantity='")
+                   .append(quantity)
+                   .append("'");
+            if (effectiveFromDate != null) {
+                logLine.append(", date='")
+                       .append(effectiveFromDate)
+                       .append("'");
+            }
+            logWithLimit(log, logLine.toString());
+        }
+    }
+
     public static void logUpdateExternalKey(final Logger log, final UUID bundleId, final String newExternalKey) {
         if (log.isInfoEnabled()) {
             final StringBuilder logLine = new StringBuilder("Update Entitlement Key: ");

@@ -79,6 +79,7 @@ import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUncancelEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUndoChangePlan;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUpdateBCD;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUpdateQuantity;
 
 public class DefaultEntitlement extends EntityBase implements Entitlement {
 
@@ -833,8 +834,15 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     }
 
     @Override
-    public void updateQuantity(final int quantity, final LocalDate effectiveFromDate, final CallContext context) throws EntitlementApiException {
-        // TODO
+    public void updateQuantity(final int quantity, final LocalDate effectiveFromDate, final CallContext callContext) throws EntitlementApiException {
+        logUpdateQuantity(log, this, quantity, effectiveFromDate);
+
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+        try {
+            subscriptionInternalApi.updateQuantity(getId(), quantity, effectiveFromDate, context);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
     }
 
     private void refresh(final TenantContext context) throws EntitlementApiException {
