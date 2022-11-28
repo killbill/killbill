@@ -458,7 +458,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         }
 
         @Override
-        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final CallContext callContext) {
+        public AdditionalItemsResult getAdditionalInvoiceItems(final Invoice invoice, final boolean isDryRun, final Iterable<PluginProperty> pluginProperties, final InvoiceContext invoiceContext) {
             final List<InvoiceItem> result = new ArrayList<InvoiceItem>();
             for (final TaxInvoiceItem item : taxItems) {
                 final String description;
@@ -508,7 +508,7 @@ public class TestWithTaxItems extends TestIntegrationBase {
         }
 
         @Override
-        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> properties, final CallContext context) {
+        public InvoiceGroupingResult getInvoiceGrouping(final Invoice invoice, final boolean dryRun, final Iterable<PluginProperty> properties, final InvoiceContext context) {
             return null;
         }
 
