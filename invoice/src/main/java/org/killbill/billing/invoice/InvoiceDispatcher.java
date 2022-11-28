@@ -622,7 +622,7 @@ public class InvoiceDispatcher {
     private static boolean isPropertyReuseDraftSet(final Iterable<PluginProperty> inputProperties) {
         // Hack to allow reusing a draft invoice when invoked through api
         return Iterables.toStream(inputProperties)
-                        .anyMatch(p -> p.getKey().equals("KB_AUTO_INVOICING_REUSE_DRAFT") && ((String) p.getValue()).equalsIgnoreCase("true"));
+                        .anyMatch(p -> "KB_AUTO_INVOICING_REUSE_DRAFT".equals(p.getKey()) && "true".equalsIgnoreCase((String) p.getValue()));
     }
     private InvoicesWithFutureNotifications processAccountWithLockAndInputTargetDate(final UUID accountId,
                                                                                      final LocalDate originalTargetDate,
