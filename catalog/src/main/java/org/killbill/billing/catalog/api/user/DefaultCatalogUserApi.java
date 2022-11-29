@@ -33,6 +33,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogUpdater;
+import org.killbill.billing.catalog.DefaultCatalogValidation;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -40,6 +41,7 @@ import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.CatalogValidation;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.tenant.api.TenantApiException;
@@ -49,6 +51,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
+import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
@@ -141,17 +144,39 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     }
 
     @Override
-    public void validateCatalog(final String catalogXML, final CallContext context) throws CatalogApiException {
+    public CatalogValidation validateCatalog(final String catalogXML, final CallContext context) {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(context);
+        final ValidationErrors errors = new ValidationErrors();
         try {
-            XMLLoader.getObjectFromStream(new ByteArrayInputStream(catalogXML.getBytes(StandardCharsets.UTF_8)), StandaloneCatalog.class);
+            VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
+            if (versionedCatalog == null) {
+                // If this is the first version
+                versionedCatalog = new DefaultVersionedCatalog();
+            }
+            // Validation purpose:  Will throw if bad XML or catalog validation fails
+            final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
+            final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
+
+            ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
+            ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
+            if (!errors.isEmpty()) {
+                // Bummer ValidationException CTOR is private to package...
+                //final ValidationException validationException = new ValidationException(errors);
+                //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+                logger.info("Failed to load new catalog version: " + errors.toString());
+                return new DefaultCatalogValidation(errors);
+
+            }
         } catch (final ValidationException e) {
-            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, ""));
+            return new DefaultCatalogValidation(errors);
         } catch (final JAXBException e) {
-            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
+            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, ""));
+            return new DefaultCatalogValidation(errors);
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
+        return new DefaultCatalogValidation(errors); //errors is empty here
     }
 
     @Override

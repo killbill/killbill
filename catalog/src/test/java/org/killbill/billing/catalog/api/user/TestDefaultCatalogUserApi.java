@@ -25,14 +25,13 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
-import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.CatalogValidation;
 import org.killbill.billing.tenant.api.TenantUserApi;
 import org.killbill.commons.utils.io.Resources;
 import org.killbill.commons.utils.io.CharStreams;
 import org.killbill.xmlloader.UriAccessor;
-import org.killbill.xmlloader.ValidationException;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -57,17 +56,17 @@ public class TestDefaultCatalogUserApi extends CatalogTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testValidateValidCatalog() throws Exception {
-        catalogUserApi.validateCatalog(getXMLCatalog("SpyCarAdvanced.xml"), callContext);
+        final CatalogValidation validation = catalogUserApi.validateCatalog(getXMLCatalog("SpyCarAdvanced.xml"), callContext);
+        Assert.assertNotNull(validation);
+        Assert.assertEquals(validation.getValidationErrors().size(), 0);
     }
 
     @Test(groups = "fast")
     public void testValidateInvalidCatalog() throws Exception {
-        try {
-            catalogUserApi.validateCatalog(getXMLCatalog("CatalogWithValidationErrors.xml"), callContext);
-        } catch (final CatalogApiException e) {
-            Assert.assertTrue(e.getCause() instanceof ValidationException);
-            Assert.assertEquals(((ValidationException) e.getCause()).getErrors().size(), 17);
-        }
+        final CatalogValidation validation = catalogUserApi.validateCatalog(getXMLCatalog("CatalogWithValidationErrors.xml"), callContext);
+        Assert.assertNotNull(validation);
+        Assert.assertEquals(validation.getValidationErrors().size(), 1);
+        Assert.assertEquals(validation.getValidationErrors().get(0).getErrorDescription(), "Invalid Catalog XML");
     }
 
     private String getXMLCatalog(final String name) throws URISyntaxException, IOException {
