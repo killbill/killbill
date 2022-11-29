@@ -844,7 +844,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
             throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_FUTURE_CANCELLED, subscription.getId());
         }
         if (effectiveDate != null && subscription.getFutureExpiryDate() != null && subscription.getFutureExpiryDate().isBefore(effectiveDate)) {
-            throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_FUTURE_CANCELLED, subscription.getId()); //TODO_1533 - change to different ErrorCode
+            throw new SubscriptionBaseApiException(ErrorCode.SUB_CHANGE_FUTURE_EXPIRED, subscription.getId());
         }
     }
 

@@ -122,7 +122,6 @@ public class DefaultTenantUserApi implements TenantUserApi {
 
     @Override
     public Tenant getTenantById(final UUID id) throws TenantApiException {
-        // TODO - API cleanup?
         final TenantModelDao tenant = tenantDao.getById(id, new InternalTenantContext(null));
         if (tenant == null) {
             throw new TenantApiException(ErrorCode.TENANT_DOES_NOT_EXIST_FOR_ID, id);

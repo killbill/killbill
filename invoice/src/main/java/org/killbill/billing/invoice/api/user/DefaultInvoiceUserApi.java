@@ -426,9 +426,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
                 final DefaultInvoice invoice = getInvoiceInternal(invoiceId, context);
                 if (InvoiceStatus.VOID == invoice.getStatus()) {
-                    // TODO Add missing error https://github.com/killbill/killbill/issues/1501
-                    throw new IllegalStateException(String.format("Cannot add credit or external charge for invoice id %s because it is in \" + InvoiceStatus.VOID + \" status\"",
-                                                                  invoice.getId()));
+                    throw new InvoiceApiException(ErrorCode.INVOICE_VOID_UPDATED, invoice.getId());
                 }
 
                 // Check the specified currency matches the one of the existing invoice
@@ -754,8 +752,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
 
     private void checkInvoiceNotRepaired(final InvoiceModelDao invoice) throws InvoiceApiException {
         if (invoice.getIsRepaired()) {
-            // TODO ErrorCode https://github.com/killbill/killbill/issues/1501
-            throw new IllegalStateException(String.format("Cannot void invoice %s because it contains items being repaired", invoice.getId()));
+            throw new InvoiceApiException(ErrorCode.CAN_NOT_VOID_INVOICE_THAT_IS_REPAIRED, invoice.getId());
         }
     }
 
@@ -767,8 +764,7 @@ public class DefaultInvoiceUserApi implements InvoiceUserApi {
                                   invoiceItemModelDao.getAmount().compareTo(BigDecimal.ZERO) > 0 && /* Credit generation */
                                   invoiceItemModelDao.getAmount().compareTo(accountCBA) > 0 /* Some of it was used already */);
         if (largeCreditGenExist) {
-            // TODO ErrorCode https://github.com/killbill/killbill/issues/1501
-            throw new IllegalStateException(String.format("Cannot void invoice %s because it contains credit items (credit generation)", invoice.getId()));
+            throw new InvoiceApiException(ErrorCode.CAN_NOT_VOID_INVOICE_THAT_GENERATED_USED_CREDIT, invoice.getId());
         }
     }
 
