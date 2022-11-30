@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,12 +47,14 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
         final String bundleExternalKey = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
+        final Date catalogEffectiveDate = new Date();
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
 
         final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId,
                                                                          BillingPeriod.NO_BILLING_PERIOD,
                                                                          effectiveDate,
+                                                                         catalogEffectiveDate,
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),

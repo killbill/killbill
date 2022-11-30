@@ -18,6 +18,7 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +37,7 @@ public class TestBundleTimelineJson extends JaxrsTestSuiteNoDB {
         final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID(),
                                                                       BillingPeriod.NO_BILLING_PERIOD,
                                                                       new DateTime(),
+                                                                      new Date(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),

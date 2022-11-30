@@ -20,6 +20,7 @@ package org.killbill.billing.jaxrs.json;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -87,6 +88,7 @@ public class SubscriptionJson extends JsonBase {
         private final UUID eventId;
         private final BillingPeriod billingPeriod;
         private final DateTime effectiveDate;
+        private final Date catalogEffectiveDate;
         private final String plan;
         private final String product;
         private final String priceList;
@@ -101,6 +103,7 @@ public class SubscriptionJson extends JsonBase {
         public EventSubscriptionJson(@JsonProperty("eventId") final UUID eventId,
                                      @JsonProperty("billingPeriod") final BillingPeriod billingPeriod,
                                      @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                     @JsonProperty("catalogEffectiveDate") final Date catalogEffectiveDate,
                                      @JsonProperty("plan") final String plan,
                                      @JsonProperty("product") final String product,
                                      @JsonProperty("priceList") final String priceList,
@@ -115,6 +118,7 @@ public class SubscriptionJson extends JsonBase {
             this.eventId = eventId;
             this.billingPeriod = billingPeriod;
             this.effectiveDate = effectiveDate;
+            this.catalogEffectiveDate = catalogEffectiveDate;
             this.plan = plan;
             this.product = product;
             this.priceList = priceList;
@@ -137,6 +141,7 @@ public class SubscriptionJson extends JsonBase {
             this.eventId = subscriptionEvent.getId();
             this.billingPeriod = billingPeriod;
             this.effectiveDate = subscriptionEvent.getEffectiveDate();
+			this.catalogEffectiveDate = plan != null ? plan.getCatalog().getEffectiveDate() : null;
             this.plan = plan != null ? plan.getName() : null;
             this.product = product != null ? product.getName() : null;
             this.priceList = priceList != null ? priceList.getName() : null;
@@ -174,7 +179,11 @@ public class SubscriptionJson extends JsonBase {
             return effectiveDate;
         }
 
-        public String getPlan() {
+        public Date getCatalogEffectiveDate() {
+			return catalogEffectiveDate;
+		}
+
+		public String getPlan() {
             return plan;
         }
 
