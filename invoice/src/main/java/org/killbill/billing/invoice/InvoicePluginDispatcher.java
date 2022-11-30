@@ -236,6 +236,9 @@ public class InvoicePluginDispatcher {
                                               final boolean isDryRun,
                                               final CallContext callContext,
                                               final Iterable<PluginProperty> pluginProperties,
+                         					  final LocalDate targetDate,
+                         					  final List<Invoice> existingInvoices,
+                         					  final boolean isRescheduled,                                              
                                               final InternalTenantContext tenantContext) {
         log.debug("Invoking invoice plugins for splitInvoices operation: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
@@ -243,8 +246,9 @@ public class InvoicePluginDispatcher {
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
         final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
-            final InvoiceGroupingResult grpResult = invoicePlugin.getInvoiceGrouping(clonedInvoice, isDryRun, inputPluginProperties, callContext);
-            if (grpResult !=  null) {
+            final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, clonedInvoice, existingInvoices, isDryRun, isRescheduled, callContext);
+            final InvoiceGroupingResult grpResult = invoicePlugin.getInvoiceGrouping(clonedInvoice, isDryRun, inputPluginProperties, invoiceContext);
+            if (grpResult != null) {
 
                 if (grpResult.getAdjustedPluginProperties() != null) {
                     inputPluginProperties = grpResult.getAdjustedPluginProperties();
@@ -309,10 +313,13 @@ public class InvoicePluginDispatcher {
     }
 
     public AdditionalInvoiceItemsResult updateOriginalInvoiceWithPluginInvoiceItems(final DefaultInvoice originalInvoice,
-                                                               final boolean isDryRun,
-                                                               final CallContext callContext,
-                                                               final Iterable<PluginProperty> pluginProperties,
-                                                               final InternalTenantContext tenantContext) throws InvoiceApiException {
+                                                               						final boolean isDryRun,
+                                                               						final CallContext callContext,
+                                                               						final Iterable<PluginProperty> pluginProperties,
+                                                               						final LocalDate targetDate,
+                                                               						final List<Invoice> existingInvoices,
+                                                               						final boolean isRescheduled,
+                                                               						final InternalTenantContext tenantContext) throws InvoiceApiException {
         log.debug("Invoking invoice plugins getAdditionalInvoiceItems: isDryRun='{}', originalInvoice='{}'", isDryRun, originalInvoice);
 
         final Collection<InvoicePluginApi> invoicePlugins = getInvoicePlugins(tenantContext).values();
@@ -331,7 +338,8 @@ public class InvoicePluginDispatcher {
         for (final InvoicePluginApi invoicePlugin : invoicePlugins) {
             // We clone the original invoice so plugins don't remove/add items
             final Invoice clonedInvoice = (Invoice) originalInvoice.clone();
-            final AdditionalItemsResult res = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, inputPluginProperties, callContext);
+            final InvoiceContext invoiceContext = new DefaultInvoiceContext(targetDate, clonedInvoice, existingInvoices, isDryRun, isRescheduled, callContext);
+            final AdditionalItemsResult res = invoicePlugin.getAdditionalInvoiceItems(clonedInvoice, isDryRun, inputPluginProperties, invoiceContext);
 
             if (res != null) {
                 if (res.getAdditionalItems() != null &&
