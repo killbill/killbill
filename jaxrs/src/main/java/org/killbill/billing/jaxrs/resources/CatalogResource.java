@@ -240,7 +240,6 @@ public class CatalogResource extends JaxRsResourceBase {
     @Consumes(TEXT_XML)
     @Produces(APPLICATION_JSON)
     @ApiOperation(value = "Validate a XML catalog", response = CatalogValidationJson.class)
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Valid XML catalog")})
     public Response validateCatalogXml(final String catalogXML,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
@@ -250,7 +249,11 @@ public class CatalogResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final CatalogValidation catalogValidation = catalogUserApi.validateCatalog(catalogXML, callContext);
         final CatalogValidationJson catalogValidationJson = new CatalogValidationJson(catalogValidation);
-        return Response.status(Status.OK).entity(catalogValidationJson).build();
+        if (catalogValidation.getValidationErrors() != null && !catalogValidation.getValidationErrors().isEmpty()) {
+            return Response.status(Status.BAD_REQUEST).entity(catalogValidationJson).build();
+        } else {
+            return Response.status(Status.OK).entity(catalogValidationJson).build();
+        }
     }
 
     @TimedResource

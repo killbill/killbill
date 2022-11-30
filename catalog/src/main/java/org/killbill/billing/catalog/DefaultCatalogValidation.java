@@ -33,7 +33,7 @@ public class DefaultCatalogValidation implements CatalogValidation {
 
     public DefaultCatalogValidation(final ValidationErrors validationErrors) {
 
-        for (final ValidationError error : validationErrors) { //TODO_1674 - find a better way to do this?
+        for (final ValidationError error : validationErrors) {
             this.validationErrors.add(new DefaultCatalogValidationError(error.getDescription()));
         }
     }

@@ -106,18 +106,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
         try {
 
-            VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
-            if (versionedCatalog == null) {
-                // If this is the first version
-                versionedCatalog = new DefaultVersionedCatalog();
-            }
-            // Validation purpose:  Will throw if bad XML or catalog validation fails
-            final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
-            final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
-            final ValidationErrors errors = new ValidationErrors();
-            // Fix for https://github.com/killbill/killbill/issues/1481
-            ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
-            ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
+            final ValidationErrors errors = validateCatalogInternal(catalogXML, internalTenantContext);
             if (!errors.isEmpty()) {
                 // Bummer ValidationException CTOR is private to package...
                 //final ValidationException validationException = new ValidationException(errors);
@@ -130,15 +119,9 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             catalogCache.clearCatalog(internalTenantContext);
         } catch (final TenantApiException e) {
             throw new CatalogApiException(e);
-        } catch (final ValidationException e) {
+        } catch (final ValidationException | JAXBException e) {
             throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-        } catch (final JAXBException e) {
-            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        } catch (final TransformerException e) {
-            throw new IllegalStateException(e);
-        } catch (final SAXException e) {
+        } catch (final IOException | TransformerException | SAXException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -146,37 +129,22 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
     @Override
     public CatalogValidation validateCatalog(final String catalogXML, final CallContext context) {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(context);
-        final ValidationErrors errors = new ValidationErrors();
+        ValidationErrors errors = new ValidationErrors();
         try {
-            VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
-            if (versionedCatalog == null) {
-                // If this is the first version
-                versionedCatalog = new DefaultVersionedCatalog();
-            }
-            // Validation purpose:  Will throw if bad XML or catalog validation fails
-            final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
-            final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
-
-            ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
-            ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
+            errors = validateCatalogInternal(catalogXML, internalTenantContext);
             if (!errors.isEmpty()) {
-                // Bummer ValidationException CTOR is private to package...
-                //final ValidationException validationException = new ValidationException(errors);
-                //throw new CatalogApiException(errors, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
                 logger.info("Failed to load new catalog version: " + errors.toString());
-                return new DefaultCatalogValidation(errors);
-
             }
-        } catch (final ValidationException e) {
-            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, ""));
             return new DefaultCatalogValidation(errors);
-        } catch (final JAXBException e) {
-            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, ""));
+
+        } catch (final ValidationException | JAXBException e) {
+            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, "")); //TODO_1674 - is this correct?
             return new DefaultCatalogValidation(errors);
         } catch (final Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            catalogCache.clearCatalog(internalTenantContext);
         }
-        return new DefaultCatalogValidation(errors); //errors is empty here
     }
 
     @Override
@@ -249,5 +217,18 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         return internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
     }
 
+    private ValidationErrors validateCatalogInternal(final String catalogXML, final InternalTenantContext internalTenantContext) throws ValidationException, JAXBException, CatalogApiException, TransformerException, SAXException, IOException { //TODO_1674 - Revisit throws clause
+        final ValidationErrors errors = new ValidationErrors();
+        VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
+        if (versionedCatalog == null) {
+            versionedCatalog = new DefaultVersionedCatalog();
+        }
+        // Validation purpose:  Will throw if bad XML or catalog validation fails
+        final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
+        final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
 
+        ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
+        ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
+        return errors;
+    }
 }
