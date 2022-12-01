@@ -101,6 +101,14 @@ public class TestCatalogValidation extends TestIntegrationBase {
         assertNotNull(errors);
         assertEquals(errors.size(), 0);
 
+        //invalid catalog
+        validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v1-invalid.xml"), testCallContext);
+        assertNotNull(validation);
+        errors = validation.getValidationErrors();
+        assertNotNull(errors);
+        assertEquals(errors.size(), 1);
+        assertEquals(errors.get(0).getErrorDescription(), "'FIXEDTERM' Phase 'standard-monthly-fixedterm' for plan 'standard-monthly' in version 'Thu Oct 14 00:00:00 GMT 2021' must not have duration as UNLIMITED'");
+
         //valid catalog with existing catalog
         uploadCatalog("CatalogValidation-v1.xml");
         validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v1.xml"), testCallContext);
@@ -110,13 +118,13 @@ public class TestCatalogValidation extends TestIntegrationBase {
         assertEquals(errors.size(), 1);
         assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Mon Oct 04 00:00:00 GMT 2021' already exists for a previous version");
 
-        //invalid catalog
-        validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v1-invalid.xml"), testCallContext);
+        //catalog with name different from existing catalog
+        validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v4-valid.xml"), testCallContext);
         assertNotNull(validation);
         errors = validation.getValidationErrors();
         assertNotNull(errors);
         assertEquals(errors.size(), 1);
-        assertEquals(errors.get(0).getErrorDescription(), "'FIXEDTERM' Phase 'standard-monthly-fixedterm' for plan 'standard-monthly' in version 'Thu Oct 14 00:00:00 GMT 2021' must not have duration as UNLIMITED'");
+        assertEquals(errors.get(0).getErrorDescription(), "Catalog name 'DifferentCatalog' is different from existing catalog name 'ExampleCatalog'");
 
     }
 

@@ -141,7 +141,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             errors.addAll(e.getErrors());
             return new DefaultCatalogValidation(errors);
         } catch (final JAXBException e) {
-            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, ""));
+            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, "")); //TODO_1674 - Error message is hardcoded here, move this elsewhere?
             return new DefaultCatalogValidation(errors);
         } catch (final Exception e) {
             throw new RuntimeException(e);
@@ -229,6 +229,11 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         // Validation purpose:  Will throw if bad XML or catalog validation fails
         final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
         final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
+
+        if (versionedCatalog.getCatalogName() != null && !versionedCatalog.getCatalogName().isEmpty() && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {
+            errors.add(new ValidationError(String.format("Catalog name '%s' is different from existing catalog name '%s'", newCatalogVersion.getCatalogName(), versionedCatalog.getCatalogName()), StaticCatalog.class, "")); //TODO_1674 - Error message is hardcoded here, move this elsewhere?
+            return errors;
+        }
 
         ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
         ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
