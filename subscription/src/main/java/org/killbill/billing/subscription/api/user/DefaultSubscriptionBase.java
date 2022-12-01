@@ -460,16 +460,16 @@ public class DefaultSubscriptionBase extends EntityBase implements SubscriptionB
 
     @Override
     public Integer getBillCycleDayLocal() {
-        return getQuantityOrBCD(true);
+        return getPrevValue(true);
     }
 
     @Override
     public Integer getQuantity() {
-        return getQuantityOrBCD(false);
+        return getPrevValue(false);
     }
 
 
-    private Integer getQuantityOrBCD(final boolean bcd) {
+    private Integer getPrevValue(final boolean bcd) {
 
         final SubscriptionBaseTransitionDataIterator it = new SubscriptionBaseTransitionDataIterator(
                 clock, transitions, Order.DESC_FROM_FUTURE,
