@@ -1153,6 +1153,11 @@ public class InvoiceResource extends JaxRsResourceBase {
                     }
 
                     @Override
+                    public Integer getQuantity() {
+                        return null;
+                    }
+
+                    @Override
                     public String getExternalKey() {
                         return null;
                     }

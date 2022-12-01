@@ -797,7 +797,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             public Entitlement apply(@Nullable final Void dontcare) {
                 try {
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(productName, billingPeriod, priceList, null);
-                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, new DefaultEntitlementSpecifier(spec, null, null, overrides), bundleExternalKey, null, billingEffectiveDate, false, true, Collections.emptyList(), callContext);
+                    final UUID entitlementId = entitlementApi.createBaseEntitlement(accountId, new DefaultEntitlementSpecifier(spec, null, null, null, overrides), bundleExternalKey, null, billingEffectiveDate, false, true, Collections.emptyList(), callContext);
                     assertNotNull(entitlementId);
                     return entitlementApi.getEntitlementForId(entitlementId, false, callContext);
                 } catch (final EntitlementApiException e) {
@@ -1175,7 +1175,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
                                    final BillingActionPolicy billingPolicy,
                                    @Nullable final List<PlanPhasePriceOverride> overrides) {
             this.dryRunType = dryRunType;
-            this.spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier(productName, billingPeriod, priceList, phaseType), null, null, overrides);
+            this.spec = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier(productName, billingPeriod, priceList, phaseType), null, null, null, overrides);
             this.action = action;
             this.subscriptionId = subscriptionId;
             this.bundleId = bundleId;

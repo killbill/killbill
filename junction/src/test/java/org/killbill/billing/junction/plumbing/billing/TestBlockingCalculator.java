@@ -886,6 +886,7 @@ public class TestBlockingCalculator extends JunctionTestSuiteNoDB {
                                                                                                           effectiveDate,
                                                                                                           totalOrdering,
                                                                                                           billCycleDay,
+                                                                                                          1,
                                                                                                           effectiveDate);
             return new DefaultBillingEvent(subscriptionBillingEvent,
                                            subscription,

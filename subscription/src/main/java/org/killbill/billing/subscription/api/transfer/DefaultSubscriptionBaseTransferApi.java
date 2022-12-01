@@ -120,6 +120,9 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 newEvent = BCDEventData.createBCDEvent(subscription, effectiveDate, existingEvent.getBillCycleDayLocal());
                 break;
 
+            case QUANTITY_CHANGE:
+                throw new IllegalStateException("Not implemented");
+
             case CANCEL:
             default:
                 break;

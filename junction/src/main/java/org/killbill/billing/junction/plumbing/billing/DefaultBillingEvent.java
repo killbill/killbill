@@ -43,6 +43,8 @@ public class DefaultBillingEvent implements BillingEvent {
     private final UUID bundleId;
 
     private final int billCycleDayLocal;
+
+    private final int quantity;
     private final BillingAlignment billingAlignment;
 
     private final DateTime effectiveDate;
@@ -82,6 +84,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
         this.currency = currency;
         this.billCycleDayLocal = billCycleDayLocal;
+        this.quantity = inputEvent.getQuantity() == null || inputEvent.getQuantity() <= 0 ? 1 /* default to 1 if not passed or has an invalid value (safety) */ : inputEvent.getQuantity();
         this.billingAlignment = billingAlignment;
         this.description = inputEvent.getType().toString();
         this.effectiveDate = inputEvent.getEffectiveDate();
@@ -108,6 +111,7 @@ public class DefaultBillingEvent implements BillingEvent {
                                final Currency currency,
                                final BillingPeriod billingPeriod,
                                final int billCycleDayLocal,
+                               final int quantity,
                                final String description,
                                final long totalOrdering,
                                final SubscriptionBaseTransitionType type) {
@@ -128,6 +132,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.usages = usages;
         this.currency = currency;
         this.billCycleDayLocal = billCycleDayLocal;
+        this.quantity = quantity;
         this.description = description;
         this.type = type;
         this.totalOrdering = totalOrdering;
@@ -147,6 +152,11 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public int getBillCycleDayLocal() {
         return billCycleDayLocal;
+    }
+
+    @Override
+    public int getQuantity() {
+        return quantity;
     }
 
     @Override
@@ -318,6 +328,9 @@ public class DefaultBillingEvent implements BillingEvent {
         if (billCycleDayLocal != that.billCycleDayLocal) {
             return false;
         }
+        if (quantity != that.quantity) {
+            return false;
+        }
         if (billingPeriod != that.billingPeriod) {
             return false;
         }
@@ -352,6 +365,7 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public int hashCode() {
         int result = 31 * billCycleDayLocal;
+        result = 31 * result + quantity;
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);

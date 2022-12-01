@@ -70,6 +70,11 @@ public class SubscriptionResourceHelpers {
             }
 
             @Override
+            public Integer getQuantity() {
+                return subscriptionJson.getQuantity();
+            }
+
+            @Override
             public String getExternalKey() {
                 return externalKey;
             }

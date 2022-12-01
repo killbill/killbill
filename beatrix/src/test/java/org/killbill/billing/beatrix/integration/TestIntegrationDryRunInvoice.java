@@ -726,7 +726,7 @@ public class TestIntegrationDryRunInvoice extends TestIntegrationBase {
         // Create the monthly
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), "bundleKey", null, null, false, true, Collections.emptyList(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), "bundleKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();

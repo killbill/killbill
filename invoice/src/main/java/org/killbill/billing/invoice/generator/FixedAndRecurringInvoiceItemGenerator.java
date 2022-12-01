@@ -247,7 +247,10 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
 
                     final BigDecimal rate = thisEvent.getRecurringPrice();
                     if (rate != null) {
-                        final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
+                        final BigDecimal quantity = new BigDecimal(thisEvent.getQuantity());
+                        final BigDecimal rateXQuantity = rate.multiply(quantity);
+
+                        final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rateXQuantity), currency);
                         final DateTime catalogEffectiveDate = thisEvent.getCatalogEffectiveDate() != null ? thisEvent.getCatalogEffectiveDate() : null;
                         final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
                                                                                             accountId,
@@ -259,7 +262,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                                                             catalogEffectiveDate,
                                                                                             itemDatum.getStartDate(),
                                                                                             itemDatum.getEndDate(),
-                                                                                            amount, rate, currency);
+                                                                                            amount, rateXQuantity, currency);
                         items.add(recurringItem);
                     }
                 }
@@ -417,6 +420,8 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
             final BigDecimal fixedPrice = thisEvent.getFixedPrice();
 
             if (fixedPrice != null) {
+                final BigDecimal quantity = new BigDecimal(thisEvent.getQuantity());
+                final BigDecimal fixedPriceXQuantity = fixedPrice.multiply(quantity);
 
                 final Plan currentPlan = thisEvent.getPlan();
                 Preconditions.checkNotNull(currentPlan, String.format("Unexpected null Plan name event = %s", thisEvent));
@@ -426,7 +431,7 @@ public class FixedAndRecurringInvoiceItemGenerator extends InvoiceItemGenerator 
                                                                                               thisEvent.getSubscriptionId(),
                                                                                               currentPlan.getProduct().getName(), currentPlan.getName(), thisEvent.getPlanPhase().getName(),
                                                                                               catalogEffectiveDate,
-                                                                                              roundedStartDate, fixedPrice, currency);
+                                                                                              roundedStartDate, fixedPriceXQuantity, currency);
 
                 // For debugging purposes
                 invoiceItemGeneratorLogger.append(thisEvent, fixedPriceInvoiceItem);

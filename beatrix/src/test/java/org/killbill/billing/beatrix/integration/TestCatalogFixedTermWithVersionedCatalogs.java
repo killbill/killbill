@@ -73,7 +73,7 @@ public class TestCatalogFixedTermWithVersionedCatalogs extends TestIntegrationBa
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
                 NextEvent.PAYMENT);        
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("plumber-insurance-monthly", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 01, 01), new LocalDate(2021, 02, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
@@ -114,7 +114,7 @@ public class TestCatalogFixedTermWithVersionedCatalogs extends TestIntegrationBa
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT,
                 NextEvent.PAYMENT);        
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("plumber-insurance-monthly2", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 01, 01), new LocalDate(2021, 02, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));

@@ -112,7 +112,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         //
         // We verify that invoice only tried to REPAIR from cutoff date -- and in particular the period 2020-01-15 - 2020-02-01 is left untouched.
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), new LocalDate(2020, 1, 15), Collections.emptyList(), callContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null, null), new LocalDate(2020, 1, 15), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
@@ -171,14 +171,14 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose targetDt >= cutoffDt
         // - Proposed items correctly generate the 2 expected items but both are filtered because their startDt < cutoffDt
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.NULL_INVOICE);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday().minusDays(1), Collections.emptyList(), callContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null, null), clock.getUTCToday().minusDays(1), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Do a change today => Only new item 2020-01-16 - 2020-02-01 gets generated
         // - System does not fetch any existing invoices as cutoffDt= 2020-01-16 and there are no invoices whose targetDt >= cutoffDt
         // - Proposed items correctly generate the 2 expected items but the first one is filtered because its start date  2020-01-15 < cutoffDt
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null), clock.getUTCToday(), Collections.emptyList(), callContext);
+        entitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2, null, null, null, null), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Double invoicing due to bad config! (no REPAIR)
@@ -515,7 +515,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // AO subscription
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2021, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2021, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // 2020-05-01
@@ -538,7 +538,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
         invoiceChecker.checkTrackingIds(curInvoice, Collections.emptySet(), internalCallContext);
 
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2021, 6, 1), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", clock.getUTCNow(), BigDecimal.valueOf(50L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), BigDecimal.valueOf(300L), callContext);
 
         // We have 2 conflicting properties (on purpose) for this test that will lead to re-invoice the usage on month 2021-04-01 -> 2021-05-01:
@@ -580,7 +580,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         // AO subscription
         final DefaultEntitlement aoSubscription = addAOEntitlementAndCheckForCompletion(bpSubscription.getBundleId(), "Bullets", ProductCategory.ADD_ON, BillingPeriod.NO_BILLING_PERIOD, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
 
-        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", new LocalDate(2021, 4, 1), BigDecimal.valueOf(99L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-1", "bullets", clock.getUTCNow(), BigDecimal.valueOf(99L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-2", "bullets", new LocalDate(2021, 4, 15), BigDecimal.valueOf(100L), callContext);
 
         // 2020-05-01
@@ -603,7 +603,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
                                                  new ExpectedInvoiceItemCheck(new LocalDate(2021, 5, 1), new LocalDate(2021, 6, 1), InvoiceItemType.USAGE, BigDecimal.ZERO));
         invoiceChecker.checkTrackingIds(curInvoice, Collections.emptySet(), internalCallContext);
 
-        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", new LocalDate(2021, 6, 1), BigDecimal.valueOf(50L), callContext);
+        recordUsageData(aoSubscription.getId(), "tracking-3", "bullets", clock.getUTCNow(), BigDecimal.valueOf(50L), callContext);
         recordUsageData(aoSubscription.getId(), "tracking-4", "bullets", new LocalDate(2021, 6, 16), BigDecimal.valueOf(300L), callContext);
 
         // 2020-07-01
@@ -898,7 +898,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final LocalDate effDt1 = new LocalDate(2020, 8, 15);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier("blowdart-in-arrear-monthly-notrial");
-        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId1 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1, 15, null, null, null), null, effDt1, effDt1, false, true, Collections.emptyList(), callContext);
         subscriptionApi.getSubscriptionForEntitlementId(entitlementId1, false, callContext);
         assertListenerStatus();
 
@@ -906,7 +906,7 @@ public class TestWithInvoiceOptimization extends TestIntegrationBase {
         final LocalDate effDt2 = new LocalDate(2020, 9, 1);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("training-usage-in-arrear");
-        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null), null, effDt2, effDt2, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId2 = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec2, 1, null, null, null), null, effDt2, effDt2, false, true, Collections.emptyList(), callContext);
         final Subscription sub2 = subscriptionApi.getSubscriptionForEntitlementId(entitlementId2, false, callContext);
         assertListenerStatus();
 

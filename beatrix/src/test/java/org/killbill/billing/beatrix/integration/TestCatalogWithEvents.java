@@ -62,7 +62,7 @@ public class TestCatalogWithEvents extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("water-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
-        final UUID subscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), clock.getUTCToday(), clock.getUTCToday(), false, true, Collections.emptyList(), callContext);
+        final UUID subscriptionId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), UUID.randomUUID().toString(), clock.getUTCToday(), clock.getUTCToday(), false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         recordUsageData(subscriptionId, "t1", "liter", new LocalDate(2020, 1, 1), BigDecimal.valueOf(10L), callContext);

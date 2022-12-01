@@ -35,6 +35,7 @@ public class SubscriptionBuilder {
     private DateTime chargedThroughDate;
     private boolean migrated;
     private Integer subscriptionBCD;
+    private Integer quantity;
     private boolean includeDeletedEvents;
 
     public SubscriptionBuilder(final DefaultSubscriptionBase original) {
@@ -153,8 +154,12 @@ public class SubscriptionBuilder {
     public Integer getSubscriptionBCD() {
         return subscriptionBCD;
     }
-    
-	public boolean getIncludeDeletedEvents() {
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public boolean getIncludeDeletedEvents() {
 		return includeDeletedEvents;
 	}
 
@@ -170,5 +175,11 @@ public class SubscriptionBuilder {
         this.subscriptionBCD = subscriptionBCD;
         return this;
     }
+
+    public SubscriptionBuilder setQuantity(final Integer quantity) {
+        this.quantity = quantity;
+        return this;
+    }
+
 
 }

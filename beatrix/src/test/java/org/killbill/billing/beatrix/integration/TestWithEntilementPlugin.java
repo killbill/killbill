@@ -146,7 +146,7 @@ public class TestWithEntilementPlugin extends TestIntegrationBase {
         @Override
         public PriorEntitlementResult priorCall(final EntitlementContext entitlementContext, final Iterable<PluginProperty> properties) throws EntitlementPluginApiException {
             if (planPhasePriceOverride != null) {
-                final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementSpecifier().iterator().next().getPlanPhaseSpecifier(), null, null,  planPhasePriceOverride);
+                final EntitlementSpecifier entitlementSpecifier = new DefaultEntitlementSpecifier(entitlementContext.getBaseEntitlementWithAddOnsSpecifiers().iterator().next().getEntitlementSpecifier().iterator().next().getPlanPhaseSpecifier(), null, null, null, planPhasePriceOverride);
                 final List<EntitlementSpecifier> entitlementSpecifiers = new ArrayList<EntitlementSpecifier>();
                 entitlementSpecifiers.add(entitlementSpecifier);
 

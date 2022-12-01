@@ -73,6 +73,8 @@ import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.engine.dao.model.SubscriptionBundleModelDao;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventData;
+import org.killbill.billing.subscription.events.quantity.QuantityEvent;
+import org.killbill.billing.subscription.events.quantity.QuantityEventData;
 import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
@@ -448,6 +450,20 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
         dao.updateBundleExternalKey(bundleId, newExternalKey, context);
     }
 
+
+    @Override
+    public void updateQuantity(final UUID subscriptionId, final int quantity, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException {
+        try {
+            final SubscriptionCatalog catalog = subscriptionCatalogApi.getFullCatalog(internalCallContext);
+            final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, false, internalCallContext);
+            final DateTime effectiveDate = effectiveFromDate != null ? internalCallContext.toUTCDateTime(effectiveFromDate) : internalCallContext.getCreatedDate();
+            final QuantityEvent quantityEvent = QuantityEventData.createQuantityEvent(subscription, effectiveDate, quantity);
+            dao.createChangeEvent(subscription, quantityEvent, catalog, internalCallContext);
+        } catch (final CatalogApiException e) {
+            throw new SubscriptionBaseApiException(e);
+        }
+    }
+
     @Override
     public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException {
 
@@ -456,7 +472,7 @@ public class DefaultSubscriptionInternalApi extends DefaultSubscriptionBaseCreat
             final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) getSubscriptionFromId(subscriptionId, false, internalCallContext);
             final DateTime effectiveDate = getEffectiveDateForNewBCD(bcd, effectiveFromDate, subscription.getStartDate(), internalCallContext);
             final BCDEvent bcdEvent = BCDEventData.createBCDEvent(subscription, effectiveDate, bcd);
-            dao.createBCDChangeEvent(subscription, bcdEvent, catalog, internalCallContext);
+            dao.createChangeEvent(subscription, bcdEvent, catalog, internalCallContext);
         } catch (final CatalogApiException e) {
             throw new SubscriptionBaseApiException(e);
         }
