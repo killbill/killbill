@@ -65,8 +65,7 @@ public class TestDefaultCatalogUserApi extends CatalogTestSuiteNoDB {
     public void testValidateInvalidCatalog() throws Exception {
         final CatalogValidation validation = catalogUserApi.validateCatalog(getXMLCatalog("CatalogWithValidationErrors.xml"), callContext);
         Assert.assertNotNull(validation);
-        Assert.assertEquals(validation.getValidationErrors().size(), 1);
-        Assert.assertEquals(validation.getValidationErrors().get(0).getErrorDescription(), "Invalid Catalog XML");
+        Assert.assertEquals(validation.getValidationErrors().size(), 17);
     }
 
     private String getXMLCatalog(final String name) throws URISyntaxException, IOException {
