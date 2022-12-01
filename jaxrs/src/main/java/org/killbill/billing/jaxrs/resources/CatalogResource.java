@@ -249,11 +249,7 @@ public class CatalogResource extends JaxRsResourceBase {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
         final CatalogValidation catalogValidation = catalogUserApi.validateCatalog(catalogXML, callContext);
         final CatalogValidationJson catalogValidationJson = new CatalogValidationJson(catalogValidation);
-        if (catalogValidation.getValidationErrors() != null && !catalogValidation.getValidationErrors().isEmpty()) {
-            return Response.status(Status.BAD_REQUEST).entity(catalogValidationJson).build();
-        } else {
-            return Response.status(Status.OK).entity(catalogValidationJson).build();
-        }
+        return Response.status(Status.OK).entity(catalogValidationJson).build();
     }
 
     @TimedResource

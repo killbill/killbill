@@ -137,8 +137,11 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             }
             return new DefaultCatalogValidation(errors);
 
-        } catch (final ValidationException | JAXBException e) {
-            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, "")); //TODO_1674 - is this correct?
+        } catch (final ValidationException e) {
+            errors.addAll(e.getErrors());
+            return new DefaultCatalogValidation(errors);
+        } catch (final JAXBException e) {
+            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, ""));
             return new DefaultCatalogValidation(errors);
         } catch (final Exception e) {
             throw new RuntimeException(e);
@@ -217,7 +220,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         return internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
     }
 
-    private ValidationErrors validateCatalogInternal(final String catalogXML, final InternalTenantContext internalTenantContext) throws ValidationException, JAXBException, CatalogApiException, TransformerException, SAXException, IOException { //TODO_1674 - Revisit throws clause
+    private ValidationErrors validateCatalogInternal(final String catalogXML, final InternalTenantContext internalTenantContext) throws ValidationException, JAXBException, CatalogApiException, TransformerException, SAXException, IOException {
         final ValidationErrors errors = new ValidationErrors();
         VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
         if (versionedCatalog == null) {
