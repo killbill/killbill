@@ -121,8 +121,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 break;
 
             case QUANTITY_CHANGE:
-                // TODO
-                break;
+                throw new IllegalStateException("Not implemented");
 
             case CANCEL:
             default:
