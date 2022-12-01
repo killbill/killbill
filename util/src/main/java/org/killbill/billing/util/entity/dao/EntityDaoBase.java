@@ -233,7 +233,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
 
                                                                      @Override
                                                                      public Iterator<M> build(final EntitySqlDao<M, E> sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
-                                                                         return sqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit, context); //TODO_1792: Is this correct or is a new query (similar to EntitySqlDao.sql.stg#Line147 but with accountRecordId) required? This query does not take into account the ordering parameter
+                                                                         return sqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit, context);
                                                                      }
                                                                  },
                                                                  offset,
