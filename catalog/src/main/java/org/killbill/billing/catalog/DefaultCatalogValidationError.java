@@ -37,8 +37,7 @@ public class DefaultCatalogValidationError implements CatalogValidationError {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder(errorDescription);
-        return sb.toString();
+    	return errorDescription;
     }
 
 }

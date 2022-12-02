@@ -119,35 +119,18 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             catalogCache.clearCatalog(internalTenantContext);
         } catch (final TenantApiException e) {
             throw new CatalogApiException(e);
-        } catch (final ValidationException | JAXBException e) {
-            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-        } catch (final IOException | TransformerException | SAXException e) {
-            throw new IllegalStateException(e);
         }
     }
 
     @Override
     public CatalogValidation validateCatalog(final String catalogXML, final CallContext context) {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(context);
-        ValidationErrors errors = new ValidationErrors();
-        try {
-            errors = validateCatalogInternal(catalogXML, internalTenantContext);
-            if (!errors.isEmpty()) {
-                logger.info("Failed to load new catalog version: " + errors.toString());
-            }
-            return new DefaultCatalogValidation(errors);
-
-        } catch (final ValidationException e) {
-            errors.addAll(e.getErrors());
-            return new DefaultCatalogValidation(errors);
-        } catch (final JAXBException e) {
-            errors.add(new ValidationError("Invalid Catalog XML", DefaultVersionedCatalog.class, "")); //TODO_1674 - Error message is hardcoded here, move this elsewhere?
-            return new DefaultCatalogValidation(errors);
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            catalogCache.clearCatalog(internalTenantContext);
+        final ValidationErrors errors = validateCatalogInternal(catalogXML, internalTenantContext);
+        if (!errors.isEmpty()) {
+            logger.info("Failed to load new catalog version: " + errors.toString());
         }
+        catalogCache.clearCatalog(internalTenantContext);
+        return new DefaultCatalogValidation(errors);
     }
 
     @Override
@@ -220,23 +203,34 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         return internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
     }
 
-    private ValidationErrors validateCatalogInternal(final String catalogXML, final InternalTenantContext internalTenantContext) throws ValidationException, JAXBException, CatalogApiException, TransformerException, SAXException, IOException {
+    private ValidationErrors validateCatalogInternal(final String catalogXML, final InternalTenantContext internalTenantContext) {
         final ValidationErrors errors = new ValidationErrors();
-        VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
-        if (versionedCatalog == null) {
-            versionedCatalog = new DefaultVersionedCatalog();
-        }
-        // Validation purpose:  Will throw if bad XML or catalog validation fails
-        final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
-        final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
+        try {
+            VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
+            if (versionedCatalog == null) {
+                versionedCatalog = new DefaultVersionedCatalog();
+            }
+            // Validation purpose:  Will throw if bad XML or catalog validation fails
+            final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
+            final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
 
-        if (versionedCatalog.getCatalogName() != null && !versionedCatalog.getCatalogName().isEmpty() && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {
-            errors.add(new ValidationError(String.format("Catalog name '%s' is different from existing catalog name '%s'", newCatalogVersion.getCatalogName(), versionedCatalog.getCatalogName()), StaticCatalog.class, "")); //TODO_1674 - Error message is hardcoded here, move this elsewhere?
-            return errors;
-        }
+            if (versionedCatalog.getCatalogName() != null && !versionedCatalog.getCatalogName().isEmpty() && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {
+                errors.add(new ValidationError(String.format("Catalog name '%s' is different from existing catalog name '%s'", newCatalogVersion.getCatalogName(), versionedCatalog.getCatalogName()), StaticCatalog.class, "")); //TODO_1674 - Error message is hardcoded here, move this elsewhere?
+                return errors;
+            }
 
-        ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
-        ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
+            ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
+            ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
+
+        } catch (final CatalogApiException e) {
+            errors.add(new ValidationError(e.getMessage(), DefaultVersionedCatalog.class, ""));
+        } catch (final ValidationException e) {
+            errors.addAll(e.getErrors());
+        } catch (final JAXBException e) {
+            errors.add(new ValidationError(e.getLinkedException().getMessage(), DefaultVersionedCatalog.class, ""));
+        } catch (final TransformerException | IOException | SAXException e) {
+            throw new IllegalStateException(e);
+        }
         return errors;
     }
 }

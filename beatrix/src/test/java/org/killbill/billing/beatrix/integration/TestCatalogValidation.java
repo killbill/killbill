@@ -109,6 +109,15 @@ public class TestCatalogValidation extends TestIntegrationBase {
         assertEquals(errors.size(), 1);
         assertEquals(errors.get(0).getErrorDescription(), "'FIXEDTERM' Phase 'standard-monthly-fixedterm' for plan 'standard-monthly' in version 'Thu Oct 14 00:00:00 GMT 2021' must not have duration as UNLIMITED'");
 
+        //another invalid catalog
+        validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v3-invalid.xml"), testCallContext);
+        assertNotNull(validation);
+        errors = validation.getValidationErrors();
+        assertNotNull(errors);
+        assertEquals(errors.size(), 1);
+        assertEquals(errors.get(0).getErrorDescription(), "cvc-complex-type.2.4.a: Invalid content was found starting with element 'duration'. One of '{unit}' is expected.");
+        
+
         //valid catalog with existing catalog
         uploadCatalog("CatalogValidation-v1.xml");
         validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v1.xml"), testCallContext);
