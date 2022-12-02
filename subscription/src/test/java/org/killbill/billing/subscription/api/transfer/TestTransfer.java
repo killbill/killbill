@@ -567,6 +567,55 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
 
     @Test(groups = "slow")
+    public void testWithQuantityUpdatePriorTransfer() throws Exception {
+        final String baseProduct = "Pistol";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = "notrial";
+
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+
+        // Create context for the quantity update as it looks like test default internalCallContext to be on newAccountId
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
+                                                                                                             ObjectType.ACCOUNT,
+                                                                                                             this.internalCallContext.getUpdatedBy(),
+                                                                                                             this.internalCallContext.getCallOrigin(),
+                                                                                                             this.internalCallContext.getContextUserType(),
+                                                                                                             this.internalCallContext.getUserToken(),
+                                                                                                             this.internalCallContext.getTenantRecordId());
+
+        // 2012-5-8
+        clock.addDays(1);
+
+        final int quantity = 5;
+        testListener.pushExpectedEvent(NextEvent.QUANTITY_CHANGE);
+        subscriptionInternalApi.updateQuantity(baseSubscription.getId(), quantity, clock.getUTCToday(), internalCallContext);
+        assertListenerStatus();
+
+        // 2012-5-9
+        clock.addDays(1);
+
+
+        testListener.pushExpectedEvent(NextEvent.QUANTITY_CHANGE);
+        // Do a second quantity change
+        final int newQuantity = 7;
+        subscriptionInternalApi.updateQuantity(baseSubscription.getId(), newQuantity, clock.getUTCToday(), internalCallContext);
+        assertListenerStatus();
+
+        // Transfer date = 2012-5-12
+        clock.addDays(3);
+        final DateTime transferRequestedDate = clock.getUTCNow();
+        testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.QUANTITY_CHANGE, NextEvent.CANCEL);
+        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
+        assertListenerStatus();
+
+        // Check the transferred subscription has the latest value for the quantity
+        final DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(newBundle.getId(), internalCallContext);
+        assertEquals(newSubscription.getQuantity().intValue(), newQuantity);
+    }
+
+
+
+    @Test(groups = "slow")
     public void testTransferWithPendingSubscription() throws Exception {
         final String baseProduct = "Pistol";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;

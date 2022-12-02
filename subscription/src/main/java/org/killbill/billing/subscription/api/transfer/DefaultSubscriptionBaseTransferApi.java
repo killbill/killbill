@@ -55,6 +55,7 @@ import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEventData;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
+import org.killbill.billing.subscription.events.quantity.QuantityEventData;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
@@ -82,8 +83,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
         this.internalCallContextFactory = internalCallContextFactory;
     }
 
-    private SubscriptionBaseEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate)
-            throws CatalogApiException {
+    private SubscriptionBaseEvent createEvent(final boolean firstEvent, final ExistingEvent existingEvent, final DefaultSubscriptionBase subscription, final DateTime transferDate) {
 
         SubscriptionBaseEvent newEvent = null;
         final DateTime effectiveDate = existingEvent.getEffectiveDate().isBefore(transferDate) ? transferDate : existingEvent.getEffectiveDate();
@@ -121,7 +121,8 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 break;
 
             case QUANTITY_CHANGE:
-                throw new IllegalStateException("Not implemented");
+                newEvent = QuantityEventData.createQuantityEvent(subscription, effectiveDate, existingEvent.getQuantity());
+                break;
 
             case CANCEL:
             default:
@@ -137,12 +138,15 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
             final List<SubscriptionBaseEvent> result = new LinkedList<>();
             ExistingEvent prevEvent = null;
             ExistingEvent prevBCDEvent = null;
+            ExistingEvent prevQuantityEvent = null;
             boolean firstEvent = true;
             for (final ExistingEvent cur : existingEvents) {
                 // Skip all events prior to the transferDate
                 if (cur.getEffectiveDate().isBefore(transferDate)) {
                     if (cur.getSubscriptionTransitionType() == SubscriptionBaseTransitionType.BCD_CHANGE) {
                         prevBCDEvent = cur;
+                    } else if (cur.getSubscriptionTransitionType() == SubscriptionBaseTransitionType.QUANTITY_CHANGE) {
+                        prevQuantityEvent = cur;
                     } else {
                         prevEvent = cur;
                     }
@@ -160,6 +164,11 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                     prevBCDEvent = null;
                 }
 
+                if (insertEventToResult(firstEvent, prevQuantityEvent, subscription, transferDate, result)) {
+                    firstEvent = false;
+                    prevQuantityEvent = null;
+                }
+
                 if (insertEventToResult(firstEvent, cur, subscription, transferDate, result)) {
                     firstEvent = false;
                 }
@@ -170,6 +179,7 @@ public class DefaultSubscriptionBaseTransferApi extends SubscriptionApiBase impl
                 firstEvent = false;
             }
             insertEventToResult(firstEvent, prevBCDEvent, subscription, transferDate, result);
+            insertEventToResult(firstEvent, prevQuantityEvent, subscription, transferDate, result);
 
 
             return result;
