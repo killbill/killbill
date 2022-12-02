@@ -225,6 +225,7 @@ public class SubscriptionJson extends JsonBase {
             sb.append("eventId='").append(eventId).append('\'');
             sb.append(", billingPeriod='").append(billingPeriod).append('\'');
             sb.append(", effectiveDate=").append(effectiveDate);
+            sb.append(", catalogEffectiveDate=").append(catalogEffectiveDate);
             sb.append(", plan='").append(plan).append('\'');
             sb.append(", product='").append(product).append('\'');
             sb.append(", priceList='").append(priceList).append('\'');
@@ -294,6 +295,7 @@ public class SubscriptionJson extends JsonBase {
             int result = eventId != null ? eventId.hashCode() : 0;
             result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
             result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+            result = 31 * result + (catalogEffectiveDate != null ? catalogEffectiveDate.hashCode() : 0);
             result = 31 * result + (plan != null ? plan.hashCode() : 0);
             result = 31 * result + (product != null ? product.hashCode() : 0);
             result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
