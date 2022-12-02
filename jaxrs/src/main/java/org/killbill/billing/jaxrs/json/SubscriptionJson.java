@@ -141,7 +141,7 @@ public class SubscriptionJson extends JsonBase {
             this.eventId = subscriptionEvent.getId();
             this.billingPeriod = billingPeriod;
             this.effectiveDate = subscriptionEvent.getEffectiveDate();
-			this.catalogEffectiveDate = plan != null ? plan.getCatalog().getEffectiveDate() : null;
+            this.catalogEffectiveDate = plan != null ? plan.getCatalog().getEffectiveDate() : null;
             this.plan = plan != null ? plan.getName() : null;
             this.product = product != null ? product.getName() : null;
             this.priceList = priceList != null ? priceList.getName() : null;
