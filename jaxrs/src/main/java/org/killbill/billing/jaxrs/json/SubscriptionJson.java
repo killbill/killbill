@@ -182,8 +182,8 @@ public class SubscriptionJson extends JsonBase {
         public Date getCatalogEffectiveDate() {
 			return catalogEffectiveDate;
 		}
-
-		public String getPlan() {
+        
+        public String getPlan() {
             return plan;
         }
 
