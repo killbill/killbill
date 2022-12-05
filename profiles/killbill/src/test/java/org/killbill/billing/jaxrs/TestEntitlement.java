@@ -1254,7 +1254,7 @@ public class TestEntitlement extends TestJaxrsBase {
         callbackServlet.assertListenerStatus();
 
         final Subscription result = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
-        // Still shows as the 4 (BCD did not take effect)
+        // Still shows as the 25 (BCD did not take effect)
         Assert.assertEquals(result.getBillCycleDayLocal(), new Integer(25));
 
         // 2012, 5, 9
@@ -1265,6 +1265,33 @@ public class TestEntitlement extends TestJaxrsBase {
         final Subscription result2 = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
         // Still shows as the 4 (BCD did not take effect)
         Assert.assertEquals(result2.getBillCycleDayLocal(), new Integer(9));
+    }
+
+
+    @Test(groups = "slow", description = "Verify we can update the quantity associated with the subscription")
+    public void testUpdateEntitlementQuantity() throws Exception {
+        final DateTime initialDate = new DateTime(2022, 11, 28, 15, 7, 00, 0);
+        clock.setDeltaFromReality(initialDate.getMillis() - clock.getUTCNow().getMillis());
+
+        final Account accountJson = createAccountWithDefaultPaymentMethod();
+
+        final String productName = "Shotgun";
+        final BillingPeriod term = BillingPeriod.MONTHLY;
+
+        final Subscription entitlementJson = createSubscription(accountJson.getAccountId(), "22112815", productName,
+                                                                ProductCategory.BASE, term);
+
+        Assert.assertEquals(entitlementJson.getBillCycleDayLocal(), Integer.valueOf(28));
+
+        final Subscription updatedSubscription = new Subscription();
+        updatedSubscription.setSubscriptionId(entitlementJson.getSubscriptionId());
+        updatedSubscription.setQuantity(3);
+        callbackServlet.pushExpectedEvents(ExtBusEventType.SUBSCRIPTION_QUANTITY);
+        subscriptionApi.updateSubscriptionQuantity(entitlementJson.getSubscriptionId(), updatedSubscription, null, requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        final Subscription result = subscriptionApi.getSubscription(entitlementJson.getSubscriptionId(), requestOptions);
+        Assert.assertEquals(result.getQuantity(), Integer.valueOf(3));
     }
 
     @Test(groups = "slow", description = "Can create subscription and change plan using planName")

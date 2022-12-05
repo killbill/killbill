@@ -26,9 +26,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import javax.annotation.Nullable;
 
-import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -115,7 +113,7 @@ public interface SubscriptionDao extends EntityDao<SubscriptionBundleModelDao, S
 
     void updateBundleExternalKey(UUID bundleId, String externalKey, InternalCallContext context);
 
-    void createBCDChangeEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent bcdEvent, final SubscriptionCatalog catalog, InternalCallContext context);
+    void createChangeEvent(DefaultSubscriptionBase subscription, SubscriptionBaseEvent changeEvent, final SubscriptionCatalog catalog, InternalCallContext context);
 
     List<AuditLogWithHistory> getSubscriptionBundleAuditLogsWithHistoryForId(UUID bundleId, AuditLevel auditLevel, InternalTenantContext context);
 

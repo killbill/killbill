@@ -128,6 +128,7 @@ public abstract class JunctionTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {
                                                                                                       effectiveDate,
                                                                                                       totalOrdering,
                                                                                                       billCycleDay,
+                                                                                                      1,
                                                                                                       effectiveDate);
         return new DefaultBillingEvent(subscriptionBillingEvent,
                                        sub,

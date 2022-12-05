@@ -1269,7 +1269,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, correctStartDate, correctStartDate, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), null, correctStartDate, correctStartDate, false, false, Collections.emptyList(), callContext);
         final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         assertListenerStatus();
 
@@ -1320,7 +1320,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
         final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         assertListenerStatus();
 
@@ -1374,7 +1374,7 @@ public class TestIntegrationInvoiceWithRepairLogic extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.CREATE, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
         final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         assertListenerStatus();
 

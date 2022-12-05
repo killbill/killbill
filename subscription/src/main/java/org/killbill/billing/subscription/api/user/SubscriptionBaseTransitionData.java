@@ -41,6 +41,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     private final EntitlementState previousState;
     private final PriceList previousPriceList;
     private final Integer previousBillingCycleDayLocal;
+    private final Integer previousQuantity;
     private final UUID previousEventId;
     private final DateTime previousEventCreatedDate;
     private final Plan previousPlan;
@@ -50,6 +51,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
     private final EntitlementState nextState;
     private final PriceList nextPriceList;
     private final Integer nextBillingCycleDayLocal;
+    private final Integer nextQuantity;
     private final Plan nextPlan;
     private final PlanPhase nextPhase;
     private final Boolean isFromDisk;
@@ -71,6 +73,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
                                           final PlanPhase previousPhase,
                                           final PriceList previousPriceList,
                                           final Integer previousBillingCycleDayLocal,
+                                          final Integer previousQuantity,
                                           final UUID nextEventId,
                                           final DateTime nextEventCreatedDate,
                                           final EntitlementState nextState,
@@ -78,6 +81,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
                                           final PlanPhase nextPhase,
                                           final PriceList nextPriceList,
                                           final Integer nextBillingCycleDayLocal,
+                                          final Integer nextQuantity,
                                           final Long totalOrdering,
                                           final DateTime createdDate,
                                           final UUID userToken,
@@ -92,12 +96,14 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         this.previousState = previousState;
         this.previousPriceList = previousPriceList;
         this.previousBillingCycleDayLocal = previousBillingCycleDayLocal;
+        this.previousQuantity = previousQuantity;
         this.previousPlan = previousPlan;
         this.previousPhase = previousPhase;
         this.nextState = nextState;
         this.nextPlan = nextPlan;
         this.nextPriceList = nextPriceList;
         this.nextBillingCycleDayLocal = nextBillingCycleDayLocal;
+        this.nextQuantity = nextQuantity;
         this.nextPhase = nextPhase;
         this.totalOrdering = totalOrdering;
         this.previousEventId = previousEventId;
@@ -129,6 +135,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         this.previousState = input.getPreviousState();
         this.previousPriceList = input.getPreviousPriceList();
         this.previousBillingCycleDayLocal = input.getPreviousBillingCycleDayLocal();
+        this.previousQuantity = input.getPreviousQuantity();
         this.previousPlan = input.getPreviousPlan();
         this.previousPhase = input.getPreviousPhase();
         this.nextEventId = input.getNextEventId();
@@ -137,6 +144,7 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         this.nextPlan = input.getNextPlan();
         this.nextPriceList = input.getNextPriceList();
         this.nextBillingCycleDayLocal = input.getNextBillingCycleDayLocal();
+        this.nextQuantity = input.getNextQuantity();
         this.nextPhase = input.getNextPhase();
         this.totalOrdering = input.getTotalOrdering();
         this.isFromDisk = input.isFromDisk();
@@ -229,9 +237,17 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         return previousBillingCycleDayLocal;
     }
 
+    public Integer getPreviousQuantity() {
+        return previousQuantity;
+    }
+
     @Override
     public Integer getNextBillingCycleDayLocal() {
         return nextBillingCycleDayLocal;
+    }
+
+    public Integer getNextQuantity() {
+        return nextQuantity;
     }
 
     public UUID getUserToken() {
@@ -255,6 +271,8 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
                 return SubscriptionBaseTransitionType.PHASE;
             case BCD_UPDATE:
                 return SubscriptionBaseTransitionType.BCD_CHANGE;
+            case QUANTITY_UPDATE:
+                return SubscriptionBaseTransitionType.QUANTITY_CHANGE;
             case EXPIRED:
             	return SubscriptionBaseTransitionType.EXPIRED;                
             default:
@@ -322,11 +340,13 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         sb.append(", previousState=").append(previousState);
         sb.append(", previousPriceList=").append(previousPriceList);
         sb.append(", previousBillingCycleDayLocal=").append(previousBillingCycleDayLocal);
+        sb.append(", previousQuantity=").append(previousQuantity);
         sb.append(", previousPlan=").append(previousPlan);
         sb.append(", previousPhase=").append(previousPhase);
         sb.append(", nextState=").append(nextState);
         sb.append(", nextPriceList=").append(nextPriceList);
         sb.append(", nextBillingCycleDayLocal=").append(nextBillingCycleDayLocal);
+        sb.append(", nextQuantity=").append(nextQuantity);
         sb.append(", nextPlan=").append(nextPlan);
         sb.append(", nextPhase=").append(nextPhase);
         sb.append(", isFromDisk=").append(isFromDisk);
@@ -380,6 +400,9 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         if (nextBillingCycleDayLocal != null ? !nextBillingCycleDayLocal.equals(that.nextBillingCycleDayLocal) : that.nextBillingCycleDayLocal != null) {
             return false;
         }
+        if (nextQuantity != null ? !nextQuantity.equals(that.nextQuantity) : that.nextQuantity != null) {
+            return false;
+        }
         if (nextState != that.nextState) {
             return false;
         }
@@ -393,6 +416,9 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
             return false;
         }
         if (previousBillingCycleDayLocal != null ? !previousBillingCycleDayLocal.equals(that.previousBillingCycleDayLocal) : that.previousBillingCycleDayLocal != null) {
+            return false;
+        }
+        if (previousQuantity != null ? !previousQuantity.equals(that.previousQuantity) : that.previousQuantity != null) {
             return false;
         }
         if (previousState != that.previousState) {
@@ -426,11 +452,13 @@ public class SubscriptionBaseTransitionData implements SubscriptionBaseTransitio
         result = 31 * result + (previousState != null ? previousState.hashCode() : 0);
         result = 31 * result + (previousPriceList != null ? previousPriceList.hashCode() : 0);
         result = 31 * result + (previousBillingCycleDayLocal != null ? previousBillingCycleDayLocal.hashCode() : 0);
+        result = 31 * result + (previousQuantity != null ? previousQuantity.hashCode() : 0);
         result = 31 * result + (previousPlan != null ? previousPlan.hashCode() : 0);
         result = 31 * result + (previousPhase != null ? previousPhase.hashCode() : 0);
         result = 31 * result + (nextState != null ? nextState.hashCode() : 0);
         result = 31 * result + (nextPriceList != null ? nextPriceList.hashCode() : 0);
         result = 31 * result + (nextBillingCycleDayLocal != null ? nextBillingCycleDayLocal.hashCode() : 0);
+        result = 31 * result + (nextQuantity != null ? nextQuantity.hashCode() : 0);
         result = 31 * result + (nextPlan != null ? nextPlan.hashCode() : 0);
         result = 31 * result + (nextPhase != null ? nextPhase.hashCode() : 0);
         result = 31 * result + (isFromDisk != null ? isFromDisk.hashCode() : 0);

@@ -241,6 +241,11 @@ public class TestSubscriptionHelper {
             }
 
             @Override
+            public Integer getQuantity() {
+                return null;
+            }
+
+            @Override
             public String getExternalKey() {
                 return UUID.randomUUID().toString();
             }

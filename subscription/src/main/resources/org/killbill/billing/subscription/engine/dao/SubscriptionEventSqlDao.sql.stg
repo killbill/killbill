@@ -22,6 +22,7 @@ tableFields(prefix) ::= <<
 , <prefix> phase_name
 , <prefix> price_list_name
 , <prefix> billing_cycle_day_local
+, <prefix> quantity
 , <prefix> is_active
 , <prefix> created_by
 , <prefix> created_date
@@ -38,6 +39,7 @@ tableValues() ::= <<
 , :phaseName
 , :priceListName
 , :billingCycleDayLocal
+, :quantity
 , :isActive
 , :createdBy
 , :createdDate

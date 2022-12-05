@@ -29,6 +29,7 @@ public interface SubscriptionBaseEvent extends Comparable<SubscriptionBaseEvent>
         API_USER,
         PHASE,
         BCD_UPDATE,
+        QUANTITY_UPDATE,
         EXPIRED
     }
 

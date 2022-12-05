@@ -27,16 +27,18 @@ public class DefaultEntitlementSpecifier implements EntitlementSpecifier {
     private final PlanPhaseSpecifier planPhaseSpecifier;
     private final List<PlanPhasePriceOverride> overrides;
     private final Integer billCycleDay;
+    private final Integer quantity;
     private final String externalKey;
 
     public DefaultEntitlementSpecifier(final PlanPhaseSpecifier planPhaseSpecifier) {
-        this(planPhaseSpecifier, null, null, null);
+        this(planPhaseSpecifier, null, null, null, null);
     }
 
-    public DefaultEntitlementSpecifier(final PlanPhaseSpecifier planPhaseSpecifier, final Integer billCycleDay, final String externalKey, final List<PlanPhasePriceOverride> overrides) {
+    public DefaultEntitlementSpecifier(final PlanPhaseSpecifier planPhaseSpecifier, final Integer billCycleDay, final Integer quantity, final String externalKey, final List<PlanPhasePriceOverride> overrides) {
         this.planPhaseSpecifier = planPhaseSpecifier;
         this.externalKey = externalKey;
         this.billCycleDay = billCycleDay;
+        this.quantity = quantity;
         this.overrides = overrides;
     }
 
@@ -48,6 +50,11 @@ public class DefaultEntitlementSpecifier implements EntitlementSpecifier {
     @Override
     public Integer getBillCycleDay() {
         return billCycleDay;
+    }
+
+    @Override
+    public Integer getQuantity() {
+        return quantity;
     }
 
     @Override
@@ -69,6 +76,7 @@ public class DefaultEntitlementSpecifier implements EntitlementSpecifier {
         sb.append(", phaseType=").append(planPhaseSpecifier.getPhaseType());
         sb.append(", priceListName=").append(planPhaseSpecifier.getPriceListName());
         sb.append(", billCycleDay=").append(billCycleDay);
+        sb.append(", quantity=").append(quantity);
         sb.append(", externalKey=").append(externalKey);
         sb.append(", overrides=").append(overrides);
         sb.append('}');

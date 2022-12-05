@@ -90,7 +90,6 @@ import org.killbill.billing.jaxrs.util.KillbillEventHandler;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
 import org.killbill.billing.payment.api.PluginProperty;
-import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -102,12 +101,13 @@ import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
-import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.userrequest.CompletionUserRequestBase;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -678,11 +678,77 @@ public class SubscriptionResource extends JaxRsResourceBase {
                                           @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                           @HeaderParam(HDR_REASON) final String reason,
                                           @HeaderParam(HDR_COMMENT) final String comment,
-                                          @javax.ws.rs.core.Context final UriInfo uriInfo,
                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException {
 
         verifyNonNullOrEmpty(json, "SubscriptionJson body should be specified");
         verifyNonNullOrEmpty(json.getBillCycleDayLocal(), "SubscriptionJson new BCD should be specified");
+
+        return updateSubscriptionInternal(subscriptionId,
+                                          effectiveFromDateStr,
+                                          forceNewBcdWithPastEffectiveDate,
+                                          json.getBillCycleDayLocal(),
+                                          new SubscriptionUpdate() {
+                                              @Override
+                                              public void doUpdate(final Entitlement entitlement, final int newValue, final LocalDate effectiveFromDate, final CallContext callContext) throws EntitlementApiException {
+                                                  entitlement.updateBCD(json.getBillCycleDayLocal(), effectiveFromDate, callContext);
+                                              }
+                                          },
+                                          createdBy,
+                                          reason,
+                                          comment,
+                                          request);
+    }
+
+    @TimedResource
+    @PUT
+    @Produces(APPLICATION_JSON)
+    @Consumes(APPLICATION_JSON)
+    @Path("/{subscriptionId:" + UUID_PATTERN + "}/" + QUANTITY)
+    @ApiOperation(value = "Update the quantity associated to a subscription")
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Successful operation"),
+                           @ApiResponse(code = 400, message = "Invalid entitlement supplied")})
+    public Response updateSubscriptionQuantity(@PathParam(ID_PARAM_NAME) final UUID subscriptionId,
+                                               final SubscriptionJson json,
+                                               @QueryParam(QUERY_ENTITLEMENT_EFFECTIVE_FROM_DT) final String effectiveFromDateStr,
+                                               @QueryParam(QUERY_FORCE_NEW_QUANTITY_WITH_PAST_EFFECTIVE_DATE) @DefaultValue("false") final Boolean forceNewQuantityWithPastEffectiveDate,
+                                               @HeaderParam(HDR_CREATED_BY) final String createdBy,
+                                               @HeaderParam(HDR_REASON) final String reason,
+                                               @HeaderParam(HDR_COMMENT) final String comment,
+                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws EntitlementApiException, AccountApiException {
+
+        verifyNonNullOrEmpty(json, "SubscriptionJson body should be specified");
+        verifyNonNullOrEmpty(json.getQuantity(), "SubscriptionJson new quantity should be specified");
+
+        return updateSubscriptionInternal(subscriptionId,
+                                          effectiveFromDateStr,
+                                          forceNewQuantityWithPastEffectiveDate,
+                                          json.getQuantity(),
+                                          new SubscriptionUpdate() {
+                                              @Override
+                                              public void doUpdate(final Entitlement entitlement, final int newValue, final LocalDate effectiveFromDate, final CallContext callContext) throws EntitlementApiException {
+                                                  entitlement.updateQuantity(json.getQuantity(), effectiveFromDate, callContext);
+                                              }
+                                          },
+                                          createdBy,
+                                          reason,
+                                          comment,
+                                          request);
+
+    }
+
+    private interface SubscriptionUpdate {
+        void doUpdate(final Entitlement entitlement, final int quantity, final LocalDate effectiveFromDate, final CallContext context) throws EntitlementApiException;
+    }
+
+    private Response updateSubscriptionInternal(final UUID subscriptionId,
+                                                final String effectiveFromDateStr,
+                                                final Boolean forceNewQuantityWithPastEffectiveDate,
+                                                final int newValue,
+                                                final SubscriptionUpdate callback,
+                                                final String createdBy,
+                                                final String reason,
+                                                final String comment,
+                                                final HttpServletRequest request) throws EntitlementApiException, AccountApiException {
 
         LocalDate effectiveFromDate = toLocalDate(effectiveFromDateStr);
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
@@ -694,12 +760,13 @@ public class SubscriptionResource extends JaxRsResourceBase {
             int comp = effectiveFromDate.compareTo(accountToday);
             switch (comp) {
                 case -1:
-                    if (!forceNewBcdWithPastEffectiveDate) {
-                        throw new IllegalArgumentException("Changing a subscription BCD in the past may have consequences on previous invoice generated. Use flag forceNewBcdWithPastEffectiveDate to force this behavior");
+                    if (!forceNewQuantityWithPastEffectiveDate) {
+                        throw new IllegalArgumentException("Changing a subscription bcd or quantity in the past may have consequences on previous invoice generated. " +
+                                                           "Use force flag to overrule this behavior");
                     }
                     break;
                 case 0:
-                    // Ensure system will use curremt time for the event so it happens immediately
+                    // Ensure system will use current time for the event so it happens immediately
                     effectiveFromDate = null;
                     break;
                 case 1:
@@ -707,9 +774,10 @@ public class SubscriptionResource extends JaxRsResourceBase {
                     break;
             }
         }
-        entitlement.updateBCD(json.getBillCycleDayLocal(), effectiveFromDate, callContext);
+        callback.doUpdate(entitlement, newValue, effectiveFromDate, callContext);
         return Response.status(Status.NO_CONTENT).build();
     }
+
 
     private static final class CompletionUserRequestEntitlement extends CompletionUserRequestBase {
 

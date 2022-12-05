@@ -100,6 +100,8 @@ public interface SubscriptionBaseInternalApi {
 
     public void updateBCD(final UUID subscriptionId, final int bcd, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
 
+    public void updateQuantity(final UUID subscriptionId, final int quantity, @Nullable final LocalDate effectiveFromDate, final InternalCallContext internalCallContext) throws SubscriptionBaseApiException;
+
     public UUID getAccountIdFromBundleId(UUID bundleId, InternalTenantContext context) throws SubscriptionBaseApiException;
 
     public UUID getBundleIdFromSubscriptionId(UUID entitlementId, InternalTenantContext context) throws SubscriptionBaseApiException;

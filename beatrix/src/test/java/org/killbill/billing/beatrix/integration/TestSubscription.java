@@ -736,7 +736,7 @@ public class TestSubscription extends TestIntegrationBase {
                                       NextEvent.PAYMENT);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", initialDate, initialDate, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", initialDate, initialDate, false, true, Collections.emptyList(), callContext);
         assertNotNull(entitlementId);
         Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
         assertEquals(entitlement.getState(), EntitlementState.ACTIVE);
@@ -768,7 +768,7 @@ public class TestSubscription extends TestIntegrationBase {
         //create subscription
         final PlanPhaseSpecifier planSpec = new PlanPhaseSpecifier("pistol-monthly");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         //Retrieve subscription without deleted events and verify subscription events
@@ -834,7 +834,7 @@ public class TestSubscription extends TestIntegrationBase {
         //create subscription in the future
         final LocalDate creationDate = initialDate.plusDays(2);
         final PlanPhaseSpecifier planSpec = new PlanPhaseSpecifier("pistol-monthly");
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null), "externalKey", creationDate, creationDate, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null, null), "externalKey", creationDate, creationDate, false, false, Collections.emptyList(), callContext);
 
         //Retrieve subscription without deleted events and verify subscription events
         Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
@@ -929,7 +929,7 @@ public class TestSubscription extends TestIntegrationBase {
         //create subscription
         final PlanPhaseSpecifier planSpec = new PlanPhaseSpecifier("pistol-monthly-notrial");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         //Retrieve subscription without deleted events and verify subscription events
@@ -1020,13 +1020,13 @@ public class TestSubscription extends TestIntegrationBase {
         //create subscription
         final PlanPhaseSpecifier planSpec = new PlanPhaseSpecifier("pistol-monthly-notrial");
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(planSpec, null, null, null, null), "externalKey", null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
         
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
         Subscription subscription = subscriptionApi.getSubscriptionForEntitlementId(entitlementId, false, callContext);
         final PlanPhaseSpecifier addOnplanSpec = new PlanPhaseSpecifier("cleaning-monthly");
-        UUID addOnEntitlementId = entitlementApi.addEntitlement(subscription.getBundleId(), new DefaultEntitlementSpecifier(addOnplanSpec, null, null, null), null, null, false, Collections.emptyList(), callContext);
+        UUID addOnEntitlementId = entitlementApi.addEntitlement(subscription.getBundleId(), new DefaultEntitlementSpecifier(addOnplanSpec, null, null, null, null), null, null, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         //Retrieve base subscription and verify subscription events

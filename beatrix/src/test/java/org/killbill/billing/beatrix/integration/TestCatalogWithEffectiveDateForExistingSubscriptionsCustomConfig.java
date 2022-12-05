@@ -106,7 +106,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("liability-monthly-no-trial");
 
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -148,7 +148,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("liability-monthly-no-trial");
 
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // We expect the C2 price right away as we started after C2 effDt
@@ -182,7 +182,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("collision-monthly-no-trial");
 
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 5, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 5, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
