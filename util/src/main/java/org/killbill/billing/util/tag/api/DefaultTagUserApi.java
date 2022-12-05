@@ -126,8 +126,7 @@ public class DefaultTagUserApi implements TagUserApi {
     public void addTag(final UUID objectId, final ObjectType objectType, final UUID tagDefinitionId, final CallContext context) throws TagApiException {
 
         if (SystemTags.isSystemTag(tagDefinitionId)) {
-            // TODO Create a proper ErrorCode instaed
-            throw new IllegalStateException(String.format("Failed to add tag for tagDefinitionId='%s': System tags are reserved for the system.", tagDefinitionId));
+            throw new TagApiException(ErrorCode.TAG_IS_SYSTEM, tagDefinitionId);
         }
 
         final InternalCallContext internalContext = internalCallContextFactory.createInternalCallContext(objectId, objectType, context);

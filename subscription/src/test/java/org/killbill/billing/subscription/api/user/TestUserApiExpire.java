@@ -805,7 +805,7 @@ public class TestUserApiExpire extends SubscriptionTestSuiteWithEmbeddedDB {
             subscription.changePlanWithDate(new DefaultEntitlementSpecifier(planPhaseSpecifier), clock.getUTCNow().plusMonths(13), callContext);
             Assert.fail("Change plan should fail as date is past expiry date");
         } catch (final SubscriptionBaseApiException e) {
-            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_FUTURE_CANCELLED.getCode());
+            Assert.assertEquals(e.getCode(), ErrorCode.SUB_CHANGE_FUTURE_EXPIRED.getCode());
         }
     }
 

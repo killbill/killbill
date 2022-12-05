@@ -1845,8 +1845,8 @@ public class TestInvoiceDao extends InvoiceTestSuiteWithEmbeddedDB {
         try {
             invoiceDao.deleteCBA(accountId, invoice1.getId(), creditBalanceAdjInvoiceItem1.getId(), context);
             Assert.fail();
-        } catch (IllegalStateException e) {
-            Assert.assertEquals(e.getMessage(), "Cannot delete system generated credit");
+        } catch (final InvoiceApiException e) {
+            Assert.assertEquals(e.getCode(), ErrorCode.INVOICE_CBA_DELETED.getCode(), "Cannot delete system generated credit");
         }
 
         // Verify the result
