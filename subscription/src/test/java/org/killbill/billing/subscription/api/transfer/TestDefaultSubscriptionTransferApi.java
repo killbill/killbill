@@ -132,6 +132,11 @@ public class TestDefaultSubscriptionTransferApi extends SubscriptionTestSuiteNoD
             }
 
             @Override
+            public Integer getQuantity() {
+                return null;
+            }
+
+            @Override
             public UUID getEventId() {
                 return UUID.randomUUID();
             }
