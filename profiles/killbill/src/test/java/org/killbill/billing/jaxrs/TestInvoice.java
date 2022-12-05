@@ -999,9 +999,10 @@ public class TestInvoice extends TestJaxrsBase {
         final LocalDate futureDate = clock.getUTCToday();
         final Map<String, String> properties = new HashMap<>();
         properties.put("KB_REUSE_DRAFT_INVOICING_ID", invoiceId.toString());
-        
+
         callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION,
-                                           ExtBusEventType.INVOICE_ADJUSTMENT);
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED);
         final Invoice invoice = invoiceApi.createFutureInvoice(accountJson.getAccountId(), futureDate, properties, requestOptions);
         callbackServlet.assertListenerStatus();
 
