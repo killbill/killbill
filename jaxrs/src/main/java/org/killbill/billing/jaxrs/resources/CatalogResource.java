@@ -60,6 +60,7 @@ import org.killbill.billing.account.api.AccountUserApi;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.CatalogUserApi;
+import org.killbill.billing.catalog.api.CatalogValidation;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.CurrencyValueNull;
 import org.killbill.billing.catalog.api.Listing;
@@ -81,6 +82,7 @@ import org.killbill.billing.jaxrs.json.CatalogJson.PhaseJson;
 import org.killbill.billing.jaxrs.json.CatalogJson.PlanJson;
 import org.killbill.billing.jaxrs.json.CatalogJson.PriceListJson;
 import org.killbill.billing.jaxrs.json.CatalogJson.ProductJson;
+import org.killbill.billing.jaxrs.json.CatalogValidationJson;
 import org.killbill.billing.jaxrs.json.PlanDetailJson;
 import org.killbill.billing.jaxrs.json.SimplePlanJson;
 import org.killbill.billing.jaxrs.util.Context;
@@ -236,9 +238,8 @@ public class CatalogResource extends JaxRsResourceBase {
     @POST
     @Path("/xml/validate")
     @Consumes(TEXT_XML)
-    @ApiOperation(value = "Validate a XML catalog", response = String.class)
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Valid XML catalog"),
-                           @ApiResponse(code = 400, message = "Invalid XML catalog")})
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Validate a XML catalog", response = CatalogValidationJson.class)
     public Response validateCatalogXml(final String catalogXML,
                                        @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                        @HeaderParam(HDR_REASON) final String reason,
@@ -246,8 +247,9 @@ public class CatalogResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request,
                                        @javax.ws.rs.core.Context final UriInfo uriInfo) throws Exception {
         final CallContext callContext = context.createCallContextNoAccountId(createdBy, reason, comment, request);
-        catalogUserApi.validateCatalog(catalogXML, callContext);
-        return Response.status(Status.OK).build();
+        final CatalogValidation catalogValidation = catalogUserApi.validateCatalog(catalogXML, callContext);
+        final CatalogValidationJson catalogValidationJson = new CatalogValidationJson(catalogValidation);
+        return Response.status(Status.OK).entity(catalogValidationJson).build();
     }
 
     @TimedResource
