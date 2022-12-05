@@ -23,11 +23,8 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EventListener;
 import java.util.Iterator;
@@ -434,18 +431,8 @@ public class TestJaxrsBase extends KillbillClient {
     }
 
     protected String getResourceBodyString(final String resource) throws IOException {
-    	URI uri;
-		try {
-			uri = ClassLoader.getSystemResource(resource).toURI();
-	    	String resourcePath = Paths.get(uri).toString();
-//	        final String resourcePath = Resources.getResource(resource).getPath();
-	        return Files.readString(Path.of(resourcePath));
-			
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+        final String resourcePath = Resources.getResource(resource).getPath();
+        return Files.readString(Path.of(resourcePath));
     }
 
     protected void printThreadDump() {
