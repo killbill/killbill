@@ -227,7 +227,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         } catch (final ValidationException e) {
             errors.addAll(e.getErrors());
         } catch (final JAXBException e) {
-            errors.add(new ValidationError(e.getLinkedException() != null ? e.getLinkedException().getMessage() : "Invalid Catalog XML", DefaultVersionedCatalog.class, ""));
+            errors.add(new ValidationError(e.getLinkedException() != null ? e.getLinkedException().getMessage() : e.getMessage(), DefaultVersionedCatalog.class, ""));
         } catch (final TransformerException | IOException | SAXException e) {
             throw new IllegalStateException(e);
         }
