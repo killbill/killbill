@@ -266,12 +266,12 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
     }
 
     @Override
-    public UUID transferEntitlements(final UUID sourceAccountId, final UUID destAccountId, final String bundleExternalKey, final LocalDate effectiveDate, final Map<UUID, String> subExtKeys, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
-        return transferEntitlementsOverrideBillingPolicy(sourceAccountId, destAccountId, bundleExternalKey, effectiveDate, subExtKeys, BillingActionPolicy.IMMEDIATE, properties, context);
+    public UUID transferEntitlements(final UUID sourceAccountId, final UUID destAccountId, final String bundleExternalKey, final LocalDate effectiveDate, final Map<UUID, String> subExtKeys, final BcdTransfer bcdTransfer, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
+        return transferEntitlementsOverrideBillingPolicy(sourceAccountId, destAccountId, bundleExternalKey, effectiveDate, subExtKeys, BillingActionPolicy.IMMEDIATE, bcdTransfer, properties, context);
     }
 
     @Override
-    public UUID transferEntitlementsOverrideBillingPolicy(final UUID sourceAccountId, final UUID destAccountId, final String bundleExternalKey, @Nullable final LocalDate effectiveDate, final Map<UUID, String> subExtKeys, final BillingActionPolicy billingPolicy, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
+    public UUID transferEntitlementsOverrideBillingPolicy(final UUID sourceAccountId, final UUID destAccountId, final String bundleExternalKey, @Nullable final LocalDate effectiveDate, final Map<UUID, String> subExtKeys, final BillingActionPolicy billingPolicy, final BcdTransfer bcdTransfer, final Iterable<PluginProperty> properties, final CallContext context) throws EntitlementApiException {
 
         logTransferEntitlement(log, sourceAccountId, destAccountId, bundleExternalKey, effectiveDate, billingPolicy);
 
@@ -325,7 +325,7 @@ public class DefaultEntitlementApi extends DefaultEntitlementApiBase implements 
                     final DefaultBaseEntitlementWithAddOnsSpecifier baseEntitlementWithAddOnsSpecifier = getFirstBaseEntitlementWithAddOnsSpecifier(updatedPluginContext.getBaseEntitlementWithAddOnsSpecifiers());
 
                     final DateTime requestedDate = baseEntitlementWithAddOnsSpecifier.getBillingEffectiveDate();
-                    final SubscriptionBaseBundle newBundle = subscriptionBaseTransferApi.transferBundle(sourceAccountId, destAccountId, bundleExternalKey, subExtKeys, requestedDate, true, cancelImm, context);
+                    final SubscriptionBaseBundle newBundle = subscriptionBaseTransferApi.transferBundle(sourceAccountId, destAccountId, bundleExternalKey, subExtKeys, requestedDate, true, cancelImm, bcdTransfer, context);
 
                     // Update the context for plugins
                     baseEntitlementWithAddOnsSpecifier.setBundleId(newBundle.getId());
