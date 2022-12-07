@@ -316,5 +316,13 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertNotNull(errors);
         Assert.assertEquals(errors.size(), 1);
         Assert.assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
+
+        //validate same catalog again to ensure that it is not added to the cache at the time of validation
+        catalogValidation = catalogApi.validateCatalogXml(body, requestOptions);
+        Assert.assertNotNull(catalogValidation);
+        errors = catalogValidation.getCatalogValidationErrors();
+        Assert.assertNotNull(errors);
+        Assert.assertEquals(errors.size(), 1); //still 1, indicates that the catalog to be validated is validated only once
+        Assert.assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
     }
 }
