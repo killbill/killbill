@@ -405,7 +405,7 @@ public class TestIntegrationWithCatalogUpdate extends TestIntegrationBase {
         } else {
             busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         }
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, overrides), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, overrides), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
         return entitlementApi.getEntitlementForId(entitlementId, false, testCallContext);
     }

@@ -36,6 +36,7 @@ import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.ProductCategory;
+import org.killbill.billing.entitlement.api.BcdTransfer;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.Subscription;
@@ -81,7 +82,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(17));
 
         busHandler.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, false, callContext);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
 
         final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(newAccount.getId(), false, false, true, callContext);
@@ -127,7 +128,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(0));
 
         busHandler.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, false, callContext);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
 
         // Verify the BCD of the new account
@@ -183,7 +184,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final Account newAccount = createAccountWithNonOsgiPaymentMethod(getAccountData(15));
 
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.TRANSFER, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, true, callContext);
+        transferApi.transferBundle(account.getId(), newAccount.getId(), "externalKey", Collections.emptyMap(), clock.getUTCNow(), false, true, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
 
         List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
@@ -261,7 +262,7 @@ public class TestBundleTransfer extends TestIntegrationBase {
         final LocalDate transferDay = now.toLocalDate();
 
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.BLOCK, NextEvent.TRANSFER, NextEvent.TRANSFER, NextEvent.BLOCK, NextEvent.BLOCK,  NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        final UUID newBundleId = entitlementApi.transferEntitlements(account.getId(), newAccount.getId(), bundleExternalKey, transferDay, Collections.emptyMap(), Collections.emptyList(), callContext);
+        final UUID newBundleId = entitlementApi.transferEntitlements(account.getId(), newAccount.getId(), bundleExternalKey, transferDay, Collections.emptyMap(), BcdTransfer.USE_EXISTING, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Check the last 2 invoices on the old account

@@ -363,6 +363,11 @@ public class TestInvoiceHelper {
             }
 
             @Override
+            public int getQuantity() {
+                return 1;
+            }
+
+            @Override
             public BillingAlignment getBillingAlignment() {
                 return null;
             }

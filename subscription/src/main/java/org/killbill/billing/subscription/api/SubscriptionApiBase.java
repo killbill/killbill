@@ -160,7 +160,7 @@ public class SubscriptionApiBase {
                 final DateTime bundleStartDate = getBundleStartDateWithSanity(bundleId, baseSubscription, plan, startEffectiveDate, addonUtils, context);
                 final UUID subscriptionId = UUIDs.randomUUID();
                 dryRunEvents = apiService.getEventsOnCreation(subscriptionId, startEffectiveDate, bundleStartDate, plan, inputSpec.getPhaseType(), plan.getPriceList().getName(),
-                                                              startEffectiveDate, entitlementSpecifier.getBillCycleDay(), catalog, context);
+                                                              startEffectiveDate, entitlementSpecifier.getBillCycleDay(), entitlementSpecifier.getQuantity(), catalog, context);
                 final SubscriptionBuilder builder = new SubscriptionBuilder()
                         .setId(subscriptionId)
                         .setBundleId(bundleId)

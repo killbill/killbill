@@ -73,7 +73,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
                                       NextEvent.PAYMENT);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inadvance", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
 
@@ -97,7 +97,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inarrear", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
         
@@ -122,7 +122,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
                                       NextEvent.PAYMENT);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inadvance-discountandrecurring", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));

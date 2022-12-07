@@ -71,6 +71,8 @@ import org.killbill.billing.subscription.events.expired.ExpiredEventBuilder;
 import org.killbill.billing.subscription.events.expired.ExpiredEventData;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
+import org.killbill.billing.subscription.events.quantity.QuantityEventBuilder;
+import org.killbill.billing.subscription.events.quantity.QuantityEventData;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBuilder;
 import org.killbill.billing.subscription.events.user.ApiEventCancel;
@@ -173,6 +175,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                                subscription.getRealPriceList(),
                                                                                subscription.getEffectiveDate(),
                                                                                subscription.getBuilder().getSubscriptionBCD(),
+                                                                               subscription.getBuilder().getQuantity(),
                                                                                catalog,
                                                                                internalCallContext);
                 eventsMap.put(subscriptionBase.getId(), events);
@@ -499,6 +502,7 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                            final String realPriceList,
                                                            final DateTime effectiveDate,
                                                            final Integer bcd,
+                                                           final Integer quantity,
                                                            final SubscriptionCatalog catalog,
                                                            final InternalTenantContext internalTenantContext) throws CatalogApiException, SubscriptionBaseApiException {
 
@@ -535,6 +539,15 @@ public class DefaultSubscriptionBaseApiService implements SubscriptionBaseApiSer
                                                                             .setActive(true)
                                                                             .setBillCycleDayLocal(bcd));
             events.add(bcdEvent);
+        }
+
+        if (quantity != null) {
+            final SubscriptionBaseEvent quantityEvent = new QuantityEventData(new QuantityEventBuilder()
+                                                                                      .setSubscriptionId(subscriptionId)
+                                                                                      .setEffectiveDate(effectiveDate)
+                                                                                      .setActive(true)
+                                                                                      .setQuantity(quantity));
+            events.add(quantityEvent);
         }
 
         if (nextPhaseEvent != null) {

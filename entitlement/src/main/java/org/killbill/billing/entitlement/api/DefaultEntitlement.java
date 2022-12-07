@@ -79,6 +79,7 @@ import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUncancelEntitlement;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUndoChangePlan;
 import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUpdateBCD;
+import static org.killbill.billing.entitlement.logging.EntitlementLoggingHelper.logUpdateQuantity;
 
 public class DefaultEntitlement extends EntityBase implements Entitlement {
 
@@ -280,6 +281,11 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
     public Integer getBillCycleDayLocal() {
         final Integer perSubscriptionBillCycleDayLocal = getSubscriptionBase().getBillCycleDayLocal();
         return perSubscriptionBillCycleDayLocal != null ? perSubscriptionBillCycleDayLocal : eventsStream.getDefaultBillCycleDayLocal();
+    }
+
+    @Override
+    public Integer getQuantity() {
+        return getSubscriptionBase().getQuantity() != null ? getSubscriptionBase().getQuantity() : Integer.valueOf(1); // Provide a sane non null default.
     }
 
     @Override
@@ -822,6 +828,18 @@ public class DefaultEntitlement extends EntityBase implements Entitlement {
         final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
         try {
             subscriptionInternalApi.updateBCD(getId(), newBCD, effectiveFromDate, context);
+        } catch (final SubscriptionBaseApiException e) {
+            throw new EntitlementApiException(e);
+        }
+    }
+
+    @Override
+    public void updateQuantity(final int quantity, final LocalDate effectiveFromDate, final CallContext callContext) throws EntitlementApiException {
+        logUpdateQuantity(log, this, quantity, effectiveFromDate);
+
+        final InternalCallContext context = internalCallContextFactory.createInternalCallContext(getAccountId(), callContext);
+        try {
+            subscriptionInternalApi.updateQuantity(getId(), quantity, effectiveFromDate, context);
         } catch (final SubscriptionBaseApiException e) {
             throw new EntitlementApiException(e);
         }

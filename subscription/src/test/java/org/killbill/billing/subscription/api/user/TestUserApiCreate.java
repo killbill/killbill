@@ -46,9 +46,7 @@ import org.killbill.billing.subscription.api.SubscriptionBaseWithAddOnsSpecifier
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
 import org.killbill.billing.subscription.events.user.ApiEventBase;
-import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -304,7 +302,7 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
                                                                                                              this.internalCallContext.getUserToken(),
                                                                                                              this.internalCallContext.getTenantRecordId());
 
-        final Iterable<EntitlementSpecifier> specifiers = List.of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), 18, null, null));
+        final Iterable<EntitlementSpecifier> specifiers = List.of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), 18, null, null, null));
         final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle.getId(),
                                                                                                                                 bundle.getExternalKey(),
                                                                                                                                 specifiers,
@@ -327,7 +325,44 @@ public class TestUserApiCreate extends SubscriptionTestSuiteWithEmbeddedDB {
         assertEquals(subscription.getBillCycleDayLocal().intValue(), 18);
 
     }
-    
+
+    @Test(groups = "slow")
+    public void testCreateSubscriptionWithQuantity() throws SubscriptionBaseApiException {
+        final DateTime init = clock.getUTCNow();
+
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
+                                                                                                             ObjectType.ACCOUNT,
+                                                                                                             this.internalCallContext.getUpdatedBy(),
+                                                                                                             this.internalCallContext.getCallOrigin(),
+                                                                                                             this.internalCallContext.getContextUserType(),
+                                                                                                             this.internalCallContext.getUserToken(),
+                                                                                                             this.internalCallContext.getTenantRecordId());
+
+        final int quantity = 7;
+        final Iterable<EntitlementSpecifier> specifiers = List.of(new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("shotgun-monthly"), null, quantity, null, null));
+        final SubscriptionBaseWithAddOnsSpecifier subscriptionBaseWithAddOnsSpecifier = new SubscriptionBaseWithAddOnsSpecifier(bundle.getId(),
+                                                                                                                                bundle.getExternalKey(),
+                                                                                                                                specifiers,
+                                                                                                                                init,
+                                                                                                                                false);
+
+        testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.QUANTITY_CHANGE);
+        final List<SubscriptionBaseWithAddOns> subscriptionBaseWithAddOns = subscriptionInternalApi.createBaseSubscriptionsWithAddOns(catalog.getCatalog(),
+                                                                                                                                      List.of(subscriptionBaseWithAddOnsSpecifier),
+                                                                                                                                      false,
+                                                                                                                                      internalCallContext);
+        testListener.assertListenerStatus();
+
+        assertEquals(subscriptionBaseWithAddOns.size(), 1);
+        assertEquals(subscriptionBaseWithAddOns.get(0).getSubscriptionBaseList().size(), 1);
+
+        final DefaultSubscriptionBase subscription = (DefaultSubscriptionBase) subscriptionBaseWithAddOns.get(0).getSubscriptionBaseList().get(0);
+        assertNotNull(subscription);
+        assertNotNull(subscription.getQuantity());
+        assertEquals(subscription.getQuantity().intValue(),  quantity);
+
+    }
+
     @Test(groups = "slow")
     public void testCreateSubscriptionAndCheckSubscriptionEvents() throws SubscriptionBaseApiException {
         final DateTime init = clock.getUTCNow();

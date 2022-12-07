@@ -22,11 +22,14 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.CatalogApiException;
+import org.killbill.billing.catalog.api.CatalogValidation;
+import org.killbill.billing.catalog.api.CatalogValidationError;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.commons.utils.io.Resources;
 import org.testng.Assert;
@@ -34,6 +37,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class TestCatalogValidation extends TestIntegrationBase {
 
@@ -85,6 +89,57 @@ public class TestCatalogValidation extends TestIntegrationBase {
         } catch (final CatalogApiException cApiException) {
             assertEquals(cApiException.getCode(), ErrorCode.CAT_INVALID_FOR_TENANT.getCode());
         }
+    }
+
+    @Test(groups = "slow")
+    public void testValidateCatalog() throws Exception {
+
+        //valid catalog
+        CatalogValidation validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v1.xml"), testCallContext);
+        assertNotNull(validation);
+        List<CatalogValidationError> errors = validation.getValidationErrors();
+        assertNotNull(errors);
+        assertEquals(errors.size(), 0);
+
+        //invalid catalog
+        validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v1-invalid.xml"), testCallContext);
+        assertNotNull(validation);
+        errors = validation.getValidationErrors();
+        assertNotNull(errors);
+        assertEquals(errors.size(), 1);
+        assertEquals(errors.get(0).getErrorDescription(), "'FIXEDTERM' Phase 'standard-monthly-fixedterm' for plan 'standard-monthly' in version 'Thu Oct 14 00:00:00 GMT 2021' must not have duration as UNLIMITED'");
+
+        //another invalid catalog
+        validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v3-invalid.xml"), testCallContext);
+        assertNotNull(validation);
+        errors = validation.getValidationErrors();
+        assertNotNull(errors);
+        assertEquals(errors.size(), 1);
+        assertEquals(errors.get(0).getErrorDescription(), "cvc-complex-type.2.4.a: Invalid content was found starting with element 'duration'. One of '{unit}' is expected.");
+        
+
+        //valid catalog with existing catalog
+        uploadCatalog("CatalogValidation-v1.xml");
+        validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v1.xml"), testCallContext);
+        assertNotNull(validation);
+        errors = validation.getValidationErrors();
+        assertNotNull(errors);
+        assertEquals(errors.size(), 1);
+        assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Mon Oct 04 00:00:00 GMT 2021' already exists for a previous version");
+
+        //catalog with name different from existing catalog
+        validation = catalogUserApi.validateCatalog(getCatalogXml("catalogs/testCatalogValidation/CatalogValidation-v4-valid.xml"), testCallContext);
+        assertNotNull(validation);
+        errors = validation.getValidationErrors();
+        assertNotNull(errors);
+        assertEquals(errors.size(), 1);
+        assertEquals(errors.get(0).getErrorDescription(), "Catalog name 'DifferentCatalog' is different from existing catalog name 'ExampleCatalog'");
+
+    }
+
+    private String getCatalogXml(final String catalogPath) throws URISyntaxException, IOException {
+        final Path path = Paths.get(Resources.getResource(catalogPath).toURI());
+        return Files.readString(path);
     }
 
     private void uploadCatalog(final String name) throws CatalogApiException, IOException, URISyntaxException {

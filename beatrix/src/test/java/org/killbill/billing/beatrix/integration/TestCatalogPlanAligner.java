@@ -71,7 +71,7 @@ public class TestCatalogPlanAligner extends TestIntegrationBase {
         // 2020-09-17T12:56:02
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID subId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
+        final UUID subId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), testCallContext);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2020, 9, 17), null, InvoiceItemType.FIXED, new BigDecimal("0.00")));

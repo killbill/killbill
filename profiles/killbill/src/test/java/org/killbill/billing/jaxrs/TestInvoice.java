@@ -21,6 +21,7 @@ package org.killbill.billing.jaxrs;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ import org.killbill.billing.client.model.gen.InvoiceDryRun;
 import org.killbill.billing.client.model.gen.InvoiceItem;
 import org.killbill.billing.client.model.gen.InvoicePayment;
 import org.killbill.billing.client.model.gen.PaymentMethod;
+import org.killbill.billing.client.model.gen.Subscription;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.InvoiceItemType;
@@ -58,6 +60,7 @@ import org.testng.annotations.Test;
 import org.testng.util.Strings;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
@@ -943,6 +946,74 @@ public class TestInvoice extends TestJaxrsBase {
         final Invoices accountInvoices2 = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.FULL, requestOptions);
         assertEquals(accountInvoices2.size(), 4);
     }
+
+    @Test(groups = "slow")
+    public void testKB_REUSE_DRAFT_INVOICING_ID() throws Exception {
+        final Account accountJson = createAccount();
+        assertNotNull(accountJson);
+
+        // AUTO_INVOICING_OFF
+        callbackServlet.pushExpectedEvents(ExtBusEventType.TAG_CREATION);
+        final Tags tags = accountApi.createAccountTags(accountJson.getAccountId(), List.of(new UUID(0L, 2L)), requestOptions);
+        assertEquals(tags.get(0).getTagDefinitionName(), "AUTO_INVOICING_OFF");
+        callbackServlet.assertListenerStatus();
+
+        // Create draft invoice for account
+        final BigDecimal creditAmount = BigDecimal.TEN;
+        final InvoiceItem credit = new InvoiceItem();
+        credit.setAccountId(accountJson.getAccountId());
+        credit.setInvoiceId(null);
+        credit.setAmount(creditAmount);
+
+        InvoiceItems credits = new InvoiceItems();
+        credits.add(credit);
+        final List<InvoiceItem> creditJsons = creditApi.createCredits(credits, false, NULL_PLUGIN_PROPERTIES, requestOptions);
+        Assert.assertEquals(creditJsons.size(), 1);
+        final UUID invoiceId = creditJsons.get(0).getInvoiceId();
+
+        // Create a subscription with no trial plan
+        final Subscription input = new Subscription();
+        input.setAccountId(accountJson.getAccountId());
+        input.setProductName("Blowdart");
+        input.setProductCategory(ProductCategory.BASE);
+        input.setBillingPeriod(BillingPeriod.MONTHLY);
+        input.setPriceList("notrial");
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.ACCOUNT_CHANGE, /* BCD Update */
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.SUBSCRIPTION_CREATION,
+                                           ExtBusEventType.ENTITLEMENT_CREATION); // Note that the BCD isn't set
+        final Subscription subscriptionJson = subscriptionApi.createSubscription(input,
+                                                                                 (LocalDate) null,
+                                                                                 (LocalDate) null,
+                                                                                 false,
+                                                                                 false,
+                                                                                 false,
+                                                                                 true,
+                                                                                 DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC,
+                                                                                 NULL_PLUGIN_PROPERTIES,
+                                                                                 requestOptions);
+        assertNotNull(subscriptionJson);
+        callbackServlet.assertListenerStatus();
+
+        final LocalDate futureDate = clock.getUTCToday();
+        final Map<String, String> properties = new HashMap<>();
+        properties.put("KB_REUSE_DRAFT_INVOICING_ID", invoiceId.toString());
+
+        callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_CREATION,
+                                           ExtBusEventType.INVOICE_ADJUSTMENT,
+                                           ExtBusEventType.INVOICE_PAYMENT_FAILED);
+        final Invoice invoice = invoiceApi.createFutureInvoice(accountJson.getAccountId(), futureDate, properties, requestOptions);
+        callbackServlet.assertListenerStatus();
+
+        assertEquals(invoice.getAmount(), new BigDecimal("19.95"));
+        // CREDIT_ADJ -10, CBA_ADJ +10 -> CBA generation from initial credit call on the Draft invoice
+        // RECURRING 29.95, CBA_ADJ -10 -> RECURRING and CBA use from invoice run (on the same invoice)
+        assertEquals(invoice.getItems().size(), 4);
+
+        callbackServlet.assertListenerStatus();
+    }
+
 
     @Test(groups = "slow", description = "retrieve account invoices")
     public void testGetAccountInvoices() throws Exception {

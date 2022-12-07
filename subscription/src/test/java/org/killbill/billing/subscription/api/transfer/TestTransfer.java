@@ -35,13 +35,13 @@ import org.killbill.billing.catalog.api.Plan;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.catalog.api.Product;
+import org.killbill.billing.entitlement.api.BcdTransfer;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
 import org.killbill.billing.subscription.SubscriptionTestSuiteWithEmbeddedDB;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
-import org.killbill.billing.util.callcontext.CallContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -99,7 +99,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
         final DateTime afterTransferDate = clock.getUTCNow();
 
@@ -148,7 +148,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         final DateTime transferRequestedDate = clock.getUTCNow();
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
@@ -195,7 +195,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.CANCEL);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
         final DateTime afterTransferDate = clock.getUTCNow();
 
@@ -244,7 +244,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, false, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
 
         // CHECK OLD BASE IS CANCEL AT THE TRANSFER DATE
@@ -277,7 +277,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final BillingPeriod newBaseTerm1 = BillingPeriod.ANNUAL;
         testListener.pushExpectedEvent(NextEvent.CHANGE);
         final PlanPhaseSpecifier planPhaseSpecifier = new PlanPhaseSpecifier(newBaseProduct1, newBaseTerm1, basePriceList);
-        newBaseSubscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier, null, null, null), callContext);
+        newBaseSubscription.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier, null, 1, null, null), callContext);
         assertListenerStatus();
 
         newPlan = newBaseSubscription.getCurrentPlan();
@@ -294,7 +294,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         final String newBaseProduct2 = "Pistol";
         final BillingPeriod newBaseTerm2 = BillingPeriod.ANNUAL;
         final PlanPhaseSpecifier planPhaseSpecifier1 = new PlanPhaseSpecifier(newBaseProduct2, newBaseTerm2, basePriceList);
-        newBaseSubscriptionWithCtd.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier1, null, null, null), callContext);
+        newBaseSubscriptionWithCtd.changePlan(new DefaultEntitlementSpecifier(planPhaseSpecifier1, null, 1, null, null), callContext);
 
         newPlan = newBaseSubscriptionWithCtd.getCurrentPlan();
         assertEquals(newPlan.getProduct().getName(), newBaseProduct1);
@@ -347,7 +347,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), subExtKeysMap, transferRequestedDate, true, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), subExtKeysMap, transferRequestedDate, true, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
 
         // RETRIEVE NEW BUNDLE AND CHECK SUBSCRIPTIONS
@@ -407,7 +407,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(newBundle.getAccountId(), finalNewAccountId, newBundle.getExternalKey(), subExtKeysMap, newTransferRequestedDate, true, false, callContext);
+        transferApi.transferBundle(newBundle.getAccountId(), finalNewAccountId, newBundle.getExternalKey(), subExtKeysMap, newTransferRequestedDate, true, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
 
         final List<SubscriptionBaseBundle> latestBundlesForAccountAndKey = subscriptionInternalApi.getBundlesForAccountAndKey(finalNewAccountId, newBundle.getExternalKey(), internalCallContext);
@@ -467,7 +467,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
 
         final List<SubscriptionBaseBundle> bundlesForAccountAndKey = subscriptionInternalApi.getBundlesForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
@@ -509,7 +509,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         clock.addDays(1);
         final DateTime transferRequestedDate = clock.getUTCNow();
         testListener.pushExpectedEvent(NextEvent.TRANSFER);
-        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
+        transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
 
         final List<SubscriptionBaseBundle> bundlesForAccountAndKey = subscriptionInternalApi.getBundlesForAccountAndKey(newAccountId, bundle.getExternalKey(), internalCallContext);
@@ -522,6 +522,20 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
     public void testWithBCDUpdatePriorTransfer() throws Exception {
+        testWithBCDUpdatePriorTransfer(BcdTransfer.USE_EXISTING);
+    }
+
+    @Test(groups = "slow")
+    public void testWithBCDUpdatePriorTransfer2() throws Exception {
+        testWithBCDUpdatePriorTransfer(BcdTransfer.ALIGN_WITH_EFF_DT);
+    }
+
+    @Test(groups = "slow")
+    public void testWithBCDUpdatePriorTransfer3() throws Exception {
+        testWithBCDUpdatePriorTransfer(BcdTransfer.NONE);
+    }
+
+    private void testWithBCDUpdatePriorTransfer(final BcdTransfer bcdTransfer) throws Exception {
         final String baseProduct = "Pistol";
         final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
         final String basePriceList = "notrial";
@@ -530,12 +544,12 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         // Create context for the updateBCD as it looks like test default internalCallContext to be on newAccountId
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
-                                                                                                         ObjectType.ACCOUNT,
-                                                                                                         this.internalCallContext.getUpdatedBy(),
-                                                                                                         this.internalCallContext.getCallOrigin(),
-                                                                                                         this.internalCallContext.getContextUserType(),
-                                                                                                         this.internalCallContext.getUserToken(),
-                                                                                                         this.internalCallContext.getTenantRecordId());
+                                                                                                             ObjectType.ACCOUNT,
+                                                                                                             this.internalCallContext.getUpdatedBy(),
+                                                                                                             this.internalCallContext.getCallOrigin(),
+                                                                                                             this.internalCallContext.getContextUserType(),
+                                                                                                             this.internalCallContext.getUserToken(),
+                                                                                                             this.internalCallContext.getTenantRecordId());
 
         subscriptionInternalApi.updateBCD(baseSubscription.getId(), 8, clock.getUTCToday(), internalCallContext);
 
@@ -556,13 +570,74 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // Transfer date = 2012-5-12
         clock.addDays(3);
         final DateTime transferRequestedDate = clock.getUTCNow();
-        testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.BCD_CHANGE, NextEvent.CANCEL);
-        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
+        testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.CANCEL);
+        if (bcdTransfer != BcdTransfer.NONE) {
+            testListener.pushExpectedEvents(NextEvent.BCD_CHANGE);
+        }
+        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, bcdTransfer, callContext);
         assertListenerStatus();
 
         // Check the transferred subscription has the latest value for the BCD
         final DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(newBundle.getId(), internalCallContext);
-        assertEquals(newSubscription.getBillCycleDayLocal().intValue(), 9);
+        switch (bcdTransfer) {
+            case NONE:
+                assertNull(newSubscription.getBillCycleDayLocal());
+                break;
+            case USE_EXISTING:
+                assertEquals(newSubscription.getBillCycleDayLocal().intValue(), 9);
+                break;
+            case ALIGN_WITH_EFF_DT:
+                assertEquals(newSubscription.getBillCycleDayLocal().intValue(), 12);
+                break;
+        }
+    }
+
+
+    @Test(groups = "slow")
+    public void testWithQuantityUpdatePriorTransfer() throws Exception {
+        final String baseProduct = "Pistol";
+        final BillingPeriod baseTerm = BillingPeriod.MONTHLY;
+        final String basePriceList = "notrial";
+
+        final SubscriptionBase baseSubscription = testUtil.createSubscription(bundle, baseProduct, baseTerm, basePriceList);
+
+        // Create context for the quantity update as it looks like test default internalCallContext to be on newAccountId
+        final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),
+                                                                                                             ObjectType.ACCOUNT,
+                                                                                                             this.internalCallContext.getUpdatedBy(),
+                                                                                                             this.internalCallContext.getCallOrigin(),
+                                                                                                             this.internalCallContext.getContextUserType(),
+                                                                                                             this.internalCallContext.getUserToken(),
+                                                                                                             this.internalCallContext.getTenantRecordId());
+
+        // 2012-5-8
+        clock.addDays(1);
+
+        final int quantity = 5;
+        testListener.pushExpectedEvent(NextEvent.QUANTITY_CHANGE);
+        subscriptionInternalApi.updateQuantity(baseSubscription.getId(), quantity, clock.getUTCToday(), internalCallContext);
+        assertListenerStatus();
+
+        // 2012-5-9
+        clock.addDays(1);
+
+
+        testListener.pushExpectedEvent(NextEvent.QUANTITY_CHANGE);
+        // Do a second quantity change
+        final int newQuantity = 7;
+        subscriptionInternalApi.updateQuantity(baseSubscription.getId(), newQuantity, clock.getUTCToday(), internalCallContext);
+        assertListenerStatus();
+
+        // Transfer date = 2012-5-12
+        clock.addDays(3);
+        final DateTime transferRequestedDate = clock.getUTCNow();
+        testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.QUANTITY_CHANGE, NextEvent.CANCEL);
+        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, BcdTransfer.NONE, callContext);
+        assertListenerStatus();
+
+        // Check the transferred subscription has the latest value for the quantity
+        final DefaultSubscriptionBase newSubscription = (DefaultSubscriptionBase) subscriptionInternalApi.getBaseSubscription(newBundle.getId(), internalCallContext);
+        assertEquals(newSubscription.getQuantity().intValue(), newQuantity);
     }
 
 
@@ -587,7 +662,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
 
         clock.addDays(3);
         final DateTime transferRequestedDate = clock.getUTCNow();
-        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
+        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, BcdTransfer.USE_EXISTING, callContext);
 
 
         // Create context for the old Subscription as it looks like test default initialInternalCallContext to be on newAccountId
@@ -654,7 +729,7 @@ public class TestTransfer extends SubscriptionTestSuiteWithEmbeddedDB {
         // Transfer with a date prior the start date of the subscription
         final DateTime transferRequestedDate = creationDate.minusDays(3).toDateTimeAtCurrentTime();
         testListener.pushExpectedEvents(NextEvent.TRANSFER, NextEvent.BCD_CHANGE, NextEvent.CANCEL);
-        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, callContext);
+        final SubscriptionBaseBundle newBundle = transferApi.transferBundle(bundle.getAccountId(), newAccountId, bundle.getExternalKey(), new HashMap<>(), transferRequestedDate, true, false, BcdTransfer.USE_EXISTING, callContext);
         assertListenerStatus();
         // Create context for the old Subscription as it looks like test default initialInternalCallContext to be on newAccountId
         final InternalCallContext initialInternalCallContext = internalCallContextFactory.createInternalCallContext(bundle.getAccountId(),

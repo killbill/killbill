@@ -102,7 +102,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 1, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 1, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         checkAllNotificationProcessed(internalCallContext.getTenantRecordId());
@@ -118,7 +118,7 @@ public class TestIntegrationWithAutoInvoiceDraft extends TestIntegrationBase {
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, toBeChecked);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.BCD_CHANGE);
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 1, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 1, null, null, null), null, startDate, startDate, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         checkAllNotificationProcessed(internalCallContext.getTenantRecordId());

@@ -240,6 +240,7 @@ public class BlockingCalculator {
     protected BillingEvent createNewDisableEvent(final DateTime disabledDurationStart,
                                                  final BillingEvent previousEvent) {
         final int billCycleDay = previousEvent.getBillCycleDayLocal();
+        final int quantity = previousEvent.getQuantity();
         final DateTime effectiveDate = disabledDurationStart;
         final PlanPhase planPhase = previousEvent.getPlanPhase();
         final Plan plan = previousEvent.getPlan();
@@ -266,6 +267,7 @@ public class BlockingCalculator {
                                        currency,
                                        billingPeriod,
                                        billCycleDay,
+                                       quantity,
                                        description,
                                        totalOrdering,
                                        type
@@ -276,6 +278,7 @@ public class BlockingCalculator {
                                                   final BillingEvent previousEvent) throws CatalogApiException {
         // All fields are populated with the event state from before the blocking period, for invoice to resume invoicing
         final int billCycleDay = previousEvent.getBillCycleDayLocal();
+        final int quantity = previousEvent.getQuantity();
         final DateTime effectiveDate = odEventTime;
         final PlanPhase planPhase = previousEvent.getPlanPhase();
         final BigDecimal fixedPrice = previousEvent.getFixedPrice();
@@ -299,6 +302,7 @@ public class BlockingCalculator {
                                        currency,
                                        billingPeriod,
                                        billCycleDay,
+                                       quantity,
                                        description,
                                        totalOrdering,
                                        type

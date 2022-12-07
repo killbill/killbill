@@ -280,7 +280,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
         overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, Collections.emptyList()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
         final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 

@@ -205,6 +205,11 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
+    public Integer getQuantity() {
+        return null;
+    }
+
+    @Override
     public DateTime getFutureEndDate() {
         return sub.getFutureEndDate();
     }

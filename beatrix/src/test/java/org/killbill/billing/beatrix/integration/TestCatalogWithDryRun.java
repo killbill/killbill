@@ -66,7 +66,7 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
         final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext);
         assertListenerStatus();
 
@@ -103,7 +103,7 @@ public class TestCatalogWithDryRun extends TestIntegrationBase {
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
         final Entitlement bpEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext);
         assertListenerStatus();
 
