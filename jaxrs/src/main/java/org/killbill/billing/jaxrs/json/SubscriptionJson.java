@@ -27,6 +27,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -140,7 +141,7 @@ public class SubscriptionJson extends JsonBase {
             this.eventId = subscriptionEvent.getId();
             this.billingPeriod = billingPeriod;
             this.effectiveDate = subscriptionEvent.getEffectiveDate();
-            this.catalogEffectiveDate = plan != null ? new DateTime(plan.getCatalog().getEffectiveDate()) : null;
+            this.catalogEffectiveDate = plan != null ? new DateTime(plan.getCatalog().getEffectiveDate()).toDateTime(DateTimeZone.UTC) : null;
             this.plan = plan != null ? plan.getName() : null;
             this.product = product != null ? product.getName() : null;
             this.priceList = priceList != null ? priceList.getName() : null;
