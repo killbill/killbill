@@ -50,6 +50,7 @@ public class TestBundleJsonWithSubscriptions extends JaxrsTestSuiteNoDB {
         final EventSubscriptionJson event = new EventSubscriptionJson(UUID.randomUUID(),
                                                                       BillingPeriod.NO_BILLING_PERIOD,
                                                                       new DateTime(),
+                                                                      new DateTime(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),
                                                                       UUID.randomUUID().toString(),

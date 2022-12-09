@@ -20,9 +20,12 @@
 package org.killbill.billing.catalog.api.user;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -129,7 +132,6 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         if (!errors.isEmpty()) {
             logger.info("Failed to load new catalog version: " + errors.toString());
         }
-        catalogCache.clearCatalog(internalTenantContext);
         return new DefaultCatalogValidation(errors);
     }
 
@@ -207,6 +209,15 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         final ValidationErrors errors = new ValidationErrors();
         try {
             VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
+
+            //clone the catalog just to be safe, since the validation process adds the catalog to be validated to the versionedCatalog
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            final ObjectOutput out = new ObjectOutputStream(bos);
+            out.writeObject(versionedCatalog);
+            final ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+            final ObjectInputStream in = new ObjectInputStream(bis);
+            versionedCatalog = (VersionedCatalog) in.readObject();
+
             if (versionedCatalog == null) {
                 versionedCatalog = new DefaultVersionedCatalog();
             }
@@ -215,7 +226,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
 
             if (versionedCatalog.getCatalogName() != null && !versionedCatalog.getCatalogName().isEmpty() && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {
-                errors.add(new ValidationError(String.format("Catalog name '%s' is different from existing catalog name '%s'", newCatalogVersion.getCatalogName(), versionedCatalog.getCatalogName()), StaticCatalog.class, "")); //TODO_1674 - Error message is hardcoded here, move this elsewhere?
+                errors.add(new ValidationError(String.format("Catalog name '%s' is different from existing catalog name '%s'", newCatalogVersion.getCatalogName(), versionedCatalog.getCatalogName()), StaticCatalog.class, ""));
                 return errors;
             }
 
@@ -227,8 +238,8 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         } catch (final ValidationException e) {
             errors.addAll(e.getErrors());
         } catch (final JAXBException e) {
-            errors.add(new ValidationError(e.getLinkedException().getMessage(), DefaultVersionedCatalog.class, ""));
-        } catch (final TransformerException | IOException | SAXException e) {
+            errors.add(new ValidationError(e.getLinkedException() != null ? e.getLinkedException().getMessage() : e.getMessage(), DefaultVersionedCatalog.class, ""));
+        } catch (final TransformerException | IOException | SAXException | ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }
         return errors;

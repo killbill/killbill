@@ -45,6 +45,7 @@ import org.killbill.billing.entitlement.api.SubscriptionEvent;
 import org.killbill.billing.entitlement.api.SubscriptionEventType;
 import org.killbill.billing.util.audit.AccountAuditLogs;
 import org.killbill.billing.util.audit.AuditLog;
+import org.killbill.billing.util.catalog.CatalogDateHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -88,6 +89,7 @@ public class SubscriptionJson extends JsonBase {
         private final UUID eventId;
         private final BillingPeriod billingPeriod;
         private final DateTime effectiveDate;
+        private final DateTime catalogEffectiveDate;
         private final String plan;
         private final String product;
         private final String priceList;
@@ -102,6 +104,7 @@ public class SubscriptionJson extends JsonBase {
         public EventSubscriptionJson(@JsonProperty("eventId") final UUID eventId,
                                      @JsonProperty("billingPeriod") final BillingPeriod billingPeriod,
                                      @JsonProperty("effectiveDate") final DateTime effectiveDate,
+                                     @JsonProperty("catalogEffectiveDate") final DateTime catalogEffectiveDate,
                                      @JsonProperty("plan") final String plan,
                                      @JsonProperty("product") final String product,
                                      @JsonProperty("priceList") final String priceList,
@@ -116,6 +119,7 @@ public class SubscriptionJson extends JsonBase {
             this.eventId = eventId;
             this.billingPeriod = billingPeriod;
             this.effectiveDate = effectiveDate;
+            this.catalogEffectiveDate = catalogEffectiveDate;
             this.plan = plan;
             this.product = product;
             this.priceList = priceList;
@@ -138,6 +142,7 @@ public class SubscriptionJson extends JsonBase {
             this.eventId = subscriptionEvent.getId();
             this.billingPeriod = billingPeriod;
             this.effectiveDate = subscriptionEvent.getEffectiveDate();
+            this.catalogEffectiveDate = plan != null ? CatalogDateHelper.toUTCDateTime(plan.getCatalog().getEffectiveDate()) : null;
             this.plan = plan != null ? plan.getName() : null;
             this.product = product != null ? product.getName() : null;
             this.priceList = priceList != null ? priceList.getName() : null;
@@ -175,6 +180,10 @@ public class SubscriptionJson extends JsonBase {
             return effectiveDate;
         }
 
+        public DateTime getCatalogEffectiveDate() {
+			return catalogEffectiveDate;
+		}
+        
         public String getPlan() {
             return plan;
         }
@@ -217,6 +226,7 @@ public class SubscriptionJson extends JsonBase {
             sb.append("eventId='").append(eventId).append('\'');
             sb.append(", billingPeriod='").append(billingPeriod).append('\'');
             sb.append(", effectiveDate=").append(effectiveDate);
+            sb.append(", catalogEffectiveDate=").append(catalogEffectiveDate);
             sb.append(", plan='").append(plan).append('\'');
             sb.append(", product='").append(product).append('\'');
             sb.append(", priceList='").append(priceList).append('\'');
@@ -286,6 +296,7 @@ public class SubscriptionJson extends JsonBase {
             int result = eventId != null ? eventId.hashCode() : 0;
             result = 31 * result + (billingPeriod != null ? billingPeriod.hashCode() : 0);
             result = 31 * result + (effectiveDate != null ? effectiveDate.hashCode() : 0);
+            result = 31 * result + (catalogEffectiveDate != null ? catalogEffectiveDate.hashCode() : 0);
             result = 31 * result + (plan != null ? plan.hashCode() : 0);
             result = 31 * result + (product != null ? product.hashCode() : 0);
             result = 31 * result + (priceList != null ? priceList.hashCode() : 0);
