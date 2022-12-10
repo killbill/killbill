@@ -126,7 +126,8 @@ public class DefaultControlInitiated implements LeavingStateCallback {
                     // the properties will be serialized in the enteringState callback (any plugin that sets a
                     // retried date is responsible to correctly remove sensitive information such as CVV, ...)
                     //
-                    final byte[] serializedProperties = PluginPropertySerializer.serialize(ImmutableList.<PluginProperty>of());
+                    // TODO Make this configurable (e.g. rejectList?)
+                    final byte[] serializedProperties = PluginPropertySerializer.serialize(stateContext.getProperties());
 
                     attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
                                                          utcNow, utcNow, stateContext.getPaymentExternalKey(), stateContext.getTransactionId(),
