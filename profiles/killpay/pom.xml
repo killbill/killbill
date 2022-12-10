@@ -20,16 +20,12 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-profiles</artifactId>
-        <version>0.22.32</version>
+        <version>0.22.33-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>killbill-profiles-killpay</artifactId>
     <packaging>war</packaging>
     <name>killbill-profiles-killpay</name>
-
-    <scm>
-        <tag>killbill-0.22.32</tag>
-    </scm>
     <properties>
         <main.basedir>${project.parent.parent.basedir}</main.basedir>
     </properties>
