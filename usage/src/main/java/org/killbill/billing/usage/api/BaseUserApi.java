@@ -27,14 +27,15 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
-import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 public class BaseUserApi {
 
@@ -51,16 +52,16 @@ public class BaseUserApi {
     //   and the usage module will look for data inside its own table.
     // * If not, a possibly empty (or not) list should be returned (and the usage module will *not* look for data inside its own table)
     //
-    protected List<RawUsageRecord> getAccountUsageFromPlugin(final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
-        return getUsageFromPlugin(null, startDate, endDate, tenantContext);
+    protected List<RawUsageRecord> getAccountUsageFromPlugin(final DateTime startDate, final DateTime endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
+        return getUsageFromPlugin(null, startDate, endDate, properties, usageContext);
     }
 
-    protected List<RawUsageRecord> getSubscriptionUsageFromPlugin(final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
-        return getUsageFromPlugin(subscriptionId, startDate, endDate, tenantContext);
+    protected List<RawUsageRecord> getSubscriptionUsageFromPlugin(final UUID subscriptionId, final DateTime startDate, final DateTime endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
+        return getUsageFromPlugin(subscriptionId, startDate, endDate, properties, usageContext);
     }
 
-    private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContext) {
-        Preconditions.checkNotNull(tenantContext.getAccountId(), "TenantContext has no accountId");
+    private List<RawUsageRecord> getUsageFromPlugin(@Nullable final UUID subscriptionId, final DateTime startDate, final DateTime endDate, final Iterable<PluginProperty> properties, final UsageContext usageContext) {
+        Preconditions.checkNotNull(usageContext.getAccountId(), "UsageContext has no accountId");
 
         final Set<String> allServices = pluginRegistry.getAllServices();
         // No plugin registered
@@ -71,8 +72,8 @@ public class BaseUserApi {
             final UsagePluginApi plugin = pluginRegistry.getServiceForName(service);
 
             final List<RawUsageRecord> result = subscriptionId != null ?
-                                                plugin.getUsageForSubscription(subscriptionId, startDate, endDate, tenantContext) :
-                                                plugin.getUsageForAccount(startDate, endDate, tenantContext);
+                                                plugin.getUsageForSubscription(subscriptionId, startDate, endDate, usageContext, properties) :
+                                                plugin.getUsageForAccount(startDate, endDate, usageContext, properties);
             // First plugin registered, returns result -- could be empty List if no usage was recorded.
             if (result != null) {
 
@@ -96,10 +97,10 @@ public class BaseUserApi {
 
         private final Map<UUID, List<RawUsageRecord>> perSubscriptionRecords;
         private final Logger logger;
-        private final LocalDate startDate;
-        private final LocalDate endDate;
+        private final DateTime startDate;
+        private final DateTime endDate;
 
-        public DebugMap(final LocalDate startDate, final LocalDate endDate, final Logger logger) {
+        public DebugMap(final DateTime startDate, final DateTime endDate, final Logger logger) {
             this.logger = logger;
             this.startDate = startDate;
             this.endDate = endDate;

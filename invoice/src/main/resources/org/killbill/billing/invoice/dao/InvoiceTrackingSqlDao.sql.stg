@@ -32,7 +32,7 @@ tableValues() ::= <<
 deactivateByIds() ::= <<
 update <tableName()>
 set
-  is_active = '0'
+  is_active = FALSE
 , updated_by = :createdBy
 , updated_date = :updatedDate
 where <idField("")> in (<ids>)
@@ -46,9 +46,9 @@ select
 from <tableName()>
 where
 record_date >= :startDate
-and record_date \< :endDate
+and record_date \<= :endDate
 and <accountRecordIdField("")> = :accountRecordId
-and is_active = '1'
+and is_active = TRUE
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;
@@ -62,7 +62,7 @@ from <tableName()>
 where
 invoice_id in (<invoiceIds>)
 and <accountRecordIdField("")> = :accountRecordId
-and is_active = '1'
+and is_active = TRUE
 <AND_CHECK_TENANT("")>
 <defaultOrderBy("")>
 ;

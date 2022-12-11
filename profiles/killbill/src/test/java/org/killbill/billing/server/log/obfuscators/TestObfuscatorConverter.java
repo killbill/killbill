@@ -25,7 +25,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.common.collect.ImmutableList;
 
 public class TestObfuscatorConverter extends ServerTestSuiteNoDB {
 
@@ -108,7 +107,7 @@ public class TestObfuscatorConverter extends ServerTestSuiteNoDB {
 
         @Override
         public List<String> getOptionList() {
-            return ImmutableList.of("address1");
+            return List.of("address1");
         }
     }
 }

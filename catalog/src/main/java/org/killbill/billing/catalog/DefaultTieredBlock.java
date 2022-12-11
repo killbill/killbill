@@ -21,6 +21,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.math.BigDecimal;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -35,14 +36,14 @@ import org.killbill.billing.catalog.api.TieredBlockPriceOverride;
 public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Externalizable {
 
     @XmlElement(required = true)
-    private double max;
+    private BigDecimal max;
 
     @Override
-    public Double getMax() {
+    public BigDecimal getMax() {
         return max;
     }
 
-    public DefaultTieredBlock setMax(final double max) {
+    public DefaultTieredBlock setMax(final BigDecimal max) {
         this.max = max;
         return this;
     }
@@ -52,7 +53,7 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Ext
         setType(BlockType.TIERED);
     }
 
-    public DefaultTieredBlock(TieredBlock in, TieredBlockPriceOverride override, Currency currency) {
+    public DefaultTieredBlock(final TieredBlock in, final TieredBlockPriceOverride override, final Currency currency) {
         super((DefaultUnit) in.getUnit(), in.getSize(), (DefaultInternationalPrice) in.getPrice(), override.getPrice(), currency);
         this.max = in.getMax();
         setType(BlockType.TIERED);
@@ -83,14 +84,14 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Ext
 
         final DefaultTieredBlock that = (DefaultTieredBlock) o;
 
-        return Double.compare(that.max, max) == 0;
+        return max.compareTo(that.max) == 0;
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
         final long temp;
-        temp = Double.doubleToLongBits(max);
+        temp = max.hashCode();
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         return result;
     }
@@ -98,12 +99,12 @@ public class DefaultTieredBlock extends DefaultBlock implements TieredBlock, Ext
     @Override
     public void writeExternal(final ObjectOutput out) throws IOException {
         super.writeExternal(out);
-        out.writeDouble(max);
+        out.writeObject(max);
     }
 
     @Override
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         super.readExternal(in);
-        this.max = in.readDouble();
+        this.max = (BigDecimal) in.readObject();
     }
 }

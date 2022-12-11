@@ -23,27 +23,25 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 /**
  * Tree of invoice items for a given subscription
  */
 public class SubscriptionItemTree {
 
-    private final List<Item> items = new LinkedList<Item>();
-    private final List<InvoiceItem> existingIgnoredItems = new LinkedList<InvoiceItem>();
-    private final List<InvoiceItem> remainingIgnoredItems = new LinkedList<InvoiceItem>();
-    private final List<InvoiceItem> pendingItemAdj = new LinkedList<InvoiceItem>();
+    private final List<Item> items = new LinkedList<>();
+    private final List<InvoiceItem> existingIgnoredItems = new LinkedList<>();
+    private final List<InvoiceItem> remainingIgnoredItems = new LinkedList<>();
+    private final List<InvoiceItem> pendingItemAdj = new LinkedList<>();
 
     private final UUID targetInvoiceId;
     private final UUID subscriptionId;
@@ -121,13 +119,10 @@ public class SubscriptionItemTree {
 
         for (final InvoiceItem item : pendingItemAdj) {
             // If the linked item was ignored, ignore this adjustment too
-            final InvoiceItem ignoredLinkedItem = Iterables.tryFind(existingIgnoredItems, new Predicate<InvoiceItem>() {
-                @Override
-                public boolean apply(final InvoiceItem input) {
-                    return input.getId().equals(item.getLinkedItemId());
-                }
-            }).orNull();
-            if (ignoredLinkedItem == null) {
+            final boolean isLinkedItemExist = existingIgnoredItems
+                    .stream()
+                    .anyMatch(input -> input.getId().equals(item.getLinkedItemId()));
+            if (!isLinkedItemExist) {
                 root.addAdjustment(item);
             }
         }
@@ -168,13 +163,8 @@ public class SubscriptionItemTree {
         Preconditions.checkState(!isBuilt, "Tree already built, unable to add new invoiceItem=%s", invoiceItem);
 
         // Check if it was an existing item ignored for tree purposes (e.g. FIXED or $0 RECURRING, both of which aren't repaired)
-        final InvoiceItem existingItem = Iterables.tryFind(existingIgnoredItems, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.matches(invoiceItem);
-            }
-        }).orNull();
-        if (existingItem != null) {
+        final boolean isItemExist = existingIgnoredItems.stream().anyMatch(input -> input.matches(invoiceItem));
+        if (isItemExist) {
             return;
         }
 
@@ -214,16 +204,10 @@ public class SubscriptionItemTree {
      * @return a flat view of the items in the tree.
      */
     public List<InvoiceItem> getView() {
+        final List<InvoiceItem> tmp = new LinkedList<>(remainingIgnoredItems);
+        items.stream().filter(Objects::nonNull).forEach(item -> tmp.add(item.toInvoiceItem()));
 
-        final List<InvoiceItem> tmp = new LinkedList<InvoiceItem>();
-        tmp.addAll(remainingIgnoredItems);
-        for (final Item item : items) {
-            if (item != null) {
-                tmp.add(item.toInvoiceItem());
-            }
-        }
-
-        final List<InvoiceItem> result = Ordering.<InvoiceItem>from(INVOICE_ITEM_COMPARATOR).sortedCopy(tmp);
+        final List<InvoiceItem> result = tmp.stream().sorted(INVOICE_ITEM_COMPARATOR).collect(Collectors.toUnmodifiableList());
         checkItemsListState(result);
         return result;
     }

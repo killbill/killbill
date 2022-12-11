@@ -16,6 +16,7 @@
 
 package org.killbill.billing.usage.api.user;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,13 +26,16 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.osgi.api.OSGIServiceRegistration;
+import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.usage.api.BaseUserApi;
+import org.killbill.billing.usage.api.DefaultUsageContext;
 import org.killbill.billing.usage.api.RawUsageRecord;
 import org.killbill.billing.usage.api.RolledUpUnit;
 import org.killbill.billing.usage.api.RolledUpUsage;
@@ -42,13 +46,12 @@ import org.killbill.billing.usage.api.UsageRecord;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.usage.dao.RolledUpUsageDao;
 import org.killbill.billing.usage.dao.RolledUpUsageModelDao;
+import org.killbill.billing.usage.plugin.api.UsageContext;
 import org.killbill.billing.usage.plugin.api.UsagePluginApi;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-
-import com.google.common.base.Strings;
 
 public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
 
@@ -69,7 +72,7 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
         final InternalCallContext internalCallContext = internalCallContextFactory.createInternalCallContext(record.getSubscriptionId(), ObjectType.SUBSCRIPTION, callContext);
 
         final String trackingIds;
-        if (Strings.isNullOrEmpty(record.getTrackingId())) {
+        if (record.getTrackingId() == null || record.getTrackingId().isEmpty()) {
             trackingIds = UUIDs.randomUUID().toString();
         // check if we have (at least) one row with the supplied tracking id
         } else if (recordsWithTrackingIdExist(record, internalCallContext)) {
@@ -79,7 +82,7 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
         }
 
 
-        final List<RolledUpUsageModelDao> usages = new ArrayList<RolledUpUsageModelDao>();
+        final List<RolledUpUsageModelDao> usages = new ArrayList<>();
         for (final UnitUsageRecord unitUsageRecord : record.getUnitUsageRecord()) {
             for (final UsageRecord usageRecord : unitUsageRecord.getDailyAmount()) {
                 usages.add(new RolledUpUsageModelDao(record.getSubscriptionId(), unitUsageRecord.getUnitType(), usageRecord.getDate(), usageRecord.getAmount(), trackingIds));
@@ -89,10 +92,11 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     @Override
-    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final LocalDate startDate, final LocalDate endDate, final TenantContext tenantContextNoAccountId) {
+    public RolledUpUsage getUsageForSubscription(final UUID subscriptionId, final String unitType, final DateTime startDate, final DateTime endDate, final Iterable<PluginProperty> properties, final TenantContext tenantContextNoAccountId) {
         final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContextNoAccountId);
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalCallContext);
-        final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, startDate, endDate, tenantContext);
+        final UsageContext usageContext = new DefaultUsageContext(null, null, tenantContext);
+        final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, startDate, endDate, properties, usageContext);
         if (rawUsage != null) {
             final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(subscriptionId, unitType, rawUsage);
             return new DefaultRolledUpUsage(subscriptionId, startDate, endDate, rolledUpAmount);
@@ -104,15 +108,17 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     @Override
-    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final List<LocalDate> transitionTimes, final TenantContext tenantContextNoAccountId) {
+    public List<RolledUpUsage> getAllUsageForSubscription(final UUID subscriptionId, final List<DateTime> transitionTimes, final Iterable<PluginProperty> properties, final TenantContext tenantContextNoAccountId) {
         final InternalTenantContext internalCallContext = internalCallContextFactory.createInternalTenantContext(subscriptionId, ObjectType.SUBSCRIPTION, tenantContextNoAccountId);
         final TenantContext tenantContext = internalCallContextFactory.createTenantContext(internalCallContext);
-        List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
-        LocalDate prevDate = null;
-        for (LocalDate curDate : transitionTimes) {
+        final UsageContext usageContext = new DefaultUsageContext(null, null, tenantContext);
+
+        final List<RolledUpUsage> result = new ArrayList<RolledUpUsage>();
+        DateTime prevDate = null;
+        for (final DateTime curDate : transitionTimes) {
             if (prevDate != null) {
 
-                final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, prevDate, curDate, tenantContext);
+                final List<RawUsageRecord> rawUsage = getSubscriptionUsageFromPlugin(subscriptionId, prevDate, curDate, properties, usageContext);
                 if (rawUsage != null) {
                     final List<RolledUpUnit> rolledUpAmount = getRolledUpUnitsForRawPluginUsage(subscriptionId, null, rawUsage);
                     result.add(new DefaultRolledUpUsage(subscriptionId, prevDate, curDate, rolledUpAmount));
@@ -128,8 +134,8 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     private List<RolledUpUnit> getRolledUpUnitsForRawPluginUsage(final UUID subscriptionId, @Nullable final String unitType, final List<RawUsageRecord> rawAccountUsage) {
-        final Map<String, Long> tmp = new HashMap<String, Long>();
-        for (RawUsageRecord cur : rawAccountUsage) {
+        final Map<String, BigDecimal> tmp = new HashMap<>();
+        for (final RawUsageRecord cur : rawAccountUsage) {
             // Filter out wrong subscriptionId
             if (cur.getSubscriptionId().compareTo(subscriptionId) != 0) {
                 continue;
@@ -140,11 +146,11 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
                 continue;
             }
 
-            Long currentAmount = tmp.get(cur.getUnitType());
-            Long updatedAmount = (currentAmount != null) ? currentAmount + cur.getAmount() : cur.getAmount();
+            final BigDecimal currentAmount = tmp.get(cur.getUnitType());
+            final BigDecimal updatedAmount = (currentAmount != null) ? currentAmount.add(cur.getAmount()) : cur.getAmount();
             tmp.put(cur.getUnitType(), updatedAmount);
         }
-        final List<RolledUpUnit> result = new ArrayList<RolledUpUnit>(tmp.size());
+        final List<RolledUpUnit> result = new ArrayList<>(tmp.size());
         for (final String curType : tmp.keySet()) {
             result.add(new DefaultRolledUpUnit(curType, tmp.get(curType)));
         }
@@ -152,20 +158,20 @@ public class DefaultUsageUserApi extends BaseUserApi implements UsageUserApi {
     }
 
     private List<RolledUpUnit> getRolledUpUnits(final List<RolledUpUsageModelDao> usageForSubscription) {
-        final Map<String, Long> tmp = new HashMap<String, Long>();
-        for (RolledUpUsageModelDao cur : usageForSubscription) {
-            Long currentAmount = tmp.get(cur.getUnitType());
-            Long updatedAmount = (currentAmount != null) ? currentAmount + cur.getAmount() : cur.getAmount();
+        final Map<String, BigDecimal> tmp = new HashMap<>();
+        for (final RolledUpUsageModelDao cur : usageForSubscription) {
+            final BigDecimal currentAmount = tmp.get(cur.getUnitType());
+            final BigDecimal updatedAmount = (currentAmount != null) ? currentAmount.add(cur.getAmount()) : cur.getAmount();
             tmp.put(cur.getUnitType(), updatedAmount);
         }
-        final List<RolledUpUnit> result = new ArrayList<RolledUpUnit>(tmp.size());
+        final List<RolledUpUnit> result = new ArrayList<>(tmp.size());
         for (final String unitType : tmp.keySet()) {
             result.add(new DefaultRolledUpUnit(unitType, tmp.get(unitType)));
         }
         return result;
     }
 
-    private boolean recordsWithTrackingIdExist(SubscriptionUsageRecord record, InternalCallContext context) {
+    private boolean recordsWithTrackingIdExist(final SubscriptionUsageRecord record, final InternalCallContext context) {
         return rolledUpUsageDao.recordsWithTrackingIdExist(record.getSubscriptionId(), record.getTrackingId(), context);
     }
 }

@@ -18,6 +18,8 @@
 package org.killbill.billing.server.filters;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Singleton;
 import javax.servlet.Filter;
@@ -30,11 +32,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.net.HttpHeaders;
+import org.killbill.commons.utils.Joiner;
+import org.killbill.commons.utils.net.HttpHeaders;
 
 @Singleton
 public class ResponseCorsFilter implements Filter {
@@ -42,19 +41,21 @@ public class ResponseCorsFilter implements Filter {
     private final String allowedHeaders;
 
     public ResponseCorsFilter() {
-        allowedHeaders = Joiner.on(",").join(ImmutableList.<String>of(HttpHeaders.AUTHORIZATION,
-                                                                      HttpHeaders.CONTENT_TYPE,
-                                                                      HttpHeaders.LOCATION,
-                                                                      JaxrsResource.HDR_API_KEY,
-                                                                      JaxrsResource.HDR_API_SECRET,
-                                                                      JaxrsResource.HDR_COMMENT,
-                                                                      JaxrsResource.HDR_CREATED_BY,
-                                                                      JaxrsResource.HDR_PAGINATION_CURRENT_OFFSET,
-                                                                      JaxrsResource.HDR_PAGINATION_MAX_NB_RECORDS,
-                                                                      JaxrsResource.HDR_PAGINATION_NEXT_OFFSET,
-                                                                      JaxrsResource.HDR_PAGINATION_NEXT_PAGE_URI,
-                                                                      JaxrsResource.HDR_PAGINATION_TOTAL_NB_RECORDS,
-                                                                      JaxrsResource.HDR_REASON));
+        allowedHeaders = Joiner.on(",")
+                               .join(List.of(HttpHeaders.AUTHORIZATION,
+                                             HttpHeaders.CONTENT_TYPE,
+                                             HttpHeaders.LOCATION,
+                                             JaxrsResource.HDR_API_KEY,
+                                             JaxrsResource.HDR_API_SECRET,
+                                             JaxrsResource.HDR_COMMENT,
+                                             JaxrsResource.HDR_CREATED_BY,
+                                             JaxrsResource.HDR_PAGINATION_CURRENT_OFFSET,
+                                             JaxrsResource.HDR_PAGINATION_MAX_NB_RECORDS,
+                                             JaxrsResource.HDR_PAGINATION_NEXT_OFFSET,
+                                             JaxrsResource.HDR_PAGINATION_NEXT_PAGE_URI,
+                                             JaxrsResource.HDR_PAGINATION_TOTAL_NB_RECORDS,
+                                             JaxrsResource.HDR_REASON)
+                                    );
     }
 
     @Override
@@ -66,7 +67,7 @@ public class ResponseCorsFilter implements Filter {
         final HttpServletResponse res = (HttpServletResponse) response;
         final HttpServletRequest req = (HttpServletRequest) request;
 
-        final String origin = MoreObjects.firstNonNull(req.getHeader(HttpHeaders.ORIGIN), "*");
+        final String origin = Objects.requireNonNullElse(req.getHeader(HttpHeaders.ORIGIN), "*");
         res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
         res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, DELETE, PUT, OPTIONS");
         res.addHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, allowedHeaders);

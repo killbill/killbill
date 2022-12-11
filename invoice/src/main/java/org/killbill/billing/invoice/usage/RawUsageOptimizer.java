@@ -18,17 +18,23 @@
 package org.killbill.billing.invoice.usage;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Usage;
@@ -41,25 +47,16 @@ import org.killbill.billing.invoice.generator.InvoiceWithMetadata.TrackingRecord
 import org.killbill.billing.invoice.model.UsageInvoiceItem;
 import org.killbill.billing.usage.InternalUserApi;
 import org.killbill.billing.usage.api.RawUsageRecord;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.InvoiceConfig;
 import org.killbill.clock.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
-
 public class RawUsageOptimizer {
 
-    private static final Ordering<InvoiceItem> USAGE_ITEM_ORDERING = Ordering.natural()
-                                                                             .onResultOf(new Function<InvoiceItem, Comparable>() {
-                                                                                 @Override
-                                                                                 public Comparable apply(final InvoiceItem invoiceItem) {
-                                                                                     return invoiceItem.getEndDate();
-                                                                                 }
-                                                                             });
+    private static final Comparator<InvoiceItem> USAGE_ITEM_COMPARATOR = Comparator.comparing(InvoiceItem::getEndDate);
 
     private static final Logger log = LoggerFactory.getLogger(RawUsageOptimizer.class);
 
@@ -76,15 +73,19 @@ public class RawUsageOptimizer {
         this.clock = clock;
     }
 
-    public RawUsageOptimizerResult getInArrearUsage(final LocalDate firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, @Nullable final DryRunInfo dryRunInfo, final InternalCallContext internalCallContext) {
+    public RawUsageOptimizerResult getInArrearUsage(final DateTime firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, @Nullable final DryRunInfo dryRunInfo, final InternalCallContext internalCallContext) {
+
+        // The idea is that if we need to come up with a DateTime we use the largest possible based on the provided LocalDate to return enough points and have the usage invoice code filter what is not relevant.
+        final DateTime targetDateMax = targetDate.plusDays(1).toDateTimeAtStartOfDay(DateTimeZone.UTC).minus(Period.millis(1));
         final int configRawUsagePreviousPeriod = config.getMaxRawUsagePreviousPeriod(internalCallContext);
-        final LocalDate optimizedStartDate = configRawUsagePreviousPeriod >= 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage, internalCallContext) : firstEventStartDate;
+        final DateTime optimizedStartDate = configRawUsagePreviousPeriod >= 0 ? getOptimizedRawUsageStartDate(firstEventStartDate, targetDate, existingUsageItems, knownUsage, internalCallContext) : firstEventStartDate;
         log.debug("RawUsageOptimizerResult accountRecordId='{}', configRawUsagePreviousPeriod='{}', firstEventStartDate='{}', optimizedStartDate='{}',  targetDate='{}'",
                   internalCallContext.getAccountRecordId(), configRawUsagePreviousPeriod, firstEventStartDate, optimizedStartDate, targetDate);
-        final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(optimizedStartDate, targetDate, dryRunInfo, internalCallContext);
 
-        final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(optimizedStartDate, targetDate, internalCallContext);
-        final Set<TrackingRecordId> existingTrackingIds = new HashSet<TrackingRecordId>();
+        final List<RawUsageRecord> rawUsageData = usageApi.getRawUsageForAccount(optimizedStartDate, targetDateMax, dryRunInfo, internalCallContext);
+
+        final List<InvoiceTrackingModelDao> trackingIds = invoiceDao.getTrackingsByDateRange(optimizedStartDate.toLocalDate(), targetDate, internalCallContext);
+        final Set<TrackingRecordId> existingTrackingIds = new HashSet<>();
         for (final InvoiceTrackingModelDao invoiceTrackingModelDao : trackingIds) {
             existingTrackingIds.add(new TrackingRecordId(invoiceTrackingModelDao.getTrackingId(), invoiceTrackingModelDao.getInvoiceId(), invoiceTrackingModelDao.getSubscriptionId(), invoiceTrackingModelDao.getUnitType(), invoiceTrackingModelDao.getRecordDate()));
         }
@@ -92,7 +93,7 @@ public class RawUsageOptimizer {
     }
 
     @VisibleForTesting
-    LocalDate getOptimizedRawUsageStartDate(final LocalDate firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, final InternalCallContext internalCallContext) {
+    DateTime getOptimizedRawUsageStartDate(final DateTime firstEventStartDate, final LocalDate targetDate, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage, final InternalCallContext internalCallContext) {
 
 
         // Extract all usage billing period known in that catalog
@@ -124,7 +125,9 @@ public class RawUsageOptimizer {
             }
         }
 
-        final LocalDate result = targetStartDate != null && targetStartDate.compareTo(firstEventStartDate) > 0 ? targetStartDate : firstEventStartDate;
+        // We chose toDateTimeAtStartOfDay for the conversion as it is better to return slightly too much than too little at this stage.
+        final DateTime earlierTargetStartDate = targetStartDate != null ? targetStartDate.toDateTimeAtStartOfDay() : null;
+        final DateTime result = earlierTargetStartDate != null && earlierTargetStartDate.compareTo(firstEventStartDate) > 0 ? earlierTargetStartDate : firstEventStartDate;
         return result;
     }
 
@@ -133,13 +136,15 @@ public class RawUsageOptimizer {
     Map<BillingPeriod, LocalDate> getBillingPeriodMinDate1(final Collection<BillingPeriod> knownUsageBillingPeriod, final Iterable<InvoiceItem> existingUsageItems, final Map<String, Usage> knownUsage) {
 
         if (!existingUsageItems.iterator().hasNext()) {
-            return ImmutableMap.<BillingPeriod, LocalDate>of();
+            return Collections.emptyMap();
         }
 
         final Map<BillingPeriod, LocalDate> perBillingPeriodMostRecentConsumableInArrearItemEndDate = new HashMap<>();
 
         // Make sure all usage items are sorted by endDate
-        final List<InvoiceItem> sortedUsageItems = USAGE_ITEM_ORDERING.sortedCopy(existingUsageItems);
+        final List<InvoiceItem> sortedUsageItems = Iterables.toStream(existingUsageItems)
+                                                            .sorted(USAGE_ITEM_COMPARATOR)
+                                                            .collect(Collectors.toUnmodifiableList());
 
         for (final BillingPeriod bp : knownUsageBillingPeriod) {
             perBillingPeriodMostRecentConsumableInArrearItemEndDate.put(bp, null);
@@ -201,17 +206,17 @@ public class RawUsageOptimizer {
 
     public static class RawUsageOptimizerResult {
 
-        private final LocalDate rawUsageStartDate;
+        private final DateTime rawUsageStartDate;
         private final List<RawUsageRecord> rawUsage;
         private final Set<TrackingRecordId> existingTrackingIds;
 
-        public RawUsageOptimizerResult(final LocalDate rawUsageStartDate, final List<RawUsageRecord> rawUsage, final Set<TrackingRecordId> existingTrackingIds) {
+        public RawUsageOptimizerResult(final DateTime rawUsageStartDate, final List<RawUsageRecord> rawUsage, final Set<TrackingRecordId> existingTrackingIds) {
             this.rawUsageStartDate = rawUsageStartDate;
             this.rawUsage = rawUsage;
             this.existingTrackingIds = existingTrackingIds;
         }
 
-        public LocalDate getRawUsageStartDate() {
+        public DateTime getRawUsageStartDate() {
             return rawUsageStartDate;
         }
 

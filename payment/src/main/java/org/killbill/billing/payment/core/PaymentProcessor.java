@@ -20,6 +20,7 @@ package org.killbill.billing.payment.core;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,15 +50,16 @@ import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.glue.DefaultPaymentService;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.payment.retry.DefaultRetryService;
 import org.killbill.billing.payment.retry.PaymentRetryNotificationKey;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.killbill.notificationq.api.NotificationEvent;
@@ -68,16 +70,11 @@ import org.killbill.notificationq.api.NotificationQueueService.NoSuchNotificatio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
 public class PaymentProcessor extends ProcessorBase {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessor.class);
 
-    private static final ImmutableList<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+    private static final List<PluginProperty> PLUGIN_PROPERTIES = Collections.emptyList();
 
     private final PaymentAutomatonRunner paymentAutomatonRunner;
     private final NotificationQueueService notificationQueueService;
@@ -303,13 +300,9 @@ public class PaymentProcessor extends ProcessorBase {
 
                 if (transactionToComplete != null) {
                     final UUID transactionToCompleteId = transactionToComplete.getId();
-                    transactionToComplete = Iterables.<PaymentTransactionModelDao>find(paymentTransactionsForCurrentPayment,
-                                                                                       new Predicate<PaymentTransactionModelDao>() {
-                                                                                           @Override
-                                                                                           public boolean apply(final PaymentTransactionModelDao input) {
-                                                                                               return transactionToCompleteId.equals(input.getId());
-                                                                                           }
-                                                                                       });
+                    transactionToComplete = paymentTransactionsForCurrentPayment.stream()
+                            .filter(input -> transactionToCompleteId.equals(input.getId()))
+                            .findFirst().get();
 
                     // We can't tell where we should be in the state machine - bail (cannot be enforced by the state machine unfortunately because UNKNOWN and PLUGIN_FAILURE are both treated as EXCEPTION)
                     if (transactionToComplete.getTransactionStatus() == TransactionStatus.UNKNOWN) {
@@ -360,7 +353,7 @@ public class PaymentProcessor extends ProcessorBase {
                                                                                    final Iterable<PaymentTransactionModelDao> paymentTransactionsForCurrentPayment,
                                                                                    final PaymentStateContext paymentStateContext,
                                                                                    final InternalCallContext internalCallContext) throws PaymentApiException {
-        final Collection<PaymentTransactionModelDao> completionCandidates = new LinkedList<PaymentTransactionModelDao>();
+        final Collection<PaymentTransactionModelDao> completionCandidates = new LinkedList<>();
         for (final PaymentTransactionModelDao paymentTransactionModelDao : paymentTransactionsForCurrentPayment) {
             // Check if we already have a transaction for that id or key
             if (!(paymentStateContext.getTransactionId() != null && paymentTransactionModelDao.getId().equals(paymentStateContext.getTransactionId())) &&
@@ -388,6 +381,6 @@ public class PaymentProcessor extends ProcessorBase {
         }
 
         Preconditions.checkState(Iterables.size(completionCandidates) <= 1, "There should be at most one completion candidate");
-        return Iterables.<PaymentTransactionModelDao>getLast(completionCandidates, null);
+        return Iterables.getLast(completionCandidates, null);
     }
 }

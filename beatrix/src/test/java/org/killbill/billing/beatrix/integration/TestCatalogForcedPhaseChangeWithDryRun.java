@@ -17,7 +17,6 @@
 
 package org.killbill.billing.beatrix.integration;
 
-import com.google.common.collect.ImmutableList;
 import org.joda.time.LocalDate;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.api.TestApiListener.NextEvent;
@@ -34,12 +33,12 @@ import org.killbill.billing.invoice.api.DryRunArguments;
 import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,8 +61,8 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext);
         assertListenerStatus();
 
         final LocalDate futureDate = new LocalDate(2022, 7, 13);
@@ -78,7 +77,7 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
                 createdEntitlement.getBundleId(),
                 futureDate,
                 BillingActionPolicy.IMMEDIATE);
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunSubscriptionActionArg, callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunSubscriptionActionArg, Collections.emptyList(), callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2022, 7, 13), new LocalDate(2022, 7, 28), InvoiceItemType.RECURRING, new BigDecimal("20.00")));
@@ -95,8 +94,8 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext);
         assertListenerStatus();
 
         final LocalDate futureDate = new LocalDate(2022, 7, 13);
@@ -111,7 +110,7 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
                 createdEntitlement.getBundleId(),
                 futureDate,
                 BillingActionPolicy.IMMEDIATE);
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunSubscriptionActionArg, callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), futureDate, dryRunSubscriptionActionArg, Collections.emptyList(), callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2022, 7, 13), new LocalDate(2022, 7, 28), InvoiceItemType.RECURRING, new BigDecimal("10.00")));
@@ -128,8 +127,8 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext);
         assertListenerStatus();
 
         final DryRunArguments dryRunSubscriptionActionArg = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION,
@@ -143,7 +142,7 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
                 createdEntitlement.getBundleId(),
                 initialDate,
                 BillingActionPolicy.IMMEDIATE);
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), initialDate, dryRunSubscriptionActionArg, callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), initialDate, dryRunSubscriptionActionArg, Collections.emptyList(), callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2022, 6, 28), new LocalDate(2022, 7, 28), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
@@ -160,8 +159,8 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
         final Account account = createAccountWithNonOsgiPaymentMethod(getAccountData(null));
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null), UUID.randomUUID().toString(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, callContext);
+        final UUID createdEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, null), UUID.randomUUID().toString(), null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement createdEntitlement = entitlementApi.getEntitlementForId(createdEntitlementId, false, callContext);
         assertListenerStatus();
 
         final DryRunArguments dryRunSubscriptionActionArg = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION,
@@ -175,7 +174,7 @@ public class TestCatalogForcedPhaseChangeWithDryRun extends TestIntegrationBase 
                 createdEntitlement.getBundleId(),
                 initialDate,
                 BillingActionPolicy.IMMEDIATE);
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), initialDate, dryRunSubscriptionActionArg, callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(createdEntitlement.getAccountId(), initialDate, dryRunSubscriptionActionArg, Collections.emptyList(), callContext);
 
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2022, 6, 28), new LocalDate(2022, 7, 28), InvoiceItemType.RECURRING, new BigDecimal("20.00")));

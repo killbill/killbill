@@ -21,10 +21,9 @@ import javax.cache.CacheManager;
 import javax.cache.configuration.Configuration;
 import javax.cache.configuration.MutableConfiguration;
 
+import org.killbill.commons.metrics.api.MetricRegistry;
 import org.redisson.api.RedissonClient;
 import org.redisson.jcache.configuration.RedissonConfiguration;
-
-import com.codahale.metrics.MetricRegistry;
 
 abstract class RedisCacheProviderBase extends CacheProviderBase {
 

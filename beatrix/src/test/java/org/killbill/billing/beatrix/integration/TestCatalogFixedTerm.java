@@ -21,6 +21,11 @@ import static org.testng.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
@@ -32,14 +37,10 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.util.callcontext.CallContext;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 
 public class TestCatalogFixedTerm extends TestIntegrationBase {
 
@@ -72,7 +73,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
                                       NextEvent.PAYMENT);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inadvance", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
 
@@ -83,7 +84,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
 
-        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        busHandler.pushExpectedEvents(NextEvent.EXPIRED, NextEvent.NULL_INVOICE);
         clock.addYears(1);//2024-12-01
         assertListenerStatus();
         
@@ -96,7 +97,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inarrear", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
         
@@ -105,7 +106,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
         
-        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT); 
+        busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT, NextEvent.EXPIRED); 
         clock.addYears(2);//2025-12-01
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 2, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2023, 12, 01), new LocalDate(2024, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("20.03")));
@@ -121,7 +122,7 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
                                       NextEvent.PAYMENT);
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-biennial-inadvance-discountandrecurring", null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, ImmutableList.<PluginProperty>of(), testCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, UUID.randomUUID().toString(), null), "something", null, null, false, true, Collections.emptyList(), testCallContext);
         assertNotNull(entitlementId);
         assertListenerStatus();
         invoiceChecker.checkInvoice(account.getId(), 1, testCallContext, new ExpectedInvoiceItemCheck(new LocalDate(2021, 12, 01), new LocalDate(2023, 12, 01), InvoiceItemType.RECURRING, new BigDecimal("40.00")));
@@ -144,10 +145,9 @@ public class TestCatalogFixedTerm extends TestIntegrationBase {
     }
     
 
-    private void uploadCatalog(final String name) throws CatalogApiException, IOException {
-        catalogUserApi.uploadCatalog(Resources
-                                             .asCharSource(Resources.getResource("catalogs/testCatalogFixedTerm/" + name), Charsets.UTF_8)
-                                             .read(), testCallContext);
+    private void uploadCatalog(final String name) throws CatalogApiException, IOException, URISyntaxException {
+        final Path path = Paths.get(Resources.getResource("catalogs/testCatalogFixedTerm/" + name).toURI());
+        catalogUserApi.uploadCatalog(Files.readString(path), testCallContext);
     }
 
 }

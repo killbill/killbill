@@ -22,6 +22,7 @@ import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -94,21 +95,32 @@ public class DatabaseExportDao {
         }
 
         final List<ColumnInfo> columnsForTable = new ArrayList<ColumnInfo>();
+        // Separate lookup table, to keep the ordering of the columns
+        final Map<String, Integer> columnsLookup = new TreeMap<>(String.CASE_INSENSITIVE_ORDER); // Ignore casing (for H2)
+
         // The list of columns is ordered by table name first
         String lastSeenTableName = columns.get(0).getTableName();
+        int j = 0;
         for (final ColumnInfo column : columns) {
             if (!column.getTableName().equals(lastSeenTableName)) {
-                exportDataForAccountAndTable(out, columnsForTable, context);
+                exportDataForAccountAndTable(out, columnsForTable, columnsLookup, context);
                 lastSeenTableName = column.getTableName();
                 columnsForTable.clear();
+                columnsLookup.clear();
+                j = 0;
             }
             columnsForTable.add(column);
+            columnsLookup.put(column.getColumnName(), j);
+            j++;
         }
-        exportDataForAccountAndTable(out, columnsForTable, context);
+        exportDataForAccountAndTable(out, columnsForTable, columnsLookup, context);
     }
 
 
-    private void exportDataForAccountAndTable(final DatabaseExportOutputStream out, final List<ColumnInfo> columnsForTable, final InternalTenantContext context) {
+    private void exportDataForAccountAndTable(final DatabaseExportOutputStream out,
+                                              final List<ColumnInfo> columnsForTable,
+                                              final Map<String, Integer> columnsLookup,
+                                              final InternalTenantContext context) {
 
 
         TableType tableType = TableType.OTHER;
@@ -176,11 +188,16 @@ public class DatabaseExportDao {
                             // See also LowerToCamelBeanMapper
                             if (value instanceof Blob) {
                                 final Blob blob = (Blob) value;
-                                row.put(k, blob.getBytes(0, (int) blob.length()));
+                                row.put(k, blob.getBytes(1, (int) blob.length()));
                             } else if (value instanceof Clob) {
                                 // TODO Update LowerToCamelBeanMapper?
                                 final Clob clob = (Clob) value;
                                 row.put(k, clob.getSubString(1, (int) clob.length()));
+                            } else if (value != null &&
+                                       columnsLookup.get(k) != null &&
+                                       columnsForTable.get(columnsLookup.get(k)) != null &&
+                                       "boolean".equals(columnsForTable.get(columnsLookup.get(k)).getDataType())) {
+                                row.put(k, value instanceof Boolean ? value : "1".equals(value.toString())); // Most likely Byte
                             }
                         }
 

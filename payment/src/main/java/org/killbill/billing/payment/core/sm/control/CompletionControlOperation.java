@@ -17,6 +17,7 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +28,6 @@ import org.killbill.billing.control.plugin.api.PaymentApiType;
 import org.killbill.billing.control.plugin.api.PaymentControlContext;
 import org.killbill.billing.payment.api.Payment;
 import org.killbill.billing.payment.api.PaymentApiException;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PaymentRefresher;
@@ -36,13 +36,11 @@ import org.killbill.billing.payment.core.sm.control.ControlPluginRunner.DefaultP
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher;
 import org.killbill.billing.payment.dispatcher.PluginDispatcher.PluginDispatcherReturnType;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 
 //
 // Used from AttemptCompletionTask to resume an incomplete payment that went through control API.
@@ -128,7 +126,7 @@ public class CompletionControlOperation extends OperationControlCallback {
                                            false,
                                            false,
                                            paymentStateContext.isApiPayment(),
-                                           ImmutableList.<PluginProperty>of(),
+                                           Collections.emptyList(),
                                            paymentStateContext.getCallContext(),
                                            paymentStateContext.getInternalCallContext());
     }

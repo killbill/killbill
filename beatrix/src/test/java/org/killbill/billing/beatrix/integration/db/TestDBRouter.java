@@ -34,11 +34,10 @@ import org.killbill.billing.notification.plugin.api.ExtBusEvent;
 import org.killbill.billing.osgi.api.ROTenantContext;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.bus.api.PersistentBus.EventBusException;
+import org.killbill.commons.eventbus.Subscribe;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.eventbus.Subscribe;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;

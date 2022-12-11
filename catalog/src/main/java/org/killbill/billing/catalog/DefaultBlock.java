@@ -22,12 +22,14 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlIDREF;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.Block;
@@ -52,16 +54,19 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     private DefaultUnit unit;
 
     @XmlElement(required = true)
-    private double size;
+    private BigDecimal size;
 
     @XmlElement(required = true)
     private DefaultInternationalPrice prices;
 
     @XmlElement(required = false)
-    private Double minTopUpCredit;
+    private BigDecimal minTopUpCredit;
 
     // Not defined in catalog
     private PlanPhase phase;
+
+    @XmlTransient
+    private boolean minTopUpCreditHasValue;
 
     @Override
     public BlockType getType() {
@@ -74,7 +79,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public Double getSize() {
+    public BigDecimal getSize() {
         return size;
     }
 
@@ -84,8 +89,8 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     }
 
     @Override
-    public Double getMinTopUpCredit() throws CatalogApiException {
-        if (!CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(minTopUpCredit) && type != BlockType.TOP_UP) {
+    public BigDecimal getMinTopUpCredit() throws CatalogApiException {
+        if (minTopUpCreditHasValue && type != BlockType.TOP_UP) {
             throw new CatalogApiException(ErrorCode.CAT_NOT_TOP_UP_BLOCK, phase.getName());
         }
         return minTopUpCredit;
@@ -98,7 +103,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
             throw new IllegalStateException("type should have been automatically been initialized with VANILLA ");
         }
 
-        if (type == BlockType.TOP_UP && CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_DOUBLE_FIELD_VALUE.equals(minTopUpCredit)) {
+        if (type == BlockType.TOP_UP && !minTopUpCreditHasValue) {
             errors.add(new ValidationError(String.format("TOP_UP block needs to define minTopUpCredit for phase %s",
                                                          phase.getName()), DefaultUsage.class, ""));
         }
@@ -108,7 +113,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     public DefaultBlock() {
     }
 
-    public DefaultBlock(final DefaultUnit unit, final double size, final DefaultInternationalPrice prices, final BigDecimal overriddenPrice, Currency currency) {
+    public DefaultBlock(final DefaultUnit unit, final BigDecimal size, final DefaultInternationalPrice prices, final BigDecimal overriddenPrice, final Currency currency) {
         this.unit = unit;
         this.size = size;
         this.prices = prices != null ? new DefaultInternationalPrice(prices, overriddenPrice, currency) : null;
@@ -118,6 +123,8 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     public void initialize(final StandaloneCatalog catalog) {
         super.initialize(catalog);
         CatalogSafetyInitializer.initializeNonRequiredNullFieldsWithDefaultValue(this);
+        minTopUpCreditHasValue = minTopUpCredit != null &&
+                                 CatalogSafetyInitializer.DEFAULT_NON_REQUIRED_BIGDECIMAL_FIELD_VALUE.compareTo(minTopUpCredit) != 0;
     }
 
     public DefaultBlock setType(final BlockType type) {
@@ -135,7 +142,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         return this;
     }
 
-    public DefaultBlock setSize(final double size) {
+    public DefaultBlock setSize(final BigDecimal size) {
         this.size = size;
         return this;
     }
@@ -161,22 +168,19 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
 
         final DefaultBlock that = (DefaultBlock) o;
 
-        if (Double.compare(that.size, size) != 0) {
+        if (size.compareTo(that.size) != 0) {
             return false;
         }
         if (type != that.type) {
             return false;
         }
-        if (unit != null ? !unit.equals(that.unit) : that.unit != null) {
+        if (!Objects.equals(unit, that.unit)) {
             return false;
         }
-        if (prices != null ? !prices.equals(that.prices) : that.prices != null) {
+        if (!Objects.equals(prices, that.prices)) {
             return false;
         }
-        if (minTopUpCredit != null ? !minTopUpCredit.equals(that.minTopUpCredit) : that.minTopUpCredit != null) {
-            return false;
-        }
-        return true;
+        return Objects.equals(minTopUpCredit, that.minTopUpCredit);
     }
 
     @Override
@@ -185,7 +189,7 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
         final long temp;
         result = type != null ? type.hashCode() : 0;
         result = 31 * result + (unit != null ? unit.hashCode() : 0);
-        temp = Double.doubleToLongBits(size);
+        temp = size.hashCode();
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (prices != null ? prices.hashCode() : 0);
         result = 31 * result + (minTopUpCredit != null ? minTopUpCredit.hashCode() : 0);
@@ -199,11 +203,11 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
             out.writeUTF(type.name());
         }
         out.writeObject(unit);
-        out.writeDouble(size);
+        out.writeObject(size);
         out.writeObject(prices);
         out.writeBoolean(minTopUpCredit != null);
         if (minTopUpCredit != null) {
-            out.writeDouble(minTopUpCredit);
+            out.writeObject(minTopUpCredit);
         }
     }
 
@@ -211,8 +215,8 @@ public class DefaultBlock extends ValidatingConfig<StandaloneCatalog> implements
     public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
         this.type = in.readBoolean() ? BlockType.valueOf(in.readUTF()) : null;
         this.unit = (DefaultUnit) in.readObject();
-        this.size = in.readDouble();
+        this.size = (BigDecimal) in.readObject();
         this.prices = (DefaultInternationalPrice) in.readObject();
-        this.minTopUpCredit = in.readBoolean() ? in.readDouble() : null;
+        this.minTopUpCredit = in.readBoolean() ? (BigDecimal) in.readObject() : null;
     }
 }

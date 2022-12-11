@@ -23,9 +23,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.ObjectType;
@@ -53,10 +55,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.inject.Inject;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -101,7 +99,7 @@ public class TestAccount extends TestJaxrsBase {
                                                             .withComment(Base64.getEncoder().encodeToString(comment.getBytes(StandardCharsets.UTF_8)))
                                                             .withHeader("X-Killbill-Encoding", "base64")
                                                             .withFollowLocation(true)
-                                                            .withQueryParamsForFollow(ImmutableMultimap.of(JaxrsResource.QUERY_AUDIT, AuditLevel.MINIMAL.name()))
+                                                            .withQueryParamsForFollow(Map.of(JaxrsResource.QUERY_AUDIT, List.of(AuditLevel.MINIMAL.name())))
                                                             .build();
         final Account emptyAccount = new Account();
 
@@ -350,7 +348,7 @@ public class TestAccount extends TestJaxrsBase {
         // FINALLY TRY TO REMOVE AUTO_PAY_OFF WITH NO DEFAULT PAYMENT METHOD ON ACCOUNT
         //
         try {
-            accountApi.deleteAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(new UUID(0, 1)), requestOptions);
+            accountApi.deleteAccountTags(accountJson.getAccountId(), List.of(new UUID(0, 1)), requestOptions);
         } catch (final KillBillClientException e) {
             Assert.assertTrue(e.getBillingException().getCode() == ErrorCode.TAG_CANNOT_BE_REMOVED.getCode());
         }
@@ -372,7 +370,7 @@ public class TestAccount extends TestJaxrsBase {
         final UUID autoPayOffId = new UUID(0, 1);
 
         // Add a tag
-        accountApi.createAccountTags(input.getAccountId(), ImmutableList.<UUID>of(autoPayOffId), requestOptions);
+        accountApi.createAccountTags(input.getAccountId(), List.of(autoPayOffId), requestOptions);
 
         // Retrieves all tags
         final List<Tag> tags1 = accountApi.getAccountTags(input.getAccountId(), false, AuditLevel.FULL, requestOptions);
@@ -380,10 +378,10 @@ public class TestAccount extends TestJaxrsBase {
         Assert.assertEquals(tags1.get(0).getTagDefinitionId(), autoPayOffId);
 
         // Verify adding the same tag a second time doesn't do anything
-        accountApi.createAccountTags(input.getAccountId(), ImmutableList.<UUID>of(autoPayOffId), requestOptions);
+        accountApi.createAccountTags(input.getAccountId(), List.of(autoPayOffId), requestOptions);
 
         // Retrieves all tags again
-        accountApi.createAccountTags(input.getAccountId(), ImmutableList.<UUID>of(autoPayOffId), requestOptions);
+        accountApi.createAccountTags(input.getAccountId(), List.of(autoPayOffId), requestOptions);
         final List<Tag> tags2 = accountApi.getAccountTags(input.getAccountId(), true, AuditLevel.FULL, requestOptions);
         Assert.assertEquals(tags2, tags1);
 

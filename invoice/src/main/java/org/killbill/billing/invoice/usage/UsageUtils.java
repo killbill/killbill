@@ -17,6 +17,7 @@
 package org.killbill.billing.invoice.usage;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -26,23 +27,20 @@ import org.killbill.billing.catalog.api.Tier;
 import org.killbill.billing.catalog.api.TieredBlock;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.catalog.api.UsageType;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import org.killbill.commons.utils.Preconditions;
 
 public class UsageUtils {
 
     public static List<TieredBlock> getConsumableInArrearTieredBlocks(final Usage usage, final String unitType) {
 
-        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE);
-        Preconditions.checkArgument(usage.getTiers().length > 0);
+        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE, "#getConsumableInArrearTieredBlocks(): usage: %s", usage);
+        Preconditions.checkArgument(usage.getTiers().length > 0, "#getConsumableInArrearTieredBlocks(): usage tier's length is 0");
 
 
-        final List<TieredBlock> result = Lists.newLinkedList();
-        for (Tier tier : usage.getTiers()) {
+        final List<TieredBlock> result = new LinkedList<>();
+        for (final Tier tier : usage.getTiers()) {
             boolean found = false;
-            for (TieredBlock tierBlock : tier.getTieredBlocks()) {
+            for (final TieredBlock tierBlock : tier.getTieredBlocks()) {
                 if (tierBlock.getUnit().getName().equals(unitType)) {
                     result.add(tierBlock);
                     found = true;
@@ -56,13 +54,12 @@ public class UsageUtils {
     }
 
     public static Set<String> getConsumableInArrearUnitTypes(final Usage usage) {
+        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE, "#getConsumableInArrearUnitTypes(): usage: %s", usage);
+        Preconditions.checkArgument(usage.getTiers().length > 0, "#getConsumableInArrearUnitTypes(): usage tier's length is 0");
 
-        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CONSUMABLE);
-        Preconditions.checkArgument(usage.getTiers().length > 0);
-
-        final Set<String> result = new HashSet<String>();
-        for (Tier tier : usage.getTiers()) {
-            for (TieredBlock tierBlock : tier.getTieredBlocks()) {
+        final Set<String> result = new HashSet<>();
+        for (final Tier tier : usage.getTiers()) {
+            for (final TieredBlock tierBlock : tier.getTieredBlocks()) {
                 result.add(tierBlock.getUnit().getName());
             }
         }
@@ -70,20 +67,19 @@ public class UsageUtils {
     }
 
     public static List<Tier> getCapacityInArrearTier(final Usage usage) {
+        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CAPACITY, "#getCapacityInArrearTier(): usage");
+        Preconditions.checkArgument(usage.getTiers().length > 0, "#getCapacityInArrearTier(): usage tier's length is 0");
 
-        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CAPACITY);
-        Preconditions.checkArgument(usage.getTiers().length > 0);
-        return ImmutableList.copyOf(usage.getTiers());
+        return  List.of(usage.getTiers());
     }
 
     public static Set<String> getCapacityInArrearUnitTypes(final Usage usage) {
+        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CAPACITY, "#getCapacityInArrearTier(): usage");
+        Preconditions.checkArgument(usage.getTiers().length > 0, "#getCapacityInArrearUnitTypes(): usage tier's length is 0");
 
-        Preconditions.checkArgument(usage.getBillingMode() == BillingMode.IN_ARREAR && usage.getUsageType() == UsageType.CAPACITY);
-        Preconditions.checkArgument(usage.getTiers().length > 0);
-
-        final Set<String> result = new HashSet<String>();
-        for (Tier tier : usage.getTiers()) {
-            for (Limit limit : tier.getLimits()) {
+        final Set<String> result = new HashSet<>();
+        for (final Tier tier : usage.getTiers()) {
+            for (final Limit limit : tier.getLimits()) {
                 result.add(limit.getUnit().getName());
             }
         }

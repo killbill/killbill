@@ -32,14 +32,11 @@ import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
 
@@ -68,7 +65,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                                                  DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
         final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationForSearchKeys(accountRecordId, internalCallContext.getTenantRecordId());
-        final ImmutableList<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = ImmutableList.copyOf(futureNotifications);
+        final List<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = Iterables.toUnmodifiableList(futureNotifications);
         Assert.assertEquals(futureNotificationsList.size(), 1);
 
         // We expect only one notification for which effectiveDate matches our original effectiveDate (conversion DateTime -> LocalDate -> DateTime)
@@ -77,7 +74,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
 
         final Iterable<UUID> uuidKeys = notification.getEvent().getUuidKeys();
         Assert.assertFalse(Iterables.isEmpty(uuidKeys));
-        final List<UUID> uuidKeysList = ImmutableList.copyOf(uuidKeys);
+        final List<UUID> uuidKeysList = Iterables.toUnmodifiableList(uuidKeys);
         Assert.assertEquals(uuidKeysList.size(), 1);
         Assert.assertEquals(uuidKeysList.get(0), subscriptionId);
     }
@@ -105,7 +102,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
                                                                                                  DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
 
         final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationForSearchKeys(accountRecordId, internalCallContext.getTenantRecordId());
-        final ImmutableList<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = ImmutableList.copyOf(futureNotifications);
+        final List<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = Iterables.toUnmodifiableList(futureNotifications);
         Assert.assertEquals(futureNotificationsList.size(), 1);
 
         // We expect only one notification but this time we should see a list with both subscriptionIds.
@@ -114,10 +111,10 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
 
         final Iterable<UUID> uuidKeys = notification.getEvent().getUuidKeys();
         Assert.assertFalse(Iterables.isEmpty(uuidKeys));
-        final List<UUID> uuidKeysList = ImmutableList.copyOf(uuidKeys);
+        final List<UUID> uuidKeysList = Iterables.toUnmodifiableList(uuidKeys);
         Assert.assertEquals(uuidKeysList.size(), 2);
-        Assert.assertEquals(uuidKeysList.get(0), subscriptionId1);
-        Assert.assertEquals(uuidKeysList.get(1), subscriptionId2);
+        Assert.assertTrue(uuidKeysList.contains(subscriptionId1));
+        Assert.assertTrue(uuidKeysList.contains(subscriptionId2));
     }
 
     @Test(groups = "slow")
@@ -147,7 +144,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
         final NotificationQueue nextBillingQueue = notificationQueueService.getNotificationQueue(KILLBILL_SERVICES.INVOICE_SERVICE.getServiceName(),
                                                                                                  DefaultNextBillingDateNotifier.NEXT_BILLING_DATE_NOTIFIER_QUEUE);
         final Iterable<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotifications = nextBillingQueue.getFutureNotificationForSearchKeys(accountRecordId, internalCallContext.getTenantRecordId());
-        final ImmutableList<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = ImmutableList.copyOf(futureNotifications);
+        final List<NotificationEventWithMetadata<NextBillingDateNotificationKey>> futureNotificationsList = Iterables.toUnmodifiableList(futureNotifications);
         // We expect only two notifications, one for each date
         Assert.assertEquals(futureNotificationsList.size(), 2);
 
@@ -156,7 +153,7 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
 
         final Iterable<UUID> uuidKeys1 = notification1.getEvent().getUuidKeys();
         Assert.assertFalse(Iterables.isEmpty(uuidKeys1));
-        final List<UUID> uuidKeysList1 = ImmutableList.copyOf(uuidKeys1);
+        final List<UUID> uuidKeysList1 = Iterables.toUnmodifiableList(uuidKeys1);
         Assert.assertEquals(uuidKeysList1.size(), 1);
         Assert.assertEquals(uuidKeysList1.get(0), subscriptionId);
 
@@ -165,15 +162,15 @@ public class TestNextBillingDatePoster extends InvoiceTestSuiteWithEmbeddedDB {
 
         final Iterable<UUID> uuidKeys2 = notification2.getEvent().getUuidKeys();
         Assert.assertFalse(Iterables.isEmpty(uuidKeys2));
-        final List<UUID> uuidKeysList2 = ImmutableList.copyOf(uuidKeys2);
+        final List<UUID> uuidKeysList2 = Iterables.toUnmodifiableList(uuidKeys2);
         Assert.assertEquals(uuidKeysList2.size(), 1);
         Assert.assertEquals(uuidKeysList2.get(0), subscriptionId);
 
     }
 
     private FutureAccountNotifications createFutureAccountNotifications(final UUID subscriptionId, final LocalDate notificationDate) {
-        final Map<LocalDate, Set<UUID>> notificationListForDryRun = new HashMap<LocalDate, Set<UUID>>();
-        notificationListForDryRun.put(notificationDate, ImmutableSet.<UUID>of(subscriptionId));
+        final Map<LocalDate, Set<UUID>> notificationListForDryRun = new HashMap<>();
+        notificationListForDryRun.put(notificationDate, Set.of(subscriptionId));
 
         return new FutureAccountNotificationsBuilder()
                 .setNotificationListForDryRun(notificationListForDryRun)

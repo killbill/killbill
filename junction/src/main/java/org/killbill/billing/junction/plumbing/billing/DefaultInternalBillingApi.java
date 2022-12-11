@@ -19,6 +19,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,8 +27,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.ObjectType;
@@ -52,20 +55,13 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.bcd.BillCycleDayCalculator;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 public class DefaultInternalBillingApi implements BillingInternalApi {
 
@@ -107,7 +103,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final boolean found_INVOICING_DRAFT = is_AUTO_INVOICING_DRAFT(accountTags);
         final boolean found_INVOICING_REUSE_DRAFT = is_AUTO_INVOICING_REUSE_DRAFT(accountTags);
 
-        final Set<UUID> skippedSubscriptions = new HashSet<UUID>();
+        final Set<UUID> skippedSubscriptions = new HashSet<>();
         final DefaultBillingEventSet result;
 
         long subsIniTs = System.nanoTime();
@@ -126,9 +122,9 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
         final StringBuilder logStringBuilder = new StringBuilder("Computed billing events for accountId='").append(accountId).append("'");
         eventsToString(logStringBuilder, result);
 
-        long bsIniTs = System.nanoTime();
+        final long bsIniTs = System.nanoTime();
         final boolean afterBlocking = blockCalculator.insertBlockingEvents(result, skippedSubscriptions, subscriptionsForAccount, fullCatalog, cutoffDt, context);
-        long bsAfterTs = System.nanoTime();
+        final long bsAfterTs = System.nanoTime();
         if (afterBlocking) {
             logStringBuilder.append("\nBilling Events After Blocking");
             eventsToString(logStringBuilder, result);
@@ -289,7 +285,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             return;
         }
 
-        final Map<UUID, Integer> bcdCache = new HashMap<UUID, Integer>();
+        final Map<UUID, Integer> bcdCache = new HashMap<>();
 
         for (final SubscriptionBase subscription : subscriptions) {
             // TODO Can we batch those ?
@@ -307,7 +303,7 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
             BillingAlignment alignment = null;
             for (final SubscriptionBillingEvent transition : billingTransitions) {
 
-                if (transition.getType() != SubscriptionBaseTransitionType.CANCEL) {
+                if (transition.getType() != SubscriptionBaseTransitionType.CANCEL && transition.getType() != SubscriptionBaseTransitionType.EXPIRED) { 
                     final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(transition.getPlan().getName(), transition.getPlanPhase().getPhaseType());
                     alignment = subscription.getBillingAlignment(spec, transition.getEffectiveDate(), catalog);
 
@@ -338,49 +334,36 @@ public class DefaultInternalBillingApi implements BillingInternalApi {
     }
 
     private boolean is_AUTO_INVOICING_OFF(final List<Tag> tags) {
-        return ControlTagType.isAutoInvoicingOff(Collections2.transform(tags, new Function<Tag, UUID>() {
-            @Override
-            public UUID apply(final Tag tag) {
-                return tag.getTagDefinitionId();
-            }
-        }));
+        final List<UUID> definitionIds = tags.stream()
+                .map(Tag::getTagDefinitionId)
+                .collect(Collectors.toUnmodifiableList());
+        return ControlTagType.isAutoInvoicingOff(definitionIds);
     }
 
     private boolean is_AUTO_INVOICING_DRAFT(final List<Tag> tags) {
-        return Iterables.any(tags, new Predicate<Tag>() {
-            @Override
-            public boolean apply(final Tag input) {
-                return input.getTagDefinitionId().equals(ControlTagType.AUTO_INVOICING_DRAFT.getId());
-            }
-        });
+        return tags.stream()
+                .anyMatch(input -> input.getTagDefinitionId().equals(ControlTagType.AUTO_INVOICING_DRAFT.getId()));
     }
 
     private boolean is_AUTO_INVOICING_REUSE_DRAFT(final List<Tag> tags) {
-        return Iterables.any(tags, new Predicate<Tag>() {
-            @Override
-            public boolean apply(final Tag input) {
-                return input.getTagDefinitionId().equals(ControlTagType.AUTO_INVOICING_REUSE_DRAFT.getId());
-            }
-        });
+        return tags.stream()
+                .anyMatch(input -> input.getTagDefinitionId().equals(ControlTagType.AUTO_INVOICING_REUSE_DRAFT.getId()));
     }
 
     private List<Tag> getTagsForObjectType(final ObjectType objectType, final List<Tag> tags, @Nullable final UUID objectId) {
-        return ImmutableList.<Tag>copyOf(Iterables.<Tag>filter(tags,
-                                                               new Predicate<Tag>() {
-                                                                   @Override
-                                                                   public boolean apply(final Tag input) {
-                                                                       if (objectId == null) {
-                                                                           return objectType == input.getObjectType();
-                                                                       } else {
-                                                                           return objectType == input.getObjectType() && objectId.equals(input.getObjectId());
-                                                                       }
-
-                                                                   }
-                                                               }));
+        return tags.stream()
+                .filter(input -> {
+                    if (objectId == null) {
+                        return objectType == input.getObjectType();
+                    } else {
+                        return objectType == input.getObjectType() && objectId.equals(input.getObjectId());
+                    }
+                })
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private List<SubscriptionBase> getSubscriptionsForAccountByBundleId(final Map<UUID, List<SubscriptionBase>> subscriptionsForAccount, final UUID bundleId) {
-        return subscriptionsForAccount.containsKey(bundleId) ? subscriptionsForAccount.get(bundleId) : ImmutableList.<SubscriptionBase>of();
+        return subscriptionsForAccount.containsKey(bundleId) ? subscriptionsForAccount.get(bundleId) : Collections.emptyList();
     }
 
 }

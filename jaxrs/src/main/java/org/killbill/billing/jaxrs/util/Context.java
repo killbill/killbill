@@ -26,6 +26,7 @@ import javax.servlet.ServletRequest;
 
 import org.killbill.billing.jaxrs.resources.JaxrsResource;
 import org.killbill.billing.tenant.api.Tenant;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.CallContextFactory;
@@ -34,8 +35,6 @@ import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.callcontext.UserType;
 import org.killbill.commons.request.Request;
-
-import com.google.common.base.Preconditions;
 
 @Singleton
 public class Context {

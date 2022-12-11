@@ -18,6 +18,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,8 +30,6 @@ import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.junction.JunctionTestSuiteNoDB;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -80,8 +79,8 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(2)),
-                                                                 new DisabledDuration(testInit.plusDays(1), testInit.plusDays(3)));
+        final List<DisabledDuration> expected = List.of(new DisabledDuration(testInit, testInit.plusDays(2)),
+                                                        new DisabledDuration(testInit.plusDays(1), testInit.plusDays(3)));
 
         verify(result, expected);
     }
@@ -106,13 +105,13 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusDays(2)));
 
         final BlockingStateService test = new BlockingStateService();
-        for (BlockingState cur : input) {
+        for (final BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(2)),
-                                                                 new DisabledDuration(testInit.plusDays(1), null));
+        final List<DisabledDuration> expected = List.of(new DisabledDuration(testInit, testInit.plusDays(2)),
+                                                        new DisabledDuration(testInit.plusDays(1), null));
 
         verify(result, expected);
     }
@@ -142,8 +141,8 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(1)),
-                                                                 new DisabledDuration(testInit.plusDays(2), testInit.plusDays(3)));
+        final List<DisabledDuration> expected = List.of(new DisabledDuration(testInit, testInit.plusDays(1)),
+                                                        new DisabledDuration(testInit.plusDays(2), testInit.plusDays(3)));
 
         verify(result, expected);
     }
@@ -174,8 +173,8 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(1)),
-                                                                 new DisabledDuration(testInit, testInit.plusDays(2)));
+        final List<DisabledDuration> expected = List.of(new DisabledDuration(testInit, testInit.plusDays(1)),
+                                                        new DisabledDuration(testInit, testInit.plusDays(2)));
 
         verify(result, expected);
     }
@@ -199,12 +198,12 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit));
 
         final BlockingStateService test = new BlockingStateService();
-        for (BlockingState cur : input) {
+        for (final BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of();
+        final List<DisabledDuration> expected = Collections.emptyList();
 
         verify(result, expected);
     }
@@ -233,7 +232,7 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of();
+        final List<DisabledDuration> expected = Collections.emptyList();
 
         verify(result, expected);
     }
@@ -258,13 +257,13 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
 
         final BlockingStateService test = new BlockingStateService();
-        for (BlockingState cur : input) {
+        for (final BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(1)),
-                                                                 new DisabledDuration(testInit.plusDays(1), null));
+        final List<DisabledDuration> expected = List.of(new DisabledDuration(testInit, testInit.plusDays(1)),
+                                                        new DisabledDuration(testInit.plusDays(1), null));
 
         verify(result, expected);
     }
@@ -289,12 +288,12 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, false, testInit.plusDays(1)));
 
         final BlockingStateService test = new BlockingStateService();
-        for (BlockingState cur : input) {
+        for (final BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(1)));
+        final List<DisabledDuration> expected = List.of(new DisabledDuration(testInit, testInit.plusDays(1)));
 
         verify(result, expected);
     }
@@ -319,13 +318,13 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.ACCOUNT, true, testInit.plusDays(1)));
 
         final BlockingStateService test = new BlockingStateService();
-        for (BlockingState cur : input) {
+        for (final BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit, testInit.plusDays(1)),
-                                                                 new DisabledDuration(testInit.plusDays(1), null));
+        final List<DisabledDuration> expected = List.of(new DisabledDuration(testInit, testInit.plusDays(1)),
+                                                        new DisabledDuration(testInit.plusDays(1), null));
 
         verify(result, expected);
     }
@@ -350,13 +349,13 @@ public class TestBlockingStateService extends JunctionTestSuiteNoDB {
         input.add(createBillingBlockingState(BlockingStateType.SUBSCRIPTION_BUNDLE, true, testInit.plusDays(2)));
 
         final BlockingStateService test = new BlockingStateService();
-        for (BlockingState cur : input) {
+        for (final BlockingState cur : input) {
             test.addBlockingState(cur);
         }
         final List<DisabledDuration> result = test.build();
 
-        final List<DisabledDuration> expected = ImmutableList.of(new DisabledDuration(testInit.plusDays(2), null),
-                                                                 new DisabledDuration(testInit.plusDays(1), null));
+        final List<DisabledDuration> expected = List.of(new DisabledDuration(testInit.plusDays(2), null),
+                                                        new DisabledDuration(testInit.plusDays(1), null));
 
         verify(result, expected);
     }

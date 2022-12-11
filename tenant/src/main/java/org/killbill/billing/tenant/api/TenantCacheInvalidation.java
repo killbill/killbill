@@ -17,6 +17,7 @@
 
 package org.killbill.billing.tenant.api;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,18 +38,14 @@ import org.killbill.billing.tenant.dao.TenantBroadcastModelDao;
 import org.killbill.billing.tenant.dao.TenantDao;
 import org.killbill.billing.tenant.dao.TenantKVModelDao;
 import org.killbill.billing.tenant.glue.DefaultTenantModule;
+import org.killbill.commons.utils.collect.MultiValueHashMap;
+import org.killbill.commons.utils.collect.MultiValueMap;
 import org.killbill.billing.util.config.definition.TenantConfig;
 import org.killbill.bus.api.PersistentBus;
 import org.killbill.bus.api.PersistentBus.EventBusException;
 import org.killbill.commons.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
 
 /**
  * This class manages the callbacks that have been registered when per tenant objects have been inserted into the
@@ -62,11 +59,11 @@ import com.google.common.collect.Multimap;
  */
 public class TenantCacheInvalidation {
 
-    private final static int TERMINATION_TIMEOUT_SEC = 5;
+    private static final int TERMINATION_TIMEOUT_SEC = 5;
 
     private static final Logger logger = LoggerFactory.getLogger(TenantCacheInvalidation.class);
 
-    private final Multimap<TenantKey, CacheInvalidationCallback> cache;
+    private final MultiValueMap<TenantKey, CacheInvalidationCallback> cache;
     private final TenantBroadcastDao broadcastDao;
     private final TenantConfig tenantConfig;
     private final PersistentBus eventBus;
@@ -81,7 +78,7 @@ public class TenantCacheInvalidation {
                                    @Named(DefaultTenantModule.NO_CACHING_TENANT) final TenantDao tenantDao,
                                    final PersistentBus eventBus,
                                    final TenantConfig tenantConfig) {
-        this.cache = HashMultimap.<TenantKey, CacheInvalidationCallback>create();
+        this.cache = new MultiValueHashMap<>();
         this.broadcastDao = broadcastDao;
         this.tenantConfig = tenantConfig;
         this.tenantDao = tenantDao;
@@ -110,11 +107,11 @@ public class TenantCacheInvalidation {
         }
         try {
             tenantExecutor.shutdown();
-            boolean success = tenantExecutor.awaitTermination(TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
+            final boolean success = tenantExecutor.awaitTermination(TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
             if (!success) {
                 logger.warn("TenantExecutor failed to complete termination within " + TERMINATION_TIMEOUT_SEC + "sec");
             }
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.warn("TenantExecutor stop sequence got interrupted");
         } finally {
@@ -123,8 +120,7 @@ public class TenantCacheInvalidation {
     }
 
     public void registerCallback(final TenantKey key, final CacheInvalidationCallback value) {
-        cache.put(key, value);
-
+        cache.putElement(key, value);
     }
 
     public Collection<CacheInvalidationCallback> getCacheInvalidations(final TenantKey key) {
@@ -168,7 +164,7 @@ public class TenantCacheInvalidation {
             }
 
             final List<TenantBroadcastModelDao> entries = broadcastDao.getLatestEntriesFrom(parent.getLatestRecordIdProcessed().get());
-            for (TenantBroadcastModelDao cur : entries) {
+            for (final TenantBroadcastModelDao cur : entries) {
                 if (parent.isStopped()) {
                     return;
                 }
@@ -218,12 +214,9 @@ public class TenantCacheInvalidation {
         }
 
         private TenantKeyAndCookie extractTenantKeyAndCookie(final String key) {
-            final TenantKey tenantKey = Iterables.tryFind(ImmutableList.copyOf(TenantKey.values()), new Predicate<TenantKey>() {
-                @Override
-                public boolean apply(final TenantKey input) {
-                    return key.startsWith(input.toString());
-                }
-            }).orNull();
+            final TenantKey tenantKey = Arrays.stream(TenantKey.values())
+                    .filter(input -> key.startsWith(input.toString()))
+                    .findFirst().orElse(null);
             if (tenantKey == null) {
                 return null;
             }

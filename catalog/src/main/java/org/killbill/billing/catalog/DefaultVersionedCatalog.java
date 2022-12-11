@@ -145,7 +145,7 @@ public class DefaultVersionedCatalog extends ValidatingConfig<DefaultVersionedCa
                 errors.add(new ValidationError(String.format("Catalog name '%s' is not consistent across versions ", c.getCatalogName()),
                                                DefaultVersionedCatalog.class, ""));
             }
-            errors.addAll(((StandaloneCatalog) c).validate((StandaloneCatalog) c, errors));
+            ((StandaloneCatalog) c).validate((StandaloneCatalog) c, errors);
         }
 
         validateUniformPlanShapeAcrossVersions(errors);

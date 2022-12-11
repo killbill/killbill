@@ -19,9 +19,10 @@
 package org.killbill.billing.jaxrs;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.client.model.Invoices;
 import org.killbill.billing.client.model.Tags;
@@ -29,12 +30,10 @@ import org.killbill.billing.client.model.gen.Account;
 import org.killbill.billing.client.model.gen.Invoice;
 import org.killbill.billing.client.model.gen.InvoicePayment;
 import org.killbill.billing.notification.plugin.api.ExtBusEventType;
+import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
 
 import static org.testng.Assert.assertEquals;
 
@@ -79,13 +78,10 @@ public class TestOverdue extends TestJaxrsBase {
         // Post external payments, paying the most recent invoice first: this is to avoid a race condition where
         // a refresh overdue notification kicks in after the first payment, which makes the account goes CLEAR and
         // triggers an AUTO_INVOICE_OFF tag removal (hence adjustment of the other invoices balance).
-        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, null, requestOptions);
-        final List<Invoice> mostRecentInvoiceFirst = Ordering.<Invoice>from(new Comparator<Invoice>() {
-            @Override
-            public int compare(final Invoice invoice1, final Invoice invoice2) {
-                return invoice1.getInvoiceDate().compareTo(invoice2.getInvoiceDate());
-            }
-        }).reverse().sortedCopy(invoicesForAccount);
+        final Invoices invoicesForAccount = accountApi.getInvoicesForAccount(accountJson.getAccountId(), null, null, false, false, false, true, null, AuditLevel.NONE, requestOptions);
+        final List<Invoice> mostRecentInvoiceFirst = invoicesForAccount.stream()
+                .sorted(Comparator.comparing(Invoice::getInvoiceDate).reversed())
+                .collect(Collectors.toUnmodifiableList());
         for (final Invoice invoice : mostRecentInvoiceFirst) {
             if (invoice.getBalance().compareTo(BigDecimal.ZERO) > 0) {
                 final InvoicePayment invoicePayment = new InvoicePayment();
@@ -93,7 +89,7 @@ public class TestOverdue extends TestJaxrsBase {
                 invoicePayment.setAccountId(accountJson.getAccountId());
                 invoicePayment.setTargetInvoiceId(invoice.getInvoiceId());
                 callbackServlet.pushExpectedEvents(ExtBusEventType.INVOICE_PAYMENT_SUCCESS, ExtBusEventType.PAYMENT_SUCCESS);
-                invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, ImmutableList.of(), NULL_PLUGIN_PROPERTIES, requestOptions);
+                invoiceApi.createInstantPayment(invoice.getInvoiceId(), invoicePayment, true, Collections.emptyList(), NULL_PLUGIN_PROPERTIES, requestOptions);
                 callbackServlet.assertListenerStatus();
             }
         }
@@ -113,7 +109,7 @@ public class TestOverdue extends TestJaxrsBase {
         // Create an account without a payment method and assign a TEST tag
         final Account accountJson = createAccountNoPMBundleAndSubscription();
         callbackServlet.pushExpectedEvent(ExtBusEventType.TAG_CREATION);
-        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(ControlTagType.TEST.getId()), requestOptions);
+        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), List.of(ControlTagType.TEST.getId()), requestOptions);
         callbackServlet.assertListenerStatus();
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.TEST.getId());
 
@@ -160,7 +156,7 @@ public class TestOverdue extends TestJaxrsBase {
         // Create an account without a payment method and assign a TEST tag
         final Account accountJson = createAccountNoPMBundleAndSubscription();
         callbackServlet.pushExpectedEvent(ExtBusEventType.TAG_CREATION);
-        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(ControlTagType.TEST.getId()), requestOptions);
+        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), List.of(ControlTagType.TEST.getId()), requestOptions);
         callbackServlet.assertListenerStatus();
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.TEST.getId());
 

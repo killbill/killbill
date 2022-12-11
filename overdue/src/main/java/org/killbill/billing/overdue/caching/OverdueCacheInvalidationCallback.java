@@ -17,13 +17,13 @@
 
 package org.killbill.billing.overdue.caching;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.tenant.api.TenantInternalApi.CacheInvalidationCallback;
 import org.killbill.billing.tenant.api.TenantKV.TenantKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
 
 public class OverdueCacheInvalidationCallback implements CacheInvalidationCallback {
 

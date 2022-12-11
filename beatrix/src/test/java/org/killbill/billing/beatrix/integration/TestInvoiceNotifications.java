@@ -17,6 +17,7 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -31,11 +32,8 @@ import org.killbill.billing.catalog.api.ProductCategory;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestInvoiceNotifications extends TestIntegrationBase {
 
@@ -84,9 +82,9 @@ public class TestInvoiceNotifications extends TestIntegrationBase {
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial");
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", null, billingDate, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleKey", null, billingDate, false, true, Collections.emptyList(), callContext);
         busHandler.assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         // Move to the notification before the start date =>  2018, 2, 21
         addDaysAndCheckForCompletion(21, NextEvent.INVOICE_NOTIFICATION);

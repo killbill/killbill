@@ -19,6 +19,7 @@ package org.killbill.billing.usage;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.invoice.api.DryRunInfo;
@@ -26,5 +27,5 @@ import org.killbill.billing.usage.api.RawUsageRecord;
 
 public interface InternalUserApi {
 
-    public List<RawUsageRecord> getRawUsageForAccount(LocalDate stateDate, LocalDate endDate, DryRunInfo dryRunInfo, InternalTenantContext tenantContext);
+    public List<RawUsageRecord> getRawUsageForAccount(DateTime stateDate, DateTime endDate, DryRunInfo dryRunInfo, InternalTenantContext tenantContext);
 }

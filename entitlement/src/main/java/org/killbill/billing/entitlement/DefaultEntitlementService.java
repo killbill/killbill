@@ -22,7 +22,10 @@ package org.killbill.billing.entitlement;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.callcontext.InternalCallContext;
@@ -36,7 +39,6 @@ import org.killbill.billing.entitlement.engine.core.BlockingTransitionNotificati
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKey;
 import org.killbill.billing.entitlement.engine.core.EntitlementNotificationKeyAction;
 import org.killbill.billing.entitlement.engine.core.EntitlementUtils;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.LifecycleHandlerType;
 import org.killbill.billing.platform.api.LifecycleHandlerType.LifecycleLevel;
 import org.killbill.billing.util.callcontext.CallContext;
@@ -55,9 +57,6 @@ import org.killbill.notificationq.api.NotificationQueueService.NotificationQueue
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 public class DefaultEntitlementService implements EntitlementService {
 
@@ -131,7 +130,7 @@ public class DefaultEntitlementService implements EntitlementService {
     private void processEntitlementNotification(final EntitlementNotificationKey key, final InternalCallContext internalCallContext, final CallContext callContext) {
         final Entitlement entitlement;
         try {
-            entitlement = entitlementInternalApi.getEntitlementForId(key.getEntitlementId(), internalCallContext);
+            entitlement = entitlementInternalApi.getEntitlementForId(key.getEntitlementId(), false, internalCallContext);
         } catch (final EntitlementApiException e) {
             log.error("Error retrieving entitlementId='{}'", key.getEntitlementId(), e);
             return;
@@ -148,9 +147,9 @@ public class DefaultEntitlementService implements EntitlementService {
                 EntitlementNotificationKeyAction.CANCEL.equals(entitlementNotificationKeyAction)) {
                 blockAddOnsIfRequired(key, (DefaultEntitlement) entitlement, callContext, internalCallContext);
             } else if (EntitlementNotificationKeyAction.PAUSE.equals(entitlementNotificationKeyAction)) {
-                entitlementInternalApi.pause(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate()), ImmutableList.<PluginProperty>of(), internalCallContext);
+                entitlementInternalApi.pause(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate()), Collections.emptyList(), internalCallContext);
             } else if (EntitlementNotificationKeyAction.RESUME.equals(entitlementNotificationKeyAction)) {
-                entitlementInternalApi.resume(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate()), ImmutableList.<PluginProperty>of(), internalCallContext);
+                entitlementInternalApi.resume(key.getBundleId(), internalCallContext.toLocalDate(key.getEffectiveDate()), Collections.emptyList(), internalCallContext);
             }
         } catch (final EntitlementApiException e) {
             log.error("Error processing event for entitlementId='{}'", entitlement.getId(), e);

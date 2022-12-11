@@ -28,9 +28,8 @@ import org.killbill.billing.account.api.Account;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.api.TransactionStatus;
+import org.killbill.commons.utils.Joiner;
 import org.slf4j.Logger;
-
-import com.google.common.base.Joiner;
 
 public abstract class PaymentLoggingHelper {
 

@@ -22,31 +22,30 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.killbill.billing.catalog.api.CatalogEntity;
 
-import com.google.common.collect.Ordering;
-
 public class CatalogEntityCollection<T extends CatalogEntity> implements Collection<T>, Externalizable {
 
     private final Map<String, T> data;
 
     public CatalogEntityCollection() {
-        this.data = new TreeMap<String, T>(Ordering.<String>natural());
+        this.data = new TreeMap<String, T>(Comparator.naturalOrder());
     }
 
     public CatalogEntityCollection(final T[] entities) {
-        this.data = new TreeMap<String, T>(Ordering.<String>natural());
+        this.data = new TreeMap<String, T>(Comparator.naturalOrder());
         for (final T cur : entities) {
             addEntry(cur);
         }
     }
 
     public CatalogEntityCollection(final Iterable<T> entities) {
-        this.data = new TreeMap<String, T>(Ordering.<String>natural());
+        this.data = new TreeMap<String, T>(Comparator.naturalOrder());
         for (final T cur : entities) {
             addEntry(cur);
         }

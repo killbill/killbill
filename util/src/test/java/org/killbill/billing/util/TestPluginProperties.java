@@ -17,34 +17,33 @@
 
 package org.killbill.billing.util;
 
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.commons.utils.collect.Iterables;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
-
 public class TestPluginProperties extends UtilTestSuiteNoDB {
 
-    private final List<PluginProperty> pluginProperties1 = PluginProperties.buildPluginProperties(ImmutableMap.<String, Object>of("foo", "bar",
-                                                                                                                                  "baz", 12L));
-    private final List<PluginProperty> pluginProperties2 = PluginProperties.buildPluginProperties(ImmutableMap.<String, Object>of("foo", "override",
-                                                                                                                                  "baz2", "something else"));
+    private final List<PluginProperty> pluginProperties1 = PluginProperties.buildPluginProperties(mapOf("foo", "bar", "baz", 12L));
+    private final List<PluginProperty> pluginProperties2 = PluginProperties.buildPluginProperties(mapOf("foo", "override", "baz2", "something else"));
 
     @Test(groups = "fast")
     public void testMerge() throws Exception {
-        final List<PluginProperty> pluginPropertiesRaw = ImmutableList.<PluginProperty>copyOf(PluginProperties.merge(pluginProperties1, pluginProperties2));
+        final List<PluginProperty> pluginPropertiesRaw = Iterables
+                .toStream(PluginProperties.merge(pluginProperties1, pluginProperties2))
+                .collect(Collectors.toUnmodifiableList());
 
         final List<PluginProperty> pluginProperties = sort(pluginPropertiesRaw);
 
         Assert.assertEquals(pluginProperties.size(), 3);
         Assert.assertEquals(pluginProperties.get(0).getKey(), "baz");
-        Assert.assertEquals(pluginProperties.get(0).getValue(), (Long) 12L);
+        Assert.assertEquals(pluginProperties.get(0).getValue(), 12L);
         Assert.assertFalse(pluginProperties.get(0).getIsUpdatable());
         Assert.assertEquals(pluginProperties.get(1).getKey(), "baz2");
         Assert.assertEquals(pluginProperties.get(1).getValue(), "something else");
@@ -57,7 +56,7 @@ public class TestPluginProperties extends UtilTestSuiteNoDB {
     @Test(groups = "fast")
     public void testToMap() throws Exception {
         final Map<String, Object> properties = PluginProperties.toMap(pluginProperties1, pluginProperties2);
-        Assert.assertEquals(properties.get("baz"), (Long) 12L);
+        Assert.assertEquals(properties.get("baz"), 12L);
         Assert.assertEquals(properties.get("baz2"), "something else");
         Assert.assertEquals(properties.get("foo"), "override");
     }
@@ -65,7 +64,7 @@ public class TestPluginProperties extends UtilTestSuiteNoDB {
     @Test(groups = "fast")
     public void testToMapHandlesNull() throws Exception {
         final Map<String, Object> properties = PluginProperties.toMap(null, pluginProperties1, pluginProperties2, null);
-        Assert.assertEquals(properties.get("baz"), (Long) 12L);
+        Assert.assertEquals(properties.get("baz"), 12L);
         Assert.assertEquals(properties.get("baz2"), "something else");
         Assert.assertEquals(properties.get("foo"), "override");
     }
@@ -82,13 +81,17 @@ public class TestPluginProperties extends UtilTestSuiteNoDB {
     }
 
     private List<PluginProperty> sort(final Iterable<PluginProperty> pluginProperties) {
-        return Ordering.natural()
-                       .onResultOf(new Function<PluginProperty, String>() {
-                           @Override
-                           public String apply(final PluginProperty pluginProperty) {
-                               return pluginProperty.getKey();
-                           }
-                       })
-                       .immutableSortedCopy(pluginProperties);
+        return Iterables.toStream(pluginProperties)
+                .sorted(Comparator.comparing(PluginProperty::getKey))
+                .collect(Collectors.toUnmodifiableList());
     }
+
+    /** needed because {@link Map#of()} not maintaining insertion order. */
+    private static <K, V> Map<K, V> mapOf(final K k1, final V v1, final K k2, final V v2) {
+        final Map<K, V> result = new LinkedHashMap<>();
+        result.put(k1, v1);
+        result.put(k2, v2);
+        return result;
+    }
+
 }

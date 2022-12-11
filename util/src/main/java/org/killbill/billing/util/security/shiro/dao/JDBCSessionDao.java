@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -33,22 +32,26 @@ import org.apache.shiro.session.Session;
 import org.apache.shiro.session.mgt.eis.CachingSessionDAO;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.entity.dao.DBRouter;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
+import org.killbill.commons.utils.cache.Cache;
+import org.killbill.commons.utils.cache.DefaultCache;
 import org.skife.jdbi.v2.IDBI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 
 public class JDBCSessionDao extends CachingSessionDAO {
 
+    private static final int CACHE_MAX_SIZE = 20;
+    private static final int CACHE_TIMEOUT_IN_SECONDS = 5;
+
     private static final Logger log = LoggerFactory.getLogger(JDBCSessionDao.class);
 
     private final DBRouter<JDBCSessionSqlDao> dbRouter;
 
-    private final Cache<Serializable, Boolean> noUpdateSessionsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.SECONDS).build();
+    @VisibleForTesting
+    final Cache<Serializable, Boolean> noUpdateSessionsCache = new DefaultCache<>(CACHE_MAX_SIZE, CACHE_TIMEOUT_IN_SECONDS, DefaultCache.noCacheLoader());
 
     @Inject
     public JDBCSessionDao(final IDBI dbi, @Named(MAIN_RO_IDBI_NAMED) final IDBI roDbi) {
@@ -118,8 +121,9 @@ public class JDBCSessionDao extends CachingSessionDAO {
         doUpdate(session);
     }
 
-    private boolean shouldUpdateSession(final Session session) {
-        return noUpdateSessionsCache.getIfPresent(session.getId()) == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
+    @VisibleForTesting
+    boolean shouldUpdateSession(final Session session) {
+        return noUpdateSessionsCache.get(session.getId()) == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
     }
 
     private Session toSession(final SessionModelDao sessionModelDao) {

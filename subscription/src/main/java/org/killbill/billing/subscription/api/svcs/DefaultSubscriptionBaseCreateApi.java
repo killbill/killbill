@@ -114,7 +114,7 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
         SubscriptionBaseBundle bundle = getBundleWithSanity(subscriptionBaseWithAddOnsSpecifier, catalog, callContext, context);
 
         final DateTime billingRequestedDateRaw = (subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate() != null) ?
-                                                 context.toUTCDateTime(subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate()) : context.getCreatedDate();
+                                                 subscriptionBaseWithAddOnsSpecifier.getBillingEffectiveDate() : context.getCreatedDate();
 
         final SubscriptionBase baseSubscription;
         final DateTime billingRequestedDate;
@@ -268,7 +268,8 @@ public class DefaultSubscriptionBaseCreateApi extends SubscriptionApiBase {
                                             .setBundleStartDate(bundleStartDate)
                                             .setAlignStartDate(effectiveDate)
                                             .setMigrated(isMigrated)
-                                            .setSubscriptionBCD(entitlement.getBillCycleDay()));
+                                            .setSubscriptionBCD(entitlement.getBillCycleDay())
+                                            .setQuantity(entitlement.getQuantity()));
             subscriptions.add(subscription);
         }
 

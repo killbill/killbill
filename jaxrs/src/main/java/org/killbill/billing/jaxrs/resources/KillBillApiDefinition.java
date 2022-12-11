@@ -17,13 +17,13 @@
 
 package org.killbill.billing.jaxrs.resources;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.util.api.AuditLevel;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.config.ReaderListener;
 import io.swagger.models.Model;
@@ -119,12 +119,9 @@ public class KillBillApiDefinition implements ReaderListener {
                     if (qp.getName().equals(QUERY_AUDIT)) {
                         qp.setRequired(false);
                         qp.setType("string");
-                        final List<String> values = ImmutableList.copyOf(Iterables.transform(ImmutableList.<AuditLevel>copyOf(AuditLevel.values()), new Function<AuditLevel, String>() {
-                            @Override
-                            public String apply(final AuditLevel input) {
-                                return input.toString();
-                            }
-                        }));
+                        final List<String> values = Arrays.stream(AuditLevel.values())
+                                .map(Objects::toString)
+                                .collect(Collectors.toUnmodifiableList());
                         qp.setEnum(values);
                     } else if (qp.getName().equals(JaxrsResource.QUERY_REQUESTED_DT) ||
                                qp.getName().equals(JaxrsResource.QUERY_ENTITLEMENT_REQUESTED_DT) ||

@@ -17,19 +17,19 @@
 
 package org.killbill.billing.util.glue;
 
+import java.util.Map;
+
 import javax.cache.Cache;
 import javax.cache.CacheManager;
 import javax.cache.configuration.Configuration;
 
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricFilter;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.jcache.JCacheGaugeSet;
-import com.google.common.base.Preconditions;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.billing.util.metrics.JCacheGaugeFactory;
+
+import org.killbill.commons.metrics.api.Gauge;
+import org.killbill.commons.metrics.api.MetricRegistry;
 
 abstract class CacheProviderBase {
-
-    private static final String PROP_METRIC_REG_JCACHE_STATISTICS = "jcache.statistics";
 
     private final MetricRegistry metricRegistry;
 
@@ -44,13 +44,8 @@ abstract class CacheProviderBase {
         final Cache cache = cacheManager.createCache(cacheName, configuration);
         Preconditions.checkState(!cache.isClosed(), "Cache '%s' should not be closed", cacheName);
 
-        // Re-create the metrics to support dynamically created caches (e.g. for Shiro)
-        metricRegistry.removeMatching(new MetricFilter() {
-            @Override
-            public boolean matches(final String name, final Metric metric) {
-                return name != null && name.startsWith(PROP_METRIC_REG_JCACHE_STATISTICS);
-            }
-        });
-        metricRegistry.register(PROP_METRIC_REG_JCACHE_STATISTICS, new JCacheGaugeSet());
+        // Create the metrics for this cache
+        final Map<String, Gauge<Object>> metrics = JCacheGaugeFactory.forCache(cacheName);
+        metrics.keySet().forEach(metricName -> metricRegistry.gauge(metricName, metrics.get(metricName)));
     }
 }

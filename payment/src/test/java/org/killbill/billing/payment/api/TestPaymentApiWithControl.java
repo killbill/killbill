@@ -18,8 +18,11 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -42,9 +45,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-
 public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
     private static final PaymentOptions PAYMENT_OPTIONS = new PaymentOptions() {
@@ -55,7 +55,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.of(TestPaymentControlPluginApi.PLUGIN_NAME);
+            return List.of(TestPaymentControlPluginApi.PLUGIN_NAME);
         }
     };
 
@@ -98,11 +98,11 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
     @Test(groups = "slow")
     public void testCreateAuthWithControl() throws PaymentApiException {
         final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(account, null, MockPaymentProviderPlugin.PLUGIN_NAME, false, paymentMethodInfo, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethod(account, null, MockPaymentProviderPlugin.PLUGIN_NAME, false, paymentMethodInfo, Collections.emptyList(), callContext);
         testPaymentControlPluginApi.setNewPaymentMethodId(newPaymentMethodId);
 
         final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, null, null, BigDecimal.TEN, Currency.USD, null,null, UUID.randomUUID().toString(),
-                                                                                 ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                                                 Collections.emptyList(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getPaymentMethodId(), newPaymentMethodId);
 
         verifyOnSuccess(payment.getId(),
@@ -117,7 +117,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
     public void testCreateAuthPendingWithControlCompleteWithControl() throws PaymentApiException {
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.TEN;
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
                                                                            paymentTransactionExternalKey, pendingPluginProperties, PAYMENT_OPTIONS, callContext);
@@ -134,7 +134,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                         Currency.USD);
 
         payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), null,payment.getExternalKey(),
-                                                                   payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                                   payment.getTransactions().get(0).getExternalKey(), Collections.emptyList(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
@@ -153,7 +153,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
     public void testCreateAuthUnknownWithControlCompleteWithControl() throws PaymentApiException {
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.TEN;
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
 
         Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
                                                                            paymentTransactionExternalKey, pendingPluginProperties, PAYMENT_OPTIONS, callContext);
@@ -171,7 +171,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         try {
             payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), null,payment.getExternalKey(),
-                                                                       payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                                       payment.getTransactions().get(0).getExternalKey(), Collections.emptyList(), PAYMENT_OPTIONS, callContext);
             Assert.fail();
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
@@ -196,14 +196,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
-                                                         UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+                                                         UUID.randomUUID().toString(), Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey,
                                                              pendingPluginProperties, PAYMENT_OPTIONS, callContext);
@@ -223,7 +223,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                                               Currency.USD);
 
         payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey,
-                                                             ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                             Collections.emptyList(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getTransactions().size(), 2);
@@ -245,14 +245,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
-                                                         UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+                                                         UUID.randomUUID().toString(), Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
 
         payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey,
                                                              pendingPluginProperties, PAYMENT_OPTIONS, callContext);
@@ -298,7 +298,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
     public void testCreateAuthPendingWithControlCompleteNoControl() throws PaymentApiException {
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.TEN;
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
                                                                            paymentTransactionExternalKey, pendingPluginProperties, PAYMENT_OPTIONS, callContext);
@@ -315,7 +315,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                         Currency.USD);
 
         payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), null,payment.getExternalKey(),
-                                                 payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), callContext);
+                                                 payment.getTransactions().get(0).getExternalKey(), Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
@@ -327,7 +327,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
     public void testCreateAuthUnknownWithControlCompleteNoControl() throws PaymentApiException {
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.TEN;
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
 
         Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
                                                                            paymentTransactionExternalKey, pendingPluginProperties, PAYMENT_OPTIONS, callContext);
@@ -345,7 +345,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         try {
             payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), null,payment.getExternalKey(),
-                                                     payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), callContext);
+                                                     payment.getTransactions().get(0).getExternalKey(), Collections.emptyList(), callContext);
             Assert.fail();
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
@@ -363,14 +363,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
-                                                         UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+                                                         UUID.randomUUID().toString(), Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey,
                                                              pendingPluginProperties, PAYMENT_OPTIONS, callContext);
@@ -389,7 +389,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                                               requestedAmount,
                                               Currency.USD);
 
-        payment = paymentApi.createCapture(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+        payment = paymentApi.createCapture(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey, Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getTransactions().size(), 2);
@@ -404,14 +404,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
-                                                         UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+                                                         UUID.randomUUID().toString(), Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
 
         payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey,
                                                              pendingPluginProperties, PAYMENT_OPTIONS, callContext);
@@ -431,7 +431,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                                               Currency.USD);
 
         try {
-            payment = paymentApi.createCapture(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+            payment = paymentApi.createCapture(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey, Collections.emptyList(), callContext);
             Assert.fail();
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
@@ -449,7 +449,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
     public void testCreateAuthPendingNoControlCompleteWithControl() throws PaymentApiException {
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.TEN;
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
                                                          paymentTransactionExternalKey, pendingPluginProperties, callContext);
@@ -459,7 +459,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
         payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), null,payment.getExternalKey(),
-                                                                   payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                                   payment.getTransactions().get(0).getExternalKey(), Collections.emptyList(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
@@ -478,7 +478,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
     public void testCreateAuthUnknownNoControlCompleteWithControl() throws PaymentApiException {
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
         final BigDecimal requestedAmount = BigDecimal.TEN;
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
                                                          paymentTransactionExternalKey, pendingPluginProperties, callContext);
@@ -489,7 +489,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         try {
             payment = paymentApi.createAuthorizationWithPaymentControl(account, payment.getPaymentMethodId(), payment.getId(), requestedAmount, payment.getCurrency(), null,payment.getExternalKey(),
-                                                                       payment.getTransactions().get(0).getExternalKey(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                                       payment.getTransactions().get(0).getExternalKey(), Collections.emptyList(), PAYMENT_OPTIONS, callContext);
             Assert.fail();
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
@@ -514,14 +514,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
-                                                         UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+                                                         UUID.randomUUID().toString(), Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.PENDING, false));
 
         payment = paymentApi.createCapture(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey, pendingPluginProperties, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
@@ -533,7 +533,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         Assert.assertEquals(payment.getTransactions().get(1).getExternalKey(), paymentTransactionExternalKey);
 
         payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey,
-                                                             ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                             Collections.emptyList(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getTransactions().size(), 2);
@@ -555,14 +555,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
-                                                         UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+                                                         UUID.randomUUID().toString(), Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
         final String paymentTransactionExternalKey = UUID.randomUUID().toString();
-        final Iterable<PluginProperty> pendingPluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
+        final Iterable<PluginProperty> pendingPluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, PaymentPluginStatus.UNDEFINED, false));
 
         payment = paymentApi.createCapture(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey, pendingPluginProperties, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
@@ -575,7 +575,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
 
         try {
             payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), requestedAmount, payment.getCurrency(), null,paymentTransactionExternalKey,
-                                                                 ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                                 Collections.emptyList(), PAYMENT_OPTIONS, callContext);
             Assert.fail();
         } catch (final PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_INVALID_OPERATION.getCode());
@@ -601,7 +601,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
-                                                                           UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                                           UUID.randomUUID().toString(), Collections.emptyList(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
@@ -614,7 +614,7 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
                         requestedAmount,
                         Currency.USD);
 
-        payment = paymentApi.createCapture(account, payment.getId(), payment.getAuthAmount(), payment.getCurrency(), null,UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+        payment = paymentApi.createCapture(account, payment.getId(), payment.getAuthAmount(), payment.getCurrency(), null,UUID.randomUUID().toString(), Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getTransactions().size(), 2);
@@ -627,14 +627,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
         final BigDecimal requestedAmount = BigDecimal.TEN;
 
         Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, Currency.USD, null,UUID.randomUUID().toString(),
-                                                         UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+                                                         UUID.randomUUID().toString(), Collections.emptyList(), callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(BigDecimal.ZERO), 0);
         Assert.assertEquals(payment.getTransactions().size(), 1);
         Assert.assertNull(((DefaultPaymentTransaction) payment.getTransactions().get(0)).getAttemptId());
 
         payment = paymentApi.createCaptureWithPaymentControl(account, payment.getId(), payment.getAuthAmount(), payment.getCurrency(), null,UUID.randomUUID().toString(),
-                                                             ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                             Collections.emptyList(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getAuthAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getCapturedAmount().compareTo(requestedAmount), 0);
         Assert.assertEquals(payment.getTransactions().size(), 2);
@@ -653,14 +653,14 @@ public class TestPaymentApiWithControl extends PaymentTestSuiteWithEmbeddedDB {
     public void testAddPaymentMethodWithControl() throws PaymentApiException {
         final PaymentMethodPlugin paymentMethodInfo = new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, null);
         testPaymentControlPluginApi.setNewPaymentMethodName(MockPaymentProviderPlugin.PLUGIN_NAME);
-        final UUID newPaymentMethodId = paymentApi.addPaymentMethodWithPaymentControl(account, null, "SomeDummyValueToBeChanged", false, paymentMethodInfo, ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+        final UUID newPaymentMethodId = paymentApi.addPaymentMethodWithPaymentControl(account, null, "SomeDummyValueToBeChanged", false, paymentMethodInfo, Collections.emptyList(), PAYMENT_OPTIONS, callContext);
 
 
-        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(newPaymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(newPaymentMethodId, false, false, Collections.emptyList(), callContext);
         Assert.assertEquals(paymentMethod.getPluginName(), MockPaymentProviderPlugin.PLUGIN_NAME);
 
         final Payment payment = paymentApi.createAuthorizationWithPaymentControl(account, newPaymentMethodId, null, BigDecimal.TEN, Currency.USD, null,UUID.randomUUID().toString(),
-                                                                                 UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), PAYMENT_OPTIONS, callContext);
+                                                                                 UUID.randomUUID().toString(), Collections.emptyList(), PAYMENT_OPTIONS, callContext);
         Assert.assertEquals(payment.getPaymentMethodId(), newPaymentMethodId);
 
         verifyOnSuccess(payment.getId(),

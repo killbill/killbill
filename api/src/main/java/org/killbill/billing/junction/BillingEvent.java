@@ -45,6 +45,8 @@ public interface BillingEvent extends Comparable<BillingEvent> {
      */
     int getBillCycleDayLocal();
 
+    int getQuantity();
+
     /**
      * @return the BillingAlignment for this transition
      */

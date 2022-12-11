@@ -18,10 +18,12 @@
 
 package org.killbill.billing.entitlement.block;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
@@ -36,9 +38,6 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseInternalApi;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseBundle;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 public class DefaultBlockingChecker implements BlockingChecker {
 
@@ -194,7 +193,7 @@ public class DefaultBlockingChecker implements BlockingChecker {
         if (blockableId != null) {
             blockableState = dao.getBlockingState(blockableId, blockingStateType, upToDate, context);
         } else {
-            blockableState = ImmutableList.<BlockingState>of();
+            blockableState = Collections.emptyList();
         }
         return statelessBlockingChecker.getBlockedState(blockableState);
     }

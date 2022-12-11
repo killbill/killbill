@@ -28,12 +28,11 @@ import javax.cache.CacheManager;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.config.definition.CacheConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 // Build the abstraction layer between JCache and Kill Bill
 public class CacheControllerDispatcherProvider implements Provider<CacheControllerDispatcher> {

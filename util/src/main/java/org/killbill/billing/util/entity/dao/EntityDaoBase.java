@@ -40,9 +40,7 @@ import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.Ordering;
 import org.killbill.billing.util.entity.dao.DefaultPaginationSqlDaoHelper.PaginationIteratorBuilder;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
@@ -115,7 +113,7 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
 
 
     protected EntitySqlDaoTransactionWrapper<M> getCreateEntitySqlDaoTransactionWrapper(final M entity, final InternalCallContext context) {
-        final EntitySqlDaoTransactionWrapper<List<M>> entityWrapperList = getCreateEntitySqlDaoTransactionWrapper(ImmutableList.<M>of(entity), context);
+        final EntitySqlDaoTransactionWrapper<List<M>> entityWrapperList = getCreateEntitySqlDaoTransactionWrapper(List.of(entity), context);
         return new EntitySqlDaoTransactionWrapper<M>() {
             @Override
             public M inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
@@ -221,6 +219,26 @@ public abstract class EntityDaoBase<M extends EntityModelDao<E>, E extends Entit
                                               offset,
                                               limit,
                                               context);
+    }
+
+    @Override
+    public Pagination<M> getByAccountRecordId(final Long offset, final Long limit, final InternalTenantContext context) {
+        return paginationHelper.getPaginationWithAccountRecordId(realSqlDao,
+                                                                 new PaginationIteratorBuilder<M, E, EntitySqlDao<M, E>>() {
+                                                                     @Override
+                                                                     public Long getCount(final EntitySqlDao<M, E> sqlDao, final InternalTenantContext context) {
+                                                                         // Only need to compute it once, because no search filter has been applied (see DefaultPaginationSqlDaoHelper)
+                                                                         return null;
+                                                                     }
+
+                                                                     @Override
+                                                                     public Iterator<M> build(final EntitySqlDao<M, E> sqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
+                                                                         return sqlDao.getByAccountRecordIdWithPaginationEnabled(offset, limit, context); //TODO_1792: Is this correct or is a new query (similar to EntitySqlDao.sql.stg#Line147 but with accountRecordId) required? This query does not take into account the ordering parameter
+                                                                     }
+                                                                 },
+                                                                 offset,
+                                                                 limit,
+                                                                 context);
     }
 
     @Override

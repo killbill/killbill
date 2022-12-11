@@ -28,22 +28,20 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.killbill.billing.BillingExceptionBase;
 import org.killbill.billing.callcontext.InternalCallContext;
 import org.killbill.billing.callcontext.InternalTenantContext;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Entity;
 import org.killbill.billing.util.entity.Pagination;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U extends BillingExceptionBase> implements EntityDao<M, E, U> {
 
     protected static final AtomicLong autoIncrement = new AtomicLong(1);
 
-    protected final Map<UUID, Map<Long, M>> entities = new HashMap<UUID, Map<Long, M>>();
+    protected final Map<UUID, Map<Long, M>> entities = new HashMap<>();
 
     @Override
     public void create(final M entity, final InternalCallContext context) throws U {
-        entities.put(entity.getId(), ImmutableMap.<Long, M>of(autoIncrement.incrementAndGet(), entity));
+        entities.put(entity.getId(), Map.of(autoIncrement.incrementAndGet(), entity));
     }
 
     protected Long getRecordId(final UUID id, final InternalTenantContext context) {
@@ -67,7 +65,7 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
 
     @Override
     public Pagination<M> getAll(final InternalTenantContext context) {
-        final List<M> result = new ArrayList<M>();
+        final List<M> result = new ArrayList<>();
         for (final Map<Long, M> cur : entities.values()) {
             result.add(cur.values().iterator().next());
         }
@@ -76,7 +74,7 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
 
     @Override
     public Pagination<M> get(final Long offset, final Long limit, final InternalTenantContext context) {
-        return DefaultPagination.<M>build(offset, limit, ImmutableList.<M>copyOf(getAll(context)));
+        return DefaultPagination.<M>build(offset, limit, Iterables.toUnmodifiableList(getAll(context)));
     }
 
     @Override
@@ -95,5 +93,14 @@ public class MockEntityDaoBase<M extends EntityModelDao<E>, E extends Entity, U 
 
     @Override
     public void test(final InternalTenantContext context) {
+    }
+
+    @Override
+    public Pagination<M> getByAccountRecordId(final Long offset, final Long limit, final InternalTenantContext context) {
+        final List<M> result = new ArrayList<>();
+        for (final Map<Long, M> cur : entities.values()) {
+            result.add(cur.get(context.getAccountRecordId()));
+        }
+        return new DefaultPagination<M>(Long.valueOf(result.size()), result.iterator());
     }
 }

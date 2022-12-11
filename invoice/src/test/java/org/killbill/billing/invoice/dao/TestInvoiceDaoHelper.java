@@ -18,6 +18,7 @@
 package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +35,7 @@ import org.killbill.billing.invoice.InvoiceTestSuiteWithEmbeddedDB;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.model.DefaultInvoice;
@@ -50,9 +52,6 @@ import org.killbill.billing.util.tag.Tag;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-
 
 //
 // Regression suite to verify that our optimized logic to either read invoice state per account recordId or per invoiceId
@@ -93,7 +92,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         inputInvoice.addInvoiceItem(invoiceItem);
         invoiceUtil.createInvoice(inputInvoice, internalAccountContext);
 
-        final List<Tag> tags = ImmutableList.of();
+        final List<Tag> tags = Collections.emptyList();
         final InvoiceModelDao invoice1 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
         populateChildrenByInvoiceId(invoice1, tags);
 
@@ -113,10 +112,10 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         inputInvoice.addInvoiceItem(invoiceItem);
         invoiceUtil.createInvoice(inputInvoice, internalAccountContext);
 
-        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), inputInvoice.getId(), new DateTime(), BigDecimal.TEN, Currency.USD, Currency.USD, null, true);
+        final InvoicePayment payment = new DefaultInvoicePayment(InvoicePaymentType.ATTEMPT, UUID.randomUUID(), inputInvoice.getId(), new DateTime(), BigDecimal.TEN, Currency.USD, Currency.USD, null, InvoicePaymentStatus.SUCCESS);
         invoiceUtil.createPayment(payment, internalAccountContext);
 
-        final List<Tag> tags = ImmutableList.of();
+        final List<Tag> tags = Collections.emptyList();
         final InvoiceModelDao invoice1 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
         populateChildrenByInvoiceId(invoice1, tags);
 
@@ -144,10 +143,10 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         invoiceUtil.createInvoice(inputInvoice, internalAccountContext);
 
         final InvoiceTrackingSqlDao trackingSqlDao = dbi.onDemand(InvoiceTrackingSqlDao.class);
-        trackingSqlDao.create(ImmutableList.of(new InvoiceTrackingModelDao("12345", inputInvoice.getId(), UUID.randomUUID(), "foo", today)), internalAccountContext);
+        trackingSqlDao.create(List.of(new InvoiceTrackingModelDao("12345", inputInvoice.getId(), UUID.randomUUID(), "foo", today)), internalAccountContext);
 
 
-        final List<Tag> tags = ImmutableList.of();
+        final List<Tag> tags = Collections.emptyList();
         final InvoiceModelDao invoice1 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
         populateChildrenByInvoiceId(invoice1, tags);
 
@@ -173,7 +172,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
 
         invoiceUtil.createInvoice(inputInvoice, internalAccountContext);
 
-        final List<Tag> tags = ImmutableList.of(new DefaultControlTag(ControlTagType.WRITTEN_OFF, ObjectType.INVOICE, inputInvoice.getId(), clock.getUTCNow()));
+        final List<Tag> tags = List.of(new DefaultControlTag(ControlTagType.WRITTEN_OFF, ObjectType.INVOICE, inputInvoice.getId(), clock.getUTCNow()));
         final InvoiceModelDao invoice1 = getRawInvoice(inputInvoice.getId(), internalAccountContext);
         populateChildrenByInvoiceId(invoice1, tags);
 
@@ -213,7 +212,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
 
         ////
 
-        final List<Tag> tags = ImmutableList.of();
+        final List<Tag> tags = Collections.emptyList();
         final InvoiceModelDao invoice1 = getRawInvoice(childInvoice.getId(), internalAccountContext);
         populateChildrenByInvoiceId(invoice1, tags);
 
@@ -232,7 +231,7 @@ public class TestInvoiceDaoHelper extends InvoiceTestSuiteWithEmbeddedDB {
         transactionalSqlDao.execute(true, new EntitySqlDaoTransactionWrapper<Void>() {
             @Override
             public Void inTransaction(final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory) throws Exception {
-                invoiceDaoHelper.populateChildren(ImmutableList.of(invoice), tags, entitySqlDaoWrapperFactory, internalAccountContext);
+                invoiceDaoHelper.populateChildren(List.of(invoice), tags, entitySqlDaoWrapperFactory, internalAccountContext);
                 return null;
             }
         });

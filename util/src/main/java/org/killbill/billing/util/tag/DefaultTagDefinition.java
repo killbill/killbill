@@ -16,8 +16,10 @@
 
 package org.killbill.billing.util.tag;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -28,15 +30,8 @@ import org.killbill.billing.util.tag.dao.TagDefinitionModelDao;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class DefaultTagDefinition extends EntityBase implements TagDefinition {
-
-    private static final Splitter SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
 
     private final String name;
     private final String description;
@@ -146,7 +141,7 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
 
     private static List<ObjectType> getApplicableObjectTypes(final UUID id, final Boolean isControlTag) {
         if (!isControlTag) {
-            return ImmutableList.<ObjectType>copyOf(ObjectType.values());
+            return List.of(ObjectType.values());
         }
         for (final ControlTagType cur : ControlTagType.values()) {
             if (cur.getId().equals(id)) {
@@ -158,15 +153,13 @@ public class DefaultTagDefinition extends EntityBase implements TagDefinition {
 
     private static List<ObjectType> toObjectTypes(@Nullable final String input) {
         if (input == null) {
-            return ImmutableList.copyOf(ObjectType.values());
+            return List.of(ObjectType.values());
         }
 
-        return ImmutableList.copyOf(Iterables.transform(SPLITTER.splitToList(input), new Function<String, ObjectType>() {
-            @Override
-            public ObjectType apply(final String input) {
-                return ObjectType.valueOf(input);
-            }
-        }));
+        return Arrays.stream(input.split(","))
+                     .filter(s -> !s.isEmpty())
+                     .map(s -> ObjectType.valueOf(s.trim()))
+                     .collect(Collectors.toUnmodifiableList());
     }
 
 }

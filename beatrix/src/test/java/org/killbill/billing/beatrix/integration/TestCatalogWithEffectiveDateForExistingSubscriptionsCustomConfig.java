@@ -18,6 +18,7 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,12 +34,9 @@ import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -108,7 +106,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("liability-monthly-no-trial");
 
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -150,7 +148,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("liability-monthly-no-trial");
 
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 15, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // We expect the C2 price right away as we started after C2 effDt
@@ -184,7 +182,7 @@ public class TestCatalogWithEffectiveDateForExistingSubscriptionsCustomConfig ex
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("collision-monthly-no-trial");
 
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 5, null, null), null, null, null, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, 5, null, null, null), null, null, null, false, false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         Invoice curInvoice = invoiceChecker.checkInvoice(account.getId(), 1, callContext,

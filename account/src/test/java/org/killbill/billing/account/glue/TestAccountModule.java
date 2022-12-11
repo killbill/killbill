@@ -28,6 +28,8 @@ import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.CustomFieldModule;
 import org.killbill.billing.util.glue.EventModule;
 import org.killbill.billing.util.glue.TagStoreModule;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 
 public class TestAccountModule extends DefaultAccountModule {
 
@@ -49,5 +51,7 @@ public class TestAccountModule extends DefaultAccountModule {
         // Needed for Audit
         install(new MockSubscriptionModule(configSource));
         install(new TagStoreModule(configSource));
+
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }

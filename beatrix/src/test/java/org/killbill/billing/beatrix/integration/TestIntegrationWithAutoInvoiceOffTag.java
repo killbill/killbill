@@ -76,25 +76,25 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK);
         assertNotNull(bpEntitlement);
 
-        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        Collection<Invoice> invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 0);
 
         clock.addDays(10); // DAY 10 still in trial
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 0);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE);
         clock.addDays(30); // DAY 40 out of trial
         assertListenerStatus();
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 0);
 
         remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
 
-        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
     }
 
@@ -109,7 +109,7 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertNotNull(bpEntitlement);
         assertEquals(accountUserApi.getAccountById(account.getId(), callContext).getBillCycleDayLocal(), (Integer) 30);
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 1);
         assertEquals(invoices.get(0).getInvoiceItems().size(), 1);
         assertEquals(invoices.get(0).getTargetDate(), new LocalDate(2018, 11, 30));
@@ -120,22 +120,22 @@ public class TestIntegrationWithAutoInvoiceOffTag extends TestIntegrationBase {
         assertEquals(clock.getUTCNow().toDateTime(account.getTimeZone()).toLocalDate(), new LocalDate(2018, 12, 29));
         // Still in trial
         assertListenerStatus();
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getName(), "shotgun-monthly-trial");
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getName(), "shotgun-monthly-trial");
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         // Adding / Removing AUTO_INVOICING_OFF shouldn't have any impact
         add_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT);
         remove_AUTO_INVOICING_OFF_Tag(account.getId(), ObjectType.ACCOUNT, NextEvent.NULL_INVOICE);
 
         assertListenerStatus();
-        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), callContext).getLastActivePhase().getName(), "shotgun-monthly-trial");
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(entitlementApi.getEntitlementForId(bpEntitlement.getId(), false, callContext).getLastActivePhase().getName(), "shotgun-monthly-trial");
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         busHandler.pushExpectedEvents(NextEvent.PHASE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.setTime(new DateTime(2018, 12, 31, 0, 25, 0, 0));
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 2);
         assertEquals(invoices.get(1).getTargetDate(), new LocalDate(2018, 12, 30));
         assertEquals(invoices.get(1).getInvoiceItems().get(0).getStartDate(), new LocalDate(2018, 12, 30));

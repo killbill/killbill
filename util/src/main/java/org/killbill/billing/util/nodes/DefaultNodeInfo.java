@@ -18,22 +18,17 @@
 package org.killbill.billing.util.nodes;
 
 import java.util.Set;
-
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginInfo;
 import org.killbill.billing.osgi.api.DefaultPluginsInfoApi.DefaultPluginServiceInfo;
 import org.killbill.billing.osgi.api.PluginInfo;
 import org.killbill.billing.osgi.api.PluginServiceInfo;
-import org.killbill.billing.osgi.api.PluginState;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.nodes.json.NodeInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginInfoModelJson;
 import org.killbill.billing.util.nodes.json.PluginServiceInfoModelJson;
-
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public class DefaultNodeInfo implements NodeInfo {
 
@@ -80,23 +75,21 @@ public class DefaultNodeInfo implements NodeInfo {
     }
 
     private static Set<PluginServiceInfo> toPluginServiceInfo(final Set<PluginServiceInfoModelJson> services) {
-        return ImmutableSet.<PluginServiceInfo>copyOf(Iterables.transform(services, new Function<PluginServiceInfoModelJson, PluginServiceInfo>() {
-
-            @Nullable
-            @Override
-            public PluginServiceInfo apply(final PluginServiceInfoModelJson input) {
-                return new DefaultPluginServiceInfo(input.getServiceTypeName(), input.getRegistrationName());
-            }
-        }));
+        return services.stream()
+                .map(input -> new DefaultPluginServiceInfo(input.getServiceTypeName(), input.getRegistrationName()))
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     private static Iterable<PluginInfo> toPluginInfo(final Iterable<PluginInfoModelJson> plugins) {
-        return Iterables.transform(plugins, new Function<PluginInfoModelJson, PluginInfo>() {
-            @Override
-            public PluginInfo apply(final PluginInfoModelJson input) {
-                return new DefaultPluginInfo(input.getPluginKey(), input.getBundleSymbolicName(), input.getPluginName(), input.getVersion(), input.getState(), input.isSelectedForStart(), toPluginServiceInfo(input.getServices()));
-            }
-        });
+        return Iterables.toStream(plugins)
+                        .map(DefaultNodeInfo::newDefaultPluginInfo)
+                        .collect(Collectors.toUnmodifiableList());
+    }
+
+    private static DefaultPluginInfo newDefaultPluginInfo(PluginInfoModelJson input) {
+        return new DefaultPluginInfo(input.getPluginKey(), input.getBundleSymbolicName(), input.getPluginName(),
+                                     input.getVersion(), input.getState(), input.isSelectedForStart(),
+                                     toPluginServiceInfo(input.getServices()));
     }
 
     @Override

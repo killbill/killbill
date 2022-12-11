@@ -16,7 +16,10 @@
 
 package org.killbill.billing.jaxrs.json;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -24,9 +27,7 @@ import org.killbill.billing.BillingExceptionBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+
 import io.swagger.annotations.ApiModel;
 
 // Doesn't extend JsonBase (no audit logs)
@@ -62,18 +63,15 @@ public class BillingExceptionJson {
              exception.getLocalizedMessage(),
              exception.getCause() == null ? null : exception.getCause().getClass().getName(),
              exception.getCause() == null ? null : exception.getCause().getLocalizedMessage(),
-             !withStackTrace ? ImmutableList.<StackTraceElementJson>of() :
-             Lists.<StackTraceElement, StackTraceElementJson>transform(ImmutableList.<StackTraceElement>copyOf(exception.getStackTrace()),
-                                                                       new Function<StackTraceElement, StackTraceElementJson>() {
-                                                                           @Override
-                                                                           public StackTraceElementJson apply(final StackTraceElement input) {
-                                                                               return new StackTraceElementJson(input.getClassName(),
-                                                                                                                input.getFileName(),
-                                                                                                                input.getLineNumber(),
-                                                                                                                input.getMethodName(),
-                                                                                                                input.isNativeMethod());
-                                                                           }
-                                                                       }));
+             withStackTrace ? Arrays.stream(exception.getStackTrace())
+                                    .map(input -> new StackTraceElementJson(input.getClassName(),
+                                                                            input.getFileName(),
+                                                                            input.getLineNumber(),
+                                                                            input.getMethodName(),
+                                                                            input.isNativeMethod()))
+                                    .collect(Collectors.toUnmodifiableList())
+                            : Collections.emptyList()
+            );
     }
 
     public String getClassName() {

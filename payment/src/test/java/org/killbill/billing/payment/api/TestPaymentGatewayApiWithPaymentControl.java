@@ -18,8 +18,11 @@
 package org.killbill.billing.payment.api;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
@@ -35,14 +38,10 @@ import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.retry.DefaultFailureCallResult;
 import org.killbill.billing.payment.retry.DefaultOnSuccessPaymentControlResult;
 import org.killbill.billing.payment.retry.DefaultPriorPaymentControlResult;
+import org.killbill.commons.utils.collect.Iterables;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoDB {
 
@@ -73,7 +72,7 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
             @Override
             public List<String> getPaymentControlPluginNames() {
-                return ImmutableList.of(TestPaymentGatewayApiControlPlugin.PLUGIN_NAME, TestPaymentGatewayApiValidationPlugin.VALIDATION_PLUGIN_NAME);
+                return List.of(TestPaymentGatewayApiControlPlugin.PLUGIN_NAME, TestPaymentGatewayApiValidationPlugin.VALIDATION_PLUGIN_NAME);
             }
         };
 
@@ -151,7 +150,7 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
         validationPlugin.setExpectedProperties(expectedProperties);
 
         // Set a null paymentMethodId to verify the plugin will successfully override it
-        paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, null, ImmutableList.<PluginProperty>of(), initialProperties, paymentOptions, callContext);
+        paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, null, Collections.emptyList(), initialProperties, paymentOptions, callContext);
 
     }
 
@@ -161,7 +160,7 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
         // Set a random UUID to verify the plugin will successfully override it
         try {
-            paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, null, ImmutableList.<PluginProperty>of(), ImmutableList.<PluginProperty>of(), paymentOptions, callContext);
+            paymentGatewayApi.buildFormDescriptorWithPaymentControl(account, null, Collections.emptyList(), Collections.emptyList(), paymentOptions, callContext);
             Assert.fail();
         } catch (PaymentApiException e) {
             Assert.assertEquals(e.getCode(), ErrorCode.PAYMENT_PLUGIN_API_ABORTED.getCode());
@@ -177,8 +176,8 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
         private Iterable<PluginProperty> expectedProperties;
 
         public TestPaymentGatewayApiValidationPlugin() {
-            this.expectedPriorCallProperties = ImmutableList.of();
-            this.expectedProperties = ImmutableList.of();
+            this.expectedPriorCallProperties = Collections.emptyList();
+            this.expectedProperties = Collections.emptyList();
         }
 
         public void setExpectedProperties(final Iterable<PluginProperty> expectedProperties) {
@@ -211,13 +210,9 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
             Assert.assertEquals(Iterables.size(properties), Iterables.size(expected), "Got " + Iterables.size(properties) + "properties" + ", expected " + Iterables.size(expected));
 
             for (final PluginProperty curExpected : expected) {
-                Assert.assertTrue(Iterables.any(properties, new Predicate<PluginProperty>() {
-                    @Override
-                    public boolean apply(final PluginProperty input) {
-                        return input.getKey().equals(curExpected.getKey()) && input.getValue().equals(curExpected.getValue());
-
-                    }
-                }), "Cannot find expected property" + curExpected.getKey());
+                final boolean isTestPassed = Iterables.toStream(properties)
+                        .anyMatch(input -> input.getKey().equals(curExpected.getKey()) && input.getValue().equals(curExpected.getValue()));
+                Assert.assertTrue(isTestPassed, "Cannot find expected property" + curExpected.getKey());
             }
         }
 
@@ -237,10 +232,10 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
 
         public TestPaymentGatewayApiControlPlugin() {
             this.aborted = false;
-            this.newPriorCallProperties = ImmutableList.of();
-            this.removedPriorCallProperties = ImmutableList.of();
-            this.newOnResultProperties = ImmutableList.of();
-            this.removedOnResultProperties = ImmutableList.of();
+            this.newPriorCallProperties = Collections.emptyList();
+            this.removedPriorCallProperties = Collections.emptyList();
+            this.newOnResultProperties = Collections.emptyList();
+            this.removedOnResultProperties = Collections.emptyList();
         }
 
         public void setAborted(final boolean aborted) {
@@ -273,18 +268,13 @@ public class TestPaymentGatewayApiWithPaymentControl extends PaymentTestSuiteNoD
         }
 
         private Iterable<PluginProperty> getAdjustedProperties(final Iterable<PluginProperty> input, final Iterable<PluginProperty> newProperties, final Iterable<PluginProperty> removedProperties) {
-            final Iterable<PluginProperty> filtered = Iterables.filter(input, new Predicate<PluginProperty>() {
-                @Override
-                public boolean apply(final PluginProperty p) {
-                    final boolean toBeRemoved = Iterables.any(removedProperties, new Predicate<PluginProperty>() {
-                        @Override
-                        public boolean apply(final PluginProperty a) {
-                            return a.getKey().equals(p.getKey()) && a.getValue().equals(p.getValue());
-                        }
-                    });
-                    return !toBeRemoved;
-                }
-            });
+            final Iterable<PluginProperty> filtered = Iterables.toStream(input)
+                    .filter(p -> {
+                        final boolean toBeRemoved = Iterables.toStream(removedProperties)
+                                                             .anyMatch(a -> a.getKey().equals(p.getKey()) && a.getValue().equals(p.getValue()));
+                        return !toBeRemoved;
+                    })
+                    .collect(Collectors.toUnmodifiableList());
             return Iterables.concat(filtered, newProperties);
         }
     }

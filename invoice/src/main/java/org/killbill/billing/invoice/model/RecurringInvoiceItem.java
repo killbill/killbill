@@ -19,7 +19,7 @@
 package org.killbill.billing.invoice.model;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -29,8 +29,6 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.util.UUIDs;
-
-import com.google.common.base.MoreObjects;
 
 public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
 
@@ -53,7 +51,7 @@ public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
                                 final String productName, final String planName, final String phaseName, final DateTime catalogEffectiveDate,
                                 final String prettyProductName, final String prettyPlanName, final String prettyPhaseName,
                                 @Nullable final String description, final LocalDate startDate, final LocalDate endDate,
-                                final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final Integer quantity, @Nullable final String itemDetails) {
+                                final BigDecimal amount, final BigDecimal rate, final Currency currency, @Nullable final BigDecimal quantity, @Nullable final String itemDetails) {
         super(id, createdDate, invoiceId, accountId, bundleId, subscriptionId, description, productName, planName, phaseName, null, catalogEffectiveDate, prettyProductName, prettyPlanName, prettyPhaseName, null, startDate, endDate, amount, rate, currency, null, quantity, itemDetails, InvoiceItemType.RECURRING);
 
     }
@@ -90,7 +88,7 @@ public class RecurringInvoiceItem extends InvoiceItemCatalogBase {
     @Override
     public String getDescription() {
         final String resolvedPhaseName = getPrettyPhaseName() != null ? getPrettyPhaseName() : getPhaseName();
-        return MoreObjects.firstNonNull(description, resolvedPhaseName);
+        return Objects.requireNonNullElse(description, resolvedPhaseName);
     }
 
     @Override

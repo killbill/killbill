@@ -29,11 +29,11 @@ import org.killbill.billing.account.dao.AccountModelDao;
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.events.AccountCreationInternalEvent;
 import org.killbill.billing.events.BusEventBase;
+import org.killbill.commons.utils.Strings;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Strings;
 
 public class DefaultAccountCreationEvent extends BusEventBase implements AccountCreationInternalEvent {
 

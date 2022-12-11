@@ -17,8 +17,8 @@
 
 package org.killbill.billing.jaxrs;
 
-import java.io.File;
-import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,11 +32,9 @@ import org.killbill.billing.overdue.api.OverdueConfig;
 import org.killbill.billing.util.cache.Cachable.CacheType;
 import org.killbill.billing.util.cache.CacheController;
 import org.killbill.billing.util.config.tenant.PerTenantConfig;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -110,8 +108,7 @@ public class TestCache extends TestJaxrsBase {
         // Uploading the test catalog using the new Tenant created before
         callbackServlet.pushExpectedEvent(ExtBusEventType.TENANT_CONFIG_CHANGE);
         final String catalogPath = Resources.getResource("SpyCarAdvanced.xml").getPath();
-        final File catalogFile = new File(catalogPath);
-        final String body = Files.toString(catalogFile, Charset.forName("UTF-8"));
+        final String body = Files.readString(Path.of(catalogPath));
         catalogApi.uploadCatalogXml(body, requestOptions);
         callbackServlet.assertListenerStatus();
 

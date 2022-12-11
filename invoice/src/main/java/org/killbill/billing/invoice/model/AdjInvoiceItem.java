@@ -44,7 +44,7 @@ public abstract class AdjInvoiceItem extends InvoiceItemBase {
 
     AdjInvoiceItem(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId,
                    final LocalDate startDate, final LocalDate endDate, @Nullable final String description,
-                   final BigDecimal amount, @Nullable final BigDecimal rate, final Currency currency, @Nullable final UUID reversingId, @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+                   final BigDecimal amount, @Nullable final BigDecimal rate, final Currency currency, @Nullable final UUID reversingId, @Nullable final BigDecimal quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
         super(id, createdDate, invoiceId, accountId, null, null, description, startDate, endDate, amount, rate, currency, reversingId, quantity, itemDetails, invoiceItemType);
     }
 

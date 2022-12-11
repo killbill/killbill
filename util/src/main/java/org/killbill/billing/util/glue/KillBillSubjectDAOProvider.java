@@ -17,11 +17,11 @@
 
 package org.killbill.billing.util.glue;
 
+import javax.inject.Provider;
+
 import org.apache.shiro.mgt.SessionStorageEvaluator;
 import org.apache.shiro.mgt.SubjectDAO;
 import org.apache.shiro.subject.Subject;
-
-import com.google.inject.Provider;
 
 // See org.killbill.billing.server.modules.KillBillWebSubjectDAOProvider for the web version
 public class KillBillSubjectDAOProvider implements Provider<SubjectDAO> {

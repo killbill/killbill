@@ -20,6 +20,7 @@ package org.killbill.billing.beatrix.integration;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +35,6 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.api.UsagePriceOverride;
 import org.killbill.billing.entitlement.api.DefaultEntitlement;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
@@ -44,20 +44,14 @@ import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.invoice.model.CreditAdjInvoiceItem;
 import org.killbill.billing.invoice.model.ExternalChargeInvoiceItem;
 import org.killbill.billing.payment.api.Payment;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBase;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 public class TestIntegrationInvoice extends TestIntegrationBase {
-
 
     @Test(groups = "slow")
     public void testWithUserCreditDeletion() throws Exception {
@@ -92,18 +86,15 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         // Add the 1000.00 credit
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), "some description", new BigDecimal("1000.00"), account.getCurrency(), null);
-        final List<InvoiceItem> creditItems = invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.of(inputCredit), true, null, callContext);
+        final List<InvoiceItem> creditItems = invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         Assert.assertEquals(creditItems.size(), 1);
         final InvoiceItem creditItem = creditItems.get(0);
         final Invoice creditInvoice = invoiceUserApi.getInvoice(creditItem.getInvoiceId(), callContext);
-        final InvoiceItem cbaGenItem = Iterables.tryFind(creditInvoice.getInvoiceItems(), new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem invoiceItem) {
-                return invoiceItem.getInvoiceItemType() == InvoiceItemType.CBA_ADJ;
-            }
-        }).orNull();
+        final InvoiceItem cbaGenItem = creditInvoice.getInvoiceItems().stream()
+                .filter(invoiceItem -> invoiceItem.getInvoiceItemType() == InvoiceItemType.CBA_ADJ)
+                .findFirst().orElse(null);
         Assert.assertNotNull(cbaGenItem);
 
 
@@ -112,7 +103,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         clock.addMonths(1);
         assertListenerStatus();
 
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         assertEquals(invoices.size(), 4);
 
         // Verify credit has been used on 2 previous invoices and we still have some left
@@ -157,7 +148,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE_ADJUSTMENT);
         final InvoiceItem inputCredit = new CreditAdjInvoiceItem(null, account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), "some description", new BigDecimal("300"), account.getCurrency(), null);
-        invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), ImmutableList.of(inputCredit), true, null, callContext);
+        invoiceUserApi.insertCredits(account.getId(), new LocalDate(clock.getUTCNow(), account.getTimeZone()), List.of(inputCredit), true, null, callContext);
         assertListenerStatus();
 
         final BigDecimal accountBalance2 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
@@ -175,7 +166,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final BigDecimal accountBalance3 = invoiceUserApi.getAccountBalance(account.getId(), callContext);
         assertTrue(accountBalance3.compareTo(BigDecimal.ZERO) == 0);
 
-        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final List<Payment> payments = paymentApi.getAccountPayments(account.getId(), false, false, Collections.emptyList(), callContext);
         assertEquals(payments.size(), 1);
 
         final Payment payment = payments.get(0);
@@ -206,7 +197,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         clock.addDays(30);
         assertListenerStatus();
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         invoiceChecker.checkInvoice(invoices.get(1).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 
@@ -228,7 +219,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         clock.addMonths(1);
         assertListenerStatus();
-        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
 
         invoiceChecker.checkInvoice(invoices.get(2).getId(), callContext, expectedDraftInvoices);
         invoiceChecker.checkInvoice(invoices.get(3).getId(), callContext, expectedInvoices);
@@ -254,7 +245,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2017-02-28
@@ -287,11 +278,11 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
 
         // Price override of $0
         final List<PlanPhasePriceOverride> overrides = new ArrayList<PlanPhasePriceOverride>();
-        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, ImmutableList.<UsagePriceOverride>of()));
+        overrides.add(new DefaultPlanPhasePriceOverride("blowdart-monthly-notrial-evergreen", account.getCurrency(), null, BigDecimal.ZERO, Collections.emptyList()));
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec, null, null, overrides), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec, null, null, null, overrides), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 1, 1), new LocalDate(2017, 2, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
@@ -305,7 +296,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2017, 2, 1), new LocalDate(2017, 3, 1), InvoiceItemType.RECURRING, BigDecimal.ZERO));
 
         // Do the change mid-month so the repair triggers the bug in https://github.com/killbill/killbill/issues/783
-        entitlement.changePlanWithDate( new DefaultEntitlementSpecifier(spec), new LocalDate("2017-02-15"), ImmutableList.<PluginProperty>of(), callContext);
+        entitlement.changePlanWithDate( new DefaultEntitlementSpecifier(spec), new LocalDate("2017-02-15"), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // 2017-02-15
@@ -366,7 +357,7 @@ public class TestIntegrationInvoice extends TestIntegrationBase {
         final List<ExpectedInvoiceItemCheck> expectedInvoices = new ArrayList<ExpectedInvoiceItemCheck>();
         expectedInvoices.add(new ExpectedInvoiceItemCheck(chargeEffectiveDate, chargeEffectiveDate, InvoiceItemType.EXTERNAL_CHARGE, BigDecimal.TEN));
 
-        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         invoiceChecker.checkInvoice(invoices.get(0).getId(), callContext, expectedInvoices);
         expectedInvoices.clear();
 

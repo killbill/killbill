@@ -19,12 +19,11 @@ package org.killbill.billing.overdue.applicator;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.killbill.commons.eventbus.Subscribe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.killbill.billing.events.OverdueChangeInternalEvent;
-
-import com.google.common.eventbus.Subscribe;
 
 public class OverdueBusListenerTester {
 

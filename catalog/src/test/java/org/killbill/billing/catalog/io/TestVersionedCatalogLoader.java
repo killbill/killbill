@@ -24,19 +24,17 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.catalog.CatalogTestSuiteNoDB;
-import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
+import org.killbill.commons.utils.io.Resources;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
 
 public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
 
@@ -156,9 +154,9 @@ public class TestVersionedCatalogLoader extends CatalogTestSuiteNoDB {
     @Test(groups = "fast")
     public void testLoadCatalogFromExternalFile() throws CatalogApiException, IOException, URISyntaxException {
         final File originFile = new File(Resources.getResource("org/killbill/billing/catalog/SpyCarBasic.xml").toURI());
-        final File destinationFile = new File(Files.createTempDir().toString() + "/SpyCarBasicRelocated.xml");
+        final File destinationFile = Files.createTempFile(null, "SpyCarBasicRelocated.xml").toFile();
         destinationFile.deleteOnExit();
-        Files.copy(originFile, destinationFile);
+        Files.copy(originFile.toPath(), destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         final VersionedCatalog c = loader.loadDefaultCatalog(destinationFile.toURI().toString());
         Assert.assertEquals(c.getCatalogName(), "SpyCarBasic");
     }

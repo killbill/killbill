@@ -18,6 +18,7 @@
 
 package org.killbill.billing.payment.core;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,11 +34,9 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWithEmbeddedDB {
 
-    private static final ImmutableList<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+    private static final List<PluginProperty> PLUGIN_PROPERTIES = Collections.emptyList();
 
     @BeforeMethod(groups = "slow")
     public void beforeMethod() throws Exception {
@@ -57,7 +56,7 @@ public class TestPaymentMethodProcessorRefreshWithDB extends PaymentTestSuiteWit
 
         // Add new payment in plugin directly
         final UUID newPmId = UUID.randomUUID();
-        getPluginApi().addPaymentMethod(account.getId(), newPmId, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, ImmutableList.<PluginProperty>of()), false, PLUGIN_PROPERTIES, callContext);
+        getPluginApi().addPaymentMethod(account.getId(), newPmId, new DefaultNoOpPaymentMethodPlugin(UUID.randomUUID().toString(), false, Collections.emptyList()), false, PLUGIN_PROPERTIES, callContext);
 
         // Verify that the refresh does indeed show 2 PMs
         final List<PaymentMethod> methods = paymentMethodProcessor.refreshPaymentMethods(MockPaymentProviderPlugin.PLUGIN_NAME, account, PLUGIN_PROPERTIES, callContext, internalCallContext);

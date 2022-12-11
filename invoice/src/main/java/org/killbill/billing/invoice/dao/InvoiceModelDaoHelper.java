@@ -17,15 +17,14 @@
 package org.killbill.billing.invoice.dao;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
 import org.killbill.billing.invoice.calculator.InvoiceCalculatorUtils;
 import org.killbill.billing.invoice.model.DefaultInvoicePayment;
 import org.killbill.billing.invoice.model.InvoiceItemFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 
 public class InvoiceModelDaoHelper {
 
@@ -37,38 +36,28 @@ public class InvoiceModelDaoHelper {
             return BigDecimal.ZERO;
         }
 
-        return InvoiceCalculatorUtils.computeRawInvoiceBalance(invoiceModelDao.getCurrency(),
-                                                               Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
-                                                                   @Override
-                                                                   public InvoiceItem apply(final InvoiceItemModelDao input) {
-                                                                       return InvoiceItemFactory.fromModelDao(input);
-                                                                   }
-                                                               }),
-                                                               Iterables.transform(invoiceModelDao.getInvoicePayments(), new Function<InvoicePaymentModelDao, InvoicePayment>() {
-                                                                   @Override
-                                                                   public InvoicePayment apply(final InvoicePaymentModelDao input) {
-                                                                       return new DefaultInvoicePayment(input);
-                                                                   }
-                                                               }));
+        final Iterable<InvoiceItem> invoiceItems = mapInvoiceItemModelDaoToInvoiceItem(invoiceModelDao.getInvoiceItems());
+
+        final Iterable<InvoicePayment> invoicePayments = invoiceModelDao.getInvoicePayments().stream()
+                .map(DefaultInvoicePayment::new)
+                .collect(Collectors.toUnmodifiableList());
+
+        return InvoiceCalculatorUtils.computeRawInvoiceBalance(invoiceModelDao.getCurrency(), invoiceItems, invoicePayments);
     }
 
     public static BigDecimal getCBAAmount(final InvoiceModelDao invoiceModelDao) {
-        return InvoiceCalculatorUtils.computeInvoiceAmountCredited(invoiceModelDao.getCurrency(),
-                                                                   Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
-                                                                       @Override
-                                                                       public InvoiceItem apply(final InvoiceItemModelDao input) {
-                                                                           return InvoiceItemFactory.fromModelDao(input);
-                                                                       }
-                                                                   }));
+        final Iterable<InvoiceItem> invoiceItems = mapInvoiceItemModelDaoToInvoiceItem(invoiceModelDao.getInvoiceItems());
+        return InvoiceCalculatorUtils.computeInvoiceAmountCredited(invoiceModelDao.getCurrency(), invoiceItems);
     }
 
     public static BigDecimal getAmountCharged(final InvoiceModelDao invoiceModelDao) {
-        return InvoiceCalculatorUtils.computeInvoiceAmountCharged(invoiceModelDao.getCurrency(),
-                                                            Iterables.transform(invoiceModelDao.getInvoiceItems(), new Function<InvoiceItemModelDao, InvoiceItem>() {
-                                                                @Override
-                                                                public InvoiceItem apply(final InvoiceItemModelDao input) {
-                                                                    return InvoiceItemFactory.fromModelDao(input);
-                                                                }
-                                                            }));
+        final Iterable<InvoiceItem> invoiceItems = mapInvoiceItemModelDaoToInvoiceItem(invoiceModelDao.getInvoiceItems());
+        return InvoiceCalculatorUtils.computeInvoiceAmountCharged(invoiceModelDao.getCurrency(), invoiceItems);
+    }
+
+    private static List<InvoiceItem> mapInvoiceItemModelDaoToInvoiceItem(final List<InvoiceItemModelDao> invoiceItems) {
+        return invoiceItems.stream()
+                .map(InvoiceItemFactory::fromModelDao)
+                .collect(Collectors.toUnmodifiableList());
     }
 }
