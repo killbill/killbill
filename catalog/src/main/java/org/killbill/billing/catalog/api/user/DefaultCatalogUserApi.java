@@ -20,9 +20,12 @@
 package org.killbill.billing.catalog.api.user;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -33,6 +36,7 @@ import org.joda.time.DateTime;
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.CatalogUpdater;
+import org.killbill.billing.catalog.DefaultCatalogValidation;
 import org.killbill.billing.catalog.DefaultVersionedCatalog;
 import org.killbill.billing.catalog.StandaloneCatalog;
 import org.killbill.billing.catalog.api.CatalogApiException;
@@ -40,6 +44,7 @@ import org.killbill.billing.catalog.api.CatalogService;
 import org.killbill.billing.catalog.api.CatalogUserApi;
 import org.killbill.billing.catalog.api.SimplePlanDescriptor;
 import org.killbill.billing.catalog.api.StaticCatalog;
+import org.killbill.billing.catalog.api.CatalogValidation;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.catalog.caching.CatalogCache;
 import org.killbill.billing.tenant.api.TenantApiException;
@@ -49,6 +54,7 @@ import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.clock.Clock;
+import org.killbill.xmlloader.ValidationError;
 import org.killbill.xmlloader.ValidationErrors;
 import org.killbill.xmlloader.ValidationException;
 import org.killbill.xmlloader.XMLLoader;
@@ -103,18 +109,7 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(callContext);
         try {
 
-            VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
-            if (versionedCatalog == null) {
-                // If this is the first version
-                versionedCatalog = new DefaultVersionedCatalog();
-            }
-            // Validation purpose:  Will throw if bad XML or catalog validation fails
-            final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
-            final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
-            final ValidationErrors errors = new ValidationErrors();
-            // Fix for https://github.com/killbill/killbill/issues/1481
-            ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
-            ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
+            final ValidationErrors errors = validateCatalogInternal(catalogXML, internalTenantContext);
             if (!errors.isEmpty()) {
                 // Bummer ValidationException CTOR is private to package...
                 //final ValidationException validationException = new ValidationException(errors);
@@ -127,31 +122,17 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
             catalogCache.clearCatalog(internalTenantContext);
         } catch (final TenantApiException e) {
             throw new CatalogApiException(e);
-        } catch (final ValidationException e) {
-            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-        } catch (final JAXBException e) {
-            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
-        } catch (final TransformerException e) {
-            throw new IllegalStateException(e);
-        } catch (final SAXException e) {
-            throw new IllegalStateException(e);
         }
     }
 
     @Override
-    public void validateCatalog(final String catalogXML, final CallContext context) throws CatalogApiException {
+    public CatalogValidation validateCatalog(final String catalogXML, final CallContext context) {
         final InternalTenantContext internalTenantContext = createInternalTenantContext(context);
-        try {
-            XMLLoader.getObjectFromStream(new ByteArrayInputStream(catalogXML.getBytes(StandardCharsets.UTF_8)), StandaloneCatalog.class);
-        } catch (final ValidationException e) {
-            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-        } catch (final JAXBException e) {
-            throw new CatalogApiException(e, ErrorCode.CAT_INVALID_FOR_TENANT, internalTenantContext.getTenantRecordId());
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
+        final ValidationErrors errors = validateCatalogInternal(catalogXML, internalTenantContext);
+        if (!errors.isEmpty()) {
+            logger.info("Failed to load new catalog version: " + errors.toString());
         }
+        return new DefaultCatalogValidation(errors);
     }
 
     @Override
@@ -224,5 +205,43 @@ public class DefaultCatalogUserApi implements CatalogUserApi {
         return internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(tenantContext);
     }
 
+    private ValidationErrors validateCatalogInternal(final String catalogXML, final InternalTenantContext internalTenantContext) {
+        final ValidationErrors errors = new ValidationErrors();
+        try {
+            VersionedCatalog versionedCatalog = catalogService.getFullCatalog(false, true, internalTenantContext);
 
+            //clone the catalog just to be safe, since the validation process adds the catalog to be validated to the versionedCatalog
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            final ObjectOutput out = new ObjectOutputStream(bos);
+            out.writeObject(versionedCatalog);
+            final ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+            final ObjectInputStream in = new ObjectInputStream(bis);
+            versionedCatalog = (VersionedCatalog) in.readObject();
+
+            if (versionedCatalog == null) {
+                versionedCatalog = new DefaultVersionedCatalog();
+            }
+            // Validation purpose:  Will throw if bad XML or catalog validation fails
+            final InputStream stream = new ByteArrayInputStream(catalogXML.getBytes());
+            final StaticCatalog newCatalogVersion = XMLLoader.getObjectFromStream(stream, StandaloneCatalog.class);
+
+            if (versionedCatalog.getCatalogName() != null && !versionedCatalog.getCatalogName().isEmpty() && !newCatalogVersion.getCatalogName().equals(versionedCatalog.getCatalogName())) {
+                errors.add(new ValidationError(String.format("Catalog name '%s' is different from existing catalog name '%s'", newCatalogVersion.getCatalogName(), versionedCatalog.getCatalogName()), StaticCatalog.class, ""));
+                return errors;
+            }
+
+            ((DefaultVersionedCatalog) versionedCatalog).add((StandaloneCatalog) newCatalogVersion);
+            ((DefaultVersionedCatalog) versionedCatalog).validate(null, errors);
+
+        } catch (final CatalogApiException e) {
+            errors.add(new ValidationError(e.getMessage(), DefaultVersionedCatalog.class, ""));
+        } catch (final ValidationException e) {
+            errors.addAll(e.getErrors());
+        } catch (final JAXBException e) {
+            errors.add(new ValidationError(e.getLinkedException() != null ? e.getLinkedException().getMessage() : e.getMessage(), DefaultVersionedCatalog.class, ""));
+        } catch (final TransformerException | IOException | SAXException | ClassNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+        return errors;
+    }
 }

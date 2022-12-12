@@ -46,12 +46,14 @@ public class TestEntitlementJsonWithEvents extends JaxrsTestSuiteNoDB {
         final String bundleExternalKey = UUID.randomUUID().toString();
         final String externalKey = UUID.randomUUID().toString();
         final DateTime effectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
+        final DateTime catalogEffectiveDate = DefaultClock.toUTCDateTime(new DateTime(DateTimeZone.UTC));
         final UUID eventId = UUID.randomUUID();
         final List<AuditLogJson> auditLogs = createAuditLogsJson(clock.getUTCNow());
 
         final EventSubscriptionJson newEvent = new EventSubscriptionJson(eventId,
                                                                          BillingPeriod.NO_BILLING_PERIOD,
                                                                          effectiveDate,
+                                                                         catalogEffectiveDate,
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),
                                                                          UUID.randomUUID().toString(),

@@ -79,6 +79,8 @@ public interface JaxrsResource {
     String QUERY_CALL_TIMEOUT = "callTimeoutSec";
     String QUERY_TARGET_DATE = "targetDate";
     String QUERY_BILLING_POLICY = "billingPolicy";
+
+    String QUERY_BCD_TRANSFER = "bcdTransfer";
     String QUERY_MIGRATED = "migrated";
     String QUERY_ENTITLEMENT_POLICY = "entitlementPolicy";
     String QUERY_SEARCH_OFFSET = "offset";

@@ -36,6 +36,8 @@ import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.bcd.BCDEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEvent;
+import org.killbill.billing.subscription.events.quantity.QuantityEvent;
+import org.killbill.billing.subscription.events.quantity.QuantityEventData;
 import org.killbill.billing.subscription.events.user.ApiEvent;
 import org.killbill.billing.subscription.events.user.ApiEventType;
 import org.killbill.clock.Clock;
@@ -77,6 +79,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
             Plan plan = null;
             String planPhaseName = null;
             Integer billCycleDayLocal = null;
+            Integer quantity = null;
 
             ApiEventType apiType = null;
             switch (cur.getType()) {
@@ -95,6 +98,11 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                     billCycleDayLocal = bcdEvent.getBillCycleDayLocal();
                     break;
 
+                case QUANTITY_UPDATE:
+                    final QuantityEvent quantityEvent = (QuantityEvent) cur;
+                    quantity = quantityEvent.getQuantity();
+                    break;
+
                 case API_USER:
                     final ApiEvent userEV = (ApiEvent) cur;
                     apiType = userEV.getApiEventType();
@@ -111,6 +119,7 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
             final String planNameWithClosure = plan != null ? plan.getName() : null;
             final String planPhaseNameWithClosure = planPhaseName;
             final Integer billCycleDayLocalWithClosure = billCycleDayLocal;
+            final Integer quantityWithClosure = quantity;
             final PlanPhaseSpecifier spec = new PlanPhaseSpecifier(planNameWithClosure, phaseType);
             result.add(new ExistingEvent() {
                 @Override
@@ -151,6 +160,11 @@ public class DefaultSubscriptionBaseTimeline implements SubscriptionBaseTimeline
                 @Override
                 public Integer getBillCycleDayLocal() {
                     return billCycleDayLocalWithClosure;
+                }
+
+                @Override
+                public Integer getQuantity() {
+                    return quantityWithClosure;
                 }
             });
 

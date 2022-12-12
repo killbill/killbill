@@ -43,6 +43,8 @@ import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.client.KillBillClientException;
 import org.killbill.billing.client.model.Catalogs;
 import org.killbill.billing.client.model.gen.Catalog;
+import org.killbill.billing.client.model.gen.CatalogValidation;
+import org.killbill.billing.client.model.gen.CatalogValidationError;
 import org.killbill.billing.client.model.gen.Plan;
 import org.killbill.billing.client.model.gen.PlanDetail;
 import org.killbill.billing.client.model.gen.Product;
@@ -291,5 +293,36 @@ public class TestCatalog extends TestJaxrsBase {
         Assert.assertNotEquals(catalogsJson.get(0).getProducts().get(1).getPlans().get(0).getRecurringBillingMode(), BillingMode.IN_ARREAR);
         Assert.assertNotEquals(catalogsJson.get(0).getProducts().get(2).getPlans().get(0).getRecurringBillingMode(), null);
 
+    }
+
+    @Test(groups = "slow")
+    public void testValidateCatalog() throws Exception {
+
+        //valid catalog
+        String body = getResourceBodyString("org/killbill/billing/server/SpyCarBasic.xml");
+        CatalogValidation catalogValidation = catalogApi.validateCatalogXml(body, requestOptions);
+        Assert.assertNotNull(catalogValidation);
+        List<CatalogValidationError> errors = catalogValidation.getCatalogValidationErrors();
+        Assert.assertNotNull(errors);
+        Assert.assertEquals(errors.size(), 0);
+
+        //valid catalog with existing catalog
+        uploadTenantCatalog("org/killbill/billing/server/SpyCarBasic.xml", false);
+        body = getResourceBodyString("org/killbill/billing/server/SpyCarBasic.xml");
+
+        catalogValidation = catalogApi.validateCatalogXml(body, requestOptions);
+        Assert.assertNotNull(catalogValidation);
+        errors = catalogValidation.getCatalogValidationErrors();
+        Assert.assertNotNull(errors);
+        Assert.assertEquals(errors.size(), 1);
+        Assert.assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
+
+        //validate same catalog again to ensure that it is not added to the cache at the time of validation
+        catalogValidation = catalogApi.validateCatalogXml(body, requestOptions);
+        Assert.assertNotNull(catalogValidation);
+        errors = catalogValidation.getCatalogValidationErrors();
+        Assert.assertNotNull(errors);
+        Assert.assertEquals(errors.size(), 1); //still 1, indicates that the catalog to be validated is validated only once
+        Assert.assertEquals(errors.get(0).getErrorDescription(), "Catalog effective date 'Fri Feb 08 00:00:00 GMT 2013' already exists for a previous version");
     }
 }

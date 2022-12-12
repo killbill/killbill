@@ -22,10 +22,10 @@
     <parent>
         <groupId>org.kill-bill.billing</groupId>
         <artifactId>killbill-oss-parent</artifactId>
-        <version>0.145.3-8ff3c94-SNAPSHOT</version>
+        <version>0.146.6</version>
     </parent>
     <artifactId>killbill</artifactId>
-    <version>0.23.0-SNAPSHOT</version>
+    <version>0.24.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>killbill</name>
     <description>Library for managing recurring subscriptions and the associated billing</description>
@@ -61,18 +61,18 @@
     <properties>
         <check.skip-dependency-versions>true</check.skip-dependency-versions>
         <check.spotbugs-exclude-filter-file>${main.basedir}/spotbugs-exclude.xml</check.spotbugs-exclude-filter-file>
+        <killbill.version>${project.version}</killbill.version>
         <main.basedir>${project.basedir}</main.basedir>
-        <killbill.version>${project.version}</killbill.version>
-        <killbill-api.version>0.54.0-bca18bb-SNAPSHOT</killbill-api.version>
-        <killbill-client.version>1.3.0-4594573-SNAPSHOT</killbill-client.version>
-        <killbill.version>${project.version}</killbill.version>
-        <killbill-commons.version>0.25.1-f0f7860-SNAPSHOT</killbill-commons.version>
-        <killbill-plugin-api.version>0.27.0-df83159-SNAPSHOT</killbill-plugin-api.version>
         <!-- Temporary until upgrade to 2.x -->
         <swagger.version>1.6.2</swagger.version>
     </properties>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-common</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
