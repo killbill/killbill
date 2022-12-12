@@ -1050,8 +1050,7 @@ public class DefaultInvoiceDao extends EntityDaoBase<InvoiceModelDao, Invoice, I
                     invoiceItemSqlDao.updateItemFields(creditItem.getId().toString(), adjustedCreditAmount, "Delete gen credit", null, context);
                     invoiceIds.add(invoice.getId());
                 } else /* System generated credit, e.g Repair invoice */ {
-                    // TODO Add missing error https://github.com/killbill/killbill/issues/1501
-                    throw new IllegalStateException("Cannot delete system generated credit");
+                    throw new InvoiceApiException(ErrorCode.INVOICE_CBA_DELETED, cbaItem.getId());
                 }
             }
             // renamed to 'invId' because: Variable 'invoiceId' is already defined in the scope
