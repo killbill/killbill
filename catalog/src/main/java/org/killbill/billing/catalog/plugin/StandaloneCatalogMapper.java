@@ -400,7 +400,7 @@ public class StandaloneCatalogMapper {
 
     private DefaultInternationalPrice toDefaultInternationalPrice(final InternationalPrice input) {
         DefaultInternationalPrice result = null;
-        if (input != null) {
+        if (input != null && input.getPrices() != null) {
             result = new DefaultInternationalPrice();
             result.setPrices(toDefaultPrices(List.of(input.getPrices())));
         }
