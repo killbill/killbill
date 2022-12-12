@@ -32,8 +32,6 @@ import org.killbill.billing.util.dao.CounterMappings;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestInvoiceItemSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
@@ -161,7 +159,7 @@ public class TestInvoiceItemSqlDao extends InvoiceTestSuiteWithEmbeddedDB {
                                                                     null, null, null, null, null, new LocalDate(), null, BigDecimal.ONE, null, Currency.USD, item4.getId());
         invoiceItemSqlDao.create(repair4, internalCallContext);
 
-        final Iterable<CounterMappings> repairedMapRes = invoiceItemSqlDao.getRepairMap(ImmutableList.of(invoice1.getId().toString(), invoice2.getId().toString(), invoice3.getId().toString(), invoice4.getId().toString()), internalCallContext);
+        final Iterable<CounterMappings> repairedMapRes = invoiceItemSqlDao.getRepairMap(List.of(invoice1.getId().toString(), invoice2.getId().toString(), invoice3.getId().toString(), invoice4.getId().toString()), internalCallContext);
         final Map<String, Integer> repairedMap = CounterMappings.toMap(repairedMapRes);
         Assert.assertEquals(repairedMap.size(), 2);
         Assert.assertEquals(repairedMap.get(invoice1.getId().toString()), Integer.valueOf(1));

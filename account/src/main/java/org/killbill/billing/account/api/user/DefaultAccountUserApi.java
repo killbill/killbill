@@ -22,6 +22,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -46,9 +48,6 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.NonEntityDao;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DefaultPaginationHelper.SourcePaginationBuilder;
-
-import com.google.common.base.Function;
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.entity.dao.DefaultPaginationHelper.getEntityPaginationNoException;
 
@@ -118,12 +117,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                                       return accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
-                                              new Function<AccountModelDao, Account>() {
-                                                  @Override
-                                                  public Account apply(final AccountModelDao accountModelDao) {
-                                                      return new DefaultAccount(accountModelDao);
-                                                  }
-                                              }
+                                              DefaultAccount::new
                                              );
     }
 
@@ -136,12 +130,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                                       return accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
-                                              new Function<AccountModelDao, Account>() {
-                                                  @Override
-                                                  public Account apply(final AccountModelDao accountModelDao) {
-                                                      return new DefaultAccount(accountModelDao);
-                                                  }
-                                              }
+                                              DefaultAccount::new
                                              );
     }
 

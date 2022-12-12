@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,7 +31,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
@@ -42,6 +46,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -84,6 +89,9 @@ import org.killbill.billing.payment.api.PaymentTransaction;
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.api.TransactionStatus;
 import org.killbill.billing.payment.api.TransactionType;
+import org.killbill.commons.utils.Joiner;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -96,6 +104,7 @@ import org.killbill.billing.util.audit.AuditLog;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.customfield.StringCustomField;
 import org.killbill.billing.util.entity.Entity;
@@ -109,17 +118,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public abstract class JaxRsResourceBase implements JaxrsResource {
 
@@ -189,11 +187,14 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         final boolean isBlockEntitlement = (json.isBlockEntitlement() != null && json.isBlockEntitlement());
         final boolean isBlockChange = (json.isBlockChange() != null && json.isBlockChange());
 
-        final LocalDate resolvedRequestedDate = toLocalDate(requestedDate);
         final BlockingState input = new DefaultBlockingState(blockableId, type, json.getStateName(), json.getService(), isBlockChange, isBlockEntitlement, isBlockBilling, null);
-        subscriptionApi.addBlockingState(input, resolvedRequestedDate, pluginProperties, callContext);
+        if (isDateTime(requestedDate)) {
+            subscriptionApi.addBlockingState(input, toDateTime(requestedDate), pluginProperties, callContext);
+        } else {
+            subscriptionApi.addBlockingState(input, toLocalDate(requestedDate), pluginProperties, callContext);
+        }
         return uriInfo != null ?
-               uriBuilder.buildResponse(uriInfo, AccountResource.class, "getBlockingStates", accountId, ImmutableMap.<String, String>of(QUERY_BLOCKING_STATE_TYPES, type.name()) , request) :
+               uriBuilder.buildResponse(uriInfo, AccountResource.class, "getBlockingStates", accountId, Map.of(QUERY_BLOCKING_STATE_TYPES, type.name()) , request) :
                null;
     }
 
@@ -231,12 +232,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected Collection<UUID> getTagDefinitionUUIDs(final List<String> tagList) {
-        return Collections2.transform(tagList, new Function<String, UUID>() {
-            @Override
-            public UUID apply(final String input) {
-                return UUID.fromString(input);
-            }
-        });
+        return tagList.stream().map(UUID::fromString).collect(Collectors.toList());
     }
 
     protected Response deleteTags(final UUID id,
@@ -299,32 +295,26 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
      * @return
      * @throws CustomFieldApiException
      */
-    protected Response deleteCustomFields(final UUID id,
-                                          final List<UUID> customFieldList,
-                                          final CallContext context) throws CustomFieldApiException {
-
+    protected Response deleteCustomFields(final UUID id, final List<UUID> customFieldList, final CallContext context) throws CustomFieldApiException {
         // Retrieve all the custom fields for the object
         final List<CustomField> fields = customFieldUserApi.getCustomFieldsForObject(id, getObjectType(), context);
 
         // Filter the proposed list to only keep the one that exist and indeed match our object
-        final Iterable inputIterable = Iterables.filter(fields, new Predicate<CustomField>() {
-            @Override
-            public boolean apply(final CustomField input) {
-                if (customFieldList.isEmpty()) {
-                    return true;
-                }
-                for (final UUID curId : customFieldList) {
-                    if (input.getId().equals(curId)) {
+        final List<CustomField> toRemove = fields.stream()
+                .filter(input -> {
+                    if (customFieldList == null || customFieldList.isEmpty()) {
                         return true;
                     }
-                }
-                return false;
-            }
-        });
+                    for (final UUID curId : customFieldList) {
+                        if (input.getId().equals(curId)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }).collect(Collectors.toUnmodifiableList());
 
-        if (inputIterable.iterator().hasNext()) {
-            final List<CustomField> input = ImmutableList.<CustomField>copyOf(inputIterable);
-            customFieldUserApi.removeCustomFields(input, context);
+        if (!toRemove.isEmpty()) {
+            customFieldUserApi.removeCustomFields(toRemove, context);
         }
         return Response.status(Status.NO_CONTENT).build();
     }
@@ -370,7 +360,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected void validatePaymentMethodForAccount(final UUID accountId, final UUID paymentMethodId, final CallContext callContext) throws PaymentApiException {
         if (paymentMethodId != null) {
-            final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(paymentMethodId, false, false, ImmutableList.<PluginProperty>of(), callContext);
+            final PaymentMethod paymentMethod = paymentApi.getPaymentMethodById(paymentMethodId, false, false, Collections.emptyList(), callContext);
             if (!paymentMethod.getAccountId().equals(accountId)) {
                 throw new PaymentApiException(ErrorCode.PAYMENT_NO_SUCH_PAYMENT_METHOD, paymentMethodId);
             }
@@ -444,28 +434,28 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected PaymentTransaction lookupPendingOrSuccessTransaction(final Payment initialPayment, @Nullable final UUID transactionId, @Nullable final String transactionExternalKey, @Nullable final TransactionType transactionType) throws PaymentApiException {
-        final Collection<PaymentTransaction> pendingTransaction = Collections2.filter(initialPayment.getTransactions(), new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                if (input.getTransactionStatus() != TransactionStatus.PENDING && input.getTransactionStatus() != TransactionStatus.SUCCESS) {
-                    return false;
-                }
-                if (transactionId != null && !transactionId.equals(input.getId())) {
-                    return false;
-                }
-                if (transactionExternalKey != null && !transactionExternalKey.equals(input.getExternalKey())) {
-                    return false;
-                }
-                if (transactionType != null && !transactionType.equals(input.getTransactionType())) {
-                    return false;
-                }
-                //
-                // If we were given a transactionId or a transactionExternalKey or a transactionType we checked there was a match;
-                // In the worst case, if we were given nothing, we return the PENDING transaction for that payment
-                //
-                return true;
-            }
-        });
+        final Collection<PaymentTransaction> pendingTransaction = initialPayment.getTransactions().stream()
+                .filter(input -> {
+                    if (input.getTransactionStatus() != TransactionStatus.PENDING && input.getTransactionStatus() != TransactionStatus.SUCCESS) {
+                        return false;
+                    }
+                    if (transactionId != null && !transactionId.equals(input.getId())) {
+                        return false;
+                    }
+                    if (transactionExternalKey != null && !transactionExternalKey.equals(input.getExternalKey())) {
+                        return false;
+                    }
+                    if (transactionType != null && !transactionType.equals(input.getTransactionType())) {
+                        return false;
+                    }
+                    //
+                    // If we were given a transactionId or a transactionExternalKey or a transactionType we checked there was a match;
+                    // In the worst case, if we were given nothing, we return the PENDING transaction for that payment
+                    //
+                    return true;
+                })
+                .collect(Collectors.toUnmodifiableList());
+
         switch (pendingTransaction.size()) {
             // Nothing: invalid input...
             case 0:
@@ -500,25 +490,27 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected LocalDate toLocalDateDefaultToday(final Account account, @Nullable final String inputDate, final TenantContext context) {
         // TODO Switch to cached normalized timezone when available
-        return MoreObjects.firstNonNull(toLocalDate(inputDate), clock.getToday(account.getTimeZone()));
+        return Objects.requireNonNullElse(toLocalDate(inputDate), clock.getToday(account.getTimeZone()));
     }
 
     // API for subscription and invoice generation: keep null, the lower layers will default to now()
     protected LocalDate toLocalDate(@Nullable final String inputDate) {
         return inputDate == null || inputDate.isEmpty() ? null : LocalDate.parse(inputDate, LOCAL_DATE_FORMATTER);
     }
+    
+    protected DateTime toDateTime(@Nullable final String inputDate) {
+        return inputDate == null || inputDate.isEmpty() ? null : DateTime.parse(inputDate, DATE_TIME_FORMATTER);
+    }  
+
+    protected boolean isDateTime(@Nullable final String inputDate) {
+    	return inputDate != null && inputDate.contains("T") ? true : false;
+    }
 
     protected Iterable<PluginProperty> extractPluginProperties(@Nullable final Iterable<PluginPropertyJson> pluginProperties) {
-        return pluginProperties != null ?
-               Iterables.<PluginPropertyJson, PluginProperty>transform(pluginProperties,
-                                                                       new Function<PluginPropertyJson, PluginProperty>() {
-                                                                           @Override
-                                                                           public PluginProperty apply(final PluginPropertyJson pluginPropertyJson) {
-                                                                               return pluginPropertyJson.toPluginProperty();
-                                                                           }
-                                                                       }
-                                                                      ) :
-               ImmutableList.<PluginProperty>of();
+        return pluginProperties != null ? Iterables.toStream(pluginProperties)
+                                                   .map(PluginPropertyJson::toPluginProperty)
+                                                   .collect(Collectors.toUnmodifiableList())
+                                        : Collections.emptyList();
 
     }
 
@@ -529,7 +521,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         }
 
         for (final String pluginProperty : pluginProperties) {
-            final List<String> property = ImmutableList.<String>copyOf(pluginProperty.split("="));
+            final List<String> property = List.of(pluginProperty.split("="));
             // Skip entries for which there is no value
             if (property.size() == 1) {
                 continue;
@@ -543,9 +535,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             }
             properties.add(new PluginProperty(key, value, false));
         }
-        for (final PluginProperty cur : additionalProperties) {
-            properties.add(cur);
-        }
+        Collections.addAll(properties, additionalProperties);
         return properties;
     }
 
@@ -602,7 +592,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
     }
 
     protected PaymentOptions createInvoicePaymentControlPluginApiPaymentOptions(final boolean isExternalPayment) {
-        return createControlPluginApiPaymentOptions(isExternalPayment, ImmutableList.<String>of());
+        return createControlPluginApiPaymentOptions(isExternalPayment, Collections.emptyList());
     }
 
     protected PaymentOptions createControlPluginApiPaymentOptions(@Nullable final List<String> paymentControlPluginNames) {
@@ -626,52 +616,45 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     protected Iterable<InvoiceItem> validateSanitizeAndTranformInputItems(final Currency accountCurrency, final Iterable<InvoiceItemJson> inputItems) throws InvoiceApiException {
         try {
-            final Iterable<InvoiceItemJson> sanitized = Iterables.transform(inputItems, new Function<InvoiceItemJson, InvoiceItemJson>() {
-                @Override
-                public InvoiceItemJson apply(final InvoiceItemJson input) {
-                    if (input.getCurrency() != null) {
-                        if (!input.getCurrency().equals(accountCurrency)) {
-                            throw new IllegalArgumentException(input.getCurrency().toString());
-                        }
-                        return input;
-                    } else {
-                        return new InvoiceItemJson(null,
-                                                   input.getInvoiceId(),
-                                                   input.getLinkedInvoiceItemId(),
-                                                   input.getAccountId(),
-                                                   input.getChildAccountId(),
-                                                   input.getBundleId(),
-                                                   input.getSubscriptionId(),
-                                                   input.getProductName(),
-                                                   input.getPlanName(),
-                                                   input.getPhaseName(),
-                                                   input.getUsageName(),
-                                                   input.getPrettyProductName(),
-                                                   input.getPrettyPlanName(),
-                                                   input.getPrettyPhaseName(),
-                                                   input.getPrettyUsageName(),
-                                                   input.getItemType(),
-                                                   input.getDescription(),
-                                                   input.getStartDate(),
-                                                   input.getEndDate(),
-                                                   input.getAmount(),
-                                                   input.getRate(),
-                                                   accountCurrency,
-                                                   input.getQuantity(),
-                                                   input.getItemDetails(),
-                                                   input.getCatalogEffectiveDate(),
-                                                   null,
-                                                   null);
-                    }
-                }
-            });
-
-            return Iterables.transform(sanitized, new Function<InvoiceItemJson, InvoiceItem>() {
-                @Override
-                public InvoiceItem apply(final InvoiceItemJson input) {
-                    return input.toInvoiceItem();
-                }
-            });
+            return Iterables.toStream(inputItems)
+                            .map(input -> {
+                                if (input.getCurrency() != null) {
+                                    if (!input.getCurrency().equals(accountCurrency)) {
+                                        throw new IllegalArgumentException(input.getCurrency().toString());
+                                    }
+                                    return input;
+                                } else {
+                                    return new InvoiceItemJson(null,
+                                                               input.getInvoiceId(),
+                                                               input.getLinkedInvoiceItemId(),
+                                                               input.getAccountId(),
+                                                               input.getChildAccountId(),
+                                                               input.getBundleId(),
+                                                               input.getSubscriptionId(),
+                                                               input.getProductName(),
+                                                               input.getPlanName(),
+                                                               input.getPhaseName(),
+                                                               input.getUsageName(),
+                                                               input.getPrettyProductName(),
+                                                               input.getPrettyPlanName(),
+                                                               input.getPrettyPhaseName(),
+                                                               input.getPrettyUsageName(),
+                                                               input.getItemType(),
+                                                               input.getDescription(),
+                                                               input.getStartDate(),
+                                                               input.getEndDate(),
+                                                               input.getAmount(),
+                                                               input.getRate(),
+                                                               accountCurrency,
+                                                               input.getQuantity(),
+                                                               input.getItemDetails(),
+                                                               input.getCatalogEffectiveDate(),
+                                                               null,
+                                                               null);
+                                }
+                            })
+                            .map(InvoiceItemJson::toInvoiceItem)
+                            .collect(Collectors.toUnmodifiableList());
         } catch (IllegalArgumentException e) {
             throw new InvoiceApiException(ErrorCode.CURRENCY_INVALID, accountCurrency, e.getMessage());
         }
@@ -679,26 +662,16 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
 
     public static Iterable<PaymentTransaction> getPaymentTransactions(final List<Payment> payments, final TransactionType transactionType) {
-        return Iterables.concat(Iterables.transform(payments, new Function<Payment, Iterable<PaymentTransaction>>() {
-            @Override
-            public Iterable<PaymentTransaction> apply(final Payment input) {
-                return Iterables.filter(input.getTransactions(), new Predicate<PaymentTransaction>() {
-                    @Override
-                    public boolean apply(final PaymentTransaction input) {
-                        return input.getTransactionType() == transactionType;
-                    }
-                });
-            }
-        }));
+        return payments.stream()
+                       .flatMap(payment -> payment.getTransactions().stream())
+                       .filter(transaction -> transaction.getTransactionType() == transactionType)
+                       .collect(Collectors.toUnmodifiableList());
     }
 
     public static UUID getInvoiceId(final List<InvoicePayment> invoicePayments, final Payment payment) {
-        final InvoicePayment invoicePayment = Iterables.tryFind(invoicePayments, new Predicate<InvoicePayment>() {
-            @Override
-            public boolean apply(final InvoicePayment input) {
-                return input.getPaymentId().equals(payment.getId()) && input.getType() == InvoicePaymentType.ATTEMPT;
-            }
-        }).orNull();
+        final InvoicePayment invoicePayment = invoicePayments.stream()
+                .filter(input -> input.getPaymentId().equals(payment.getId()) && input.getType() == InvoicePaymentType.ATTEMPT)
+                .findFirst().orElse(null);
         return invoicePayment != null ? invoicePayment.getInvoiceId() : null;
     }
 
@@ -708,7 +681,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             final Object argument = elements[i];
             final Object errorMessage = elements[i + 1];
             final boolean expression = argument instanceof String ? Strings.emptyToNull((String) argument) != null : argument != null;
-            Preconditions.checkArgument(expression, errorMessage);
+            Preconditions.checkArgument(expression, String.valueOf(errorMessage));
         }
     }
 
@@ -718,7 +691,7 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
             final Object argument = elements[i];
             final Object errorMessage = elements[i + 1];
             final boolean expression = argument != null;
-            Preconditions.checkArgument(expression, errorMessage);
+            Preconditions.checkArgument(expression, String.valueOf(errorMessage));
         }
     }
 
@@ -779,13 +752,12 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
 
     private PaymentTransaction findCreatedTransaction(final Payment payment, final TransactionType transactionType, @Nullable final String transactionExternalKey) {
         // Make sure we start looking from the latest transaction created
-        final List<PaymentTransaction> reversedTransactions = Lists.reverse(payment.getTransactions());
-        final Iterable<PaymentTransaction> matchingTransactions = Iterables.filter(reversedTransactions, new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return input.getTransactionType() == transactionType;
-            }
-        });
+        final List<PaymentTransaction> reversedTransactions = new ArrayList<>(payment.getTransactions());
+        Collections.reverse(reversedTransactions);
+        final Iterable<PaymentTransaction> matchingTransactions = reversedTransactions
+                .stream()
+                .filter(input -> input.getTransactionType() == transactionType)
+                .collect(Collectors.toUnmodifiableList());
 
         if (transactionExternalKey != null) {
             for (final PaymentTransaction transaction : matchingTransactions) {
@@ -799,12 +771,9 @@ public abstract class JaxRsResourceBase implements JaxrsResource {
         return Iterables.getFirst(matchingTransactions, null);
     }
 
-    protected List<AuditLogJson> getAuditLogsWithHistory(List<AuditLogWithHistory> auditLogWithHistory) {
-        return ImmutableList.<AuditLogJson>copyOf(Collections2.transform(auditLogWithHistory, new Function<AuditLogWithHistory, AuditLogJson>() {
-            @Override
-            public AuditLogJson apply(@Nullable final AuditLogWithHistory input) {
-                return new AuditLogJson(input);
-            }
-        }));
+    protected List<AuditLogJson> getAuditLogsWithHistory(final List<AuditLogWithHistory> auditLogWithHistory) {
+        return auditLogWithHistory.stream()
+                .map(AuditLogJson::new)
+                .collect(Collectors.toUnmodifiableList());
     }
 }

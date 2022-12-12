@@ -19,26 +19,23 @@ package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-import org.killbill.billing.invoice.model.ItemAdjInvoiceItem;
-import org.killbill.billing.invoice.model.RepairAdjInvoiceItem;
 import org.killbill.billing.invoice.optimizer.InvoiceOptimizerBase.AccountInvoices;
-
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.collect.Iterables;
 
 //
 // This is invoked prior we build the tree of existing items to make sure we simplify the view,
@@ -236,15 +233,10 @@ public class InvoicePruner {
 
         private Set<UUID> getIds(final Iterable<? extends InvoiceItem> items) {
             if (items == null) {
-                return ImmutableSet.of();
+                return Collections.emptySet();
             }
 
-            return ImmutableSet.copyOf(Iterables.transform(items, new Function<InvoiceItem, UUID>() {
-                @Override
-                public UUID apply(final InvoiceItem input) {
-                    return input.getId();
-                }
-            }));
+            return Iterables.toStream(items).map(InvoiceItem::getId).collect(Collectors.toUnmodifiableSet());
         }
 
         private BigDecimal sumAmounts(final Iterable<? extends InvoiceItem> items) {

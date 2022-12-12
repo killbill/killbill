@@ -18,6 +18,7 @@
 
 package org.killbill.billing.payment.glue;
 
+import java.util.Collections;
 import java.util.UUID;
 
 import org.killbill.billing.ObjectType;
@@ -36,11 +37,10 @@ import org.killbill.billing.util.glue.CacheModule;
 import org.killbill.billing.util.glue.CallContextModule;
 import org.killbill.billing.util.glue.ConfigModule;
 import org.killbill.billing.util.glue.EventModule;
-import org.killbill.billing.util.tag.Tag;
 import org.killbill.clock.Clock;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 import org.mockito.Mockito;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestPaymentModule extends PaymentModule {
 
@@ -61,7 +61,7 @@ public class TestPaymentModule extends PaymentModule {
     private void installExternalApis() {
         final TagInternalApi tagInternalApi = Mockito.mock(TagInternalApi.class);
         bind(TagInternalApi.class).toInstance(tagInternalApi);
-        Mockito.when(tagInternalApi.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any(), Mockito.<InternalTenantContext>any())).thenReturn(ImmutableList.<Tag>of());
+        Mockito.when(tagInternalApi.getTags(Mockito.<UUID>any(), Mockito.<ObjectType>any(), Mockito.<InternalTenantContext>any())).thenReturn(Collections.emptyList());
 
         final TagUserApi tagUserApi = Mockito.mock(TagUserApi.class);
         bind(TagUserApi.class).toInstance(tagUserApi);
@@ -80,5 +80,6 @@ public class TestPaymentModule extends PaymentModule {
 
         installExternalApis();
         bind(TestPaymentHelper.class).asEagerSingleton();
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 }

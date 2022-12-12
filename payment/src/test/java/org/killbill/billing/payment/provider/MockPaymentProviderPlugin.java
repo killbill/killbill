@@ -20,6 +20,8 @@ package org.killbill.billing.payment.provider;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,8 +31,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
@@ -44,19 +48,15 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginApi;
 import org.killbill.billing.payment.plugin.api.PaymentPluginApiException;
 import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE;
 import org.killbill.clock.Clock;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 /**
  * This MockPaymentProviderPlugin only works for a single accounts as we don't specify the accountId
@@ -324,27 +324,25 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     public List<PaymentTransactionInfoPlugin> getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentPluginApiException {
         updateLastThreadState();
         final List<PaymentTransactionInfoPlugin> result = paymentTransactions.get(kbPaymentId.toString());
-        return result != null ? result : ImmutableList.<PaymentTransactionInfoPlugin>of();
+        return result != null ? result : Collections.emptyList();
     }
 
     @Override
     public Pagination<PaymentTransactionInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentPluginApiException {
         updateLastThreadState();
 
-        final ImmutableList<PaymentTransactionInfoPlugin> results = ImmutableList.<PaymentTransactionInfoPlugin>copyOf(Iterables.<PaymentTransactionInfoPlugin>filter(Iterables.<PaymentTransactionInfoPlugin>concat(paymentTransactions.values()), new Predicate<PaymentTransactionInfoPlugin>() {
-            @Override
-            public boolean apply(final PaymentTransactionInfoPlugin input) {
-                if (input.getProperties() !=  null) {
-                    for (final PluginProperty cur : input.getProperties()) {
-                        if (cur.getValue().equals(searchKey)) {
+        final List<PaymentTransactionInfoPlugin> results = paymentTransactions.values().stream()
+                .flatMap(Collection::stream)
+                .filter(input -> {
+                    if (input.getProperties() != null) {
+                        if (input.getProperties().stream().map(PluginProperty::getValue).anyMatch(searchKey::equals)) {
                             return true;
                         }
                     }
-                }
-                return (input.getKbPaymentId().toString().equals(searchKey));
-            }
-        }));
-        return DefaultPagination.<PaymentTransactionInfoPlugin>build(offset, limit, paymentTransactions.size(), results);
+                    return searchKey.equals(input.getKbPaymentId().toString());
+                })
+                .collect(Collectors.toUnmodifiableList());
+        return DefaultPagination.build(offset, limit, paymentTransactions.size(), results);
     }
 
     @Override
@@ -379,26 +377,25 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final Iterable<PluginProperty> properties, final CallContext context) {
         updateLastThreadState();
-        return ImmutableList.<PaymentMethodInfoPlugin>copyOf(paymentMethodsInfo.values());
+        return List.copyOf(paymentMethodsInfo.values());
     }
 
     @Override
     public Pagination<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentPluginApiException {
         updateLastThreadState();
-        final ImmutableList<PaymentMethodPlugin> results = ImmutableList.<PaymentMethodPlugin>copyOf(Iterables.<PaymentMethodPlugin>filter(paymentMethods.values(), new Predicate<PaymentMethodPlugin>() {
-            @Override
-            public boolean apply(final PaymentMethodPlugin input) {
-                if (input.getProperties() !=  null) {
-                    for (PluginProperty cur : input.getProperties()) {
-                        if (cur.getValue().equals(searchKey)) {
+
+        final List<PaymentMethodPlugin> results = paymentMethods.values().stream()
+                .filter(input -> {
+                    if (input.getProperties() != null) {
+                        if (input.getProperties().stream().map(PluginProperty::getValue).anyMatch(searchKey::equals)) {
                             return true;
                         }
                     }
-                }
-                return (input.getKbPaymentMethodId().toString().equals(searchKey));
-            }
-        }));
-        return DefaultPagination.<PaymentMethodPlugin>build(offset, limit, paymentMethods.size(), results);
+                    return searchKey.equals(input.getKbPaymentMethodId().toString());
+                })
+                .collect(Collectors.toUnmodifiableList());
+
+        return DefaultPagination.build(offset, limit, paymentMethods.size(), results);
     }
 
     @Override
@@ -451,7 +448,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
         }
         Preconditions.checkNotNull(paymentTransactionInfoPlugin);
 
-        final Iterable<PluginProperty> pluginProperties = ImmutableList.<PluginProperty>of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, paymentPluginStatus.toString(), false));
+        final Iterable<PluginProperty> pluginProperties = List.of(new PluginProperty(MockPaymentProviderPlugin.PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE, paymentPluginStatus.toString(), false));
         getPaymentTransactionInfoPluginResult(kbPaymentId, kbTransactionId, TransactionType.AUTHORIZE, paymentTransactionInfoPlugin.getAmount(), paymentTransactionInfoPlugin.getCurrency(), pluginProperties);
     }
 
@@ -469,12 +466,9 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             throw new PaymentPluginApiException("", "test error");
         }
 
-        final PluginProperty paymentPluginStatusOverride = Iterables.tryFind(pluginProperties, new Predicate<PluginProperty>() {
-            @Override
-            public boolean apply(final PluginProperty input) {
-                return PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE.equals(input.getKey());
-            }
-        }).orNull();
+        final PluginProperty paymentPluginStatusOverride = Iterables.toStream(pluginProperties)
+                .filter(input -> PLUGIN_PROPERTY_PAYMENT_PLUGIN_STATUS_OVERRIDE.equals(input.getKey()))
+                .findFirst().orElse(null);
 
         final PaymentPluginStatus status;
         if (paymentPluginStatusOverride != null && paymentPluginStatusOverride.getValue() != null) {
@@ -506,7 +500,7 @@ public class MockPaymentProviderPlugin implements PaymentPluginApi {
             processedCurrency = currency;
         }
 
-        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, processedAmount, processedCurrency, clock.getUTCNow(), clock.getUTCNow(), status, errorCode, error, null, null, ImmutableList.<PluginProperty>copyOf(pluginProperties));
+        final PaymentTransactionInfoPlugin result = new DefaultNoOpPaymentInfoPlugin(kbPaymentId, kbTransactionId, type, processedAmount, processedCurrency, clock.getUTCNow(), clock.getUTCNow(), status, errorCode, error, null, null, Iterables.toUnmodifiableList(pluginProperties));
         List<PaymentTransactionInfoPlugin> existingTransactions = paymentTransactions.get(kbPaymentId.toString());
         if (existingTransactions == null) {
             existingTransactions = new ArrayList<PaymentTransactionInfoPlugin>();

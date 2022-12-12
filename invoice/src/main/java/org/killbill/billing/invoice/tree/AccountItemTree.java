@@ -29,10 +29,8 @@ import java.util.UUID;
 
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoiceItemType;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.collect.Iterables;
 
 /**
  * Tree of invoice items for a given account.
@@ -74,7 +72,7 @@ public class AccountItemTree {
     public void build() {
         Preconditions.checkState(!isBuilt);
 
-        if (pendingItemAdj.size() > 0) {
+        if (!pendingItemAdj.isEmpty()) {
             for (final InvoiceItem item : pendingItemAdj) {
                 addExistingItem(item, true);
             }
@@ -183,12 +181,9 @@ public class AccountItemTree {
     }
 
     private InvoiceItem getLinkedInvoiceItem(final InvoiceItem item, final Iterable<InvoiceItem> allItems) {
-        return Iterables.tryFind(allItems, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getId().equals(item.getLinkedItemId());
-            }
-        }).orNull();
+        return Iterables.toStream(allItems)
+                .filter(input -> input.getId().equals(item.getLinkedItemId()))
+                .findFirst().orElse(null);
     }
 
     @Override

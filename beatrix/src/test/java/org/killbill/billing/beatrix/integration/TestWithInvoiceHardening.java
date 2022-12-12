@@ -19,8 +19,11 @@
 package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -46,18 +49,11 @@ import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
 import org.killbill.billing.invoice.dao.InvoiceItemModelDao;
 import org.killbill.billing.invoice.dao.InvoiceModelDao;
-import org.killbill.billing.invoice.dao.InvoiceTrackingModelDao;
 import org.killbill.billing.junction.DefaultBlockingState;
-import org.killbill.billing.payment.api.PluginProperty;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import static org.killbill.billing.ErrorCode.INVOICE_NOTHING_TO_DO;
 import static org.testng.Assert.assertEquals;
@@ -65,7 +61,6 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
 public class TestWithInvoiceHardening extends TestIntegrationBase {
-
 
     @Inject
     protected InvoiceDao invoiceDao;
@@ -84,7 +79,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -95,7 +90,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         final BlockingState blockingState1 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "BLOCK_5_3", "SERVICE_5_3", true, true, true, null);
-        subscriptionApi.addBlockingState(blockingState1, new LocalDate(2019, 5, 3), ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState1, new LocalDate(2019, 5, 3), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -104,7 +99,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         final BlockingState blockingState2 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "BLOCK_4_27", "SERVICE_4_27", true, true, true, null);
-        subscriptionApi.addBlockingState(blockingState2, new LocalDate(2019, 4, 27), ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState2, new LocalDate(2019, 4, 27), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 3, callContext,
@@ -113,31 +108,25 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final BlockingState blockingState4 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "UNBLOCK_5_3", "SERVICE_5_3", false, false, false, null);
-        subscriptionApi.addBlockingState(blockingState4, new LocalDate(2019, 5, 3), ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState4, new LocalDate(2019, 5, 3), Collections.emptyList(), callContext);
         assertListenerStatus();
-
 
         // 2019-05-17
         clock.addDays(14);
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
         final BlockingState blockingState3 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "BLOCK_5_17", "SERVICE_5_17", true, true, true, null);
-        subscriptionApi.addBlockingState(blockingState3, new LocalDate(2019, 5, 17), ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState3, new LocalDate(2019, 5, 17), Collections.emptyList(), callContext);
         assertListenerStatus();
-
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         final BlockingState blockingState5 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "UNBLOCK_4_27", "SERVICE_4_27", false, false, false, null);
-        subscriptionApi.addBlockingState(blockingState5, new LocalDate(2019, 4, 27), ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState5, new LocalDate(2019, 4, 27), Collections.emptyList(), callContext);
         assertListenerStatus();
-
-
-
 
         invoiceChecker.checkInvoice(account.getId(), 4, callContext,
                                     new ExpectedInvoiceItemCheck(new LocalDate(2019, 4, 27), new LocalDate(2019, 5, 17), InvoiceItemType.RECURRING, new BigDecimal("19.97")),
                                     new ExpectedInvoiceItemCheck(new LocalDate(2019, 5, 17), new LocalDate(2019, 5, 17), InvoiceItemType.CBA_ADJ, new BigDecimal("-19.97")));
-
 
         // 2019-05-27
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
@@ -158,7 +147,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 1, callContext,
@@ -169,7 +158,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
         final BlockingState blockingState1 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "SOMETHING_BLOCK", "company.a.b.c", true, true, true, null);
-        subscriptionApi.addBlockingState(blockingState1, new LocalDate(2019, 5, 3), ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState1, new LocalDate(2019, 5, 3), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         invoiceChecker.checkInvoice(account.getId(), 2, callContext,
@@ -177,7 +166,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
                                     new ExpectedInvoiceItemCheck(new LocalDate(2019, 5, 03), new LocalDate(2019, 5, 03), InvoiceItemType.CBA_ADJ, new BigDecimal("23.96")));
 
         final BlockingState blockingState2 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "SOMETHING_UNBLOCK", "company.a.b.c", false, false, false, null);
-        subscriptionApi.addBlockingState(blockingState2, new LocalDate(2019, 5, 17), ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState2, new LocalDate(2019, 5, 17), Collections.emptyList(), callContext);
 
         // 2019-05-17
         busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
@@ -195,7 +184,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
             busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
             final BlockingState somethingBlockAgain = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "SOMETHING_BLOCK_AGAIN", "company.a.b.c", true, true, true, null);
-            subscriptionApi.addBlockingState(somethingBlockAgain, new LocalDate(2019, 5, 17), ImmutableList.<PluginProperty>of(), callContext);
+            subscriptionApi.addBlockingState(somethingBlockAgain, new LocalDate(2019, 5, 17), Collections.emptyList(), callContext);
             assertListenerStatus();
 
             // Block again on the same date
@@ -209,7 +198,7 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
             // Unblock again on the same date
             busHandler.pushExpectedEvents(NextEvent.BLOCK, NextEvent.INVOICE);
             final BlockingState somethingUnblockAgain = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "SOMETHING_UNBLOCK_AGAIN", "company.a.b.c", false, false, false, null);
-            subscriptionApi.addBlockingState(somethingUnblockAgain, new LocalDate(2019, 5, 17), ImmutableList.<PluginProperty>of(), callContext);
+            subscriptionApi.addBlockingState(somethingUnblockAgain, new LocalDate(2019, 5, 17), Collections.emptyList(), callContext);
             assertListenerStatus();
 
             invoiceChecker.checkInvoice(account.getId(), ++curInvoiceNumber, callContext,
@@ -221,21 +210,17 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
     }
 
     private void deleteUsedCredit(final UUID accountId, final BigDecimal targetAmount) throws InvoiceApiException {
-        final List<Invoice> allInvoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, callContext);
-        final Iterable<InvoiceItem> allItems = Iterables.concat(Iterables.transform(allInvoices, new Function<Invoice, List<InvoiceItem>>() {
+        final List<Invoice> allInvoices = invoiceUserApi.getInvoicesByAccount(accountId, false, false, true, callContext);
+        final Iterable<InvoiceItem> allItems = allInvoices.stream()
+                .map(Invoice::getInvoiceItems)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toUnmodifiableList());
 
-            @Override
-            public List<InvoiceItem> apply(final Invoice input) {
-                return input.getInvoiceItems();
-            }
-        }));
-        final InvoiceItem usedCredit = Iterables.tryFind(allItems, new Predicate<InvoiceItem>() {
-            @Override
-            public boolean apply(final InvoiceItem input) {
-                return input.getInvoiceItemType() == InvoiceItemType.CBA_ADJ &&
-                       input.getAmount().compareTo(targetAmount) == 0;
-            }
-        }).orNull();
+        final InvoiceItem usedCredit = Iterables.toStream(allItems)
+                .filter(input -> input.getInvoiceItemType() == InvoiceItemType.CBA_ADJ &&
+                                 input.getAmount().compareTo(targetAmount) == 0)
+                .findFirst().orElse(null);
+
         Assert.assertNotNull(usedCredit);
 
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
@@ -269,12 +254,11 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
-
         final BlockingState blockingState2 = new DefaultBlockingState(entitlementId, BlockingStateType.SUBSCRIPTION, "SOMETHING_BLOCK", "company.a.b.c", true, true, true, null);
-        subscriptionApi.addBlockingState(blockingState2, new LocalDate(2019, 5, 17), ImmutableList.<PluginProperty>of(), callContext);
+        subscriptionApi.addBlockingState(blockingState2, new LocalDate(2019, 5, 17), Collections.emptyList(), callContext);
 
         // 2019-05-17
         busHandler.pushExpectedEvents(NextEvent.BLOCK);
@@ -338,7 +322,6 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
         insertInvoiceItems(fifthInvoice);
 
-
         // Trigger IllegalStateException: Double billing detected
         busHandler.pushExpectedEvents(NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.INVOICE, NextEvent.TAG);
         tagUserApi.removeTag(account.getId(), ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
@@ -368,16 +351,14 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
         invoiceUserApi.voidInvoice(thirdInvoice.getId(), callContext);
         assertListenerStatus();
 
-
         busHandler.pushExpectedEvents(NextEvent.INVOICE_ADJUSTMENT);
         invoiceUserApi.voidInvoice(firstInvoice.getId(), callContext);
         assertListenerStatus();
 
-
         // This remove the __PARK__ tag and fixes the state !
         busHandler.pushExpectedEvents(NextEvent.TAG, NextEvent.NULL_INVOICE);
         try {
-            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2019, 5, 17), callContext);
+            invoiceUserApi.triggerInvoiceGeneration(account.getId(), new LocalDate(2019, 5, 17), Collections.emptyList(), callContext);
             fail();
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), INVOICE_NOTHING_TO_DO.getCode());
@@ -389,14 +370,14 @@ public class TestWithInvoiceHardening extends TestIntegrationBase {
 
     private void insertInvoiceItems(final InvoiceModelDao invoice) {
         final FutureAccountNotifications callbackDateTimePerSubscriptions = new FutureAccountNotifications();
-        invoiceDao.createInvoice(invoice, null, ImmutableSet.<InvoiceTrackingModelDao>of(), callbackDateTimePerSubscriptions, null, internalCallContext);
+        invoiceDao.createInvoices(Collections.singleton(invoice), null, Collections.emptySet(), callbackDateTimePerSubscriptions, null, false, internalCallContext);
     }
 
     private void verifyNoInvoiceDueOnDate(final UUID accountId, final LocalDate targetDate) {
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
         try {
 
-            invoiceUserApi.triggerInvoiceGeneration(accountId, targetDate, callContext);
+            invoiceUserApi.triggerInvoiceGeneration(accountId, targetDate, Collections.emptyList(), callContext);
             Assert.fail("Unexpected to generate a new invoice for date " + targetDate);
         } catch (final InvoiceApiException e) {
             assertEquals(e.getCode(), ErrorCode.INVOICE_NOTHING_TO_DO.getCode());

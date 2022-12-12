@@ -26,11 +26,18 @@ public class DefaultBlockPriceOverride implements BlockPriceOverride {
 
     private String unitName;
 
-    private Double size;
+    private BigDecimal size;
 
     private BigDecimal price;
 
     private Currency currency;
+
+    public DefaultBlockPriceOverride( String unitName, BigDecimal size, BigDecimal price, Currency currency) {
+        this.unitName = unitName;
+        this.size = size;
+        this.price = price;
+        this.currency = currency;
+    }
 
     @Override
     public String getUnitName() {
@@ -38,7 +45,7 @@ public class DefaultBlockPriceOverride implements BlockPriceOverride {
     }
 
     @Override
-    public Double getSize() {
+    public BigDecimal getSize() {
         return size;
     }
 
@@ -50,12 +57,5 @@ public class DefaultBlockPriceOverride implements BlockPriceOverride {
     @Override
     public Currency getCurrency() {
         return currency;
-    }
-
-    public DefaultBlockPriceOverride( String unitName, Double size, BigDecimal price, Currency currency) {
-        this.unitName = unitName;
-        this.size = size;
-        this.price = price;
-        this.currency = currency;
     }
 }

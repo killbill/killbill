@@ -18,8 +18,8 @@ package org.killbill.billing.invoice.template.formatters;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
-import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.UUID;
 
@@ -34,12 +34,10 @@ import org.killbill.billing.invoice.api.formatters.InvoiceItemFormatter;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.ResourceBundleType;
 import org.killbill.billing.util.LocaleUtils;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.template.translation.DefaultCatalogTranslator;
 import org.killbill.billing.util.template.translation.Translator;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
-
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
 
 /**
  * Format invoice item fields
@@ -68,7 +66,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
 
     @Override
     public BigDecimal getAmount() {
-        return MoreObjects.firstNonNull(item.getAmount(), BigDecimal.ZERO);
+        return Objects.requireNonNullElse(item.getAmount(), BigDecimal.ZERO);
     }
 
     @Override
@@ -80,7 +78,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     public String getFormattedAmount() {
         final NumberFormat number = NumberFormat.getCurrencyInstance(locale);
         number.setCurrency(java.util.Currency.getInstance(item.getCurrency().toString()));
-        return number.format(getAmount().doubleValue());
+        return number.format(getAmount());
     }
 
     @Override
@@ -204,7 +202,7 @@ public class DefaultInvoiceItemFormatter implements InvoiceItemFormatter {
     }
 
     @Override
-    public Integer getQuantity() { return item.getQuantity(); }
+    public BigDecimal getQuantity() { return item.getQuantity(); }
 
     @Override
     public String getItemDetails() { return item.getItemDetails(); }

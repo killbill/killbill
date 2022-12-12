@@ -21,6 +21,8 @@ package org.killbill.billing.invoice.notification;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.DateTime;
 import org.killbill.billing.invoice.InvoiceListener;
 import org.killbill.billing.invoice.api.DefaultInvoiceService;
@@ -35,8 +37,6 @@ import org.killbill.notificationq.api.NotificationQueueService.NotificationQueue
 import org.killbill.notificationq.api.NotificationQueueService.NotificationQueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
 
 public class ParentInvoiceCommitmentNotifier implements NextBillingDateNotifier {
 

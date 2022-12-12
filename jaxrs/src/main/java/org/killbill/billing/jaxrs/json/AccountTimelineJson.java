@@ -19,6 +19,7 @@
 package org.killbill.billing.jaxrs.json;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,7 +40,7 @@ import org.killbill.billing.util.audit.AuditLog;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.ImmutableList;
+
 import io.swagger.annotations.ApiModel;
 
 @ApiModel(value="AccountTimeline")
@@ -81,7 +82,7 @@ public class AccountTimelineJson {
             for (final InvoiceItem invoiceItem : invoice.getInvoiceItems()) {
                 if (InvoiceItemType.CREDIT_ADJ.equals(invoiceItem.getInvoiceItemType())) {
                     final List<AuditLog> auditLogs = accountAuditLogs.getAuditLogsForInvoiceItem(invoiceItem.getId());
-                    credits.add(new InvoiceItemJson(invoiceItem, ImmutableList.of(), auditLogs));
+                    credits.add(new InvoiceItemJson(invoiceItem, Collections.emptyList(), auditLogs));
                 }
             }
         }

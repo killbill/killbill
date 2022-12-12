@@ -18,6 +18,7 @@
 package org.killbill.billing.util.nodes;
 
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -27,9 +28,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class NodeInfoMapper {
 
@@ -56,13 +54,10 @@ public class NodeInfoMapper {
     }
 
     public NodeCommandMetadata deserializeNodeCommand(final String nodeCommand, final String type) throws IOException {
-
-        final SystemNodeCommandType systemType = Iterables.tryFind(ImmutableList.copyOf(SystemNodeCommandType.values()), new Predicate<SystemNodeCommandType>() {
-            @Override
-            public boolean apply(final SystemNodeCommandType input) {
-                return input.name().equals(type);
-            }
-        }).orNull();
+        final SystemNodeCommandType systemType = Stream.of(SystemNodeCommandType.values())
+                .filter(input -> input.name().equals(type))
+                .findFirst()
+                .orElse(null);
 
         return (systemType != null) ?
                mapper.readValue(nodeCommand, systemType.getCommandMetadataClass()) :

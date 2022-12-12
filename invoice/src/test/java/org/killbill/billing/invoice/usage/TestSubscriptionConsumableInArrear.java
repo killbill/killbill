@@ -18,9 +18,10 @@
 package org.killbill.billing.invoice.usage;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -30,14 +31,7 @@ import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.TierBlockPolicy;
 import org.killbill.billing.catalog.api.Usage;
 import org.killbill.billing.junction.BillingEvent;
-import org.killbill.billing.usage.api.RawUsageRecord;
 import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -47,7 +41,7 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
     @Test(groups = "fast")
     public void testComputeInArrearUsageInterval() throws Exception {
 
-        final List<BillingEvent> billingEvents = Lists.newArrayList();
+        final List<BillingEvent> billingEvents = new ArrayList<>();
 
         final String usageName1 = "erw";
         final DefaultTieredBlock block1 = createDefaultTieredBlock("unit", 100, 10, BigDecimal.ONE);
@@ -60,58 +54,51 @@ public class TestSubscriptionConsumableInArrear extends TestUsageInArrearBase {
         final Usage usage2 = createConsumableInArrearUsage(usageName2, BillingPeriod.MONTHLY, TierBlockPolicy.ALL_TIERS, tier2);
 
         final DateTime dt1 = new DateTime(2013, 3, 23, 4, 34, 59, DateTimeZone.UTC);
-        final BillingEvent evt1 = createMockBillingEvent(dt1, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).add(usage2).build(), catalogEffectiveDate);
+        final BillingEvent evt1 = createMockBillingEvent(dt1, BillingPeriod.MONTHLY, List.of(usage1, usage2), catalogEffectiveDate);
         billingEvents.add(evt1);
 
         final DateTime dt2 = new DateTime(2013, 4, 23, 4, 34, 59, DateTimeZone.UTC);
-        final BillingEvent evt2 = createMockBillingEvent(dt2, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).build(), catalogEffectiveDate);
+        final BillingEvent evt2 = createMockBillingEvent(dt2, BillingPeriod.MONTHLY, List.of(usage1), catalogEffectiveDate);
         billingEvents.add(evt2);
 
         final DateTime dt3 = new DateTime(2013, 5, 23, 4, 34, 59, DateTimeZone.UTC);
-        final BillingEvent evt3 = createMockBillingEvent(dt3, BillingPeriod.MONTHLY, ImmutableList.<Usage>builder().add(usage1).add(usage2).build(), catalogEffectiveDate);
+        final BillingEvent evt3 = createMockBillingEvent(dt3, BillingPeriod.MONTHLY, List.of(usage1, usage2), catalogEffectiveDate);
         billingEvents.add(evt3);
 
-        LocalDate targetDate = new LocalDate(2013, 6, 23);
+        final LocalDate targetDate = new LocalDate(2013, 6, 23);
 
-        final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, ImmutableList.<RawUsageRecord>of(), ImmutableSet.of(), targetDate, new LocalDate(dt1, DateTimeZone.UTC), usageDetailMode, invoiceConfig, internalCallContext);
+        final SubscriptionUsageInArrear foo = new SubscriptionUsageInArrear(accountId, invoiceId, billingEvents, Collections.emptyList(), Collections.emptySet(), targetDate, dt1, usageDetailMode, invoiceConfig, internalCallContext);
         final List<ContiguousIntervalUsageInArrear> result = foo.computeInArrearUsageInterval(false);
         assertEquals(result.size(), 3);
 
-        final ContiguousIntervalUsageInArrear firstResult = Iterables.tryFind(result, new Predicate<ContiguousIntervalUsageInArrear>() {
-            @Override
-            public boolean apply(final ContiguousIntervalUsageInArrear input) {
-                return input.getUsage().getName().equals(usageName2) && input.transitionTimes.size() == 3;
-            }
-        }).get();
+        final ContiguousIntervalUsageInArrear firstResult = result.stream()
+                .filter(input -> input.getUsage().getName().equals(usageName2) && input.transitionTimes.size() == 3)
+                .findFirst().get();
 
         assertEquals(firstResult.getUsage().getName(), usageName2);
         assertEquals(firstResult.getTransitionTimes().size(), 3);
-        assertTrue(firstResult.getTransitionTimes().get(0).compareTo(new LocalDate(2013, 3, 23)) == 0);
-        assertTrue(firstResult.getTransitionTimes().get(1).compareTo(new LocalDate(2013, 4, 15)) == 0);
-        assertTrue(firstResult.getTransitionTimes().get(2).compareTo(new LocalDate(2013, 4, 23)) == 0);
+        assertTrue(firstResult.getTransitionTimes().get(0).compareTo(dt1) == 0);
+        assertTrue(internalCallContext.toLocalDate(firstResult.getTransitionTimes().get(1)).compareTo(new LocalDate(2013, 4, 15)) == 0);
+        assertTrue(firstResult.getTransitionTimes().get(2).compareTo(dt2) == 0);
 
-        final ContiguousIntervalUsageInArrear secondResult = Iterables.tryFind(result, new Predicate<ContiguousIntervalUsageInArrear>() {
-            @Override
-            public boolean apply(final ContiguousIntervalUsageInArrear input) {
-                return input.getUsage().getName().equals(usageName1);
-            }
-        }).get();
+        final ContiguousIntervalUsageInArrear secondResult = result.stream()
+                .filter(input -> input.getUsage().getName().equals(usageName1))
+                .findFirst().get();
+
         assertEquals(secondResult.getUsage().getName(), usageName1);
         assertEquals(secondResult.getTransitionTimes().size(), 4);
-        assertTrue(secondResult.getTransitionTimes().get(0).compareTo(new LocalDate(2013, 3, 23)) == 0);
-        assertTrue(secondResult.getTransitionTimes().get(1).compareTo(new LocalDate(2013, 4, 15)) == 0);
-        assertTrue(secondResult.getTransitionTimes().get(2).compareTo(new LocalDate(2013, 5, 15)) == 0);
-        assertTrue(secondResult.getTransitionTimes().get(3).compareTo(new LocalDate(2013, 6, 15)) == 0);
+        assertTrue(secondResult.getTransitionTimes().get(0).compareTo(dt1) == 0);
+        assertTrue(internalCallContext.toLocalDate(secondResult.getTransitionTimes().get(1)).compareTo(new LocalDate(2013, 4, 15)) == 0);
+        assertTrue(internalCallContext.toLocalDate(secondResult.getTransitionTimes().get(2)).compareTo(new LocalDate(2013, 5, 15)) == 0);
+        assertTrue(internalCallContext.toLocalDate(secondResult.getTransitionTimes().get(3)).compareTo(new LocalDate(2013, 6, 15)) == 0);
 
-        final ContiguousIntervalUsageInArrear thirdResult = Iterables.tryFind(result, new Predicate<ContiguousIntervalUsageInArrear>() {
-            @Override
-            public boolean apply(final ContiguousIntervalUsageInArrear input) {
-                return input.getUsage().getName().equals(usageName2) && input.transitionTimes.size() == 2;
-            }
-        }).get();
+        final ContiguousIntervalUsageInArrear thirdResult = result.stream()
+                .filter(input -> input.getUsage().getName().equals(usageName2) && input.transitionTimes.size() == 2)
+                .findFirst().get();
+
         assertEquals(thirdResult.getUsage().getName(), usageName2);
         assertEquals(thirdResult.getTransitionTimes().size(), 2);
-        assertTrue(thirdResult.getTransitionTimes().get(0).compareTo(new LocalDate(2013, 5, 23)) == 0);
-        assertTrue(thirdResult.getTransitionTimes().get(1).compareTo(new LocalDate(2013, 6, 15)) == 0);
+        assertTrue(thirdResult.getTransitionTimes().get(0).compareTo(dt3) == 0);
+        assertTrue(internalCallContext.toLocalDate(thirdResult.getTransitionTimes().get(1)).compareTo(new LocalDate(2013, 6, 15)) == 0);
     }
 }

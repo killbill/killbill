@@ -73,7 +73,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
 
             assertEquals(usage.getLimits().length, 1);
             assertEquals(usage.getLimits()[0].getUnit().getName(), "members");
-            assertEquals(usage.getLimits()[0].getMax(), new Double("100"));
+            assertEquals(usage.getLimits()[0].getMax(), new BigDecimal("100"));
 
             assertEquals(usage.getRecurringPrice().getPrices().length, 1);
             assertEquals(usage.getRecurringPrice().getPrices()[0].getCurrency(), Currency.BTC);
@@ -104,7 +104,7 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usage.getBlocks().length, 1);
 
             assertEquals(usage.getBlocks()[0].getUnit().getName(), "cell-phone-minutes");
-            assertEquals(usage.getBlocks()[0].getSize(), new Double("1000"));
+            assertEquals(usage.getBlocks()[0].getSize(), new BigDecimal("1000"));
 
             assertEquals(usage.getBlocks()[0].getPrice().getPrices().length, 1);
             assertEquals(usage.getBlocks()[0].getPrice().getPrices()[0].getCurrency(), Currency.BTC);
@@ -136,13 +136,13 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usage.getBlocks().length, 1);
 
             assertEquals(usage.getBlocks()[0].getUnit().getName(), "fastrack-tokens");
-            assertEquals(usage.getBlocks()[0].getSize(), new Double("10"));
+            assertEquals(usage.getBlocks()[0].getSize(), new BigDecimal("10"));
 
             assertEquals(usage.getBlocks()[0].getPrice().getPrices().length, 1);
             assertEquals(usage.getBlocks()[0].getPrice().getPrices()[0].getCurrency(), Currency.BTC);
             assertEquals(usage.getBlocks()[0].getPrice().getPrices()[0].getValue(), new BigDecimal("0.10"));
 
-            assertEquals(usage.getBlocks()[0].getMinTopUpCredit(), new Double("5"));
+            assertEquals(usage.getBlocks()[0].getMinTopUpCredit(), new BigDecimal("5"));
 
         } catch (Exception e) {
             Assert.fail(e.toString());
@@ -173,9 +173,9 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
 
             assertEquals(usage.getTiers()[0].getLimits().length, 2);
             assertEquals(usage.getTiers()[0].getLimits()[0].getUnit().getName(), "bandwith-meg-sec");
-            assertEquals(usage.getTiers()[0].getLimits()[0].getMax(), new Double("100"));
+            assertEquals(usage.getTiers()[0].getLimits()[0].getMax(), new BigDecimal("100"));
             assertEquals(usage.getTiers()[0].getLimits()[1].getUnit().getName(), "members");
-            assertEquals(usage.getTiers()[0].getLimits()[1].getMax(), new Double("500"));
+            assertEquals(usage.getTiers()[0].getLimits()[1].getMax(), new BigDecimal("500"));
             assertEquals(usage.getTiers()[0].getFixedPrice().getPrices().length, 1);
             assertEquals(usage.getTiers()[0].getFixedPrice().getPrices()[0].getCurrency(), Currency.BTC);
             assertEquals(usage.getTiers()[0].getFixedPrice().getPrices()[0].getValue(), new BigDecimal("0.007"));
@@ -184,9 +184,9 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usage.getTiers()[0].getRecurringPrice().getPrices()[0].getValue(), new BigDecimal("0.8"));
 
             assertEquals(usage.getTiers()[1].getLimits()[0].getUnit().getName(), "bandwith-meg-sec");
-            assertEquals(usage.getTiers()[1].getLimits()[0].getMax(), new Double("100"));
+            assertEquals(usage.getTiers()[1].getLimits()[0].getMax(), new BigDecimal("100"));
             assertEquals(usage.getTiers()[1].getLimits()[1].getUnit().getName(), "members");
-            assertEquals(usage.getTiers()[1].getLimits()[1].getMax(), new Double("1000"));
+            assertEquals(usage.getTiers()[1].getLimits()[1].getMax(), new BigDecimal("1000"));
             assertEquals(usage.getTiers()[1].getFixedPrice().getPrices().length, 1);
             assertEquals(usage.getTiers()[1].getFixedPrice().getPrices()[0].getCurrency(), Currency.BTC);
             assertEquals(usage.getTiers()[1].getFixedPrice().getPrices()[0].getValue(), new BigDecimal("0.4"));
@@ -223,15 +223,15 @@ public class TestXMLReader extends CatalogTestSuiteNoDB {
             assertEquals(usage.getTiers()[0].getTieredBlocks().length, 2);
             assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getUnit().getName(), "cell-phone-minutes");
 
-            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getSize(), new Double("1000"));
-            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getMax(), new Double("10000"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getSize(), new BigDecimal("1000"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getMax(), new BigDecimal("10000"));
             assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getPrice().getPrices().length, 1);
             assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getPrice().getPrices()[0].getCurrency(), Currency.BTC);
             assertEquals(usage.getTiers()[0].getTieredBlocks()[0].getPrice().getPrices()[0].getValue(), new BigDecimal("0.5"));
 
             assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getUnit().getName(), "Mbytes");
-            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getSize(), new Double("512"));
-            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getMax(), new Double("512000"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getSize(), new BigDecimal("512"));
+            assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getMax(), new BigDecimal("512000"));
             assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getPrice().getPrices().length, 1);
             assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getPrice().getPrices()[0].getCurrency(), Currency.BTC);
             assertEquals(usage.getTiers()[0].getTieredBlocks()[1].getPrice().getPrices()[0].getValue(), new BigDecimal("0.3"));

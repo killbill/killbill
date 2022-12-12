@@ -22,18 +22,10 @@ import java.util.Map;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
-import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.template.translation.DefaultCatalogTranslator;
-import org.killbill.billing.util.template.translation.Translator;
-import org.killbill.billing.util.template.translation.TranslatorConfig;
 import org.killbill.xmlloader.UriAccessor;
-import org.skife.config.ConfigSource;
-import org.skife.config.ConfigurationObjectFactory;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableMap;
 
 import static org.testng.Assert.assertEquals;
 

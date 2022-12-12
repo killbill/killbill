@@ -19,7 +19,10 @@
 package org.killbill.billing.jaxrs.resources;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -44,6 +47,7 @@ import org.killbill.billing.jaxrs.util.Context;
 import org.killbill.billing.jaxrs.util.JaxrsUriBuilder;
 import org.killbill.billing.payment.api.InvoicePaymentApi;
 import org.killbill.billing.payment.api.PaymentApi;
+import org.killbill.commons.utils.Preconditions;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.api.AuditUserApi;
 import org.killbill.billing.util.api.CustomFieldApiException;
@@ -55,12 +59,8 @@ import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
-import org.killbill.commons.metrics.TimedResource;
+import org.killbill.commons.metrics.api.annotation.TimedResource;
 
-import com.google.common.base.Function;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -98,16 +98,18 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                     @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<CustomField> customFields = customFieldUserApi.getCustomFields(offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class, "getCustomFields", customFields.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()), ImmutableMap.<String, String>of());
+        final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class,
+                                                    "getCustomFields",
+                                                    customFields.getNextOffset(),
+                                                    limit,
+                                                    Map.of(QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Collections.emptyMap());
 
         return buildStreamingPaginationResponse(customFields,
-                                                new Function<CustomField, CustomFieldJson>() {
-                                                    @Override
-                                                    public CustomFieldJson apply(final CustomField customField) {
-                                                        // TODO Really slow - we should instead try to figure out the account id
-                                                        final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(customField.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), tenantContext);
-                                                        return new CustomFieldJson(customField, auditLogs);
-                                                    }
+                                                customField -> {
+                                                    // TODO Really slow - we should instead try to figure out the account id
+                                                    final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(customField.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), tenantContext);
+                                                    return new CustomFieldJson(customField, auditLogs);
                                                 },
                                                 nextPageUri);
     }
@@ -127,8 +129,8 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                                  @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
 
-        Preconditions.checkNotNull(objectType);
-        Preconditions.checkNotNull(fieldName);
+        Preconditions.checkNotNull(objectType, "objectType in searchCustomFieldsByTypeName() is null");
+        Preconditions.checkNotNull(fieldName, "fieldName in searchCustomFieldsByTypeName() is null");
 
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<CustomField> customFields = fieldValue != null ?
@@ -139,19 +141,16 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                                     "searchCustomFields",
                                                     customFields.getNextOffset(),
                                                     limit,
-                                                    ImmutableMap.<String, String>of("objectType", objectType,
-                                                                                    "fieldName", fieldName,
-                                                                                    "fieldValue", MoreObjects.firstNonNull(fieldValue, ""),
-                                                                                    QUERY_AUDIT, auditMode.getLevel().toString()),
-                                                    ImmutableMap.<String, String>of());
+                                                    Map.of("objectType", objectType,
+                                                           "fieldName", fieldName,
+                                                           "fieldValue", Objects.requireNonNullElse(fieldValue, ""),
+                                                           QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Collections.emptyMap());
         return buildStreamingPaginationResponse(customFields,
-                                                new Function<CustomField, CustomFieldJson>() {
-                                                    @Override
-                                                    public CustomFieldJson apply(final CustomField customField) {
-                                                        // TODO Really slow - we should instead try to figure out the account id
-                                                        final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(customField.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), tenantContext);
-                                                        return new CustomFieldJson(customField, auditLogs);
-                                                    }
+                                                customField -> {
+                                                    // TODO Really slow - we should instead try to figure out the account id
+                                                    final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(customField.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), tenantContext);
+                                                    return new CustomFieldJson(customField, auditLogs);
                                                 },
                                                 nextPageUri);
     }
@@ -171,15 +170,17 @@ public class CustomFieldResource extends JaxRsResourceBase {
                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final Pagination<CustomField> customFields = customFieldUserApi.searchCustomFields(searchKey, offset, limit, tenantContext);
-        final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class, "searchCustomFields", customFields.getNextOffset(), limit, ImmutableMap.<String, String>of(QUERY_AUDIT, auditMode.getLevel().toString()), ImmutableMap.<String, String>of("searchKey", searchKey));
+        final URI nextPageUri = uriBuilder.nextPage(CustomFieldResource.class,
+                                                    "searchCustomFields",
+                                                    customFields.getNextOffset(),
+                                                    limit,
+                                                    Map.of(QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Map.of("searchKey", searchKey));
         return buildStreamingPaginationResponse(customFields,
-                                                new Function<CustomField, CustomFieldJson>() {
-                                                    @Override
-                                                    public CustomFieldJson apply(final CustomField customField) {
-                                                        // TODO Really slow - we should instead try to figure out the account id
-                                                        final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(customField.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), tenantContext);
-                                                        return new CustomFieldJson(customField, auditLogs);
-                                                    }
+                                                customField -> {
+                                                    // TODO Really slow - we should instead try to figure out the account id
+                                                    final List<AuditLog> auditLogs = auditUserApi.getAuditLogs(customField.getId(), ObjectType.CUSTOM_FIELD, auditMode.getLevel(), tenantContext);
+                                                    return new CustomFieldJson(customField, auditLogs);
                                                 },
                                                 nextPageUri);
     }

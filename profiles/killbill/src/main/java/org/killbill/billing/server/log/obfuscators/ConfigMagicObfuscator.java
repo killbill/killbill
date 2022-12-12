@@ -18,11 +18,11 @@
 package org.killbill.billing.server.log.obfuscators;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import com.google.common.collect.ImmutableList;
 
 // See ConfigurationObjectFactory
 public class ConfigMagicObfuscator extends Obfuscator {
@@ -33,10 +33,10 @@ public class ConfigMagicObfuscator extends Obfuscator {
             "password"
     };
 
-    private final Collection<Pattern> patterns = new LinkedList<Pattern>();
+    private final Collection<Pattern> patterns = new LinkedList<>();
 
     public ConfigMagicObfuscator() {
-        this(ImmutableList.<Pattern>of());
+        this(Collections.emptyList());
     }
 
     public ConfigMagicObfuscator(final Collection<Pattern> extraPatterns) {

@@ -19,6 +19,7 @@ package org.killbill.billing.catalog.plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
@@ -44,9 +45,7 @@ import org.killbill.billing.catalog.api.rules.CaseChangePlanPolicy;
 import org.killbill.billing.catalog.api.rules.CaseCreateAlignment;
 import org.killbill.billing.catalog.api.rules.CasePriceList;
 import org.killbill.billing.catalog.api.rules.PlanRules;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
+import org.killbill.commons.utils.collect.Iterables;
 
 public class TestModelPlanRules implements PlanRules {
 
@@ -214,37 +213,22 @@ public class TestModelPlanRules implements PlanRules {
     }
 
     private Product findProduct(@Nullable final String productName) {
-        return find(products, productName, "products", new Predicate<Product>() {
-            @Override
-            public boolean apply(final Product input) {
-                return input.getName().equals(productName);
-            }
-        });
+        return find(products, productName, "products", input -> input.getName().equals(productName));
     }
 
     private Plan findPlan(@Nullable final String planName) {
-        return find(plans, planName, "plans", new Predicate<Plan>() {
-            @Override
-            public boolean apply(final Plan input) {
-                return input.getName().equals(planName);
-            }
-        });
+        return find(plans, planName, "plans", input -> input.getName().equals(planName));
     }
 
     private PriceList findPriceList(@Nullable final String priceListName) {
-        return find(priceLists, priceListName, "pricelists", new Predicate<PriceList>() {
-            @Override
-            public boolean apply(final PriceList input) {
-                return input.getName().equals(priceListName);
-            }
-        });
+        return find(priceLists, priceListName, "pricelists", input -> input.getName().equals(priceListName));
     }
 
     private <T> T find(final Iterable<T> all, @Nullable final String name, final String what, final Predicate<T> predicate) {
         if (name == null) {
             return null;
         }
-        final T result = Iterables.tryFind(all, predicate).orNull();
+        final T result = Iterables.toUnmodifiableList(all).stream().filter(predicate).findFirst().orElse(null);
         if (result == null) {
             throw new IllegalStateException(String.format("%s : cannot find entry %s", what, name));
         }

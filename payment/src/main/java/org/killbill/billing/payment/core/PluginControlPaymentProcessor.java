@@ -18,7 +18,9 @@
 package org.killbill.billing.payment.core;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,18 +53,13 @@ import org.killbill.billing.payment.dao.PluginPropertySerializer;
 import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.payment.invoice.InvoicePaymentControlPluginApi;
 import org.killbill.billing.tag.TagInternalApi;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import static org.killbill.billing.payment.logging.PaymentLoggingHelper.logEnterAPICall;
 import static org.killbill.billing.payment.logging.PaymentLoggingHelper.logExitAPICall;
@@ -207,13 +204,10 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
     public Payment notifyPendingPaymentOfStateChanged(final boolean isApiPayment, final Account account, final UUID paymentTransactionId, final boolean isSuccess, final List<String> paymentControlPluginNames, final CallContext callContext, final InternalCallContext internalCallContext) throws PaymentApiException {
         final PaymentTransactionModelDao paymentTransactionModelDao = paymentDao.getPaymentTransaction(paymentTransactionId, internalCallContext);
         final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttemptByTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey(), internalCallContext);
-        final PaymentAttemptModelDao attempt = Iterables.find(attempts,
-                                                              new Predicate<PaymentAttemptModelDao>() {
-                                                                  @Override
-                                                                  public boolean apply(final PaymentAttemptModelDao input) {
-                                                                      return input.getTransactionId().equals(paymentTransactionId);
-                                                                  }
-                                                              });
+        final PaymentAttemptModelDao attempt = attempts.stream()
+                .filter(input -> input.getTransactionId().equals(paymentTransactionId))
+                .findFirst()
+                .get();
 
         final Iterable<PluginProperty> pluginProperties;
         try {
@@ -254,7 +248,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                           amount,
                                                           currency,
                                                           effectiveDate,
-                                                          ImmutableList.<PluginProperty>of(),
+                                                          Collections.emptyList(),
                                                           paymentControlPluginNames,
                                                           callContext, internalCallContext);
     }
@@ -272,7 +266,7 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                           null,
                                                           null,
                                                           effectiveDate,
-                                                          ImmutableList.<PluginProperty>of(),
+                                                          Collections.emptyList(),
                                                           paymentControlPluginNames,
                                                           callContext,
                                                           internalCallContext);
@@ -329,13 +323,12 @@ public class PluginControlPaymentProcessor extends ProcessorBase {
                                                                  internalCallContext);
 
             log.debug("retryPaymentTransaction result: payment='{}'", payment);
-            paymentTransaction = Iterables.<PaymentTransaction>find(Lists.<PaymentTransaction>reverse(payment.getTransactions()),
-                                                                    new Predicate<PaymentTransaction>() {
-                                                                        @Override
-                                                                        public boolean apply(final PaymentTransaction input) {
-                                                                            return attempt.getTransactionExternalKey().equals(input.getExternalKey());
-                                                                        }
-                                                                    });
+            final List<PaymentTransaction> reversedPaymentTransactions = new ArrayList<>(payment.getTransactions());
+            Collections.reverse(reversedPaymentTransactions);
+            paymentTransaction = reversedPaymentTransactions.stream()
+                    .filter(input -> attempt.getTransactionExternalKey().equals(input.getExternalKey()))
+                    .findFirst()
+                    .get();
         } catch (final AccountApiException e) {
             log.warn("Failed to retry attemptId='{}', paymentControlPlugins='{}'", attemptId, toPluginNamesOnError(paymentControlPluginNames), e);
         } catch (final PaymentApiException e) {

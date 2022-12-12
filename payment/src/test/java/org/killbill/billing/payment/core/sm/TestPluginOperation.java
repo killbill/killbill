@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -54,8 +55,6 @@ import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestPluginOperation extends PaymentTestSuiteNoDB {
 
@@ -226,7 +225,7 @@ public class TestPluginOperation extends PaymentTestSuiteNoDB {
                                                                                 null,
                                                                                 shouldLockAccount,
                                                                                 null,
-                                                                                ImmutableList.<PluginProperty>of(),
+                                                                                Collections.emptyList(),
                                                                                 internalCallContext,
                                                                                 callContext);
 

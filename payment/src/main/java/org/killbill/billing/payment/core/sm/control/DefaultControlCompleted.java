@@ -36,9 +36,6 @@ import org.killbill.billing.payment.retry.BaseRetryService.RetryServiceScheduler
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-
 public class DefaultControlCompleted implements EnteringStateCallback {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultControlCompleted.class);
@@ -100,15 +97,11 @@ public class DefaultControlCompleted implements EnteringStateCallback {
             return paymentStateContext.getCurrentTransaction().getTransactionStatus() == TransactionStatus.UNKNOWN;
         } else {
             final List<PaymentTransactionModelDao> transactions = retryablePaymentAutomatonRunner.getPaymentDao().getPaymentTransactionsByExternalKey(paymentStateContext.getPaymentTransactionExternalKey(), paymentStateContext.getInternalCallContext());
-            return Iterables.any(transactions, new Predicate<PaymentTransactionModelDao>() {
-                @Override
-                public boolean apply(final PaymentTransactionModelDao input) {
-                    return input.getTransactionStatus() == TransactionStatus.UNKNOWN &&
-                           // Not strictly required
-                           // (Note, we don't match on AttemptId as it is risky, the row on disk would match the first attempt, not necessarily the current one)
-                           input.getAccountRecordId().equals(paymentStateContext.getInternalCallContext().getAccountRecordId());
-                }
-            });
+            return transactions.stream()
+                    .anyMatch(input -> input.getTransactionStatus() == TransactionStatus.UNKNOWN &&
+                                       // Not strictly required
+                                       // (Note, we don't match on AttemptId as it is risky, the row on disk would match the first attempt, not necessarily the current one)
+                                       input.getAccountRecordId().equals(paymentStateContext.getInternalCallContext().getAccountRecordId()));
         }
     }
 }

@@ -17,13 +17,12 @@
 
 package org.killbill.billing.payment.provider;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.payment.plugin.api.HostedPaymentPageFormDescriptor;
-
-import com.google.common.collect.ImmutableList;
 
 public class DefaultNoOpHostedPaymentPageFormDescriptor implements HostedPaymentPageFormDescriptor {
 
@@ -50,12 +49,12 @@ public class DefaultNoOpHostedPaymentPageFormDescriptor implements HostedPayment
 
     @Override
     public List<PluginProperty> getFormFields() {
-        return ImmutableList.<PluginProperty>of();
+        return Collections.emptyList();
     }
 
     @Override
     public List<PluginProperty> getProperties() {
-        return ImmutableList.<PluginProperty>of();
+        return Collections.emptyList();
     }
 
     @Override

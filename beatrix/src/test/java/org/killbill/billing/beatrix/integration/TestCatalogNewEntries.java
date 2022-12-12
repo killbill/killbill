@@ -64,13 +64,13 @@ public class TestCatalogNewEntries extends TestIntegrationBase {
                                                            ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         final PlanPhaseSpecifier bazookaSpec = new PlanPhaseSpecifier("bazooka-monthly");
         try {
-            bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(bazookaSpec), null, null, callContext);
+            bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(bazookaSpec), (LocalDate) null, null, callContext);
             Assert.fail("Change plan should fail because plan does not yet exist");
         } catch (EntitlementApiException ignore) {
         }
@@ -106,13 +106,13 @@ public class TestCatalogNewEntries extends TestIntegrationBase {
                                                            ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
 
         assertNotNull(bpEntitlement);
-        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext).size(), 1);
+        assertEquals(invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext).size(), 1);
 
         assertEquals(bpEntitlement.getSubscriptionBase().getCurrentPlan().getRecurringBillingPeriod(), BillingPeriod.MONTHLY);
 
         final PlanPhaseSpecifier bazookaSpec = new PlanPhaseSpecifier("bazooka-monthly");
         try {
-            bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(bazookaSpec), null, null, callContext);
+            bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(bazookaSpec), (LocalDate) null, null, callContext);
             Assert.fail("Change plan should fail because plan does not yet exist");
         } catch (EntitlementApiException ignore) {
         }

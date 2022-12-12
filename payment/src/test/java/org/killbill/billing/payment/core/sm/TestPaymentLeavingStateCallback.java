@@ -18,6 +18,7 @@
 package org.killbill.billing.payment.core.sm;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,8 +38,6 @@ import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbeddedDB {
 
@@ -116,7 +115,8 @@ public class TestPaymentLeavingStateCallback extends PaymentTestSuiteWithEmbedde
                                                       null,
                                                       null,
                                                       false,
-                                                      null, ImmutableList.<PluginProperty>of(),
+                                                      null,
+                                                      Collections.emptyList(),
                                                       internalCallContext,
                                                       callContext);
 

@@ -19,7 +19,9 @@
 package org.killbill.billing.payment.api;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.joda.time.LocalDate;
@@ -35,9 +37,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -47,7 +46,7 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
 
     private static final Logger log = LoggerFactory.getLogger(TestPaymentApiNoDB.class);
 
-    private final Iterable<PluginProperty> PLUGIN_PROPERTIES = ImmutableList.<PluginProperty>of();
+    private final Iterable<PluginProperty> PLUGIN_PROPERTIES = Collections.emptyList();
     private Account account;
 
     @BeforeClass(groups = "fast")
@@ -133,19 +132,19 @@ public class TestPaymentApiNoDB extends PaymentTestSuiteNoDB {
                                                               null,
                                                               invoice.getId().toString(),
                                                               UUID.randomUUID().toString(),
-                                                              ImmutableList.<PluginProperty>of(),
+                                                              Collections.emptyList(),
                                                               PAYMENT_OPTIONS,
                                                               callContext);
-            final Payment paymentInfo = paymentApi.getPaymentByExternalKey(invoice.getId().toString(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment paymentInfo = paymentApi.getPaymentByExternalKey(invoice.getId().toString(), false, false, Collections.emptyList(), callContext);
             if (requestedAmount != null && expectedAmount == null) {
                 fail("Expected to fail because requested amount > invoice amount");
             }
             assertNotNull(paymentInfo.getId());
-            assertTrue(paymentInfo.getPurchasedAmount().compareTo(MoreObjects.firstNonNull(expectedAmount, invoiceAmount)) == 0);
+            assertTrue(paymentInfo.getPurchasedAmount().compareTo(Objects.requireNonNullElse(expectedAmount, invoiceAmount)) == 0);
             assertNotNull(paymentInfo.getPaymentNumber());
             assertEquals(paymentInfo.getExternalKey(), invoice.getId().toString());
             assertEquals(paymentInfo.getCurrency(), Currency.USD);
-            assertTrue(paymentInfo.getTransactions().get(0).getAmount().compareTo(MoreObjects.firstNonNull(expectedAmount, invoiceAmount)) == 0);
+            assertTrue(paymentInfo.getTransactions().get(0).getAmount().compareTo(Objects.requireNonNullElse(expectedAmount, invoiceAmount)) == 0);
             assertEquals(paymentInfo.getTransactions().get(0).getCurrency(), Currency.USD);
             assertEquals(paymentInfo.getTransactions().get(0).getPaymentId(), paymentInfo.getId());
             assertEquals(paymentInfo.getTransactions().get(0).getTransactionType(), TransactionType.PURCHASE);

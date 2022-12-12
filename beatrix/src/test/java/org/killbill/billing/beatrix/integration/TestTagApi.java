@@ -18,6 +18,8 @@ package org.killbill.billing.beatrix.integration;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
@@ -34,8 +36,6 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
 import org.killbill.billing.util.tag.TagDefinition;
-
-import com.google.common.collect.ImmutableSet;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -92,7 +92,7 @@ public class TestTagApi extends TestIntegrationBase {
         final DefaultEntitlement bpEntitlement = createBaseEntitlementAndCheckForCompletion(account.getId(), "externalKey", productName, ProductCategory.BASE, term, NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE);
         assertNotNull(bpEntitlement);
 
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         Assert.assertEquals(invoices.size(), 1);
 
         final Invoice invoice = invoices.get(0);
@@ -102,7 +102,9 @@ public class TestTagApi extends TestIntegrationBase {
         // Create a new tag definition
         //
         busHandler.pushExpectedEvents(NextEvent.TAG_DEFINITION);
-        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", ImmutableSet.<ObjectType>of(ObjectType.ACCOUNT, ObjectType.INVOICE), callContext);
+        // wrap to TreeSet to guarantee ObjectTypes order so assertion in line ~112-113 will always valid
+        final Set<ObjectType> objectTypes = new TreeSet<>(Set.of(ObjectType.ACCOUNT, ObjectType.INVOICE));
+        final TagDefinition tagDefinition = tagUserApi.createTagDefinition("foo", "foo desc", objectTypes, callContext);
         assertListenerStatus();
 
         final TagDefinition tagDefinition2 = tagUserApi.getTagDefinition(tagDefinition.getId(), callContext);

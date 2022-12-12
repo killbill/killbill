@@ -24,18 +24,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 import org.joda.time.LocalDate;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.tree.Item.ItemAction;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.collect.Iterables;
 
 /**
  * Keeps track of all the items existing on a specified ItemsNodeInterval
@@ -52,7 +50,7 @@ public class ItemsInterval {
 
     public ItemsInterval(final ItemsNodeInterval interval, final Item initialItem) {
         this.interval = interval;
-        this.items = Lists.newLinkedList();
+        this.items = new LinkedList<>();
         if (initialItem != null) {
             items.add(initialItem);
         }
@@ -63,41 +61,23 @@ public class ItemsInterval {
     }
 
     public Iterable<Item> get_ADD_items() {
-        return findItems(ItemAction.ADD);
+        return findItems(input -> input.getAction() == ItemAction.ADD);
     }
 
     public Iterable<Item> get_CANCEL_items() {
-        return findItems(ItemAction.CANCEL);
+        return findItems(input -> input.getAction() == ItemAction.CANCEL);
     }
 
     public Item getCancellingItemIfExists(final UUID targetId) {
-        return Iterables.tryFind(items,
-                                 new Predicate<Item>() {
-                                     @Override
-                                     public boolean apply(final Item input) {
-                                         return input.getAction() == ItemAction.CANCEL && input.getLinkedId().equals(targetId);
-                                     }
-                                 }).orNull();
+        return findItem(input -> input.getAction() == ItemAction.CANCEL && input.getLinkedId().equals(targetId));
     }
 
     public Item getCancelledItemIfExists(final UUID linkedId) {
-        return Iterables.tryFind(items,
-                                 new Predicate<Item>() {
-                                     @Override
-                                     public boolean apply(final Item input) {
-                                         return input.getAction() == ItemAction.ADD && input.getId().equals(linkedId);
-                                     }
-                                 }).orNull();
+        return findItem(input -> input.getAction() == ItemAction.ADD && input.getId().equals(linkedId));
     }
 
     public Item findItem(final UUID targetId) {
-        final Collection<Item> matchingItems = Collections2.<Item>filter(items,
-                                                                         new Predicate<Item>() {
-                                                                             @Override
-                                                                             public boolean apply(final Item input) {
-                                                                                 return input.getId().equals(targetId);
-                                                                             }
-                                                                         });
+        final Collection<Item> matchingItems = findItems(input -> input.getId().equals(targetId));
         Preconditions.checkState(matchingItems.size() < 2, "Too many items matching id='%s' among items='%s'", targetId, items);
         return matchingItems.size() == 1 ? matchingItems.iterator().next() : null;
     }
@@ -107,9 +87,9 @@ public class ItemsInterval {
     }
 
     public void cancelItems(final Item item) {
-        Preconditions.checkState(item.getAction() == ItemAction.ADD);
-        Preconditions.checkState(items.size() == 1);
-        Preconditions.checkState(items.get(0).getAction() == ItemAction.CANCEL);
+        Preconditions.checkState((item.getAction() == ItemAction.ADD), "item.getAction != ADD");
+        Preconditions.checkState(items.size() == 1, "items.size() != 1");
+        Preconditions.checkState((items.get(0).getAction() == ItemAction.CANCEL), "item.get(0).getAction() != CANCEL");
         items.clear();
     }
 
@@ -168,7 +148,7 @@ public class ItemsInterval {
     }
 
     private Item getResulting_CANCEL_ItemNoChecks() {
-        return findItem(ItemAction.CANCEL);
+        return findItem(input -> input.getAction() == ItemAction.CANCEL);
     }
 
     private Item getResulting_ADD_Item() {
@@ -180,15 +160,15 @@ public class ItemsInterval {
         //
         Preconditions.checkState(items.size() <= 2, "Double billing detected: %s", items);
 
-        final Collection<Item> addItems = findItems(ItemAction.ADD);
-        Preconditions.checkState(addItems.size() <= 1, "Double billing detected: %s", items);
+        final Iterable<Item> addItems = get_ADD_items();
+        Preconditions.checkState(Iterables.size(addItems) <= 1, "Double billing detected: %s", items);
 
-        Item item = findItem(ItemAction.ADD);
+        Item item = findItem(input -> input.getAction() == ItemAction.ADD);
 
         // Double billing sanity check across nodes
         if (item != null) {
-            final Set<UUID> addItemsCancelled = new HashSet<UUID>();
-            final Item cancelItem = findItem(ItemAction.CANCEL);
+            final Set<UUID> addItemsCancelled = new HashSet<>();
+            final Item cancelItem = findItem(input -> input.getAction() == ItemAction.CANCEL);
             if (cancelItem != null) {
                 Preconditions.checkState(cancelItem.getLinkedId() != null, "Invalid CANCEL item=%s", cancelItem);
                 if (cancelItem.getLinkedId().equals(item.getId())) {
@@ -198,7 +178,7 @@ public class ItemsInterval {
                     addItemsCancelled.add(cancelItem.getLinkedId());
                 }
             }
-            final Set<UUID> addItemsToBeCancelled = new HashSet<UUID>();
+            final Set<UUID> addItemsToBeCancelled = new HashSet<>();
             checkDoubleBilling(addItemsCancelled, addItemsToBeCancelled);
         }
 
@@ -234,19 +214,12 @@ public class ItemsInterval {
         parentItemsInterval.checkDoubleBilling(addItemsCancelled, addItemsToBeCancelled);
     }
 
-    private Item findItem(final ItemAction itemAction) {
-        final Collection<Item> matchingItems = findItems(itemAction);
-        return matchingItems.size() == 1 ? matchingItems.iterator().next() : null;
+    private Item findItem(final Predicate<? super Item> filter) {
+        return items.stream().filter(filter).findFirst().orElse(null);
     }
 
-    private Collection<Item> findItems(final ItemAction itemAction) {
-        return Collections2.<Item>filter(items,
-                                         new Predicate<Item>() {
-                                             @Override
-                                             public boolean apply(final Item input) {
-                                                 return input.getAction() == itemAction;
-                                             }
-                                         });
+    private List<Item> findItems(final Predicate<? super Item> filter) {
+        return items.stream().filter(filter).collect(Collectors.toUnmodifiableList());
     }
 
     @Override

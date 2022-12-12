@@ -90,7 +90,7 @@ public class TestPlanPhase extends CatalogTestSuiteNoDB {
         usage.setUsageType(UsageType.CONSUMABLE);
         final DefaultTieredBlock block = new DefaultTieredBlock();
         block.setUnit(new DefaultUnit().setName("unit"));
-        block.setSize(12.0);
+        block.setSize(BigDecimal.valueOf(12.0));
         final DefaultTier tier = new DefaultTier();
         tier.setBlocks(new DefaultTieredBlock[]{block});
         usage.setTiers(new DefaultTier[]{tier});

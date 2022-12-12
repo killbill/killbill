@@ -18,13 +18,14 @@
 
 package org.killbill.billing.jaxrs;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.GuicyKillbillTestSuiteNoDB;
 import org.killbill.billing.jaxrs.glue.TestJaxrsModuleNoDB;
 import org.testng.annotations.BeforeClass;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 public abstract class JaxrsTestSuiteNoDB extends GuicyKillbillTestSuiteNoDB {

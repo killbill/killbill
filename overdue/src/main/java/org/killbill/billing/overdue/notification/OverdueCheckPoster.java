@@ -20,6 +20,7 @@ package org.killbill.billing.overdue.notification;
 
 import java.util.Iterator;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.joda.time.DateTime;
@@ -32,8 +33,6 @@ import org.killbill.notificationq.api.NotificationEventWithMetadata;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
-
-import com.google.inject.Inject;
 
 import static org.killbill.billing.util.glue.IDBISetup.MAIN_RO_IDBI_NAMED;
 

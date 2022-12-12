@@ -28,6 +28,8 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.payment.PaymentTestSuiteNoDB;
 import org.killbill.billing.payment.api.PaymentApiException;
 import org.killbill.billing.payment.glue.PaymentModule;
+import org.killbill.commons.utils.io.ByteStreams;
+import org.killbill.commons.utils.io.Resources;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -35,9 +37,6 @@ import org.mockito.stubbing.Answer;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Resources;
 
 public class TestStateMachineConfigCache extends PaymentTestSuiteNoDB {
 

@@ -18,7 +18,8 @@
 package org.killbill.billing.catalog;
 
 import java.math.BigDecimal;
-import java.util.regex.Matcher;
+import java.util.Collections;
+import java.util.List;
 
 import org.killbill.billing.ErrorCode;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -29,13 +30,9 @@ import org.killbill.billing.catalog.api.PlanPhasePriceOverride;
 import org.killbill.billing.catalog.api.PlanPhasePriceOverridesWithCallContext;
 import org.killbill.billing.catalog.api.PlanSpecifier;
 import org.killbill.billing.catalog.api.StaticCatalog;
-import org.killbill.billing.catalog.api.UsagePriceOverride;
-import org.killbill.billing.catalog.override.DefaultPriceOverride;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestStandaloneCatalogWithPriceOverride extends CatalogTestSuiteWithEmbeddedDB {
 
@@ -51,8 +48,8 @@ public class TestStandaloneCatalogWithPriceOverride extends CatalogTestSuiteWith
         final PlanSpecifier spec = new PlanSpecifier("standard-monthly-67890");
         final PlanPhasePriceOverridesWithCallContext overrides = Mockito.mock(PlanPhasePriceOverridesWithCallContext.class);
         Mockito.when(overrides.getCallContext()).thenReturn(callContext);
-        final PlanPhasePriceOverride override = new DefaultPlanPhasePriceOverride("standard-monthly-evergreen", Currency.USD, null, BigDecimal.ONE, ImmutableList.<UsagePriceOverride>of());
-        Mockito.when(overrides.getOverrides()).thenReturn(ImmutableList.of(override));
+        final PlanPhasePriceOverride override = new DefaultPlanPhasePriceOverride("standard-monthly-evergreen", Currency.USD, null, BigDecimal.ONE, Collections.emptyList());
+        Mockito.when(overrides.getOverrides()).thenReturn(List.of(override));
         final Plan plan = standaloneCatalogWithPriceOverride.createOrFindPlan(spec, overrides);
         Assert.assertTrue(plan.getName().startsWith("standard-monthly-67890-"));
         Assert.assertTrue(priceOverridePattern.isOverriddenPlan(plan.getName()));

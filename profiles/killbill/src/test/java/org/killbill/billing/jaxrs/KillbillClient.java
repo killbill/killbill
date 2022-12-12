@@ -19,11 +19,14 @@
 package org.killbill.billing.jaxrs;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.joda.time.LocalDate;
 import org.killbill.billing.GuicyKillbillTestSuiteWithEmbeddedDB;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.catalog.api.Currency;
@@ -67,17 +70,14 @@ import org.killbill.billing.payment.provider.ExternalPaymentProviderPlugin;
 import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.tag.ControlTagType;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedDB {
 
-    protected static final ImmutableList<String> NULL_PLUGIN_NAMES = null;
-    protected static final ImmutableMap<String, String> NULL_PLUGIN_PROPERTIES = null;
-    protected static final ImmutableList<AuditLog> EMPTY_AUDIT_LOGS = ImmutableList.<AuditLog>of();
+    protected static final List<String> NULL_PLUGIN_NAMES = null;
+    protected static final Map<String, String> NULL_PLUGIN_PROPERTIES = null;
+    protected static final List<AuditLog> EMPTY_AUDIT_LOGS = Collections.emptyList();
 
     protected final long DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC = 60;
 
@@ -229,7 +229,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         input.setProductCategory(productCategory);
         input.setBillingPeriod(billingPeriod);
         input.setPriceList(PriceListSet.DEFAULT_PRICELIST_NAME);
-        final Subscription subscription = subscriptionApi.createSubscription(input, null, null, true, false, false, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
+        final Subscription subscription = subscriptionApi.createSubscription(input, (LocalDate) null, (LocalDate) null, true, false, false, true, DEFAULT_WAIT_COMPLETION_TIMEOUT_SEC, NULL_PLUGIN_PROPERTIES, requestOptions);
         callbackServlet.assertListenerStatus();
 
         assertEquals(subscription.getExternalKey(), externalKey);
@@ -283,7 +283,7 @@ public abstract class KillbillClient extends GuicyKillbillTestSuiteWithEmbeddedD
         assertNotNull(accountJson);
 
         callbackServlet.pushExpectedEvent(ExtBusEventType.TAG_CREATION);
-        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), ImmutableList.<UUID>of(ControlTagType.MANUAL_PAY.getId()), requestOptions);
+        final Tags accountTag = accountApi.createAccountTags(accountJson.getAccountId(), List.of(ControlTagType.MANUAL_PAY.getId()), requestOptions);
         callbackServlet.assertListenerStatus();
         assertNotNull(accountTag);
         assertEquals(accountTag.get(0).getTagDefinitionId(), ControlTagType.MANUAL_PAY.getId());

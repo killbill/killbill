@@ -45,8 +45,6 @@ import org.mockito.Mockito;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
@@ -124,10 +122,10 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 4);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -284,10 +282,10 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 4);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -393,15 +391,15 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 9);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(4).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(5).getEffectiveDate().compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(6).getEffectiveDate().compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(7).getEffectiveDate().compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(8).getEffectiveDate().compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(4).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(5).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(6).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(7).getEffectiveDate()).compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(8).getEffectiveDate()).compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -547,16 +545,16 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 10);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(4).getEffectiveDate().compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(5).getEffectiveDate().compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(6).getEffectiveDate().compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(7).getEffectiveDate().compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(8).getEffectiveDate().compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(9).getEffectiveDate().compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(4).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(5).getEffectiveDate()).compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(6).getEffectiveDate()).compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(7).getEffectiveDate()).compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(8).getEffectiveDate()).compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(9).getEffectiveDate()).compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -686,11 +684,11 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 5);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(4).getEffectiveDate().compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(4).getEffectiveDate()).compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -781,12 +779,12 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 6);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(4).getEffectiveDate().compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(5).getEffectiveDate().compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(4).getEffectiveDate()).compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(5).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -903,18 +901,18 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 9);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(ent1Tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(ent1Tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(ent2Tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(ent2Tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(ent1Tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(ent1Tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(ent2Tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(ent2Tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
 
-        assertEquals(events.get(4).getEffectiveDate().compareTo(new LocalDate(ent1Tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(4).getEffectiveDate()).compareTo(new LocalDate(ent1Tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
 
-        assertEquals(events.get(5).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(6).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(5).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(6).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
 
-        assertEquals(events.get(7).getEffectiveDate().compareTo(new LocalDate(ent1Tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(8).getEffectiveDate().compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(7).getEffectiveDate()).compareTo(new LocalDate(ent1Tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(8).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -1017,7 +1015,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         allTransitions.add(tr3);
 
         // Verify the timeline without the blocking state events
-        final ImmutableList<Entitlement> entitlementsWithoutBlockingStates = ImmutableList.<Entitlement>of(createEntitlement(entitlementId, allTransitions, blockingStates));
+        final List<Entitlement> entitlementsWithoutBlockingStates = List.of(createEntitlement(entitlementId, allTransitions, blockingStates));
         final List<SubscriptionEvent> eventsWithoutBlockingStates = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlementsWithoutBlockingStates, internalCallContext).getSubscriptionEvents();
         assertEquals(eventsWithoutBlockingStates.size(), 4);
         assertEquals(eventsWithoutBlockingStates.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
@@ -1033,7 +1031,7 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         blockingStates.add(bs1);
 
         // Verify the timeline with the overdue event blocking the entitlement
-        final ImmutableList<Entitlement> entitlementsWithOverdueEvent = ImmutableList.<Entitlement>of(createEntitlement(entitlementId, allTransitions, blockingStates));
+        final List<Entitlement> entitlementsWithOverdueEvent = List.of(createEntitlement(entitlementId, allTransitions, blockingStates));
         final List<SubscriptionEvent> eventsWithOverdueEvent = new DefaultSubscriptionBundleTimeline(accountId, bundleId, externalKey, entitlementsWithOverdueEvent, internalCallContext).getSubscriptionEvents();
         assertEquals(eventsWithOverdueEvent.size(), 5);
         assertEquals(eventsWithOverdueEvent.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
@@ -1062,12 +1060,12 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 6);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(4).getEffectiveDate().compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(5).getEffectiveDate().compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(tr2.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(4).getEffectiveDate()).compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(5).getEffectiveDate()).compareTo(new LocalDate(tr3.getEffectiveTransitionTime(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -1173,10 +1171,10 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 4);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -1281,19 +1279,19 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         final List<SubscriptionEvent> events = timeline.getSubscriptionEvents();
         assertEquals(events.size(), 11);
 
-        assertEquals(events.get(0).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
-        assertEquals(events.get(1).getEffectiveDate().compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(0).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(1).getEffectiveDate()).compareTo(new LocalDate(tr1.getEffectiveTransitionTime(), accountTimeZone)), 0);
 
-        assertEquals(events.get(2).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(3).getEffectiveDate().compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(4).getEffectiveDate().compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(5).getEffectiveDate().compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(6).getEffectiveDate().compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(7).getEffectiveDate().compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(8).getEffectiveDate().compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);
-        assertEquals(events.get(9).getEffectiveDate().compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(2).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(3).getEffectiveDate()).compareTo(new LocalDate(bs1.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(4).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(5).getEffectiveDate()).compareTo(new LocalDate(bs2.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(6).getEffectiveDate()).compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(7).getEffectiveDate()).compareTo(new LocalDate(bs3.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(8).getEffectiveDate()).compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(9).getEffectiveDate()).compareTo(new LocalDate(bs4.getEffectiveDate(), accountTimeZone)), 0);
 
-        assertEquals(events.get(10).getEffectiveDate().compareTo(new LocalDate(bs5.getEffectiveDate(), accountTimeZone)), 0);
+        assertEquals(internalCallContext.toLocalDate(events.get(10).getEffectiveDate()).compareTo(new LocalDate(bs5.getEffectiveDate(), accountTimeZone)), 0);
 
         assertEquals(events.get(0).getSubscriptionEventType(), SubscriptionEventType.START_ENTITLEMENT);
         assertEquals(events.get(1).getSubscriptionEventType(), SubscriptionEventType.START_BILLING);
@@ -1356,11 +1354,11 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
         Mockito.when(result.getId()).thenReturn(entitlementId);
 
         final EventsStream eventsStream = Mockito.mock(EventsStream.class);
-        Mockito.when(eventsStream.getBlockingStates()).thenReturn(blockingStates);
+        Mockito.when(eventsStream.getBlockingStates(false)).thenReturn(blockingStates);
         Mockito.when(result.getEventsStream()).thenReturn(eventsStream);
 
         final SubscriptionBase base = Mockito.mock(SubscriptionBase.class);
-        Mockito.when(base.getAllTransitions()).thenReturn(allTransitions);
+        Mockito.when(base.getAllTransitions(false)).thenReturn(allTransitions);
         Mockito.when(result.getSubscriptionBase()).thenReturn(base);
         Mockito.when(result.getSubscriptionBase().getStartDate()).thenReturn(new DateTime(DateTimeZone.UTC));
         return result;
@@ -1439,9 +1437,11 @@ public class TestDefaultSubscriptionBundleTimeline extends EntitlementTestSuiteN
                                                   null,
                                                   null,
                                                   null,
+                                                  null,
                                                   nextPlan,
                                                   nextPhase,
                                                   nextPriceList,
+                                                  null,
                                                   null,
                                                   1L,
                                                   createdDate,

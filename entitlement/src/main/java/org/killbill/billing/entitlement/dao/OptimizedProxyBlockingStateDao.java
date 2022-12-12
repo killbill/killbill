@@ -20,6 +20,7 @@ package org.killbill.billing.entitlement.dao;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -43,8 +44,6 @@ import org.killbill.billing.util.optimizer.BusOptimizer;
 import org.killbill.clock.Clock;
 import org.killbill.notificationq.api.NotificationQueueService;
 import org.skife.jdbi.v2.IDBI;
-
-import com.google.common.collect.ImmutableList;
 
 public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
 
@@ -72,6 +71,7 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
      * @param allSubscriptionsForBundle         all subscriptions associated with that bundle
      * @param accountBCD                        account BCD
      * @param catalog                           full Catalog
+     * @param includeDeletedEvents              flag that specifies whether deleted events should be returned
      * @param context                           call context
      * @return blocking states for that subscription
      * @throws EntitlementApiException
@@ -85,6 +85,7 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
                                                         final Collection<SubscriptionBase> allSubscriptionsForBundle,
                                                         final int accountBCD,
                                                         final VersionedCatalog catalog,
+                                                        final boolean includeDeletedEvents,
                                                         final InternalTenantContext context) throws EntitlementApiException {
         // blockable id points to a subscription, but make sure it's an add-on
         if (!ProductCategory.ADD_ON.equals(subscription.getCategory())) {
@@ -93,19 +94,20 @@ public class OptimizedProxyBlockingStateDao extends ProxyBlockingStateDao {
         }
 
         // Find all base entitlements that we care about (for which we want to find future cancelled add-ons)
-        final Iterable<EventsStream> eventsStreams = ImmutableList.<EventsStream>of(eventsStreamBuilder.buildForEntitlement(allBlockingStatesOnDiskForAccount,
-                                                                                                                            account,
-                                                                                                                            bundle,
-                                                                                                                            baseSubscription,
-                                                                                                                            allSubscriptionsForBundle,
-                                                                                                                            accountBCD,
-                                                                                                                            catalog,
-                                                                                                                            context));
+        final Iterable<EventsStream> eventsStreams = List.of(eventsStreamBuilder.buildForEntitlement(allBlockingStatesOnDiskForAccount,
+                                                                                                     account,
+                                                                                                     bundle,
+                                                                                                     baseSubscription,
+                                                                                                     allSubscriptionsForBundle,
+                                                                                                     accountBCD,
+                                                                                                     catalog,
+                                                                                                     includeDeletedEvents,
+                                                                                                     context));
 
         return addBlockingStatesNotOnDisk(subscription.getId(),
                                           BlockingStateType.SUBSCRIPTION,
-                                          new LinkedList<BlockingState>(subscriptionBlockingStatesOnDisk),
-                                          ImmutableList.<SubscriptionBase>of(baseSubscription),
+                                          new LinkedList<>(subscriptionBlockingStatesOnDisk),
+                                          List.of(baseSubscription),
                                           eventsStreams);
     }
 }

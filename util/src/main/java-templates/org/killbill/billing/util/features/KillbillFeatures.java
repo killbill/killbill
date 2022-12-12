@@ -17,7 +17,7 @@
 
 package org.killbill.billing.util.features;
 
-import com.google.common.base.MoreObjects;
+import static java.util.Objects.requireNonNullElse;
 
 public class KillbillFeatures {
 
@@ -34,9 +34,9 @@ public class KillbillFeatures {
     private final boolean allowAccountBCDUpdate;
 
     public KillbillFeatures() {
-        this.isInvoiceOptimizationOn = Boolean.valueOf(MoreObjects.<String>firstNonNull(FEATURE_INVOICE_OPTIMIZATION, "false"));
-        this.isBusOptimizationOn = Boolean.valueOf(MoreObjects.<String>firstNonNull(FEATURE_BUS_OPTIMIZATION, "false"));
-        this.allowAccountBCDUpdate = Boolean.valueOf(MoreObjects.<String>firstNonNull(FEATURE_ALLOW_ACCOUNT_BCD_UPDATE, "false"));
+        this.isInvoiceOptimizationOn = Boolean.valueOf(requireNonNullElse(FEATURE_INVOICE_OPTIMIZATION, "false"));
+        this.isBusOptimizationOn = Boolean.valueOf(requireNonNullElse(FEATURE_BUS_OPTIMIZATION, "false"));
+        this.allowAccountBCDUpdate = Boolean.valueOf(requireNonNullElse(FEATURE_ALLOW_ACCOUNT_BCD_UPDATE, "false"));
     }
 
     public boolean isInvoiceOptimizationOn() {

@@ -17,20 +17,21 @@
 
 package org.killbill.billing.usage.api.svcs;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.joda.time.LocalDate;
+import org.joda.time.DateTime;
 import org.killbill.billing.usage.api.RawUsageRecord;
 
 public class DefaultRawUsage implements RawUsageRecord {
 
     private final UUID subscriptionId;
-    private final LocalDate recordDate;
+    private final DateTime recordDate;
     private final String unitType;
-    private final Long amount;
+    private final BigDecimal amount;
     private final String trackingId;
 
-    public DefaultRawUsage(final UUID subscriptionId, final LocalDate recordDate, final String unitType, final Long amount, final String trackingId) {
+    public DefaultRawUsage(final UUID subscriptionId, final DateTime recordDate, final String unitType, final BigDecimal amount, final String trackingId) {
         this.subscriptionId = subscriptionId;
         this.recordDate = recordDate;
         this.unitType = unitType;
@@ -44,7 +45,7 @@ public class DefaultRawUsage implements RawUsageRecord {
     }
 
     @Override
-    public LocalDate getDate() {
+    public DateTime getDate() {
         return recordDate;
     }
 
@@ -54,7 +55,7 @@ public class DefaultRawUsage implements RawUsageRecord {
     }
 
     @Override
-    public Long getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 

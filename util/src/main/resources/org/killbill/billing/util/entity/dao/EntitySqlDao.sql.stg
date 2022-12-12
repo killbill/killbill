@@ -168,11 +168,30 @@ limit 1 offset :offset
 ;
 >>
 
+getRecordIdAtOffsetWithAccountRecordId(offset) ::= <<
+select <recordIdField("")>
+from <tableName()>
+where <accountRecordIdField("")> = :accountRecordId
+order by <recordIdField("")> ASC
+limit 1 offset :offset
+;
+>>
+
 getCount() ::= <<
 select
 count(1) as count
 from <tableName()> t
 where <CHECK_TENANT("t.")>
+<andCheckSoftDeletionWithComma("t.")>
+;
+>>
+
+getCountWithAccountRecordId() ::= <<
+select
+count(1) as count
+from <tableName()> t
+where <CHECK_TENANT("t.")>
+and <accountRecordIdField("t.")> = :accountRecordId
 <andCheckSoftDeletionWithComma("t.")>
 ;
 >>
@@ -238,6 +257,18 @@ where <accountRecordIdField("t.")> = :accountRecordId
 <andCheckSoftDeletionWithComma("t.")>
 <AND_CHECK_TENANT("t.")>
 <defaultOrderBy("t.")>
+;
+>>
+
+getByAccountRecordIdWithPaginationEnabled(accountRecordId) ::= <<
+select
+<allTableFields("t.")>
+from <tableName()> t
+where <accountRecordIdField("t.")> = :accountRecordId
+<andCheckSoftDeletionWithComma("t.")>
+<AND_CHECK_TENANT("t.")>
+<defaultOrderBy("t.")>
+limit :rowCount offset :offset
 ;
 >>
 

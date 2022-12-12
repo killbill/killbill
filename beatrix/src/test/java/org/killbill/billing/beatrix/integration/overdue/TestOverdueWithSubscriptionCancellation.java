@@ -105,10 +105,10 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // Should be in OD1
         checkODState("OD1");
 
-        final SubscriptionBase cancelledBaseSubscription = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext)).getSubscriptionBase();
+        final SubscriptionBase cancelledBaseSubscription = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext)).getSubscriptionBase();
         assertTrue(cancelledBaseSubscription.getState() == EntitlementState.CANCELLED);
 
-        final SubscriptionBase cancelledAddon1= ((DefaultEntitlement) entitlementApi.getEntitlementForId(addOn1.getId(), callContext)).getSubscriptionBase();
+        final SubscriptionBase cancelledAddon1= ((DefaultEntitlement) entitlementApi.getEntitlementForId(addOn1.getId(), false, callContext)).getSubscriptionBase();
         assertTrue(cancelledAddon1.getState() == EntitlementState.CANCELLED);
     }
 
@@ -139,7 +139,7 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // Cancel bundle 2 one day after (2012-05-02)
         clock.addDays(1);
         cancelEntitlementAndCheckForCompletion(baseEntitlement2, NextEvent.BLOCK, NextEvent.CANCEL, NextEvent.NULL_INVOICE);
-        final SubscriptionBase cancelledBaseSubscription2 = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement2.getId(), callContext)).getSubscriptionBase();
+        final SubscriptionBase cancelledBaseSubscription2 = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement2.getId(), false, callContext)).getSubscriptionBase();
         assertTrue(cancelledBaseSubscription2.getState() == EntitlementState.CANCELLED);
 
         // DAY 30 have to get out of trial before first payment (2012-05-31)
@@ -162,10 +162,10 @@ public class TestOverdueWithSubscriptionCancellation extends TestOverdueBase {
         // Should be in OD1
         checkODState("OD1");
 
-        final SubscriptionBase cancelledBaseSubscription = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), callContext)).getSubscriptionBase();
+        final SubscriptionBase cancelledBaseSubscription = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement.getId(), false, callContext)).getSubscriptionBase();
         assertTrue(cancelledBaseSubscription.getState() == EntitlementState.CANCELLED);
 
-        final SubscriptionBase cancelledBaseEntitlement3 = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement3.getId(), callContext)).getSubscriptionBase();
+        final SubscriptionBase cancelledBaseEntitlement3 = ((DefaultEntitlement) entitlementApi.getEntitlementForId(baseEntitlement3.getId(), false, callContext)).getSubscriptionBase();
         assertTrue(cancelledBaseEntitlement3.getState() == EntitlementState.CANCELLED);
     }
 }

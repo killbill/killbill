@@ -31,8 +31,6 @@ import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.entity.dao.MockEntityDaoBase;
 import org.killbill.billing.util.tag.TagDefinition;
 
-import com.google.common.collect.ImmutableList;
-
 public class MockTagDefinitionDao extends MockEntityDaoBase<TagDefinitionModelDao, TagDefinition, TagDefinitionApiException> implements TagDefinitionDao {
 
     private final Map<String, TagDefinitionModelDao> tags = new ConcurrentHashMap<String, TagDefinitionModelDao>();

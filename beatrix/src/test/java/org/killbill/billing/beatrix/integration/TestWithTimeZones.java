@@ -19,6 +19,7 @@ package org.killbill.billing.beatrix.integration;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,11 +43,8 @@ import org.killbill.billing.invoice.api.DryRunType;
 import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.mock.MockAccountBuilder;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 
@@ -79,7 +77,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         final TestDryRunArguments dryRun = new TestDryRunArguments(DryRunType.SUBSCRIPTION_ACTION, "Shotgun", ProductCategory.BASE, BillingPeriod.MONTHLY, null, null,
                                                                    SubscriptionEventType.START_BILLING, null, null, null, null);
-        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, callContext);
+        final Invoice dryRunInvoice = invoiceUserApi.triggerDryRunInvoiceGeneration(account.getId(), clock.getUTCToday(), dryRun, Collections.emptyList(), callContext);
         expectedInvoices.add(new ExpectedInvoiceItemCheck(new LocalDate(2015, 9, 1), null, InvoiceItemType.FIXED, new BigDecimal("0")));
         invoiceChecker.checkInvoiceNoAudits(dryRunInvoice, expectedInvoices);
 
@@ -136,17 +134,17 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         // Cancel the next month specifying just a LocalDate
         final LocalDate cancellationDate = new LocalDate("2015-12-01", tz);
-        entitlement = entitlement.cancelEntitlementWithDate(cancellationDate, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement = entitlement.cancelEntitlementWithDate(cancellationDate, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Verify first entitlement is correctly cancelled on the right date
-        Assert.assertEquals(entitlement.getEffectiveEndDate(), cancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveEndDate()), cancellationDate);
 
         // We now move the clock to the date of the cancellation, which match the cancellation day from the client point of view
         busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE, NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE);
@@ -154,7 +152,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01")
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -182,16 +180,16 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
-        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "Something", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
         // Cancel the next month specifying just a LocalDate
         final LocalDate cancellationDate = new LocalDate("2015-03-01", tz);
-        entitlement = entitlement.cancelEntitlementWithDate(cancellationDate, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlement = entitlement.cancelEntitlementWithDate(cancellationDate, true, Collections.emptyList(), callContext);
 
         // Verify first entitlement is correctly cancelled on the right date
-        Assert.assertEquals(entitlement.getEffectiveEndDate(), cancellationDate);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveEndDate()), cancellationDate);
 
         // We now move the clock to the date of the cancellation  which match the cancellation day from the client point of view
         busHandler.pushExpectedEvents(NextEvent.CANCEL, NextEvent.BLOCK, NextEvent.NULL_INVOICE, NextEvent.NULL_INVOICE);
@@ -199,7 +197,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
         assertListenerStatus();
 
         // Verify second that there was no repair (so the cancellation did correctly happen on the "2015-12-01"
-        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, callContext);
+        final List<Invoice> invoices = invoiceUserApi.getInvoicesByAccount(account.getId(), false, false, true, callContext);
         Assert.assertEquals(invoices.size(), 1);
     }
 
@@ -237,11 +235,11 @@ public class TestWithTimeZones extends TestIntegrationBase {
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Blowdart", BillingPeriod.MONTHLY, "notrial", null);
         // Pass a date of today, to trigger TimeAwareContext#toUTCDateTime
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "Something", clock.getUTCToday(), clock.getUTCToday(), false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(),  new DefaultEntitlementSpecifier(spec), "Something", clock.getUTCToday(), clock.getUTCToday(), false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
 
-        Assert.assertEquals(entitlement.getEffectiveStartDate().compareTo(new LocalDate("2015-03-08")), 0);
+        Assert.assertEquals(internalCallContext.toLocalDate(entitlement.getEffectiveStartDate()).compareTo(new LocalDate("2015-03-08")), 0);
         Assert.assertEquals(((DefaultEntitlement) entitlement).getBasePlanSubscriptionBase().getStartDate().compareTo(new DateTime("2015-03-08T02:00:00.000-08:00")), 0);
 
         invoiceChecker.checkChargedThroughDate(entitlement.getId(), new LocalDate("2015-04-08"), callContext);
@@ -364,7 +362,7 @@ public class TestWithTimeZones extends TestIntegrationBase {
 
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("pistol-monthly-notrial",null);
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.INVOICE_PAYMENT, NextEvent.PAYMENT);
-        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), "bundleExternalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
 
 

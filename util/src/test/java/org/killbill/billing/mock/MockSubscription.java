@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.joda.time.DateTime;
+import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingActionPolicy;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
@@ -31,7 +32,6 @@ import org.killbill.billing.catalog.api.PlanPhaseSpecifier;
 import org.killbill.billing.catalog.api.PriceList;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.ProductCategory;
-import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementSourceType;
 import org.killbill.billing.entitlement.api.Entitlement.EntitlementState;
@@ -176,7 +176,7 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog) throws SubscriptionBaseApiException {
+    public List<SubscriptionBillingEvent> getSubscriptionBillingEvents(final VersionedCatalog publicCatalog, final InternalTenantContext context) throws SubscriptionBaseApiException {
         return null;
     }
 
@@ -205,9 +205,19 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
+    public Integer getQuantity() {
+        return null;
+    }
+
+    @Override
     public DateTime getFutureEndDate() {
         return sub.getFutureEndDate();
     }
+    
+    @Override
+    public DateTime getFutureExpiryDate() {
+        return sub.getFutureExpiryDate();
+    }    
 
     @Override
     public EntitlementSourceType getSourceType() {
@@ -264,7 +274,12 @@ public class MockSubscription implements SubscriptionBase {
     }
 
     @Override
-    public List<SubscriptionBaseTransition> getAllTransitions() {
+    public List<SubscriptionBaseTransition> getAllTransitions(boolean includeDeleted) {
         return null;
     }
+
+	@Override
+	public boolean getIncludeDeletedEvents() {
+		return false;
+	}
 }

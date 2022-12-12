@@ -55,7 +55,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     protected final UUID linkedItemId;
 
     /* Usage details */
-    protected final Integer quantity;
+    protected final BigDecimal quantity;
     protected final String itemDetails;
 
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
@@ -67,7 +67,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     public InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID bundleId,
                            @Nullable final UUID subscriptionId, @Nullable final String description,
                            final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency, final UUID reversedItemId,
-                           @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+                           @Nullable final BigDecimal quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
         this(id, createdDate, invoiceId, accountId, null, bundleId, subscriptionId, description, startDate, endDate, amount, rate, currency, reversedItemId, quantity, itemDetails, invoiceItemType);
     }
 
@@ -80,7 +80,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     private InvoiceItemBase(final UUID id, @Nullable final DateTime createdDate, final UUID invoiceId, final UUID accountId, @Nullable final UUID childAccountId, @Nullable final UUID bundleId,
                             @Nullable final UUID subscriptionId, @Nullable final String description,
                             @Nullable final LocalDate startDate, final LocalDate endDate, final BigDecimal amount, final BigDecimal rate, final Currency currency,
-                            final UUID reversedItemId, @Nullable final Integer quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
+                            final UUID reversedItemId, @Nullable final BigDecimal quantity, @Nullable final String itemDetails, final InvoiceItemType invoiceItemType) {
         super(id, createdDate, createdDate);
         this.invoiceId = invoiceId;
         this.accountId = accountId;
@@ -195,7 +195,7 @@ public abstract class InvoiceItemBase extends EntityBase implements InvoiceItem 
     }
 
     @Override
-    public Integer getQuantity() {
+    public BigDecimal getQuantity() {
         return quantity;
     }
 

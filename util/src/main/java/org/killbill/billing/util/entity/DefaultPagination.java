@@ -26,7 +26,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import com.google.common.collect.ImmutableList;
+import org.killbill.commons.utils.collect.Iterators;
 
 // Assumes the original offset starts at zero.
 public class DefaultPagination<T> implements Pagination<T>, Closeable {
@@ -44,11 +44,11 @@ public class DefaultPagination<T> implements Pagination<T>, Closeable {
     }
 
     public static <T> Pagination<T> build(final Long offset, final Long limit, final Integer maxNbRecords, final Collection<T> elements) {
-        final List<T> allResults = ImmutableList.<T>copyOf(elements);
+        final List<T> allResults = List.<T>copyOf(elements);
 
         final List<T> results;
         if (offset >= allResults.size()) {
-            results = ImmutableList.<T>of();
+            results = List.<T>of();
         } else if (offset + limit > allResults.size()) {
             results = allResults.subList(offset.intValue(), allResults.size());
         } else {
@@ -157,11 +157,7 @@ public class DefaultPagination<T> implements Pagination<T>, Closeable {
         if (currentOffset != null ? !currentOffset.equals(that.currentOffset) : that.currentOffset != null) {
             return false;
         }
-        if (delegateIterator != null ? !ImmutableList.<T>copyOf(delegateIterator).equals(ImmutableList.<T>copyOf(that.delegateIterator)) : that.delegateIterator != null) {
-            return false;
-        }
-
-        return true;
+        return delegateIterator != null ? Iterators.toUnmodifiableList(delegateIterator).equals(Iterators.toUnmodifiableList(that.delegateIterator)) : that.delegateIterator == null;
     }
 
     @Override

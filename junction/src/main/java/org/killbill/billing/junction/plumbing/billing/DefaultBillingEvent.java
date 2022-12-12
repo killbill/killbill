@@ -20,6 +20,7 @@
 package org.killbill.billing.junction.plumbing.billing;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,15 +37,14 @@ import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBillingEvent;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
 public class DefaultBillingEvent implements BillingEvent {
 
     private final UUID subscriptionId;
     private final UUID bundleId;
 
     private final int billCycleDayLocal;
+
+    private final int quantity;
     private final BillingAlignment billingAlignment;
 
     private final DateTime effectiveDate;
@@ -74,7 +74,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.subscriptionId = subscription.getId();
         this.bundleId = subscription.getBundleId();
 
-        this.isCancelledOrBlocked = inputEvent.getType() == SubscriptionBaseTransitionType.CANCEL;
+        this.isCancelledOrBlocked = inputEvent.getType() == SubscriptionBaseTransitionType.CANCEL || inputEvent.getType() == SubscriptionBaseTransitionType.EXPIRED; 
 
         this.type = inputEvent.getType();
         this.plan = inputEvent.getPlan();
@@ -84,6 +84,7 @@ public class DefaultBillingEvent implements BillingEvent {
 
         this.currency = currency;
         this.billCycleDayLocal = billCycleDayLocal;
+        this.quantity = inputEvent.getQuantity() == null || inputEvent.getQuantity() <= 0 ? 1 /* default to 1 if not passed or has an invalid value (safety) */ : inputEvent.getQuantity();
         this.billingAlignment = billingAlignment;
         this.description = inputEvent.getType().toString();
         this.effectiveDate = inputEvent.getEffectiveDate();
@@ -110,6 +111,7 @@ public class DefaultBillingEvent implements BillingEvent {
                                final Currency currency,
                                final BillingPeriod billingPeriod,
                                final int billCycleDayLocal,
+                               final int quantity,
                                final String description,
                                final long totalOrdering,
                                final SubscriptionBaseTransitionType type) {
@@ -130,6 +132,7 @@ public class DefaultBillingEvent implements BillingEvent {
         this.usages = usages;
         this.currency = currency;
         this.billCycleDayLocal = billCycleDayLocal;
+        this.quantity = quantity;
         this.description = description;
         this.type = type;
         this.totalOrdering = totalOrdering;
@@ -149,6 +152,11 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public int getBillCycleDayLocal() {
         return billCycleDayLocal;
+    }
+
+    @Override
+    public int getQuantity() {
+        return quantity;
     }
 
     @Override
@@ -237,15 +245,14 @@ public class DefaultBillingEvent implements BillingEvent {
 
     private static List<Usage> computeUsages(final boolean isCancelledOrBlocked, final PlanPhase effectivePlanPhase) {
         if (isCancelledOrBlocked) {
-            return ImmutableList.<Usage>of();
+            return Collections.emptyList();
         }
 
-        final List<Usage> result = (effectivePlanPhase.getUsages().length > 0) ?
-                             Lists.newArrayList() : ImmutableList.<Usage>of();
-        for (Usage usage : effectivePlanPhase.getUsages()) {
-            result.add(usage);
+        if (effectivePlanPhase.getUsages().length <= 0) {
+            return Collections.emptyList();
         }
-        return result;
+
+        return List.of(effectivePlanPhase.getUsages());
     }
 
 
@@ -321,6 +328,9 @@ public class DefaultBillingEvent implements BillingEvent {
         if (billCycleDayLocal != that.billCycleDayLocal) {
             return false;
         }
+        if (quantity != that.quantity) {
+            return false;
+        }
         if (billingPeriod != that.billingPeriod) {
             return false;
         }
@@ -355,6 +365,7 @@ public class DefaultBillingEvent implements BillingEvent {
     @Override
     public int hashCode() {
         int result = 31 * billCycleDayLocal;
+        result = 31 * result + quantity;
         result = 31 * result + (subscriptionId != null ? subscriptionId.hashCode() : 0);
         result = 31 * result + (bundleId != null ? bundleId.hashCode() : 0);
         result = 31 * result + (fixedPrice != null ? fixedPrice.hashCode() : 0);

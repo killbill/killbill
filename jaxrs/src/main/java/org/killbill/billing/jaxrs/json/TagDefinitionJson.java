@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -29,10 +30,7 @@ import org.killbill.billing.util.tag.TagDefinition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -154,11 +152,8 @@ public class TagDefinitionJson extends JsonBase {
     }
 
     public static Set<ObjectType> toObjectType(final Set<String> applicableObjectTypes) {
-        return ImmutableSet.copyOf(Collections2.transform(applicableObjectTypes, new Function<String, ObjectType>() {
-            @Override
-            public ObjectType apply(final String input) {
-                return ObjectType.valueOf(input);
-            }
-        }));
+        return applicableObjectTypes.stream()
+                .map(ObjectType::valueOf)
+                .collect(Collectors.toUnmodifiableSet());
     }
 }

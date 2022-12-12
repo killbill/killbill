@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.callcontext.InternalTenantContext;
@@ -37,14 +38,12 @@ import org.killbill.billing.invoice.api.formatters.ResourceBundleFactory.Resourc
 import org.killbill.billing.invoice.template.translator.DefaultInvoiceTranslator;
 import org.killbill.billing.tenant.api.TenantInternalApi;
 import org.killbill.billing.util.LocaleUtils;
+import org.killbill.commons.utils.Strings;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.email.templates.TemplateEngine;
-import org.killbill.billing.util.io.IOUtils;
 import org.killbill.billing.util.template.translation.TranslatorConfig;
+import org.killbill.commons.utils.io.IOUtils;
 import org.killbill.xmlloader.UriAccessor;
-
-import com.google.common.base.Strings;
-import com.google.inject.Inject;
 
 public class HtmlInvoiceGenerator {
 
@@ -116,7 +115,7 @@ public class HtmlInvoiceGenerator {
         try {
             final InputStream templateStream = UriAccessor.accessUri(templateName);
             return IOUtils.toString(templateStream);
-        } catch (URISyntaxException e) {
+        } catch (final URISyntaxException e) {
             throw new IOException(e);
         }
     }

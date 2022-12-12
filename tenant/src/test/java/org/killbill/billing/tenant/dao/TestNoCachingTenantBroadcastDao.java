@@ -34,7 +34,7 @@ public class TestNoCachingTenantBroadcastDao extends TenantTestSuiteWithEmbedded
         tenantBroadcastDao.create(model, internalCallContext);
 
         final TenantBroadcastModelDao result1 = tenantBroadcastDao.getById(model.getId(), internalCallContext);
-        Assert.assertEquals(result1.getTenantRecordId(), new Long(79L));
+        Assert.assertEquals(result1.getTenantRecordId(), Long.valueOf(79L));
         Assert.assertEquals(result1.getType(), "foo");
 
         internalCallContext.reset();
@@ -43,7 +43,7 @@ public class TestNoCachingTenantBroadcastDao extends TenantTestSuiteWithEmbedded
         Assert.assertNull(resultNull);
 
         final TenantBroadcastModelDao result2 = noCachingTenantBroadcastDao.getLatestEntry();
-        Assert.assertEquals(result2.getTenantRecordId(), new Long(79L));
+        Assert.assertEquals(result2.getTenantRecordId(), Long.valueOf(79L));
         Assert.assertEquals(result2.getType(), "foo");
     }
 

@@ -32,17 +32,21 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     private final DateTime effectiveDate;
     private final Long totalOrdering;
     private final Integer bcdLocal;
+
+    private final Integer quantity;
     private final DateTime catalogEffectiveDate;
 
     public DefaultSubscriptionBillingEvent(final SubscriptionBaseTransitionType type, final Plan plan,
                                            final PlanPhase planPhase, final DateTime effectiveDate,
-                                           final Long totalOrdering, final Integer bcdLocal, final DateTime catalogEffectiveDate) {
+                                           final Long totalOrdering, final Integer bcdLocal, final Integer quantity,
+                                           final DateTime catalogEffectiveDate) {
         this.type = type;
         this.plan = plan;
         this.planPhase = planPhase;
         this.effectiveDate = effectiveDate;
         this.totalOrdering = totalOrdering;
         this.bcdLocal = bcdLocal;
+        this.quantity = quantity;
         this.catalogEffectiveDate = catalogEffectiveDate;
     }
 
@@ -77,6 +81,11 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
     }
 
     @Override
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    @Override
     public DateTime getCatalogEffectiveDate() {
         return catalogEffectiveDate;
     }
@@ -91,6 +100,7 @@ public class DefaultSubscriptionBillingEvent implements SubscriptionBillingEvent
                ", totalOrdering=" + totalOrdering +
                ", catalogEffectiveDate=" + catalogEffectiveDate +
                ", bcdLocal=" + bcdLocal +
+               ", quantity=" + quantity +
                '}';
     }
 

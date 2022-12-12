@@ -20,6 +20,7 @@ package org.killbill.billing.invoice.proRations;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +37,7 @@ import org.killbill.billing.invoice.api.InvoiceApiException;
 import org.killbill.billing.invoice.api.InvoiceInternalApi;
 import org.killbill.billing.invoice.api.InvoiceItem;
 import org.killbill.billing.invoice.api.InvoicePayment;
+import org.killbill.billing.invoice.api.InvoicePaymentStatus;
 import org.killbill.billing.invoice.api.InvoicePaymentType;
 import org.killbill.billing.invoice.api.InvoiceStatus;
 import org.killbill.billing.invoice.dao.InvoiceDao;
@@ -45,9 +47,6 @@ import org.killbill.billing.invoice.model.FixedPriceInvoiceItem;
 import org.killbill.clock.Clock;
 import org.mockito.Mockito;
 import org.testng.Assert;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class InvoiceTestUtils {
 
@@ -60,12 +59,7 @@ public class InvoiceTestUtils {
                                                   final Currency currency,
                                                   final InternalCallContext internalCallContext) {
         try {
-            return createAndPersistInvoice(testInvoiceHelper,
-                                           invoiceDao,
-                                           clock,
-                                           ImmutableList.<BigDecimal>of(amount),
-                                           currency,
-                                           internalCallContext);
+            return createAndPersistInvoice(testInvoiceHelper, invoiceDao, clock, List.of(amount), currency, internalCallContext);
         } catch (final EntityPersistenceException e) {
             Assert.fail(e.getMessage());
             return null;
@@ -109,7 +103,7 @@ public class InvoiceTestUtils {
 
         final InvoiceModelDao invoiceModelDao = new InvoiceModelDao(invoice);
         invoiceModelDao.addInvoiceItems(invoiceModelItems);
-        invoiceDao.createInvoices(ImmutableList.<InvoiceModelDao>of(invoiceModelDao), null, ImmutableSet.of(), internalCallContext);
+        invoiceDao.createInvoices(List.of(invoiceModelDao), null, Collections.emptySet(), null, null, false, internalCallContext);
 
         return invoice;
     }
@@ -136,10 +130,10 @@ public class InvoiceTestUtils {
         Mockito.when(payment.getAmount()).thenReturn(amount);
         Mockito.when(payment.getCurrency()).thenReturn(currency);
         Mockito.when(payment.getProcessedCurrency()).thenReturn(currency);
-        Mockito.when(payment.isSuccess()).thenReturn(true);
+        Mockito.when(payment.getStatus()).thenReturn(InvoicePaymentStatus.SUCCESS);
 
         invoicePaymentApi.recordPaymentAttemptCompletion(payment.getInvoiceId(), payment.getAmount(), payment.getCurrency(), payment.getProcessedCurrency(), payment.getPaymentId(), UUID.randomUUID(), payment.getPaymentCookieId(),
-                                                         payment.getPaymentDate(), payment.isSuccess(), callContext);
+                                                         payment.getPaymentDate(), payment.getStatus(), callContext);
 
         return payment;
     }

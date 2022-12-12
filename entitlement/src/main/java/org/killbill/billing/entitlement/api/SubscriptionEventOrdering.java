@@ -17,6 +17,7 @@
 
 package org.killbill.billing.entitlement.api;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -27,10 +28,8 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import org.killbill.commons.utils.Preconditions;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 
 //
 // Compute all events based on blocking states events and base subscription events
@@ -45,7 +44,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
     private SubscriptionEventOrdering() {}
 
     public static List<SubscriptionEvent> sortedCopy(final Entitlement entitlement, final InternalTenantContext internalTenantContext) {
-        return sortedCopy(ImmutableList.<Entitlement>of(entitlement), internalTenantContext);
+        return sortedCopy(List.of(entitlement), internalTenantContext);
     }
 
     public static List<SubscriptionEvent> sortedCopy(final Iterable<Entitlement> entitlements, final InternalTenantContext internalTenantContext) {
@@ -71,7 +70,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
         for (final Entitlement cur : entitlements) {
             Preconditions.checkState(cur instanceof DefaultEntitlement, "Entitlement %s is not a DefaultEntitlement", cur);
             final SubscriptionBase base = ((DefaultEntitlement) cur).getSubscriptionBase();
-            final List<SubscriptionBaseTransition> baseTransitions = base.getAllTransitions();
+            final List<SubscriptionBaseTransition> baseTransitions = base.getAllTransitions(base.getIncludeDeletedEvents());
             for (final SubscriptionBaseTransition tr : baseTransitions) {
                 final List<SubscriptionEventType> eventTypes = toEventTypes(tr.getTransitionType());
                 for (final SubscriptionEventType eventType : eventTypes) {
@@ -87,15 +86,14 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
     private List<SubscriptionEventType> toEventTypes(final SubscriptionBaseTransitionType in) {
         switch (in) {
             case CREATE:
-                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_BILLING);
             case TRANSFER:
-                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.START_BILLING);
+                return List.of(SubscriptionEventType.START_BILLING);
             case CHANGE:
-                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.CHANGE);
+                return List.of(SubscriptionEventType.CHANGE);
             case CANCEL:
-                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.STOP_BILLING);
+                return List.of(SubscriptionEventType.STOP_BILLING);
             case PHASE:
-                return ImmutableList.<SubscriptionEventType>of(SubscriptionEventType.PHASE);
+                return List.of(SubscriptionEventType.PHASE);
             /*
              * Those can be ignored:
              */
@@ -105,7 +103,7 @@ public class SubscriptionEventOrdering extends EntitlementOrderingBase {
             case START_BILLING_DISABLED:
             case END_BILLING_DISABLED:
             default:
-                return ImmutableList.<SubscriptionEventType>of();
+                return Collections.emptyList();
         }
     }
 

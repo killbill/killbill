@@ -36,8 +36,6 @@ import org.killbill.billing.util.dao.TableName;
 import org.killbill.billing.util.entity.dao.EntityModelDao;
 import org.killbill.billing.util.entity.dao.EntityModelDaoBase;
 
-import com.google.common.collect.ImmutableList;
-
 public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDao<Invoice> {
 
     private UUID accountId;
@@ -48,6 +46,8 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     private boolean migrated;
     private InvoiceStatus status;
     private boolean isParentInvoice;
+    private UUID grpId;
+
 
     // Not in the database, for convenience only
     private List<InvoiceItemModelDao> invoiceItems = new LinkedList<InvoiceItemModelDao>();
@@ -76,6 +76,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         this.isRepaired = false;
         this.status = status;
         this.isParentInvoice = isParentInvoice;
+        this.grpId = id; // Default value unless explicitly set.
     }
 
     public InvoiceModelDao(final UUID accountId, final LocalDate invoiceDate, final LocalDate targetDate, final Currency currency, final boolean migrated) {
@@ -96,7 +97,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
     }
 
     public List<String> getTrackingIds() {
-        return ImmutableList.copyOf(trackingIds);
+        return List.copyOf(trackingIds);
     }
 
     public void addTrackingIds(final Set<String> trackingIds) {
@@ -238,6 +239,14 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         return parentInvoice;
     }
 
+    public UUID getGrpId() {
+        return grpId;
+    }
+
+    public void setGrpId(final UUID grpId) {
+        this.grpId = grpId;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("InvoiceModelDao{");
@@ -254,6 +263,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         sb.append(", isWrittenOff=").append(isWrittenOff);
         sb.append(", isParentInvoice=").append(isParentInvoice);
         sb.append(", parentInvoice=").append(parentInvoice);
+        sb.append(", grpId=").append(grpId);
         sb.append('}');
         return sb.toString();
     }
@@ -308,6 +318,9 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         if (parentInvoice != null ? !parentInvoice.equals(that.parentInvoice) : that.parentInvoice != null) {
             return false;
         }
+        if (grpId != null ? !grpId.equals(that.grpId) : that.grpId != null) {
+            return false;
+        }
         return processedCurrency == that.processedCurrency;
     }
 
@@ -327,6 +340,7 @@ public class InvoiceModelDao extends EntityModelDaoBase implements EntityModelDa
         result = 31 * result + (isWrittenOff ? 1 : 0);
         result = 31 * result + (isParentInvoice ? 1 : 0);
         result = 31 * result + (parentInvoice != null ? parentInvoice.hashCode() : 0);
+        result = 31 * result + (grpId != null ? grpId.hashCode() : 0);
         return result;
     }
 

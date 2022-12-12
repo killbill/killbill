@@ -28,12 +28,11 @@ import java.util.concurrent.TimeoutException;
 import org.apache.shiro.util.ThreadContext;
 import org.killbill.billing.payment.core.PaymentExecutors;
 import org.killbill.billing.util.UUIDs;
+import org.killbill.commons.utils.annotation.VisibleForTesting;
 import org.killbill.commons.profiling.Profiling;
 import org.killbill.commons.profiling.ProfilingData;
 import org.killbill.commons.request.Request;
 import org.slf4j.MDC;
-
-import com.google.common.annotations.VisibleForTesting;
 
 public class PluginDispatcher<ReturnType> {
 

@@ -42,16 +42,15 @@ import org.killbill.billing.events.PaymentInfoInternalEvent;
 import org.killbill.billing.events.PaymentPluginErrorInternalEvent;
 import org.killbill.billing.events.TagDefinitionInternalEvent;
 import org.killbill.billing.events.TagInternalEvent;
+import org.killbill.commons.utils.Joiner;
 import org.killbill.clock.Clock;
+import org.killbill.commons.eventbus.Subscribe;
 import org.skife.jdbi.v2.Handle;
 import org.skife.jdbi.v2.IDBI;
 import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-
-import com.google.common.base.Joiner;
-import com.google.common.eventbus.Subscribe;
 
 import static org.awaitility.Awaitility.await;
 import static org.testng.Assert.assertTrue;
@@ -63,7 +62,7 @@ public class TestApiListener {
 
     private static final Joiner SPACE_JOINER = Joiner.on(" ");
 
-    private static final long DELAY = 10000;
+    private static final long DELAY = Long.parseLong(System.getProperty("killbill.test.apiListenerDelay", "30000"));
 
     private final List<NextEvent> nextExpectedEvent;
     private final IDBI idbi;
@@ -83,7 +82,7 @@ public class TestApiListener {
     }
 
     // In some (rare) cases we don't want to listen to events -- e.g event processing causes exceptions
-    public void waitAndIgnoreEvents(long waitMsec) {
+    public void waitAndIgnoreEvents(final long waitMsec) {
 
         long remaining = waitMsec;
         try {
@@ -91,7 +90,7 @@ public class TestApiListener {
                 Thread.sleep(100);
                 remaining -= 100;
             } while(remaining > 0);
-        } catch(InterruptedException ignored) {
+        } catch(final InterruptedException ignored) {
         } finally {
             reset();
         }
@@ -140,7 +139,9 @@ public class TestApiListener {
         TAG,
         TAG_DEFINITION,
         CUSTOM_FIELD,
-        BCD_CHANGE
+        BCD_CHANGE,
+        QUANTITY_CHANGE,
+        EXPIRED
     }
 
     @Subscribe
@@ -196,6 +197,15 @@ public class TestApiListener {
                 assertEqualsNicely(NextEvent.BCD_CHANGE);
                 notifyIfStackEmpty();
                 break;
+            case QUANTITY_CHANGE:
+                assertEqualsNicely(NextEvent.QUANTITY_CHANGE);
+                notifyIfStackEmpty();
+                break;
+            case EXPIRED:
+                assertEqualsNicely(NextEvent.EXPIRED);
+                notifyIfStackEmpty();
+                break;
+            	
             default:
                 throw new RuntimeException("Unexpected event type " + eventEffective.getRequestedTransitionTime());
         }

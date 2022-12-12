@@ -18,6 +18,7 @@
 package org.killbill.billing.invoice.generator;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -45,8 +46,6 @@ import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableSet;
 
 public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
 
@@ -77,7 +76,7 @@ public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
 
         final LocalDate invoiceDate = new LocalDate(2016, 11, 15);
 
-        final DefaultInvoice originalInvoice = new DefaultInvoice(account.getId(), invoiceDate, account.getCurrency());
+        final DefaultInvoice originalInvoice = new DefaultInvoice(UUID.randomUUID(), account.getId(), invoiceDate, account.getCurrency());
 
         final Plan plan = new MockPlan("my-plan");
         final MockInternationalPrice price = new MockInternationalPrice(new DefaultPrice(BigDecimal.TEN, account.getCurrency()));
@@ -124,7 +123,7 @@ public class TestInvoiceWithMetadata extends InvoiceTestSuiteNoDB {
 
         perSubscriptionFutureNotificationDates.put(subscription.getId(), subscriptionFutureNotificationDates);
 
-        final InvoiceWithMetadata invoiceWithMetadata = new InvoiceWithMetadata(originalInvoice, ImmutableSet.of(), perSubscriptionFutureNotificationDates, false, internalCallContext);
+        final InvoiceWithMetadata invoiceWithMetadata = new InvoiceWithMetadata(originalInvoice, Collections.emptySet(), perSubscriptionFutureNotificationDates, false, internalCallContext);
 
         // We generate an invoice with one item, invoicing for $0
         final Invoice resultingInvoice = invoiceWithMetadata.getInvoice();

@@ -18,6 +18,7 @@
 
 package org.killbill.billing.payment.provider;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,15 +27,13 @@ import org.killbill.billing.payment.api.PluginProperty;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestDefaultNoOpPaymentMethodPlugin extends PaymentTestSuiteNoDB {
 
     @Test(groups = "fast")
     public void testEquals() throws Exception {
         final String externalId = UUID.randomUUID().toString();
         final boolean isDefault = false;
-        final List<PluginProperty> props = ImmutableList.<PluginProperty>of(new PluginProperty(UUID.randomUUID().toString(), UUID.randomUUID().toString(), false));
+        final List<PluginProperty> props = List.of(new PluginProperty(UUID.randomUUID().toString(), UUID.randomUUID().toString(), false));
 
         final DefaultNoOpPaymentMethodPlugin paymentMethod = new DefaultNoOpPaymentMethodPlugin(externalId, isDefault, props);
         Assert.assertEquals(paymentMethod, paymentMethod);
@@ -42,7 +41,7 @@ public class TestDefaultNoOpPaymentMethodPlugin extends PaymentTestSuiteNoDB {
         final DefaultNoOpPaymentMethodPlugin samePaymentMethod = new DefaultNoOpPaymentMethodPlugin(externalId, isDefault, props);
         Assert.assertEquals(samePaymentMethod, paymentMethod);
 
-        final DefaultNoOpPaymentMethodPlugin otherPaymentMethod = new DefaultNoOpPaymentMethodPlugin(externalId, isDefault, ImmutableList.<PluginProperty>of());
+        final DefaultNoOpPaymentMethodPlugin otherPaymentMethod = new DefaultNoOpPaymentMethodPlugin(externalId, isDefault, Collections.emptyList());
         Assert.assertNotEquals(otherPaymentMethod, paymentMethod);
     }
 

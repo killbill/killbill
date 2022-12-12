@@ -22,9 +22,11 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 
 import org.joda.time.DateTime;
 import org.killbill.billing.account.api.Account;
@@ -36,9 +38,6 @@ import org.killbill.billing.util.UUIDs;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
-
-import com.google.common.base.MoreObjects;
-import com.google.inject.Inject;
 
 public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
 
@@ -104,7 +103,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                                                         final PaymentOptions paymentOptions,
                                                         final CallContext context) throws PaymentApiException {
         final Collection<PluginProperty> pluginProperties = preparePluginPropertiesForRefundOrCredit(isAdjusted, adjustments, originalProperties);
-        final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
+        final String paymentTransactionExternalKey = Objects.requireNonNullElse(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
 
         paymentApi.createRefundWithPaymentControl(account,
                                                   paymentId,
@@ -137,7 +136,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
         final Collection<PluginProperty> pluginProperties = preparePluginPropertiesForRefundOrCredit(isAdjusted, adjustments, originalProperties);
         pluginProperties.add(new PluginProperty("IPCD_PAYMENT_ID", originalPaymentId, false));
 
-        final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
+        final String paymentTransactionExternalKey = Objects.requireNonNullElse(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
 
         paymentApi.createCreditWithPaymentControl(account,
                                                   paymentMethodId,
@@ -164,7 +163,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                                                             final Iterable<PluginProperty> properties,
                                                             final PaymentOptions paymentOptions,
                                                             final CallContext context) throws PaymentApiException {
-        final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
+        final String paymentTransactionExternalKey = Objects.requireNonNullElse(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
         paymentApi.createChargebackWithPaymentControl(account,
                                                       paymentId,
                                                       amount,
@@ -186,7 +185,7 @@ public class DefaultInvoicePaymentApi implements InvoicePaymentApi {
                                                                     final Iterable<PluginProperty> properties,
                                                                     final PaymentOptions paymentOptions,
                                                                     final CallContext context) throws PaymentApiException {
-        final String paymentTransactionExternalKey = MoreObjects.firstNonNull(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
+        final String paymentTransactionExternalKey = Objects.requireNonNullElse(originalPaymentTransactionExternalKey, UUIDs.randomUUID().toString());
         paymentApi.createChargebackReversalWithPaymentControl(account,
                                                               paymentId,
                                                               effectiveDate,

@@ -125,7 +125,7 @@ CREATE TABLE payments (
 DROP TABLE IF EXISTS dummy;
 CREATE TABLE dummy (
     dummy_id varchar(36) NOT NULL,
-    value varchar(256) NOT NULL,
+    some_value varchar(256) NOT NULL,
     PRIMARY KEY(dummy_id)
 );
 

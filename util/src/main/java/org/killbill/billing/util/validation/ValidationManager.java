@@ -24,17 +24,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.killbill.billing.util.validation.dao.DatabaseSchemaDao;
+import javax.inject.Inject;
 
-import com.google.inject.Inject;
+import org.killbill.billing.util.validation.dao.DatabaseSchemaDao;
 
 public class ValidationManager {
 
     private final DatabaseSchemaDao dao;
 
     // table name, string name, column info
-    private final Map<String, Map<String, DefaultColumnInfo>> columnInfoMap = new HashMap<String, Map<String, DefaultColumnInfo>>();
-    private final Map<Class, ValidationConfiguration> configurations = new HashMap<Class, ValidationConfiguration>();
+    private final Map<String, Map<String, DefaultColumnInfo>> columnInfoMap = new HashMap<>();
+    private final Map<Class<?>, ValidationConfiguration> configurations = new HashMap<>();
 
     @Inject
     public ValidationManager(final DatabaseSchemaDao dao) {
@@ -76,7 +76,7 @@ public class ValidationManager {
             return true;
         }
 
-        final Class clazz = o.getClass();
+        final Class<?> clazz = o.getClass();
         for (final String propertyName : configuration.keySet()) {
             try {
                 final Field field = clazz.getDeclaredField(propertyName);
@@ -107,9 +107,9 @@ public class ValidationManager {
                 if (!hasValidScale(columnInfo, value)) {
                     return false;
                 }
-            } catch (NoSuchFieldException e) {
+            } catch (final NoSuchFieldException e) {
                 // if the field doesn't exist, assume the configuration is faulty and skip this property
-            } catch (IllegalAccessException e) {
+            } catch (final IllegalAccessException e) {
                 // TODO: something? deliberate no op?
             }
 
@@ -143,7 +143,7 @@ public class ValidationManager {
 
     private boolean isValidLengthChar(final DefaultColumnInfo columnInfo, final Object value) {
         // MySQL and PostgreSQL report data_type as Strings, H2 as SQLTypes
-        if ("char".equals(columnInfo.getDataType()) || "character".equals(columnInfo.getDataType()) || String.valueOf(Types.CHAR).equals(columnInfo.getDataType())) {
+        if ("char".equalsIgnoreCase(columnInfo.getDataType()) || "character".equalsIgnoreCase(columnInfo.getDataType()) || String.valueOf(Types.CHAR).equals(columnInfo.getDataType())) {
             if (value == null) {
                 return false;
             } else {
@@ -183,15 +183,15 @@ public class ValidationManager {
         return true;
     }
 
-    public boolean hasConfiguration(final Class clazz) {
+    public boolean hasConfiguration(final Class<?> clazz) {
         return configurations.containsKey(clazz);
     }
 
-    public ValidationConfiguration getConfiguration(final Class clazz) {
+    public ValidationConfiguration getConfiguration(final Class<?> clazz) {
         return configurations.get(clazz);
     }
 
-    public void setConfiguration(final Class clazz, final String propertyName, final DefaultColumnInfo columnInfo) {
+    public void setConfiguration(final Class<?> clazz, final String propertyName, final DefaultColumnInfo columnInfo) {
         if (!configurations.containsKey(clazz)) {
             configurations.put(clazz, new ValidationConfiguration());
         }

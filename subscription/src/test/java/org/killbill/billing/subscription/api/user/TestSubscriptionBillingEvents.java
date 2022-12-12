@@ -26,20 +26,9 @@ import java.util.UUID;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.killbill.billing.catalog.DefaultVersionedCatalog;
-import org.killbill.billing.catalog.MockCatalog;
-import org.killbill.billing.catalog.MockCatalogService;
-import org.killbill.billing.catalog.MockPlan;
-import org.killbill.billing.catalog.api.CatalogInternalApi;
-import org.killbill.billing.catalog.api.CatalogService;
-import org.killbill.billing.catalog.api.DefaultCatalogInternalApi;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.subscription.SubscriptionTestSuiteNoDB;
-import org.killbill.billing.subscription.api.SubscriptionBaseApiService;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
-import org.killbill.billing.subscription.api.timeline.SubscriptionBaseTimelineApi;
-import org.killbill.billing.subscription.api.transfer.DefaultSubscriptionBaseTransferApi;
-import org.killbill.billing.subscription.engine.dao.SubscriptionDao;
 import org.killbill.billing.subscription.events.SubscriptionBaseEvent;
 import org.killbill.billing.subscription.events.phase.PhaseEventBuilder;
 import org.killbill.billing.subscription.events.phase.PhaseEventData;
@@ -48,9 +37,7 @@ import org.killbill.billing.subscription.events.user.ApiEventCancel;
 import org.killbill.billing.subscription.events.user.ApiEventChange;
 import org.killbill.billing.subscription.events.user.ApiEventCreate;
 import org.killbill.billing.subscription.events.user.ApiEventType;
-import org.mockito.Mockito;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static org.killbill.billing.subscription.events.user.ApiEventType.CREATE;
@@ -91,8 +78,9 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
     @Test(groups = "fast")
     public void testWithCancelation_Before_EffSubDtV2() throws Exception {
 
+
         final DateTime createDate = new DateTime(2011, 1, 2, 0, 0, DateTimeZone.UTC);
-        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate));
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate), subscriptionBaseApiService, clock);
 
         final UUID subscriptionId = UUID.randomUUID();
         final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
@@ -135,7 +123,8 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
-        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog());
+
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), internalCallContext);
 
         Assert.assertEquals(result.size(), 3);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
@@ -161,7 +150,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
     public void testWithCancelation_After_EffSubDtV2() throws Exception {
 
         final DateTime createDate = new DateTime(2011, 1, 2, 0, 0, DateTimeZone.UTC);
-        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate));
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate), subscriptionBaseApiService, clock);
 
         final UUID subscriptionId = UUID.randomUUID();
         final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
@@ -204,7 +193,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
-        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog());
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), internalCallContext);
 
         Assert.assertEquals(result.size(), 5);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
@@ -219,13 +208,13 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
 
         // Catalog change event for EFF_SUB_DT_V2
         Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CHANGE);
-        Assert.assertEquals(result.get(2).getEffectiveDate().compareTo(EFF_SUB_DT_V2), 0);
+        Assert.assertEquals(result.get(2).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V2.toLocalDate()), 0);
         Assert.assertEquals(result.get(2).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V2), 0);
 
         // Catalog change event for EFF_SUB_DT_V3
         Assert.assertEquals(result.get(3).getType(), SubscriptionBaseTransitionType.CHANGE);
-        Assert.assertEquals(result.get(3).getEffectiveDate().compareTo(EFF_SUB_DT_V3), 0);
+        Assert.assertEquals(result.get(3).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V3.toLocalDate()), 0);
         Assert.assertEquals(result.get(3).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(3).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 
@@ -241,7 +230,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
     public void testWithChange_Before_EffSubDtV2() throws Exception {
 
         final DateTime createDate = new DateTime(2011, 1, 2, 0, 0, DateTimeZone.UTC);
-        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate));
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate), subscriptionBaseApiService, clock);
 
         final UUID subscriptionId = UUID.randomUUID();
         final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
@@ -284,7 +273,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
-        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog());
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), internalCallContext);
 
         Assert.assertEquals(result.size(), 3);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
@@ -311,7 +300,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
     public void testWithChange_After_EffSubDtV3() throws Exception {
 
         final DateTime createDate = new DateTime(2011, 1, 2, 0, 0, DateTimeZone.UTC);
-        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate));
+        final DefaultSubscriptionBase subscriptionBase = new DefaultSubscriptionBase(new SubscriptionBuilder().setAlignStartDate(createDate), subscriptionBaseApiService, clock);
 
         final UUID subscriptionId = UUID.randomUUID();
         final List<SubscriptionBaseEvent> inputEvents = new LinkedList<SubscriptionBaseEvent>();
@@ -354,7 +343,7 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
                                                                 .setActive(true)));
         subscriptionBase.rebuildTransitions(inputEvents, catalog);
 
-        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog());
+        final List<SubscriptionBillingEvent> result = subscriptionBase.getSubscriptionBillingEvents(catalog.getCatalog(), internalCallContext);
 
         Assert.assertEquals(result.size(), 5);
         Assert.assertEquals(result.get(0).getType(), SubscriptionBaseTransitionType.CREATE);
@@ -369,13 +358,13 @@ public class TestSubscriptionBillingEvents extends SubscriptionTestSuiteNoDB {
 
         // Catalog change event for EFF_SUB_DT_V2
         Assert.assertEquals(result.get(2).getType(), SubscriptionBaseTransitionType.CHANGE);
-        Assert.assertEquals(result.get(2).getEffectiveDate().compareTo(EFF_SUB_DT_V2), 0);
+        Assert.assertEquals(result.get(2).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V2.toLocalDate()), 0);
         Assert.assertEquals(result.get(2).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(2).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V2), 0);
 
         // Catalog change event for EFF_SUB_DT_V3
         Assert.assertEquals(result.get(3).getType(), SubscriptionBaseTransitionType.CHANGE);
-        Assert.assertEquals(result.get(3).getEffectiveDate().compareTo(EFF_SUB_DT_V3), 0);
+        Assert.assertEquals(result.get(3).getEffectiveDate().toLocalDate().compareTo(EFF_SUB_DT_V3.toLocalDate()), 0);
         Assert.assertEquals(result.get(3).getPlan().getName().compareTo("gold-monthly"), 0);
         Assert.assertEquals(toDateTime(result.get(3).getPlan().getCatalog().getEffectiveDate()).compareTo(EFF_V3), 0);
 

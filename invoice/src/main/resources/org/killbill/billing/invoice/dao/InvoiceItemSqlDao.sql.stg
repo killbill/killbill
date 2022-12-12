@@ -139,6 +139,7 @@ getRepairMap(ids) ::= <<
   JOIN invoices i on i.id = ii2.invoice_id
   WHERE
   ii1.invoice_id in (<ids>)
+  and <accountRecordIdField("i.")> = :accountRecordId
   and i.status = 'COMMITTED'
   and ii2.id is not null
   <AND_CHECK_TENANT("ii1.")>

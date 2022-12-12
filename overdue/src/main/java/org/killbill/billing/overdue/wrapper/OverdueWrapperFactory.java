@@ -20,6 +20,8 @@ package org.killbill.billing.overdue.wrapper;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.joda.time.Period;
 import org.killbill.billing.account.api.Account;
 import org.killbill.billing.account.api.AccountApiException;
@@ -41,8 +43,6 @@ import org.killbill.clock.Clock;
 import org.killbill.commons.locker.GlobalLocker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
 
 public class OverdueWrapperFactory {
 

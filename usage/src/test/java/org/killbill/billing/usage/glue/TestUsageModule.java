@@ -22,6 +22,8 @@ import org.killbill.billing.mock.glue.MockTenantModule;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.killbill.billing.usage.api.UsageUserApi;
 import org.killbill.billing.usage.api.user.MockUsageUserApi;
+import org.killbill.commons.metrics.api.MetricRegistry;
+import org.killbill.commons.metrics.impl.NoOpMetricRegistry;
 
 public class TestUsageModule extends UsageModule {
 
@@ -32,6 +34,8 @@ public class TestUsageModule extends UsageModule {
     @Override
     protected void configure() {
         super.configure();
+
+        bind(MetricRegistry.class).to(NoOpMetricRegistry.class).asEagerSingleton();
     }
 
     protected void installUsageUserApi() {
@@ -39,5 +43,4 @@ public class TestUsageModule extends UsageModule {
         bind(UsageUserApi.class).to(MockUsageUserApi.class).asEagerSingleton();
         install(new MockTenantModule(configSource));
     }
-
 }

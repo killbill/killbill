@@ -16,6 +16,7 @@
 
 package org.killbill.billing.util.audit.api;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,8 +34,6 @@ import org.killbill.billing.util.audit.dao.AuditDao;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
 import org.killbill.billing.util.callcontext.TenantContext;
 import org.killbill.billing.util.dao.TableName;
-
-import com.google.common.collect.ImmutableList;
 
 public class DefaultAuditUserApi implements AuditUserApi {
 
@@ -76,12 +75,12 @@ public class DefaultAuditUserApi implements AuditUserApi {
     public List<AuditLog> getAuditLogs(final UUID objectId, final ObjectType objectType, final AuditLevel auditLevel, final TenantContext context) {
         // Optimization - bail early
         if (AuditLevel.NONE.equals(auditLevel)) {
-            return ImmutableList.<AuditLog>of();
+            return Collections.emptyList();
         }
 
         final TableName tableName = getTableNameFromObjectType(objectType);
         if (tableName == null) {
-            return ImmutableList.<AuditLog>of();
+            return Collections.emptyList();
         }
 
         return auditDao.getAuditLogsForId(tableName, objectId, auditLevel, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));

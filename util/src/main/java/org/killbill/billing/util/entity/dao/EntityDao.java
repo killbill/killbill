@@ -37,6 +37,8 @@ public interface EntityDao<M extends EntityModelDao<E>, E extends Entity, U exte
     public Pagination<M> getAll(InternalTenantContext context);
 
     public Pagination<M> get(Long offset, Long limit, InternalTenantContext context);
+    
+    public Pagination<M> getByAccountRecordId(Long offset, Long limit, InternalTenantContext context);
 
     public Long getCount(InternalTenantContext context);
 

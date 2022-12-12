@@ -18,8 +18,6 @@
  */
 package org.apache.shiro.guice.web;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
@@ -44,6 +42,7 @@ import org.apache.shiro.web.session.mgt.ServletContainerSessionManager;
 import javax.servlet.Filter;
 import javax.servlet.ServletContext;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -88,19 +87,19 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
      * We use a LinkedHashMap here to ensure that iterator order is the same as add order.  This is important, as the
      * FilterChainResolver uses iterator order when searching for a matching chain.
      */
-    private final Map<String, Key<? extends Filter>[]> filterChains = new LinkedHashMap<String, Key<? extends Filter>[]>();
+    private final Map<String, Key<? extends Filter>[]> filterChains = new LinkedHashMap<>();
     private final ServletContext servletContext;
 
-    public ShiroWebModuleWith435(ServletContext servletContext) {
+    public ShiroWebModuleWith435(final ServletContext servletContext) {
         this.servletContext = servletContext;
     }
 
-    public static void bindGuiceFilter(Binder binder) {
+    public static void bindGuiceFilter(final Binder binder) {
         binder.install(guiceFilterModule());
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    public static void bindGuiceFilter(final String pattern, Binder binder) {
+    public static void bindGuiceFilter(final String pattern, final Binder binder) {
         binder.install(guiceFilterModule(pattern));
     }
 
@@ -134,35 +133,35 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
     }
 
     private void setupFilterChainConfigs() {
-        Table<Key<? extends PathMatchingFilter>, String, String> configs = HashBasedTable.create();
+        final HashMap<Key<? extends PathMatchingFilter>, Map<String, String>> configs = new HashMap<>();
 
-        for (Map.Entry<String, Key<? extends Filter>[]> filterChain : filterChains.entrySet()) {
+        for (final Map.Entry<String, Key<? extends Filter>[]> filterChain : filterChains.entrySet()) {
             for (int i = 0; i < filterChain.getValue().length; i++) {
                 Key<? extends Filter> key = filterChain.getValue()[i];
                 if (key instanceof FilterConfigKey) {
-                    FilterConfigKey<? extends PathMatchingFilter> configKey = (FilterConfigKey<? extends PathMatchingFilter>) key;
+                    final FilterConfigKey<? extends PathMatchingFilter> configKey = (FilterConfigKey<? extends PathMatchingFilter>) key;
                     key = configKey.getKey();
                     filterChain.getValue()[i] = key;
                     if (!PathMatchingFilter.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
                         throw new ConfigurationException("Config information requires a PathMatchingFilter - can't apply to " + key.getTypeLiteral().getRawType());
                     }
-                    configs.put(castToPathMatching(key), filterChain.getKey(), configKey.getConfigValue());
+                    configs.put(castToPathMatching(key), Map.of(filterChain.getKey(), configKey.getConfigValue()));
                 } else if (PathMatchingFilter.class.isAssignableFrom(key.getTypeLiteral().getRawType())) {
-                    configs.put(castToPathMatching(key), filterChain.getKey(), "");
+                    configs.put(castToPathMatching(key), Map.of(filterChain.getKey(), ""));
                 }
             }
         }
-        for (Key<? extends PathMatchingFilter> filterKey : configs.rowKeySet()) {
-            bindPathMatchingFilter(filterKey, configs.row(filterKey));
+        for (final Key<? extends PathMatchingFilter> filterKey : configs.keySet()) {
+            bindPathMatchingFilter(filterKey, configs.get(filterKey));
         }
     }
 
-    private <T extends PathMatchingFilter> void bindPathMatchingFilter(Key<T> filterKey, Map<String, String> configs) {
+    private <T extends PathMatchingFilter> void bindPathMatchingFilter(final Key<T> filterKey, final Map<String, String> configs) {
         bind(filterKey).toProvider(new PathMatchingFilterProvider<T>(filterKey, configs)).asEagerSingleton();
     }
 
     @SuppressWarnings({"unchecked"})
-    private Key<? extends PathMatchingFilter> castToPathMatching(Key<? extends Filter> key) {
+    private Key<? extends PathMatchingFilter> castToPathMatching(final Key<? extends Filter> key) {
         return (Key<? extends PathMatchingFilter>) key;
     }
 
@@ -170,7 +169,7 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
 
     @SuppressWarnings({"unchecked"})
     @Override
-    protected final void bindSecurityManager(AnnotatedBindingBuilder<? super SecurityManager> bind) {
+    protected final void bindSecurityManager(final AnnotatedBindingBuilder<? super SecurityManager> bind) {
         bind.to(WebSecurityManager.class); // SHIRO-435
     }
 
@@ -181,10 +180,10 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
      *
      * @param bind
      */
-    protected void bindWebSecurityManager(AnnotatedBindingBuilder<? super WebSecurityManager> bind) {
+    protected void bindWebSecurityManager(final AnnotatedBindingBuilder<? super WebSecurityManager> bind) {
         try {
             bind.toConstructor(DefaultWebSecurityManager.class.getConstructor(Collection.class)).asEagerSingleton();
-        } catch (NoSuchMethodException e) {
+        } catch (final NoSuchMethodException e) {
             throw new ConfigurationException("This really shouldn't happen.  Either something has changed in Shiro, or there's a bug in ShiroModule.", e);
         }
     }
@@ -197,16 +196,16 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
      * @param bind
      */
     @Override
-    protected void bindSessionManager(AnnotatedBindingBuilder<SessionManager> bind) {
+    protected void bindSessionManager(final AnnotatedBindingBuilder<SessionManager> bind) {
         bind.to(ServletContainerSessionManager.class).asEagerSingleton();
     }
 
     @Override
-    protected final void bindEnvironment(AnnotatedBindingBuilder<Environment> bind) {
+    protected final void bindEnvironment(final AnnotatedBindingBuilder<Environment> bind) {
         bind.to(WebEnvironment.class); // SHIRO-435
     }
 
-    protected void bindWebEnvironment(AnnotatedBindingBuilder<? super WebEnvironment> bind) {
+    protected void bindWebEnvironment(final AnnotatedBindingBuilder<? super WebEnvironment> bind) {
         bind.to(WebGuiceEnvironment.class).asEagerSingleton();
     }
 
@@ -220,21 +219,21 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
      * @param keys
      */
     @SuppressWarnings({"UnusedDeclaration"})
-    protected final void addFilterChain(String pattern, Key<? extends Filter>... keys) {
+    protected final void addFilterChain(final String pattern, final Key<? extends Filter>... keys) {
         filterChains.put(pattern, keys);
     }
 
-    protected static <T extends PathMatchingFilter> Key<T> config(Key<T> baseKey, String configValue) {
+    protected static <T extends PathMatchingFilter> Key<T> config(final Key<T> baseKey, final String configValue) {
         return new FilterConfigKey<T>(baseKey, configValue);
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    protected static <T extends PathMatchingFilter> Key<T> config(TypeLiteral<T> typeLiteral, String configValue) {
+    protected static <T extends PathMatchingFilter> Key<T> config(final TypeLiteral<T> typeLiteral, final String configValue) {
         return config(Key.get(typeLiteral), configValue);
     }
 
     @SuppressWarnings({"UnusedDeclaration"})
-    protected static <T extends PathMatchingFilter> Key<T> config(Class<T> type, String configValue) {
+    protected static <T extends PathMatchingFilter> Key<T> config(final Class<T> type, final String configValue) {
         return config(Key.get(type), configValue);
     }
 
@@ -242,7 +241,7 @@ public abstract class ShiroWebModuleWith435 extends ShiroModule {
         private Key<T> key;
         private String configValue;
 
-        private FilterConfigKey(Key<T> key, String configValue) {
+        private FilterConfigKey(final Key<T> key, final String configValue) {
             super();
             this.key = key;
             this.configValue = configValue;

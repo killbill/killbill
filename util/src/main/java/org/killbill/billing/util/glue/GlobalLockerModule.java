@@ -20,6 +20,7 @@ package org.killbill.billing.util.glue;
 
 import java.io.IOException;
 
+import javax.inject.Singleton;
 import javax.sql.DataSource;
 
 import org.killbill.billing.platform.api.KillbillConfigSource;
@@ -30,7 +31,6 @@ import org.killbill.commons.locker.mysql.MySqlGlobalLocker;
 import org.killbill.commons.locker.postgresql.PostgreSQLGlobalLocker;
 
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 
 public class GlobalLockerModule extends KillBillModule {
 

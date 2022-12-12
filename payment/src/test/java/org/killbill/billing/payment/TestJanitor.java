@@ -19,6 +19,7 @@ package org.killbill.billing.payment;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -26,6 +27,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 import org.awaitility.Awaitility;
 import org.joda.time.LocalDate;
@@ -59,6 +62,7 @@ import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.util.api.AuditLevel;
 import org.killbill.billing.util.audit.AuditLogWithHistory;
 import org.killbill.billing.util.callcontext.InternalCallContextFactory;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped;
 import org.killbill.billing.util.entity.dao.DBRouterUntyped.THREAD_STATE;
 import org.killbill.bus.api.PersistentBus.EventBusException;
@@ -73,10 +77,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -96,7 +96,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         @Override
         public List<String> getPaymentControlPluginNames() {
-            return ImmutableList.of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
+            return List.of(InvoicePaymentControlPluginApi.PLUGIN_NAME);
         }
     };
 
@@ -197,10 +197,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                           null,
                                                           paymentExternalKey,
                                                           transactionExternalKey,
-                                                          ImmutableList.<PluginProperty>of(),
+                                                          Collections.emptyList(),
                                                           INVOICE_PAYMENT,
                                                           callContext);
-        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, Collections.emptyList(), callContext);
         testListener.assertListenerStatus();
         assertEquals(payment.getTransactions().size(), 1);
         assertEquals(payment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
@@ -282,10 +282,10 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                           null,
                                                           paymentExternalKey,
                                                           transactionExternalKey,
-                                                          ImmutableList.<PluginProperty>of(),
+                                                          Collections.emptyList(),
                                                           INVOICE_PAYMENT,
                                                           callContext);
-        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, Collections.emptyList(), callContext);
         testListener.assertListenerStatus();
 
         final List<PluginProperty> refundProperties = new ArrayList<PluginProperty>();
@@ -349,7 +349,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
         final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
-                                                               transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+                                                               transactionExternalKey, Collections.emptyList(), callContext);
         testListener.assertListenerStatus();
 
         // Artificially move the transaction status to UNKNOWN
@@ -366,7 +366,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         assertNotificationsCompleted(internalCallContext, 5);
         testListener.assertListenerStatus();
 
-        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, Collections.emptyList(), callContext);
         assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
@@ -382,7 +382,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         mockPaymentProviderPlugin.makeNextPaymentFailWithError();
         testListener.pushExpectedEvent(NextEvent.PAYMENT_ERROR);
         final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
-                                                               transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+                                                               transactionExternalKey, Collections.emptyList(), callContext);
         testListener.assertListenerStatus();
 
         // Artificially move the transaction status to UNKNOWN
@@ -409,7 +409,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         PaymentTransactionModelDao history3 = (PaymentTransactionModelDao) paymentTransactionHistoryAfterJanitor.get(3).getEntity();
         Assert.assertEquals(history3.getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
 
-        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, Collections.emptyList(), callContext);
         // Janitor should have moved us to PAYMENT_FAILURE
         assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PAYMENT_FAILURE);
     }
@@ -426,11 +426,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
         try {
             testListener.pushExpectedEvent(NextEvent.PAYMENT_PLUGIN_ERROR);
             paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
-                                           transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+                                           transactionExternalKey, Collections.emptyList(), callContext);
         } catch (PaymentApiException ignore) {
             testListener.assertListenerStatus();
         }
-        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment payment = paymentApi.getPaymentByExternalKey(paymentExternalKey, false, false, Collections.emptyList(), callContext);
 
         // Artificially move the transaction status to UNKNOWN
         final String paymentStateName = paymentSMHelper.getErroredStateForTransaction(TransactionType.AUTHORIZE).toString();
@@ -462,7 +462,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
         final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
-                                                               transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+                                                               transactionExternalKey, Collections.emptyList(), callContext);
         testListener.assertListenerStatus();
 
         // Artificially move the transaction status to PENDING
@@ -479,7 +479,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         assertNotificationsCompleted(internalCallContext, 5);
         testListener.assertListenerStatus();
-        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+        final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, Collections.emptyList(), callContext);
         Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
     }
 
@@ -494,11 +494,11 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
 
         testListener.pushExpectedEvent(NextEvent.PAYMENT);
         final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, paymentExternalKey,
-                                                               transactionExternalKey, ImmutableList.<PluginProperty>of(), callContext);
+                                                               transactionExternalKey, Collections.emptyList(), callContext);
         testListener.assertListenerStatus();
 
         // Artificially move the transaction status to PENDING AND update state on the plugin as well
-        final List<PaymentTransactionInfoPlugin> paymentTransactions = mockPaymentProviderPlugin.getPaymentInfo(account.getId(), payment.getId(), ImmutableList.<PluginProperty>of(), callContext);
+        final List<PaymentTransactionInfoPlugin> paymentTransactions = mockPaymentProviderPlugin.getPaymentInfo(account.getId(), payment.getId(), Collections.emptyList(), callContext);
         final PaymentTransactionInfoPlugin oTx = paymentTransactions.remove(0);
         final PaymentTransactionInfoPlugin updatePaymentTransaction = new DefaultNoOpPaymentInfoPlugin(oTx.getKbPaymentId(), oTx.getKbTransactionPaymentId(), oTx.getTransactionType(), oTx.getAmount(), oTx.getCurrency(), oTx.getCreatedDate(), oTx.getCreatedDate(), PaymentPluginStatus.PENDING, null, null);
         paymentTransactions.add(updatePaymentTransaction);
@@ -526,7 +526,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
             Thread.sleep(1500);
             assertNotificationsCompleted(internalCallContext, 5);
 
-            final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, ImmutableList.<PluginProperty>of(), callContext);
+            final Payment updatedPayment = paymentApi.getPayment(payment.getId(), false, false, Collections.emptyList(), callContext);
             Assert.assertEquals(updatedPayment.getTransactions().get(0).getTransactionStatus(), TransactionStatus.PENDING);
         }
 
@@ -550,7 +550,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                                                                    final BigDecimal requestedAmount = BigDecimal.TEN;
                                                                                    testListener.pushExpectedEvent(NextEvent.PAYMENT);
                                                                                    final Payment payment = paymentApi.createAuthorization(account, account.getPaymentMethodId(), null, requestedAmount, account.getCurrency(), null, UUID.randomUUID().toString(),
-                                                                                                                                          UUID.randomUUID().toString(), ImmutableList.<PluginProperty>of(), callContext);
+                                                                                                                                          UUID.randomUUID().toString(), Collections.emptyList(), callContext);
                                                                                    testListener.assertListenerStatus();
 
                                                                                    // Thread switch, RW by default
@@ -567,7 +567,7 @@ public class TestJanitor extends PaymentTestSuiteWithEmbeddedDB {
                                              public Object execute() throws Throwable {
                                                  assertEquals(DBRouterUntyped.getCurrentState(), THREAD_STATE.RO_ALLOWED);
 
-                                                 final Payment retrievedPayment2 = paymentApi.getPayment(payment.getId(), true, false, ImmutableList.<PluginProperty>of(), callContext);
+                                                 final Payment retrievedPayment2 = paymentApi.getPayment(payment.getId(), true, false, Collections.emptyList(), callContext);
                                                  Assert.assertEquals(retrievedPayment2.getTransactions().get(0).getTransactionStatus(), TransactionStatus.SUCCESS);
 
                                                  // No thread switch, RO as well

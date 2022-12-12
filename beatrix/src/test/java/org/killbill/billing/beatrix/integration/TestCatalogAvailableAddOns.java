@@ -18,6 +18,7 @@
 
 package org.killbill.billing.beatrix.integration;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -32,12 +33,9 @@ import org.killbill.billing.catalog.api.PriceListSet;
 import org.killbill.billing.entitlement.api.DefaultEntitlementSpecifier;
 import org.killbill.billing.entitlement.api.Entitlement;
 import org.killbill.billing.entitlement.api.EntitlementApiException;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillConfigSource;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 import static org.testng.Assert.assertEquals;
 
@@ -45,7 +43,7 @@ public class TestCatalogAvailableAddOns extends TestIntegrationBase {
 
     @Override
     protected KillbillConfigSource getConfigSource(final Map<String, String> extraProperties) {
-        final Map<String, String> allExtraProperties = new HashMap<String, String>(extraProperties);
+        final Map<String, String> allExtraProperties = new HashMap<>(extraProperties);
         allExtraProperties.put("org.killbill.catalog.uri", "catalogs/testCatalogAvailableAddOns");
         return super.getConfigSource(null, allExtraProperties);
     }
@@ -66,14 +64,14 @@ public class TestCatalogAvailableAddOns extends TestIntegrationBase {
         final PlanPhaseSpecifier spec1 = new PlanPhaseSpecifier(productName, term, "DEFAULT", null);
 
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
+        final UUID bpEntitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec1), "externalKey", null, null, false, true, Collections.emptyList(), callContext);
         assertListenerStatus();
-        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, callContext);
+        Entitlement bpEntitlement = entitlementApi.getEntitlementForId(bpEntitlementId, false, callContext);
 
         // Verify we cannot create an add-on Laser-Scope as it is not available in V1
         final PlanPhaseSpecifier addOnSpec = new PlanPhaseSpecifier("Laser-Scope", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
         try {
-            entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), clock.getUTCToday(), clock.getUTCToday(), false, ImmutableList.<PluginProperty>of(), callContext);
+            entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), clock.getUTCToday(), clock.getUTCToday(), false, Collections.emptyList(), callContext);
             Assert.fail("Should fail to create Laser-scope add-on as it is not available");
         } catch (final EntitlementApiException e) {
             assertEquals(e.getCode(), ErrorCode.CAT_NO_SUCH_PRODUCT.getCode());
@@ -86,12 +84,12 @@ public class TestCatalogAvailableAddOns extends TestIntegrationBase {
         // Change Plan (same Plan pistol-monthly), but using catalog V2 (the price increase should be reflected)
         final PlanPhaseSpecifier spec2 = new PlanPhaseSpecifier("pistol-monthly", null);
         busHandler.pushExpectedEvents(NextEvent.CHANGE, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), ImmutableList.<PluginProperty>of(), callContext);
+        bpEntitlement = bpEntitlement.changePlanWithDate(new DefaultEntitlementSpecifier(spec2), clock.getUTCToday(), Collections.emptyList(), callContext);
         assertListenerStatus();
 
         // Verify we can now create the add-on since is available on the new version
         busHandler.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.INVOICE, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
-        entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), clock.getUTCToday(), clock.getUTCToday(), false, ImmutableList.<PluginProperty>of(), callContext);
+        entitlementApi.addEntitlement(bpEntitlement.getBundleId(), new DefaultEntitlementSpecifier(addOnSpec), clock.getUTCToday(), clock.getUTCToday(), false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
     }

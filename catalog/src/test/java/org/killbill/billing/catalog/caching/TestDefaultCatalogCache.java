@@ -22,8 +22,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,17 +37,13 @@ import org.killbill.billing.catalog.api.CatalogApiException;
 import org.killbill.billing.catalog.api.Product;
 import org.killbill.billing.catalog.api.StaticCatalog;
 import org.killbill.billing.catalog.api.VersionedCatalog;
+import org.killbill.commons.utils.io.Resources;
+import org.killbill.commons.utils.io.CharStreams;
 import org.killbill.xmlloader.UriAccessor;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.CharStreams;
-import com.google.common.io.Resources;
 
 public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
 
@@ -123,23 +120,20 @@ public class TestDefaultCatalogCache extends CatalogTestSuiteNoDB {
         final Long otherMultiTenantRecordId = otherMultiTenantContext.getTenantRecordId();
 
         final InputStream tenantInputCatalog = UriAccessor.accessUri(new URI(Resources.getResource("org/killbill/billing/catalog/SpyCarAdvanced.xml").toExternalForm()));
-        final String tenantCatalogXML = CharStreams.toString(new InputStreamReader(tenantInputCatalog, "UTF-8"));
+        final String tenantCatalogXML = CharStreams.toString(new InputStreamReader(tenantInputCatalog, StandardCharsets.UTF_8));
         final InputStream otherTenantInputCatalog = UriAccessor.accessUri(new URI(Resources.getResource("org/killbill/billing/catalog/SpyCarBasic.xml").toExternalForm()));
-        final String otherTenantCatalogXML = CharStreams.toString(new InputStreamReader(otherTenantInputCatalog, "UTF-8"));
-        Mockito.when(tenantInternalApi.getTenantCatalogs(Mockito.any(InternalTenantContext.class))).thenAnswer(new Answer<List<String>>() {
-            @Override
-            public List<String> answer(final InvocationOnMock invocation) throws Throwable {
-                if (shouldThrow.get()) {
-                    throw new RuntimeException();
-                }
-                final InternalTenantContext internalContext = (InternalTenantContext) invocation.getArguments()[0];
-                if (multiTenantRecordId.equals(internalContext.getTenantRecordId())) {
-                    return ImmutableList.<String>of(tenantCatalogXML);
-                } else if (otherMultiTenantRecordId.equals(internalContext.getTenantRecordId())) {
-                    return ImmutableList.<String>of(otherTenantCatalogXML);
-                } else {
-                    return ImmutableList.<String>of();
-                }
+        final String otherTenantCatalogXML = CharStreams.toString(new InputStreamReader(otherTenantInputCatalog, StandardCharsets.UTF_8));
+        Mockito.when(tenantInternalApi.getTenantCatalogs(Mockito.any(InternalTenantContext.class))).thenAnswer(invocation -> {
+            if (shouldThrow.get()) {
+                throw new RuntimeException();
+            }
+            final InternalTenantContext internalContext = (InternalTenantContext) invocation.getArguments()[0];
+            if (multiTenantRecordId.equals(internalContext.getTenantRecordId())) {
+                return List.of(tenantCatalogXML);
+            } else if (otherMultiTenantRecordId.equals(internalContext.getTenantRecordId())) {
+                return List.of(otherTenantCatalogXML);
+            } else {
+                return Collections.emptyList();
             }
         });
 

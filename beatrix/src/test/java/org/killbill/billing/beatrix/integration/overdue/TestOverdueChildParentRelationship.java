@@ -37,11 +37,10 @@ import org.killbill.billing.invoice.api.Invoice;
 import org.killbill.billing.invoice.api.InvoiceItemType;
 import org.killbill.billing.overdue.wrapper.OverdueWrapper;
 import org.testng.annotations.Test;
-import org.weakref.jmx.internal.guava.collect.Iterables;
 
 import static org.testng.Assert.assertEquals;
 
-// For all the tests, we set the the property org.killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
+// For all the tests, we set the property org.killbill.payment.retry.days=8,8,8,8,8,8,8,8 so that Payment retry logic does not end with an ABORTED state
 // preventing final instant payment to succeed.
 //
 // The tests are difficult to follow because there are actually two tracks of retry in logic:
@@ -294,7 +293,7 @@ public class TestOverdueChildParentRelationship extends TestOverdueBase {
                 if (remainingUnpaidInvoices > 0) {
                     createPaymentAndCheckForCompletion(account, invoice, NextEvent.PAYMENT, NextEvent.INVOICE_PAYMENT);
                 } else {
-                    createPaymentAndCheckForCompletion(account, invoice, Iterables.toArray(nextEventList, NextEvent.class));
+                    createPaymentAndCheckForCompletion(account, invoice, nextEventList.toArray(new NextEvent[0]));
                 }
             }
         }

@@ -32,6 +32,7 @@ import org.killbill.billing.subscription.api.transfer.SubscriptionBaseTransferAp
 import org.killbill.billing.subscription.api.user.DefaultSubscriptionBaseApiService;
 import org.killbill.billing.subscription.catalog.DefaultSubscriptionCatalogApi;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalogApi;
+import org.killbill.billing.subscription.config.MultiTenantSubscriptionConfig;
 import org.killbill.billing.subscription.engine.addon.AddonUtils;
 import org.killbill.billing.subscription.engine.core.DefaultSubscriptionBaseService;
 import org.killbill.billing.subscription.engine.dao.DefaultSubscriptionDao;
@@ -40,6 +41,8 @@ import org.killbill.billing.util.config.definition.SubscriptionConfig;
 import org.killbill.billing.util.glue.KillBillModule;
 import org.skife.config.ConfigurationObjectFactory;
 
+import com.google.inject.name.Names;
+
 public class DefaultSubscriptionModule extends KillBillModule implements SubscriptionModule {
 
     public DefaultSubscriptionModule(final KillbillConfigSource configSource) {
@@ -47,9 +50,14 @@ public class DefaultSubscriptionModule extends KillBillModule implements Subscri
     }
 
     protected void installConfig() {
-        final SubscriptionConfig config = new ConfigurationObjectFactory(skifeConfigSource).build(SubscriptionConfig.class);
-        bind(SubscriptionConfig.class).toInstance(config);
+        installConfig(new ConfigurationObjectFactory(skifeConfigSource).build(SubscriptionConfig.class));
     }
+
+    protected void installConfig(final SubscriptionConfig staticInvoiceConfig) {
+        bind(SubscriptionConfig.class).annotatedWith(Names.named(KillBillModule.STATIC_CONFIG)).toInstance(staticInvoiceConfig);
+        bind(SubscriptionConfig.class).to(MultiTenantSubscriptionConfig.class).asEagerSingleton();
+    }
+
 
     protected void installSubscriptionDao() {
         bind(SubscriptionDao.class).to(DefaultSubscriptionDao.class).asEagerSingleton();

@@ -17,8 +17,10 @@
 package org.killbill.billing.util.security.shiro.realm;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.UsernamePasswordToken;
@@ -33,8 +35,6 @@ import org.testng.annotations.Test;
 import org.killbill.billing.util.UtilTestSuiteNoDB;
 import org.killbill.billing.util.config.definition.SecurityConfig;
 
-import com.google.common.collect.Sets;
-
 public class TestKillBillJndiLdapRealm extends UtilTestSuiteNoDB {
 
     @Test(groups = "fast")
@@ -46,10 +46,10 @@ public class TestKillBillJndiLdapRealm extends UtilTestSuiteNoDB {
         Assert.assertEquals(permission.get("admin").iterator().next(), "*:*");
 
         Assert.assertEquals(permission.get("finance").size(), 2);
-        Assert.assertEquals(Sets.newHashSet(permission.get("finance")), Sets.newHashSet("invoice:*", "payment:*"));
+        Assert.assertEquals(new HashSet<>(permission.get("finance")), Set.of("invoice:*", "payment:*"));
 
         Assert.assertEquals(permission.get("support").size(), 2);
-        Assert.assertEquals(Sets.newHashSet(permission.get("support")), Sets.newHashSet("entitlement:*", "invoice:item_adjust"));
+        Assert.assertEquals(new HashSet<>(permission.get("support")), Set.of("entitlement:*", "invoice:item_adjust"));
     }
 
     @Test(groups = "external", enabled = false)

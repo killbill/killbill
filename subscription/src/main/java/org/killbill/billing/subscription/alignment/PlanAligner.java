@@ -19,6 +19,7 @@ package org.killbill.billing.subscription.alignment;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -41,10 +42,6 @@ import org.killbill.billing.subscription.api.user.SubscriptionBaseApiException;
 import org.killbill.billing.subscription.api.user.SubscriptionBaseTransition;
 import org.killbill.billing.subscription.catalog.SubscriptionCatalog;
 import org.killbill.billing.subscription.exceptions.SubscriptionBaseError;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 /**
  * PlanAligner offers specific APIs to return the correct {@code TimedPhase} when creating, changing Plan or to compute
@@ -170,7 +167,7 @@ public class PlanAligner extends BaseAligner {
                                                  effectiveDate,
                                                  pendingOrLastPlanTransition.getEffectiveTransitionTime(),
                                                  pendingOrLastPlanTransition.getEffectiveTransitionTime(),
-                                                 subscription.getAllTransitions().get(0).getNextPhase().getPhaseType(),
+                                                 subscription.getAllTransitions(false).get(0).getNextPhase().getPhaseType(),
                                                  null,
                                                  WhichPhase.NEXT,
                                                  catalog,
@@ -232,7 +229,7 @@ public class PlanAligner extends BaseAligner {
                                      effectiveDate,
                                      // This method is only called while doing the change, hence we want to pass the change effective date
                                      effectiveDate,
-                                     subscription.getAllTransitions().get(0).getNextPhase().getPhaseType(),
+                                     subscription.getAllTransitions(false).get(0).getNextPhase().getPhaseType(),
                                      newPlanInitialPhaseType,
                                      which,
                                      catalog,
@@ -345,12 +342,7 @@ public class PlanAligner extends BaseAligner {
     }
 
     private boolean isPlanContainPhaseType(final Plan plan, @Nullable final PhaseType phaseType) {
-        return Iterables.any(ImmutableList.copyOf(plan.getAllPhases()), new Predicate<PlanPhase>() {
-            @Override
-            public boolean apply(final PlanPhase input) {
-                return input.getPhaseType() == phaseType;
-            }
-        });
+        return Stream.of(plan.getAllPhases()).anyMatch(input -> input.getPhaseType() == phaseType);
     }
 
     private enum WhichPhase {

@@ -18,6 +18,7 @@
 
 package org.killbill.billing.junction.plumbing.billing;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,14 +42,11 @@ import org.killbill.billing.entitlement.api.EntitlementSpecifier;
 import org.killbill.billing.junction.BillingEvent;
 import org.killbill.billing.junction.DefaultBlockingState;
 import org.killbill.billing.junction.JunctionTestSuiteWithEmbeddedDB;
-import org.killbill.billing.payment.api.PluginProperty;
 import org.killbill.billing.platform.api.KillbillService.KILLBILL_SERVICES;
 import org.killbill.billing.subscription.api.SubscriptionBase;
 import org.killbill.billing.subscription.api.SubscriptionBaseTransitionType;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbeddedDB {
 
@@ -64,13 +62,9 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         // Create base entitlement
         final String bundleKey = UUID.randomUUID().toString();
         final EntitlementSpecifier entitlementSpecifierBase = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Cannon", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
-        final BaseEntitlementWithAddOnsSpecifier specifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey, ImmutableList.of(entitlementSpecifierBase), null, null, false);
+        final BaseEntitlementWithAddOnsSpecifier specifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey, List.of(entitlementSpecifierBase), null, null, false);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
-                                                        ImmutableList.of(specifier),
-                                                        false,
-                                                        ImmutableList.<PluginProperty>of(),
-                                                        callContext);
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), List.of(specifier), false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
@@ -82,7 +76,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
         Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        List<BillingEvent> events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
 
@@ -96,7 +90,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         Assert.assertEquals(entitlementsUpdated.get(0).getLastActiveProduct().getName(), "Cannon");
         Assert.assertEquals(entitlementsUpdated.get(0).getBillCycleDayLocal(), (Integer) 7);
 
-        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
     }
@@ -113,13 +107,9 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         // Create base entitlement
         final String bundleKey = UUID.randomUUID().toString();
         final EntitlementSpecifier entitlementSpecifierBase = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Trebuchet", BillingPeriod.NO_BILLING_PERIOD, PriceListSet.DEFAULT_PRICELIST_NAME, null));
-        final BaseEntitlementWithAddOnsSpecifier specifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey, ImmutableList.of(entitlementSpecifierBase), null, null, false);
+        final BaseEntitlementWithAddOnsSpecifier specifier = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey, List.of(entitlementSpecifierBase), null, null, false);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
-        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
-                                                        ImmutableList.of(specifier),
-                                                        false,
-                                                        ImmutableList.<PluginProperty>of(),
-                                                        callContext);
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), List.of(specifier), false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
@@ -131,7 +121,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
         Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        List<BillingEvent> events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
 
@@ -145,7 +135,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         Assert.assertEquals(entitlementsUpdated.get(0).getLastActiveProduct().getName(), "Trebuchet");
         Assert.assertEquals(entitlementsUpdated.get(0).getBillCycleDayLocal(), (Integer) 7);
 
-        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 1);
         Assert.assertEquals(events.get(0).getBillCycleDayLocal(), 7);
     }
@@ -163,13 +153,9 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final String bundleKey1 = UUID.randomUUID().toString();
         final EntitlementSpecifier entitlementSpecifierBase1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
         final EntitlementSpecifier entitlementSpecifierAO1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Cabinet", BillingPeriod.TRIANNUAL, PriceListSet.DEFAULT_PRICELIST_NAME, null));
-        final BaseEntitlementWithAddOnsSpecifier specifier1 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey1, ImmutableList.of(entitlementSpecifierBase1, entitlementSpecifierAO1), null, null, false);
+        final BaseEntitlementWithAddOnsSpecifier specifier1 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey1, List.of(entitlementSpecifierBase1, entitlementSpecifierAO1), null, null, false);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK);
-        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
-                                                        ImmutableList.of(specifier1),
-                                                        false,
-                                                        ImmutableList.<PluginProperty>of(),
-                                                        callContext);
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), List.of(specifier1), false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
@@ -184,7 +170,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
         Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        List<BillingEvent> events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 3);
         for (final BillingEvent billingEvent : events) {
             Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
@@ -202,7 +188,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         Assert.assertEquals(entitlementsUpdated.get(1).getLastActiveProduct().getName(), "Cabinet");
         Assert.assertEquals(entitlementsUpdated.get(1).getBillCycleDayLocal(), (Integer) 7);
 
-        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 3);
         for (final BillingEvent billingEvent : events) {
             Assert.assertEquals(billingEvent.getBillCycleDayLocal(), 7);
@@ -223,14 +209,10 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final String bundleKey2 = UUID.randomUUID().toString();
         final EntitlementSpecifier entitlementSpecifierBase1 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Pistol", BillingPeriod.ANNUAL, "gunclubDiscountNoTrial", null));
         final EntitlementSpecifier entitlementSpecifierBase2 = new DefaultEntitlementSpecifier(new PlanPhaseSpecifier("Pistol", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null));
-        final BaseEntitlementWithAddOnsSpecifier specifier1 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey1, ImmutableList.of(entitlementSpecifierBase1), null, null, false);
-        final BaseEntitlementWithAddOnsSpecifier specifier2 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey2, ImmutableList.of(entitlementSpecifierBase2), null, null, false);
+        final BaseEntitlementWithAddOnsSpecifier specifier1 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey1, List.of(entitlementSpecifierBase1), null, null, false);
+        final BaseEntitlementWithAddOnsSpecifier specifier2 = new DefaultBaseEntitlementWithAddOnsSpecifier(null, bundleKey2, List.of(entitlementSpecifierBase2), null, null, false);
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK, NextEvent.CREATE, NextEvent.BLOCK);
-        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(),
-                                                        ImmutableList.of(specifier1, specifier2),
-                                                        false,
-                                                        ImmutableList.<PluginProperty>of(),
-                                                        callContext);
+        entitlementApi.createBaseEntitlementsWithAddOns(account.getId(), List.of(specifier1, specifier2), false, Collections.emptyList(), callContext);
         assertListenerStatus();
 
         final List<Entitlement> entitlements = entitlementApi.getAllEntitlementsForAccountId(account.getId(), callContext);
@@ -249,7 +231,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         final Account accountNoBCD = accountApi.getAccountById(account.getId(), callContext);
         Assert.assertEquals(accountNoBCD.getBillCycleDayLocal(), (Integer) 0);
 
-        List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        List<BillingEvent> events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 4);
         for (final BillingEvent billingEvent : events) {
             if ("pistol-annual-gunclub-discount-notrial".equals(billingEvent.getPlan().getName())) {
@@ -274,7 +256,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
             }
         }
 
-        events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 4);
         for (final BillingEvent billingEvent : events) {
             if ("pistol-annual-gunclub-discount-notrial".equals(billingEvent.getPlan().getName())) {
@@ -298,9 +280,9 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
-        final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), internalCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), false, internalCallContext);
         assertListenerStatus();
 
         final DateTime block1Date = clock.getUTCNow();
@@ -415,7 +397,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         // Expected blocking duration:
         // * 2013-08-15 to 2013-10-04 [2013-08-15 to 2013-10-01 (block3Date -> block4Date) and 2013-10-01 to 2013-10-04 (block4Date -> block5Date)]
-        final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        final List<BillingEvent> events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         Assert.assertEquals(events.size(), 3);
         Assert.assertEquals(events.get(0).getTransitionType(), SubscriptionBaseTransitionType.CREATE);
         Assert.assertEquals(events.get(0).getEffectiveDate(), subscription.getStartDate());
@@ -444,9 +426,9 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
 
         testListener.pushExpectedEvents(NextEvent.CREATE, NextEvent.BLOCK);
         final PlanPhaseSpecifier spec = new PlanPhaseSpecifier("Shotgun", BillingPeriod.MONTHLY, PriceListSet.DEFAULT_PRICELIST_NAME, null);
-        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, ImmutableList.<PluginProperty>of(), callContext);
-        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, callContext);
-        final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), internalCallContext);
+        final UUID entitlementId = entitlementApi.createBaseEntitlement(account.getId(), new DefaultEntitlementSpecifier(spec), account.getExternalKey(), null, null, false, true, Collections.emptyList(), callContext);
+        final Entitlement entitlement = entitlementApi.getEntitlementForId(entitlementId, false, callContext);
+        final SubscriptionBase subscription = subscriptionInternalApi.getSubscriptionFromId(entitlement.getId(), false, internalCallContext);
         assertListenerStatus();
 
         final DateTime block1Date = subscription.getStartDate().plus(delay);
@@ -494,7 +476,7 @@ public class TestDefaultInternalBillingApi extends JunctionTestSuiteWithEmbedded
         clock.addDays(3);
         assertListenerStatus();
 
-        final List<BillingEvent> events = ImmutableList.<BillingEvent>copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
+        final List<BillingEvent> events = List.copyOf(billingInternalApi.getBillingEventsForAccountAndUpdateAccountBCD(account.getId(), null, null, internalCallContext));
         if (delay.toPeriod().toStandardDuration().compareTo(Period.ZERO.toStandardDuration()) == 0) {
             Assert.assertEquals(events.size(), 0);
         } else {

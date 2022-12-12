@@ -23,6 +23,8 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.samskivert.mustache.Mustache.Lambda;
+
 public abstract class DefaultTranslatorBase implements Translator {
 
     protected final Logger log = LoggerFactory.getLogger(DefaultTranslatorBase.class);
@@ -34,6 +36,13 @@ public abstract class DefaultTranslatorBase implements Translator {
                                  @Nullable final ResourceBundle defaultBundle) {
         this.bundle = bundle;
         this.defaultBundle = defaultBundle;
+    }
+
+    public Lambda properties() {
+        return (frag, out) -> {
+            String template = frag.execute();
+            out.write(this.getTranslation(template));
+        };
     }
 
     @Override

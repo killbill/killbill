@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
 import org.killbill.billing.catalog.api.Currency;
 import org.killbill.billing.payment.api.PaymentMethodPlugin;
 import org.killbill.billing.payment.api.PluginProperty;
@@ -36,16 +38,11 @@ import org.killbill.billing.payment.plugin.api.PaymentPluginStatus;
 import org.killbill.billing.payment.plugin.api.PaymentTransactionInfoPlugin;
 import org.killbill.billing.util.callcontext.CallContext;
 import org.killbill.billing.util.callcontext.TenantContext;
+import org.killbill.commons.utils.collect.Iterables;
 import org.killbill.billing.util.config.definition.PaymentConfig;
 import org.killbill.billing.util.entity.DefaultPagination;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.clock.Clock;
-
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 /**
  * Special plugin used to record external payments (i.e. payments not issued by Killbill), such as checks.
@@ -90,12 +87,12 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public List<PaymentTransactionInfoPlugin> getPaymentInfo(final UUID kbAccountId, final UUID kbPaymentId, final Iterable<PluginProperty> properties, final TenantContext context) throws PaymentPluginApiException {
-        return ImmutableList.of();
+        return Collections.emptyList();
     }
 
     @Override
     public Pagination<PaymentTransactionInfoPlugin> searchPayments(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentPluginApiException {
-        return new DefaultPagination<PaymentTransactionInfoPlugin>(offset, limit, 0L, 0L, ImmutableSet.<PaymentTransactionInfoPlugin>of().iterator());
+        return new DefaultPagination<PaymentTransactionInfoPlugin>(offset, limit, 0L, 0L, Collections.emptyIterator());
     }
 
     @Override
@@ -122,12 +119,12 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
 
     @Override
     public List<PaymentMethodInfoPlugin> getPaymentMethods(final UUID kbAccountId, final boolean refreshFromGateway, final Iterable<PluginProperty> properties, final CallContext context) throws PaymentPluginApiException {
-        return ImmutableList.<PaymentMethodInfoPlugin>of();
+        return Collections.emptyList();
     }
 
     @Override
     public Pagination<PaymentMethodPlugin> searchPaymentMethods(final String searchKey, final Long offset, final Long limit, final Iterable<PluginProperty> properties, final TenantContext tenantContext) throws PaymentPluginApiException {
-        return new DefaultPagination<PaymentMethodPlugin>(offset, limit, 0L, 0L, ImmutableSet.<PaymentMethodPlugin>of().iterator());
+        return new DefaultPagination<PaymentMethodPlugin>(offset, limit, 0L, 0L, Collections.emptyIterator());
     }
 
     @Override
@@ -177,12 +174,7 @@ public class ExternalPaymentProviderPlugin implements PaymentPluginApi {
     }
 
     private boolean isPropertySet(final Iterable<PluginProperty> properties, final String targetProperty) {
-        return Iterables.any(properties, new Predicate<PluginProperty>() {
-            @Override
-            public boolean apply(final PluginProperty input) {
-                return input.getKey().equals(targetProperty) && input.getValue().equals("true");
-            }
-        });
+        return Iterables.toStream(properties).anyMatch(input -> targetProperty.equals(input.getKey()) && "true".equals(input.getValue()));
     }
 
 }

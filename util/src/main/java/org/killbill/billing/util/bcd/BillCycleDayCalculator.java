@@ -28,10 +28,9 @@ import org.killbill.billing.callcontext.InternalTenantContext;
 import org.killbill.billing.catalog.api.BillingAlignment;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.subscription.api.SubscriptionBase;
+import org.killbill.commons.utils.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 public abstract class BillCycleDayCalculator {
 
@@ -62,12 +61,10 @@ public abstract class BillCycleDayCalculator {
         }
         final int lastDayOfMonth = proposedDate.dayOfMonth().getMaximumValue();
         int proposedBillCycleDate = proposedDate.getDayOfMonth();
-        if (proposedBillCycleDate < billingCycleDay) {
-            if (billingCycleDay <= lastDayOfMonth) {
-                proposedBillCycleDate = billingCycleDay;
-            } else {
-                proposedBillCycleDate = lastDayOfMonth;
-            }
+        if (billingCycleDay <= lastDayOfMonth) {
+            proposedBillCycleDate = billingCycleDay;
+        } else {
+            proposedBillCycleDate = lastDayOfMonth;
         }
         return new LocalDate(proposedDate.getYear(), proposedDate.getMonthOfYear(), proposedBillCycleDate, proposedDate.getChronology());
     }

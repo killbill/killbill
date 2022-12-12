@@ -35,8 +35,6 @@ import org.skife.jdbi.v2.tweak.HandleCallback;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
 
     @Test(groups = "slow")
@@ -50,7 +48,7 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
         checkPagination(0);
 
         eventsListener.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.addTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
+        tagUserApi.addTags(accountId, ObjectType.ACCOUNT, List.of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
         assertListenerStatus();
 
         checkPagination(1);
@@ -74,7 +72,7 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
         });
 
         eventsListener.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
+        tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, List.of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
         assertListenerStatus();
 
         List<Tag> remainingTags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, false, callContext);
@@ -84,7 +82,7 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
 
         // Add again the tag
         eventsListener.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.addTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
+        tagUserApi.addTags(accountId, ObjectType.ACCOUNT, List.of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
         assertListenerStatus();
 
         remainingTags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, false, callContext);
@@ -94,7 +92,7 @@ public class TestDefaultTagUserApi extends UtilTestSuiteWithEmbeddedDB {
 
         // Delete again
         eventsListener.pushExpectedEvent(NextEvent.TAG);
-        tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, ImmutableList.<UUID>of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
+        tagUserApi.removeTags(accountId, ObjectType.ACCOUNT, List.of(ControlTagType.AUTO_INVOICING_OFF.getId()), callContext);
         assertListenerStatus();
 
         remainingTags = tagUserApi.getTagsForObject(accountId, ObjectType.ACCOUNT, false, callContext);

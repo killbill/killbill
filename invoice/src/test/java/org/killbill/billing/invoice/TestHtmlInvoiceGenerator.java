@@ -66,6 +66,7 @@ public class TestHtmlInvoiceGenerator extends InvoiceTestSuiteNoDB {
         final HtmlInvoice output = g.generateInvoice(createAccount(), createInvoice(), false, internalCallContext);
         Assert.assertNotNull(output);
         Assert.assertNotNull(output.getBody());
+        Assert.assertTrue(output.getBody().contains("<!-- Test customKey value -->"));
         Assert.assertEquals(output.getSubject(), "Your invoice");
     }
 

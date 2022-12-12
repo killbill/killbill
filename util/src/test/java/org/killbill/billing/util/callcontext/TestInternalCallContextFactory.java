@@ -48,7 +48,7 @@ public class TestInternalCallContextFactory extends UtilTestSuiteWithEmbeddedDB 
             @Override
             public Void withHandle(final Handle handle) throws Exception {
                 handle.execute("insert into invoices (id, account_id, invoice_date, target_date, currency, status, migrated, created_by, created_date, account_record_id, tenant_record_id) values " +
-                               "(?, ?, ?, ?, 'USD', 'COMMITTED', '0', 'test', ?, ?, ?)", invoiceId.toString(), UUID.randomUUID().toString(), new Date(), new Date(), new Date(), accountRecordId, internalCallContext.getTenantRecordId());
+                               "(?, ?, ?, ?, 'USD', 'COMMITTED', FALSE, 'test', ?, ?, ?)", invoiceId.toString(), UUID.randomUUID().toString(), new Date(), new Date(), new Date(), accountRecordId, internalCallContext.getTenantRecordId());
                 return null;
             }
         });
