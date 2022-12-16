@@ -1058,7 +1058,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         usageUserApi.recordRolledUpUsage(record, context);
     }
 
-
     protected void recordUsageData(final SubscriptionUsageRecord usageRecord, final CallContext context) throws UsageApiException {
         usageUserApi.recordRolledUpUsage(usageRecord, context);
     }
@@ -1073,7 +1072,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             }
         });
     }
-
 
     protected boolean areAllNotificationsProcessed(final Long tenantRecordId) {
         int nbNotifications = 0;
@@ -1108,8 +1106,6 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             }
         });
     }
-
-
 
     protected static class TestDryRunArguments implements DryRunArguments {
 
@@ -1220,6 +1216,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
         private boolean shouldParkAccountsWithUnknownUsage;
         private boolean isZeroAmountUsageDisabled;
         private UsageDetailMode detailMode;
+        private InArrearMode inArrearMode;
         private Period maxInvoiceLimit;
         private int maxRawUsagePreviousPeriod;
 
@@ -1368,12 +1365,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
 
         @Override
         public InArrearMode getInArrearMode() {
-            return InArrearMode.DEFAULT;
+            return inArrearMode;
         }
 
         @Override
         public InArrearMode getInArrearMode(final InternalTenantContext tenantContext) {
-            return InArrearMode.DEFAULT;
+            return getInArrearMode();
+        }
+
+        public void setInArrearMode(final InArrearMode inArrearMode) {
+            this.inArrearMode = inArrearMode;
         }
 
         public void setItemResultBehaviorMode(final UsageDetailMode detailMode) {
@@ -1417,6 +1418,7 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             shouldParkAccountsWithUnknownUsage = defaultInvoiceConfig.shouldParkAccountsWithUnknownUsage();
             isZeroAmountUsageDisabled = defaultInvoiceConfig.isUsageZeroAmountDisabled();
             detailMode = defaultInvoiceConfig.getItemResultBehaviorMode();
+            inArrearMode = defaultInvoiceConfig.getInArrearMode();
             maxInvoiceLimit = defaultInvoiceConfig.getMaxInvoiceLimit();
             maxRawUsagePreviousPeriod = defaultInvoiceConfig.getMaxRawUsagePreviousPeriod();
         }
