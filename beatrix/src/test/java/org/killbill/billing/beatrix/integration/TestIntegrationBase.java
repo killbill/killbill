@@ -1366,6 +1366,16 @@ public class TestIntegrationBase extends BeatrixTestSuiteWithEmbeddedDB implemen
             return getItemResultBehaviorMode();
         }
 
+        @Override
+        public InArrearMode getInArrearMode() {
+            return InArrearMode.DEFAULT;
+        }
+
+        @Override
+        public InArrearMode getInArrearMode(final InternalTenantContext tenantContext) {
+            return InArrearMode.DEFAULT;
+        }
+
         public void setItemResultBehaviorMode(final UsageDetailMode detailMode) {
             this.detailMode = detailMode;
         }

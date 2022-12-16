@@ -41,6 +41,11 @@ public interface InvoiceConfig extends KillbillConfig {
         DETAIL,
     }
 
+    public enum InArrearMode {
+        DEFAULT,
+        GREEDY
+    }
+
     @Config("org.killbill.invoice.maxNumberOfMonthsInFuture")
     @Default("36")
     @Description("Maximum target date to consider when generating an invoice")
@@ -161,6 +166,16 @@ public interface InvoiceConfig extends KillbillConfig {
     @Default("AGGREGATE")
     @Description("How the result for an item will be reported (aggregate mode or detail mode). ")
     UsageDetailMode getItemResultBehaviorMode(@Param("dummy") final InternalTenantContext tenantContext);
+
+    @Config("org.killbill.invoice.in-arrear.mode")
+    @Default("DEFAULT")
+    @Description("Determine how the system should behave for in-arrear plans")
+    InArrearMode getInArrearMode();
+
+    @Config("org.killbill.invoice.in-arrear.mode")
+    @Default("DEFAULT")
+    @Description("Determine how the system should behave for in-arrear plans")
+    InArrearMode getInArrearMode(@Param("dummy") final InternalTenantContext tenantContext);
 
     @Config("org.killbill.invoice.parkAccountsWithUnknownUsage")
     @Default("false")

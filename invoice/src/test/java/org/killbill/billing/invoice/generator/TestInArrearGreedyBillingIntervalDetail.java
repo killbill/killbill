@@ -21,6 +21,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.invoice.InvoiceTestSuiteNoDB;
+import org.killbill.billing.util.config.definition.InvoiceConfig.InArrearMode;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -36,7 +37,7 @@ public class TestInArrearGreedyBillingIntervalDetail extends InvoiceTestSuiteNoD
         final LocalDate start = new LocalDate("2022-11-07");
         final int bcd = 7;
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, true);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, InArrearMode.GREEDY);
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2022-11-07"));
         Assert.assertEquals(billingIntervalDetail.getEffectiveEndDate(), new LocalDate("2022-12-07"));
@@ -53,7 +54,7 @@ public class TestInArrearGreedyBillingIntervalDetail extends InvoiceTestSuiteNoD
         final LocalDate start = new LocalDate("2022-09-07");
         final int bcd = 7;
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, true);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, InArrearMode.GREEDY);
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2022-09-07"));
         Assert.assertEquals(billingIntervalDetail.getEffectiveEndDate(), new LocalDate("2022-12-07"));
@@ -71,7 +72,7 @@ public class TestInArrearGreedyBillingIntervalDetail extends InvoiceTestSuiteNoD
         final LocalDate start = new LocalDate("2022-11-01");
         final int bcd = 1;
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, true);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, InArrearMode.GREEDY);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2022-11-01"));
@@ -88,7 +89,7 @@ public class TestInArrearGreedyBillingIntervalDetail extends InvoiceTestSuiteNoD
         final LocalDate start = new LocalDate("2022-09-01");
         final int bcd = 1;
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, true);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, InArrearMode.GREEDY);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2022-09-01"));
@@ -108,7 +109,7 @@ public class TestInArrearGreedyBillingIntervalDetail extends InvoiceTestSuiteNoD
         final LocalDate end = new LocalDate("2022-11-15");
         final int bcd = 7;
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, true);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, InArrearMode.GREEDY);
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2022-11-07"));
         Assert.assertEquals(billingIntervalDetail.getEffectiveEndDate(), new LocalDate("2022-11-15"));
@@ -126,7 +127,7 @@ public class TestInArrearGreedyBillingIntervalDetail extends InvoiceTestSuiteNoD
         final LocalDate end = new LocalDate("2022-12-02");
         final int bcd = 7;
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, true);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, InArrearMode.GREEDY);
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2022-11-07"));
         Assert.assertEquals(billingIntervalDetail.getEffectiveEndDate(), new LocalDate("2022-12-02"));
@@ -144,7 +145,7 @@ public class TestInArrearGreedyBillingIntervalDetail extends InvoiceTestSuiteNoD
         final LocalDate end = new LocalDate("2022-12-08");
         final int bcd = 7;
 
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, true);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, InArrearMode.GREEDY);
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2022-11-07"));
         Assert.assertEquals(billingIntervalDetail.getEffectiveEndDate(), new LocalDate("2022-12-07"));

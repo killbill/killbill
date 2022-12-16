@@ -22,6 +22,7 @@ import org.joda.time.LocalDate;
 import org.killbill.billing.catalog.api.BillingMode;
 import org.killbill.billing.catalog.api.BillingPeriod;
 import org.killbill.billing.util.bcd.BillCycleDayCalculator;
+import org.killbill.billing.util.config.definition.InvoiceConfig.InArrearMode;
 
 public class BillingIntervalDetail {
 
@@ -49,7 +50,7 @@ public class BillingIntervalDetail {
                                  final int billingCycleDay,
                                  final BillingPeriod billingPeriod,
                                  final BillingMode billingMode,
-                                 final boolean inArrearGreedy) {
+                                 final InArrearMode inArrearMode) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.targetDate = targetDate;
@@ -60,7 +61,7 @@ public class BillingIntervalDetail {
         }
         this.billingPeriod = billingPeriod;
         this.billingMode = billingMode;
-        this.inArrearGreedy = inArrearGreedy;
+        this.inArrearGreedy = inArrearMode == InArrearMode.GREEDY;
         computeAll();
     }
 
