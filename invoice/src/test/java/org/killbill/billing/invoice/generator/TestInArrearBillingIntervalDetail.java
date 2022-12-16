@@ -38,7 +38,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate start = new LocalDate("2012-01-16");
         final LocalDate targetDate = new LocalDate("2012-01-16");
         final int bcd = 13;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertFalse(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-02-13"));
@@ -57,7 +57,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate start = new LocalDate("2012-01-16");
         final LocalDate targetDate = new LocalDate("2012-02-13");
         final int bcd = 13;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-02-13"));
@@ -77,7 +77,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate start = new LocalDate("2012-01-16");
         final LocalDate targetDate = new LocalDate("2012-01-19");
         final int bcd = 16;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-16"));
@@ -97,7 +97,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate start = new LocalDate("2012-01-16");
         final LocalDate targetDate = new LocalDate("2012-01-19");
         final int bcd = 25;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertFalse(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-25"));
@@ -118,7 +118,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate end = new LocalDate("2012-01-19");
         final LocalDate targetDate = new LocalDate("2012-01-25");
         final int bcd = 25;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-25"));
@@ -139,7 +139,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate start = new LocalDate("2012-01-16");
         final LocalDate targetDate = new LocalDate("2012-01-25");
         final int bcd = 25;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-25"));
@@ -160,7 +160,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate end = new LocalDate("2012-01-20");
         final LocalDate targetDate = new LocalDate("2012-01-25");
         final int bcd = 18;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-18"));
@@ -179,7 +179,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate start = new LocalDate("2012-01-16");
         final LocalDate targetDate = new LocalDate("2012-01-25");
         final int bcd = 18;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-18"));
@@ -199,7 +199,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate end = new LocalDate("2012-01-28");
         final LocalDate targetDate = new LocalDate("2012-01-25");
         final int bcd = 18;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-18"));
@@ -218,7 +218,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate start = new LocalDate("2012-01-16");
         final LocalDate targetDate = new LocalDate("2012-02-18");
         final int bcd = 18;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, null, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-18"));
@@ -238,7 +238,7 @@ public class TestInArrearBillingIntervalDetail extends InvoiceTestSuiteNoDB {
         final LocalDate end = new LocalDate("2012-02-16");
         final LocalDate targetDate = new LocalDate("2012-02-18");
         final int bcd = 18;
-        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR);
+        final BillingIntervalDetail billingIntervalDetail = new BillingIntervalDetail(start, end, targetDate, bcd, BillingPeriod.MONTHLY, BillingMode.IN_ARREAR, false);
 
         Assert.assertTrue(billingIntervalDetail.hasSomethingToBill());
         Assert.assertEquals(billingIntervalDetail.getFirstBillingCycleDate(), new LocalDate("2012-01-18"));

@@ -237,7 +237,7 @@ public abstract class ContiguousIntervalUsageInArrear {
     }
 
     private void addTransitionTimesForBillingEvent(final BillingEvent event, final LocalDate startDate, final LocalDate endDate, final int bcd, final boolean lastEvent) {
-        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, bcd, usage.getBillingPeriod(), usage.getBillingMode());
+        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, bcd, usage.getBillingPeriod(), usage.getBillingMode(), false);
 
 
         int numberOfPeriod = 0;
@@ -385,13 +385,13 @@ public abstract class ContiguousIntervalUsageInArrear {
             final LocalDate startDate = internalTenantContext.toLocalDate(thisEvent.getEffectiveDate());
             final LocalDate endDate = internalTenantContext.toLocalDate(nextEvent.getEffectiveDate());
 
-            final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, thisEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
+            final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, endDate, targetDate, thisEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR, false);
             final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
             result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
         }
 
         final LocalDate startDate = internalTenantContext.toLocalDate(nextEvent.getEffectiveDate());
-        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, null, targetDate, nextEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR);
+        final BillingIntervalDetail bid = new BillingIntervalDetail(startDate, null, targetDate, nextEvent.getBillCycleDayLocal(), usage.getBillingPeriod(), BillingMode.IN_ARREAR, false);
         final LocalDate nextBillingCycleDate = bid.getNextBillingCycleDate();
         result = (result == null || result.compareTo(nextBillingCycleDate) < 0) ? nextBillingCycleDate : result;
         return result;
