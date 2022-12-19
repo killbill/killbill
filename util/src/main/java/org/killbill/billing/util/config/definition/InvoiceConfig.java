@@ -167,12 +167,12 @@ public interface InvoiceConfig extends KillbillConfig {
     @Description("How the result for an item will be reported (aggregate mode or detail mode). ")
     UsageDetailMode getItemResultBehaviorMode(@Param("dummy") final InternalTenantContext tenantContext);
 
-    @Config("org.killbill.invoice.in-arrear.mode")
+    @Config("org.killbill.invoice.inArrear.mode")
     @Default("DEFAULT")
     @Description("Determine how the system should behave for in-arrear plans")
     InArrearMode getInArrearMode();
 
-    @Config("org.killbill.invoice.in-arrear.mode")
+    @Config("org.killbill.invoice.inArrear.mode")
     @Default("DEFAULT")
     @Description("Determine how the system should behave for in-arrear plans")
     InArrearMode getInArrearMode(@Param("dummy") final InternalTenantContext tenantContext);
