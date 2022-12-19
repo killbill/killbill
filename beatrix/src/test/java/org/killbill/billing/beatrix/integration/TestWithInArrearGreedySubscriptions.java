@@ -115,6 +115,10 @@ public class TestWithInArrearGreedySubscriptions extends TestIntegrationBase {
         entitlement.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.IMMEDIATE, ImmutableList.of(), callContext);
         assertListenerStatus();
 
+        // Cancel 2022-03-13
+        busHandler.pushExpectedEvents(NextEvent.NULL_INVOICE);
+        clock.addMonths(1);
+        assertListenerStatus();
 
         for (int i = 0; i < 3; i++) {
             clock.addMonths(1);
